@@ -7,8 +7,8 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'AskBiz — Sell With Your Phone. Know Your Money Tonight.',
-  description: 'AskBiz: phone POS for market stalls, street vendors, and informal businesses. Take M-Pesa, cash, or card. Know your profit by tonight — any phone, free to start.',
+  title: 'AskBiz — Free Phone POS App for Kenya, Nigeria & Uganda | M-Pesa Till, Stock & Daily Sales',
+  description: 'AskBiz is a free phone POS and daily sales tracker for market stalls, kiosks, salons and small shops in Kenya, Nigeria, Uganda and across Africa. Take M-Pesa, MTN Mobile Money, Airtel Money, cash or card — know your profit by tonight.',
   keywords: 'mobile POS Africa, M-Pesa POS, phone POS, market stall app, street vendor app, small shop POS, kiosk POS, spaza shop POS, duuka POS, barbershop POS, salon POS Africa, restaurant POS Africa, courier payment app, boda boda payment, hawker POS, jua kali business app, informal business tracker, sell with phone, mobile money POS, MTN mobile money, Airtel Money, M-Pesa receipt, float management, Kenya POS app, Nigeria small business app, Nairobi POS, Lagos POS, Kampala POS, Accra POS, Dar es Salaam POS, camera barcode scan, no hardware POS, daily sales tracker, daily takings, end of day report, track daily sales, sales book phone, stock management phone, affordable POS Africa, free POS Kenya, free POS Nigeria, phone till, unregistered business tracker, sole trader Africa',
   authors: [{ name: 'AskBiz' }],
   creator: 'AskBiz',
@@ -38,6 +38,11 @@ export const metadata: Metadata = {
       'en-UG': 'https://askbiz.co',
       'en-GB': 'https://askbiz.co',
       'en-US': 'https://askbiz.co',
+      'es': 'https://askbiz.co/es',
+      'fr': 'https://askbiz.co/fr',
+      'de': 'https://askbiz.co/de',
+      'nl': 'https://askbiz.co/nl',
+      'ar': 'https://askbiz.co/ar',
     },
   },
 }
@@ -139,7 +144,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         {
           '@type': 'Offer',
           name: 'Business Plan',
-          price: '49',
+          price: '39',
           priceCurrency: 'GBP',
           billingIncrement: 'P1M',
           description: 'Everything in Growth plus 5 team seats, Decision Memory, Competitor Watch, CFO Mode',
@@ -305,7 +310,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         {
           '@type': 'Question',
           name: 'Does AskBiz include a Point of Sale system?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The PoS costs £5 per seat per month and is available on all plans.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The POS costs £5 per seat per month and is available on all plans.' },
         },
         {
           '@type': 'Question',

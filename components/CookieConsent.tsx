@@ -47,7 +47,7 @@ export default function CookieConsent() {
         {!showDetails ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>🍪 {tc('cookies.title')}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{tc('cookies.title')}</div>
               <p style={{ fontSize: 12, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
                 {tc('cookies.description')} <Link href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('nav.privacy')}</Link>.
               </p>

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
@@ -39,21 +39,66 @@ interface Geo {
 const CURRENCIES = [
   { code:'GBP', symbol:'£' },{ code:'USD', symbol:'$' },{ code:'EUR', symbol:'€' },
   { code:'KES', symbol:'KSh' },{ code:'NGN', symbol:'₦' },{ code:'ZAR', symbol:'R' },
+  { code:'UGX', symbol:'USh' },{ code:'TZS', symbol:'TSh' },{ code:'GHS', symbol:'₵' },
   { code:'AED', symbol:'د.إ' },{ code:'INR', symbol:'₹' },{ code:'AUD', symbol:'A$' },
   { code:'CAD', symbol:'C$' },{ code:'JPY', symbol:'¥' },{ code:'CHF', symbol:'Fr' },
 ] as const
 
+// ── Geo-aware demo data ───────────────────────────────────────────────────────
+// The UI replicas show example figures. A visitor in Nairobi should see KSh and
+// local couriers, not £ and Royal Mail. Base figures are in GBP, scaled per
+// currency and rounded to believable demo numbers.
+const AFRICAN_CC = new Set(['KE','NG','UG','TZ','GH','ZA','ET','RW','ZM','ZW','CI','SN','CM','EG','MA'])
+const DEMO_FX: Record<string,{sym:string;mult:number;dec?:boolean}> = {
+  GBP:{sym:'£',mult:1,dec:true}, USD:{sym:'$',mult:1.3,dec:true}, EUR:{sym:'€',mult:1.2,dec:true},
+  KES:{sym:'KSh ',mult:165}, NGN:{sym:'₦',mult:1950}, UGX:{sym:'USh ',mult:4800},
+  TZS:{sym:'TSh ',mult:3300}, GHS:{sym:'₵',mult:16}, ZAR:{sym:'R ',mult:24}, ETB:{sym:'Br ',mult:75},
+  INR:{sym:'₹',mult:110}, AED:{sym:'AED ',mult:4.8,dec:true}, CAD:{sym:'CA$',mult:1.7,dec:true}, AUD:{sym:'A$',mult:1.9,dec:true},
+}
+interface Demo {
+  afri: boolean
+  compact: (gbp:number)=>string
+  pnl: { rev:string; cogs:string; gross:string; opex:string; net:string; avg:string }
+  carriers: string[]
+  ref: (n:number)=>string
+}
+function buildDemo(geo:Geo|null): Demo {
+  const cc = geo?.countryCode || 'GB'
+  const fx = DEMO_FX[geo?.currency || ''] || DEMO_FX.GBP
+  const afri = AFRICAN_CC.has(cc)
+  const nice = (v:number)=>{
+    if(v < 100) return Math.round(v*100)/100
+    const step = v<1000?1:v<10000?10:v<100000?100:1000
+    return Math.round(v/step)*step
+  }
+  const f = (v:number)=>fx.sym+v.toLocaleString('en-GB',{maximumFractionDigits:v<100&&fx.dec?2:0})
+  // P&L derived from rounded revenue/costs so the rows always add up
+  const rev = nice(3247*fx.mult), cogs = nice(2138*fx.mult), opex = nice(260*fx.mult)
+  const gross = rev-cogs, net = gross-opex
+  const compact = (gbp:number)=>{
+    const v = gbp*fx.mult
+    if(v >= 1000) return fx.sym+(v/1000).toFixed(1).replace(/\.0$/,'')+'K'
+    return fx.sym+String(Math.round(v))
+  }
+  return {
+    afri, compact,
+    pnl: { rev:f(rev), cogs:'−'+f(cogs), gross:f(gross), opex:'−'+f(opex), net:f(net), avg:f(nice(22.71*fx.mult)) },
+    carriers: afri ? ['Sendy','G4S Courier','Boda rider','DHL'] : ['Royal Mail','DPD','Hermes','Royal Mail'],
+    ref: (n:number)=>`#${cc}-${n}`,
+  }
+}
+
 type BizType = 'retail'|'factory'|'restaurant'|'cargo'|'repair'
 const buildBizTypes = (tc: (k: string) => string) => [
-  { id:'retail' as BizType,icon:'🛒',label:tc('landing.biz_retail_label'),priceLabel:tc('landing.biz_retail_price_label'),pricePh:'12.99',unitLabel:tc('landing.biz_retail_unit_label'),resultLabel:tc('landing.biz_retail_result_label'),
+  { id:'retail' as BizType,icon:'cart',label:tc('landing.biz_retail_label'),priceLabel:tc('landing.biz_retail_price_label'),pricePh:'12.99',unitLabel:tc('landing.biz_retail_unit_label'),resultLabel:tc('landing.biz_retail_result_label'),
     fields:[{key:'a',label:tc('landing.biz_retail_field_a'),ph:'3.00'},{key:'b',label:tc('landing.biz_retail_field_b'),ph:'2.50'},{key:'c',label:tc('landing.biz_retail_field_c'),ph:'1.20'},{key:'d',label:tc('landing.biz_retail_field_d'),ph:'0.80'}]},
-  { id:'factory' as BizType,icon:'🏭',label:tc('landing.biz_factory_label'),priceLabel:tc('landing.biz_factory_price_label'),pricePh:'24.00',unitLabel:tc('landing.biz_factory_unit_label'),resultLabel:tc('landing.biz_factory_result_label'),
+  { id:'factory' as BizType,icon:'factory',label:tc('landing.biz_factory_label'),priceLabel:tc('landing.biz_factory_price_label'),pricePh:'24.00',unitLabel:tc('landing.biz_factory_unit_label'),resultLabel:tc('landing.biz_factory_result_label'),
     fields:[{key:'a',label:tc('landing.biz_factory_field_a'),ph:'6.00'},{key:'b',label:tc('landing.biz_factory_field_b'),ph:'4.50'},{key:'c',label:tc('landing.biz_factory_field_c'),ph:'2.00'},{key:'d',label:tc('landing.biz_factory_field_d'),ph:'1.50'}]},
-  { id:'restaurant' as BizType,icon:'🍽️',label:tc('landing.biz_restaurant_label'),priceLabel:tc('landing.biz_restaurant_price_label'),pricePh:'16.50',unitLabel:tc('landing.biz_restaurant_unit_label'),resultLabel:tc('landing.biz_restaurant_result_label'),
+  { id:'restaurant' as BizType,icon:'utensils',label:tc('landing.biz_restaurant_label'),priceLabel:tc('landing.biz_restaurant_price_label'),pricePh:'16.50',unitLabel:tc('landing.biz_restaurant_unit_label'),resultLabel:tc('landing.biz_restaurant_result_label'),
     fields:[{key:'a',label:tc('landing.biz_restaurant_field_a'),ph:'4.20'},{key:'b',label:tc('landing.biz_restaurant_field_b'),ph:'2.00'},{key:'c',label:tc('landing.biz_restaurant_field_c'),ph:'0.50'},{key:'d',label:tc('landing.biz_restaurant_field_d'),ph:'8',isPct:true}]},
-  { id:'cargo' as BizType,icon:'🚛',label:tc('landing.biz_cargo_label'),priceLabel:tc('landing.biz_cargo_price_label'),pricePh:'850',unitLabel:tc('landing.biz_cargo_unit_label'),resultLabel:tc('landing.biz_cargo_result_label'),
+  { id:'cargo' as BizType,icon:'truck',label:tc('landing.biz_cargo_label'),priceLabel:tc('landing.biz_cargo_price_label'),pricePh:'850',unitLabel:tc('landing.biz_cargo_unit_label'),resultLabel:tc('landing.biz_cargo_result_label'),
     fields:[{key:'a',label:tc('landing.biz_cargo_field_a'),ph:'180'},{key:'b',label:tc('landing.biz_cargo_field_b'),ph:'120'},{key:'c',label:tc('landing.biz_cargo_field_c'),ph:'45'},{key:'d',label:tc('landing.biz_cargo_field_d'),ph:'30'}]},
-  { id:'repair' as BizType,icon:'🔧',label:tc('landing.biz_repair_label'),priceLabel:tc('landing.biz_repair_price_label'),pricePh:'89.99',unitLabel:tc('landing.biz_repair_unit_label'),resultLabel:tc('landing.biz_repair_result_label'),
+  { id:'repair' as BizType,icon:'wrench',label:tc('landing.biz_repair_label'),priceLabel:tc('landing.biz_repair_price_label'),pricePh:'89.99',unitLabel:tc('landing.biz_repair_unit_label'),resultLabel:tc('landing.biz_repair_result_label'),
     fields:[{key:'a',label:tc('landing.biz_repair_field_a'),ph:'25.00'},{key:'b',label:tc('landing.biz_repair_field_b'),ph:'1.5'},{key:'c',label:tc('landing.biz_repair_field_c'),ph:'20'},{key:'d',label:tc('landing.biz_repair_field_d'),ph:'0'}]},
 ]
 
@@ -73,160 +118,57 @@ function Logo({size=12,color='white'}:{size?:number;color?:string}) {
   )
 }
 
-// ── Actual AskBiz "Ask" UI replica ────────────────────────────────────────────
-function AskUIReplica({tc}:{tc:(k:string)=>string}) {
-  const [typed, setTyped] = useState('')
-  const [phase, setPhase] = useState<'idle'|'typing'|'thinking'|'answer'>('idle')
-  const question = tc('landing.ask_question')
-
-  useEffect(() => {
-    const start = setTimeout(() => setPhase('typing'), 1200)
-    return () => clearTimeout(start)
-  }, [])
-
-  useEffect(() => {
-    if (phase === 'typing') {
-      if (typed.length < question.length) {
-        const t = setTimeout(() => setTyped(question.slice(0, typed.length + 1)), 52)
-        return () => clearTimeout(t)
-      } else {
-        const t = setTimeout(() => setPhase('thinking'), 600)
-        return () => clearTimeout(t)
-      }
-    }
-    if (phase === 'thinking') {
-      const t = setTimeout(() => setPhase('answer'), 1100)
-      return () => clearTimeout(t)
-    }
-    if (phase === 'answer') {
-      const t = setTimeout(() => { setPhase('idle'); setTyped('') }, 5000)
-      return () => clearTimeout(t)
-    }
-    if (phase === 'idle' && typed === '') {
-      const t = setTimeout(() => setPhase('typing'), 1500)
-      return () => clearTimeout(t)
-    }
-  }, [phase, typed])
-
+// ── Icon set ──────────────────────────────────────────────────────────────────
+// One consistent stroke style (lucide-inspired) instead of emoji — emoji render
+// differently (often poorly) on the budget Android devices most visitors use.
+const IC: Record<string, JSX.Element> = {
+  cart: <><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></>,
+  factory: <><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M17 18h1M12 18h1M7 18h1"/></>,
+  utensils: <><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></>,
+  truck: <><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35a1 1 0 0 0-.78-.38H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></>,
+  wrench: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>,
+  scissors: <><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="M14.47 14.48 20 20"/><path d="M8.12 8.12 12 12"/></>,
+  package: <><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.29 6.96 8.73 5.05 8.73-5.05"/><path d="M12 22.08V12"/></>,
+  zap: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>,
+  chart: <><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></>,
+  bulb: <><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></>,
+  clock: <><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></>,
+  bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></>,
+  trendup: <><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></>,
+  trenddown: <><path d="m22 17-8.5-8.5-5 5L2 7"/><path d="M16 17h6v-6"/></>,
+  phone: <><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></>,
+  search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></>,
+  target: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
+  megaphone: <><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></>,
+  coins: <><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></>,
+  bag: <><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></>,
+  tag: <><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/></>,
+  book: <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>,
+  card: <><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></>,
+  users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  star: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>,
+  undo: <><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></>,
+  clipboard: <><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></>,
+  gift: <><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></>,
+  user: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+  store: <><path d="m2 7 2-5h16l2 5"/><path d="M4 12v9h16v-9"/><path d="M2 7h20v2a3 3 0 0 1-3 3 3 3 0 0 1-3-2 3 3 0 0 1-6 0 3 3 0 0 1-3 2 3 3 0 0 1-3-3z"/></>,
+  map: <><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></>,
+  link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+  settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+  pin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>,
+  swap: <><path d="m8 3-4 4 4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></>,
+}
+function Ic({n,size=13,color='#8B7355',style}:{n:string;size?:number;color?:string;style?:CSSProperties}) {
+  if(n.startsWith('dot-')) return <span style={{width:size-3,height:size-3,borderRadius:'50%',background:n.slice(4),display:'inline-block',...style}}/>
   return (
-    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',maxWidth:700,width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
-      {/* App chrome */}
-      <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff'}}>
-        <div className="rep-hide-sm" style={{width:210,borderRight:'1px solid #F0F0F0',height:48,display:'flex',alignItems:'center',padding:'0 12px',gap:10,background:'#FAFAFA',flexShrink:0}}>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
-            <div style={{width:22,height:22,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={10}/></div>
-            <span style={{fontSize:12,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
-          </div>
-          <div style={{marginLeft:'auto',display:'flex',gap:6}}>
-            {[tc('landing.ask_nav_ask'),tc('landing.ask_nav_business'),tc('landing.ask_nav_pos')].map((t,i)=>(
-              <span key={t} style={{fontSize:9,fontWeight:i===0?700:400,color:i===0?'#C97A44':'#AAA',borderBottom:i===0?'1px solid #C97A44':'1px solid transparent',paddingBottom:1}}>{t}</span>
-            ))}
-          </div>
-        </div>
-        <div style={{flex:1,padding:'0 16px',fontSize:11,fontWeight:600,color:'#1A1410'}}>{tc('landing.ask_new_conversation')}</div>
-        <div className="rep-hide-sm" style={{display:'flex',gap:6,padding:'0 14px'}}>
-          {[tc('landing.ask_btn_run_scenario'),tc('landing.ask_btn_cfo_view'),tc('landing.ask_btn_upload')].map(btn=>(
-            <span key={btn} style={{fontSize:9,padding:'4px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>{btn}</span>
-          ))}
-        </div>
-      </div>
-      <div style={{display:'flex',minHeight:350}}>
-        {/* Left sidebar */}
-        <div className="rep-hide-sm" style={{width:210,borderRight:'1px solid #F0F0F0',padding:'10px 8px',background:'#FAFAFA',flexShrink:0,display:'flex',flexDirection:'column',gap:3}}>
-          <div style={{fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>{tc('landing.ask_quick_questions')}</div>
-          {[tc('landing.ask_q_top_sellers'),tc('landing.ask_q_margin_by_product'),tc('landing.ask_q_revenue_vs_last_week'),tc('landing.ask_q_stock_running_low')].map((q,i)=>(
-            <div key={i} style={{fontSize:9,padding:'5px 8px',borderRadius:5,color:'#666',cursor:'pointer',lineHeight:1.3}}>{q}</div>
-          ))}
-          <div style={{marginTop:6,fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>{tc('landing.ask_history')}</div>
-          {[tc('landing.ask_hist_0'),tc('landing.ask_hist_1'),tc('landing.ask_q_top_sellers')].map((h,i)=>(
-            <div key={i} style={{fontSize:8,padding:'4px 8px',borderRadius:5,color:'#999',cursor:'pointer',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h}</div>
-          ))}
-        </div>
-        {/* Main chat area */}
-        <div style={{flex:1,display:'flex',flexDirection:'column',background:'#fff'}}>
-          {phase === 'idle' && typed === '' ? (
-            <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px 28px',gap:14}}>
-              <div style={{width:38,height:38,borderRadius:10,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={16}/></div>
-              <div style={{textAlign:'center'}}>
-                <p style={{fontSize:15,fontWeight:700,color:'#1A1410',margin:'0 0 3px'}}>{tc('landing.ask_empty_title')}</p>
-                <p style={{fontSize:10,color:'#999',margin:0}}>{tc('landing.ask_empty_sub')}</p>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,width:'100%',maxWidth:380}}>
-                {[
-                  {icon:'💱',title:tc('landing.ask_card_currency_title'),sub:tc('landing.ask_card_currency_sub')},
-                  {icon:'🏭',title:tc('landing.ask_card_suppliers_title'),sub:tc('landing.ask_card_suppliers_sub')},
-                  {icon:'📦',title:tc('landing.ask_card_true_cost_title'),sub:tc('landing.ask_card_true_cost_sub')},
-                  {icon:'🌍',title:tc('landing.ask_card_markets_title'),sub:tc('landing.ask_card_markets_sub')},
-                ].map((card,i)=>(
-                  <div key={i} style={{padding:'9px 11px',borderRadius:8,border:'1px solid #F0F0F0',background:'#FAFAFA',cursor:'pointer'}}>
-                    <div style={{fontSize:15,marginBottom:3}}>{card.icon}</div>
-                    <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:1}}>{card.title}</div>
-                    <div style={{fontSize:9,color:'#AAA',lineHeight:1.3}}>{card.sub}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{width:'100%',maxWidth:380,padding:'8px 11px',borderRadius:8,border:'1px dashed #E5E5E5',background:'#FAFAFA',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-                <div>
-                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>{tc('landing.ask_connect_title')}</div>
-                  <div style={{fontSize:8,color:'#AAA'}}>{tc('landing.ask_connect_sub')}</div>
-                </div>
-                <span style={{fontSize:9,fontWeight:700,padding:'5px 9px',borderRadius:6,background:'#C97A44',color:'#fff',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>{tc('landing.ask_connect_btn')}</span>
-              </div>
-            </div>
-          ) : (
-            <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,padding:'18px 20px',overflowY:'auto'}}>
-              <div style={{display:'flex',justifyContent:'flex-end'}}>
-                <div style={{maxWidth:'78%',background:'#F4EFE8',border:'1px solid #E8DDD4',borderRadius:'12px 12px 3px 12px',padding:'9px 13px',fontSize:12,color:'#1A1410',lineHeight:1.5}}>
-                  {typed}
-                  {phase==='typing'&&<span style={{display:'inline-block',width:2,height:13,background:'#C97A44',marginLeft:2,verticalAlign:'middle',animation:'blink .9s infinite'}}/>}
-                </div>
-              </div>
-              {(phase==='thinking'||phase==='answer')&&(
-                <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-                  <div style={{width:24,height:24,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                    <Logo size={10}/>
-                  </div>
-                  {phase==='thinking' ? (
-                    <div style={{padding:'9px 12px',background:'#FAFAFA',border:'1px solid #F0F0F0',borderRadius:'3px 12px 12px 12px',display:'flex',gap:4,alignItems:'center'}}>
-                      {[0,160,320].map(d=>(
-                        <span key={d} style={{width:6,height:6,borderRadius:'50%',background:'#CCC',display:'block',animation:`tdot 1.2s infinite ${d}ms`}}/>
-                      ))}
-                    </div>
-                  ):(
-                    <div style={{flex:1}}>
-                      <div style={{padding:'10px 13px',background:'#FAFAFA',border:'1px solid #F0F0F0',borderRadius:'3px 12px 12px 12px',fontSize:12,lineHeight:1.7,color:'#1A1410',marginBottom:7}}>
-                        <strong>Wireless Earbuds Pro</strong> {tc('landing.ask_answer_main_a')} <strong style={{color:'#C97A44'}}>{tc('landing.ask_answer_main_b')}</strong>{tc('landing.ask_answer_main_c')}<br/>
-                        <span style={{color:'#888',fontSize:11}}>⚠ Ginger Powder {tc('landing.ask_answer_warn_a')}<span style={{color:'#dc2626',fontWeight:700}}>{tc('landing.ask_answer_warn_b')}</span>{tc('landing.ask_answer_warn_c')}</span>
-                      </div>
-                      <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                        {[tc('landing.ask_chip_margin'),tc('landing.ask_chip_week'),tc('landing.ask_chip_units')].map(chip=>(
-                          <span key={chip} style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)'}}>{chip}</span>
-                        ))}
-                        <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(220,38,38,.08)',color:'#dc2626',border:'1px solid rgba(220,38,38,.2)'}}>{tc('landing.ask_chip_ginger')}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          {/* Input */}
-          <div style={{borderTop:'1px solid #F0F0F0',padding:'9px 14px',display:'flex',alignItems:'center',gap:7,background:'#fff'}}>
-            <div style={{flex:1,border:'1px solid #E5E5E5',borderRadius:8,padding:'7px 11px',fontSize:11,color:'#CCC',background:'#FAFAFA'}}>
-              {phase==='typing'?typed:tc('landing.ask_input_placeholder')}
-            </div>
-            <div style={{width:26,height:26,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,...style}} aria-hidden="true">
+      {IC[n]||null}
+    </svg>
   )
 }
 
 // ── Monitor / Intelligence UI replica ─────────────────────────────────────────
-function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
+function MonitorUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   type MTab = 'overview'|'cfo'|'alerts'|'decisions'|'team'|'askai'|'ships'|'memory'|'market'
   const [tab, setTab] = useState<MTab>('overview')
   const [askQ, setAskQ] = useState('')
@@ -248,7 +190,7 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
           <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
           <span style={{marginLeft:'auto',fontSize:8,padding:'1px 5px',borderRadius:9999,background:'rgba(201,122,68,.1)',color:'#C97A44',fontWeight:700}}>{tc('landing.mon_badge')}</span>
         </div>
-        <div style={{display:'flex',overflowX:'auto',flex:1,scrollbarWidth:'none'}} className="pos-tabs">
+        <div style={{display:'flex',overflowX:'auto',flex:1,minWidth:0,scrollbarWidth:'none'}} className="pos-tabs">
           {TABS.map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)}
               style={{padding:'0 12px',height:42,fontSize:10,fontWeight:tab===t.id?700:400,color:tab===t.id?'#C97A44':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
@@ -277,9 +219,9 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
                 <div style={{fontSize:7,color:'#16a34a',fontWeight:600}}>{tc('landing.mon_health_delta')}</div>
               </div>
             </div>
-            {[{icon:'🚨',title:tc('landing.mon_active_alerts'),value:tc('landing.mon_active_alerts_value'),color:'#fb923c'},{icon:'📈',title:tc('landing.mon_30day_trend'),value:'▲ 34%',color:'#16a34a'}].map((c,i)=>(
+            {[{icon:'bell',title:tc('landing.mon_active_alerts'),value:tc('landing.mon_active_alerts_value'),color:'#fb923c'},{icon:'trendup',title:tc('landing.mon_30day_trend'),value:'▲ 34%',color:'#16a34a'}].map((c,i)=>(
               <div key={i} style={{padding:'11px 13px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
-                <div style={{fontSize:14,marginBottom:4}}>{c.icon}</div>
+                <div style={{marginBottom:4}}><Ic n={c.icon} size={14} color={c.color}/></div>
                 <div style={{fontSize:8,color:'#AAA',marginBottom:1}}>{c.title}</div>
                 <div style={{fontSize:11,fontWeight:700,color:c.color}}>{c.value}</div>
               </div>
@@ -287,7 +229,7 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
           </div>
           <div style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:7}}>
             <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-              <span style={{fontSize:10}}>⏰</span><span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.mon_daily_brief')}</span>
+              <Ic n="clock" size={11}/><span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.mon_daily_brief')}</span>
               <span style={{fontSize:8,color:'#AAA',marginLeft:'auto'}}>{tc('landing.mon_daily_brief_date')}</span>
             </div>
             <p style={{fontSize:9,color:'#555',lineHeight:1.6,margin:0}}>{tc('landing.mon_daily_brief_body_a')} <strong>34% {tc('landing.mon_daily_brief_body_up')}</strong> {tc('landing.mon_daily_brief_body_b')}</p>
@@ -307,7 +249,7 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
         <div style={{padding:'16px 18px'}}>
           <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>{tc('landing.mon_cfo_header')}</div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
-            {[{label:tc('landing.mon_cfo_revenue'),value:'£3,247',sub:tc('landing.mon_cfo_revenue_sub'),c:'#16a34a'},{label:tc('landing.mon_cfo_gross_profit'),value:'£1,109',sub:tc('landing.mon_cfo_gross_profit_sub'),c:'#C97A44'},{label:tc('landing.mon_cfo_net_margin'),value:'26.1%',sub:tc('landing.mon_cfo_net_margin_sub'),c:'#6366f1'}].map((k,i)=>(
+            {[{label:tc('landing.mon_cfo_revenue'),value:demo.pnl.rev,sub:tc('landing.mon_cfo_revenue_sub'),c:'#16a34a'},{label:tc('landing.mon_cfo_gross_profit'),value:demo.pnl.gross,sub:tc('landing.mon_cfo_gross_profit_sub'),c:'#C97A44'},{label:tc('landing.mon_cfo_net_margin'),value:'26.1%',sub:tc('landing.mon_cfo_net_margin_sub'),c:'#6366f1'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 11px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:8,color:'#AAA',marginBottom:3}}>{k.label}</div>
                 <div style={{fontSize:16,fontWeight:800,color:k.c,lineHeight:1}}>{k.value}</div>
@@ -317,7 +259,7 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
           </div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',overflow:'hidden',marginBottom:10}}>
             <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>{tc('landing.mon_pnl_summary')}</div>
-            {[{label:tc('landing.pnl_revenue'),value:'£3,247',indent:false},{label:tc('landing.pnl_cost_of_goods'),value:'−£2,138',indent:true,color:'#ef4444'},{label:tc('landing.pnl_gross_profit'),value:'£1,109',indent:false,bold:true,color:'#16a34a'},{label:tc('landing.pnl_operating_expenses'),value:'−£260',indent:true,color:'#ef4444'},{label:tc('landing.pnl_net_profit'),value:'£849',indent:false,bold:true,color:'#16a34a'}].map((r,i)=>(
+            {[{label:tc('landing.pnl_revenue'),value:demo.pnl.rev,indent:false},{label:tc('landing.pnl_cost_of_goods'),value:demo.pnl.cogs,indent:true,color:'#ef4444'},{label:tc('landing.pnl_gross_profit'),value:demo.pnl.gross,indent:false,bold:true,color:'#16a34a'},{label:tc('landing.pnl_operating_expenses'),value:demo.pnl.opex,indent:true,color:'#ef4444'},{label:tc('landing.pnl_net_profit'),value:demo.pnl.net,indent:false,bold:true,color:'#16a34a'}].map((r,i)=>(
               <div key={i} style={{display:'flex',justifyContent:'space-between',padding:`5px ${r.indent?'20px':'12px'} 5px 12px`,borderTop:i>0?'1px solid #F8F8F8':'none'}}>
                 <span style={{fontSize:9,color:r.bold?'#1A1410':'#666',fontWeight:r.bold?700:400}}>{r.label}</span>
                 <span style={{fontSize:9,fontWeight:r.bold?700:500,color:r.color||'#1A1410'}}>{r.value}</span>
@@ -340,14 +282,14 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
             <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(251,146,60,.1)',color:'#fb923c',fontWeight:700}}>{tc('landing.mon_alerts_unread')}</span>
           </div>
           {[
-            {sev:tc('landing.mon_sev_high'),icon:'📉',title:tc('landing.mon_alert_0_title'),body:tc('landing.mon_alert_0_body'),color:'#ef4444',bg:'rgba(239,68,68,.05)',time:tc('landing.mon_time_2h')},
-            {sev:tc('landing.mon_sev_high'),icon:'📦',title:tc('landing.mon_alert_1_title'),body:tc('landing.mon_alert_1_body'),color:'#ef4444',bg:'rgba(239,68,68,.05)',time:tc('landing.mon_time_4h')},
-            {sev:tc('landing.mon_sev_med'),icon:'📱',title:tc('landing.mon_alert_2_title'),body:tc('landing.mon_alert_2_body'),color:'#f59e0b',bg:'rgba(245,158,11,.04)',time:tc('landing.mon_time_yesterday')},
-            {sev:tc('landing.mon_sev_low'),icon:'🔍',title:tc('landing.mon_alert_3_title'),body:tc('landing.mon_alert_3_body'),color:'#6b7280',bg:'rgba(107,114,128,.04)',time:tc('landing.mon_time_2d')},
+            {sev:tc('landing.mon_sev_high'),icon:'trenddown',title:tc('landing.mon_alert_0_title'),body:tc('landing.mon_alert_0_body'),color:'#ef4444',bg:'rgba(239,68,68,.05)',time:tc('landing.mon_time_2h')},
+            {sev:tc('landing.mon_sev_high'),icon:'package',title:tc('landing.mon_alert_1_title'),body:tc('landing.mon_alert_1_body'),color:'#ef4444',bg:'rgba(239,68,68,.05)',time:tc('landing.mon_time_4h')},
+            {sev:tc('landing.mon_sev_med'),icon:'phone',title:tc('landing.mon_alert_2_title'),body:tc('landing.mon_alert_2_body'),color:'#f59e0b',bg:'rgba(245,158,11,.04)',time:tc('landing.mon_time_yesterday')},
+            {sev:tc('landing.mon_sev_low'),icon:'search',title:tc('landing.mon_alert_3_title'),body:tc('landing.mon_alert_3_body'),color:'#6b7280',bg:'rgba(107,114,128,.04)',time:tc('landing.mon_time_2d')},
           ].map((a,i)=>(
             <div key={i} style={{padding:'10px 12px',borderRadius:9,border:`1px solid ${a.color}22`,background:a.bg,marginBottom:7}}>
               <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:5}}>
-                <span style={{fontSize:12}}>{a.icon}</span>
+                <Ic n={a.icon} size={12} color={a.color}/>
                 <span style={{fontSize:9,fontWeight:700,color:'#1A1410',flex:1}}>{a.title}</span>
                 {pill(a.sev,a.color,`${a.color}18`)}
                 <span style={{fontSize:7,color:'#AAA'}}>{a.time}</span>
@@ -459,10 +401,10 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
             ))}
           </div>
           {[
-            {ref:'#UK-4421',item:'Wireless Earbuds Pro ×10',carrier:'Royal Mail',status:tc('landing.mon_ships_status_in_transit'),eta:tc('landing.mon_ships_eta_tomorrow'),color:'#6366f1'},
-            {ref:'#UK-4420',item:'USB Hub ×50',carrier:'DPD',status:tc('landing.mon_ships_status_delivered'),eta:`${tc('landing.mon_ships_eta_today')} 10:31`,color:'#16a34a'},
-            {ref:'#UK-4419',item:'Phone Stand ×25',carrier:'Hermes',status:tc('landing.mon_ships_status_delayed'),eta:tc('landing.mon_ships_eta_unknown'),color:'#ef4444'},
-            {ref:'#UK-4418',item:'Cable Kit ×100',carrier:'Royal Mail',status:tc('landing.mon_ships_status_in_transit'),eta:'Wed 18 Jun',color:'#6366f1'},
+            {ref:demo.ref(4421),item:'Wireless Earbuds Pro ×10',carrier:demo.carriers[0],status:tc('landing.mon_ships_status_in_transit'),eta:tc('landing.mon_ships_eta_tomorrow'),color:'#6366f1'},
+            {ref:demo.ref(4420),item:'USB Hub ×50',carrier:demo.carriers[1],status:tc('landing.mon_ships_status_delivered'),eta:`${tc('landing.mon_ships_eta_today')} 10:31`,color:'#16a34a'},
+            {ref:demo.ref(4419),item:'Phone Stand ×25',carrier:demo.carriers[2],status:tc('landing.mon_ships_status_delayed'),eta:tc('landing.mon_ships_eta_unknown'),color:'#ef4444'},
+            {ref:demo.ref(4418),item:'Cable Kit ×100',carrier:demo.carriers[3],status:tc('landing.mon_ships_status_in_transit'),eta:'Wed 18 Jun',color:'#6366f1'},
           ].map((s,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
               <span style={{fontSize:7,color:'#888',fontWeight:700,flexShrink:0,fontFamily:'monospace'}}>{s.ref}</span>
@@ -482,14 +424,14 @@ function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
           <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.mon_mem_header')}</div>
           <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>{tc('landing.mon_mem_sub')}</div>
           {[
-            {icon:'🏭',category:tc('landing.mon_mem_cat_suppliers'),fact:tc('landing.mon_mem_fact_suppliers')},
-            {icon:'📦',category:tc('landing.mon_mem_cat_products'),fact:tc('landing.mon_mem_fact_products')},
-            {icon:'🎯',category:tc('landing.mon_mem_cat_goals'),fact:tc('landing.mon_mem_fact_goals')},
-            {icon:'📣',category:tc('landing.mon_mem_cat_channels'),fact:tc('landing.mon_mem_fact_channels')},
-            {icon:'💸',category:tc('landing.mon_mem_cat_costs'),fact:tc('landing.mon_mem_fact_costs')},
+            {icon:'factory',category:tc('landing.mon_mem_cat_suppliers'),fact:tc('landing.mon_mem_fact_suppliers')},
+            {icon:'package',category:tc('landing.mon_mem_cat_products'),fact:tc('landing.mon_mem_fact_products')},
+            {icon:'target',category:tc('landing.mon_mem_cat_goals'),fact:tc('landing.mon_mem_fact_goals')},
+            {icon:'megaphone',category:tc('landing.mon_mem_cat_channels'),fact:tc('landing.mon_mem_fact_channels')},
+            {icon:'coins',category:tc('landing.mon_mem_cat_costs'),fact:tc('landing.mon_mem_fact_costs')},
           ].map((m,i)=>(
             <div key={i} style={{display:'flex',gap:9,padding:'9px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
-              <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>{m.icon}</div>
+              <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n={m.icon} size={13}/></div>
               <div>
                 <div style={{fontSize:8,fontWeight:700,color:'#C97A44',marginBottom:2}}>{m.category}</div>
                 <div style={{fontSize:8,color:'#555',lineHeight:1.5}}>{m.fact}</div>
@@ -563,28 +505,28 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
       <div style={{maxHeight:300,overflowY:'hidden'}}>
         {[
           {cat:tc('landing.src_cat_mobile_money'),items:[
-            {icon:'🟢',name:'M-Pesa',desc:tc('landing.src_desc_mpesa'),status:'connected'},
-            {icon:'🟡',name:'MTN Mobile Money',desc:tc('landing.src_desc_mtn'),status:'connect'},
-            {icon:'🔴',name:'Airtel Money',desc:tc('landing.src_desc_airtel'),status:'connect'},
+            {icon:'dot-#22c55e',name:'M-Pesa',desc:tc('landing.src_desc_mpesa'),status:'connected'},
+            {icon:'dot-#eab308',name:'MTN Mobile Money',desc:tc('landing.src_desc_mtn'),status:'connect'},
+            {icon:'dot-#ef4444',name:'Airtel Money',desc:tc('landing.src_desc_airtel'),status:'connect'},
           ]},
           {cat:tc('landing.src_cat_ecommerce'),items:[
-            {icon:'🛒',name:'Shopify',desc:tc('landing.src_desc_shopify'),status:'connect'},
-            {icon:'📦',name:'Amazon FBA',desc:tc('landing.src_desc_amazon'),status:'connect'},
-            {icon:'🛍️',name:'eBay Store',desc:tc('landing.src_desc_ebay'),status:'connected'},
-            {icon:'🧵',name:'Etsy',desc:tc('landing.src_desc_etsy'),status:'connect'},
-            {icon:'📱',name:'TikTok Shop',desc:tc('landing.src_desc_tiktok'),status:'connect'},
+            {icon:'cart',name:'Shopify',desc:tc('landing.src_desc_shopify'),status:'connect'},
+            {icon:'package',name:'Amazon FBA',desc:tc('landing.src_desc_amazon'),status:'connect'},
+            {icon:'bag',name:'eBay Store',desc:tc('landing.src_desc_ebay'),status:'connected'},
+            {icon:'tag',name:'Etsy',desc:tc('landing.src_desc_etsy'),status:'connect'},
+            {icon:'phone',name:'TikTok Shop',desc:tc('landing.src_desc_tiktok'),status:'connect'},
           ]},
           {cat:tc('landing.src_cat_accounting'),items:[
-            {icon:'📒',name:'QuickBooks',desc:tc('landing.src_desc_quickbooks'),status:'connect'},
-            {icon:'🔵',name:'Xero',desc:tc('landing.src_desc_xero'),status:'connect'},
-            {icon:'💳',name:'Stripe',desc:tc('landing.src_desc_stripe'),status:'connected'},
+            {icon:'book',name:'QuickBooks',desc:tc('landing.src_desc_quickbooks'),status:'connect'},
+            {icon:'dot-#3b82f6',name:'Xero',desc:tc('landing.src_desc_xero'),status:'connect'},
+            {icon:'card',name:'Stripe',desc:tc('landing.src_desc_stripe'),status:'connected'},
           ]},
         ].map(section=>(
           <div key={section.cat}>
             <div style={{padding:'7px 18px 3px',fontSize:8,fontWeight:700,color:'#BBB',letterSpacing:'.1em',background:'#FAFAFA'}}>{section.cat}</div>
             {section.items.map((item,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 18px',borderTop:'1px solid #F5F5F5',background:item.status==='connected'?'rgba(34,197,94,.03)':'#fff'}}>
-                <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>{item.icon}</div>
+                <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n={item.icon} size={13}/></div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>{item.name}</div>
                   <div style={{fontSize:8,color:'#AAA',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.desc}</div>
@@ -601,9 +543,8 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
   )
 }
 
-// ── PoS Register UI replica ───────────────────────────────────────────────────
-// ── PoS full tabbed showcase ──────────────────────────────────────────────────
-function PosShowcase({tc}:{tc:(k:string)=>string}) {
+// ── POS full tabbed showcase ──────────────────────────────────────────────────
+function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   type TabId = 'overview'|'operations'|'staff'|'branches'|'map'|'audit'|'payments'|'logistics'
   const [tab, setTab] = useState<TabId>('overview')
   const TABS:{id:TabId;label:string}[] = [
@@ -653,7 +594,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           {/* Top row: 4 KPI cards */}
           <div className="rep-4col" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
             {[
-              {label:tc('landing.pos_kpi_revenue'),value:'£3,247',sub:tc('landing.pos_kpi_vs_prev_up34'),color:'#16a34a'},
+              {label:tc('landing.pos_kpi_revenue'),value:demo.pnl.rev,sub:tc('landing.pos_kpi_vs_prev_up34'),color:'#16a34a'},
               {label:tc('landing.pos_kpi_sales'),value:'143',sub:tc('landing.pos_kpi_vs_prev_up12'),color:'#16a34a'},
               {label:tc('landing.pos_kpi_refunds'),value:'3',sub:tc('landing.pos_kpi_vs_prev_down2'),color:'#f87171'},
               {label:tc('landing.pos_kpi_low_stock'),value:'42',sub:tc('landing.pos_kpi_products'),color:'#fb923c'},
@@ -668,9 +609,9 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           {/* Second row: 3 cards */}
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
             {[
-              {label:tc('landing.pos_kpi_gross_profit'),value:'£1,109',color:'#16a34a'},
+              {label:tc('landing.pos_kpi_gross_profit'),value:demo.pnl.gross,color:'#16a34a'},
               {label:tc('landing.pos_kpi_margin'),value:'34.2%',color:'#C97A44'},
-              {label:tc('landing.pos_kpi_avg_sale'),value:'£22.71',color:'#1A1410'},
+              {label:tc('landing.pos_kpi_avg_sale'),value:demo.pnl.avg,color:'#1A1410'},
             ].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
@@ -687,7 +628,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           {/* Staff performance */}
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'10px 12px'}}>
             <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:8}}>{tc('landing.pos_staff_perf')} <span style={{color:'#C97A44',fontWeight:400,cursor:'pointer'}}>{tc('landing.pos_view_all')}</span></div>
-            {[{name:'Phidisia',role:tc('landing.pos_role_cashier_retail'),sales:'KSh 1.8K',tx:6},{name:'James',role:tc('landing.pos_role_inventory_retail'),sales:'KSh 480',tx:2}].map((s,i)=>(
+            {[{name:'Phidisia',role:tc('landing.pos_role_cashier_retail'),sales:demo.compact(11),tx:6},{name:'James',role:tc('landing.pos_role_inventory_retail'),sales:demo.compact(2.9),tx:2}].map((s,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'6px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
                 <div style={{width:24,height:24,borderRadius:'50%',background:'#F0F0F0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#555',flexShrink:0}}>{s.name[0]}</div>
                 <div style={{flex:1}}>
@@ -708,9 +649,9 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
         <div style={{padding:'14px 18px'}}>
           {/* Sector tabs */}
           <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
-            {[{icon:'🍽️',label:tc('landing.pos_sector_restaurant')},{icon:'🔧',label:tc('landing.pos_sector_repair')},{icon:'💈',label:tc('landing.pos_sector_salon')},{icon:'📦',label:tc('landing.pos_sector_retail'),active:true},{icon:'🏭',label:tc('landing.pos_sector_factory')},{icon:'🚛',label:tc('landing.pos_sector_logistics')}].map(s=>(
+            {[{icon:'utensils',label:tc('landing.pos_sector_restaurant')},{icon:'wrench',label:tc('landing.pos_sector_repair')},{icon:'scissors',label:tc('landing.pos_sector_salon')},{icon:'package',label:tc('landing.pos_sector_retail'),active:true},{icon:'factory',label:tc('landing.pos_sector_factory')},{icon:'truck',label:tc('landing.pos_sector_logistics')}].map(s=>(
               <span key={s.label} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${s.active?'#C97A44':'#E5E5E5'}`,background:s.active?'rgba(201,122,68,.08)':'#fff',color:s.active?'#C97A44':'#888',cursor:'pointer',fontWeight:s.active?700:400,display:'flex',alignItems:'center',gap:3}}>
-                <span>{s.icon}</span>{s.label}
+                <Ic n={s.icon} size={10} color="currentColor"/>{s.label}
               </span>
             ))}
           </div>
@@ -718,25 +659,25 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>{tc('landing.pos_ops_sub')}</div>
           <div className="rep-5col" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:7}}>
             {[
-              {icon:'📦',label:tc('landing.pos_mod_inventory'),desc:tc('landing.pos_mod_inventory_desc'),badge:'37',bdgColor:'#ef4444'},
-              {icon:'🛒',label:tc('landing.pos_mod_sales'),desc:tc('landing.pos_mod_sales_desc')},
-              {icon:'👥',label:tc('landing.pos_mod_customers'),desc:tc('landing.pos_mod_customers_desc')},
-              {icon:'🏷️',label:tc('landing.pos_mod_promotions'),desc:tc('landing.pos_mod_promotions_desc')},
-              {icon:'⭐',label:tc('landing.pos_mod_loyalty'),desc:tc('landing.pos_mod_loyalty_desc')},
-              {icon:'↩️',label:tc('landing.pos_mod_returns'),desc:tc('landing.pos_mod_returns_desc')},
-              {icon:'📊',label:tc('landing.pos_mod_reports'),desc:tc('landing.pos_mod_reports_desc')},
-              {icon:'📋',label:tc('landing.pos_mod_purchase_orders'),desc:tc('landing.pos_mod_purchase_orders_desc'),soon:true},
-              {icon:'🎁',label:tc('landing.pos_mod_gift_cards'),desc:tc('landing.pos_mod_gift_cards_desc'),soon:true},
-              {icon:'👤',label:tc('landing.pos_mod_staff'),desc:tc('landing.pos_mod_staff_desc')},
-              {icon:'🏪',label:tc('landing.pos_mod_branches'),desc:tc('landing.pos_mod_branches_desc')},
-              {icon:'🗺️',label:tc('landing.pos_mod_map'),desc:tc('landing.pos_mod_map_desc')},
-              {icon:'🔗',label:tc('landing.pos_mod_integrations'),desc:tc('landing.pos_mod_integrations_desc')},
-              {icon:'🔍',label:tc('landing.pos_mod_audit'),desc:tc('landing.pos_mod_audit_desc')},
+              {icon:'package',label:tc('landing.pos_mod_inventory'),desc:tc('landing.pos_mod_inventory_desc'),badge:'37',bdgColor:'#ef4444'},
+              {icon:'cart',label:tc('landing.pos_mod_sales'),desc:tc('landing.pos_mod_sales_desc')},
+              {icon:'users',label:tc('landing.pos_mod_customers'),desc:tc('landing.pos_mod_customers_desc')},
+              {icon:'tag',label:tc('landing.pos_mod_promotions'),desc:tc('landing.pos_mod_promotions_desc')},
+              {icon:'star',label:tc('landing.pos_mod_loyalty'),desc:tc('landing.pos_mod_loyalty_desc')},
+              {icon:'undo',label:tc('landing.pos_mod_returns'),desc:tc('landing.pos_mod_returns_desc')},
+              {icon:'chart',label:tc('landing.pos_mod_reports'),desc:tc('landing.pos_mod_reports_desc')},
+              {icon:'clipboard',label:tc('landing.pos_mod_purchase_orders'),desc:tc('landing.pos_mod_purchase_orders_desc'),soon:true},
+              {icon:'gift',label:tc('landing.pos_mod_gift_cards'),desc:tc('landing.pos_mod_gift_cards_desc'),soon:true},
+              {icon:'user',label:tc('landing.pos_mod_staff'),desc:tc('landing.pos_mod_staff_desc')},
+              {icon:'store',label:tc('landing.pos_mod_branches'),desc:tc('landing.pos_mod_branches_desc')},
+              {icon:'map',label:tc('landing.pos_mod_map'),desc:tc('landing.pos_mod_map_desc')},
+              {icon:'link',label:tc('landing.pos_mod_integrations'),desc:tc('landing.pos_mod_integrations_desc')},
+              {icon:'search',label:tc('landing.pos_mod_audit'),desc:tc('landing.pos_mod_audit_desc')},
             ].map((m,i)=>(
               <div key={i} style={{padding:'10px 10px',borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',cursor:'pointer',position:'relative'}}>
                 {m.badge&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#ef4444',color:'#fff',borderRadius:9999,padding:'1px 5px'}}>{m.badge}</span>}
                 {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>{tc('landing.pos_soon')}</span>}
-                <div style={{fontSize:16,marginBottom:5}}>{m.icon}</div>
+                <div style={{marginBottom:6}}><Ic n={m.icon} size={15}/></div>
                 <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:2}}>{m.label}</div>
                 <div style={{fontSize:7,color:'#AAA',lineHeight:1.3}}>{m.desc}</div>
               </div>
@@ -788,7 +729,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
             ].map((p,i)=>(
               <div key={i} style={{padding:'10px 13px',borderRadius:9,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',gap:9}}>
                 <div style={{width:28,height:28,borderRadius:6,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>
-                  {i===0?'💳':'💜'}
+                  <Ic n="card" size={14} color={p.color}/>
                 </div>
                 <div style={{flex:1}}>
                   <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:2}}>
@@ -806,7 +747,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
             <span style={{fontSize:8,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_received_summary')}</span>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7,marginBottom:12}}>
-            {[{label:tc('landing.pos_pay_stat_received'),value:'6',sub:tc('landing.pos_pay_stat_payments')},{label:tc('landing.pos_pay_stat_total'),value:'KSh 2.0K',sub:tc('landing.pos_pay_stat_collected')},{label:tc('landing.pos_pay_stat_avg'),value:'KSh 337',sub:tc('landing.pos_pay_stat_per_payment')}].map((k,i)=>(
+            {[{label:tc('landing.pos_pay_stat_received'),value:'6',sub:tc('landing.pos_pay_stat_payments')},{label:tc('landing.pos_pay_stat_total'),value:demo.compact(12.2),sub:tc('landing.pos_pay_stat_collected')},{label:tc('landing.pos_pay_stat_avg'),value:demo.compact(2.04),sub:tc('landing.pos_pay_stat_per_payment')}].map((k,i)=>(
               <div key={i} style={{padding:'8px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{fontSize:7,color:'#AAA',letterSpacing:'.08em',marginBottom:3}}>{k.label}</div>
                 <div style={{fontSize:13,fontWeight:800,color:'#16a34a'}}>{k.value}</div>
@@ -815,12 +756,12 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
             ))}
           </div>
           {[
-            {name:'+254722173771',method:`Mpesa · paystack`,time:tc('landing.pos_pay_time_17h'),ref:'#6255025614',amount:'KSh 1.8K'},
-            {name:tc('landing.pos_pay_customer'),method:`${tc('landing.pos_pay_method_card')} · stripe`,time:tc('landing.pos_pay_time_3d'),ref:'',amount:'KSh 100'},
-            {name:'+254713826241',method:`Mpesa · paystack`,time:tc('landing.pos_pay_time_5d'),ref:'#6237054796',amount:'KSh 24'},
+            {name:'+254722173771',method:`M-Pesa · paystack`,time:tc('landing.pos_pay_time_17h'),ref:'#6255025614',amount:demo.compact(11)},
+            {name:tc('landing.pos_pay_customer'),method:`${tc('landing.pos_pay_method_card')} · stripe`,time:tc('landing.pos_pay_time_3d'),ref:'',amount:demo.compact(0.61)},
+            {name:'+254713826241',method:`M-Pesa · paystack`,time:tc('landing.pos_pay_time_5d'),ref:'#6237054796',amount:demo.compact(0.15)},
           ].map((t,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:'1px solid #F5F5F5'}}>
-              <div style={{width:22,height:22,borderRadius:5,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0}}>📱</div>
+              <div style={{width:22,height:22,borderRadius:5,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n="phone" size={11}/></div>
               <div style={{flex:1}}>
                 <div style={{fontSize:10,fontWeight:600,color:'#1A1410'}}>{t.name}</div>
                 <div style={{fontSize:8,color:'#AAA'}}>{t.method} · {t.time}{t.ref?` · ${t.ref}`:''}</div>
@@ -836,7 +777,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
               <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_recovery')}</span>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0}}>
-              {[{label:tc('landing.pos_pay_rec_failed'),value:'0',sub:'KSh 0',color:'#ef4444'},{label:tc('landing.pos_pay_rec_recovered'),value:'0',sub:'KSh 0',color:'#16a34a'},{label:tc('landing.pos_pay_rec_rate'),value:'0%',sub:tc('landing.pos_pay_rec_rate_sub'),color:'#888'},{label:tc('landing.pos_pay_rec_pending'),value:'0',sub:tc('landing.pos_pay_rec_pending_sub'),color:'#f59e0b'}].map((k,i)=>(
+              {[{label:tc('landing.pos_pay_rec_failed'),value:'0',sub:demo.compact(0),color:'#ef4444'},{label:tc('landing.pos_pay_rec_recovered'),value:'0',sub:demo.compact(0),color:'#16a34a'},{label:tc('landing.pos_pay_rec_rate'),value:'0%',sub:tc('landing.pos_pay_rec_rate_sub'),color:'#888'},{label:tc('landing.pos_pay_rec_pending'),value:'0',sub:tc('landing.pos_pay_rec_pending_sub'),color:'#f59e0b'}].map((k,i)=>(
                 <div key={i} style={{padding:'10px 0',textAlign:'center',borderRight:i<3?'1px solid #F5F5F5':'none'}}>
                   <div style={{fontSize:7,color:'#AAA',letterSpacing:'.06em',marginBottom:4}}>{k.label}</div>
                   <div style={{fontSize:16,fontWeight:800,color:k.color}}>{k.value}</div>
@@ -870,7 +811,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           </div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'12px 14px',marginBottom:8}}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
-              <div style={{width:32,height:32,borderRadius:7,background:'rgba(201,122,68,.08)',border:'1px solid rgba(201,122,68,.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>🏪</div>
+              <div style={{width:32,height:32,borderRadius:7,background:'rgba(201,122,68,.08)',border:'1px solid rgba(201,122,68,.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n="store" size={15} color="#C97A44"/></div>
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
                   <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>Town Branch</span>
@@ -880,12 +821,12 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
                 <div style={{fontSize:9,color:'#AAA'}}>Nairobi, Kenya · {tc('landing.pos_branch_meta')}</div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div style={{fontSize:11,fontWeight:700,color:'#16a34a'}}>KSh 2.0K</div>
+                <div style={{fontSize:11,fontWeight:700,color:'#16a34a'}}>{demo.compact(12.2)}</div>
                 <div style={{fontSize:8,color:'#AAA'}}>{tc('landing.pos_branch_revenue_today')}</div>
               </div>
             </div>
             <div style={{marginTop:10,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
-              {[{label:tc('landing.pos_branch_sales_today'),value:'6'},{label:tc('landing.pos_branch_low_stock'),value:'37',color:'#ef4444'},{label:tc('landing.pos_branch_avg_sale'),value:'KSh 337'}].map((s,i)=>(
+              {[{label:tc('landing.pos_branch_sales_today'),value:'6'},{label:tc('landing.pos_branch_low_stock'),value:'37',color:'#ef4444'},{label:tc('landing.pos_branch_avg_sale'),value:demo.compact(2.04)}].map((s,i)=>(
                 <div key={i} style={{padding:'6px 8px',background:'#FAFAFA',borderRadius:6,textAlign:'center'}}>
                   <div style={{fontSize:7,color:'#AAA',marginBottom:2}}>{s.label}</div>
                   <div style={{fontSize:11,fontWeight:700,color:s.color||'#1A1410'}}>{s.value}</div>
@@ -925,7 +866,7 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
             {/* Branch pin */}
             <div style={{position:'absolute',top:'45%',left:'52%',transform:'translate(-50%,-100%)'}}>
               <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:'#C97A44',border:'2px solid #fff',boxShadow:'0 2px 8px rgba(0,0,0,.2)',transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <div style={{transform:'rotate(45deg)',fontSize:12}}>🏪</div>
+                <div style={{transform:'rotate(45deg)',display:'flex'}}><Ic n="store" size={11} color="#fff"/></div>
               </div>
             </div>
             {/* Tooltip */}
@@ -953,15 +894,15 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
             </div>
           </div>
           {[
-            {icon:'🛒',action:tc('landing.pos_audit_0_action'),detail:tc('landing.pos_audit_0_detail'),user:'Phidisia',time:'10:41 AM',branch:'Town'},
-            {icon:'📦',action:tc('landing.pos_audit_1_action'),detail:tc('landing.pos_audit_1_detail'),user:'James',time:'9:15 AM',branch:'Town'},
-            {icon:'🛒',action:tc('landing.pos_audit_0_action'),detail:tc('landing.pos_audit_2_detail'),user:'Phidisia',time:'9:02 AM',branch:'Town'},
-            {icon:'↩️',action:tc('landing.pos_audit_3_action'),detail:tc('landing.pos_audit_3_detail'),user:'Phidisia',time:'8:47 AM',branch:'Town'},
-            {icon:'👤',action:tc('landing.pos_audit_4_action'),detail:tc('landing.pos_audit_4_detail'),user:tc('landing.pos_audit_user_system'),time:'8:30 AM',branch:'Town'},
-            {icon:'⚙️',action:tc('landing.pos_audit_5_action'),detail:tc('landing.pos_audit_5_detail'),user:tc('landing.pos_audit_user_admin'),time:tc('landing.pos_audit_time_yesterday'),branch:'Town'},
+            {icon:'cart',action:tc('landing.pos_audit_0_action'),detail:tc('landing.pos_audit_0_detail'),user:'Phidisia',time:'10:41 AM',branch:'Town'},
+            {icon:'package',action:tc('landing.pos_audit_1_action'),detail:tc('landing.pos_audit_1_detail'),user:'James',time:'9:15 AM',branch:'Town'},
+            {icon:'cart',action:tc('landing.pos_audit_0_action'),detail:tc('landing.pos_audit_2_detail'),user:'Phidisia',time:'9:02 AM',branch:'Town'},
+            {icon:'undo',action:tc('landing.pos_audit_3_action'),detail:tc('landing.pos_audit_3_detail'),user:'Phidisia',time:'8:47 AM',branch:'Town'},
+            {icon:'user',action:tc('landing.pos_audit_4_action'),detail:tc('landing.pos_audit_4_detail'),user:tc('landing.pos_audit_user_system'),time:'8:30 AM',branch:'Town'},
+            {icon:'settings',action:tc('landing.pos_audit_5_action'),detail:tc('landing.pos_audit_5_detail'),user:tc('landing.pos_audit_user_admin'),time:tc('landing.pos_audit_time_yesterday'),branch:'Town'},
           ].map((e,i)=>(
             <div key={i} style={{display:'flex',alignItems:'flex-start',gap:9,padding:'8px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
-              <div style={{width:24,height:24,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0,marginTop:1}}>{e.icon}</div>
+              <div style={{width:24,height:24,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}><Ic n={e.icon} size={12}/></div>
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:1}}>
                   <span style={{fontSize:10,fontWeight:600,color:'#1A1410'}}>{e.action}</span>
@@ -980,12 +921,12 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
 
       {tab==='logistics' && (
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>🚛 {tc('landing.pos_log_header')}</div>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3,display:'flex',alignItems:'center',gap:5}}><Ic n="truck" size={12}/>{tc('landing.pos_log_header')}</div>
           <div style={{fontSize:9,color:'#AAA',marginBottom:14}}>{tc('landing.pos_log_sub')}</div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
-            {[{label:tc('landing.pos_log_active_deliveries'),value:'0',icon:'🚛',color:'#C97A44'},{label:tc('landing.pos_log_pending_pos'),value:'0',icon:'📋',color:'#6366f1'},{label:tc('landing.pos_log_stock_transfers'),value:'0',icon:'↔️',color:'#16a34a'}].map((k,i)=>(
+            {[{label:tc('landing.pos_log_active_deliveries'),value:'0',icon:'truck',color:'#C97A44'},{label:tc('landing.pos_log_pending_pos'),value:'0',icon:'clipboard',color:'#6366f1'},{label:tc('landing.pos_log_stock_transfers'),value:'0',icon:'swap',color:'#16a34a'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',textAlign:'center'}}>
-                <div style={{fontSize:18,marginBottom:4}}>{k.icon}</div>
+                <div style={{marginBottom:5,display:'flex',justifyContent:'center'}}><Ic n={k.icon} size={16} color={k.color}/></div>
                 <div style={{fontSize:16,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
                 <div style={{fontSize:8,color:'#AAA'}}>{k.label}</div>
               </div>
@@ -993,14 +934,14 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
             {[
-              {icon:'📋',title:tc('landing.pos_log_po_title'),desc:tc('landing.pos_log_po_desc'),badge:tc('landing.pos_soon')},
-              {icon:'↔️',title:tc('landing.pos_log_transfers_title'),desc:tc('landing.pos_log_transfers_desc'),badge:tc('landing.pos_soon')},
-              {icon:'🚛',title:tc('landing.pos_log_delivery_title'),desc:tc('landing.pos_log_delivery_desc'),badge:tc('landing.pos_soon')},
-              {icon:'📍',title:tc('landing.pos_log_driver_title'),desc:tc('landing.pos_log_driver_desc'),badge:tc('landing.pos_soon')},
+              {icon:'clipboard',title:tc('landing.pos_log_po_title'),desc:tc('landing.pos_log_po_desc'),badge:tc('landing.pos_soon')},
+              {icon:'swap',title:tc('landing.pos_log_transfers_title'),desc:tc('landing.pos_log_transfers_desc'),badge:tc('landing.pos_soon')},
+              {icon:'truck',title:tc('landing.pos_log_delivery_title'),desc:tc('landing.pos_log_delivery_desc'),badge:tc('landing.pos_soon')},
+              {icon:'pin',title:tc('landing.pos_log_driver_title'),desc:tc('landing.pos_log_driver_desc'),badge:tc('landing.pos_soon')},
             ].map((m,i)=>(
               <div key={i} style={{padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',position:'relative'}}>
                 <span style={{position:'absolute',top:8,right:8,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 6px'}}>{m.badge}</span>
-                <div style={{fontSize:18,marginBottom:6}}>{m.icon}</div>
+                <div style={{marginBottom:7}}><Ic n={m.icon} size={16}/></div>
                 <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>{m.title}</div>
                 <div style={{fontSize:8,color:'#AAA',lineHeight:1.4}}>{m.desc}</div>
               </div>
@@ -1008,83 +949,6 @@ function PosShowcase({tc}:{tc:(k:string)=>string}) {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function PosUIReplica({tc}:{tc:(k:string)=>string}) {
-  return (
-    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
-      <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff',padding:'9px 14px',gap:7,overflowX:'auto'}}>
-        {[tc('landing.posui_tab_register'),tc('landing.posui_tab_inventory'),tc('landing.posui_tab_shifts'),tc('landing.posui_tab_reports'),tc('landing.posui_tab_customers'),tc('landing.posui_tab_settings')].map((tab,i)=>(
-          <span key={tab} style={{fontSize:9,fontWeight:i===0?700:400,color:i===0?'#C97A44':'#AAA',padding:'3px 9px',borderRadius:5,background:i===0?'rgba(201,122,68,.08)':'transparent',whiteSpace:'nowrap',cursor:'pointer',border:i===0?'1px solid rgba(201,122,68,.2)':'1px solid transparent'}}>{tab}</span>
-        ))}
-        <span style={{marginLeft:'auto',fontSize:8,padding:'3px 8px',borderRadius:5,background:'rgba(34,197,94,.08)',color:'#16a34a',fontWeight:700,border:'1px solid rgba(34,197,94,.2)',flexShrink:0}}>● {tc('landing.posui_open')}</span>
-      </div>
-      <div className="rep-split" style={{display:'grid',gridTemplateColumns:'1.15fr 1fr',minHeight:320}}>
-        {/* Left: basket */}
-        <div style={{padding:'12px 14px',borderRight:'1px solid #F0F0F0',display:'flex',flexDirection:'column',gap:7,background:'#fff'}}>
-          <div style={{display:'flex',gap:5,marginBottom:2}}>
-            <div style={{flex:1,display:'flex',alignItems:'center',gap:5,padding:'6px 9px',borderRadius:6,border:'1px solid #E5E5E5',background:'#FAFAFA'}}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#CCC" strokeWidth="2"><rect x="3" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><path d="M7 3h8M3 7v2M21 7v2M7 21h4M15 21h2M21 17v2M15 15h6v6"/></svg>
-              <span style={{fontSize:9,color:'#CCC'}}>{tc('landing.pos_scan_placeholder')}</span>
-            </div>
-            <div style={{width:28,height:28,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
-              <span style={{fontSize:12}}>📷</span>
-            </div>
-          </div>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>{tc('landing.posui_current_sale')}</div>
-          {[
-            {name:'Wireless Earbuds Pro',sku:'SKU-0041',qty:2,price:'£24.99',margin:'34.2%'},
-            {name:'Phone Case (Black)',sku:'SKU-0198',qty:1,price:'£8.50',margin:'28.7%'},
-            {name:'USB-C Cable 2m',sku:'SKU-0072',qty:3,price:'£6.99',margin:'41.0%'},
-          ].map((item,i)=>(
-            <div key={i} style={{display:'flex',alignItems:'center',gap:7,padding:'7px 9px',background:'#FAFAFA',borderRadius:7,border:'1px solid #F0F0F0'}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:9,fontWeight:600,color:'#1A1410',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</div>
-                <div style={{fontSize:7,color:'#CCC'}}>{item.sku} · {tc('landing.posui_qty')}: {item.qty}</div>
-              </div>
-              <div style={{textAlign:'right',flexShrink:0}}>
-                <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{item.price}</div>
-                <div style={{fontSize:7,color:'#16a34a',fontWeight:600}}>▲ {item.margin}</div>
-              </div>
-            </div>
-          ))}
-          {/* AI nudge */}
-          <div style={{padding:'7px 9px',borderRadius:7,background:'rgba(201,122,68,.06)',border:'1px solid rgba(201,122,68,.18)',display:'flex',gap:6,alignItems:'flex-start'}}>
-            <span style={{fontSize:10,flexShrink:0}}>💡</span>
-            <p style={{fontSize:8,color:'#7B4C20',margin:0,lineHeight:1.4}}>{tc('landing.posui_nudge')}</p>
-          </div>
-          <div style={{marginTop:'auto',borderTop:'1px solid #F0F0F0',paddingTop:8}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:3}}><span>{tc('landing.posui_subtotal')}</span><span>£64.46</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:6}}><span>{tc('landing.posui_vat')}</span><span>£12.89</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:800,color:'#1A1410'}}><span>{tc('landing.posui_total')}</span><span style={{color:'#C97A44'}}>£77.35</span></div>
-          </div>
-        </div>
-        {/* Right: payment */}
-        <div style={{padding:'12px 14px',display:'flex',flexDirection:'column',gap:7,background:'#FAFAFA'}}>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>{tc('landing.posui_payment')}</div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5}}>
-            {[{label:tc('landing.posui_pay_card'),icon:'💳',active:true},{label:tc('landing.posui_pay_cash'),icon:'💵',active:false},{label:tc('landing.posui_pay_mobile'),icon:'📱',active:false},{label:tc('landing.posui_pay_split'),icon:'⚡',active:false}].map((m,i)=>(
-              <div key={i} style={{padding:'7px 5px',borderRadius:7,border:`1px solid ${m.active?'rgba(201,122,68,.3)':'#E5E5E5'}`,background:m.active?'rgba(201,122,68,.06)':'#fff',textAlign:'center',cursor:'pointer'}}>
-                <div style={{fontSize:13,marginBottom:2}}>{m.icon}</div>
-                <div style={{fontSize:8,fontWeight:600,color:m.active?'#C97A44':'#AAA'}}>{m.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4,flex:1}}>
-            {['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map((k)=>(
-              <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'center',borderRadius:6,background:k==='✓'?'#C97A44':'#fff',border:`1px solid ${k==='✓'?'#C97A44':'#E5E5E5'}`,height:30,fontSize:k==='✓'?13:12,fontWeight:700,color:k==='✓'?'#fff':'#1A1410',cursor:'pointer'}}>
-                {k}
-              </div>
-            ))}
-          </div>
-          <div style={{padding:'11px',borderRadius:9,background:'#C97A44',color:'#fff',textAlign:'center',fontWeight:700,fontSize:12,cursor:'pointer'}}>
-            {tc('landing.posui_charge')} £77.35
-          </div>
-          <div style={{textAlign:'center',fontSize:8,color:'#AAA'}}>{tc('landing.posui_receipt_options')}</div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -1120,11 +984,18 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
 }
 
 // ── Calculator ────────────────────────────────────────────────────────────────
-function MiniCalcWidget({tc,lang}:{tc:(k:string)=>string;lang:Locale}) {
+function MiniCalcWidget({tc,lang,initialCurrency}:{tc:(k:string)=>string;lang:Locale;initialCurrency?:string}) {
   const BIZ_TYPES = buildBizTypes(tc)
   const [mode,setMode] = useState<'margin'|'industry'>('margin')
   const [biz,setBiz] = useState<BizType>('retail')
-  const [cur,setCur] = useState(0)
+  const [cur,setCur] = useState(()=>Math.max(0,CURRENCIES.findIndex(c=>c.code===initialCurrency)))
+  const curTouched = useRef(false)
+  useEffect(()=>{
+    // geo can resolve after mount (client fetch fallback) — follow it until the user picks
+    if(curTouched.current) return
+    const i = CURRENCIES.findIndex(c=>c.code===initialCurrency)
+    if(i>=0) setCur(i)
+  },[initialCurrency])
   const [showCur,setShowCur] = useState(false)
   const sym = CURRENCIES[cur].symbol
   const ref = useRef<HTMLDivElement>(null)
@@ -1167,7 +1038,7 @@ function MiniCalcWidget({tc,lang}:{tc:(k:string)=>string;lang:Locale}) {
           {showCur&&(
             <div style={{position:'absolute',top:'100%',right:0,marginTop:4,background:T.card,borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,.18)',zIndex:500,padding:8,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:3,minWidth:180,border:`1px solid ${T.bd}`}}>
               {CURRENCIES.map((c,i)=>(
-                <button key={c.code} onClick={()=>{setCur(i);setShowCur(false)}}
+                <button key={c.code} onClick={()=>{curTouched.current=true;setCur(i);setShowCur(false)}}
                   style={{padding:'5px 7px',fontSize:10,fontWeight:cur===i?700:500,fontFamily:'inherit',background:cur===i?T.acc:'transparent',color:cur===i?'#fff':T.tx2,border:'none',borderRadius:6,cursor:'pointer',textAlign:'center'}}>
                   {c.symbol} {c.code}
                 </button>
@@ -1181,7 +1052,7 @@ function MiniCalcWidget({tc,lang}:{tc:(k:string)=>string;lang:Locale}) {
           {BIZ_TYPES.map(b=>(
             <button key={b.id} onClick={()=>switchBiz(b.id)}
               style={{padding:'4px 10px',fontSize:11,fontWeight:biz===b.id?700:500,fontFamily:'inherit',background:biz===b.id?T.accBg:'transparent',color:biz===b.id?T.acc:T.tx3,border:`1px solid ${biz===b.id?T.accBdr:T.bd}`,borderRadius:9999,cursor:'pointer',transition:'all 150ms',display:'flex',alignItems:'center',gap:3}}>
-              <span>{b.icon}</span>{b.label}
+              <Ic n={b.icon} size={11} color="currentColor"/>{b.label}
             </button>
           ))}
         </div>
@@ -1297,6 +1168,15 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const [annual, setAnnual] = useState(false)
   // FAQ state removed — using native <details> for SEO
   const [liveGeo, setLiveGeo] = useState<Geo | null>(geo)
+  // Three.js globe is decoration — don't make phones on metered/slow
+  // connections pay ~200KB+ for it. Static gradient background remains.
+  const [showGlobe, setShowGlobe] = useState(false)
+  useEffect(() => {
+    const conn = (navigator as { connection?: { saveData?: boolean; effectiveType?: string } }).connection
+    if (conn?.saveData || /2g/.test(conn?.effectiveType || '')) return
+    if (window.matchMedia('(max-width: 768px)').matches) return
+    setShowGlobe(true)
+  }, [])
 
   const growthPrice   = liveGeo?.pricing?.growth   || '£19'
   const businessPrice = liveGeo?.pricing?.business || '£39'
@@ -1311,6 +1191,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   }
   const growthMonthly = annual ? annualPrice(growthPrice) : growthPrice
   const bizMonthly    = annual ? annualPrice(businessPrice) : businessPrice
+
+  const demo = buildDemo(liveGeo)
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY)
@@ -1441,7 +1323,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section id="calc" style={{ position:'relative',minHeight:'100svh',display:'flex',alignItems:'center' }}>
         <div style={{ position:'absolute',inset:0,zIndex:0,pointerEvents:'none' }}>
-          <SkullCanvas scroll={scrollY} mouse={mouse} />
+          {showGlobe && <SkullCanvas scroll={scrollY} mouse={mouse} />}
         </div>
         <div style={{ position:'absolute',top:'20%',left:'5%',width:'50%',height:'60%',background:'radial-gradient(ellipse,rgba(201,122,68,.05) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }}/>
         <div style={{ maxWidth:1280,margin:'0 auto',width:'100%',padding:'clamp(80px,10vw,100px) clamp(20px,5vw,80px)',position:'relative',zIndex:2 }}>
@@ -1459,9 +1341,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
                   {tc('landing.hero_cta_primary')}
                 </Link>
-                <a href="#pos" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
+                <Link href={localePath('/pos-preview', lang as Locale)} style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
                   {tc('landing.hero_cta_secondary')}
-                </a>
+                </Link>
               </div>
               <div style={{ display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:T.tx3 }}>
                 <span>{tc('landing.hero_trust_free')}</span>
@@ -1479,7 +1361,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
             {/* Right — calculator */}
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-              <MiniCalcWidget tc={tc} lang={lang as Locale} />
+              <MiniCalcWidget tc={tc} lang={lang as Locale} initialCurrency={liveGeo?.currency} />
             </div>
           </div>
         </div>
@@ -1506,6 +1388,44 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         ))}
       </div>
 
+      {/* ── WHERE IT WORKS ── keyword-bearing H2 + quotable definition for
+           search and answer engines; links into country hubs and use-case pages ── */}
+      <section style={{ background:T.bg,padding:'clamp(44px,5vw,64px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:760,margin:'0 auto',textAlign:'center' }} data-reveal>
+          <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3vw,38px)',fontWeight:400,lineHeight:1.15,letterSpacing:'-.02em',color:T.tx,marginBottom:14 }}>
+            {tc('landing.where_title')}
+          </h2>
+          <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:620,marginLeft:'auto',marginRight:'auto' }}>
+            {tc('landing.where_body')}
+          </p>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:10 }}>
+            {[
+              ['/business-intelligence/kenya',tc('landing.where_country_0')],
+              ['/business-intelligence/nigeria',tc('landing.where_country_1')],
+              ['/business-intelligence/uganda',tc('landing.where_country_2')],
+              ['/business-intelligence/ghana',tc('landing.where_country_3')],
+              ['/business-intelligence/tanzania',tc('landing.where_country_4')],
+              ['/business-intelligence/south-africa',tc('landing.where_country_5')],
+            ].map(([href,label])=>(
+              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'7px 15px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:12,color:T.tx2,fontWeight:600,textDecoration:'none' }}>
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
+            {[
+              ['/for/salon-owners',tc('landing.where_seg_0')],
+              ['/for/hardware-store-owners',tc('landing.where_seg_1')],
+              ['/for/mini-supermarket-owners',tc('landing.where_seg_2')],
+            ].map(([href,label])=>(
+              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'6px 13px',borderRadius:9999,border:`1px solid ${T.accBdr}`,background:T.accBg,fontSize:12,color:T.acc,fontWeight:600,textDecoration:'none' }}>
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── POINT OF SALE ─────────────────────────────────────────────── */}
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
@@ -1518,7 +1438,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </p>
           </div>
           <div data-reveal data-reveal-delay="1">
-            <PosShowcase tc={tc} />
+            <PosShowcase tc={tc} demo={demo} />
           </div>
           <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
             {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(
@@ -1530,7 +1450,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               {tc('landing.pos_cta')}
             </Link>
             <Link href={localePath('/pos-preview', lang as Locale)} style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
-              Try the demo →
+              {tc('landing.pos_demo_cta')}
             </Link>
             <span style={{ fontSize:12,color:T.tx3,alignSelf:'center',width:'100%' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
           </div>
@@ -1550,19 +1470,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:9 }}>
                 {[
-                  {icon:'⚡',label:tc('landing.monitor_feat_0')},
-                  {icon:'📊',label:tc('landing.monitor_feat_1')},
-                  {icon:'🧠',label:tc('landing.monitor_feat_2')},
-                  {icon:'⏰',label:tc('landing.monitor_feat_3')},
+                  {icon:'zap',label:tc('landing.monitor_feat_0')},
+                  {icon:'chart',label:tc('landing.monitor_feat_1')},
+                  {icon:'bulb',label:tc('landing.monitor_feat_2')},
+                  {icon:'clock',label:tc('landing.monitor_feat_3')},
                 ].map((f,i)=>(
                   <div key={i} style={{ display:'flex',gap:9,alignItems:'flex-start',fontSize:13,color:T.tx2 }}>
-                    <span style={{ fontSize:14,flexShrink:0 }}>{f.icon}</span><span>{f.label}</span>
+                    <Ic n={f.icon} size={15} color={T.acc} style={{marginTop:1}}/><span>{f.label}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div data-reveal data-reveal-delay="1">
-              <MonitorUIReplica tc={tc} />
+              <MonitorUIReplica tc={tc} demo={demo} />
             </div>
           </div>
         </div>
@@ -1577,7 +1497,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
             <div data-reveal data-reveal-delay="1">
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
-                {tc('landing.sources_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.sources_title_line2')}</em>
+                {tc('landing.sources_title_line1')} {tc('landing.sources_title_line2')}
               </h2>
               <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
                 {tc('landing.sources_subtitle')}
@@ -1594,22 +1514,50 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
+      {/* ── WHY WE BUILT IT ── founder note.
+           TODO: replace with 2-3 real customer testimonials (name, business type,
+           city, photo) as soon as the first traders agree to be quoted. ── */}
+      <section style={{ background:T.card,borderTop:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,80px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:640,margin:'0 auto',textAlign:'center' }} data-reveal>
+          <div style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.proof_note_label')}</div>
+          <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:400,lineHeight:1.1,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
+            {tc('landing.proof_note_title')}
+          </h2>
+          <p style={{ fontSize:'clamp(14px,1.3vw,16px)',color:T.tx2,lineHeight:1.8,marginBottom:14 }}>
+            {tc('landing.proof_note_body')}
+          </p>
+          <p style={{ fontSize:13,color:T.tx3,marginBottom:26 }}>{tc('landing.proof_note_sign')}</p>
+          <p style={{ fontSize:14,color:T.tx2,marginBottom:18 }}>{tc('landing.proof_note_join')}</p>
+          <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,padding:'12px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none' }}>
+            {tc('landing.proof_note_cta')}
+          </Link>
+        </div>
+      </section>
+
       {/* ── COMPARE ───────────────────────────────────────────────────── */}
       <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
-              {tc('landing.compare_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.compare_title_line2')}</em>
+              {tc('landing.compare_title_line1')} {tc('landing.compare_title_line2')}
             </h2>
             <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:440,margin:'0 auto' }}>
               {tc('landing.compare_subtitle')}
             </p>
           </div>
 
-          {/* Three-column cards */}
-          <div data-reveal data-reveal-delay="1" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:40 }}>
+          {/* Three-column cards — African visitors compare against their real
+              alternatives (notebook, hardware till); elsewhere Shopify/Power BI */}
+          <div data-reveal data-reveal-delay="1" className="three-col" style={{ gap:16,marginBottom:40 }}>
             {[
-              {
+              demo.afri ? {
+                name:tc('landing.compare_alt_0_name'),
+                role:tc('landing.compare_alt_0_role'),
+                price:tc('landing.compare_alt_0_price'),
+                pros:[0,1,2].map(j=>tc('landing.compare_alt_0_pro_'+j)),
+                cons:[0,1,2,3].map(j=>tc('landing.compare_alt_0_con_'+j)),
+                verdict:tc('landing.compare_alt_0_verdict'),
+              } : {
                 name:tc('landing.compare_0_name'),
                 role:tc('landing.compare_0_role'),
                 price:tc('landing.compare_0_price'),
@@ -1620,13 +1568,20 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               {
                 name:tc('landing.compare_1_name'),
                 role:tc('landing.compare_1_role'),
-                price:tc('landing.compare_1_price'),
+                price:tc('landing.compare_1_price',{growth:growthPrice,business:businessPrice}),
                 highlight:true,
                 pros:[0,1,2,3,4,5].map(j=>tc('landing.compare_1_pro_'+j)),
-                cons:[0,1].map(j=>tc('landing.compare_1_con_'+j)),
-                verdict:tc('landing.compare_1_verdict'),
+                cons:demo.afri?[0,1].map(j=>tc('landing.compare_alt_1_con_'+j)):[0,1].map(j=>tc('landing.compare_1_con_'+j)),
+                verdict:demo.afri?tc('landing.compare_alt_1_verdict'):tc('landing.compare_1_verdict'),
               },
-              {
+              demo.afri ? {
+                name:tc('landing.compare_alt_2_name'),
+                role:tc('landing.compare_alt_2_role'),
+                price:tc('landing.compare_alt_2_price'),
+                pros:[0,1,2].map(j=>tc('landing.compare_alt_2_pro_'+j)),
+                cons:[0,1,2,3].map(j=>tc('landing.compare_alt_2_con_'+j)),
+                verdict:tc('landing.compare_alt_2_verdict'),
+              } : {
                 name:tc('landing.compare_2_name'),
                 role:tc('landing.compare_2_role'),
                 price:tc('landing.compare_2_price'),
@@ -1682,7 +1637,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </h2>
             <p style={{ fontSize:13,color:T.tx2 }}>{tc('landing.pricing_subtitle')}</p>
           </div>
-          {/* PoS add-on */}
+          {/* POS add-on */}
           <div data-reveal style={{ borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20 }}>
             <div style={{ display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:16 }}>
               <div>
@@ -1716,9 +1671,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </span>
           </div>
           {/* Tiers */}
-          <div className="three-col" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12 }}>
+          <div className="three-col" style={{ gap:12 }}>
             {[
-              {id:'free',name:tc('landing.plan_free_name'),colour:'#8C7B6B',price:tc('landing.plan_free_price'),sub:tc('landing.plan_free_sub'),popular:false,
+              {id:'free',name:tc('landing.plan_free_name'),colour:'#8C7B6B',price:liveGeo?.pricing?.sym?(liveGeo.pricing.sym.length>1?`${liveGeo.pricing.sym} 0`:`${liveGeo.pricing.sym}0`):tc('landing.plan_free_price'),sub:tc('landing.plan_free_sub'),popular:false,
                 features:[0,1,2,3,4,5,6].map(j=>tc('landing.plan_free_feat_'+j))},
               {id:'growth',name:tc('landing.plan_growth_name'),colour:T.acc,price:growthMonthly,sub:tc('landing.plan_growth_sub'),popular:true,
                 features:[0,1,2,3,4,5,6].map(j=>tc('landing.plan_growth_feat_'+j,{pos:posPrice}))},
@@ -1768,6 +1723,20 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <p style={{ fontSize:13,color:T.tx2,lineHeight:1.75,margin:0,padding:'0 10px 16px' }}>{faq.a}</p>
           </details>
         ))}
+      </section>
+
+      {/* ── CLOSING CTA ───────────────────────────────────────────────── */}
+      <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,padding:'clamp(52px,6vw,72px) clamp(16px,4vw,40px)',textAlign:'center' }}>
+        <div style={{ maxWidth:560,margin:'0 auto' }} data-reveal>
+          <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:400,lineHeight:1.1,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
+            {tc('landing.closing_title')}
+          </h2>
+          <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:24 }}>{tc('landing.closing_sub')}</p>
+          <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:8,padding:'14px 32px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',boxShadow:'0 4px 24px rgba(201,122,68,.3)' }}>
+            {tc('landing.closing_cta')}
+          </Link>
+          <p style={{ fontSize:12,color:T.tx3,marginTop:14 }}>{tc('landing.hero_trust_free')}</p>
+        </div>
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}

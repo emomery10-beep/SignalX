@@ -122,14 +122,33 @@ button, a, label, [role="button"] {
   align-items: center;
 }
 
+/* Three equal columns (pricing tiers, comparison cards) */
+.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Grid items must be allowed to shrink below content width,
+   otherwise wide inner content (tab bars, long text) blows the column out */
+.hero-grid > *,
+.two-col > *,
+.two-col-wide > *,
+.three-col > * {
+  min-width: 0;
+}
+
 /* Mobile: stack to single column */
 @media (max-width: 768px) {
   .hero-grid,
   .two-col,
-  .two-col-wide {
+  .two-col-wide,
+  .three-col {
     grid-template-columns: 1fr;
     gap: clamp(24px, 5vw, 40px);
     align-items: stretch;
+  }
+  .three-col {
+    gap: 16px;
   }
 }
 
