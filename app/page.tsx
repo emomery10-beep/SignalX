@@ -1,50 +1,83 @@
-import { headers, cookies } from 'next/headers'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
 import LandingClient from '@/components/layout/LandingClient'
 import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
-import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
-export const metadata: Metadata = {
-  title: 'AskBiz — Phone POS App for Kenya, Nigeria & Uganda | Free to Start, M-Pesa Till & Daily Sales',
-  description: 'AskBiz is a phone POS and daily sales tracker for market stalls, kiosks, salons and small shops in Kenya, Nigeria, Uganda and across Africa. Free to start — take M-Pesa, MTN Mobile Money, Airtel Money, cash or card and know your profit by tonight.',
-  keywords: 'mobile POS Africa, M-Pesa POS, phone POS, market stall app, street vendor app, small shop POS, kiosk POS, spaza shop POS, duuka POS, barbershop POS, salon POS Africa, restaurant POS Africa, courier payment app, boda boda payment, hawker POS, jua kali business app, informal business tracker, sell with phone, mobile money POS, MTN mobile money, Airtel Money, M-Pesa receipt, float management, Kenya POS app, Nigeria small business app, Nairobi POS, Lagos POS, Kampala POS, Accra POS, Dar es Salaam POS, camera barcode scan, no hardware POS, daily sales tracker, daily takings, end of day report, track daily sales, sales book phone, stock management phone, affordable POS Africa, affordable POS Kenya, affordable POS Nigeria, phone till, unregistered business tracker, sole trader Africa',
-  authors: [{ name: 'AskBiz' }],
-  creator: 'AskBiz',
-  publisher: 'AskBiz',
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' } },
-  openGraph: {
-    type: 'website',
-    url: 'https://askbiz.co',
-    title: 'AskBiz — Sell With Your Phone. See What You Made Tonight.',
-    description: 'Phone-based POS and daily business tracker for market stalls, street vendors, and informal sellers. M-Pesa, cash, or card. See what you made today — on any phone, free to start.',
-    siteName: 'AskBiz',
-    images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz — Sell with your phone. See what you made tonight.' }],
+// Locale-aware: middleware rewrites /es, /fr, … to this page with x-locale set.
+// Each variant self-canonicalizes to its own URL and carries the full
+// reciprocal hreflang set — a canonical pointing at the English page would
+// tell Google to never index the translated homepages.
+const META_BY_LOCALE: Record<string, { title: string; description: string }> = {
+  en: {
+    title: 'AskBiz — Phone POS with M-Pesa for Kenya, Nigeria & Uganda',
+    description: 'Phone POS and daily sales tracker for market stalls and small shops. Take M-Pesa, MTN, Airtel Money, cash or card. Free to start — see your profit tonight.',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AskBiz — Sell With Your Phone. See What You Made Tonight.',
-    description: 'Phone-based POS and daily tracker for market stalls and informal sellers. M-Pesa, cash, or card. See what you made today — any phone, free to start.',
-    images: ['https://askbiz.co/og-image.png'],
+  es: {
+    title: 'AskBiz — Vende con tu teléfono. TPV y ventas del día',
+    description: 'TPV móvil y control diario de ventas para puestos, kioscos y tiendas pequeñas. Cobra en efectivo, tarjeta o dinero móvil. Gratis para empezar.',
   },
-  alternates: {
-    canonical: 'https://askbiz.co',
-    languages: {
-      'x-default': 'https://askbiz.co',
-      'en': 'https://askbiz.co',
-      'en-KE': 'https://askbiz.co',
-      'en-NG': 'https://askbiz.co',
-      'en-UG': 'https://askbiz.co',
-      'en-GB': 'https://askbiz.co',
-      'en-US': 'https://askbiz.co',
-      'es': 'https://askbiz.co/es',
-      'fr': 'https://askbiz.co/fr',
-      'de': 'https://askbiz.co/de',
-      'nl': 'https://askbiz.co/nl',
-      'ar': 'https://askbiz.co/ar',
+  fr: {
+    title: 'AskBiz — Vendez avec votre téléphone. Caisse mobile',
+    description: 'Caisse mobile et suivi des ventes pour étals, kiosques et petites boutiques. Encaissez espèces, carte ou mobile money. Gratuit pour commencer.',
+  },
+  de: {
+    title: 'AskBiz — Verkaufen mit dem Handy. Kasse und Tagesumsatz',
+    description: 'Mobile Kasse und tägliche Umsatzübersicht für Marktstände, Kioske und kleine Läden. Bargeld, Karte oder Mobile Money. Kostenlos starten.',
+  },
+  nl: {
+    title: 'AskBiz — Verkopen met je telefoon. Kassa en dagomzet',
+    description: 'Mobiele kassa en dagelijkse omzet voor marktkramen, kiosken en kleine winkels. Contant, kaart of mobile money. Gratis te starten.',
+  },
+  ar: {
+    title: 'AskBiz — بِع بهاتفك واعرف ربحك الليلة',
+    description: 'نقطة بيع بالهاتف وتتبع يومي للمبيعات للأكشاك والمحلات الصغيرة. اقبل الدفع نقدًا أو بالبطاقة أو بالمحفظة المحمولة. ابدأ مجانًا.',
+  },
+}
+
+const HREFLANG_LANGUAGES = {
+  'x-default': 'https://askbiz.co',
+  'en': 'https://askbiz.co',
+  'es': 'https://askbiz.co/es',
+  'fr': 'https://askbiz.co/fr',
+  'de': 'https://askbiz.co/de',
+  'nl': 'https://askbiz.co/nl',
+  'ar': 'https://askbiz.co/ar',
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = headers().get('x-locale') || 'en'
+  const meta = META_BY_LOCALE[locale] || META_BY_LOCALE.en
+  const url = locale === 'en' ? 'https://askbiz.co' : `https://askbiz.co/${locale}`
+
+  return {
+    title: meta.title,
+    description: meta.description,
+    keywords: 'phone POS, mobile POS Africa, M-Pesa POS, market stall app, small shop POS, daily sales tracker, mobile money POS, Kenya POS app, Nigeria POS app, camera barcode scanner POS',
+    authors: [{ name: 'AskBiz' }],
+    creator: 'AskBiz',
+    publisher: 'AskBiz',
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-snippet': -1, 'max-image-preview': 'large' } },
+    openGraph: {
+      type: 'website',
+      url,
+      title: meta.title,
+      description: meta.description,
+      siteName: 'AskBiz',
+      images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz — Sell with your phone. See what you made tonight.' }],
     },
-  },
+    twitter: {
+      card: 'summary_large_image',
+      title: meta.title,
+      description: meta.description,
+      images: ['https://askbiz.co/og-image.png'],
+    },
+    alternates: {
+      canonical: url,
+      languages: HREFLANG_LANGUAGES,
+    },
+  }
 }
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -92,8 +125,10 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
 
   const headersList = headers()
   const countryCode = headersList.get('x-vercel-ip-country') || 'US'
-  const cookieStore = cookies()
-  const lang = cookieStore.get('askbiz_lang')?.value || COUNTRY_TO_LANG[countryCode as keyof typeof COUNTRY_TO_LANG] || 'en'
+  // Middleware resolves the locale (URL prefix → cookie → geo) and constrains
+  // it to the ACTIVE set. Reading COUNTRY_TO_LANG directly here used to leak
+  // inactive locales (KE → 'sw'), making every internal link a /sw/* redirect.
+  const lang = headersList.get('x-locale') || 'en'
   const city = headersList.get('x-vercel-ip-city') || ''
 
   const country = COUNTRY_NAMES[countryCode] || countryCode
@@ -276,7 +311,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         { '@type': 'SiteNavigationElement', position: 3, name: 'Integrations',  url: 'https://askbiz.co/integrations',   description: 'Connect Shopify, Amazon, Stripe, QuickBooks and more' },
         { '@type': 'SiteNavigationElement', position: 4, name: 'Blog',          url: 'https://askbiz.co/blog',           description: 'Guides on phone-based selling, M-Pesa and mobile money, stock and daily takings' },
         { '@type': 'SiteNavigationElement', position: 5, name: 'Academy',       url: 'https://askbiz.co/academy',        description: '420+ free guides on selling with your phone, mobile money, and growing a small business' },
-        { '@type': 'SiteNavigationElement', position: 6, name: 'Pricing',       url: 'https://askbiz.co/pricing',        description: 'AskBiz plans from free — Starter, Growth, Business' },
+        { '@type': 'SiteNavigationElement', position: 6, name: 'Pricing',       url: 'https://askbiz.co/pricing',        description: 'AskBiz plans — Free, Growth, Business. Paid plans start with 3 months free.' },
         { '@type': 'SiteNavigationElement', position: 7, name: 'Help',          url: 'https://askbiz.co/help',           description: 'Help centre, FAQ and how-to guides' },
         { '@type': 'SiteNavigationElement', position: 8, name: 'Compare',       url: 'https://askbiz.co/compare',        description: 'Compare AskBiz vs other POS and phone till apps' },
       ],
@@ -295,7 +330,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         {
           '@type': 'Question',
           name: 'How much does AskBiz cost?',
-          acceptedAnswer: { '@type': 'Answer', text: 'AskBiz has a free plan with 10 questions per month, a Growth plan at £19/month with unlimited questions and all core features, and a Business plan at £39/month with team seats, Decision Memory, Competitor Watch, and CFO Mode. All plans include API access.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'AskBiz has a free plan with 10 questions per month, a Growth plan at £19/month with unlimited questions and all core features, and a Business plan at £39/month with team seats, Decision Memory, Competitor Watch, and CFO Mode. Growth and Business both come with a 3-month free trial. The Point of Sale add-on is £5 per seat per month on any plan.' },
         },
         {
           '@type': 'Question',

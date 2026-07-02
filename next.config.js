@@ -3,6 +3,15 @@ const nextConfig = {
   // TODO: remove once pre-existing TS errors are fixed across the codebase
   typescript: { ignoreBuildErrors: true },
 
+  async rewrites() {
+    return [
+      // /og-image.png is referenced by OG/Twitter/schema metadata across the
+      // site but never existed as a static file (it 404'd). Serve it from the
+      // dynamic OG generator's brand card.
+      { source: '/og-image.png', destination: '/api/og?mode=brand' },
+    ]
+  },
+
   async headers() {
     return [
       {

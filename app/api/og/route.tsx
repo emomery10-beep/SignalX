@@ -5,10 +5,16 @@ export const runtime = "edge";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const title = searchParams.get("title") ?? "AskBiz Academy";
-  const category = searchParams.get("category") ?? "Business Intelligence";
+  // mode=brand renders the sitewide share card (served at /og-image.png via a
+  // next.config rewrite) — same visual system, homepage message instead of
+  // Academy framing.
+  const brand = searchParams.get("mode") === "brand";
+  const title = searchParams.get("title") ?? (brand ? "Sell with your phone. See what you made tonight." : "AskBiz Academy");
+  const category = searchParams.get("category") ?? (brand ? "Phone POS · M-Pesa · Daily profit" : "Business Intelligence");
   const difficulty = searchParams.get("difficulty") ?? "";
   const readTime = searchParams.get("readTime") ?? "";
+  const pill = brand ? "AskBiz" : "AskBiz Academy";
+  const footer = brand ? "askbiz.co" : "askbiz.co/academy";
 
   // Truncate long titles for layout safety
   const displayTitle = title.length > 70 ? title.slice(0, 67) + "…" : title;
@@ -62,7 +68,7 @@ export async function GET(req: NextRequest) {
                 textTransform: "uppercase",
               }}
             >
-              AskBiz Academy
+              {pill}
             </div>
             <div
               style={{
@@ -92,7 +98,7 @@ export async function GET(req: NextRequest) {
 
           {/* Bottom: meta */}
           <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <div style={{ color: "#b0b8c8", fontSize: "16px" }}>askbiz.co/academy</div>
+            <div style={{ color: "#b0b8c8", fontSize: "16px" }}>{footer}</div>
             {difficulty && (
               <div
                 style={{
