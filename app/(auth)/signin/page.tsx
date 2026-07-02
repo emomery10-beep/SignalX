@@ -1,12 +1,14 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { COUNTRY_DIAL, countryFromCurrency, detectGeoFromTimezone, toE164 } from '@/lib/geo'
 
 type Mode = 'signin' | 'signup'
+type Method = 'email' | 'phone'
 
 // Version of the legal documents the user is consenting to. Bump when Terms/Privacy change.
 const CONSENT_VERSION = '2026-06-16'
@@ -25,6 +27,41 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [consentChecked, setConsentChecked] = useState(false)
+
+  // Phone / SMS OTP flow
+  const [method, setMethod] = useState<Method>('email')
+  const [phoneCountry, setPhoneCountry] = useState('KE')
+  const [phoneLocal, setPhoneLocal] = useState('')
+  const [sentPhone, setSentPhone] = useState('')   // E.164 number the code was sent to
+  const [otpCode, setOtpCode] = useState('')
+  const [resendIn, setResendIn] = useState(0)
+  const [smsUnavailable, setSmsUnavailable] = useState(false)
+
+  // Prefill the dial-code country from geo; fall back to timezone-derived
+  // currency when /api/geo is unreachable (e.g. local dev).
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/geo')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        if (!cancelled && d?.countryCode && COUNTRY_DIAL.some(c => c.code === d.countryCode)) {
+          setPhoneCountry(d.countryCode)
+        }
+      })
+      .catch(() => {
+        if (cancelled) return
+        const cc = countryFromCurrency(detectGeoFromTimezone().currency)
+        if (cc && COUNTRY_DIAL.some(c => c.code === cc)) setPhoneCountry(cc)
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  // Resend cooldown ticker
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const id = setInterval(() => setResendIn(s => s - 1), 1000)
+    return () => clearInterval(id)
+  }, [resendIn > 0])
 
   const shopifyShop = searchParams.get('ref') === 'shopify' ? searchParams.get('shop') : null
 
@@ -130,6 +167,85 @@ export default function AuthPage() {
     } finally { setLoading(false) }
   }
 
+  const dial = COUNTRY_DIAL.find(c => c.code === phoneCountry)?.dial || '+254'
+
+  // GoTrue error shapes when the SMS provider (Twilio/MessageBird) isn't
+  // configured or phone auth is disabled in Supabase settings.
+  const isSmsUnavailableError = (e: any) => {
+    const code = e?.code || ''
+    const msg = e?.message || ''
+    return ['sms_send_failed', 'phone_provider_disabled', 'otp_disabled'].includes(code)
+      || /unsupported phone provider|error sending sms|phone.*(disabled|not enabled)|provider.*not.*configured/i.test(msg)
+  }
+
+  const handleSendCode = async () => {
+    if (!phoneLocal.trim()) { setError(tc('auth.err_enter_phone')); return }
+    const e164 = toE164(dial, phoneLocal)
+    if (!e164) { setError(tc('auth.err_invalid_phone')); return }
+    if (mode === 'signup' && !consentChecked) { setError(tc('auth.err_accept_terms')); return }
+    setError(''); setSuccess(''); setLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: e164,
+        options: {
+          channel: 'sms',
+          // Sign-in must not silently create an account for a typo'd number
+          shouldCreateUser: mode === 'signup',
+          ...(mode === 'signup' && {
+            data: {
+              full_name: `${firstName} ${lastName}`.trim(),
+              // Recorded proof of affirmative consent (GDPR Art. 7(1))
+              consent_accepted: true,
+              consent_accepted_at: new Date().toISOString(),
+              consent_terms_version: CONSENT_VERSION,
+              consent_privacy_version: CONSENT_VERSION,
+            },
+          }),
+        },
+      })
+      if (error) throw error
+      setSentPhone(e164)
+      setOtpCode('')
+      setResendIn(30)
+      setSuccess(tc('auth.ok_code_sent', { phone: e164 }))
+    } catch (e: any) {
+      if (isSmsUnavailableError(e)) {
+        setSmsUnavailable(true)
+        setError(tc('auth.err_sms_unavailable'))
+      } else if (/signups not allowed/i.test(e?.message || '')) {
+        setError(tc('auth.err_phone_not_registered'))
+      } else {
+        setError(e?.message || tc('auth.err_sms_send_failed'))
+      }
+    } finally { setLoading(false) }
+  }
+
+  const handleVerifyCode = async () => {
+    if (!otpCode.trim()) { setError(tc('auth.err_invalid_code')); return }
+    setError(''); setSuccess(''); setLoading(true)
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: sentPhone,
+        token: otpCode.trim(),
+        type: 'sms',
+      })
+      if (error) throw error
+      if (data.session) {
+        router.push(mode === 'signup'
+          ? (shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding')
+          : getPostAuthRedirect())
+      }
+    } catch (e: any) {
+      const msg = e?.message || ''
+      if (/expired|invalid/i.test(msg)) setError(tc('auth.err_invalid_code'))
+      else setError(msg || tc('auth.err_auth_failed'))
+    } finally { setLoading(false) }
+  }
+
+  const resetPhoneStep = () => {
+    setSentPhone(''); setOtpCode(''); setError(''); setSuccess('')
+  }
+
   const inp: React.CSSProperties = {
     width: '100%', padding: '11px 14px', borderRadius: 10,
     border: '1px solid var(--b2)', background: 'var(--ev)',
@@ -200,7 +316,7 @@ export default function AuthPage() {
           width: '100%'
         }}>
           {(['signin', 'signup'] as Mode[]).map(m => (
-            <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }}
+            <button key={m} onClick={() => { setMode(m); setSentPhone(''); setOtpCode(''); setError(''); setSuccess('') }}
               style={{
                 flex: 1, padding: '10px', borderRadius: 9, border: 'none',
                 background: mode === m ? 'var(--acc)' : 'transparent',
@@ -252,6 +368,29 @@ export default function AuthPage() {
           <div style={{ flex: 1, height: 1, background: 'var(--b)' }}></div>
         </div>
 
+        {/* Email / Phone method toggle */}
+        <div style={{ display: 'flex', background: 'var(--ev)', borderRadius: 10, padding: 3, marginBottom: 14 }}>
+          {(['email', 'phone'] as Method[]).map(m => (
+            <button key={m} onClick={() => { setMethod(m); setError(''); setSuccess('') }}
+              style={{
+                flex: 1, padding: '7px', borderRadius: 8, border: 'none',
+                background: method === m ? 'var(--sf)' : 'transparent',
+                color: method === m ? 'var(--tx)' : 'var(--tx2)',
+                fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', transition: 'all 150ms',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                boxShadow: method === m ? '0 1px 4px rgba(0,0,0,.08)' : 'none',
+              }}>
+              {m === 'email' ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+              )}
+              {m === 'email' ? tc('auth.method_email') : tc('auth.method_phone')}
+            </button>
+          ))}
+        </div>
+
         {/* Name fields for signup */}
         {mode === 'signup' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -260,16 +399,54 @@ export default function AuthPage() {
           </div>
         )}
 
-        {/* Email */}
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={{ ...inp, marginBottom: 10 }}
-          onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+        {method === 'email' && (<>
+          {/* Email */}
+          <input value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={{ ...inp, marginBottom: 10 }}
+            onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
 
-        {/* Password */}
-        <input value={password} onChange={e => setPassword(e.target.value)} placeholder={tc('auth.password_placeholder')} type="password" style={{ ...inp, marginBottom: 16 }}
-          onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+          {/* Password */}
+          <input value={password} onChange={e => setPassword(e.target.value)} placeholder={tc('auth.password_placeholder')} type="password" style={{ ...inp, marginBottom: 16 }}
+            onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+        </>)}
+
+        {method === 'phone' && !sentPhone && (<>
+          {/* Country dial code + local number */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }} dir="ltr">
+            <select value={phoneCountry} onChange={e => setPhoneCountry(e.target.value)} aria-label={tc('auth.method_phone')}
+              style={{ ...inp, width: 118, flexShrink: 0, cursor: 'pointer', appearance: 'none' }}>
+              {COUNTRY_DIAL.map(c => (
+                <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
+              ))}
+            </select>
+            <input value={phoneLocal} onChange={e => setPhoneLocal(e.target.value)} placeholder={tc('auth.phone_placeholder')}
+              type="tel" inputMode="tel" autoComplete="tel" dir="ltr" style={{ ...inp, flex: 1 }}
+              onKeyDown={e => e.key === 'Enter' && handleSendCode()}/>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>
+            {tc('auth.phone_hint')}
+          </p>
+        </>)}
+
+        {method === 'phone' && sentPhone && (<>
+          {/* OTP code entry */}
+          <input value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder={tc('auth.otp_placeholder')} type="text" inputMode="numeric" autoComplete="one-time-code"
+            autoFocus dir="ltr" style={{ ...inp, marginBottom: 10, textAlign: 'center', letterSpacing: '.35em', fontSize: 18 }}
+            onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}/>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <button onClick={resetPhoneStep} disabled={loading}
+              style={{ background: 'none', border: 'none', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 12, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+              {tc('auth.change_number')}
+            </button>
+            <button onClick={handleSendCode} disabled={loading || resendIn > 0}
+              style={{ background: 'none', border: 'none', color: resendIn > 0 ? 'var(--tx3)' : 'var(--acc)', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: resendIn > 0 ? 'default' : 'pointer', padding: 0 }}>
+              {resendIn > 0 ? tc('auth.resend_in', { s: resendIn }) : tc('auth.resend_code')}
+            </button>
+          </div>
+        </>)}
 
         {/* Affirmative consent checkbox for signup */}
-        {mode === 'signup' && (
+        {mode === 'signup' && (method === 'email' || !sentPhone) && (
           <label htmlFor="consent" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16, cursor: 'pointer' }}>
             <input
               id="consent"
@@ -291,16 +468,39 @@ export default function AuthPage() {
         {error && <div role="alert" aria-live="polite" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 13, color: '#b91c1c', marginBottom: 14 }}>{error}</div>}
         {success && <div role="status" aria-live="polite" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 13, color: '#15803d', marginBottom: 14 }}>✓ {success}</div>}
 
+        {/* SMS provider not configured — steer to email */}
+        {method === 'phone' && smsUnavailable && (
+          <button onClick={() => { setMethod('email'); setError(''); setSuccess('') }}
+            style={{ width: '100%', padding: '11px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
+            {tc('auth.use_email_instead')}
+          </button>
+        )}
+
         {/* Primary CTA */}
-        <button onClick={() => triggerAuth('email')} disabled={loading || !email || !password || (mode === 'signup' && !consentChecked)}
-          style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: loading || !email || !password || (mode === 'signup' && !consentChecked) ? 'not-allowed' : 'pointer', opacity: loading || !email || !password || (mode === 'signup' && !consentChecked) ? .6 : 1, marginBottom: 10 }}>
-          {loading ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg style={{ animation: 'spin .7s linear infinite' }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-              {tc('auth.please_wait')}
-            </span>
-          ) : mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`}
-        </button>
+        {(() => {
+          const disabled = loading || (method === 'email'
+            ? (!email || !password || (mode === 'signup' && !consentChecked))
+            : sentPhone
+              ? otpCode.trim().length < 6
+              : (!phoneLocal.trim() || smsUnavailable || (mode === 'signup' && !consentChecked)))
+          const label = method === 'email'
+            ? (mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`)
+            : sentPhone ? `${tc('auth.verify_code')} →` : `${tc('auth.send_code')} →`
+          const onClick = method === 'email'
+            ? () => triggerAuth('email')
+            : sentPhone ? handleVerifyCode : handleSendCode
+          return (
+            <button onClick={onClick} disabled={disabled}
+              style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .6 : 1, marginBottom: 10 }}>
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg style={{ animation: 'spin .7s linear infinite' }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  {tc('auth.please_wait')}
+                </span>
+              ) : label}
+            </button>
+          )
+        })()}
 
         {/* Inline consent details for signup */}
         {mode === 'signup' && (
@@ -321,10 +521,12 @@ export default function AuthPage() {
         )}
 
         {/* Magic link */}
+        {method === 'email' && (
         <button onClick={handleMagicLink} disabled={loading || !email}
           style={{ width: '100%', padding: '11px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 14, cursor: loading || !email ? 'not-allowed' : 'pointer', opacity: loading || !email ? .6 : 1 }}>
           {loading ? '…' : tc('auth.send_magic_link')}
         </button>
+        )}
 
       </div>
 
