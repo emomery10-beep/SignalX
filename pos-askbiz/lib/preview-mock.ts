@@ -11,7 +11,8 @@ import { useEffect, useState } from 'react'
 import {
   type Sector, mulberry32, makeConfig, makeInventory, makeTransactions,
   makeServiceJobs, makeFactoryCaptures, makeParcels, makeTrucks, makeRoutes,
-  makeBranches, makeTruckLocations, FIRST, LAST,
+  makeBranches, makeTruckLocations, makeStaffList, makeRestaurantTables,
+  makeAppointments, makeScanDeviceResult, FIRST, LAST,
 } from './preview-fixtures'
 
 export interface PreviewStaffSession {
@@ -70,6 +71,9 @@ function buildPreviewHandlers(session: PreviewStaffSession): Record<string, Hand
   const routes = makeRoutes(seed, branches)
   const parcels = makeParcels(seed)
   const truckLocations = makeTruckLocations(seed, trucks)
+  const staffList = makeStaffList(seed)
+  const restaurantTables = makeRestaurantTables(seed, staffList)
+  const appointments = makeAppointments(seed, staffList)
 
   const config = makeConfig(session.business_type)
 
@@ -131,6 +135,17 @@ function buildPreviewHandlers(session: PreviewStaffSession): Record<string, Hand
     'GET /api/pos/staff/list': () => ({
       staff: Array.from({ length: 4 }, (_, i) => ({ id: `driver-${i}`, name: `${FIRST[i]} ${LAST[i]}`, role: 'driver' })),
     }),
+
+    // ── Sector front-of-house screens (restaurant/floor, salon/bookings,
+    // repair/intake) — endpoints confirmed against the real route handlers.
+    'GET /api/pos/staff': () => ({ staff: staffList }),
+    'GET /api/pos/restaurant/tables': () => ({ tables: restaurantTables }),
+    'PATCH /api/pos/restaurant/tables': (_u, init) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {}
+      return { table: { ...restaurantTables[0], ...body } }
+    },
+    'GET /api/pos/salon/appointments': () => ({ appointments }),
+    'POST /api/pos/service-jobs/scan-device': () => makeScanDeviceResult(),
   }
 }
 

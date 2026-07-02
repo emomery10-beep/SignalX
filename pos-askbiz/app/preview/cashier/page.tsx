@@ -5,26 +5,36 @@ import { PreviewGate, PreviewBanner } from '@/lib/preview-gate'
 import { buildMockSession, usePreviewHarness, previewSessionKey } from '@/lib/preview-mock'
 import type { Sector } from '@/lib/preview-fixtures'
 
-const RealSellPage = dynamic(() => import('../../sell/page'), { ssr: false })
+// Each sector's REAL front-of-house screen — not the same checkout reskinned.
+// Retail genuinely is a generic till, so it alone uses /sell; the other 4
+// sectors have their own structurally distinct daily-use screen in pos-askbiz.
+const RealSellPage        = dynamic(() => import('../../sell/page'), { ssr: false })
+const RealRestaurantFloor = dynamic(() => import('../../restaurant/floor/page'), { ssr: false })
+const RealSalonBookings   = dynamic(() => import('../../salon/bookings/page'), { ssr: false })
+const RealRepairIntake    = dynamic(() => import('../../repair/intake/page'), { ssr: false })
+const RealFactoryCapture  = dynamic(() => import('../../factory/capture/page'), { ssr: false })
 
-const SECTORS: { id: Sector; label: string }[] = [
-  { id: 'retail', label: '📦 Retail' },
-  { id: 'restaurant', label: '🍴 Restaurant' },
-  { id: 'salon', label: '💇 Salon' },
-  { id: 'repair', label: '🔧 Repair' },
-  { id: 'factory', label: '🏭 Factory' },
+const SECTORS: { id: Sector; label: string; screenLabel: string; Component: React.ComponentType }[] = [
+  { id: 'retail',     label: '📦 Retail',     screenLabel: 'Checkout',           Component: RealSellPage },
+  { id: 'restaurant', label: '🍴 Restaurant', screenLabel: 'Floor & orders',     Component: RealRestaurantFloor },
+  { id: 'salon',      label: '💇 Salon',      screenLabel: 'Bookings',           Component: RealSalonBookings },
+  { id: 'repair',     label: '🔧 Repair',     screenLabel: 'Job intake',         Component: RealRepairIntake },
+  { id: 'factory',    label: '🏭 Factory',    screenLabel: 'Production capture', Component: RealFactoryCapture },
 ]
 
 export default function CashierPreviewPage() {
   const [sector, setSector] = useState<Sector>('retail')
-  // Role stays fixed at 'cashier' regardless of sector — getRoleHomeRoute('cashier')
-  // always resolves to '/sell', so switching sector never triggers a redirect.
-  const session = buildMockSession('cashier', sector, 'Preview Cashier')
+  const active = SECTORS.find(s => s.id === sector)!
+  // Role stays fixed at 'cashier' — none of these screens gate on role, only
+  // on session presence (usePosAuth) and, for repair, on staff_sector via the
+  // /api/pos/config response, which already carries the selected sector.
+  const session = buildMockSession('cashier', sector, 'Preview Staff')
   const ready = usePreviewHarness(session)
+  const Active = active.Component
 
   return (
     <PreviewGate>
-      <PreviewBanner label="Cashier checkout screen as it appears to staff" />
+      <PreviewBanner label={`${active.label.replace(/^\S+\s/, '')} — ${active.screenLabel}`} />
       <div style={{ display: 'flex', gap: 8, padding: '12px 16px', flexWrap: 'wrap', background: '#fff', borderBottom: '1px solid rgba(0,0,0,.08)' }}>
         {SECTORS.map(s => (
           <button key={s.id} onClick={() => setSector(s.id)}
@@ -38,7 +48,7 @@ export default function CashierPreviewPage() {
         ))}
       </div>
       {ready
-        ? <RealSellPage key={previewSessionKey(session)} />
+        ? <Active key={previewSessionKey(session)} />
         : <div style={{ padding: 40, textAlign: 'center', color: '#888', fontSize: 14 }}>Loading preview…</div>}
     </PreviewGate>
   )
