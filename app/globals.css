@@ -98,12 +98,6 @@ button, a, label, [role="button"] {
 @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 @keyframes popIn     { 0%{opacity:0;transform:scale(.8)} 60%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
 @keyframes verdictIn { 0%{opacity:0;transform:translateX(-8px) scale(.97)} 100%{opacity:1;transform:translateX(0) scale(1)} }
-@keyframes tilt3d {
-  0%,100% { transform: perspective(1200px) rotateX(0deg)    rotateY(0deg); }
-  25%     { transform: perspective(1200px) rotateX(2deg)    rotateY(-3deg); }
-  50%     { transform: perspective(1200px) rotateX(-1.5deg) rotateY(2deg); }
-  75%     { transform: perspective(1200px) rotateX(1deg)    rotateY(3deg); }
-}
 
 /* ── Responsive grids ───────────────────────────────────────── */
 .hero-grid {
@@ -199,10 +193,6 @@ button, a, label, [role="button"] {
 .animate-scale-up   { animation: scaleUp   .5s  var(--ease-back) both; }
 .animate-pop-in     { animation: popIn     .4s  var(--ease-back) both; }
 .animate-float      { animation: float     3s   ease-in-out infinite; }
-.animate-tilt-3d    { animation: tilt3d    8s   ease-in-out infinite; }
-/* Higher-specificity compound rule so entrance + idle-tilt can run together
-   on the same element without one shorthand clobbering the other. */
-.animate-scale-up.animate-tilt-3d { animation: scaleUp .5s var(--ease-back) both, tilt3d 8s ease-in-out infinite; }
 .animate-ping       { animation: ping      1.8s ease-in-out infinite; }
 .animate-border-pulse { animation: borderPulse 2s ease-in-out infinite; }
 
@@ -444,13 +434,8 @@ img {
     transform: none !important;
   }
   /* Infinite decorative animations: stop entirely */
-  .animate-float, .float, .animate-ping, .animate-border-pulse, .spin, .animate-tilt-3d {
+  .animate-float, .float, .animate-ping, .animate-border-pulse, .spin {
     animation: none !important;
-  }
-  .animate-scale-up.animate-tilt-3d {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
   }
   /* Skeleton: static tint instead of moving shimmer */
   .skeleton {

@@ -269,12 +269,18 @@ export default function AuthPage() {
     } finally { setLoading(false) }
   }
 
-  // 3D tilt on the auth card — follows the cursor on hover, and gently
-  // self-animates (via the .animate-tilt-3d CSS keyframe) the rest of the
-  // time so the effect is visible even without mouse interaction.
+  // 3D tilt on the auth card — hover-only micro-interaction (no idle
+  // self-animation: a card that wobbles on its own while nobody's touching
+  // it fights the brand's own "speed reads as confidence" principle).
+  // Disabled entirely under prefers-reduced-motion.
   const [cardTilt, setCardTilt] = useState({ rx: 0, ry: 0 })
   const [cardHover, setCardHover] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(false)
+  useEffect(() => {
+    setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [])
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (reducedMotion) return
     const rect = e.currentTarget.getBoundingClientRect()
     const px = (e.clientX - rect.left) / rect.width - 0.5   // -0.5..0.5
     const py = (e.clientY - rect.top) / rect.height - 0.5
@@ -286,6 +292,10 @@ export default function AuthPage() {
     border: '1px solid var(--b2)', background: 'var(--ev)',
     color: 'var(--tx)', fontFamily: 'inherit', fontSize: 15,
     outline: 'none', boxSizing: 'border-box',
+  }
+  const lbl: React.CSSProperties = {
+    display: 'block', fontFamily: 'inherit', fontSize: 13, fontWeight: 500,
+    color: 'var(--tx2)', marginBottom: 6,
   }
 
   return (
@@ -339,7 +349,7 @@ export default function AuthPage() {
 
       {/* Card — 3D tilt: follows the cursor on hover, self-animates otherwise */}
       <div
-        className={`animate-scale-up stagger-1${cardHover ? '' : ' animate-tilt-3d'}`}
+        className="animate-scale-up stagger-1"
         onMouseMove={handleCardMouseMove}
         onMouseEnter={() => setCardHover(true)}
         onMouseLeave={() => { setCardHover(false); setCardTilt({ rx: 0, ry: 0 }) }}
@@ -476,49 +486,79 @@ export default function AuthPage() {
           ))}
         </div>
 
-        {/* Name fields for signup */}
+        {/* Name fields for signup — grouped under a heading so identity and
+            credential fields read as two distinct steps, not one long wall */}
         {mode === 'signup' && (
-          <div className="animate-fade-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-            <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={tc('auth.first_name')} style={inp}/>
-            <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('auth.last_name')} style={inp}/>
-          </div>
+          <>
+            <p className="animate-fade-up" style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>
+              {tc('auth.signup_identity_heading')}
+            </p>
+            <div className="animate-fade-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+              <div>
+                <label htmlFor="firstName" style={lbl}>{tc('auth.first_name')}</label>
+                <input id="firstName" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={tc('auth.first_name')} style={inp}/>
+              </div>
+              <div>
+                <label htmlFor="lastName" style={lbl}>{tc('auth.last_name')}</label>
+                <input id="lastName" value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('auth.last_name')} style={inp}/>
+              </div>
+            </div>
+            <p className="animate-fade-up" style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>
+              {tc('auth.signup_credentials_heading')}
+            </p>
+          </>
         )}
 
         {method === 'email' && (<>
           {/* Email */}
-          <input className="animate-fade-up stagger-7" value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={{ ...inp, marginBottom: 10 }}
-            onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+          <div className="animate-fade-up stagger-7" style={{ marginBottom: 10 }}>
+            <label htmlFor="email" style={lbl}>{tc('auth.email_placeholder')}</label>
+            <input id="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={inp}
+              onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+          </div>
 
           {/* Password */}
-          <input className="animate-fade-up stagger-8" value={password} onChange={e => setPassword(e.target.value)} placeholder={tc('auth.password_placeholder')} type="password" style={{ ...inp, marginBottom: 16 }}
-            onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+          <div className="animate-fade-up stagger-8" style={{ marginBottom: 16 }}>
+            <label htmlFor="password" style={lbl}>{tc('auth.password_placeholder')}</label>
+            <input id="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={tc('auth.password_placeholder')} type="password" style={inp}
+              onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
+          </div>
         </>)}
 
         {method === 'phone' && (<>
           {/* Country dial code + local number */}
-          <div className="animate-fade-up" style={{ display: 'flex', gap: 8, marginBottom: 10 }} dir="ltr">
-            <select value={phoneCountry} onChange={e => setPhoneCountry(e.target.value)} aria-label={tc('auth.method_phone')}
-              style={{ ...inp, width: 118, flexShrink: 0, cursor: 'pointer', appearance: 'none' }}>
-              {COUNTRY_DIAL.map(c => (
-                <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
-              ))}
-            </select>
-            <input value={phoneLocal} onChange={e => setPhoneLocal(e.target.value)} placeholder={tc('auth.phone_placeholder')}
-              type="tel" inputMode="tel" autoComplete="tel" dir="ltr" style={{ ...inp, flex: 1 }}
-              onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+          <div className="animate-fade-up" style={{ marginBottom: 10 }}>
+            <label htmlFor="phoneLocal" style={lbl}>{tc('auth.phone_label')}</label>
+            <div style={{ display: 'flex', gap: 8 }} dir="ltr">
+              <select value={phoneCountry} onChange={e => setPhoneCountry(e.target.value)} aria-label={tc('auth.method_phone')}
+                style={{ ...inp, width: 118, flexShrink: 0, cursor: 'pointer', appearance: 'none' }}>
+                {COUNTRY_DIAL.map(c => (
+                  <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
+                ))}
+              </select>
+              <input id="phoneLocal" value={phoneLocal} onChange={e => setPhoneLocal(e.target.value)} placeholder={tc('auth.phone_placeholder')}
+                type="tel" inputMode="tel" autoComplete="tel" dir="ltr" style={{ ...inp, flex: 1 }}
+                onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+            </div>
           </div>
 
           {/* PIN entry — single field to sign in, confirm field added on signup */}
           <div style={{ display: 'grid', gridTemplateColumns: mode === 'signup' ? '1fr 1fr' : '1fr', gap: 10, marginBottom: 10 }}>
-            <input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder={tc('auth.pin_placeholder')} type="password" inputMode="numeric" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pin ? '.5em' : 'normal', fontSize: 18 }}
-              onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
-            {mode === 'signup' && (
-              <input value={pinConfirm} onChange={e => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder={tc('auth.pin_confirm_placeholder')} type="password" inputMode="numeric" autoComplete="new-password"
-                dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pinConfirm ? '.5em' : 'normal', fontSize: 18 }}
+            <div>
+              <label htmlFor="pin" style={lbl}>{tc('auth.pin_placeholder')}</label>
+              <input id="pin" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder={tc('auth.pin_placeholder')} type="password" inputMode="numeric" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pin ? '.5em' : 'normal', fontSize: 18 }}
                 onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+            </div>
+            {mode === 'signup' && (
+              <div>
+                <label htmlFor="pinConfirm" style={lbl}>{tc('auth.pin_confirm_placeholder')}</label>
+                <input id="pinConfirm" value={pinConfirm} onChange={e => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder={tc('auth.pin_confirm_placeholder')} type="password" inputMode="numeric" autoComplete="new-password"
+                  dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pinConfirm ? '.5em' : 'normal', fontSize: 18 }}
+                  onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+              </div>
             )}
           </div>
           <p className="animate-fade-up" style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>
