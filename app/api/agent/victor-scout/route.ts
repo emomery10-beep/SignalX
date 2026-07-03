@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import { logUsage } from '@/lib/log-usage'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations } from '@/lib/scout-citation-guard'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
@@ -174,8 +175,17 @@ async function runVictorScout() {
         }
         existingSlugs.add(slug)
 
+        const citableSources = (result.value as Record<string, unknown>)._citableSources as string[] | undefined
+        delete (result.value as Record<string, unknown>)._citableSources
+
+        const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
         const quality = scoreAfricanMktgBlogQuality(result.value)
-        const status  = quality >= 80 ? 'published' : 'pending'
+        // A fabricated "According to Reuters..." always forces human review,
+        // regardless of how well the article otherwise scores.
+        const status  = quality >= 80 && fabricated.length === 0 ? 'published' : 'pending'
+        if (fabricated.length > 0) {
+          log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
         inserts.push({
           run_id:           runId,
           type:             'blog',
@@ -230,9 +240,8 @@ async function writeAfricanMktgBlogPost(input: SearchInput, recentPublished: Rec
   const articles  = searchResult.results.slice(0, 5)
   const aiSummary = searchResult.answer || ''
 
-  const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
-    .join('\n\n')
+  const citableSources = buildCitableSources(articles)
+  const articleContext = buildArticleContext(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
@@ -262,6 +271,8 @@ VOICE & TONE:
 - Currencies: ₦ (NGN) primarily for Nigeria content; GH₵ for Ghana; ZAR for South Africa; note USD equivalent where useful
 - You NEVER use: "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer", "best practices" without challenge
 - No corporate speak. Real wins. Real failures. Real African context. Real numbers.
+${citationRulePrompt(citableSources, articles.length)}
+- The named-brand list above (Paystack, Flutterwave, GTBank, etc.) is for tone/context only — never invent a specific statistic, quote, or claim about any of these companies unless it's actually in the source articles below.
 
 ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
 - Never open with: "In today's Nigeria...", "As African marketers navigate...", "With the rise of digital...", "In an era of..."
@@ -344,7 +355,9 @@ Return ONLY valid JSON (no markdown fences):
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      max_tokens: 3000,
+      // 3000 was truncating the ~1,800-word target article + metadata/PAA,
+      // which is why posts were landing under 800 words.
+      max_tokens: 6000,
       messages: [
         { role: 'system', content: _SYSTEM_ },
         { role: 'user',   content: userPrompt },
@@ -363,6 +376,7 @@ Return ONLY valid JSON (no markdown fences):
   }
 
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed._citableSources = citableSources
 
   return parsed
 }

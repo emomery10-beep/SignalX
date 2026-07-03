@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import { logUsage } from '@/lib/log-usage'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations } from '@/lib/scout-citation-guard'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
@@ -174,8 +175,17 @@ async function runBenScout() {
         }
         existingSlugs.add(slug)
 
+        const citableSources = (result.value as Record<string, unknown>)._citableSources as string[] | undefined
+        delete (result.value as Record<string, unknown>)._citableSources
+
+        const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
         const quality = scoreUSBlogQuality(result.value)
-        const status  = quality >= 80 ? 'published' : 'pending'
+        // A fabricated "According to Reuters..." always forces human review,
+        // regardless of how well the article otherwise scores.
+        const status  = quality >= 80 && fabricated.length === 0 ? 'published' : 'pending'
+        if (fabricated.length > 0) {
+          log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
         inserts.push({
           run_id:           runId,
           type:             'blog',
@@ -230,9 +240,8 @@ async function writeUSBlogPost(input: SearchInput, recentPublished: RecentPost[]
   const articles   = searchResult.results.slice(0, 5)
   const aiSummary  = searchResult.answer || ''
 
-  const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
-    .join('\n\n')
+  const citableSources = buildCitableSources(articles)
+  const articleContext = buildArticleContext(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
@@ -246,6 +255,7 @@ VOICE & TONE:
 - You write like someone who reads WSJ Small Business, Inc., Forbes Small Business, and the NFIB reports before breakfast
 - You lead with the number, the IRS ruling, the Fed move, or the market shift — never with preamble
 - Short, specific sentences. You name real companies, real regulators, real dollar amounts.
+${citationRulePrompt(citableSources, articles.length)}
 - Direct: "This will compress your margins by Q3" not "margins may face pressure"
 - Use contrast: "Last year X. This year Y. Here's what that means if you're running a $1M business in the South."
 - Reference real US context: IRS, SBA, NFIB, Square, Stripe, QuickBooks, Toast, Shopify, Amazon FBA, ADP, Gusto, OSHA, FTC, Fed, Main Street
@@ -339,7 +349,9 @@ Return ONLY valid JSON (no markdown fences):
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      max_tokens: 3000,
+      // 3000 was truncating the ~1,800-word target article + metadata/PAA,
+      // which is why posts were landing under 800 words.
+      max_tokens: 6000,
       messages: [
         { role: 'system', content: _SYSTEM_ },
         { role: 'user',   content: userPrompt },
@@ -358,6 +370,7 @@ Return ONLY valid JSON (no markdown fences):
   }
 
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed._citableSources = citableSources
 
   return parsed
 }

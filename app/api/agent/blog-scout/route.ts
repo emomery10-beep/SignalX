@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch, type TavilySearchResponse } from '@/lib/tavily'
 import { serperSearch } from '@/lib/serper'
 import { logUsage } from '@/lib/log-usage'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations } from '@/lib/scout-citation-guard'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -223,9 +224,19 @@ async function runBlogScout() {
         }
         existingSlugs.add(slug)
 
+        const citableSources = (result.value as Record<string, unknown>)._citableSources as string[] | undefined
+        delete (result.value as Record<string, unknown>)._citableSources
+
+        const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
         const quality = scoreBlogQuality(result.value)
-        // Auto-publish if quality ≥ 80, otherwise hold for review
-        const status = quality >= 80 ? 'published' : 'pending'
+        // Auto-publish if quality is high AND no ungrounded attributions were
+        // found — a fabricated "According to Reuters..." is worse than a
+        // low-quality article, so it always forces human review regardless
+        // of how well the article otherwise scores.
+        const status = quality >= 80 && fabricated.length === 0 ? 'published' : 'pending'
+        if (fabricated.length > 0) {
+          log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
         inserts.push({
           run_id: runId,
           type: 'blog',
@@ -286,9 +297,14 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
   const articles = searchResult.results.slice(0, 5)
   const aiSummary = searchResult.answer || ''
 
-  const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
-    .join('\n\n')
+  const articleContext = buildArticleContext(articles)
+
+  // Whitelist of publication names the model is allowed to name — anything else
+  // gets stripped post-generation, since an LLM given thin 500-char snippets
+  // and told to "name real companies, real regulations" will otherwise invent
+  // plausible-sounding attributions ("According to Reuters...") that were
+  // never actually in the source material.
+  const citableSources = buildCitableSources(articles)
 
   // Provide Alice with recent published posts for relatedSlugs selection
   const relatedContext = recentPublished.length > 0
@@ -306,7 +322,8 @@ VOICE & TONE:
 - You're direct ("This will squeeze your margins") not passive ("Margins may be impacted")
 - You use contrasts: "Last year X. This year Y. Here's what changed."
 - You occasionally use rhetorical questions, but sparingly
-- You name real companies, real regulations, real numbers from the sources
+- You name real companies, real regulations, real numbers — but ONLY when they appear in the source articles provided below
+${citationRulePrompt(citableSources, articles.length)}
 - You never use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "cutting-edge", "game-changer", "robust"
 - You sound like a smart colleague sharing a briefing, not a blog post
 
@@ -351,7 +368,12 @@ When mentioning AskBiz in the post, pick 1-2 specific features that directly sol
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      max_tokens: 3000,
+      // The requested article is ~1,400-1,500 words of body copy plus title,
+      // metaDescription, tldr, 5 PAA answers, and a CTA — comfortably over
+      // 1,800 words of total content. At ~1.4 tokens/word plus JSON escaping
+      // overhead, 3000 tokens was forcing truncation, which is why articles
+      // were landing under 800 words. 6000 gives real headroom.
+      max_tokens: 6000,
       messages: [
         { role: 'system', content: _SYSTEM_ },
         {
@@ -417,6 +439,10 @@ Return ONLY valid JSON (no markdown fences):
 
   // Always use today's date — model may pick the date of a news event instead
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+
+  // Carry the whitelist through so the publish gate can check for fabricated
+  // attributions — the caller strips this before saving to the DB.
+  parsed._citableSources = citableSources
 
   return parsed
 }

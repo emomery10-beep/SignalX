@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import { logUsage } from '@/lib/log-usage'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations } from '@/lib/scout-citation-guard'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
@@ -174,8 +175,17 @@ async function runMarketingScout() {
         }
         existingSlugs.add(slug)
 
+        const citableSources = (result.value as Record<string, unknown>)._citableSources as string[] | undefined
+        delete (result.value as Record<string, unknown>)._citableSources
+
+        const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
         const quality = scoreMktgBlogQuality(result.value)
-        const status  = quality >= 80 ? 'published' : 'pending'
+        // A fabricated "According to Reuters..." always forces human review,
+        // regardless of how well the article otherwise scores.
+        const status  = quality >= 80 && fabricated.length === 0 ? 'published' : 'pending'
+        if (fabricated.length > 0) {
+          log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
         inserts.push({
           run_id:           runId,
           type:             'blog',
@@ -230,9 +240,8 @@ async function writeMarketingBlogPost(input: SearchInput, recentPublished: Recen
   const articles   = searchResult.results.slice(0, 5)
   const aiSummary  = searchResult.answer || ''
 
-  const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
-    .join('\n\n')
+  const articleContext = buildArticleContext(articles)
+  const citableSources = buildCitableSources(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
@@ -251,6 +260,7 @@ VOICE & TONE:
 - You reference real tools: Klaviyo, Mailchimp, Meta Ads Manager, Google Ads, HubSpot, Hootsuite, Buffer, Semrush, Ahrefs, Hotjar, ConvertKit, ActiveCampaign
 - You cite real benchmarks: open rates, CTRs, CPMs, CAC, ROAS, conversion rates — with context for SME budget levels (£500/mo–£10k/mo range)
 - Currencies: use £ for UK context, $ for US/global benchmarks — specify which
+${citationRulePrompt(citableSources, articles.length)}
 - You NEVER use: "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer", "storytelling" (as a buzzword), "authentic" (as a panacea)
 - You sound like a sharp colleague who has run paid ads, email campaigns, and SEO for UK SMEs for years — someone who's seen what actually converts
 
@@ -338,7 +348,9 @@ Return ONLY valid JSON (no markdown fences):
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      max_tokens: 3000,
+      // 3000 was truncating the ~1,800-word target article + metadata/PAA,
+      // which is why posts were landing under 800 words.
+      max_tokens: 6000,
       messages: [
         { role: 'system', content: _SYSTEM_ },
         { role: 'user',   content: userPrompt },
@@ -357,6 +369,7 @@ Return ONLY valid JSON (no markdown fences):
   }
 
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed._citableSources = citableSources
 
   return parsed
 }
