@@ -775,7 +775,7 @@ export const INTEGRATION_BLOGS_BATCH_4_SINGAPORE: BlogPost[] = [
     "cluster": "Singapore Accounting",
     "pillar": "Financial Reporting",
     "publishDate": "2026-07-04",
-    "readTime": 6,
+    "readTime": 5,
     "tldr": "Retail shop SGD 1M revenue. June revenue: SGD 100K (invoiced). July payment received. Accrual: June profit includes SGD 100K. Cash: July shows inflow, June shows zero. GST filing uses accrual. Cash flow uses cash. AskBiz dual-tracks both methods.",
     "sections": [
       {
@@ -812,6 +812,11 @@ export const INTEGRATION_BLOGS_BATCH_4_SINGAPORE: BlogPost[] = [
         "heading": "Setting a Simple Internal Rule: Accrual for Reporting, Cash for Decisions",
         "level": 2,
         "body": "The retailers who navigate this most smoothly tend to adopt a clear internal rule rather than trying to mentally juggle both methods on the fly: accrual figures are the official book of record used for GST filing, annual accounts, and any external reporting (banks, investors, ACRA), while cash figures — reviewed weekly, sometimes daily — drive operational decisions like \"can we afford to restock this week\" or \"do we have enough for payroll on Friday.\" A neighbourhood grocery chain formalised this by having their POS and accounting system automatically produce both views every week without any manual reconciliation effort, so the owner reviews a simple cash dashboard each Monday for operational decisions while the accountant works exclusively from the accrual ledger for compliance and annual filing. This removes the ambiguity of \"which number is real\" that confuses most first-time retail owners, because both numbers are real — they're just answering different questions, and the business needs both answered correctly to survive and to stay compliant simultaneously."
+      },
+      {
+        "heading": "Worked Example: Reconciling the Two Views in Practice",
+        "level": 2,
+        "body": "Take a small electronics repair-and-retail shop with June revenue of SGD 120,000, of which SGD 35,000 was invoiced to two corporate clients on 60-day terms and the remainder collected in cash or card at point of sale. Accrual profit for June: SGD 120,000 revenue minus SGD 70,000 COGS and operating costs = SGD 50,000 profit, all recognised in June regardless of when the SGD 35,000 corporate invoices actually get paid. Cash profit for June: only SGD 85,000 was actually collected (the walk-in trade), against the same SGD 70,000 of costs paid out — a cash profit of SGD 15,000, with the remaining SGD 35,000 arriving in August when the corporate invoices settle. GST is calculated and due on the full SGD 120,000 accrual-basis revenue, meaning the shop owes roughly SGD 8,400 in GST for a month where actual cash profit was only SGD 15,000 — a gap of SGD 35,000 between what the P&L says was earned and what's actually sitting in the bank account. Owners who don't track both views side by side are the ones who get caught short on the GST payment date, not because the business isn't profitable, but because profit and cash arrived in different months."
       }
     ],
     "paa": [
@@ -841,7 +846,7 @@ export const INTEGRATION_BLOGS_BATCH_4_SINGAPORE: BlogPost[] = [
     "cluster": "Singapore Compliance",
     "pillar": "Digital Invoicing",
     "publishDate": "2026-07-05",
-    "readTime": 6,
+    "readTime": 5,
     "tldr": "Singapore moving to mandatory e-invoicing (PEPPOL standard). Phased: Phase 1 (2026): large businesses. Phase 2 (2027): all GST businesses. Non-compliance: penalties SGD 500+. AskBiz auto-generates PEPPOL-compliant e-invoices, embeds GST data, sends digitally.",
     "sections": [
       {
@@ -878,6 +883,11 @@ export const INTEGRATION_BLOGS_BATCH_4_SINGAPORE: BlogPost[] = [
         "heading": "What to Actually Do Between Now and Your Compliance Deadline",
         "level": 2,
         "body": "The practical preparation work is smaller than most businesses assume, provided it starts early rather than in the final weeks before a deadline. First, confirm whether your existing accounting software (Xero, QuickBooks, or similar) already has PEPPOL export capability built in or on its roadmap — most major cloud platforms have been adding this progressively rather than requiring a wholesale system replacement. Second, identify your largest B2B and government-linked customers and ask directly whether they already require or plan to require structured e-invoicing, since this often arrives on your desk well before the general regulatory deadline applies to you. Third, run a small pilot — issue e-invoices to one or two willing customers for a month before the deadline forces universal adoption, so any formatting or data-field issues surface in a low-stakes trial rather than during a compliance crunch. A retail supply business that ran this kind of pilot with two cooperative wholesale customers discovered their product SKU descriptions weren't structured cleanly enough for automated matching on the receiving end — a fixable issue, but one better found in a pilot than discovered en masse once every invoice had to comply."
+      },
+      {
+        "heading": "Worked Example: The Cost of Waiting Until the Deadline",
+        "level": 2,
+        "body": "A mid-size print and signage business with roughly SGD 3.5M annual turnover assumed the 2027 all-GST-registered deadline gave them plenty of runway and made no preparation until three months before the phase applied to them. In that compressed window, they discovered their accounting software's PEPPOL export module required a paid upgrade tier they hadn't budgeted for, their product and service line items needed re-coding to match standard classification schemes before the export would validate correctly, and their two largest clients — both government-linked entities — had already been quietly expecting structured invoices for the better part of a year, during which the business had been submitting PDFs that required manual client-side processing and had contributed to slower payment cycles nobody had connected to the invoicing format. The scramble to become compliant in three months cost roughly SGD 4,200 in expedited software fees, consultant time to clean up product coding, and a compressed testing window that led to two rejected invoice batches in the first month live — rejections that delayed payment on those batches by several weeks. Businesses that started this same process a year ahead of their deadline typically spread the same total cost over a longer timeline with no rejected batches, because there was time to test and fix issues without payment-critical invoices riding on the first attempt."
       }
     ],
     "paa": [
@@ -907,7 +917,7 @@ export const INTEGRATION_BLOGS_BATCH_4_SINGAPORE: BlogPost[] = [
     "cluster": "Singapore Retail",
     "pillar": "Inventory",
     "publishDate": "2026-07-06",
-    "readTime": 6,
+    "readTime": 5,
     "tldr": "Cosmetics store SGD 1M stock value. Physical count vs system: SGD 30K missing (3% shrinkage). Theft: SGD 18K. Spillage/breakage: SGD 8K. Unrecorded damage: SGD 4K. Impact: profit margin drops from 25% to 22% (SGD 30K cost). AskBiz daily inventory alerts: \"Expected SGD 50K stock, actual SGD 49.8K. Investigate.\"",
     "sections": [
       {
@@ -944,6 +954,11 @@ export const INTEGRATION_BLOGS_BATCH_4_SINGAPORE: BlogPost[] = [
         "heading": "Building a Shrinkage Response Protocol, Not Just a Detection System",
         "level": 2,
         "body": "Detecting shrinkage is only useful if it's paired with a defined response — many retailers discover a shrinkage alert, feel briefly alarmed, and then take no concrete action because nobody owns the next step. A homeware retail chain fixed this by building a simple three-tier response protocol tied to their shrinkage alerts: any single-day anomaly under 1% triggers a note for the weekly manager review; anomalies between 1–3% trigger a same-week stock recount of the specific category flagged; anomalies above 3% trigger an immediate investigation including CCTV review and a conversation with staff on shift during the relevant period. Before building this protocol, the chain's shrinkage alerts were technically accurate but operationally useless — flagged, acknowledged, and then forgotten because no manager had explicit ownership of what to do next. After implementing the tiered response, actionable shrinkage incidents (ones that led to a corrected process, a staff conversation, or a supplier dispute) rose sharply, not because shrinkage itself increased, but because the business finally had a defined workflow connecting detection to action."
+      },
+      {
+        "heading": "Worked Example: Tracing SGD 22K Back to Its Source",
+        "level": 2,
+        "body": "A two-outlet cosmetics retailer with combined SGD 1.8M annual stock value found overall shrinkage running at 2.9%, roughly SGD 52,000 for the year — above the 3-5% industry norm for cosmetics but still within the expected range, and easy to write off as \"normal for the category.\" Breaking the number down by outlet rather than accepting the combined figure showed one location running 1.4% shrinkage (essentially in line with well-managed cosmetics retail) while the second was running 5.1%, more than double. Digging further into the high-shrinkage outlet by category and shift, the pattern narrowed to testers and sample-size products going missing disproportionately during weekend evening shifts staffed by a specific rotation of part-time employees. Rather than assuming theft outright, the store manager first checked whether tester replenishment logs matched actual product movement and found the gap was real, not a recording error. A direct conversation with the shift team, combined with moving sample stock to a locked cabinet requiring staff sign-out, cut that outlet's shrinkage from 5.1% to 2.2% within the following quarter — recovering roughly SGD 22,000 annualised that would have stayed hidden inside a blended two-outlet average showing an unremarkable 2.9%."
       }
     ],
     "paa": [
