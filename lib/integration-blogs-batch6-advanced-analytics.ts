@@ -212,7 +212,7 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
     "cluster": "Analytics",
     "pillar": "Inventory",
     "publishDate": "2026-08-05",
-    "readTime": 6,
+    "readTime": 5,
     "tldr": "Store 1000 SKUs. By revenue: Top 200 SKUs (Category A, 20%) = SGD 800K revenue (80% of total). Next 300 SKUs (Category B, 30%) = SGD 150K (15%). Last 500 SKUs (Category C, 50%) = SGD 50K (5%). Focus: stock Category A aggressively (never stock-out), monitor Category B weekly, stock Category C conservatively (order-to-demand). Inventory investment: 50% in Category A (high sales), 30% in Category B, 20% in Category C. Rebalance quarterly as sales mix shifts.",
     "sections": [
       {
@@ -365,7 +365,7 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
     "cluster": "Analytics",
     "pillar": "Profitability",
     "publishDate": "2026-08-08",
-    "readTime": 7,
+    "readTime": 5,
     "tldr": "Online retailer order: SGD 50 price, SGD 30 COGS (GROSS SGD 20). Minus shipping SGD 5, payment fee SGD 1, customer support contact SGD 2, return (10% rate, 50% cost) = 5% × SGD 15 = SGD 0.75. Net profit: SGD 20 - SGD 5 - SGD 1 - SGD 2 - SGD 0.75 = SGD 11.25 (22.5% margin). Looks good. But outlier: low-volume SKU (A/B testing), 20% return rate (quality issue), higher support cost (assembly question). Actual net: SGD 50 - SGD 30 - SGD 5 - SGD 1 - SGD 4 (support) - SGD 5 (returns) = SGD 5 (10% margin). Or: negative margin if customer demands refund (50% chance for low-quality item).",
     "sections": [
       {
@@ -416,7 +416,7 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
     "cluster": "Analytics",
     "pillar": "Forecasting",
     "publishDate": "2026-08-09",
-    "readTime": 7,
+    "readTime": 5,
     "tldr": "Retail apparel: winter avg 100 units/month, summer avg 140 units/month (40% spike). Current inventory March: 100 units (1-month stock). By May (summer start): if you don't adjust, will stock-out mid-June. Correct: from April, order 140 units/month (increase 40%), have 3-month buffer by June (420 units on hand). Cost: additional working capital SGD 40K (40% increase × SGD 1K per unit). Benefit: zero stock-outs during peak season = avoid SGD 100K lost revenue (100 units × SGD 1K profit per unit).",
     "sections": [
       {
@@ -1028,7 +1028,7 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
     "cluster": "Analytics",
     "pillar": "Inventory",
     "publishDate": "2026-08-21",
-    "readTime": 7,
+    "readTime": 5,
     "tldr": "Retailer: SGD 500K inventory on hand. Carrying cost: capital cost 4.5% (overdraft rate on SGD 500K) = SGD 22.5K/year. Warehouse rent SGD 5K/month = SGD 60K/year. Insurance 0.5% = SGD 2.5K/year. Shrinkage 1% = SGD 5K/year. Obsolescence risk 3% = SGD 15K/year. Total: SGD 105K/year = 21% of inventory value. Slow-moving SKUs (bottom 20% by turnover) = SGD 100K of inventory = costing SGD 21K/year to hold. Sell or liquidate = save SGD 21K.",
     "sections": [
       {
@@ -1050,6 +1050,16 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
         "heading": "AskBiz Carrying Cost Analytics",
         "level": 2,
         "body": "Calculates carrying cost per SKU based on purchase cost, days in stock, and cost-of-capital rate. \"Top 10 slowest SKUs: total inventory value SGD 85K, average 210 days in stock, estimated carrying cost SGD 12K annualised. Carrying cost per SKU ranges SGD 400 to SGD 2.8K. Recommendation: run clearance on 6 SKUs (>180 days): liquidation price ≥ SGD 62K recovers more than holding. Free up SGD 85K cash, save SGD 12K carrying cost. Net benefit: SGD 85K + SGD 12K vs potential markdown loss SGD 15K = net positive SGD 82K.\""
+      },
+      {
+        "heading": "The Mistake: Treating Carrying Cost as a Rounding Error",
+        "level": 2,
+        "body": "Most SMB owners price inventory decisions purely on purchase cost versus resale price and never factor in the cost of the shelf time in between — which is exactly backwards for any business holding stock more than a few weeks. Consider a Ho Chi Minh City homeware importer stocking SGD 300K of ceramics and furniture across 40 SKUs. The owner's mental model was simple: \"I bought it for SGD 40, I sell it for SGD 70, that's a 43% margin, good deal.\" What the model missed is that 15 of those 40 SKUs sat in the warehouse for an average of 300 days before selling — at a 22% annual carrying cost, that is roughly 18% of purchase price consumed just holding the item, shrinking the real margin from 43% to about 25%. Worse, three SKUs had been sitting for over 500 days and were still being carried at full value on the books, masking a further SGD 9K of carrying cost nobody had accounted for. The mistake compounds because carrying cost is invisible on a standard P&L — it never shows up as a line item, it just shows up as slightly worse cash flow and slightly thinner margins that nobody can quite explain. Treat carrying cost as a real, ticking expense from day one of receiving stock, not an afterthought you calculate once a slow-mover embarrasses you at year-end. The fix the importer eventually applied was procedural rather than dramatic: every SKU now gets a carrying cost estimate attached at the point of purchase, calculated from expected days-to-sell based on that category's historical turnover, so the true expected margin is visible before the purchase order is even confirmed. Items where the carrying-cost-adjusted margin fell below 20% were either renegotiated on unit cost, ordered in smaller batches to reduce days in stock, or dropped from the catalogue entirely. Within two quarters, average days-in-stock across the 40 SKUs fell from 210 to 140, and blended real margin — after carrying cost — rose by six percentage points without a single price increase to customers, purely by buying smarter and turning stock faster."
+      },
+      {
+        "heading": "Industry Carrying Cost Benchmarks and Where SMBs Typically Sit",
+        "level": 2,
+        "body": "Carrying cost as a percentage of inventory value varies meaningfully by category, and knowing where your business type sits helps you judge whether your 21% is normal or a red flag. Fast-moving consumer goods and grocery typically run 12-18% (high turnover keeps capital and obsolescence costs low, but shrinkage from perishability pulls the number up). General retail and apparel sit at 20-28% (moderate turnover, meaningful obsolescence risk from seasonal and fashion cycles). Electronics and technology products often run 25-35% because obsolescence risk is severe — a smartphone accessory line loses relevance within a single product generation. Industrial parts and B2B spares can look deceptively low at 15-20% carrying cost, but only because turnover is slow by design (you are meant to hold safety stock) — the tradeoff there is capital cost, not obsolescence. A Singapore homeware retailer benchmarking themselves against the 20-25% general retail range and finding their carrying cost at 21% could reasonably conclude their inventory discipline is healthy; the same 21% at an electronics reseller would actually be below where it should be, suggesting they may be underestimating obsolescence risk on fast-moving tech categories rather than running an efficient operation."
       }
     ],
     "paa": [
@@ -1079,7 +1089,7 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
     "cluster": "Analytics",
     "pillar": "Retention",
     "publishDate": "2026-08-22",
-    "readTime": 7,
+    "readTime": 5,
     "tldr": "Retailer: 2K active customers, 800 lapsed (no purchase in 90 days). Winback campaign: email + SGD 10 voucher. Cost: SGD 0.50 email + SGD 10 voucher = SGD 10.50 per contact. Reactivation rate: 28% = 224 customers reactivated. Revenue: 224 × SGD 65 avg order = SGD 14.6K. Campaign cost: 800 × SGD 10.50 = SGD 8.4K. Net: SGD 6.2K profit. Compare: acquiring 224 new customers at SGD 45 CAC = SGD 10.1K spend. Winback is 40% cheaper per converted customer.",
     "sections": [
       {
@@ -1101,6 +1111,16 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
         "heading": "AskBiz Lapsed Customer Analytics",
         "level": 2,
         "body": "Automatically segments customers by last purchase date. Calculates reactivation rate from previous campaigns. \"Currently lapsed (90+ days): 850 customers. Breakdown: 90-180 days: 420 (estimated 30% reactivatable = 126 customers = SGD 8.2K revenue potential). 180-365 days: 280 (20% = 56 customers = SGD 3.6K). 365+ days: 150 (5% = 7 customers). Total reactivation potential: 189 customers = SGD 12.3K revenue. Campaign cost at SGD 12/contact: SGD 10.2K. Net: SGD 2.1K. Alternative: prioritise top 200 lapsed by historical LTV (80% of revenue potential at 25% cost). Recommended action: run tiered campaign this week.\""
+      },
+      {
+        "heading": "The Mistake: Blasting All Lapsed Customers With the Same Offer",
+        "level": 2,
+        "body": "The most common winback failure is not a weak offer — it is sending one generic offer to an entire lapsed list regardless of why each customer stopped buying. A Bangkok skincare retailer with 1,100 lapsed customers ran a single blanket campaign: 15% off, one email, sent to everyone lapsed 60+ days. Reactivation rate came back at 9% — well below the 20-30% range typical for winback. When they dug into the non-responders, three distinct groups emerged: customers who stopped because a product they loved was discontinued (no discount fixes this — they need to know what replaced it), customers who switched to a competitor over price (discount-sensitive, would respond to an offer), and customers who simply forgot the brand existed (needed a reminder, not a discount, since they were never price-sensitive to begin with). Rerunning the campaign three ways — a \"here's what's new\" email for the forgotten-brand group, a 20% offer for the price-switchers, and a \"we heard your feedback, here's what changed\" email for the discontinued-product group — lifted blended reactivation to 24% on the same list, more than doubling revenue from the exact same 1,100 names. The lesson: a lapsed customer list is not one audience, and the reason someone lapsed determines what will bring them back far more than the size of the discount does. Getting to this level of segmentation does not require a data science team — it requires asking a simple question of your highest-value lapsed customers (a quick email or two, or a look at what they last purchased and any support tickets on file) before assuming price is the barrier, because for most SMBs price is actually the least common reason a good customer quietly stops coming back."
+      },
+      {
+        "heading": "Calculating True Winback ROI Including Cannibalisation",
+        "level": 2,
+        "body": "A winback campaign's headline ROI often overstates the real benefit because it does not account for customers who would have returned anyway without a voucher, or who were about to buy at full price and instead redeemed a discount they did not need. To calculate true incremental ROI, hold back a control group: send the campaign to 90% of your lapsed list and deliberately exclude 10% with no contact at all. If the treated group reactivates at 28% and the untouched control group reactivates at 6% over the same window (some lapsed customers always drift back on their own), the incremental lift attributable to the campaign is 22 percentage points, not 28. For a Jakarta homeware brand testing this on 600 lapsed customers (540 treated, 60 held as control): treated group reactivated 151 customers (28%), control group reactivated 4 customers (6.7%) purely organically. True incremental reactivations: 151 minus the 36 that the control rate implies would have returned anyway (540 × 6.7%) = 115 genuinely incremental customers. At SGD 60 average order value, that is SGD 6,900 in truly incremental revenue against a campaign cost of SGD 5,670 (540 × SGD 10.50) — a real net gain of SGD 1,230, meaningfully lower than the naive calculation of SGD 3,150 that ignores organic reactivation. Running a small control group on every winback campaign is the only way to know if the campaign is creating revenue or just paying for revenue that was coming back regardless. Once a business has run this control-group test two or three times and established a stable organic-return baseline for its lapsed segments, it no longer needs a fresh control group on every single campaign — the baseline can be reused to estimate incremental lift going forward, with a control group re-run periodically to check the baseline still holds."
       }
     ],
     "paa": [
@@ -1232,7 +1252,7 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
     "cluster": "Analytics",
     "pillar": "Profitability",
     "publishDate": "2026-08-25",
-    "readTime": 6,
+    "readTime": 5,
     "tldr": "Retailer: monthly gross margin 38%. COGS jumps week 2 (new supplier invoice at 5% higher price). Without daily tracking: discover week 5 (month-end P&L) = 4 weeks at wrong margin = SGD 4K extra cost absorbed. With daily tracking: day 8 alert \"COGS up SGD 200 vs forecast\" = investigate = discover new supplier rate = negotiate or switch in week 2 = save SGD 3K of the SGD 4K. Daily tracking = 30-day faster reaction time.",
     "sections": [
       {
@@ -1254,6 +1274,16 @@ export const INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS: BlogPost[] = [
         "heading": "AskBiz Daily Gross Profit Dashboard",
         "level": 2,
         "body": "Sends morning email: yesterday's revenue, COGS, gross profit, and margin — compared to prior 7-day average and same day last week. \"Yesterday: Revenue SGD 4.8K, COGS SGD 2.9K, Gross Profit SGD 1.9K, Margin 39.6%. 7-day average margin: 41.2%. Alert: margin down 1.6% — below threshold. Drill-down: COGS up SGD 130 vs average. Breakdown: food SGD 70 higher (portion size check?), packaging SGD 60 higher (new packaging supplier invoice?). Action: review with kitchen manager this morning.\""
+      },
+      {
+        "heading": "The Mistake: Confusing Revenue Growth With Margin Health",
+        "level": 2,
+        "body": "One of the most dangerous blind spots in SMB finance is watching revenue climb month after month and assuming the business is getting healthier, while margin quietly erodes underneath the growth. A Bandung casual-dining restaurant group grew revenue 18% over two quarters — a number the owner celebrated at every management meeting — while gross margin drifted from 42% down to 33% over the same period without anyone noticing, because nobody was looking at margin as a separate number from revenue. The cause was mundane and entirely preventable: a new produce supplier had been onboarded to support the higher volume, at a price roughly 9% above the old supplier, and portion sizes had crept up slightly as new kitchen staff were trained without close supervision on plating standards. Each change individually was small enough to be invisible in a revenue-focused review. Combined and compounded over two quarters, they consumed nearly all the additional profit the revenue growth should have generated — the business was doing 18% more work for almost the same bottom-line profit it had before. When the owner finally pulled a margin trend line rather than just a revenue trend line, the erosion was obvious in hindsight, but by then roughly SGD 22,000 in avoidable margin loss had already passed through the business. The fix was not complicated — renegotiating with the original supplier for a portion of the volume and retraining kitchen staff on portioning recovered most of the lost margin within six weeks — but it required someone to actually look at margin daily or weekly rather than inferring business health from the top-line number alone. Revenue growth funded by margin erosion is not real growth; it is the business getting bigger while getting less profitable, and daily gross profit tracking is precisely the tool that catches this pattern before it becomes a multi-month, multi-thousand-dollar problem."
+      },
+      {
+        "heading": "A Worked Example: Retail Chain Catching a Pricing Error in Real Time",
+        "level": 2,
+        "body": "Consider a three-outlet homeware retail chain in Surabaya that had recently switched POS systems and, in the process of migrating product data, accidentally imported a batch of 40 SKUs with cost prices instead of sale prices for one category — kitchenware — due to a mapping error in the migration file. Under a monthly reporting cycle, this kind of error is exactly the sort of thing that hides in aggregate numbers for weeks: overall revenue looked roughly normal because kitchenware was only about 12% of total sales, and the category's contribution to blended margin dilution was not large enough to trigger obvious alarm in a once-a-month review. With daily gross profit tracking active, the anomaly surfaced on day two. The morning report flagged that gross margin had fallen from a 7-day average of 44% to 31% overnight, well outside the 2% alert threshold, and the drill-down pointed specifically at the kitchenware category, where COGS as a percentage of revenue had jumped from the normal 55% to 90% — a telltale sign that prices, not costs, had shifted. The store manager checked the affected SKUs within the hour, found roughly 40 items ringing up at cost price rather than the intended markup, and corrected the POS data before the second day of trading began. Total damage: one day of underpriced kitchenware sales, an estimated SGD 1,100 in foregone margin. Had this run under the old monthly reporting cadence, the same pricing error would likely have persisted for three to four weeks until month-end reconciliation caught it, by which point the estimated margin loss would have been closer to SGD 18,000-24,000 — twenty times worse for the exact same root cause, with the only difference being how quickly the anomaly was surfaced and acted on."
       }
     ],
     "paa": [
