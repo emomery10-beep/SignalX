@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { cookies, headers } from 'next/headers'
 import './globals.css'
 import PosConsentBanner from '@/components/PosConsentBanner'
+import PosOfflineBanner from '@/components/PosOfflineBanner'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import { resolveLocale, isRTL } from '@/lib/i18n-locale'
 import type { Lang } from '@/lib/i18n'
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{ margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif', background: '#f9f8f6', color: '#1a1916', WebkitFontSmoothing: 'antialiased' }}>
         <LanguageProvider initialLang={lang}>
+          <PosOfflineBanner />
           {children}
           <PosConsentBanner />
         </LanguageProvider>

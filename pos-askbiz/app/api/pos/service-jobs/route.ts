@@ -127,9 +127,23 @@ export async function POST(req: NextRequest) {
   const initialStatus = quoted_price ? 'quoted' : 'intake'
   const originalQuotedPrice = quoted_price || null
 
-  const { data: job, error } = await service
-    .from('pos_service_jobs')
-    .insert({
+  // Idempotency: a client_tx_id makes retries and offline-queue replays
+  // safe. Dedupe before inserting anything.
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
+  const JOB_SELECT = `*, checked_in_staff:pos_staff!checked_in_by(id, name), location:pos_locations!location_id(id, name)`
+  if (clientTxId) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('pos_service_jobs')
+        .select(JOB_SELECT)
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (!dupeErr && dupe) return json({ job: dupe, deduped: true })
+    } catch { /* dedupe is best-effort — never block intake on it */ }
+  }
+
+  const jobRow: Record<string, any> = {
       owner_id: auth.ownerId,
       ticket_number: '',  // trigger auto-generates
       status: initialStatus,
@@ -151,13 +165,26 @@ export async function POST(req: NextRequest) {
       intake_lng: intake_lng || null,
       estimated_minutes: estimated_minutes || null,
       warranty_job_id: isWarrantyReturn ? warranty_job_id : null,
-    })
-    .select(`
-      *,
-      checked_in_staff:pos_staff!checked_in_by(id, name),
-      location:pos_locations!location_id(id, name)
-    `)
-    .single()
+      client_tx_id: clientTxId,
+  }
+
+  let { data: job, error } = await service.from('pos_service_jobs').insert(jobRow).select(JOB_SELECT).single()
+
+  if (error && clientTxId && (error as any).code === '23505') {
+    const { data: dupe } = await service
+      .from('pos_service_jobs')
+      .select(JOB_SELECT)
+      .eq('owner_id', auth.ownerId)
+      .eq('client_tx_id', clientTxId)
+      .maybeSingle()
+    if (dupe) return json({ job: dupe, deduped: true })
+  }
+  if (error && /client_tx_id|column|schema cache/i.test(error.message || '')) {
+    delete jobRow.client_tx_id
+    const retry = await service.from('pos_service_jobs').insert(jobRow).select(JOB_SELECT).single()
+    job = retry.data
+    error = retry.error
+  }
 
   if (error) return json({ error: error.message }, 500)
 

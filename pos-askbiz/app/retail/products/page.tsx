@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { fetchInventory } from '@/lib/pos-inventory-fetch'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -87,10 +88,8 @@ function RetailProducts() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory`, { headers: staffHeaders })
-      const data = res.ok ? await res.json() : {}
-      const inv: InvItem[] = data.items || data.inventory || (Array.isArray(data) ? data : [])
-      setItems(inv)
+      const data = await fetchInventory({ ownerId: staffHeaders['x-owner-id'] || '', staffId: staffHeaders['x-staff-id'] || '' })
+      setItems(data.inventory || [])
     } catch (e) { console.error('inventory load error', e) }
     finally { setLoading(false) }
   }

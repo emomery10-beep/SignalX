@@ -3,6 +3,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { compressImageToDataUrl } from '@/lib/pos-image-compress'
+import { fetchInventory } from '@/lib/pos-inventory-fetch'
+import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
+import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const AMBER  = '#f59e0b'
@@ -91,18 +95,33 @@ export default function FactoryCapturePage() {
   const [selectedReason, setSelectedReason] = useState('')
   const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [pendingSync, setPendingSync] = useState(false)
 
   // ── Auth + inventory load ──────────────────────────────────────────────
   useEffect(() => {
     if (!authReady || !session) return
-    fetch('/api/pos/inventory', { headers: session.headers })
-      .then(r => r.ok ? r.json() : { inventory: [] })
+    fetchInventory({ ownerId: session.ownerId, staffId: session.staffId || '' })
       .then(d => setInventory((d.inventory || []).slice(0, 60)))
       .catch(() => {})
     openCamera()
+
+    // Background prefetch so recent captures are visible offline (throttled).
+    isResourceCacheStale('factory_captures', session.ownerId, 6 * 60 * 60 * 1000).then(stale => {
+      if (stale) bulkUpsertResourceFromApi('factory_captures', '/api/pos/factory/capture', session.ownerId, session.staffId || '', { listKey: 'captures' }).catch(() => {})
+    }).catch(() => {})
+
     return () => stopCamera()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, session])
+
+  // ── Offline queue replay ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!session) return
+    const replay = () => replayOfflineQueue(session.ownerId, session.staffId || '').catch(() => {})
+    replay()
+    window.addEventListener('online', replay)
+    return () => window.removeEventListener('online', replay)
+  }, [session])
 
   // Open camera as soon as ready
   useEffect(() => {
@@ -138,13 +157,16 @@ export default function FactoryCapturePage() {
     setCameraOn(false)
   }
 
-  function capture() {
+  // Compressed (previously raw canvas JPEG at full camera resolution) —
+  // uncompressed photos would blow through the offline outbox's IndexedDB
+  // quota fast once queued.
+  async function capture() {
     if (!canvasRef.current || !videoRef.current) return
     const v = videoRef.current
     const c = canvasRef.current
     c.width = v.videoWidth; c.height = v.videoHeight
     c.getContext('2d')?.drawImage(v, 0, 0)
-    const url = c.toDataURL('image/jpeg', 0.88)
+    const url = await compressImageToDataUrl(c, { maxEdge: 1600, quality: 0.82 })
     setPhotoUrl(url)
     // Flash animation
     setFlashActive(true)
@@ -153,16 +175,14 @@ export default function FactoryCapturePage() {
     setStage('confirm_type')
   }
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      setPhotoUrl(ev.target?.result as string)
+    try {
+      setPhotoUrl(await compressImageToDataUrl(file, { maxEdge: 1600, quality: 0.82 }))
       stopCamera()
       setStage('confirm_type')
-    }
-    reader.readAsDataURL(file)
+    } catch { /* leave photoUrl unset — user can retake */ }
     e.target.value = ''
   }
 
@@ -187,19 +207,22 @@ export default function FactoryCapturePage() {
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError(tc('factory_capture.error_valid_quantity')); return }
     if (captureType === 'wastage' && !resolvedNotes) { setSaveError(tc('factory_capture.error_wastage_reason')); return }
     if (captureType === 'dispatch' && !notes.trim()) { setSaveError(tc('factory_capture.error_destination')); return }
-    setSaving(true); setSaveError('')
+    setSaving(true); setSaveError(''); setPendingSync(false)
+    const clientTxId = generateClientTxId('capture')
+    const body = {
+      type: captureType,
+      image: photoUrl,
+      product_name: product.trim(),
+      quantity: Number(quantity),
+      batch_ref: unit,
+      notes: resolvedNotes || null,
+      client_tx_id: clientTxId,
+    }
     try {
       const res = await fetch('/api/pos/factory/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({
-          type: captureType,
-          image: photoUrl,
-          product_name: product.trim(),
-          quantity: Number(quantity),
-          batch_ref: unit,
-          notes: resolvedNotes || null,
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -209,7 +232,18 @@ export default function FactoryCapturePage() {
       }
       setStage('success')
     } catch {
-      setSaveError(tc('factory_capture.error_network'))
+      // Network failure (not a rejected request) — queue for replay, since
+      // the capture (with its photo) is already compressed and self-contained.
+      try {
+        await enqueueOfflineWrite({
+          client_tx_id: clientTxId, owner_id: session.ownerId, staff_id: session.staffId || '',
+          endpoint: '/api/pos/factory/capture', method: 'POST', body, created_at: new Date().toISOString(),
+        })
+        setPendingSync(true)
+        setStage('success')
+      } catch (queueErr) {
+        setSaveError(queueErr instanceof OfflineQueueQuotaError ? queueErr.message : tc('factory_capture.error_network'))
+      }
     } finally {
       setSaving(false)
     }
@@ -225,6 +259,7 @@ export default function FactoryCapturePage() {
     setNotes('')
     setSelectedReason('')
     setSaveError('')
+    setPendingSync(false)
     openCamera()
   }
 
@@ -559,7 +594,9 @@ export default function FactoryCapturePage() {
         {quantity && ` · ${quantity} ${unit}`}
         {product && ` · ${product}`}
       </div>
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 40 }}>{tc('factory_capture.success_awaiting')}</div>
+      <div style={{ fontSize: 12, color: pendingSync ? RED : 'rgba(255,255,255,0.3)', marginBottom: 40 }}>
+        {pendingSync ? tc('factory_capture.success_pending_sync') : tc('factory_capture.success_awaiting')}
+      </div>
 
       {/* Photo preview */}
       {photoUrl && (

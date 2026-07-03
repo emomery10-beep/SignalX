@@ -54,6 +54,21 @@ export async function POST(req: NextRequest) {
 
   if (!items?.length) return NextResponse.json({ error: 'items required' }, { status: 400 })
 
+  // Idempotency: a client_tx_id makes retries and offline-queue replays
+  // safe. Dedupe before creating the order or any of its cascading rows.
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
+  if (clientTxId) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('restaurant_orders')
+        .select('*, order_items:restaurant_order_items(id, name, unit_price, food_cost, qty, status, course, station, notes)')
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (!dupeErr && dupe) return NextResponse.json({ order: dupe, deduped: true })
+    } catch { /* dedupe is best-effort — never block an order on it */ }
+  }
+
   // Calculate totals
   const subtotal = items.reduce((s: number, i: any) => {
     const modAdj = (i.modifiers || []).reduce((ms: number, m: any) => ms + (m.price_adjustment || 0), 0)
@@ -61,7 +76,7 @@ export async function POST(req: NextRequest) {
   }, 0)
 
   // Create order
-  const { data: order, error: orderErr } = await service.from('restaurant_orders').insert({
+  const orderRow: Record<string, any> = {
     owner_id:     auth.ownerId,
     location_id:  location_id || auth.locationId,
     table_id:     table_id || null,
@@ -73,7 +88,25 @@ export async function POST(req: NextRequest) {
     total: subtotal,
     status: 'open',
     seated_at: new Date().toISOString(),
-  }).select().single()
+    client_tx_id: clientTxId,
+  }
+  let { data: order, error: orderErr } = await service.from('restaurant_orders').insert(orderRow).select().single()
+
+  if (orderErr && clientTxId && (orderErr as any).code === '23505') {
+    const { data: dupe } = await service
+      .from('restaurant_orders')
+      .select('*, order_items:restaurant_order_items(id, name, unit_price, food_cost, qty, status, course, station, notes)')
+      .eq('owner_id', auth.ownerId)
+      .eq('client_tx_id', clientTxId)
+      .maybeSingle()
+    if (dupe) return NextResponse.json({ order: dupe, deduped: true })
+  }
+  if (orderErr && /client_tx_id|column|schema cache/i.test(orderErr.message || '')) {
+    delete orderRow.client_tx_id
+    const retry = await service.from('restaurant_orders').insert(orderRow).select().single()
+    order = retry.data
+    orderErr = retry.error
+  }
   if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 500 })
 
   // Create order items

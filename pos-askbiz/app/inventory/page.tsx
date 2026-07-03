@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isInventoryLevel, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import { fetchInventory } from '@/lib/pos-inventory-fetch'
 
 const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)' }
 const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
@@ -102,8 +103,7 @@ export default function InventoryPage() {
     if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory`, { headers: posHeaders(session) })
-      const data = await res.json()
+      const data = await fetchInventory({ ownerId: session.owner_id, staffId: session.id, locationId: session.location_id })
       setItems(data.inventory || [])
     } catch { /* silent — will show empty state */ }
     setLoading(false)

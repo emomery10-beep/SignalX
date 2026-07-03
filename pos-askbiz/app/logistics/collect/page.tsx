@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsClerkLevel, isLogisticsBranchLevel, isManagerOrAboveLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 
 const ACC = '#0891b2'
 const ACC_LIGHT = 'rgba(8,145,178,.1)'
@@ -24,28 +25,6 @@ interface Parcel {
   sender_branch?: { id: string; name: string } | null
 }
 
-async function compressPhoto(file: File, maxEdge = 1600, quality = 0.82): Promise<string> {
-  const draw = (src: CanvasImageSource, w: number, h: number): string | null => {
-    const c = document.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h)
-    const ctx = c.getContext('2d'); if (!ctx) return null
-    ctx.drawImage(src, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', quality)
-  }
-  if (typeof createImageBitmap === 'function') {
-    try {
-      const bmp = await createImageBitmap(file)
-      const scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height))
-      const out = draw(bmp, Math.round(bmp.width * scale), Math.round(bmp.height * scale))
-      bmp.close?.(); if (out && out.length > 120) return out
-    } catch { /* fall through */ }
-  }
-  const dataUrl: string = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(r.error); r.readAsDataURL(file) })
-  try {
-    const img: HTMLImageElement = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = dataUrl })
-    const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
-    const out = draw(img, Math.round(img.width * scale), Math.round(img.height * scale)); if (out && out.length > 120) return out
-  } catch { /* fall through */ }
-  return dataUrl
-}
 async function fetchWithTimeout(url: string, opts: RequestInit, ms = 45000): Promise<Response> {
   const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), ms)
   try { return await fetch(url, { ...opts, signal: ctrl.signal }) } finally { clearTimeout(t) }
@@ -108,7 +87,7 @@ export default function CollectPage() {
     setErr('')
     if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setErr(tc('logistics_collect.err_photo_type')); return }
     setPhotoBusy(true)
-    try { setPhoto(await compressPhoto(file)) } catch { setErr(tc('logistics_collect.err_photo_process')) }
+    try { setPhoto(await compressImageToDataUrl(file)) } catch { setErr(tc('logistics_collect.err_photo_process')) }
     setPhotoBusy(false)
   }
 
@@ -116,7 +95,7 @@ export default function CollectPage() {
     if (!staff) return
     setScanning(true); setScanMsg('')
     try {
-      const img = await compressPhoto(file, 1800, 0.85)
+      const img = await compressImageToDataUrl(file, { maxEdge: 1800, quality: 0.85 })
       const res = await fetchWithTimeout(`${API}/api/pos/parcels/scan-id`, { method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: img }) }, 45000)
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data.id_number) { setScanMsg(tc('logistics_collect.err_id_read')); return }

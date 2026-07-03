@@ -1,5 +1,5 @@
 'use client'
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
@@ -43,6 +43,23 @@ function LoginPageContent() {
   const [staffName, setStaffName] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  // A returning staff member with a valid cached session skips the login
+  // form entirely — no network call, so this works on a cold offline boot.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pos_staff')
+      if (raw) {
+        const s = JSON.parse(raw)
+        if (s?.id && s?.owner_id && s?.role !== undefined) {
+          router.replace(getLoginDest(s.role))
+          return
+        }
+      }
+    } catch {}
+    setCheckingSession(false)
+  }, [])
 
   const handleCheckEmail = async () => {
     if (!email.trim()) return
@@ -77,6 +94,12 @@ function LoginPageContent() {
       router.push(getLoginDest(data.staff.role))
     } catch { setLoading(false); setError(tc('pos_login.err_network')) }
   }
+
+  if (checkingSession) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14, background: 'var(--pos-bg)' }}>
+      {tc('pos_login.loading_login')}
+    </div>
+  )
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'var(--pos-bg)' }}>

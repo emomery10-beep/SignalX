@@ -3,6 +3,10 @@ import { useEffect, useRef, useState, useCallback, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsClerkLevel, isLogisticsBranchLevel, isManagerOrAboveLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import { compressImageToDataUrl, approxDataUrlBytes } from '@/lib/pos-image-compress'
+import { fetchResource } from '@/lib/pos-resource-fetch'
+import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
+import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, getOutboxCount, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -38,76 +42,6 @@ interface Shift  { id: string; opened_at: string; opening_balance: number }
 type Step = 'shift' | 'sender' | 'receiver' | 'parcel' | 'photo' | 'payment' | 'confirm' | 'done'
 
 // ── Helpers ───────────────────────────────────────────────────
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader()
-    r.onload  = () => resolve(String(r.result))
-    r.onerror = () => reject(r.error || new Error('Could not read file'))
-    r.readAsDataURL(file)
-  })
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload  = () => resolve(img)
-    img.onerror = () => reject(new Error('Could not decode image'))
-    img.src = src
-  })
-}
-
-// Downscale + re-encode to JPEG so uploads stay well under the serverless
-// body limit (phone photos are 3–8 MB; this yields ~150–500 KB) and the model
-// gets a clean image. Prefers createImageBitmap with native resize — drawing a
-// full-res 12 MP phone photo straight onto a canvas blanks out on iOS Safari
-// (the well-known "black/empty canvas" bug), which is why ID scans came back
-// empty. createImageBitmap decodes + resizes off the main thread and avoids it.
-async function compressImage(file: File, maxEdge = 1600, quality = 0.82): Promise<string> {
-  const drawToJpeg = (src: CanvasImageSource, w: number, h: number): string | null => {
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, w); canvas.height = Math.max(1, h)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    ctx.drawImage(src, 0, 0, canvas.width, canvas.height)
-    return canvas.toDataURL('image/jpeg', quality)
-  }
-
-  // Path 1 — createImageBitmap (robust on iOS for large camera photos)
-  if (typeof createImageBitmap === 'function') {
-    try {
-      const probe = await createImageBitmap(file)
-      const scale = Math.min(1, maxEdge / Math.max(probe.width, probe.height))
-      const w = Math.round(probe.width * scale)
-      const h = Math.round(probe.height * scale)
-      let bmp = probe
-      try {
-        // Re-decode at target size where supported (Safari ignores options but still works)
-        bmp = await createImageBitmap(file, { resizeWidth: w, resizeHeight: h, resizeQuality: 'high' } as any)
-      } catch { /* keep probe */ }
-      const out = drawToJpeg(bmp, bmp.width === w ? w : w, bmp.height === h ? h : h)
-      probe.close?.(); if (bmp !== probe) bmp.close?.()
-      if (out && out.length > 'data:image/jpeg;base64,'.length + 100) return out
-    } catch { /* fall through */ }
-  }
-
-  // Path 2 — <img> + canvas fallback
-  const original = await fileToDataUrl(file)
-  try {
-    const img = await loadImage(original)
-    const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
-    const out = drawToJpeg(img, Math.round(img.width * scale), Math.round(img.height * scale))
-    if (out && out.length > 'data:image/jpeg;base64,'.length + 100) return out
-  } catch { /* fall through */ }
-
-  return original // undecodable format — caller still size-guards
-}
-
-function approxDataUrlBytes(dataUrl: string): number {
-  const i = dataUrl.indexOf(',')
-  const b64 = i >= 0 ? dataUrl.slice(i + 1) : dataUrl
-  return Math.floor(b64.length * 0.75)
-}
-
 // fetch that aborts instead of hanging forever on a stalled mobile connection
 async function fetchWithTimeout(url: string, opts: RequestInit, ms = 45000): Promise<Response> {
   const ctrl = new AbortController()
@@ -215,7 +149,8 @@ export default function IntakePage() {
   // Submit
   const [submitting, setSubmitting] = useState(false)
   const [submitErr, setSubmitErr]   = useState('')
-  const [createdParcel, setCreatedParcel] = useState<{ tracking_number: string; id: string; receipt_consent: boolean } | null>(null)
+  const [createdParcel, setCreatedParcel] = useState<{ tracking_number: string | null; id: string | null; receipt_consent: boolean; pendingSync?: boolean } | null>(null)
+  const [outboxPending, setOutboxPending] = useState(0)
   // Close shift
   const [showClose, setShowClose]       = useState(false)
   const [closeCash, setCloseCash]       = useState('')
@@ -237,7 +172,31 @@ export default function IntakePage() {
     if (shiftRaw) { try { setShift(JSON.parse(shiftRaw)); setStep('sender') } catch { localStorage.removeItem('pos_logistics_shift') } }
     setReady(true)
     loadRoutes(s)
+
+    // Background catalog prefetch so parcels/routes are usable offline —
+    // throttled so a screen visit doesn't re-download on every mount.
+    isResourceCacheStale('parcels', s.owner_id, 6 * 60 * 60 * 1000).then(stale => {
+      if (stale) bulkUpsertResourceFromApi('parcels', '/api/pos/parcels', s.owner_id, s.id, { listKey: 'parcels' }).catch(() => {})
+    }).catch(() => {})
+    isResourceCacheStale('routes', s.owner_id, 6 * 60 * 60 * 1000).then(stale => {
+      if (stale) bulkUpsertResourceFromApi('routes', '/api/pos/routes', s.owner_id, s.id, { listKey: 'routes' }).catch(() => {})
+    }).catch(() => {})
+
+    getOutboxCount(s.owner_id).then(setOutboxPending).catch(() => {})
   }, [router])
+
+  const replayQueue = useCallback(async () => {
+    if (!staff) return
+    await replayOfflineQueue(staff.owner_id, staff.id).catch(() => {})
+    getOutboxCount(staff.owner_id).then(setOutboxPending).catch(() => {})
+  }, [staff])
+
+  useEffect(() => {
+    if (!staff) return
+    replayQueue()
+    window.addEventListener('online', replayQueue)
+    return () => window.removeEventListener('online', replayQueue)
+  }, [staff, replayQueue])
 
   const hdrs = useCallback((s: Staff) => ({
     'Content-Type': 'application/json',
@@ -314,7 +273,7 @@ export default function IntakePage() {
     if (file.size > MAX_PHOTO_BYTES)                     { setPhotoErr(tc('logistics_intake.err_photo_too_big')); return }
     setPhotoBusy(true)
     try {
-      const compressed = await compressImage(file)
+      const compressed = await compressImageToDataUrl(file)
       if (approxDataUrlBytes(compressed) > 4 * 1024 * 1024) { setPhotoErr(tc('logistics_intake.err_photo_too_big_processed')); return }
       setPhotoDataUrl(compressed)
     } catch { setPhotoErr(tc('logistics_intake.err_photo_process')) }
@@ -329,7 +288,7 @@ export default function IntakePage() {
     setIdScanMsg(''); setIdMsgFor(which); setScanningId(which)
     try {
       if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setIdScanMsg(tc('logistics_intake.err_id_type')); return }
-      const compressed = await compressImage(file, 1800, 0.85)
+      const compressed = await compressImageToDataUrl(file, { maxEdge: 1800, quality: 0.85 })
       const res  = await fetchWithTimeout(`${API}/api/pos/parcels/scan-id`, {
         method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: compressed }),
       }, 45000)
@@ -351,58 +310,61 @@ export default function IntakePage() {
   }
 
   // ── Submit ────────────────────────────────────────────────
+  // Photo travels inline (base64) in the same request as the parcel create —
+  // not as a separate pre-upload step, which can't happen offline. The
+  // server (app/api/pos/parcels/route.ts) uploads it to the private
+  // parcel-photos bucket itself.
   const submit = async () => {
     if (!staff) return
     if (!dataConsent) { setSubmitErr(tc('logistics_intake.err_consent_required')); return }
     setSubmitting(true); setSubmitErr('')
 
-    // 1. Upload photo via the server route (private bucket + signed URL)
-    let intakePhotoUrl: string | null = null
-    let intakePhotoPath: string | null = null
-    if (photoDataUrl) {
-      try {
-        const up = await fetchWithTimeout(`${API}/api/pos/parcels/photo`, {
-          method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: photoDataUrl }),
-        }, 45000)
-        const upData = await up.json().catch(() => ({}))
-        if (!up.ok) { setSubmitErr(upData.error || tc('logistics_intake.err_photo_upload_failed')); setSubmitting(false); return }
-        intakePhotoUrl  = upData.url || null
-        intakePhotoPath = upData.path || null
-      } catch (e: any) {
-        setSubmitErr(e?.name === 'AbortError' ? tc('logistics_intake.err_photo_upload_timeout') : tc('logistics_intake.err_photo_upload_network'))
-        setSubmitting(false); return
-      }
+    const clientTxId = generateClientTxId('parcel')
+    const body = {
+      sender_name: senderName.trim(), sender_phone: senderPhone.trim(), sender_id_number: senderIdNum.trim() || null,
+      sender_branch_id: staff.location_id,
+      receiver_name: recvName.trim(), receiver_phone: recvPhone.trim(), receiver_id_number: recvIdNum.trim() || null,
+      destination_branch_id: deliveryType === 'branch_to_branch' ? (selectedRoute?.destination_branch_id || null) : null,
+      destination_city: deliveryType === 'branch_to_branch' ? (selectedRoute?.destination?.name || null) : destCity.trim() || null,
+      route_id: deliveryType === 'branch_to_branch' ? (selectedRouteId || null) : null,
+      delivery_type: deliveryType,
+      delivery_address: deliveryType === 'door_to_door' ? deliveryAddress.trim() : null,
+      description: description.trim() || null,
+      weight_kg: parseFloat(weightKg) || null,
+      parcel_size: parcelSize,
+      declared_value: parseFloat(declaredValue) || 0,
+      fee_charged: parseFloat(feeCharged) || 0,
+      payment_status: payStatus, payment_method: payMethod,
+      intake_photo: photoDataUrl || null,
+      sender_consent: dataConsent, receipt_consent: receiptConsent,
+      client_tx_id: clientTxId,
     }
 
-    // 2. Create the parcel
     try {
       const res = await fetchWithTimeout(`${API}/api/pos/parcels`, {
-        method: 'POST', headers: hdrs(staff),
-        body: JSON.stringify({
-          sender_name: senderName.trim(), sender_phone: senderPhone.trim(), sender_id_number: senderIdNum.trim() || null,
-          sender_branch_id: staff.location_id,
-          receiver_name: recvName.trim(), receiver_phone: recvPhone.trim(), receiver_id_number: recvIdNum.trim() || null,
-          destination_branch_id: deliveryType === 'branch_to_branch' ? (selectedRoute?.destination_branch_id || null) : null,
-          destination_city: deliveryType === 'branch_to_branch' ? (selectedRoute?.destination?.name || null) : destCity.trim() || null,
-          route_id: deliveryType === 'branch_to_branch' ? (selectedRouteId || null) : null,
-          delivery_type: deliveryType,
-          delivery_address: deliveryType === 'door_to_door' ? deliveryAddress.trim() : null,
-          description: description.trim() || null,
-          weight_kg: parseFloat(weightKg) || null,
-          parcel_size: parcelSize,
-          declared_value: parseFloat(declaredValue) || 0,
-          fee_charged: parseFloat(feeCharged) || 0,
-          payment_status: payStatus, payment_method: payMethod,
-          intake_photo_url: intakePhotoUrl, intake_photo_path: intakePhotoPath,
-          sender_consent: dataConsent, receipt_consent: receiptConsent,
-        }),
+        method: 'POST', headers: hdrs(staff), body: JSON.stringify(body),
       }, 45000)
       const data = await res.json().catch(() => ({}))
       if (!res.ok) { setSubmitErr(data.error || tc('logistics_intake.err_register_status', { status: res.status })); setSubmitting(false); return }
       setCreatedParcel({ tracking_number: data.parcel.tracking_number, id: data.parcel.id, receipt_consent: receiptConsent })
       setStep('done')
     } catch (e: any) {
-      setSubmitErr(e?.name === 'AbortError' ? tc('logistics_intake.err_submit_timeout') : tc('logistics_intake.err_submit_network'))
+      // Network failure (not a rejected request) — queue for replay when
+      // back online. The server generates the tracking number, so it isn't
+      // known yet; the done screen shows a "pending sync" placeholder.
+      try {
+        await enqueueOfflineWrite({
+          client_tx_id: clientTxId, owner_id: staff.owner_id, staff_id: staff.id,
+          endpoint: '/api/pos/parcels', method: 'POST', body, created_at: new Date().toISOString(),
+        })
+        setOutboxPending(await getOutboxCount(staff.owner_id))
+        setCreatedParcel({ tracking_number: null, id: null, receipt_consent: receiptConsent, pendingSync: true })
+        setStep('done')
+      } catch (queueErr) {
+        setSubmitErr(queueErr instanceof OfflineQueueQuotaError
+          ? queueErr.message
+          : (e?.name === 'AbortError' ? tc('logistics_intake.err_submit_timeout') : tc('logistics_intake.err_submit_network')))
+      }
     } finally { setSubmitting(false) }
   }
 
@@ -454,11 +416,11 @@ export default function IntakePage() {
         <div style={{ background: 'var(--pos-surface)', borderRadius: 20, padding: '32px 24px', border: `2px solid ${GREEN}` }}>
           <div style={{ fontSize: 40, marginBottom: 12 }} aria-hidden>{tc('logistics_intake.done_emoji')}</div>
           <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>{tc('logistics_intake.done_tracking_label')}</div>
-          <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 42, fontWeight: 900, color: ACC, letterSpacing: 2, padding: '16px 24px', background: ACC_LIGHT, borderRadius: 12, border: `2px dashed ${ACC_B}`, marginBottom: 16, wordBreak: 'break-all' }}>
-            {createdParcel.tracking_number}
+          <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: createdParcel.pendingSync ? 20 : 42, fontWeight: 900, color: createdParcel.pendingSync ? RED : ACC, letterSpacing: createdParcel.pendingSync ? 0 : 2, padding: '16px 24px', background: createdParcel.pendingSync ? 'var(--pos-danger-pale)' : ACC_LIGHT, borderRadius: 12, border: `2px dashed ${createdParcel.pendingSync ? 'var(--pos-danger-ring)' : ACC_B}`, marginBottom: 16, wordBreak: 'break-all' }}>
+            {createdParcel.pendingSync ? tc('logistics_intake.done_pending_sync') : createdParcel.tracking_number}
           </div>
           <p style={{ fontSize: 14, color: 'var(--pos-muted)', margin: '0 0 24px' }}>
-            {tc('logistics_intake.done_write_note')}
+            {createdParcel.pendingSync ? tc('logistics_intake.done_pending_sync_note') : tc('logistics_intake.done_write_note')}
           </p>
           {createdParcel.receipt_consent && (
             <div style={{ background: 'var(--pos-success-pale)', border: '1px solid var(--pos-success-ring)', borderRadius: 10, padding: '10px 14px', marginBottom: 24, fontSize: 12, color: GREEN }}>

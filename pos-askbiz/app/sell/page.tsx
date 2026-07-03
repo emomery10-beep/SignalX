@@ -6,6 +6,9 @@ import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
 import { getRoleHomeRoute } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
+import { fetchInventory } from '@/lib/pos-inventory-fetch'
+import { bulkUpsertFromApi, isCacheStale, decrementLocalStock } from '@/lib/pos-inventory-cache'
 
 const ACC = 'var(--pos-accent)'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -84,6 +87,7 @@ function bizLabel(type: string, tc: (key: string, vars?: Record<string, string |
 export default function SellPage() {
   const router = useRouter()
   const { tc } = useLang()
+  const online = useOnlineStatus()
   const [staff, setStaff]   = useState<StaffSession | null>(null)
   const [screen, setScreen] = useState<Screen>('home')
   const [cart, setCart]     = useState<CartItem[]>([])
@@ -220,10 +224,15 @@ export default function SellPage() {
 
     // Product count — a brand-new business with zero products gets pointed
     // at manual entry instead of discovering an empty search at the till
-    fetch(`${API}/api/pos/inventory?limit=1`, {
-      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
-    }).then(r => r.json()).then(data => {
+    fetchInventory({ ownerId: s.owner_id, staffId: s.id, locationId: s.location_id, limit: 1 }).then(data => {
       if (typeof data.total === 'number') setProductCount(data.total)
+    }).catch(() => {})
+
+    // Background catalog sync — mirrors inventory into IndexedDB so search
+    // and checkout keep working with no network. Throttled so a page visit
+    // doesn't re-download the whole catalog every time.
+    isCacheStale(s.owner_id, 6 * 60 * 60 * 1000).then(stale => {
+      if (stale) bulkUpsertFromApi(s.owner_id, s.id, s.location_id).catch(() => {})
     }).catch(() => {})
 
     // Start capturing location immediately so it's ready by checkout
@@ -351,12 +360,18 @@ export default function SellPage() {
     if (remaining.length < queue.length) loadTodayStats(staff)
   }, [staff])
 
+  const resyncCatalog = useCallback(() => {
+    if (!staff) return
+    bulkUpsertFromApi(staff.owner_id, staff.id, staff.location_id).catch(() => {})
+  }, [staff])
+
   useEffect(() => {
     if (!staff) return
     replayOfflineSales()
-    window.addEventListener('online', replayOfflineSales)
-    return () => window.removeEventListener('online', replayOfflineSales)
-  }, [staff, replayOfflineSales])
+    const onOnline = () => { replayOfflineSales(); resyncCatalog() }
+    window.addEventListener('online', onOnline)
+    return () => window.removeEventListener('online', onOnline)
+  }, [staff, replayOfflineSales, resyncCatalog])
 
   // ── Navigation guard — warn before leaving with an unpaid cart ──
   useEffect(() => {
@@ -425,10 +440,7 @@ export default function SellPage() {
     if (!q.trim() || !staff) { setSearchResults([]); return }
     setSearchLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory?search=${encodeURIComponent(q)}&limit=15`, {
-        headers: { 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id },
-      })
-      const data = await res.json()
+      const data = await fetchInventory({ ownerId: staff.owner_id, staffId: staff.id, locationId: staff.location_id, search: q, limit: 15 })
       setSearchResults(data.inventory || [])
     } catch {}
     setSearchLoading(false)
@@ -566,6 +578,9 @@ export default function SellPage() {
         setLastTxId(data.transaction_id)
         setLastTotal(cartTotal)
         setOversold(data.oversold || [])
+        // Keep the cache in step with rapid consecutive sales before the
+        // next background sync reconciles it to server truth.
+        decrementLocalStock(cart.map(i => ({ inventory_id: i.inventory_id, qty: i.qty }))).catch(() => {})
         if (paymentType === 'cash') {
           setTodaySales(s => s + 1)
           setTodayRevenue(r => r + cartTotal)
@@ -595,6 +610,11 @@ export default function SellPage() {
             })
             localStorage.setItem(offlineKey(staff), JSON.stringify(queue))
           }
+          // Same-device optimistic decrement — a second offline sale of the
+          // same SKU sees accurate low-stock state without a server round-trip.
+          // Cross-device drift is NOT reconciled here; the next catalog sync
+          // simply overwrites with server truth.
+          decrementLocalStock(cart.map(i => ({ inventory_id: i.inventory_id, qty: i.qty }))).catch(() => {})
           setOfflineSale(true)
           setLastTxId(`offline_${saleIdRef.current}`)
           setLastTotal(cartTotal)
@@ -1136,11 +1156,29 @@ export default function SellPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {([['cash', tc('sell.pay_cash')], ['card', tc('sell.pay_card')], ['mobile', tc('sell.pay_mobile')]] as const)
               .filter(([type]) => !practice || type === 'cash') // practice is cash-only: card/M-Pesa would hit real payment providers
-              .map(([type, label]) => (
-              <button key={type} onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); setCardProvider(null); }} className="pos-tab" style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${paymentType === type ? ACC : 'var(--pos-border)'}`, background: paymentType === type ? 'var(--pos-accent-pale)' : '#fff', color: paymentType === type ? ACC : 'var(--pos-muted)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                {label}
-              </button>
-            ))}
+              .map(([type, label]) => {
+                const requiresNetwork = type !== 'cash' && !online
+                return (
+                  <button
+                    key={type}
+                    disabled={requiresNetwork}
+                    onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); setCardProvider(null); }}
+                    className="pos-tab"
+                    style={{
+                      padding: '13px 8px', borderRadius: 12,
+                      border: `2px solid ${paymentType === type ? ACC : 'var(--pos-border)'}`,
+                      background: paymentType === type ? 'var(--pos-accent-pale)' : '#fff',
+                      color: paymentType === type ? ACC : 'var(--pos-muted)',
+                      fontSize: 13, fontWeight: 700,
+                      cursor: requiresNetwork ? 'not-allowed' : 'pointer',
+                      opacity: requiresNetwork ? 0.5 : 1,
+                    }}
+                  >
+                    {label}
+                    {requiresNetwork && <div style={{ fontSize: 10, fontWeight: 600, marginTop: 2 }}>{tc('sell.offline_payment_disabled')}</div>}
+                  </button>
+                )
+              })}
           </div>
         </div>
 
@@ -1319,7 +1357,7 @@ export default function SellPage() {
         {!lastTxId && (
           <button
             onClick={handleCheckout}
-            disabled={processing || (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) || (paymentType === 'card' && stripeVerified && !cardProvider) || (paymentType !== 'cash' && paymentConfigured === false)}
+            disabled={processing || (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) || (paymentType === 'card' && stripeVerified && !cardProvider) || (paymentType !== 'cash' && paymentConfigured === false) || (paymentType !== 'cash' && !online)}
             className="pos-btn-primary"
             style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) ? 0.5 : 1 }}
           >

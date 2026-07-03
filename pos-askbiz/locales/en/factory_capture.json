@@ -47,5 +47,6 @@
   "success_title": "Capture logged",
   "success_awaiting": "Awaiting supervisor approval",
   "log_another": "+ Log Another",
-  "back_to_hub": "Back to Hub"
+  "back_to_hub": "Back to Hub",
+  "success_pending_sync": "Saved on this device — will upload once you're back online."
 }

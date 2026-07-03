@@ -188,5 +188,7 @@
   "copilot_q_margin": "Cart margin?",
   "copilot_q_addon": "Suggest add-on",
   "copilot_q_upsell": "Upsell tip",
-  "copilot_q_lowstock": "Low stock?"
+  "copilot_q_lowstock": "Low stock?",
+  "offline_banner": "You're offline — cash sales still work. Card & M-Pesa need a connection.",
+  "offline_payment_disabled": "Requires internet"
 }

@@ -1,7 +1,7 @@
 // Client-side role helpers for page-level routing in pos-askbiz.
 // Mirrors server-side templateRoleLevel() in pos-auth.ts — keep in sync.
 
-function getSector(role: string): string | null {
+export function getSector(role: string): string | null {
   const m = role.match(/^(factory|restaurant|repair|salon|retail|logistics)-/)
   return m ? m[1] : null
 }

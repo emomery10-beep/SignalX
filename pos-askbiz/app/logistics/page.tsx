@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsHandlerLevel, isLogisticsDispatchLevel, isLogisticsBranchLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 
 const ACC = '#0891b2'
 const ACC_LIGHT = 'rgba(8,145,178,.1)'
@@ -11,41 +12,6 @@ const GREEN = '#16a34a'
 const RED = '#dc2626'
 const AMBER = '#ca8a04'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
-
-// Compress a camera/gallery photo to a small JPEG data URL. Uses
-// createImageBitmap (robust on iOS) so large phone photos don't blank the
-// canvas, and keeps the upload well under the serverless body limit.
-async function compressPhoto(file: File, maxEdge = 1600, quality = 0.82): Promise<string> {
-  const draw = (src: CanvasImageSource, w: number, h: number): string | null => {
-    const c = document.createElement('canvas')
-    c.width = Math.max(1, w); c.height = Math.max(1, h)
-    const ctx = c.getContext('2d')
-    if (!ctx) return null
-    ctx.drawImage(src, 0, 0, c.width, c.height)
-    return c.toDataURL('image/jpeg', quality)
-  }
-  if (typeof createImageBitmap === 'function') {
-    try {
-      const bmp = await createImageBitmap(file)
-      const scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height))
-      const out = draw(bmp, Math.round(bmp.width * scale), Math.round(bmp.height * scale))
-      bmp.close?.()
-      if (out && out.length > 120) return out
-    } catch { /* fall through */ }
-  }
-  const dataUrl: string = await new Promise((res, rej) => {
-    const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(r.error); r.readAsDataURL(file)
-  })
-  try {
-    const img: HTMLImageElement = await new Promise((res, rej) => {
-      const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = dataUrl
-    })
-    const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
-    const out = draw(img, Math.round(img.width * scale), Math.round(img.height * scale))
-    if (out && out.length > 120) return out
-  } catch { /* fall through */ }
-  return dataUrl
-}
 
 interface StaffSession {
   id: string; name: string; role: string
@@ -320,7 +286,7 @@ export default function LogisticsPage() {
     if (scanning) return
     setScanError(''); setScanResult(null); setScanning(true)
     try {
-      const dataUrl = await compressPhoto(file)
+      const dataUrl = await compressImageToDataUrl(file)
       setCapturedImage(dataUrl)
       const res = await fetch(`${API}/api/pos/parcels/scan`, {
         method: 'POST', headers: headers(), body: JSON.stringify({ image: dataUrl }),
@@ -643,7 +609,7 @@ export default function LogisticsPage() {
   // ── Native photo capture for driver proof screens ───────
   const capturePhotoFromFile = async (file: File) => {
     setScanError('')
-    try { setCapturedPhoto(await compressPhoto(file)) }
+    try { setCapturedPhoto(await compressImageToDataUrl(file)) }
     catch { setScanError(tc('logistics.could_not_process_photo')) }
   }
 
@@ -796,7 +762,7 @@ export default function LogisticsPage() {
 
   // ── Vehicle inspection: capture one step (native camera) ──
   const captureInspectionFile = async (file: File) => {
-    const dataUrl = await compressPhoto(file)
+    const dataUrl = await compressImageToDataUrl(file)
     const key = INSPECTION_STEPS[inspectionStep].key
     setInspectionPhotos(prev => ({ ...prev, [key]: dataUrl }))
     if (inspectionStep < INSPECTION_STEPS.length - 1) {

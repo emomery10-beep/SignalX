@@ -103,6 +103,22 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
 
+  // Idempotency: a client_tx_id makes retries and offline-queue replays
+  // safe. Dedupe BEFORE uploading the photo, so a replay never re-uploads
+  // a duplicate blob for a capture that's already recorded.
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
+  if (clientTxId) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('pos_factory_captures')
+        .select('*, captured_by_staff:pos_staff!captured_by(id, name, role), location:pos_locations!location_id(id, name)')
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (!dupeErr && dupe) return json({ capture: dupe, deduped: true }, 200)
+    } catch { /* dedupe is best-effort — never block a capture on it */ }
+  }
+
   // Upload photo to Supabase Storage
   let photoUrl = ''
   let storageMode: 'supabase' | 'fallback' = 'supabase'
@@ -147,6 +163,7 @@ export async function POST(req: NextRequest) {
       batch_ref:    batch_ref    || null,
       quantity:     quantity     ?? null,
       notes:        notes        || null,
+      client_tx_id: clientTxId,
     })
     .select(`
       *,
@@ -155,7 +172,40 @@ export async function POST(req: NextRequest) {
     `)
     .single()
 
-  if (error) return json({ error: error.message }, 500)
+  if (error) {
+    // 23505 = unique violation: a concurrent retry already recorded this capture — return it
+    if (clientTxId && (error as any).code === '23505') {
+      const { data: dupe } = await service
+        .from('pos_factory_captures')
+        .select('*, captured_by_staff:pos_staff!captured_by(id, name, role), location:pos_locations!location_id(id, name)')
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (dupe) return json({ capture: dupe, deduped: true }, 200)
+    }
+    // Live schema may predate the client_tx_id migration — never fail a
+    // capture because an optional column is missing.
+    if (/client_tx_id|column|schema cache/i.test(error.message || '')) {
+      const { data: retryCapture, error: retryErr } = await service
+        .from('pos_factory_captures')
+        .insert({
+          owner_id: auth.ownerId, location_id: location_id || auth.locationId || null, shift_id: shift_id || null,
+          captured_by: auth.staffId || null, type: captureType, status: 'pending', photo_url: photoUrl,
+          storage: storageMode, product_name: product_name || null, batch_ref: batch_ref || null,
+          quantity: quantity ?? null, notes: notes || null,
+        })
+        .select('*, captured_by_staff:pos_staff!captured_by(id, name, role), location:pos_locations!location_id(id, name)')
+        .single()
+      if (retryErr) return json({ error: retryErr.message }, 500)
+      logPosAudit({
+        auth, event: 'capture.submitted', entityType: 'factory_capture', entityId: retryCapture.id,
+        toValue: captureType,
+        metadata: { product_name: product_name || null, batch_ref: batch_ref || null, quantity: quantity ?? null, storage: storageMode },
+      })
+      return json({ capture: retryCapture }, 201)
+    }
+    return json({ error: error.message }, 500)
+  }
 
   logPosAudit({
     auth, event: 'capture.submitted', entityType: 'factory_capture', entityId: capture.id,

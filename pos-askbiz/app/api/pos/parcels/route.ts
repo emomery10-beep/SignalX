@@ -30,6 +30,53 @@ const SELECT = `
   route:pos_routes!route_id(id, name)
 `
 
+const PHOTO_BUCKET = 'parcel-photos'
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024
+const PHOTO_SIGNED_TTL = 60 * 60 * 24 * 365
+const PHOTO_ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
+
+// Uploads an inline base64 intake photo to the PRIVATE parcel-photos bucket
+// and returns a signed URL — same bucket/TTL as the standalone
+// /api/pos/parcels/photo endpoint. Never throws: on any failure it falls
+// back to embedding the photo as a data URL so an offline-queued intake
+// with a flaky storage bucket doesn't get stuck retrying forever.
+async function uploadInlineParcelPhoto(
+  service: ReturnType<typeof createServiceClient>,
+  ownerId: string,
+  trackingHint: string,
+  image: string,
+): Promise<{ url: string | null; path: string | null }> {
+  try {
+    const mimeMatch = image.match(/^data:(image\/[\w.+-]+);base64,/)
+    const contentType = mimeMatch ? mimeMatch[1].toLowerCase() : 'image/jpeg'
+    if (!PHOTO_ALLOWED.includes(contentType)) return { url: image, path: null }
+
+    const base64Data = image.replace(/^data:image\/[\w.+-]+;base64,/, '')
+    const buffer = Buffer.from(base64Data, 'base64')
+    if (buffer.length === 0 || buffer.length > PHOTO_MAX_BYTES) return { url: image, path: null }
+
+    const ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg'
+    const safeTrack = (trackingHint || 'parcel').replace(/[^A-Za-z0-9_-]/g, '')
+    const path = `${ownerId}/${safeTrack}_${Date.now()}.${ext}`
+
+    const { error: uploadErr } = await service.storage.from(PHOTO_BUCKET).upload(path, buffer, { contentType, upsert: false })
+    if (uploadErr) {
+      console.error('Parcel intake photo upload failed, falling back to inline data URL:', uploadErr.message)
+      return { url: image, path: null }
+    }
+
+    const { data: signed, error: signErr } = await service.storage.from(PHOTO_BUCKET).createSignedUrl(path, PHOTO_SIGNED_TTL)
+    if (signErr) {
+      console.error('Parcel intake photo signed URL failed:', signErr.message)
+      return { url: null, path } // upload succeeded — caller can re-sign from the path later
+    }
+    return { url: signed.signedUrl, path }
+  } catch (err) {
+    console.error('Parcel intake photo processing error, falling back to inline data URL:', err)
+    return { url: image, path: null }
+  }
+}
+
 // GET — list parcels for the owner
 export async function GET(req: NextRequest) {
   const auth = await resolvePosAuth(req)
@@ -84,9 +131,33 @@ export async function POST(req: NextRequest) {
 
   const VALID_PAYMENT = ['cash', 'mpesa', 'mobile_money', 'card', 'account']
 
-  const { data, error } = await service
-    .from('pos_parcels')
-    .insert({
+  // Idempotency: a client_tx_id makes retries and offline-queue replays
+  // safe. Dedupe before touching storage or inserting anything.
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
+  if (clientTxId) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('pos_parcels')
+        .select(SELECT)
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (!dupeErr && dupe) return json({ parcel: dupe, deduped: true }, 200)
+    } catch { /* dedupe is best-effort — never block an intake on it */ }
+  }
+
+  // Inline photo (offline-queue path) takes priority over legacy pre-signed
+  // fields, which stay supported so a stale service-worker-cached client
+  // mid-deploy doesn't hard-break.
+  let intakePhotoUrl = body.intake_photo_url || null
+  let intakePhotoPath = body.intake_photo_path || null
+  if (typeof body.intake_photo === 'string' && body.intake_photo.length > 0) {
+    const uploaded = await uploadInlineParcelPhoto(service, auth.ownerId, body.tracking_number || '', body.intake_photo)
+    intakePhotoUrl = uploaded.url
+    intakePhotoPath = uploaded.path
+  }
+
+  const parcelRow: Record<string, any> = {
       owner_id: auth.ownerId,
       tracking_number: body.tracking_number || '', // trigger auto-generates if blank
       sender_name: body.sender_name || null,
@@ -108,8 +179,8 @@ export async function POST(req: NextRequest) {
       fee_charged: toNum(body.fee_charged) ?? 0,
       payment_status: ['unpaid', 'paid', 'partial'].includes(body.payment_status) ? body.payment_status : 'unpaid',
       payment_method: VALID_PAYMENT.includes(body.payment_method) ? body.payment_method : null,
-      intake_photo_url: body.intake_photo_url || null,
-      intake_photo_path: body.intake_photo_path || null,
+      intake_photo_url: intakePhotoUrl,
+      intake_photo_path: intakePhotoPath,
       sender_consent: body.sender_consent === true,
       receipt_consent: body.receipt_consent === true,
       consent_at: body.sender_consent === true ? new Date().toISOString() : null,
@@ -119,9 +190,32 @@ export async function POST(req: NextRequest) {
       current_branch_id: body.current_branch_id || auth.locationId || null,
       current_lat: toNum(body.lat),
       current_lng: toNum(body.lng),
-    })
-    .select(SELECT)
-    .single()
+      client_tx_id: clientTxId,
+  }
+
+  let { data, error } = await service.from('pos_parcels').insert(parcelRow).select(SELECT).single()
+
+  if (error) {
+    // 23505 = unique violation: could be the client_tx_id (concurrent retry
+    // already recorded this intake) or the tracking_number constraint.
+    if (clientTxId && (error as any).code === '23505') {
+      const { data: dupe } = await service
+        .from('pos_parcels')
+        .select(SELECT)
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (dupe) return json({ parcel: dupe, deduped: true }, 200)
+    }
+    // Live schema may predate the client_tx_id migration — never fail an
+    // intake because an optional column is missing.
+    if (/client_tx_id|column|schema cache/i.test(error.message || '')) {
+      delete parcelRow.client_tx_id
+      const retry = await service.from('pos_parcels').insert(parcelRow).select(SELECT).single()
+      data = retry.data
+      error = retry.error
+    }
+  }
 
   if (error) {
     if ((error as any).code === '23505') {
