@@ -64,6 +64,7 @@ export default function ForecastsPage() {
   const [shareUrl, setShareUrl] = useState('')
   const [showShareModal, setShowShareModal] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [statsError, setStatsError] = useState(false)
 
   // Chart refs
   const chartRef = useRef<HTMLCanvasElement>(null)
@@ -114,9 +115,9 @@ export default function ForecastsPage() {
       const ctx = chartRef.current!.getContext('2d')!
 
       const datasets: unknown[] = [
-        { label: tc('forecasts.col_actual'), data: r.actual, borderColor: 'rgba(30,212,202,.9)', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, spanGaps: false },
-        { label: tc('forecasts.legend_forecast'), data: r.predicted.map((v, i) => r.actual[i] === null ? v : null), borderColor: 'rgba(146,104,248,.9)', backgroundColor: 'rgba(146,104,248,.08)', borderWidth: 2, borderDash: [5,3], fill: false, spanGaps: false, pointRadius: 2 },
-        { label: tc('forecasts.legend_confidence'), data: r.upperBound.map((v, i) => r.actual[i] === null ? v : null), borderColor: 'transparent', backgroundColor: 'rgba(146,104,248,.08)', fill: '+1', pointRadius: 0 },
+        { label: tc('forecasts.col_actual'), data: r.actual, borderColor: 'rgba(208,138,89,.9)', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, spanGaps: false },
+        { label: tc('forecasts.legend_forecast'), data: r.predicted.map((v, i) => r.actual[i] === null ? v : null), borderColor: 'rgba(140,111,224,.9)', backgroundColor: 'rgba(140,111,224,.08)', borderWidth: 2, borderDash: [5,3], fill: false, spanGaps: false, pointRadius: 2 },
+        { label: tc('forecasts.legend_confidence'), data: r.upperBound.map((v, i) => r.actual[i] === null ? v : null), borderColor: 'transparent', backgroundColor: 'rgba(140,111,224,.08)', fill: '+1', pointRadius: 0 },
         { label: '', data: r.lowerBound.map((v, i) => r.actual[i] === null ? v : null), borderColor: 'transparent', backgroundColor: 'transparent', fill: false, pointRadius: 0 },
       ]
 
@@ -132,7 +133,7 @@ export default function ForecastsPage() {
       }
 
       // Overlay forecasts
-      const colors = ['rgba(245,197,90,.7)', 'rgba(140,111,224,.7)', 'rgba(34,197,94,.7)']
+      const colors = ['rgba(208,138,89,.7)', 'rgba(140,111,224,.7)', 'rgba(34,197,94,.7)']
       overlayForecasts.forEach((of, idx) => {
         if (of.result) {
           datasets.push({
@@ -151,12 +152,12 @@ export default function ForecastsPage() {
           responsive: true, animation: { duration: 600, easing: 'easeOutQuart' },
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { labels: { color: '#8aa4cc', font: { size: 11 }, boxWidth: 10, filter: (item: any) => item.text !== '' } },
-            tooltip: { backgroundColor: 'rgba(13,26,53,.95)', titleColor: '#e6edf8', bodyColor: '#8aa4cc', padding: 10, cornerRadius: 8 },
+            legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10, filter: (item: any) => item.text !== '' } },
+            tooltip: { backgroundColor: 'var(--sf)', titleColor: 'var(--tx)', bodyColor: 'var(--tx2)', borderColor: 'var(--b)', borderWidth: 1, padding: 10, cornerRadius: 8 },
           },
           scales: {
-            x: { grid: { color: 'rgba(82,128,204,.07)' }, ticks: { color: '#8aa4cc', font: { size: 10 }, maxTicksLimit: 12 } },
-            y: { grid: { color: 'rgba(82,128,204,.07)' }, ticks: { color: '#8aa4cc', font: { size: 10 } } },
+            x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } },
+            y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } },
           },
         }
       })
@@ -176,15 +177,15 @@ export default function ForecastsPage() {
       decompInstanceRef.current = new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: [
-          { label: tc('forecasts.kpi_trend'), data: d.trend, borderColor: '#1ed4ca', borderWidth: 2, pointRadius: 0, fill: false },
-          { label: tc('forecasts.legend_seasonal'), data: d.seasonal, borderColor: '#f5c55a', borderWidth: 1.5, pointRadius: 0, fill: { target: 'origin', above: 'rgba(245,197,90,.06)', below: 'rgba(245,197,90,.06)' } },
+          { label: tc('forecasts.kpi_trend'), data: d.trend, borderColor: '#d08a59', borderWidth: 2, pointRadius: 0, fill: false },
+          { label: tc('forecasts.legend_seasonal'), data: d.seasonal, borderColor: '#8c6fe0', borderWidth: 1.5, pointRadius: 0, fill: { target: 'origin', above: 'rgba(140,111,224,.06)', below: 'rgba(140,111,224,.06)' } },
           { label: tc('forecasts.legend_residual'), data: d.residual, borderColor: '#f48080', borderWidth: 1, pointRadius: 0, borderDash: [3,3], fill: false },
         ]},
         options: {
           responsive: true, animation: { duration: 600 },
           interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { labels: { color: '#8aa4cc', font: { size: 11 }, boxWidth: 10 } } },
-          scales: { x: { grid: { color: 'rgba(82,128,204,.07)' }, ticks: { color: '#8aa4cc', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'rgba(82,128,204,.07)' }, ticks: { color: '#8aa4cc', font: { size: 10 } } } },
+          plugins: { legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10 } } },
+          scales: { x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } } },
         }
       })
     }
@@ -202,15 +203,15 @@ export default function ForecastsPage() {
       whatIfChartInstanceRef.current = new Chart(ctx, {
         type: 'line',
         data: { labels: b.labels, datasets: [
-          { label: tc('forecasts.col_actual'), data: b.actual, borderColor: 'rgba(30,212,202,.9)', borderWidth: 2, pointRadius: 2, spanGaps: false, backgroundColor: 'transparent' },
-          { label: tc('forecasts.legend_base_forecast'), data: b.predicted.map((v, i) => b.actual[i] === null ? v : null), borderColor: 'rgba(146,104,248,.7)', borderWidth: 2, borderDash: [5,3], pointRadius: 0, fill: false, spanGaps: false },
-          { label: tc('forecasts.legend_whatif', { sign: whatIfChange > 0 ? '+' : '', pct: whatIfChange }), data: m.predicted.map((v, i) => m.actual[i] === null ? v : null), borderColor: 'rgba(245,197,90,.9)', borderWidth: 2.5, pointRadius: 0, fill: false, spanGaps: false },
+          { label: tc('forecasts.col_actual'), data: b.actual, borderColor: 'rgba(208,138,89,.9)', borderWidth: 2, pointRadius: 2, spanGaps: false, backgroundColor: 'transparent' },
+          { label: tc('forecasts.legend_base_forecast'), data: b.predicted.map((v, i) => b.actual[i] === null ? v : null), borderColor: 'rgba(140,111,224,.7)', borderWidth: 2, borderDash: [5,3], pointRadius: 0, fill: false, spanGaps: false },
+          { label: tc('forecasts.legend_whatif', { sign: whatIfChange > 0 ? '+' : '', pct: whatIfChange }), data: m.predicted.map((v, i) => m.actual[i] === null ? v : null), borderColor: 'rgba(245,158,11,.9)', borderWidth: 2.5, pointRadius: 0, fill: false, spanGaps: false },
         ]},
         options: {
           responsive: true, animation: { duration: 600 },
           interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { labels: { color: '#8aa4cc', font: { size: 11 }, boxWidth: 10 } }, tooltip: { backgroundColor: 'rgba(13,26,53,.95)', titleColor: '#e6edf8', bodyColor: '#8aa4cc', padding: 10, cornerRadius: 8 } },
-          scales: { x: { grid: { color: 'rgba(82,128,204,.07)' }, ticks: { color: '#8aa4cc', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'rgba(82,128,204,.07)' }, ticks: { color: '#8aa4cc', font: { size: 10 } } } },
+          plugins: { legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10 } }, tooltip: { backgroundColor: 'var(--sf)', titleColor: 'var(--tx)', bodyColor: 'var(--tx2)', borderColor: 'var(--b)', borderWidth: 1, padding: 10, cornerRadius: 8 } },
+          scales: { x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } } },
         }
       })
     }
@@ -251,7 +252,7 @@ export default function ForecastsPage() {
 
   const runComparison = async () => {
     if ((!selectedUpload && !selectedSource) || !targetColumn) return
-    setComparingMethods(true)
+    setComparingMethods(true); setError('')
     try {
       const body: Record<string, unknown> = { targetColumn, horizonDays: horizon }
       if (selectedUpload) body.uploadId = selectedUpload.id
@@ -259,13 +260,14 @@ export default function ForecastsPage() {
       const res = await fetch('/api/forecast/compare', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (res.ok) { setComparison(data); setActiveTab('comparison') }
-    } catch { /* ignore */ }
+      else throw new Error(data.error || tc('forecasts.comparison_failed'))
+    } catch (e) { setError(e instanceof Error ? e.message : tc('forecasts.comparison_failed')) }
     finally { setComparingMethods(false) }
   }
 
   const runWhatIf = async () => {
     if ((!selectedUpload && !selectedSource) || !targetColumn || !result) return
-    setWhatIfLoading(true)
+    setWhatIfLoading(true); setError('')
     try {
       const body: Record<string, unknown> = { targetColumn, horizonDays: horizon, method: result.methodKey || 'linear', adjustments: { startPeriod: whatIfStart, endPeriod: whatIfEnd, changePct: whatIfChange }, confidence }
       if (selectedUpload) body.uploadId = selectedUpload.id
@@ -276,7 +278,8 @@ export default function ForecastsPage() {
       })
       const data = await res.json()
       if (res.ok) setWhatIfResult(data)
-    } catch { /* ignore */ }
+      else throw new Error(data.error || tc('forecasts.whatif_failed'))
+    } catch (e) { setError(e instanceof Error ? e.message : tc('forecasts.whatif_failed')) }
     finally { setWhatIfLoading(false) }
   }
 
@@ -307,7 +310,7 @@ export default function ForecastsPage() {
 
   const generatePdfReport = async () => {
     if (!result) return
-    setPdfLoading(true)
+    setPdfLoading(true); setError('')
     try {
       const { jsPDF } = await import('jspdf')
       const pdf = new jsPDF('landscape', 'mm', 'a4')
@@ -352,7 +355,7 @@ export default function ForecastsPage() {
       }
 
       pdf.save(`forecast-report-${targetColumn}-${horizon}d.pdf`)
-    } catch { /* jspdf might not be installed */ }
+    } catch (e) { setError(e instanceof Error ? e.message : tc('forecasts.pdf_failed')) }
     finally { setPdfLoading(false) }
   }
 
@@ -360,19 +363,21 @@ export default function ForecastsPage() {
     if (!result) return
     const url = `${window.location.origin}/forecasts?shared=${savedForecasts[0]?.id || ''}`
     setShareUrl(url); setShowShareModal(true)
-    try { await navigator.clipboard.writeText(url) } catch { /* ignore */ }
+    try { await navigator.clipboard.writeText(url) } catch { /* clipboard write is best-effort; the modal still shows the URL to copy manually */ }
   }
 
   const fetchStats = async (uploadId: string, col: string) => {
+    setStatsError(false)
     try {
       const res = await fetch('/api/forecast/stats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uploadId, targetColumn: col }) })
-      if (res.ok) setStats(await res.json()); else setStats(null)
-    } catch { setStats(null) }
+      if (res.ok) setStats(await res.json())
+      else { setStats(null); setStatsError(true) }
+    } catch { setStats(null); setStatsError(true) }
   }
 
   // ── Derived values ─────────────────────────────────────────
-  const trendColor = result?.trend === 'up' ? '#1ed4ca' : result?.trend === 'down' ? '#f48080' : '#8aa4cc'
-  const qualityColor = (s: number) => s >= 80 ? '#1ed4ca' : s >= 50 ? '#f5c55a' : '#f48080'
+  const trendColor = result?.trend === 'up' ? '#22c55e' : result?.trend === 'down' ? '#f48080' : 'var(--tx3)'
+  const qualityColor = (s: number) => s >= 80 ? '#22c55e' : s >= 50 ? '#f59e0b' : '#f48080'
   const canUsePro = isBusiness(planId)
 
   // ── Tab config with plan gating ────────────────────────────
@@ -403,7 +408,7 @@ export default function ForecastsPage() {
                 <select style={selectStyle} value={selectedUpload?.id || selectedSource?.id || ''} onChange={async (e) => {
                   const val = e.target.value
                   setTargetColumn(''); setResult(null); setComparison(null); setStats(null); setWhatIfResult(null); setOverlayForecasts([])
-                  setSelectedUpload(null); setSelectedSource(null); setSourceRows(null); setNumericColumns([])
+                  setSelectedUpload(null); setSelectedSource(null); setSourceRows(null); setNumericColumns([]); setStats(null); setStatsError(false)
 
                   // Check if it's a source dataset
                   const src = sourceDatasets.find(s => s.id === val)
@@ -432,14 +437,14 @@ export default function ForecastsPage() {
                     <optgroup label={tc('forecasts.connected_sources')}>
                       {sourceDatasets.map(s => (
                         <option key={s.id} value={s.id}>
-                          {s.sourceType === 'pos' ? '🏪 ' : '🛒 '}{s.name} ({s.rowCount.toLocaleString()} {tc('forecasts.records_suffix')})
+                          [{s.sourceType === 'pos' ? tc('forecasts.source_type_pos') : tc('forecasts.source_type_ecommerce')}] {s.name} ({s.rowCount.toLocaleString()} {tc('forecasts.records_suffix')})
                         </option>
                       ))}
                     </optgroup>
                   )}
                   {uploads.length > 0 && (
                     <optgroup label={tc('forecasts.uploaded_files')}>
-                      {uploads.map(u => <option key={u.id} value={u.id}>📄 {u.filename}</option>)}
+                      {uploads.map(u => <option key={u.id} value={u.id}>{u.filename}</option>)}
                     </optgroup>
                   )}
                 </select>
@@ -459,6 +464,7 @@ export default function ForecastsPage() {
                     )}
                   </select>
                   {targetColumn && !numericColumns.includes(targetColumn) && <div style={warningBox}>{tc('forecasts.text_column_warning')}</div>}
+                  {statsError && <div style={{ marginTop: 5, fontSize: 11, color: 'var(--tx3)' }}>{tc('forecasts.stats_failed')}</div>}
                 </div>
               )}
 
@@ -488,7 +494,7 @@ export default function ForecastsPage() {
 
               <div style={formGroup}>
                 <label style={labelStyle}>{tc('forecasts.confidence', { pct: confidence === 1 ? '68%' : confidence === 1.5 ? '87%' : confidence === 2 ? '95%' : `${Math.round(confidence * 50)}%` })}</label>
-                <input type="range" min="0.5" max="2.5" step="0.5" value={confidence} onChange={e => setConfidence(Number(e.target.value))} style={{ width: '100%', accentColor: '#9268f8' }} />
+                <input type="range" min="0.5" max="2.5" step="0.5" value={confidence} onChange={e => setConfidence(Number(e.target.value))} style={{ width: '100%', accentColor: '#8c6fe0' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--tx3)', marginTop: -2 }}><span>{tc('forecasts.narrow')}</span><span>{tc('forecasts.wide')}</span></div>
               </div>
 
@@ -513,7 +519,7 @@ export default function ForecastsPage() {
                   <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-sora)', color: qualityColor(result.dataQuality.score) }}>{result.dataQuality.score}%</div>
                 </div>
                 <div style={{ height: 4, background: 'var(--b)', borderRadius: 2, marginBottom: 12, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${result.dataQuality.score}%`, background: qualityColor(result.dataQuality.score), borderRadius: 2, transition: 'width .5s ease' }} />
+                  <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${result.dataQuality.score / 100})`, background: qualityColor(result.dataQuality.score), borderRadius: 2, transition: 'transform .5s ease' }} />
                 </div>
                 {result.dataQuality.issues.map((issue, i) => (
                   <div key={i} style={{ fontSize: 11, color: 'var(--tx2)', display: 'flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.5, marginBottom: 4 }}>
@@ -532,7 +538,7 @@ export default function ForecastsPage() {
                   <div key={i} style={{ padding: '6px 0', borderBottom: i < Math.min(4, result.anomalies!.length - 1) ? '1px solid var(--b)' : 'none', fontSize: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: 500 }}>{tc('forecasts.period_n', { n: a.index + 1 })}</span>
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: a.severity === 'high' ? 'rgba(244,128,128,.1)' : 'rgba(245,197,90,.1)', color: a.severity === 'high' ? '#f48080' : '#f5c55a', fontWeight: 600 }}>{a.severity}</span>
+                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: a.severity === 'high' ? 'rgba(244,128,128,.1)' : 'rgba(245,158,11,.1)', color: a.severity === 'high' ? '#f48080' : '#f59e0b', fontWeight: 600 }}>{a.severity}</span>
                     </div>
                     <div style={{ color: 'var(--tx3)', fontSize: 11, marginTop: 2 }}>{tc('forecasts.anomaly_detail', { actual: fmt(a.value), expected: fmt(a.expected), gap: fmt(Math.abs(a.value - a.expected)) })}</div>
                   </div>
@@ -575,11 +581,11 @@ export default function ForecastsPage() {
                         <span style={{ fontWeight: 500, cursor: 'pointer' }} onClick={() => loadSavedForecast(f)}>{f.name || f.target_column}</span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           {canUsePro && result && f.result && (
-                            <button onClick={() => toggleOverlay(f)} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: isOverlaid ? '1.5px solid #f5c55a' : '1px solid var(--b2)', background: isOverlaid ? 'rgba(245,197,90,.08)' : 'transparent', color: isOverlaid ? '#f5c55a' : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                            <button onClick={() => toggleOverlay(f)} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: isOverlaid ? '1.5px solid #d08a59' : '1px solid var(--b2)', background: isOverlaid ? 'rgba(208,138,89,.08)' : 'transparent', color: isOverlaid ? '#d08a59' : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
                               {isOverlaid ? tc('forecasts.overlaid') : tc('forecasts.overlay')}
                             </button>
                           )}
-                          {f.result && <span style={{ fontSize: 10, color: '#9268f8', background: 'rgba(146,104,248,.08)', padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }} onClick={() => loadSavedForecast(f)}>{tc('forecasts.load')}</span>}
+                          {f.result && <span style={{ fontSize: 10, color: '#8c6fe0', background: 'rgba(140,111,224,.08)', padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }} onClick={() => loadSavedForecast(f)}>{tc('forecasts.load')}</span>}
                         </div>
                       </div>
                       <div style={{ color: 'var(--tx3)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -592,21 +598,23 @@ export default function ForecastsPage() {
             )}
 
             {/* ── Method guide ────────────────────────────────── */}
-            <div style={card}>
-              <div style={sectionLabel}>{tc('forecasts.method_guide')}</div>
-              {[
-                { m: tc('forecasts.guide_auto_name'), d: tc('forecasts.guide_auto_desc'), icon: '🎯' },
-                { m: tc('forecasts.guide_linear_name'), d: tc('forecasts.guide_linear_desc'), icon: '📈' },
-                { m: tc('forecasts.guide_moving_avg_name'), d: tc('forecasts.guide_moving_avg_desc'), icon: '〰️' },
-                { m: tc('forecasts.guide_seasonal_name'), d: tc('forecasts.guide_seasonal_desc'), icon: '🔄' },
-                { m: tc('forecasts.guide_exponential_name'), d: tc('forecasts.guide_exponential_desc'), icon: '⚡' },
-              ].map((g, i) => (
-                <div key={i} style={{ padding: '7px 0', borderBottom: i < 4 ? '1px solid var(--b)' : 'none', fontSize: 12 }}>
-                  <div style={{ fontWeight: 500, marginBottom: 2 }}>{g.icon} {g.m}</div>
-                  <div style={{ color: 'var(--tx3)', lineHeight: 1.5 }}>{g.d}</div>
-                </div>
-              ))}
-            </div>
+            <details style={card} open={!result}>
+              <summary style={{ ...sectionLabel, cursor: 'pointer' }}>{tc('forecasts.method_guide')}</summary>
+              <div style={{ marginTop: 8 }}>
+                {[
+                  { m: tc('forecasts.guide_auto_name'), d: tc('forecasts.guide_auto_desc'), icon: 'auto' as const },
+                  { m: tc('forecasts.guide_linear_name'), d: tc('forecasts.guide_linear_desc'), icon: 'linear' as const },
+                  { m: tc('forecasts.guide_moving_avg_name'), d: tc('forecasts.guide_moving_avg_desc'), icon: 'moving_avg' as const },
+                  { m: tc('forecasts.guide_seasonal_name'), d: tc('forecasts.guide_seasonal_desc'), icon: 'seasonal' as const },
+                  { m: tc('forecasts.guide_exponential_name'), d: tc('forecasts.guide_exponential_desc'), icon: 'exponential' as const },
+                ].map((g, i) => (
+                  <div key={i} style={{ padding: '7px 0', borderBottom: i < 4 ? '1px solid var(--b)' : 'none', fontSize: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500, marginBottom: 2 }}><MethodIcon type={g.icon} /> {g.m}</div>
+                    <div style={{ color: 'var(--tx3)', lineHeight: 1.5 }}>{g.d}</div>
+                  </div>
+                ))}
+              </div>
+            </details>
           </div>
 
           {/* ═══ RIGHT: RESULTS ═══ */}
@@ -628,22 +636,32 @@ export default function ForecastsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
                 {/* KPI row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 10 }}>
-                  {[
-                    { label: tc('forecasts.kpi_trend'), value: result.trend.toUpperCase(), color: trendColor, sub: `${result.trendPct > 0 ? '+' : ''}${result.trendPct.toFixed(1)}%` },
-                    { label: tc('forecasts.kpi_accuracy'), value: `${result.accuracy.toFixed(0)}%`, color: result.accuracy > 80 ? '#1ed4ca' : result.accuracy > 60 ? '#f5c55a' : '#f48080', sub: result.method },
-                    { label: tc('forecasts.kpi_r2'), value: result.backtest ? result.backtest.r2.toFixed(2) : '—', color: (result.backtest?.r2 || 0) > 0.7 ? '#1ed4ca' : '#f5c55a', sub: tc('forecasts.kpi_holdout_fit') },
-                    { label: tc('forecasts.kpi_rmse'), value: result.backtest ? fmt(result.backtest.rmse) : '—', color: 'var(--tx2)', sub: tc('forecasts.kpi_prediction_error') },
-                    { label: tc('forecasts.kpi_anomalies'), value: `${result.anomalies?.length || 0}`, color: (result.anomalies?.length || 0) > 0 ? '#f48080' : '#1ed4ca', sub: (result.anomalies?.length || 0) > 0 ? tc('forecasts.kpi_review_flagged') : tc('forecasts.kpi_none_detected') },
+                {(() => {
+                  const lowConfidence = (result.dataQuality ? result.dataQuality.score < 50 : false) || ((result.backtest?.r2 ?? 1) < 0.3)
+                  const kpis: { label: string; value: string; color: string; sub: string; help?: string; flag?: string }[] = [
+                    { label: tc('forecasts.kpi_trend'), value: result.trend.toUpperCase(), color: trendColor, sub: `${result.trendPct > 0 ? '+' : ''}${result.trendPct.toFixed(1)}%`, flag: lowConfidence ? tc('forecasts.low_confidence') : undefined },
+                    { label: tc('forecasts.kpi_accuracy'), value: `${result.accuracy.toFixed(0)}%`, color: result.accuracy > 80 ? '#22c55e' : result.accuracy > 60 ? '#f59e0b' : '#f48080', sub: result.method, flag: lowConfidence ? tc('forecasts.low_confidence') : undefined },
+                    { label: tc('forecasts.kpi_r2'), value: result.backtest ? result.backtest.r2.toFixed(2) : '—', color: (result.backtest?.r2 || 0) > 0.7 ? '#22c55e' : '#f59e0b', sub: tc('forecasts.kpi_holdout_fit'), help: tc('forecasts.kpi_r2_help') },
+                    { label: tc('forecasts.kpi_rmse'), value: result.backtest ? fmt(result.backtest.rmse) : '—', color: 'var(--tx2)', sub: tc('forecasts.kpi_prediction_error'), help: tc('forecasts.kpi_rmse_help') },
+                    { label: tc('forecasts.kpi_anomalies'), value: `${result.anomalies?.length || 0}`, color: (result.anomalies?.length || 0) > 0 ? '#f48080' : '#22c55e', sub: (result.anomalies?.length || 0) > 0 ? tc('forecasts.kpi_review_flagged') : tc('forecasts.kpi_none_detected') },
                     { label: tc('forecasts.kpi_quality'), value: result.dataQuality ? `${result.dataQuality.score}%` : '—', color: result.dataQuality ? qualityColor(result.dataQuality.score) : 'var(--tx2)', sub: tc('forecasts.kpi_data_score') },
-                  ].map((k, i) => (
-                    <div key={i} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'transform .15s' }}>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{k.label}</div>
-                      <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, color: k.color }}>{k.value}</div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{k.sub}</div>
+                  ]
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 10 }}>
+                      {kpis.map((k, i) => (
+                        <div key={i} title={k.help} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'transform .15s', opacity: k.flag ? 0.82 : 1 }}>
+                          <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            {k.label}
+                            {k.help && <span aria-hidden="true" style={{ fontSize: 9, color: 'var(--tx3)', border: '1px solid var(--b2)', borderRadius: '50%', width: 12, height: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, cursor: 'help', textTransform: 'none' }}>?</span>}
+                          </div>
+                          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, color: k.color }}>{k.value}</div>
+                          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{k.sub}</div>
+                          {k.flag && <div style={{ fontSize: 9, color: '#f59e0b', marginTop: 4, fontWeight: 600 }}>{k.flag}</div>}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )
+                })()}
 
                 {/* Tab bar */}
                 <div style={{ display: 'flex', gap: 2, background: 'var(--ev)', borderRadius: 10, padding: 3, overflowX: 'auto' }}>
@@ -666,7 +684,7 @@ export default function ForecastsPage() {
                         <button key={s} onClick={() => setScenario(s)} style={scenarioBtn(s, scenario)}>{s === 'base' ? tc('forecasts.scenario_base') : s === 'optimistic' ? tc('forecasts.scenario_optimistic') : tc('forecasts.scenario_pessimistic')}</button>
                       ))}
                       {overlayForecasts.length > 0 && (
-                        <span style={{ fontSize: 11, color: '#f5c55a', marginLeft: 'auto' }}>{tc('forecasts.overlays_active', { count: overlayForecasts.length, plural: overlayForecasts.length > 1 ? 's' : '' })}</span>
+                        <span style={{ fontSize: 11, color: '#f59e0b', marginLeft: 'auto' }}>{tc('forecasts.overlays_active', { count: overlayForecasts.length, plural: overlayForecasts.length > 1 ? 's' : '' })}</span>
                       )}
                     </div>
                     <div style={{ ...card, padding: 18 }}>
@@ -709,19 +727,19 @@ export default function ForecastsPage() {
                           <thead><tr>{[tc('forecasts.col_rank'), tc('forecasts.col_method'), tc('forecasts.col_accuracy'), tc('forecasts.col_mae'), tc('forecasts.col_rmse'), tc('forecasts.col_trend')].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
                           <tbody>
                             {comparison.map((c, i) => (
-                              <tr key={c.method} style={{ background: i === 0 ? 'rgba(30,212,202,.04)' : 'transparent' }}>
-                                <td style={tdStyle}>{i === 0 ? <span style={{ background: '#1ed4ca', color: '#04080f', padding: '2px 7px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>{tc('forecasts.best_badge')}</span> : `#${i + 1}`}</td>
+                              <tr key={c.method} style={{ background: i === 0 ? 'rgba(34,197,94,.04)' : 'transparent' }}>
+                                <td style={tdStyle}>{i === 0 ? <span style={{ background: '#22c55e', color: '#fff', padding: '2px 7px', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>{tc('forecasts.best_badge')}</span> : `#${i + 1}`}</td>
                                 <td style={{ ...tdStyle, fontWeight: 500 }}>{c.method}</td>
                                 <td style={tdStyle}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <div style={{ width: 40, height: 4, background: 'var(--b)', borderRadius: 2, overflow: 'hidden' }}><div style={{ height: '100%', width: `${c.accuracy}%`, background: c.accuracy > 80 ? '#1ed4ca' : c.accuracy > 60 ? '#f5c55a' : '#f48080', borderRadius: 2 }} /></div>
+                                    <div style={{ width: 40, height: 4, background: 'var(--b)', borderRadius: 2, overflow: 'hidden' }}><div style={{ height: '100%', width: `${c.accuracy}%`, background: c.accuracy > 80 ? '#22c55e' : c.accuracy > 60 ? '#f59e0b' : '#f48080', borderRadius: 2 }} /></div>
                                     {c.accuracy.toFixed(1)}%
                                   </div>
                                 </td>
                                 <td style={tdStyle}>{c.mae === Infinity ? '—' : fmt(c.mae)}</td>
                                 <td style={tdStyle}>{c.rmse === Infinity ? '—' : fmt(c.rmse)}</td>
                                 <td style={tdStyle}>
-                                  <span style={{ color: c.trend === 'up' ? '#1ed4ca' : c.trend === 'down' ? '#f48080' : 'var(--tx3)' }}>
+                                  <span style={{ color: c.trend === 'up' ? '#22c55e' : c.trend === 'down' ? '#f48080' : 'var(--tx3)' }}>
                                     {c.trend === 'up' ? '↑' : c.trend === 'down' ? '↓' : '→'} {c.trendPct > 0 ? '+' : ''}{c.trendPct.toFixed(1)}%
                                   </span>
                                 </td>
@@ -758,7 +776,7 @@ export default function ForecastsPage() {
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                         {[{ l: tc('forecasts.whatif_preset_drop'), v: -20 }, { l: tc('forecasts.whatif_preset_spike'), v: 30 }, { l: tc('forecasts.whatif_preset_flat'), v: -5 }, { l: tc('forecasts.whatif_preset_double'), v: 100 }].map(p => (
-                          <button key={p.l} onClick={() => setWhatIfChange(p.v)} style={{ padding: '5px 10px', borderRadius: 6, border: whatIfChange === p.v ? '1.5px solid #f5c55a' : '1px solid var(--b2)', background: whatIfChange === p.v ? 'rgba(245,197,90,.06)' : 'transparent', color: whatIfChange === p.v ? '#f5c55a' : 'var(--tx3)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{p.l}</button>
+                          <button key={p.l} onClick={() => setWhatIfChange(p.v)} style={{ padding: '5px 10px', borderRadius: 6, border: whatIfChange === p.v ? '1.5px solid #d08a59' : '1px solid var(--b2)', background: whatIfChange === p.v ? 'rgba(208,138,89,.06)' : 'transparent', color: whatIfChange === p.v ? '#d08a59' : 'var(--tx3)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{p.l}</button>
                         ))}
                       </div>
                       <button onClick={runWhatIf} disabled={whatIfLoading} style={primaryBtn(!whatIfLoading)}>
@@ -770,13 +788,13 @@ export default function ForecastsPage() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                           <div style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
                             <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{tc('forecasts.forecast_impact')}</div>
-                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: whatIfResult.impactPct > 0 ? '#1ed4ca' : whatIfResult.impactPct < 0 ? '#f48080' : 'var(--tx2)' }}>
+                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: whatIfResult.impactPct > 0 ? '#22c55e' : whatIfResult.impactPct < 0 ? '#f48080' : 'var(--tx2)' }}>
                               {whatIfResult.impactPct > 0 ? '+' : ''}{whatIfResult.impactPct.toFixed(1)}%
                             </div>
                           </div>
                           <div style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
                             <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{tc('forecasts.modified_accuracy')}</div>
-                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: whatIfResult.modified.accuracy > 80 ? '#1ed4ca' : '#f5c55a' }}>
+                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: whatIfResult.modified.accuracy > 80 ? '#22c55e' : '#f59e0b' }}>
                               {whatIfResult.modified.accuracy.toFixed(0)}%
                             </div>
                           </div>
@@ -812,7 +830,7 @@ export default function ForecastsPage() {
                           {result.labels.map((label, i) => {
                             const isAnomaly = result.anomalies?.some(a => a.index === i)
                             return (
-                              <tr key={i} style={{ background: isAnomaly ? 'rgba(244,128,128,.04)' : result.actual[i] === null ? 'rgba(146,104,248,.03)' : 'transparent' }}>
+                              <tr key={i} style={{ background: isAnomaly ? 'rgba(244,128,128,.04)' : result.actual[i] === null ? 'rgba(140,111,224,.03)' : 'transparent' }}>
                                 <td style={tdStyle}>{label}</td>
                                 <td style={tdStyle}>{result.actual[i] !== null ? fmt(result.actual[i] as number) : '—'}</td>
                                 <td style={tdStyle}>{fmt(result.predicted[i])}</td>
@@ -822,7 +840,7 @@ export default function ForecastsPage() {
                                   {isAnomaly ? (
                                     <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: 'rgba(244,128,128,.1)', color: '#f48080', fontWeight: 600 }}>{tc('forecasts.type_anomaly')}</span>
                                   ) : (
-                                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: result.actual[i] !== null ? 'rgba(30,212,202,.08)' : 'rgba(146,104,248,.08)', color: result.actual[i] !== null ? '#1ed4ca' : '#9268f8' }}>
+                                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: result.actual[i] !== null ? 'rgba(208,138,89,.08)' : 'rgba(140,111,224,.08)', color: result.actual[i] !== null ? '#d08a59' : '#8c6fe0' }}>
                                       {result.actual[i] !== null ? tc('forecasts.type_historical') : tc('forecasts.type_forecast')}
                                     </span>
                                   )}
@@ -850,7 +868,7 @@ export default function ForecastsPage() {
           <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.5 }}>{tc('forecasts.share_desc')}</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input readOnly value={shareUrl} style={{ ...inputStyle, flex: 1 }} onClick={e => (e.target as HTMLInputElement).select()} />
-            <button onClick={() => { navigator.clipboard.writeText(shareUrl); setShowShareModal(false) }} style={{ ...primaryBtn(true), width: 'auto', padding: '9px 18px', marginTop: 0 }}>{tc('forecasts.copied')}</button>
+            <button onClick={() => { navigator.clipboard.writeText(shareUrl).catch(() => {}); setShowShareModal(false) }} style={{ ...primaryBtn(true), width: 'auto', padding: '9px 18px', marginTop: 0 }}>{tc('forecasts.copied')}</button>
           </div>
         </div>
       </div>
@@ -876,10 +894,26 @@ function EmptyState({ text }: { text: string }) {
   return <div style={{ padding: 32, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{text}</div>
 }
 
+const METHOD_ICON_PATHS: Record<string, React.ReactNode> = {
+  auto: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" /></>,
+  linear: <polyline points="4 18 20 6" />,
+  moving_avg: <path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0" />,
+  seasonal: <><path d="M21 12a9 9 0 11-2.64-6.36" /><polyline points="21 3 21 9 15 9" /></>,
+  exponential: <path d="M3 18C7 18 9 14 11 9S17 3 21 3" />,
+}
+
+function MethodIcon({ type }: { type: keyof typeof METHOD_ICON_PATHS }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} aria-hidden="true">
+      {METHOD_ICON_PATHS[type]}
+    </svg>
+  )
+}
+
 function scenarioBtn(s: string, active: string): React.CSSProperties {
   const isActive = s === active
-  const colorMap: Record<string, string> = { optimistic: '#1ed4ca', pessimistic: '#f48080', base: '#9268f8' }
-  const c = colorMap[s] || '#9268f8'
+  const colorMap: Record<string, string> = { optimistic: '#22c55e', pessimistic: '#f48080', base: '#8c6fe0' }
+  const c = colorMap[s] || '#8c6fe0'
   return {
     padding: '5px 12px', borderRadius: 6, border: isActive ? `1.5px solid ${c}` : '1px solid var(--b)',
     background: isActive ? `${c}0F` : 'transparent', color: isActive ? c : 'var(--tx3)',
@@ -901,9 +935,9 @@ const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', b
 
 const primaryBtn = (enabled: boolean): React.CSSProperties => ({
   width: '100%', padding: '6px', borderRadius: 9999, border: 'none',
-  background: enabled ? '#1ed4ca' : 'var(--b2)', color: '#04080f',
+  background: 'var(--acc)', color: '#fff', opacity: enabled ? 1 : 0.5,
   fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
-  cursor: enabled ? 'pointer' : 'not-allowed', marginTop: 1, transition: 'all .15s',
+  cursor: enabled ? 'pointer' : 'not-allowed', marginTop: 1, transition: 'all .15s ease',
 })
 
 const secondaryBtnStyle: React.CSSProperties = {

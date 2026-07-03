@@ -1,8 +1,6 @@
 {
-  "gates_featuregate": {
-    "featureLabel": "ميزة {label}",
-    "upgradeTo": "الترقية إلى {label} ←",
-    "seeAllPlans": "عرض جميع الخطط",
-    "currentPlan": "أنت على خطة {plan}"
-  }
+  "featureLabel": "ميزة {label}",
+  "upgradeTo": "الترقية إلى {label} ←",
+  "seeAllPlans": "عرض جميع الخطط",
+  "currentPlan": "أنت على خطة {plan}"
 }

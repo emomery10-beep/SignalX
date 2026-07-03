@@ -1,8 +1,6 @@
 {
-  "gates_featuregate": {
-    "featureLabel": "{label}-functie",
-    "upgradeTo": "Upgraden naar {label} →",
-    "seeAllPlans": "Alle abonnementen bekijken",
-    "currentPlan": "Je hebt het {plan}-abonnement"
-  }
+  "featureLabel": "{label}-functie",
+  "upgradeTo": "Upgraden naar {label} →",
+  "seeAllPlans": "Alle abonnementen bekijken",
+  "currentPlan": "Je hebt het {plan}-abonnement"
 }
