@@ -81,3 +81,18 @@ export function findFabricatedCitations(
   }
   return [...new Set(flagged)]
 }
+
+// Raising max_tokens fixed hard truncation, but a live test after deploying
+// that fix still produced ~350-400 word articles against a ~1,400-1,500
+// word prompt target — the model has room now and still undershoots. Since
+// prompt-following isn't reliable, this is a hard floor: articles under it
+// never auto-publish, regardless of quality score, the same way a
+// fabricated citation blocks auto-publish.
+export const MIN_WORD_COUNT = 900
+
+export function countSectionWords(sections: Array<{ body?: string }> | undefined): number {
+  return (sections || []).reduce(
+    (sum, s) => sum + (s.body ? s.body.trim().split(/\s+/).filter(Boolean).length : 0),
+    0
+  )
+}

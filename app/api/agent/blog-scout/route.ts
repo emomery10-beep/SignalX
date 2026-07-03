@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch, type TavilySearchResponse } from '@/lib/tavily'
 import { serperSearch } from '@/lib/serper'
 import { logUsage } from '@/lib/log-usage'
-import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations } from '@/lib/scout-citation-guard'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations, countSectionWords, MIN_WORD_COUNT } from '@/lib/scout-citation-guard'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -228,14 +228,19 @@ async function runBlogScout() {
         delete (result.value as Record<string, unknown>)._citableSources
 
         const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
+        const wordCount = countSectionWords(result.value.sections)
+        const isThin = wordCount < MIN_WORD_COUNT
         const quality = scoreBlogQuality(result.value)
         // Auto-publish if quality is high AND no ungrounded attributions were
         // found — a fabricated "According to Reuters..." is worse than a
         // low-quality article, so it always forces human review regardless
         // of how well the article otherwise scores.
-        const status = quality >= 80 && fabricated.length === 0 ? 'published' : 'pending'
+        const status = quality >= 80 && fabricated.length === 0 && !isThin ? 'published' : 'pending'
         if (fabricated.length > 0) {
           log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
+        if (isThin) {
+          log.push(`  ⚠ "${result.value.title}" is thin (${wordCount} words, needs ${MIN_WORD_COUNT}) — held for review`)
         }
         inserts.push({
           run_id: runId,
