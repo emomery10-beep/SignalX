@@ -14,7 +14,7 @@ import {
   getCountryClimate, isCountryMapped, getCountryName,
   detectSector, detectShippingLanes, getPortWatch,
   detectBusinessCommodities, SIGNAL_KIND_WEIGHT,
-  classifyChannel, buildRetailSignals, isKnownCountryName,
+  classifyChannel, buildRetailSignals, resolveCountryFromLocation,
   type MarketSignalSpec, type CountryClimate, type ChannelMix,
 } from '@/lib/market-climate-config'
 import type { SupplierSource } from '@/app/api/supplier-context/route'
@@ -135,33 +135,39 @@ function buildSupplierSignals(
       }
     }
 
-    // Shipping disruption for the source country → destination
-    // Skip if the source is local: same country as the user, a multi-word
-    // place name that contains the user's country/capital (e.g. "China Square
-    // Nyali Mombasa" is a local market in Kenya, not an international origin),
-    // or — the main check — doesn't resolve to a real country at all. Without
-    // that last check, a single-word local place name like "Lamu" or "Wajir"
-    // (real Kenyan towns) sailed past the old heuristics and generated a
-    // "shipping disruption Lamu to Kenya" query, which an LLM later wrote up
-    // as a nonsensical international trade-lane story.
-    const countryLower = country.toLowerCase()
+    // Shipping disruption for the source country → destination.
+    // `country` is free text ("ISO country code — or free text country
+    // name"), and most real input is a CITY, not a country ("we source from
+    // Guangzhou", "our supplier is in Dubai") — those are exactly the cases
+    // that should fire a real signal. resolveCountryFromLocation resolves
+    // both country names and known sourcing-hub/domestic cities to a real
+    // country; anything that doesn't resolve (typo, or a place too obscure
+    // to be mapped) is skipped rather than guessed at. A resolved country
+    // matching the destination itself — e.g. "Lamu" or "Wajir" resolving to
+    // Kenya, the same as the business's own country — is local and skipped.
+    // (Previously a bare "isn't a country name" check skipped ALL cities,
+    // including genuine foreign sourcing hubs like Guangzhou, silently
+    // dropping the signal for the majority of real supplier entries. And
+    // before that, an even looser heuristic let local single-word place
+    // names like "Lamu" through as if they were foreign, producing a
+    // nonsensical "shipping disruption Lamu to Kenya" story.)
+    const resolvedCountry = resolveCountryFromLocation(country)
     const climateLower = climate.name.toLowerCase()
-    const isLocal =
-      countryLower === climateLower ||
-      countryLower.includes(climateLower) ||
-      (climate.capital && countryLower.includes(climate.capital.toLowerCase())) ||
-      // Heuristic: more than 3 words usually means a local place name, not a country
-      country.trim().split(/\s+/).length > 3 ||
-      !isKnownCountryName(country)
+    const isLocal = !resolvedCountry || resolvedCountry === climateLower
 
-    if (!isLocal) {
-      const laneKey = `lane_${country.toLowerCase().replace(/\s+/g, '_').slice(0, 12)}`
+    if (!isLocal && resolvedCountry) {
+      // Use the resolved country name in the query/label, not the raw city
+      // the user typed — "China" produces a coherent search and narrative,
+      // "Guangzhou" would too, but staying on the resolved country keeps
+      // every lane phrased consistently and matches how climate.name reads.
+      const laneCountry = resolvedCountry.replace(/\b\w/g, c => c.toUpperCase())
+      const laneKey = `lane_${resolvedCountry.replace(/\s+/g, '_').slice(0, 12)}`
       if (!seen.has(laneKey)) {
         seen.add(laneKey)
         specs.push({
           key: laneKey,
-          label: `${country} → ${climate.name}`,
-          query: `shipping freight disruption ${country} to ${climate.name} 2025 delay`,
+          label: `${laneCountry} → ${climate.name}`,
+          query: `shipping freight disruption ${laneCountry} to ${climate.name} 2025 delay`,
           kind: 'demand',
         })
       }
