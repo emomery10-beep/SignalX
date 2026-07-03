@@ -14,7 +14,7 @@ import {
   getCountryClimate, isCountryMapped, getCountryName,
   detectSector, detectShippingLanes, getPortWatch,
   detectBusinessCommodities, SIGNAL_KIND_WEIGHT,
-  classifyChannel, buildRetailSignals,
+  classifyChannel, buildRetailSignals, isKnownCountryName,
   type MarketSignalSpec, type CountryClimate, type ChannelMix,
 } from '@/lib/market-climate-config'
 import type { SupplierSource } from '@/app/api/supplier-context/route'
@@ -136,9 +136,14 @@ function buildSupplierSignals(
     }
 
     // Shipping disruption for the source country → destination
-    // Skip if the source is local: same country as the user, or a multi-word
+    // Skip if the source is local: same country as the user, a multi-word
     // place name that contains the user's country/capital (e.g. "China Square
-    // Nyali Mombasa" is a local market in Kenya, not an international origin).
+    // Nyali Mombasa" is a local market in Kenya, not an international origin),
+    // or — the main check — doesn't resolve to a real country at all. Without
+    // that last check, a single-word local place name like "Lamu" or "Wajir"
+    // (real Kenyan towns) sailed past the old heuristics and generated a
+    // "shipping disruption Lamu to Kenya" query, which an LLM later wrote up
+    // as a nonsensical international trade-lane story.
     const countryLower = country.toLowerCase()
     const climateLower = climate.name.toLowerCase()
     const isLocal =
@@ -146,7 +151,8 @@ function buildSupplierSignals(
       countryLower.includes(climateLower) ||
       (climate.capital && countryLower.includes(climate.capital.toLowerCase())) ||
       // Heuristic: more than 3 words usually means a local place name, not a country
-      country.trim().split(/\s+/).length > 3
+      country.trim().split(/\s+/).length > 3 ||
+      !isKnownCountryName(country)
 
     if (!isLocal) {
       const laneKey = `lane_${country.toLowerCase().replace(/\s+/g, '_').slice(0, 12)}`

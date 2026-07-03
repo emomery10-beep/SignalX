@@ -110,6 +110,49 @@ export function isCountryMapped(countryCode?: string | null): boolean {
   return !!countryCode && !!COUNTRIES[countryCode.toUpperCase()]
 }
 
+// ── Real-world country names ──────────────────────────────────────────────────
+// `SupplierSource.sourceCountry` is a free-text field ("ISO country code — or
+// free text country name"), and nothing validates it against real geography.
+// A user recording where they source a product from can just as easily type
+// a local town ("Lamu", "Wajir") as an actual country. Generating a "shipping
+// disruption {source} to {destination}" search query for a local place name
+// produces nonsense once an LLM writes it up as prose (e.g. "elevated
+// shipping freight disruptions between Lamu and Wajir to Kenya" when both are
+// towns inside Kenya). This is a real, bounded list of world country names —
+// used as an allow-list so only genuine international origins generate a
+// shipping-lane query; anything that doesn't resolve to a real country is
+// treated as local and skipped.
+const KNOWN_COUNTRY_NAMES = new Set([
+  'afghanistan', 'albania', 'algeria', 'andorra', 'angola', 'argentina', 'armenia', 'australia', 'austria',
+  'azerbaijan', 'bahamas', 'bahrain', 'bangladesh', 'barbados', 'belarus', 'belgium', 'belize', 'benin', 'bhutan',
+  'bolivia', 'bosnia', 'bosnia and herzegovina', 'botswana', 'brazil', 'brunei', 'bulgaria', 'burkina faso',
+  'burundi', 'cambodia', 'cameroon', 'canada', 'cape verde', 'central african republic', 'chad', 'chile', 'china',
+  'colombia', 'comoros', 'congo', 'democratic republic of congo', 'costa rica', 'croatia', 'cuba', 'cyprus',
+  'czechia', 'czech republic', 'denmark', 'djibouti', 'dominica', 'dominican republic', 'ecuador', 'egypt',
+  'el salvador', 'equatorial guinea', 'eritrea', 'estonia', 'eswatini', 'ethiopia', 'fiji', 'finland', 'france',
+  'gabon', 'gambia', 'georgia', 'germany', 'ghana', 'greece', 'grenada', 'guatemala', 'guinea', 'guinea-bissau',
+  'guyana', 'haiti', 'honduras', 'hong kong', 'hungary', 'iceland', 'india', 'indonesia', 'iran', 'iraq',
+  'ireland', 'israel', 'italy', 'ivory coast', "cote d'ivoire", 'jamaica', 'japan', 'jordan', 'kazakhstan',
+  'kenya', 'kiribati', 'kosovo', 'kuwait', 'kyrgyzstan', 'laos', 'latvia', 'lebanon', 'lesotho', 'liberia',
+  'libya', 'liechtenstein', 'lithuania', 'luxembourg', 'madagascar', 'malawi', 'malaysia', 'maldives', 'mali',
+  'malta', 'mauritania', 'mauritius', 'mexico', 'moldova', 'monaco', 'mongolia', 'montenegro', 'morocco',
+  'mozambique', 'myanmar', 'burma', 'namibia', 'nepal', 'netherlands', 'new zealand', 'nicaragua', 'niger',
+  'nigeria', 'north korea', 'north macedonia', 'macedonia', 'norway', 'oman', 'pakistan', 'palau', 'palestine',
+  'panama', 'papua new guinea', 'paraguay', 'peru', 'philippines', 'poland', 'portugal', 'qatar', 'romania',
+  'russia', 'rwanda', 'saudi arabia', 'senegal', 'serbia', 'seychelles', 'sierra leone', 'singapore', 'slovakia',
+  'slovenia', 'somalia', 'south africa', 'south korea', 'korea', 'south sudan', 'spain', 'sri lanka', 'sudan',
+  'suriname', 'sweden', 'switzerland', 'syria', 'taiwan', 'tajikistan', 'tanzania', 'thailand', 'togo', 'tonga',
+  'trinidad and tobago', 'tunisia', 'turkey', 'turkiye', 'turkmenistan', 'uganda', 'ukraine',
+  'united arab emirates', 'uae', 'united kingdom', 'uk', 'britain', 'great britain', 'united states', 'usa',
+  'us', 'america', 'united states of america', 'uruguay', 'uzbekistan', 'vanuatu', 'vatican', 'venezuela',
+  'vietnam', 'yemen', 'zambia', 'zimbabwe',
+])
+
+/** True when `name` resolves to a real country (allow-list, not a heuristic). */
+export function isKnownCountryName(name: string): boolean {
+  return KNOWN_COUNTRY_NAMES.has(name.trim().toLowerCase())
+}
+
 // ISO code → display name, for surfacing the user's actual country even when unmapped.
 const COUNTRY_NAMES: Record<string, string> = {
   NG: 'Nigeria', KE: 'Kenya', GH: 'Ghana', ZA: 'South Africa', GB: 'United Kingdom', US: 'United States',
