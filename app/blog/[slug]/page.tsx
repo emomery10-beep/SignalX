@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { cookies, headers } from 'next/headers'
 import { getPost, getAllPosts, type BlogPost } from '@/lib/blog-content'
 import { academyArticles } from '@/lib/academy-content'
 import { createClient } from '@supabase/supabase-js'
 import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { t } from '@/lib/i18n-catalog'
+import { TRADE_NEWS_REDIRECTS } from '@/lib/trade-news-redirects'
 
 export const dynamicParams = true
 export const revalidate = 3600 // cache for 1 hour, regenerate in background
@@ -198,6 +199,9 @@ const CLUSTER_COLOURS: Record<string, { text: string; bg: string }> = {
   'Predictive Operations':        { text: '#dc2626', bg: 'rgba(239,68,68,.1)'   },
   'Predictive Strategy':          { text: '#d97706', bg: 'rgba(245,158,11,.1)'  },
   'Global Trade Intelligence':    { text: '#d97706', bg: 'rgba(245,158,11,.1)'  },
+  'US-China Tariffs':             { text: '#dc2626', bg: 'rgba(239,68,68,.1)'   },
+  'Supply Chain Disruption':      { text: '#0f766e', bg: 'rgba(20,184,166,.1)'  },
+  'Trade Finance':                { text: '#16a34a', bg: 'rgba(34,197,94,.1)'   },
   'Geopolitical Impact':          { text: '#dc2626', bg: 'rgba(239,68,68,.1)'   },
   'AI & Business Trends 2026':    { text: '#6366F1', bg: 'rgba(99,102,241,.1)'  },
   'Data-Driven Decisions':        { text: '#16a34a', bg: 'rgba(34,197,94,.1)'   },
@@ -293,6 +297,11 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   const post = await getPostWithFallback(params.slug)
 
   if (!post) {
+    // Old trade-news-batch* slug from the pre-consolidation era (5,830 URLs
+    // -> 63 canonical articles) — send crawlers/visitors to the live article
+    // instead of a dead end, so accumulated link equity isn't lost.
+    const canonicalSlug = TRADE_NEWS_REDIRECTS[params.slug]
+    if (canonicalSlug) permanentRedirect(`/blog/${canonicalSlug}`)
     notFound()
   }
 
@@ -488,10 +497,14 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <span style={{ color: TX2 }}>{post.title.length > 48 ? post.title.slice(0, 48) + '…' : post.title}</span>
         </nav>
 
-        {/* Cluster + pillar badges */}
+        {/* Cluster + pillar badges — Global Trade Intelligence articles link to
+            their dedicated hub page (spoke -> hub); everything else uses the
+            existing query-param cluster filter. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           <Link
-            href={localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, lang)}
+            href={post.pillar === 'Global Trade Intelligence'
+              ? localePath(`/blog/topic/${post.cluster.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-')}`, lang)
+              : localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, lang)}
             style={{ fontSize: 11, fontWeight: 700, color: clusterColour.text, background: clusterColour.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em', textDecoration: 'none' }}
           >
             {post.cluster}
