@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch, type TavilySearchResponse } from '@/lib/tavily'
 import { serperSearch } from '@/lib/serper'
 import { logUsage } from '@/lib/log-usage'
-import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations, countSectionWords, MIN_WORD_COUNT } from '@/lib/scout-citation-guard'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations, countSectionWords, MIN_WORD_COUNT, generateWithLengthRetry } from '@/lib/scout-citation-guard'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
@@ -371,26 +371,16 @@ Return ONLY valid JSON (no markdown fences):
   }
 }`
 
-  const groqRes = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      // 3000 was truncating the ~1,800-word target article + metadata/PAA,
-      // which is why posts were landing under 800 words.
-      max_tokens: 6000,
-      messages: [
-        { role: 'system', content: _SYSTEM_ },
-        { role: 'user',   content: userPrompt },
-      ],
-    }),
+  const parsed = await generateWithLengthRetry({
+    groqUrl: GROQ_URL,
+    apiKey: process.env.GROQ_API_KEY!,
+    model: GROQ_MODEL,
+    maxTokens: 6000,
+    systemPrompt: _SYSTEM_,
+    userPrompt,
+    logRoute: 'agent/carolyne-scout',
+    logUsage,
   })
-  const groqData = await groqRes.json()
-
-  logUsage({ route: 'agent/carolyne-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
-  const raw   = groqData.choices?.[0]?.message?.content || ''
-  const clean = raw.replace(/```json\n?|```/g, '').trim()
-  const parsed = JSON.parse(clean)
 
   if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
     throw new Error('Invalid blog structure — missing slug, title, or sections')
