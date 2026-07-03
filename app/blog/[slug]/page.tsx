@@ -10,7 +10,11 @@ import { t } from '@/lib/i18n-catalog'
 import { TRADE_NEWS_REDIRECTS } from '@/lib/trade-news-redirects'
 
 export const dynamicParams = true
-export const revalidate = 3600 // cache for 1 hour, regenerate in background
+// Can't use ISR (`revalidate`) here: this page reads headers()/cookies() for
+// locale on every render, which is incompatible with static/ISR generation
+// and throws DYNAMIC_SERVER_USAGE on a cold cache entry (i.e. every URL's
+// first hit after any deploy, since generateStaticParams returns []).
+export const dynamic = 'force-dynamic'
 
 async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
   const staticPost = getPost(slug)
@@ -242,9 +246,10 @@ function extractStats(sections: { body?: string; content?: string }[]): string[]
 }
 
 // ── Static generation ────────────────────────────────────────────────────────
-// Return empty array — pages render on first request via ISR (revalidate = 3600).
-// Pre-rendering all posts at build time causes OOM on Vercel's 8 GB build machine
-// because blog-content.ts imports hundreds of batch files (~3,000+ posts total).
+// Return empty array — pages render dynamically on request (see `dynamic =
+// 'force-dynamic'` above). Pre-rendering all posts at build time causes OOM
+// on Vercel's 8 GB build machine because blog-content.ts imports hundreds of
+// batch files (~3,000+ posts total).
 export async function generateStaticParams() {
   return []
 }
