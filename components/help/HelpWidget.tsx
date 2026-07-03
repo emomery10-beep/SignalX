@@ -94,7 +94,7 @@ export default function HelpWidget() {
   }, [pathname, tc])
 
   return (
-    <div ref={panelRef} style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 990, fontFamily: 'DM Sans, system-ui' }}>
+    <div ref={panelRef} className="help-widget-fab" style={{ fontFamily: 'DM Sans, system-ui' }}>
 
       {/* ── Panel ── */}
       {open && (

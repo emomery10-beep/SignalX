@@ -475,6 +475,22 @@ img {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ── HELP WIDGET FAB ────────────────────────────────────────── */
+.help-widget-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 990;
+}
+
+@media (max-width: 768px) {
+  /* Clear the mobile bottom nav (60px + safe-area) so the "?" button
+     doesn't sit on top of the rightmost nav tab. */
+  .help-widget-fab {
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+}
+
 /* ── MAIN LAYOUT ────────────────────────────────────────────── */
 .main-content {
   min-width: 0;
