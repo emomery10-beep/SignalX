@@ -107,14 +107,20 @@ export async function bulkUpsertResourceFromApi(
   let page = 0
   let total = 0
   let cached = 0
+  // Absolute safety net — if an endpoint doesn't honor `page` (e.g. always
+  // returns the same page-0 results) the `total`-based stop condition below
+  // would otherwise loop forever, hammering the API. 50 pages is far more
+  // than any real catalog needs.
+  const MAX_PAGES = 50
 
-  while (true) {
+  while (page < MAX_PAGES) {
     const params = new URLSearchParams({ page: String(page), limit: String(limit), ...(opts?.extraParams || {}) })
     const res = await fetch(`${API}${endpoint}?${params}`, { headers })
     if (!res.ok) break
     const data = await res.json()
     const items: any[] = data[listKey] || []
-    total = typeof data.total === 'number' ? data.total : (page === 0 ? items.length : total)
+    const hasTotal = typeof data.total === 'number'
+    total = hasTotal ? data.total : items.length
 
     const tx = db.transaction('resources', 'readwrite')
     for (const item of items) {
@@ -125,7 +131,10 @@ export async function bulkUpsertResourceFromApi(
     cached += items.length
 
     page += 1
-    if (items.length < limit || (typeof data.total === 'number' && page * limit >= total)) break
+    // Only keep paging if the endpoint explicitly reports more rows exist
+    // (a `total` beyond this page) — an endpoint that never returns `total`
+    // (like /api/pos/parcels and /api/pos/routes) is treated as single-page.
+    if (items.length < limit || !hasTotal || page * limit >= total) break
   }
 
   await db.put('meta', {
