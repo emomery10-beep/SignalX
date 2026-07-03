@@ -106,7 +106,7 @@ const buildBizTypes = (tc: (k: string) => string) => [
 // The server-side script handles Google rich results; <details>/<summary> ensures answers
 // are always in the HTML for crawlers regardless of JS execution.
 const buildFaqs = (tc: (key: string) => string) =>
-  [0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ q: tc('landing.faq_' + i + '_q'), a: tc('landing.faq_' + i + '_a') }))
+  [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ q: tc('landing.faq_' + i + '_q'), a: tc('landing.faq_' + i + '_a') }))
 
 function Logo({size=12,color='white'}:{size?:number;color?:string}) {
   return (
@@ -1440,6 +1440,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           { before:tc('landing.stat_1_label'), after:tc('landing.stat_1_value') },
           { before:tc('landing.stat_2_label'), after:tc('landing.stat_2_value') },
           { before:tc('landing.stat_3_label'), after:tc('landing.stat_3_value') },
+          { before:tc('landing.stat_4_label'), after:tc('landing.stat_4_value') },
         ].map((s,i)=>(
           <div key={i} style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
