@@ -149,7 +149,7 @@ export default function ForecastsPage() {
         type: 'line',
         data: { labels: r.labels, datasets: datasets as any },
         options: {
-          responsive: true, animation: { duration: 600, easing: 'easeOutQuart' },
+          responsive: true, maintainAspectRatio: false, animation: { duration: 600, easing: 'easeOutQuart' },
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10, filter: (item: any) => item.text !== '' } },
@@ -182,7 +182,7 @@ export default function ForecastsPage() {
           { label: tc('forecasts.legend_residual'), data: d.residual, borderColor: '#f48080', borderWidth: 1, pointRadius: 0, borderDash: [3,3], fill: false },
         ]},
         options: {
-          responsive: true, animation: { duration: 600 },
+          responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
           interaction: { mode: 'index', intersect: false },
           plugins: { legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10 } } },
           scales: { x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } } },
@@ -208,7 +208,7 @@ export default function ForecastsPage() {
           { label: tc('forecasts.legend_whatif', { sign: whatIfChange > 0 ? '+' : '', pct: whatIfChange }), data: m.predicted.map((v, i) => m.actual[i] === null ? v : null), borderColor: 'rgba(245,158,11,.9)', borderWidth: 2.5, pointRadius: 0, fill: false, spanGaps: false },
         ]},
         options: {
-          responsive: true, animation: { duration: 600 },
+          responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
           interaction: { mode: 'index', intersect: false },
           plugins: { legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10 } }, tooltip: { backgroundColor: 'var(--sf)', titleColor: 'var(--tx)', bodyColor: 'var(--tx2)', borderColor: 'var(--b)', borderWidth: 1, padding: 10, cornerRadius: 8 } },
           scales: { x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } } },
@@ -633,7 +633,7 @@ export default function ForecastsPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
                 {/* KPI row */}
                 {(() => {
@@ -649,7 +649,7 @@ export default function ForecastsPage() {
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 10 }}>
                       {kpis.map((k, i) => (
-                        <div key={i} title={k.help} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'transform .15s', opacity: k.flag ? 0.82 : 1 }}>
+                        <div key={i} title={k.help} style={{ padding: '10px 12px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'transform .15s', opacity: k.flag ? 0.82 : 1 }}>
                           <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
                             {k.label}
                             {k.help && <span aria-hidden="true" style={{ fontSize: 9, color: 'var(--tx3)', border: '1px solid var(--b2)', borderRadius: '50%', width: 12, height: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, cursor: 'help', textTransform: 'none' }}>?</span>}
@@ -687,15 +687,17 @@ export default function ForecastsPage() {
                         <span style={{ fontSize: 11, color: '#f59e0b', marginLeft: 'auto' }}>{tc('forecasts.overlays_active', { count: overlayForecasts.length, plural: overlayForecasts.length > 1 ? 's' : '' })}</span>
                       )}
                     </div>
-                    <div style={{ ...card, padding: 18 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <div style={{ ...card, padding: 14 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <div style={chartTitle}>{scenario !== 'base' ? tc('forecasts.chart_title_forecast_scenario', { column: targetColumn, horizon, scenario }) : tc('forecasts.chart_title_forecast', { column: targetColumn, horizon })}</div>
                       </div>
-                      <canvas ref={chartRef} height={200}/>
+                      <div style={{ height: 260, position: 'relative' }}>
+                        <canvas ref={chartRef} />
+                      </div>
                     </div>
-                    <div style={{ ...card, padding: '14px 16px' }}>
-                      <div style={{ ...chartTitle, marginBottom: 8 }}>{tc('forecasts.ai_summary')}</div>
-                      <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.65 }}>{result.summary}</div>
+                    <div style={{ ...card, padding: '12px 16px' }}>
+                      <div style={{ ...chartTitle, marginBottom: 6 }}>{tc('forecasts.ai_summary')}</div>
+                      <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6 }}>{result.summary}</div>
                     </div>
                   </>
                 )}
@@ -707,7 +709,7 @@ export default function ForecastsPage() {
                     <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 14, marginTop: 4, lineHeight: 1.5 }}>
                       {tc('forecasts.decomposition_desc')}
                     </div>
-                    {result.decomposition ? <canvas ref={decompRef} height={250}/> : <EmptyState text={tc('forecasts.decomposition_unavailable')} />}
+                    {result.decomposition ? <div style={{ height: 280, position: 'relative' }}><canvas ref={decompRef} /></div> : <EmptyState text={tc('forecasts.decomposition_unavailable')} />}
                   </div>
                 )}
 
@@ -799,9 +801,11 @@ export default function ForecastsPage() {
                             </div>
                           </div>
                         </div>
-                        <div style={{ ...card, padding: 18 }}>
+                        <div style={{ ...card, padding: 14 }}>
                           <div style={chartTitle}>{tc('forecasts.base_vs_whatif')}</div>
-                          <canvas ref={whatIfChartRef} height={220} style={{ marginTop: 10 }}/>
+                          <div style={{ height: 260, position: 'relative', marginTop: 8 }}>
+                            <canvas ref={whatIfChartRef} />
+                          </div>
                         </div>
                         <div style={{ ...card, padding: '14px 16px' }}>
                           <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.65 }}>{whatIfResult.impactSummary}</div>
