@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import { COUNTRY_DIAL, countryFromCurrency, detectGeoFromTimezone, toE164 } from '@/lib/geo'
+import { phoneToSyntheticEmail } from '@/lib/phone-auth'
+
+const PASSKEY_NUDGE_DISMISSED_KEY = 'askbiz_passkey_nudge_dismissed'
 
 type Mode = 'signin' | 'signup'
 type Method = 'email' | 'phone'
@@ -28,14 +31,19 @@ export default function AuthPage() {
   const [success, setSuccess] = useState('')
   const [consentChecked, setConsentChecked] = useState(false)
 
-  // Phone / SMS OTP flow
+  // Phone + PIN login — no SMS, rides on Supabase's real password auth via
+  // a synthetic email (see lib/phone-auth.ts)
   const [method, setMethod] = useState<Method>('email')
   const [phoneCountry, setPhoneCountry] = useState('KE')
   const [phoneLocal, setPhoneLocal] = useState('')
-  const [sentPhone, setSentPhone] = useState('')   // E.164 number the code was sent to
-  const [otpCode, setOtpCode] = useState('')
-  const [resendIn, setResendIn] = useState(0)
-  const [smsUnavailable, setSmsUnavailable] = useState(false)
+  const [pin, setPin] = useState('')
+  const [pinConfirm, setPinConfirm] = useState('')
+
+  // Passkey nudge — shown once after a successful login/signup if the user
+  // has no passkey yet and hasn't dismissed it for good.
+  const [passkeyNudge, setPasskeyNudge] = useState<{ show: boolean; destination: string }>({ show: false, destination: '' })
+  const [nudgeDontRemind, setNudgeDontRemind] = useState(false)
+  const [nudgeBusy, setNudgeBusy] = useState(false)
 
   // Prefill the dial-code country from geo; fall back to timezone-derived
   // currency when /api/geo is unreachable (e.g. local dev).
@@ -56,13 +64,6 @@ export default function AuthPage() {
     return () => { cancelled = true }
   }, [])
 
-  // Resend cooldown ticker
-  useEffect(() => {
-    if (resendIn <= 0) return
-    const id = setInterval(() => setResendIn(s => s - 1), 1000)
-    return () => clearInterval(id)
-  }, [resendIn > 0])
-
   const shopifyShop = searchParams.get('ref') === 'shopify' ? searchParams.get('shop') : null
 
   const getCallbackUrl = () => {
@@ -73,6 +74,52 @@ export default function AuthPage() {
   }
 
   const getPostAuthRedirect = () => shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/pos'
+
+  // Runs after any successful email/password or phone+PIN auth — nudges the
+  // user to add a passkey (skipped if they already have one, or dismissed
+  // the nudge for good). Does not apply to OAuth (redirects off-page) or
+  // passkey sign-in itself (they're already using one).
+  const proceedAfterAuth = async (destination: string) => {
+    try {
+      if (typeof window !== 'undefined' && localStorage.getItem(PASSKEY_NUDGE_DISMISSED_KEY)) {
+        router.push(destination); return
+      }
+      const auth = supabase.auth as any
+      const listFn = auth.passkey?.list || auth.listPasskeys
+      if (typeof listFn === 'function') {
+        const res = await listFn.call(auth)
+        const passkeys = res?.data?.passkeys || res?.data || []
+        if (Array.isArray(passkeys) && passkeys.length > 0) {
+          router.push(destination); return
+        }
+      }
+      setPasskeyNudge({ show: true, destination })
+    } catch {
+      router.push(destination)
+    }
+  }
+
+  const dismissPasskeyNudge = () => {
+    if (nudgeDontRemind && typeof window !== 'undefined') localStorage.setItem(PASSKEY_NUDGE_DISMISSED_KEY, '1')
+    router.push(passkeyNudge.destination)
+  }
+
+  const addPasskeyFromNudge = async () => {
+    setNudgeBusy(true)
+    try {
+      const auth = supabase.auth as any
+      if (typeof auth.registerPasskey === 'function') {
+        const result = await auth.registerPasskey()
+        if (result?.error) throw result.error
+      }
+    } catch {
+      // Cancelled or failed enrollment shouldn't block navigation — they can
+      // add a passkey later from settings.
+    } finally {
+      setNudgeBusy(false)
+      router.push(passkeyNudge.destination)
+    }
+  }
 
   const executeAuth = async (action: 'email' | 'google' | 'apple' | 'azure') => {
     setError(''); setSuccess(''); setLoading(true)
@@ -115,12 +162,12 @@ export default function AuthPage() {
           throw new Error(tc('auth.err_email_exists'))
         }
 
-        if (data.session) { router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
+        if (data.session) { proceedAfterAuth(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
         else { setSuccess(tc('auth.ok_check_inbox', { email })) }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        router.push(getPostAuthRedirect())
+        proceedAfterAuth(getPostAuthRedirect())
       }
     } catch (e: any) {
       const msg = e?.message || e?.error_description || (typeof e === 'string' ? e : tc('auth.err_auth_failed'))
@@ -169,81 +216,57 @@ export default function AuthPage() {
 
   const dial = COUNTRY_DIAL.find(c => c.code === phoneCountry)?.dial || '+254'
 
-  // GoTrue error shapes when the SMS provider (Twilio/MessageBird) isn't
-  // configured or phone auth is disabled in Supabase settings.
-  const isSmsUnavailableError = (e: any) => {
-    const code = e?.code || ''
-    const msg = e?.message || ''
-    return ['sms_send_failed', 'phone_provider_disabled', 'otp_disabled'].includes(code)
-      || /unsupported phone provider|error sending sms|phone.*(disabled|not enabled)|provider.*not.*configured/i.test(msg)
-  }
-
-  const handleSendCode = async () => {
+  const handlePhoneAuth = async () => {
     if (!phoneLocal.trim()) { setError(tc('auth.err_enter_phone')); return }
     const e164 = toE164(dial, phoneLocal)
     if (!e164) { setError(tc('auth.err_invalid_phone')); return }
-    if (mode === 'signup' && !consentChecked) { setError(tc('auth.err_accept_terms')); return }
+    if (!/^\d{4}$/.test(pin)) { setError(tc('auth.err_invalid_pin')); return }
+    if (mode === 'signup') {
+      if (!consentChecked) { setError(tc('auth.err_accept_terms')); return }
+      if (pin !== pinConfirm) { setError(tc('auth.err_pin_mismatch')); return }
+    }
     setError(''); setSuccess(''); setLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: e164,
-        options: {
-          channel: 'sms',
-          // Sign-in must not silently create an account for a typo'd number
-          shouldCreateUser: mode === 'signup',
-          ...(mode === 'signup' && {
-            data: {
-              full_name: `${firstName} ${lastName}`.trim(),
-              // Recorded proof of affirmative consent (GDPR Art. 7(1))
-              consent_accepted: true,
-              consent_accepted_at: new Date().toISOString(),
-              consent_terms_version: CONSENT_VERSION,
-              consent_privacy_version: CONSENT_VERSION,
-            },
+      if (mode === 'signup') {
+        const res = await fetch('/api/auth/phone-pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'signup', phone: e164, pin,
+            firstName, lastName, consentVersion: CONSENT_VERSION,
           }),
-        },
-      })
-      if (error) throw error
-      setSentPhone(e164)
-      setOtpCode('')
-      setResendIn(30)
-      setSuccess(tc('auth.ok_code_sent', { phone: e164 }))
-    } catch (e: any) {
-      if (isSmsUnavailableError(e)) {
-        setSmsUnavailable(true)
-        setError(tc('auth.err_sms_unavailable'))
-      } else if (/signups not allowed/i.test(e?.message || '')) {
-        setError(tc('auth.err_phone_not_registered'))
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || tc('auth.err_auth_failed'))
+
+        // Account just created server-side with the admin API (which doesn't
+        // hand back a browser session) — sign in normally with the PIN the
+        // user just chose to establish the real client session.
+        const { error } = await supabase.auth.signInWithPassword({ email: phoneToSyntheticEmail(e164), password: pin })
+        if (error) throw error
+        proceedAfterAuth(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding')
       } else {
-        setError(e?.message || tc('auth.err_sms_send_failed'))
-      }
-    } finally { setLoading(false) }
-  }
+        const res = await fetch('/api/auth/phone-pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'signin', phone: e164, pin }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || tc('auth.err_auth_failed'))
 
-  const handleVerifyCode = async () => {
-    if (!otpCode.trim()) { setError(tc('auth.err_invalid_code')); return }
-    setError(''); setSuccess(''); setLoading(true)
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: sentPhone,
-        token: otpCode.trim(),
-        type: 'sms',
-      })
-      if (error) throw error
-      if (data.session) {
-        router.push(mode === 'signup'
-          ? (shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding')
-          : getPostAuthRedirect())
+        // Server already verified the PIN against Supabase's real password
+        // auth and returned the resulting tokens — hydrate them into the
+        // browser client so cookies/session persist like any other login.
+        const { error } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
+        if (error) throw error
+        proceedAfterAuth(getPostAuthRedirect())
       }
     } catch (e: any) {
-      const msg = e?.message || ''
-      if (/expired|invalid/i.test(msg)) setError(tc('auth.err_invalid_code'))
-      else setError(msg || tc('auth.err_auth_failed'))
+      setError(e?.message || tc('auth.err_auth_failed'))
     } finally { setLoading(false) }
-  }
-
-  const resetPhoneStep = () => {
-    setSentPhone(''); setOtpCode(''); setError(''); setSuccess('')
   }
 
   // 3D tilt on the auth card — follows the cursor on hover, and gently
@@ -330,6 +353,33 @@ export default function AuthPage() {
             : { transition: 'transform .4s ease-out' }),
         }}>
 
+        {passkeyNudge.show ? (
+          <div className="animate-fade-up" style={{ textAlign: 'center', padding: '8px 0' }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(208,138,89,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <circle cx="12" cy="16" r="1"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{tc('auth.passkey_nudge_title')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 22, lineHeight: 1.5 }}>{tc('auth.passkey_nudge_body')}</p>
+            <button onClick={addPasskeyFromNudge} disabled={nudgeBusy}
+              style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: nudgeBusy ? 'wait' : 'pointer', opacity: nudgeBusy ? .7 : 1, marginBottom: 10 }}>
+              {nudgeBusy ? tc('auth.please_wait') : tc('auth.passkey_nudge_cta')}
+            </button>
+            <button onClick={dismissPasskeyNudge} disabled={nudgeBusy}
+              style={{ width: '100%', padding: '11px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 14, cursor: nudgeBusy ? 'not-allowed' : 'pointer', marginBottom: 16 }}>
+              {tc('auth.passkey_nudge_skip')}
+            </button>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" checked={nudgeDontRemind} onChange={e => setNudgeDontRemind(e.target.checked)}
+                style={{ width: 15, height: 15, accentColor: 'var(--acc)', cursor: 'pointer' }}/>
+              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('auth.passkey_nudge_dont_remind')}</span>
+            </label>
+          </div>
+        ) : (<>
+
         {/* Mode tabs */}
         <div style={{
           position: 'relative', display: 'flex', background: 'var(--ev)',
@@ -344,7 +394,7 @@ export default function AuthPage() {
             transition: 'transform .32s var(--ease)',
           }}/>
           {(['signin', 'signup'] as Mode[]).map(m => (
-            <button key={m} onClick={() => { setMode(m); setSentPhone(''); setOtpCode(''); setError(''); setSuccess('') }}
+            <button key={m} onClick={() => { setMode(m); setPin(''); setPinConfirm(''); setError(''); setSuccess('') }}
               style={{
                 position: 'relative', zIndex: 1,
                 flex: 1, padding: '10px', borderRadius: 9, border: 'none',
@@ -444,7 +494,7 @@ export default function AuthPage() {
             onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
         </>)}
 
-        {method === 'phone' && !sentPhone && (<>
+        {method === 'phone' && (<>
           {/* Country dial code + local number */}
           <div className="animate-fade-up" style={{ display: 'flex', gap: 8, marginBottom: 10 }} dir="ltr">
             <select value={phoneCountry} onChange={e => setPhoneCountry(e.target.value)} aria-label={tc('auth.method_phone')}
@@ -455,33 +505,29 @@ export default function AuthPage() {
             </select>
             <input value={phoneLocal} onChange={e => setPhoneLocal(e.target.value)} placeholder={tc('auth.phone_placeholder')}
               type="tel" inputMode="tel" autoComplete="tel" dir="ltr" style={{ ...inp, flex: 1 }}
-              onKeyDown={e => e.key === 'Enter' && handleSendCode()}/>
+              onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+          </div>
+
+          {/* PIN entry — single field to sign in, confirm field added on signup */}
+          <div style={{ display: 'grid', gridTemplateColumns: mode === 'signup' ? '1fr 1fr' : '1fr', gap: 10, marginBottom: 10 }}>
+            <input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder={tc('auth.pin_placeholder')} type="password" inputMode="numeric" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pin ? '.5em' : 'normal', fontSize: 18 }}
+              onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+            {mode === 'signup' && (
+              <input value={pinConfirm} onChange={e => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder={tc('auth.pin_confirm_placeholder')} type="password" inputMode="numeric" autoComplete="new-password"
+                dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pinConfirm ? '.5em' : 'normal', fontSize: 18 }}
+                onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
+            )}
           </div>
           <p className="animate-fade-up" style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>
             {tc('auth.phone_hint')}
           </p>
         </>)}
 
-        {method === 'phone' && sentPhone && (<>
-          {/* OTP code entry */}
-          <input className="animate-scale-up" value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            placeholder={tc('auth.otp_placeholder')} type="text" inputMode="numeric" autoComplete="one-time-code"
-            autoFocus dir="ltr" style={{ ...inp, marginBottom: 10, textAlign: 'center', letterSpacing: '.35em', fontSize: 18 }}
-            onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}/>
-          <div className="animate-fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <button onClick={resetPhoneStep} disabled={loading}
-              style={{ background: 'none', border: 'none', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 12, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
-              {tc('auth.change_number')}
-            </button>
-            <button onClick={handleSendCode} disabled={loading || resendIn > 0}
-              style={{ background: 'none', border: 'none', color: resendIn > 0 ? 'var(--tx3)' : 'var(--acc)', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: resendIn > 0 ? 'default' : 'pointer', padding: 0 }}>
-              {resendIn > 0 ? tc('auth.resend_in', { s: resendIn }) : tc('auth.resend_code')}
-            </button>
-          </div>
-        </>)}
-
         {/* Affirmative consent checkbox for signup */}
-        {mode === 'signup' && (method === 'email' || !sentPhone) && (
+        {mode === 'signup' && (
           <label htmlFor="consent" className="animate-fade-up" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16, cursor: 'pointer' }}>
             <input
               id="consent"
@@ -503,27 +549,13 @@ export default function AuthPage() {
         {error && <div role="alert" aria-live="polite" className="msg-in" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 13, color: '#b91c1c', marginBottom: 14 }}>{error}</div>}
         {success && <div role="status" aria-live="polite" className="msg-in" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 13, color: '#15803d', marginBottom: 14 }}>✓ {success}</div>}
 
-        {/* SMS provider not configured — steer to email */}
-        {method === 'phone' && smsUnavailable && (
-          <button onClick={() => { setMethod('email'); setError(''); setSuccess('') }}
-            style={{ width: '100%', padding: '11px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
-            {tc('auth.use_email_instead')}
-          </button>
-        )}
-
         {/* Primary CTA */}
         {(() => {
           const disabled = loading || (method === 'email'
             ? (!email || !password || (mode === 'signup' && !consentChecked))
-            : sentPhone
-              ? otpCode.trim().length < 6
-              : (!phoneLocal.trim() || smsUnavailable || (mode === 'signup' && !consentChecked)))
-          const label = method === 'email'
-            ? (mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`)
-            : sentPhone ? `${tc('auth.verify_code')} →` : `${tc('auth.send_code')} →`
-          const onClick = method === 'email'
-            ? () => triggerAuth('email')
-            : sentPhone ? handleVerifyCode : handleSendCode
+            : (!phoneLocal.trim() || pin.length !== 4 || (mode === 'signup' && (pinConfirm.length !== 4 || !consentChecked))))
+          const label = mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`
+          const onClick = method === 'email' ? () => triggerAuth('email') : handlePhoneAuth
           return (
             <button onClick={onClick} disabled={disabled}
               style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .6 : 1, marginBottom: 10 }}>
@@ -563,6 +595,7 @@ export default function AuthPage() {
         </button>
         )}
 
+        </>)}
       </div>
 
       <p style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 20, textAlign: 'center' }}>
