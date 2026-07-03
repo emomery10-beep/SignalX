@@ -45,6 +45,14 @@ export interface PosAuditPayload {
   toValue?:    string
   metadata?:   Record<string, unknown>
   staffName?:  string   // pass if already known, avoids extra DB lookup
+  // Offline-write idempotency for events whose target row is mutated
+  // repeatedly (e.g. job.status_change, inventory.restocked) — a single
+  // client_tx_id column on the row itself can't record "have I applied
+  // this specific mutation before" across many mutations, so this
+  // append-only log is the dedup source of truth instead. Only meaningful
+  // paired with a unique index scoped to the specific event (see
+  // supabase/migrations/20260710_pos_inventory_restock_idempotency.sql).
+  clientTxId?: string
 }
 
 /**
@@ -77,6 +85,7 @@ export async function logPosAudit(payload: PosAuditPayload): Promise<void> {
       from_value:  payload.fromValue      || null,
       to_value:    payload.toValue        || null,
       metadata:    payload.metadata       || {},
+      client_tx_id: payload.clientTxId    || null,
     })
   } catch (err) {
     // Never let audit failures break the main request

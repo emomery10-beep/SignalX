@@ -27,5 +27,15 @@ export function getOfflineResourceTypesForRole(role: string): OfflineResourceEnt
     ]
   }
 
+  // getSector() only matches hyphenated template roles (repair-intake,
+  // repair-technician, ...) — legacy bare role names ('repair', 'engineer')
+  // are still active in this codebase (see isManagerOrAboveLevel) and need
+  // to be checked explicitly, or prefetch silently doesn't fire for them.
+  if (getSector(role) === 'repair' || role === 'repair' || role === 'engineer') {
+    return [
+      { resourceType: 'service_jobs', endpoint: '/api/pos/service-jobs', listKey: 'jobs' },
+    ]
+  }
+
   return []
 }

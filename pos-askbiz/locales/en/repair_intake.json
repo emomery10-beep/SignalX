@@ -6,13 +6,11 @@
   "stage_condition": "Condition",
   "stage_details": "Details",
   "stage_done": "Done",
-
   "slot_front": "Front",
   "slot_back": "Back",
   "slot_screen": "Screen",
   "slot_sides": "Sides",
   "photo_n": "Photo {n}",
-
   "check_screen": "Screen test",
   "check_buttons": "Buttons",
   "check_camera": "Camera",
@@ -21,18 +19,15 @@
   "result_pass": "PASS",
   "result_fail": "FAIL",
   "result_untested": "—",
-
   "device_type_phone": "Phone",
   "device_type_tablet": "Tablet",
   "device_type_laptop": "Laptop",
   "device_type_watch": "Watch",
   "device_type_console": "Console",
   "device_type_other": "Other",
-
   "priority_normal": "Normal",
   "priority_high": "High",
   "priority_urgent": "Urgent",
-
   "scan_title": "Scan device label",
   "scan_subtitle": "Point the camera at the IMEI/serial sticker (usually on the back or under the battery).",
   "reading_label_short": "Reading label…",
@@ -43,18 +38,15 @@
   "photo_btn": "🖼 Photo",
   "next_condition": "Next: Condition →",
   "skip_scan": "Skip scan",
-
   "camera_permission_denied": "Camera permission denied. Use the photo button instead.",
   "camera_unavailable": "Camera unavailable. Use the photo button instead.",
   "could_not_capture_frame": "Could not capture frame",
   "scan_read_failed": "Could not read device label. Try again or enter manually.",
   "scan_failed": "Scan failed. Check your connection or enter manually.",
-
   "under_warranty": "✓ Under warranty",
   "warranty_expired": "Warranty expired",
   "previous_repair_line": "Previous repair #{ticket} — {repair}",
   "days_remaining_suffix": " · {days} days remaining",
-
   "device_details": "Device details",
   "percent_match": "{percent}% match",
   "model": "Model",
@@ -65,7 +57,6 @@
   "storage_placeholder": "128GB",
   "colour": "Colour",
   "colour_placeholder": "Graphite",
-
   "condition_title": "Document condition",
   "condition_subtitle": "Capture front, back, screen and sides. Protects you and the customer.",
   "capture_view": "Capture {view} view",
@@ -77,7 +68,6 @@
   "condition_notes_placeholder": "e.g. Hairline crack top-left, scuffs on back…",
   "back": "← Back",
   "next_details": "Next: Details →",
-
   "details_title": "Customer & job details",
   "customer_name": "Customer name",
   "customer_name_placeholder": "Full name",
@@ -91,7 +81,6 @@
   "estimated_cost_placeholder": "0.00",
   "assign_engineer": "Assign to engineer (optional)",
   "unassigned": "— Unassigned —",
-
   "summary": "Summary",
   "unknown_device": "Unknown device",
   "photos_checks_line": "{photos} {photoWord} · {done}/{total} checks done",
@@ -99,16 +88,13 @@
   "photo_plural": "photos",
   "creating": "Creating…",
   "create_ticket": "✓ Create ticket",
-
   "issue_required": "Issue description is required",
   "create_ticket_failed": "Failed to create ticket",
   "create_ticket_failed_conn": "Failed to create ticket. Check your connection.",
-
   "fault_condition_prefix": "Condition: {notes}",
   "fault_failed_checks": "Failed checks: {checks}",
   "fault_passed_checks": "Passed checks: {checks}",
   "fault_default": "Device intake",
-
   "ticket_created": "Ticket created",
   "checked_in_for": "{device} checked in for {customer}.",
   "sms_sent": " SMS confirmation sent.",
@@ -116,5 +102,6 @@
   "walk_in_customer": "walk-in customer",
   "print_ticket": "🖨 Print ticket",
   "view_tickets": "🎫 View tickets",
-  "new_intake": "📸 New intake"
+  "new_intake": "📸 New intake",
+  "pending_sync": "Saved on this device — will upload once you're back online."
 }

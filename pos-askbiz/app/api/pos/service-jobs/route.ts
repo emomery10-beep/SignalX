@@ -12,6 +12,47 @@ function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
 }
 
+const PHOTO_BUCKET = 'service-photos'
+const PHOTO_ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
+
+// Uploads one inline base64 photo to the (public) service-photos bucket.
+// Mirrors the existing standalone upload-photo endpoint's bucket/fallback
+// behavior, but runs inline in the intake POST — required so condition
+// photos travel in the same offline-queueable request as job creation,
+// instead of the old separate fire-and-forget upload that silently lost
+// photos when offline. Never throws: on any failure it falls back to the
+// raw data URL, same as upload-photo/route.ts already does.
+async function uploadInlineServicePhoto(
+  service: ReturnType<typeof createServiceClient>,
+  ownerId: string,
+  filenameHint: string,
+  image: string,
+): Promise<string> {
+  try {
+    const mimeMatch = image.match(/^data:(image\/[\w.+-]+);base64,/)
+    const contentType = mimeMatch ? mimeMatch[1].toLowerCase() : 'image/jpeg'
+    if (!PHOTO_ALLOWED.includes(contentType)) return image
+
+    const base64Data = image.replace(/^data:image\/[\w.+-]+;base64,/, '')
+    const buffer = Buffer.from(base64Data, 'base64')
+    if (buffer.length === 0) return image
+
+    const ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg'
+    const path = `${ownerId}/${filenameHint}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`
+
+    const { error: uploadErr } = await service.storage.from(PHOTO_BUCKET).upload(path, buffer, { contentType, upsert: false })
+    if (uploadErr) {
+      console.error('Service job photo upload failed, falling back to inline data URL:', uploadErr.message)
+      return image
+    }
+    const { data: urlData } = service.storage.from(PHOTO_BUCKET).getPublicUrl(path)
+    return urlData.publicUrl
+  } catch (err) {
+    console.error('Service job photo processing error, falling back to inline data URL:', err)
+    return image
+  }
+}
+
 // GET — list service jobs (filterable by status, assignee, location, customer)
 export async function GET(req: NextRequest) {
   const auth = await resolvePosAuth(req)
@@ -78,7 +119,8 @@ export async function POST(req: NextRequest) {
     device_description, fault_description, intake_photo_url,
     preset_id, quoted_price, location_id, intake_lat, intake_lng,
     estimated_minutes, warranty_job_id, assigned_to,
-  } = body
+    condition_photos,
+  } = body as { condition_photos?: string[]; [key: string]: any }
 
   if (!fault_description?.trim()) {
     return json({ error: 'fault_description required' }, 400)
@@ -143,6 +185,19 @@ export async function POST(req: NextRequest) {
     } catch { /* dedupe is best-effort — never block intake on it */ }
   }
 
+  // Condition photos travel inline (base64) in this same request — not as
+  // a separate fire-and-forget upload, which silently lost photos when
+  // offline. Uploaded before insert (dedup already checked above) using a
+  // filename hint since the real ticket number is trigger-generated.
+  let conditionPhotoUrls: string[] = []
+  if (Array.isArray(condition_photos) && condition_photos.length > 0) {
+    conditionPhotoUrls = await Promise.all(
+      condition_photos.filter((p): p is string => typeof p === 'string' && p.length > 0)
+        .map(p => uploadInlineServicePhoto(service, auth.ownerId, 'intake', p))
+    )
+  }
+  const resolvedIntakePhotoUrl = intake_photo_url || conditionPhotoUrls[0] || null
+
   const jobRow: Record<string, any> = {
       owner_id: auth.ownerId,
       ticket_number: '',  // trigger auto-generates
@@ -154,7 +209,8 @@ export async function POST(req: NextRequest) {
       device_serial: device_serial || null,
       device_description: device_description || null,
       fault_description: fault_description.trim(),
-      intake_photo_url: intake_photo_url || null,
+      intake_photo_url: resolvedIntakePhotoUrl,
+      condition_photo_urls: conditionPhotoUrls,
       preset_id: preset_id || null,
       original_quoted_price: originalQuotedPrice,
       quoted_price: originalQuotedPrice,
@@ -253,8 +309,45 @@ export async function PATCH(req: NextRequest) {
   const service = createServiceClient()
   const body = await req.json()
   const { id, ...fields } = body
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
 
   if (!id) return json({ error: 'id required' }, 400)
+
+  // Idempotency for status transitions: this dedup check MUST run before
+  // the transition-validity check below, not after — otherwise a client
+  // retry of an already-applied transition can be rejected as "invalid"
+  // once the row has already moved to the new status (e.g. a queued
+  // accepted->in_progress replayed twice: the second attempt would see
+  // current.status already 'in_progress', which isn't a valid source
+  // state for that same transition). pos_service_jobs' own client_tx_id
+  // column is reserved for the original create dedup (Phase 0) — a job
+  // goes through many transitions over its life, so this uses the
+  // pos_audit_log side-table pattern instead, same as inventory restock.
+  if (clientTxId && fields.status) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('pos_audit_log')
+        .select('id')
+        .eq('owner_id', auth.ownerId)
+        .eq('client_tx_id', clientTxId)
+        .eq('event', 'job.status_change')
+        .maybeSingle()
+      if (!dupeErr && dupe) {
+        const { data: existingJob } = await service
+          .from('pos_service_jobs')
+          .select(`
+            *,
+            checked_in_staff:pos_staff!checked_in_by(id, name, role),
+            assigned_staff:pos_staff!assigned_to(id, name, role),
+            checked_out_staff:pos_staff!checked_out_by(id, name, role),
+            customer:pos_customers!customer_id(id, phone, name),
+            location:pos_locations!location_id(id, name)
+          `)
+          .eq('id', id).eq('owner_id', auth.ownerId).maybeSingle()
+        if (existingJob) return json({ job: existingJob, deduped: true })
+      }
+    } catch { /* dedupe is best-effort — never block a status update on it */ }
+  }
 
   // Fetch current job
   const { data: current, error: fetchErr } = await service
@@ -424,13 +517,20 @@ export async function PATCH(req: NextRequest) {
     })
   }
 
-  // Audit log — record status changes and significant field updates
+  // Audit log — record status changes and significant field updates.
+  // Status changes are awaited (not fire-and-forget) when a client_tx_id
+  // is present — this closes the two-request race where the transition
+  // succeeds but a crash before the audit insert would let a retry
+  // double-apply; the dedup-select above only protects future requests
+  // once this row actually exists.
   if (fields.status && fields.status !== current.status) {
-    logPosAudit({
+    const auditCall = logPosAudit({
       auth, event: 'job.status_change', entityType: 'service_job', entityId: id,
       fromValue: current.status, toValue: fields.status,
       metadata: { ticket_number: updated.ticket_number, device_model: updated.device_model },
+      clientTxId: clientTxId || undefined,
     })
+    if (clientTxId) await auditCall
   } else if (Object.keys(updates).length > 0) {
     logPosAudit({
       auth, event: 'job.updated', entityType: 'service_job', entityId: id,

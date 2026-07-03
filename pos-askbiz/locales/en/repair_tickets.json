@@ -1,13 +1,11 @@
 {
   "loading": "Loading…",
-
   "col_intake": "Intake",
   "col_quoted": "Quoted",
   "col_accepted": "Accepted",
   "col_in_progress": "In Progress",
   "col_completed": "Ready",
   "col_collected": "Collected",
-
   "status_intake": "Intake",
   "status_quoted": "Quoted",
   "status_accepted": "Accepted",
@@ -15,7 +13,6 @@
   "status_completed": "Ready",
   "status_collected": "Collected",
   "status_cancelled": "Cancelled",
-
   "action_send_quote": "Send Quote",
   "action_accept": "Accept",
   "action_start_repair": "Start Repair",
@@ -23,13 +20,11 @@
   "action_collect": "Collect",
   "action_reopen": "Re-open",
   "action_cancel": "Cancel",
-
   "header_title": "🔧 Tickets",
   "ticket_count_one": "{count} repair ticket",
   "ticket_count_other": "{count} repair tickets",
   "view_board": "Board",
   "view_list": "List",
-
   "search_placeholder": "Search by customer, device, serial or ticket #…",
   "loading_tickets": "Loading tickets…",
   "no_tickets_match": "No tickets match.",
@@ -38,10 +33,8 @@
   "walk_in": "Walk-in",
   "days_open": "{days}d open",
   "no_tickets_here": "No tickets here",
-
   "unassigned_short": "unassigned",
   "no_further_actions": "No further actions",
-
   "row_customer": "Customer",
   "row_phone": "Phone",
   "row_serial_imei": "Serial / IMEI",
@@ -52,7 +45,6 @@
   "unassigned": "Unassigned",
   "quote_tbc": "TBC",
   "opened_value": "{date} ({days}d ago)",
-
   "fault_description": "Fault description",
   "engineer_notes": "Engineer notes",
   "photos": "Photos",
@@ -60,7 +52,7 @@
   "no_parts_logged": "No parts logged",
   "timeline": "Timeline",
   "no_history_yet": "No history yet",
-
   "failed_to_update": "Failed to update",
-  "failed_to_update_conn": "Failed to update. Check connection."
+  "failed_to_update_conn": "Failed to update. Check connection.",
+  "sync_pending": "Sync pending"
 }

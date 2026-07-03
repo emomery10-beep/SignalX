@@ -561,11 +561,21 @@ export default function SellPage() {
 
       // The client_tx_id makes this POST idempotent, so a request that timed
       // out mid-flight can be retried once without risking a double record.
-      const postSale = () => fetch(`${API}/api/pos/transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
-        body: JSON.stringify(txBody),
-      })
+      // AbortController timeout matters here specifically: on a genuinely
+      // offline real device, plain fetch() can hang for a very long time
+      // (unlike Chrome DevTools' "Offline" throttling, which fails fast) —
+      // without this, checkout would sit on "Processing..." indefinitely
+      // and never reach the offline-queue fallback below.
+      const postSale = () => {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 8000)
+        return fetch(`${API}/api/pos/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+          body: JSON.stringify(txBody),
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timer))
+      }
       let res: Response
       try {
         res = await postSale()

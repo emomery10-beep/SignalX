@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
+import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
+import { getOfflineResourceTypesForRole } from '@/lib/pos-offline-manifest'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -71,6 +74,9 @@ export default function RepairTickets() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [detailError, setDetailError] = useState('')
+  // job id -> client_tx_id of its most recent not-yet-synced status change,
+  // used to show a "sync pending" badge and clear it once replay resolves.
+  const [pendingJobTx, setPendingJobTx] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -95,8 +101,38 @@ export default function RepairTickets() {
     if (!authReady || !session) return
     loadJobs()
     const interval = setInterval(loadJobs, 30000)
+
+    // Background prefetch so the board is usable offline (throttled).
+    for (const entry of getOfflineResourceTypesForRole(session.role)) {
+      isResourceCacheStale(entry.resourceType, session.ownerId, 6 * 60 * 60 * 1000).then(stale => {
+        if (stale) bulkUpsertResourceFromApi(entry.resourceType, entry.endpoint, session.ownerId, session.staffId || '', { listKey: entry.listKey }).catch(() => {})
+      }).catch(() => {})
+    }
+
     return () => clearInterval(interval)
   }, [authReady, session, loadJobs])
+
+  // ── Offline queue replay ────────────────────────────────
+  useEffect(() => {
+    if (!session) return
+    const replay = () => {
+      replayOfflineQueue(session.ownerId, session.staffId || '').then(result => {
+        if (result.succeededResponses.length === 0) return
+        const resolvedTxIds = new Set(result.succeededResponses.map(r => r.client_tx_id))
+        setPendingJobTx(prev => {
+          const next = { ...prev }
+          for (const [jobId, txId] of Object.entries(prev)) {
+            if (resolvedTxIds.has(txId)) delete next[jobId]
+          }
+          return next
+        })
+        loadJobs()
+      }).catch(() => {})
+    }
+    replay()
+    window.addEventListener('online', replay)
+    return () => window.removeEventListener('online', replay)
+  }, [session, loadJobs])
 
   const openDetail = async (job: Job) => {
     setSelected(job); setHistory([]); setParts([]); setDetailError('')
@@ -113,20 +149,39 @@ export default function RepairTickets() {
   }
 
   const changeStatus = async (status: string) => {
-    if (!selected) return
+    if (!selected || !session) return
     setUpdating(true); setDetailError('')
+    const clientTxId = generateClientTxId('job_status')
+    const body = { id: selected.id, status, client_tx_id: clientTxId }
     try {
       const res = await fetch('/api/pos/service-jobs', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...session?.headers },
-        body: JSON.stringify({ id: selected.id, status }),
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) { setDetailError(data.error || tc('repair_tickets.failed_to_update')); setUpdating(false); return }
       setSelected(data.job)
       setJobs(prev => prev.map(j => j.id === data.job.id ? { ...j, ...data.job } : j))
       openDetail(data.job)
-    } catch { setDetailError(tc('repair_tickets.failed_to_update_conn')) }
+    } catch {
+      // Network failure — queue for replay. A status PATCH always targets a
+      // job that already exists (no dependency-chaining problem, unlike
+      // creating-then-modifying something in the same offline session), so
+      // this is a straightforward queue-and-replay. Optimistically reflect
+      // the intended status locally; the badge clears once replay resolves.
+      try {
+        await enqueueOfflineWrite({
+          client_tx_id: clientTxId, owner_id: session.ownerId, staff_id: session.staffId || '',
+          endpoint: '/api/pos/service-jobs', method: 'PATCH', body, created_at: new Date().toISOString(),
+        })
+        setPendingJobTx(prev => ({ ...prev, [selected.id]: clientTxId }))
+        setSelected(prev => prev ? { ...prev, status } : prev)
+        setJobs(prev => prev.map(j => j.id === selected.id ? { ...j, status } : j))
+      } catch (queueErr) {
+        setDetailError(queueErr instanceof OfflineQueueQuotaError ? queueErr.message : tc('repair_tickets.failed_to_update_conn'))
+      }
+    }
     setUpdating(false)
   }
 
@@ -238,6 +293,9 @@ export default function RepairTickets() {
               {/* status + actions */}
               <div>
                 <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: (STATUS_COLOR[selected.status] || DIM) + '22', color: STATUS_COLOR[selected.status] || DIM }}>{statusLabel(tc, selected.status)}</span>
+                {pendingJobTx[selected.id] && (
+                  <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, background: WARN + '22', color: WARN }}>{tc('repair_tickets.sync_pending')}</span>
+                )}
                 {detailError && <div style={{ color: BAD, fontSize: 13, marginTop: 10 }}>{detailError}</div>}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                   {(NEXT_STATUS[selected.status] || []).map(t => (

@@ -149,7 +149,7 @@ export default function IntakePage() {
   // Submit
   const [submitting, setSubmitting] = useState(false)
   const [submitErr, setSubmitErr]   = useState('')
-  const [createdParcel, setCreatedParcel] = useState<{ tracking_number: string | null; id: string | null; receipt_consent: boolean; pendingSync?: boolean } | null>(null)
+  const [createdParcel, setCreatedParcel] = useState<{ tracking_number: string | null; id: string | null; receipt_consent: boolean; pendingSync?: boolean; client_tx_id?: string } | null>(null)
   const [outboxPending, setOutboxPending] = useState(0)
   // Close shift
   const [showClose, setShowClose]       = useState(false)
@@ -187,9 +187,21 @@ export default function IntakePage() {
 
   const replayQueue = useCallback(async () => {
     if (!staff) return
-    await replayOfflineQueue(staff.owner_id, staff.id).catch(() => {})
+    const result = await replayOfflineQueue(staff.owner_id, staff.id).catch(() => null)
     getOutboxCount(staff.owner_id).then(setOutboxPending).catch(() => {})
-  }, [staff])
+    // If the currently-displayed "pending sync" parcel just synced in the
+    // background, reconcile the UI with the real server-assigned fields
+    // instead of leaving it stuck showing a placeholder forever.
+    const pendingTxId = createdParcel?.pendingSync ? createdParcel.client_tx_id : undefined
+    const match = pendingTxId ? result?.succeededResponses.find(r => r.client_tx_id === pendingTxId) : undefined
+    if (!match) return
+    if (match.body?.parcel) {
+      setCreatedParcel({ tracking_number: match.body.parcel.tracking_number, id: match.body.parcel.id, receipt_consent: createdParcel!.receipt_consent, client_tx_id: pendingTxId })
+    } else {
+      // Dropped as permanently invalid (400) — surface that instead of "pending" forever
+      setSubmitErr(match.body?.error || tc('logistics_intake.err_register_status', { status: 400 }))
+    }
+  }, [staff, createdParcel, tc])
 
   useEffect(() => {
     if (!staff) return
@@ -358,7 +370,7 @@ export default function IntakePage() {
           endpoint: '/api/pos/parcels', method: 'POST', body, created_at: new Date().toISOString(),
         })
         setOutboxPending(await getOutboxCount(staff.owner_id))
-        setCreatedParcel({ tracking_number: null, id: null, receipt_consent: receiptConsent, pendingSync: true })
+        setCreatedParcel({ tracking_number: null, id: null, receipt_consent: receiptConsent, pendingSync: true, client_tx_id: clientTxId })
         setStep('done')
       } catch (queueErr) {
         setSubmitErr(queueErr instanceof OfflineQueueQuotaError

@@ -8,6 +8,14 @@
 // from the network, but the outbox holds unsynced user data that must
 // never be touched by a cache-store schema migration. Keeping them apart
 // means a cache upgrade bug can never risk losing a queued write.
+//
+// Idempotency convention for every route this queue talks to: a
+// client_tx_id collision is ALWAYS returned as 200 with `{ ..., deduped:
+// true }`, never 409. That keeps this module resource-agnostic — it only
+// needs to know "400 = permanently invalid, drop it" / "5xx or network
+// error = retry later," and never has to learn which 409s are safe to drop
+// vs. a real business conflict. Don't "fix" a stuck-outbox-item bug by
+// teaching this module about 409 — fix the route to emit 400/200 instead.
 'use client'
 import { openDB, type IDBPDatabase } from 'idb'
 
@@ -34,7 +42,7 @@ export interface OutboxItem {
   owner_id: string
   staff_id: string
   endpoint: string
-  method: 'POST'
+  method: 'POST' | 'PATCH'
   body: Record<string, any>
   created_at: string
   attempts: number
@@ -77,16 +85,30 @@ export async function clearOutboxItem(clientTxId: string): Promise<void> {
   await db.delete('outbox', clientTxId)
 }
 
+export interface ReplayResult {
+  succeeded: number
+  remaining: number
+  // One entry per item dropped this replay (200 success OR 400 permanent
+  // rejection) — callers use this to reconcile any "pending sync" UI state
+  // keyed by client_tx_id, including reading server-generated fields
+  // (tracking number, ticket number, order id) out of `body` for the
+  // success case. For a 400 drop, `body` is whatever error the server
+  // returned — still useful so the caller can stop showing "pending" and
+  // surface the failure instead of leaving it stuck forever.
+  succeededResponses: { client_tx_id: string; body: any }[]
+}
+
 // Replays queued writes in creation order, one at a time. Stops on the
 // first network/5xx failure (preserves ordering, avoids hammering a
 // backend that's still down) — matches /sell's existing queue semantics.
 // Drops an item on 400 (permanently invalid) same as /sell.
-export async function replayOfflineQueue(ownerId: string, staffId: string): Promise<{ succeeded: number; remaining: number }> {
+export async function replayOfflineQueue(ownerId: string, staffId: string): Promise<ReplayResult> {
   const db = await openOutboxDB()
   const items: OutboxItem[] = (await db.getAllFromIndex('outbox', 'by_owner', ownerId))
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
   let succeeded = 0
+  const succeededResponses: { client_tx_id: string; body: any }[] = []
   for (const item of items) {
     try {
       const res = await fetch(`${API}${item.endpoint}`, {
@@ -95,6 +117,8 @@ export async function replayOfflineQueue(ownerId: string, staffId: string): Prom
         body: JSON.stringify(item.body),
       })
       if (res.ok || res.status === 400) {
+        const body = await res.json().catch(() => null)
+        succeededResponses.push({ client_tx_id: item.client_tx_id, body })
         await db.delete('outbox', item.client_tx_id)
         succeeded++
         continue
@@ -109,5 +133,5 @@ export async function replayOfflineQueue(ownerId: string, staffId: string): Prom
   }
 
   const remaining = await getOutboxCount(ownerId)
-  return { succeeded, remaining }
+  return { succeeded, remaining, succeededResponses }
 }

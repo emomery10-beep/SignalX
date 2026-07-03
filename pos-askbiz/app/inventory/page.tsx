@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { isInventoryLevel, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
+import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
 const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)' }
 const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
@@ -29,6 +30,7 @@ export default function InventoryPage() {
   const [loading, setLoading]     = useState(true)
   const [restocking, setRestocking] = useState<string | null>(null)
   const [restockQty, setRestockQty] = useState('')
+  const [restockError, setRestockError] = useState('')
   const [updateMode, setUpdateMode] = useState<'add' | 'set'>('add')
   const [filter, setFilter]       = useState<'all' | 'low' | 'out' | 'expiring'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -92,6 +94,16 @@ export default function InventoryPage() {
       if (cfg.currency_symbol) setSym(cfg.currency_symbol)
     }).catch(() => {})
   }, [])
+
+  // Replay any offline-queued restocks/edits on mount and when connectivity
+  // returns — mirrors the pattern already proven on /sell and /logistics/intake.
+  useEffect(() => {
+    if (!staff) return
+    const replay = () => replayOfflineQueue(staff.owner_id, staff.id).then(() => loadInventory(staff)).catch(() => {})
+    replay()
+    window.addEventListener('online', replay)
+    return () => window.removeEventListener('online', replay)
+  }, [staff])
 
   const posHeaders = (s: StaffSession) => ({
     'x-staff-id': s.id,
@@ -327,13 +339,43 @@ export default function InventoryPage() {
     if (!restockQty || !staff) return
     const qty = parseFloat(restockQty)
     if (isNaN(qty) || qty < 0) return
+    setRestockError('')
 
+    // 'add' is a cumulative increment — send restock_qty so the server
+    // applies it atomically (increment_inventory_stock RPC) instead of a
+    // client-computed absolute value, which would race against any other
+    // device's concurrent restock of the same item. 'set' is a direct
+    // override to a specific value, which is correctly a plain field-set.
+    const clientTxId = generateClientTxId(updateMode === 'add' ? 'restock' : 'stockset')
+    const body = updateMode === 'add'
+      ? { id: item.id, restock_qty: qty, client_tx_id: clientTxId }
+      : { id: item.id, stock_qty: qty, client_tx_id: clientTxId }
     const newQty = updateMode === 'add' ? item.stock_qty + qty : qty
-    await fetch(`${API}/api/pos/inventory`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...posHeaders(staff) },
-      body: JSON.stringify({ id: item.id, stock_qty: newQty }),
-    })
+
+    try {
+      const res = await fetch(`${API}/api/pos/inventory`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...posHeaders(staff) },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setRestockError(data.error || tc('inventory.err_save_failed_inputs'))
+        return
+      }
+    } catch {
+      // Network failure — queue for replay when back online. The optimistic
+      // local update below already reflects the intended end state.
+      try {
+        await enqueueOfflineWrite({
+          client_tx_id: clientTxId, owner_id: staff.owner_id, staff_id: staff.id,
+          endpoint: '/api/pos/inventory', method: 'PATCH', body, created_at: new Date().toISOString(),
+        })
+      } catch (queueErr) {
+        setRestockError(queueErr instanceof OfflineQueueQuotaError ? queueErr.message : tc('inventory.err_save_failed_connection'))
+        return
+      }
+    }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, stock_qty: newQty } : i))
     setRestocking(null); setRestockQty('')
   }
@@ -713,7 +755,7 @@ export default function InventoryPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 9999 }}>{status.label}</span>
-                    <button onClick={() => { setRestocking(restocking === item.id ? null : item.id); setRestockQty(''); setUpdateMode('add') }}
+                    <button onClick={() => { setRestocking(restocking === item.id ? null : item.id); setRestockQty(''); setUpdateMode('add'); setRestockError('') }}
                       style={{ padding: '7px 12px', borderRadius: 9, background: `rgba(208,138,89,.1)`, border: `1px solid rgba(208,138,89,.2)`, color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                       {tc('inventory.update_stock_button')}
                     </button>
@@ -760,6 +802,9 @@ export default function InventoryPage() {
                         {updateMode === 'add' ? tc('inventory.btn_add') : tc('inventory.btn_set')}
                       </button>
                     </div>
+                    {restockError && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: 'var(--pos-danger)' }}>{restockError}</div>
+                    )}
                   </div>
                 )}
               </div>

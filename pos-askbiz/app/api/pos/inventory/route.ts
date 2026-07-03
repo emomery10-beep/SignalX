@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosOwner, resolvePosAuth } from '@/lib/pos-auth'
+import { resolvePosAuth } from '@/lib/pos-auth'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -115,51 +115,64 @@ export async function PUT(req: NextRequest) {
 
 // PATCH — update product fields or restock — fix #4 #10 #24
 export async function PATCH(req: NextRequest) {
-  const ownerId = await resolvePosOwner(req, 'inventory')
-  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const auth = await resolvePosAuth(req, 'inventory')
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const ownerId = auth.ownerId
 
   const service = createServiceClient()
   const body = await req.json()
   const { id, restock_qty, ...fields } = body
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
 
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
-  // Restock — fix #24: coerce to number; fix #4: atomic increment via DB
+  // Restock — fix #24: coerce to number; fix #4: atomic increment via DB.
+  // increment_inventory_stock is idempotent on client_tx_id (dedup +
+  // increment + audit-log insert happen in one Postgres transaction) — see
+  // supabase/migrations/20260710_pos_inventory_restock_idempotency.sql.
   if (restock_qty !== undefined) {
     const qty = Number(restock_qty)
     if (isNaN(qty) || qty <= 0) {
       return NextResponse.json({ error: 'restock_qty must be a positive number' }, { status: 400 })
     }
 
-    // Atomic increment — avoids race condition from separate SELECT + UPDATE
     const { data, error } = await service.rpc('increment_inventory_stock', {
-      p_id:       id,
-      p_owner_id: ownerId,
-      p_qty:      qty,
+      p_id:            id,
+      p_owner_id:      ownerId,
+      p_qty:           qty,
+      p_client_tx_id:  clientTxId,
+      p_staff_id:      auth.staffId,
+      p_staff_role:    auth.role,
     }).select().single()
 
     if (error) {
-      // RPC may not exist yet — fall back to fetch-then-update (non-atomic but safe for low-concurrency use)
-      const { data: current, error: fetchErr } = await service
-        .from('inventory')
-        .select('stock_qty')
-        .eq('id', id)
-        .eq('owner_id', ownerId)
-        .single()
+      // Genuinely missing RPC (e.g. migration not yet applied in this
+      // environment) — fall back to the historical non-atomic path rather
+      // than fail the restock outright. Any other error is a real failure.
+      if (/function.*increment_inventory_stock.*does not exist|schema cache/i.test(error.message || '')) {
+        const { data: current, error: fetchErr } = await service
+          .from('inventory')
+          .select('stock_qty')
+          .eq('id', id)
+          .eq('owner_id', ownerId)
+          .single()
 
-      if (fetchErr || !current) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+        if (fetchErr || !current) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-      const { data: updated, error: updateErr } = await service
-        .from('inventory')
-        .update({ stock_qty: current.stock_qty + qty })
-        .eq('id', id)
-        .eq('owner_id', ownerId)
-        .select()
-        .single()
+        const { data: updated, error: updateErr } = await service
+          .from('inventory')
+          .update({ stock_qty: current.stock_qty + qty })
+          .eq('id', id)
+          .eq('owner_id', ownerId)
+          .select()
+          .single()
 
-      if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 })
-      return NextResponse.json({ product: updated })
+        if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 })
+        return NextResponse.json({ product: updated })
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    if (!data) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
     return NextResponse.json({ product: data })
   }
@@ -175,13 +188,44 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
   }
 
-  const { data, error } = await service
+  // Idempotency: a field-edit is naturally idempotent (applying the same
+  // set twice produces the same end state), but still dedupe an immediate
+  // retry so it's a fast no-op and doesn't generate a duplicate write.
+  if (clientTxId) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('inventory')
+        .select('*, location:pos_locations!location_id(id, name)')
+        .eq('owner_id', ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (!dupeErr && dupe) return NextResponse.json({ product: dupe, deduped: true })
+    } catch { /* dedupe is best-effort — never block an edit on it */ }
+  }
+
+  const updateRow = { ...updates, client_tx_id: clientTxId }
+  let { data, error } = await service
     .from('inventory')
-    .update(updates)
+    .update(updateRow)
     .eq('id', id)
     .eq('owner_id', ownerId)
     .select()
     .single()
+
+  if (error && clientTxId && (error as any).code === '23505') {
+    const { data: dupe } = await service
+      .from('inventory')
+      .select('*, location:pos_locations!location_id(id, name)')
+      .eq('owner_id', ownerId)
+      .eq('client_tx_id', clientTxId)
+      .maybeSingle()
+    if (dupe) return NextResponse.json({ product: dupe, deduped: true })
+  }
+  if (error && /client_tx_id|column|schema cache/i.test(error.message || '')) {
+    const retry = await service.from('inventory').update(updates).eq('id', id).eq('owner_id', ownerId).select().single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ product: data })

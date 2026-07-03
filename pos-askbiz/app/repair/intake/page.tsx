@@ -3,6 +3,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { compressImageToDataUrl } from '@/lib/pos-image-compress'
+import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
+import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
+import { getOfflineResourceTypesForRole } from '@/lib/pos-offline-manifest'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -90,6 +94,8 @@ export default function RepairIntake() {
   // stage 4: done
   const [ticketNumber, setTicketNumber] = useState('')
   const [createdJobId, setCreatedJobId] = useState('')
+  const [pendingSync, setPendingSync] = useState(false)
+  const [pendingClientTxId, setPendingClientTxId] = useState('')
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -106,8 +112,40 @@ export default function RepairIntake() {
           s.role.includes('engineer') || s.role.includes('technician')
         ))
       }).catch(() => {})
+
+    // Background prefetch so recent jobs are visible offline (throttled).
+    // Role → resource-types mapping lives in one place (pos-offline-manifest.ts)
+    // rather than each screen hardcoding its own list.
+    for (const entry of getOfflineResourceTypesForRole(session.role)) {
+      isResourceCacheStale(entry.resourceType, session.ownerId, 6 * 60 * 60 * 1000).then(stale => {
+        if (stale) bulkUpsertResourceFromApi(entry.resourceType, entry.endpoint, session.ownerId, session.staffId || '', { listKey: entry.listKey }).catch(() => {})
+      }).catch(() => {})
+    }
+
     return () => stopCamera()
   }, [authReady, session])
+
+  // ── Offline queue replay ────────────────────────────────
+  useEffect(() => {
+    if (!session) return
+    const replay = () => {
+      replayOfflineQueue(session.ownerId, session.staffId || '').then(result => {
+        if (!pendingSync || !pendingClientTxId) return
+        const match = result.succeededResponses.find(r => r.client_tx_id === pendingClientTxId)
+        if (!match) return
+        if (match.body?.job) {
+          setTicketNumber(match.body.job.ticket_number || '')
+          setCreatedJobId(match.body.job.id || '')
+          setPendingSync(false)
+        } else {
+          setSubmitError(match.body?.error || tc('repair_intake.create_ticket_failed'))
+        }
+      }).catch(() => {})
+    }
+    replay()
+    window.addEventListener('online', replay)
+    return () => window.removeEventListener('online', replay)
+  }, [session, pendingSync, pendingClientTxId, tc])
 
   // ── Camera helpers ──────────────────────────────────────
   const openCamera = useCallback(async (purpose: 'scan' | 'condition') => {
@@ -135,31 +173,32 @@ export default function RepairIntake() {
     setCameraActive(false)
   }, [])
 
-  const captureFromVideo = useCallback((): string | null => {
+  // Compressed (maxEdge/quality match logistics' ID-scan settings) —
+  // uncompressed photos would blow through the offline outbox's IndexedDB
+  // quota fast once queued, and a device-scan + 4 condition photos in one
+  // intake is 5+ full-resolution camera frames.
+  const captureFromVideo = useCallback(async (): Promise<string | null> => {
     if (!canvasRef.current || !videoRef.current || !videoRef.current.videoWidth) return null
     const canvas = canvasRef.current, video = videoRef.current
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     canvas.getContext('2d')?.drawImage(video, 0, 0)
-    return canvas.toDataURL('image/jpeg', 0.85)
+    return compressImageToDataUrl(canvas, { maxEdge: 1800, quality: 0.85 })
   }, [])
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
+    compressImageToDataUrl(file, { maxEdge: 1800, quality: 0.85 }).then(dataUrl => {
       if (capturePurpose.current === 'scan') runScan(dataUrl)
       else addConditionPhoto(dataUrl)
-    }
-    reader.readAsDataURL(file)
+    }).catch(() => {})
     e.target.value = ''
   }, [])
 
   // ── Stage 1: device scan ────────────────────────────────
-  const captureForScan = () => {
-    const dataUrl = captureFromVideo()
+  const captureForScan = async () => {
+    const dataUrl = await captureFromVideo()
     if (!dataUrl) { setScanError(tc('repair_intake.could_not_capture_frame')); return }
     stopCamera()
     runScan(dataUrl)
@@ -198,8 +237,8 @@ export default function RepairIntake() {
   const skipScan = () => { stopCamera(); setScanError(''); setScanConfidence(null) }
 
   // ── Stage 2: condition photos ───────────────────────────
-  const captureCondition = () => {
-    const dataUrl = captureFromVideo()
+  const captureCondition = async () => {
+    const dataUrl = await captureFromVideo()
     if (!dataUrl) return
     addConditionPhoto(dataUrl)
   }
@@ -235,23 +274,32 @@ export default function RepairIntake() {
 
   const submit = async () => {
     if (!issue.trim()) { setSubmitError(tc('repair_intake.issue_required')); return }
+    if (!session) return
     setSubmitting(true); setSubmitError('')
+    const deviceDesc = [deviceType, device.color, device.storage].filter(Boolean).join(' · ') || null
+    const clientTxId = generateClientTxId('job')
+    // All photos (device scan already consumed by scan-device separately;
+    // condition photos here) travel inline in this one request — not as a
+    // separate fire-and-forget upload loop, which silently lost photos
+    // when offline and couldn't be queued at all.
+    const body = {
+      customer_name: customerName.trim() || null,
+      customer_phone: customerPhone.trim() || null,
+      device_model: device.model?.trim() || null,
+      device_serial: device.serial?.trim() || null,
+      device_description: deviceDesc,
+      fault_description: buildFaultDescription(),
+      quoted_price: estCost ? Number(estCost) : null,
+      intake_photo_url: photos[0]?.dataUrl || null,
+      condition_photos: photos.map(p => p.dataUrl),
+      assigned_to: assignedTo || null,
+      client_tx_id: clientTxId,
+    }
     try {
-      const deviceDesc = [deviceType, device.color, device.storage].filter(Boolean).join(' · ') || null
       const res = await fetch('/api/pos/service-jobs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...session?.headers },
-        body: JSON.stringify({
-          customer_name: customerName.trim() || null,
-          customer_phone: customerPhone.trim() || null,
-          device_model: device.model?.trim() || null,
-          device_serial: device.serial?.trim() || null,
-          device_description: deviceDesc,
-          fault_description: buildFaultDescription(),
-          quoted_price: estCost ? Number(estCost) : null,
-          intake_photo_url: photos[0]?.dataUrl || null,
-          assigned_to: assignedTo || null,
-        }),
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -262,20 +310,22 @@ export default function RepairIntake() {
       const job = data.job
       setTicketNumber(job?.ticket_number || '')
       setCreatedJobId(job?.id || '')
-
-      // Upload remaining condition photos (first one already saved as intake_photo_url)
-      if (job?.id && photos.length > 0) {
-        for (const p of photos) {
-          fetch('/api/pos/service-jobs/upload-photo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...session?.headers },
-            body: JSON.stringify({ image: p.dataUrl, job_id: job.id, type: 'intake' }),
-          }).catch(() => {})
-        }
-      }
       setStage('done')
     } catch {
-      setSubmitError(tc('repair_intake.create_ticket_failed_conn'))
+      // Network failure — queue for replay when back online. Ticket
+      // number is server-generated, so it isn't known yet; the done
+      // screen shows a pending-sync placeholder until reconciliation.
+      try {
+        await enqueueOfflineWrite({
+          client_tx_id: clientTxId, owner_id: session.ownerId, staff_id: session.staffId || '',
+          endpoint: '/api/pos/service-jobs', method: 'POST', body, created_at: new Date().toISOString(),
+        })
+        setPendingSync(true)
+        setPendingClientTxId(clientTxId)
+        setStage('done')
+      } catch (queueErr) {
+        setSubmitError(queueErr instanceof OfflineQueueQuotaError ? queueErr.message : tc('repair_intake.create_ticket_failed_conn'))
+      }
     }
     setSubmitting(false)
   }
@@ -286,6 +336,7 @@ export default function RepairIntake() {
     setPhotos([]); setConditionNotes(''); setChecklist(buildChecklistDefault(tc))
     setCustomerName(''); setCustomerPhone(''); setIssue(''); setDeviceType('Phone'); setEstCost(''); setPriority('normal'); setAssignedTo('')
     setSubmitError(''); setTicketNumber(''); setCreatedJobId('')
+    setPendingSync(false); setPendingClientTxId('')
   }
 
   // ── Styles ──────────────────────────────────────────────
@@ -567,7 +618,11 @@ export default function RepairIntake() {
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GOOD} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{tc('repair_intake.ticket_created')}</div>
-            {ticketNumber && <div style={{ fontSize: 18, color: ACC, fontWeight: 700, marginBottom: 6 }}>#{ticketNumber}</div>}
+            {pendingSync ? (
+              <div style={{ fontSize: 13, color: WARN, fontWeight: 600, marginBottom: 6 }}>{tc('repair_intake.pending_sync')}</div>
+            ) : ticketNumber ? (
+              <div style={{ fontSize: 18, color: ACC, fontWeight: 700, marginBottom: 6 }}>#{ticketNumber}</div>
+            ) : null}
             <div style={{ fontSize: 13, color: MUTED, marginBottom: 24 }}>{tc('repair_intake.checked_in_for', { device: device.model || tc('repair_intake.device_fallback'), customer: customerName || tc('repair_intake.walk_in_customer') })}{customerPhone ? tc('repair_intake.sms_sent') : ''}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
               <button onClick={() => window.print()} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.print_ticket')}</button>
