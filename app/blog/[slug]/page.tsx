@@ -9,7 +9,12 @@ import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { t } from '@/lib/i18n-catalog'
 
 export const dynamicParams = true
-export const revalidate = 3600 // cache for 1 hour, regenerate in background
+// Was `revalidate = 3600` (ISR) — incompatible with the headers()/cookies() read
+// in the page body below (locale detection), which throws DYNAMIC_SERVER_USAGE
+// whenever Next tries to regenerate the cached page. Reading a dynamic API and
+// requesting time-based static revalidation are mutually exclusive; this route
+// needs per-request locale, so it must render dynamically instead.
+export const dynamic = 'force-dynamic'
 
 async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
   const staticPost = getPost(slug)
