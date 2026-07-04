@@ -530,7 +530,9 @@ img {
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;
-    padding-top: 0;
+    /* Reserve clearance for the fixed floating hamburger button so it never
+       overlaps a page's own logo/heading (button sits at safe-area-inset-top + 12px, is 36px tall). */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 56px);
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
   .desktop-sidebar {
