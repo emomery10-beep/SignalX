@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     // Verify transaction exists and fetch details
     const { data: transaction } = await service
       .from('pos_transactions')
-      .select('id, total_amount, total_tax, customer_id')
+      .select('id, total, tax_amount, customer_id')
       .eq('id', transaction_id)
       .eq('owner_id', ownerId)
       .single()
@@ -140,6 +140,8 @@ export async function handlePaymentResult(
       payment_method: paymentMethod,
       paid_at: new Date().toISOString(),
     })
+      .eq('id', transactionId)
+      .eq('owner_id', ownerId)
 
     return NextResponse.json({
       success: true,
