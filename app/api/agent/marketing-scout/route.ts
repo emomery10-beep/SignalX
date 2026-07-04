@@ -154,8 +154,10 @@ async function runMarketingScout() {
 
     log.push(`Got results for ${validResults.length}/${selected.length} queries. Writing posts...`)
 
+    // Stagger dispatch — 5 topics x up to 3 retries each can burst well past
+    // Groq's per-minute rate limit if fired simultaneously.
     const blogResults = await Promise.allSettled(
-      validResults.map(r => writeMarketingBlogPost(r, recentPublished))
+      validResults.map((r, i) => new Promise(res => setTimeout(res, i * 2000)).then(() => writeMarketingBlogPost(r, recentPublished)))
     )
 
     const inserts: Record<string, unknown>[] = []
@@ -344,28 +346,39 @@ Return ONLY valid JSON (no markdown fences):
       ? `\n\nIMPORTANT: your previous attempt was rejected for being too short or malformed. Write the FULL length specified for every section — do not summarise or compress. Every section body must hit its stated word count.`
       : ''
 
-    const groqRes = await fetch(GROQ_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        max_tokens: 6500,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: _SYSTEM_ },
-          { role: 'user',   content: userPrompt + retryNote },
-        ],
-      }),
-    })
-    const groqData = await groqRes.json()
-
-    logUsage({ route: 'agent/marketing-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
-
-    const finishReason = groqData.choices?.[0]?.finish_reason
-    const raw    = groqData.choices?.[0]?.message?.content || ''
-    const clean  = raw.replace(/```json\n?|```/g, '').trim()
+    let finishReason: string | undefined
 
     try {
+      const groqRes = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          max_tokens: 6500,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: _SYSTEM_ },
+            { role: 'user',   content: userPrompt + retryNote },
+          ],
+        }),
+      })
+      const bodyText = await groqRes.text()
+      let groqData: any
+      try {
+        groqData = JSON.parse(bodyText)
+      } catch {
+        throw new Error(`Groq API returned non-JSON (status ${groqRes.status}): ${bodyText.slice(0, 200)}`)
+      }
+      if (!groqRes.ok) {
+        throw new Error(`Groq API error ${groqRes.status}: ${groqData?.error?.message || bodyText.slice(0, 200)}`)
+      }
+
+      logUsage({ route: 'agent/marketing-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+
+      finishReason = groqData.choices?.[0]?.finish_reason
+      const raw    = groqData.choices?.[0]?.message?.content || ''
+      const clean  = raw.replace(/```json\n?|```/g, '').trim()
+
       const parsed = JSON.parse(clean)
 
       if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
