@@ -44,5 +44,11 @@
   "sending": "Sending...",
   "scanned_item": "Scanned item",
   "view_cart": "View Cart ({n}) · {sym}{total}",
-  "complete_btn": "Complete · {sym}{total}"
+  "complete_btn": "Complete · {sym}{total}",
+  "method_phone": "Phone",
+  "method_email": "Email",
+  "phone_placeholder": "712 345678",
+  "invalid_phone": "Enter a valid phone number",
+  "not_recognised": "Not recognised. Ask your manager to add you.",
+  "different_account": "Use a different account"
 }

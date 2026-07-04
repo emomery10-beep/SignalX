@@ -44,5 +44,11 @@
   "sending": "Enviando...",
   "scanned_item": "Artículo escaneado",
   "view_cart": "Ver carrito ({n}) · {sym}{total}",
-  "complete_btn": "Completar · {sym}{total}"
+  "complete_btn": "Completar · {sym}{total}",
+  "method_phone": "Teléfono",
+  "method_email": "Correo",
+  "phone_placeholder": "712 345678",
+  "invalid_phone": "Introduce un número de teléfono válido",
+  "not_recognised": "No reconocido. Pide a tu responsable que te añada.",
+  "different_account": "Usar otra cuenta"
 }

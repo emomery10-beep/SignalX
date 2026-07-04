@@ -44,5 +44,11 @@
   "sending": "جارٍ الإرسال...",
   "scanned_item": "العنصر الممسوح",
   "view_cart": "عرض السلة ({n}) · {sym}{total}",
-  "complete_btn": "إتمام · {sym}{total}"
+  "complete_btn": "إتمام · {sym}{total}",
+  "method_phone": "الهاتف",
+  "method_email": "البريد",
+  "phone_placeholder": "712 345678",
+  "invalid_phone": "أدخل رقم هاتف صالحًا",
+  "not_recognised": "غير معروف. اطلب من مديرك إضافتك.",
+  "different_account": "استخدام حساب آخر"
 }

@@ -5,6 +5,7 @@ import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath } from '@/lib/i18n-locale'
+import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -45,6 +46,10 @@ export default function SellPage() {
   const [loginPin, setLoginPin]     = useState('')
   const [loginStep, setLoginStep]   = useState<'email' | 'pin'>('email')
   const [loginName, setLoginName]   = useState('')
+  // Staff log in with phone (default, for low-literacy cashiers) or email.
+  const [loginMethod, setLoginMethod]         = useState<'phone' | 'email'>('phone')
+  const [loginPhoneCountry, setLoginPhoneCountry] = useState('KE')
+  const [loginPhoneLocal, setLoginPhoneLocal]     = useState('')
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
 
@@ -92,17 +97,32 @@ export default function SellPage() {
   }, [])
 
   // ── Staff Login ───────────────────────────────────────────
+  // Resolve the identifier body for the OTP route based on the chosen tab.
+  // Returns null (with an error set) when the input is incomplete/invalid.
+  const loginIdentifier = (): { email: string } | { phone: string } | null => {
+    if (loginMethod === 'email') {
+      const email = loginEmail.trim()
+      if (!email) return null
+      return { email }
+    }
+    const dial = COUNTRY_DIAL.find(c => c.code === loginPhoneCountry)?.dial || '+254'
+    const e164 = toE164(dial, loginPhoneLocal)
+    if (!e164) { setLoginError(tc('pos_sell.invalid_phone')); return null }
+    return { phone: e164 }
+  }
+
   const handleCheckEmail = async () => {
-    if (!loginEmail.trim()) return
+    const id = loginIdentifier()
+    if (!id) return
     setLoginLoading(true); setLoginError('')
     try {
       const res = await fetch(`${API}/api/pos/otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'check_staff', email: loginEmail.trim() }),
+        body: JSON.stringify({ action: 'check_staff', ...id }),
       })
       const data = await res.json()
-      if (!res.ok) { setLoginError(data.error || 'Email not recognised'); setLoginLoading(false); return }
+      if (!res.ok) { setLoginError(data.error || tc('pos_sell.not_recognised')); setLoginLoading(false); return }
       setLoginName(data.name || '')
       setLoginStep('pin')
     } catch { setLoginError('Connection error. Please try again.') }
@@ -111,12 +131,14 @@ export default function SellPage() {
 
   const handleVerifyPin = async () => {
     if (!loginPin) return
+    const id = loginIdentifier()
+    if (!id) return
     setLoginLoading(true); setLoginError('')
     try {
       const res = await fetch(`${API}/api/pos/otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify_pin', email: loginEmail.trim(), pin: loginPin }),
+        body: JSON.stringify({ action: 'verify_pin', ...id, pin: loginPin }),
       })
       const data = await res.json()
       if (!res.ok) { setLoginError(data.error || 'Invalid PIN'); setLoginLoading(false); return }
@@ -339,21 +361,48 @@ export default function SellPage() {
         <div style={{ background: '#fff', borderRadius: 20, padding: '32px 24px', border: '1px solid #e5e2dc' }}>
           {loginStep === 'email' ? (
             <>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916', marginBottom: 16, textAlign: 'left' }}>{tc('pos_sell.enter_email')}</div>
-              <input
-                type="email"
-                autoFocus
-                placeholder={tc('pos_sell.email_placeholder')}
-                value={loginEmail}
-                onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
-                onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
-                style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #e5e2dc', fontSize: 16, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916', boxSizing: 'border-box', marginBottom: 12 }}
-              />
+              {/* Method tabs — phone first for low-literacy cashiers */}
+              <div style={{ position: 'relative', display: 'flex', background: '#f3f2ef', borderRadius: 10, padding: 3, marginBottom: 16 }}>
+                <div aria-hidden style={{ position: 'absolute', top: 3, bottom: 3, left: 3, width: 'calc(50% - 3px)', borderRadius: 8, background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,.08)', transform: loginMethod === 'email' ? 'translateX(100%)' : 'translateX(0)', transition: 'transform .25s ease' }}/>
+                {(['phone', 'email'] as const).map(m => (
+                  <button key={m} onClick={() => { setLoginMethod(m); setLoginError('') }}
+                    style={{ position: 'relative', zIndex: 1, flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: 'transparent', color: loginMethod === m ? '#1a1916' : '#6b6760', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                    {m === 'phone' ? tc('pos_sell.method_phone') : tc('pos_sell.method_email')}
+                  </button>
+                ))}
+              </div>
+
+              {loginMethod === 'phone' ? (
+                <div style={{ display: 'flex', gap: 6, marginBottom: 12 }} dir="ltr">
+                  <select value={loginPhoneCountry} onChange={e => { setLoginPhoneCountry(e.target.value); setLoginError('') }}
+                    aria-label={tc('pos_sell.method_phone')}
+                    style={{ width: 92, flexShrink: 0, padding: '14px 8px', borderRadius: 12, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916', cursor: 'pointer', appearance: 'none' }}>
+                    {COUNTRY_DIAL.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>)}
+                  </select>
+                  <input
+                    type="tel" inputMode="tel" autoComplete="tel" autoFocus dir="ltr"
+                    placeholder={tc('pos_sell.phone_placeholder')}
+                    value={loginPhoneLocal}
+                    onChange={e => { setLoginPhoneLocal(e.target.value); setLoginError('') }}
+                    onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
+                    style={{ flex: 1, minWidth: 0, padding: '14px 16px', borderRadius: 12, border: '1.5px solid #e5e2dc', fontSize: 16, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916', boxSizing: 'border-box' }}
+                  />
+                </div>
+              ) : (
+                <input
+                  type="email" autoFocus
+                  placeholder={tc('pos_sell.email_placeholder')}
+                  value={loginEmail}
+                  onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
+                  onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #e5e2dc', fontSize: 16, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916', boxSizing: 'border-box', marginBottom: 12 }}
+                />
+              )}
               {loginError && <div style={{ fontSize: 13, color: '#dc2626', marginBottom: 12, textAlign: 'left' }}>{loginError}</div>}
               <button
                 onClick={handleCheckEmail}
-                disabled={loginLoading || !loginEmail.trim()}
-                style={{ width: '100%', padding: '14px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: loginLoading ? 'wait' : 'pointer', opacity: !loginEmail.trim() ? 0.5 : 1 }}
+                disabled={loginLoading || (loginMethod === 'email' ? !loginEmail.trim() : !loginPhoneLocal.trim())}
+                style={{ width: '100%', padding: '14px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: loginLoading ? 'wait' : 'pointer', opacity: (loginMethod === 'email' ? !loginEmail.trim() : !loginPhoneLocal.trim()) ? 0.5 : 1 }}
               >
                 {loginLoading ? tc('pos_sell.checking') : tc('pos_sell.continue_btn')}
               </button>
@@ -387,7 +436,7 @@ export default function SellPage() {
                 onClick={() => { setLoginStep('email'); setLoginPin(''); setLoginError('') }}
                 style={{ width: '100%', padding: '10px', borderRadius: 10, background: 'transparent', border: '1px solid #e5e2dc', fontSize: 13, cursor: 'pointer', color: '#6b6760' }}
               >
-                {tc('pos_sell.different_email')}
+                {tc('pos_sell.different_account')}
               </button>
             </>
           )}

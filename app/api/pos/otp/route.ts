@@ -12,14 +12,13 @@ function json(data: unknown, status = 200) {
 }
 
 // ── In-memory rate limiter for PIN attempts ───────────────────
-// { emailKey: { count, resetAt } }
+// keyed by identifier ("email:x" / "phone:y")
 const pinAttempts = new Map<string, { count: number; resetAt: number }>()
 const MAX_ATTEMPTS = 5
 const WINDOW_MS = 5 * 60 * 1000 // 5-minute window
 
-function checkPinRateLimit(email: string): { allowed: boolean; remaining: number } {
+function checkPinRateLimit(key: string): { allowed: boolean; remaining: number } {
   const now = Date.now()
-  const key = email.trim().toLowerCase()
   const rec = pinAttempts.get(key)
   if (!rec || now > rec.resetAt) {
     pinAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS })
@@ -30,8 +29,20 @@ function checkPinRateLimit(email: string): { allowed: boolean; remaining: number
   return { allowed: true, remaining: MAX_ATTEMPTS - rec.count }
 }
 
-function clearPinRateLimit(email: string) {
-  pinAttempts.delete(email.trim().toLowerCase())
+function clearPinRateLimit(key: string) {
+  pinAttempts.delete(key)
+}
+
+// Resolve the login identifier: staff log in with EITHER email or phone.
+// Email takes precedence if both are somehow sent. Email is normalised to
+// lowercase (matches how it's stored); phone is matched exactly (E.164, as
+// the owner set it and the login form builds it).
+function resolveIdentifier(body: Record<string, unknown>): { column: 'email' | 'phone'; value: string; key: string } | null {
+  const email = body.email ? String(body.email).trim().toLowerCase() : ''
+  if (email) return { column: 'email', value: email, key: `email:${email}` }
+  const phone = body.phone ? String(body.phone).trim() : ''
+  if (phone) return { column: 'phone', value: phone, key: `phone:${phone}` }
+  return null
 }
 
 export async function POST(req: NextRequest) {
@@ -39,21 +50,21 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return json({ error: 'Invalid request' }, 400) }
   const action = String(body.action ?? '')
-  const email = String(body.email ?? '')
   const pin = body.pin
 
-  if (!email?.trim()) return json({ error: 'email required' }, 400)
+  const id = resolveIdentifier(body)
+  if (!id) return json({ error: 'Phone or email required' }, 400)
 
-  // ── CHECK: does this email belong to an active staff member? ─────────────
+  // ── CHECK: does this identifier belong to an active staff member? ────────
   if (action === 'check_staff') {
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, pin_hash')
-      .eq('email', email.trim().toLowerCase())
+      .eq(id.column, id.value)
       .eq('active', true)
       .maybeSingle()
 
-    if (!staff) return json({ error: 'Email not recognised. Ask your manager to add you.' }, 404)
+    if (!staff) return json({ error: 'Not recognised. Ask your manager to add you.' }, 404)
 
     // Tell the client whether this staff member has a PIN set
     return json({ ok: true, name: staff.name, has_pin: !!staff.pin_hash })
@@ -63,14 +74,14 @@ export async function POST(req: NextRequest) {
   if (action === 'verify_pin') {
     if (!pin) return json({ error: 'PIN required' }, 400)
 
-    // Rate limit: max 5 attempts per 5 minutes per email
-    const limit = checkPinRateLimit(String(email))
+    // Rate limit: max 5 attempts per 5 minutes per identifier
+    const limit = checkPinRateLimit(id.key)
     if (!limit.allowed) return json({ error: 'Too many PIN attempts. Please wait 5 minutes.' }, 429)
 
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active, pin_hash, location_id')
-      .eq('email', String(email).trim().toLowerCase())
+      .eq(id.column, id.value)
       .eq('active', true)
       .maybeSingle()
 
@@ -80,7 +91,7 @@ export async function POST(req: NextRequest) {
     if (!verifyPin(String(pin), staff.pin_hash, staff.id)) return json({ error: 'Incorrect PIN' }, 401)
 
     // Clear rate limit on successful auth
-    clearPinRateLimit(String(email))
+    clearPinRateLimit(id.key)
 
     // Transparently upgrade legacy (SHA-256) hashes to scrypt on successful login.
     // Best-effort — never fail login if the upgrade write errors.

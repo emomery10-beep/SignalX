@@ -44,5 +44,11 @@
   "sending": "Wird gesendet...",
   "scanned_item": "Gescannter Artikel",
   "view_cart": "Warenkorb ({n}) · {sym}{total}",
-  "complete_btn": "Abschließen · {sym}{total}"
+  "complete_btn": "Abschließen · {sym}{total}",
+  "method_phone": "Telefon",
+  "method_email": "E-Mail",
+  "phone_placeholder": "712 345678",
+  "invalid_phone": "Gültige Telefonnummer eingeben",
+  "not_recognised": "Nicht erkannt. Bitte deinen Manager, dich hinzuzufügen.",
+  "different_account": "Anderes Konto verwenden"
 }

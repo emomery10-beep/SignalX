@@ -44,5 +44,11 @@
   "sending": "Envoi...",
   "scanned_item": "Article scanné",
   "view_cart": "Voir le panier ({n}) · {sym}{total}",
-  "complete_btn": "Finaliser · {sym}{total}"
+  "complete_btn": "Finaliser · {sym}{total}",
+  "method_phone": "Téléphone",
+  "method_email": "E-mail",
+  "phone_placeholder": "712 345678",
+  "invalid_phone": "Entrez un numéro de téléphone valide",
+  "not_recognised": "Non reconnu. Demandez à votre responsable de vous ajouter.",
+  "different_account": "Utiliser un autre compte"
 }

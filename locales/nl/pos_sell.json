@@ -44,5 +44,11 @@
   "sending": "Verzenden...",
   "scanned_item": "Gescand artikel",
   "view_cart": "Winkelwagen ({n}) · {sym}{total}",
-  "complete_btn": "Afronden · {sym}{total}"
+  "complete_btn": "Afronden · {sym}{total}",
+  "method_phone": "Telefoon",
+  "method_email": "E-mail",
+  "phone_placeholder": "712 345678",
+  "invalid_phone": "Voer een geldig telefoonnummer in",
+  "not_recognised": "Niet herkend. Vraag je manager om je toe te voegen.",
+  "different_account": "Ander account gebruiken"
 }
