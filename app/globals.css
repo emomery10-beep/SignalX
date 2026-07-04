@@ -50,8 +50,14 @@ body {
   text-size-adjust: 100%;
 }
 
-/* Tap targets — minimum 44px on mobile */
-button, a, label, [role="button"] {
+/* Tap targets — minimum 44px on mobile.
+   Opt out with className="no-tap-target" on any element that manages its
+   own compact sizing (e.g. a dense form) — otherwise min-height always wins
+   over an inline height/padding, silently re-inflating anything you shrink. */
+button:not(.no-tap-target),
+a:not(.no-tap-target),
+label:not(.no-tap-target),
+[role="button"]:not(.no-tap-target) {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -545,7 +551,7 @@ img {
     display: flex !important;
   }
   /* Larger tap targets on mobile */
-  button, a {
+  button:not(.no-tap-target), a:not(.no-tap-target) {
     min-height: 44px;
   }
   /* Bigger font on mobile inputs */
@@ -828,9 +834,13 @@ img {
   .kpi-row  { grid-template-columns: 1fr 1fr; }
   .page-shell-body { padding: 12px 12px 80px; }
 
-  /* Force any 2-col grid to 1-col on very small screens */
-  [style*="1fr 1fr"],
-  [style*="1fr, 1fr"] {
+  /* Force any 2-col grid to 1-col on very small screens.
+     Opt out with className="grid-fixed-cols" when the columns are narrow
+     enough to fit side by side regardless (e.g. paired name/PIN inputs) —
+     this is a blunt substring match on the style attribute, it has no idea
+     how wide your columns actually are. */
+  [style*="1fr 1fr"]:not(.grid-fixed-cols),
+  [style*="1fr, 1fr"]:not(.grid-fixed-cols) {
     grid-template-columns: 1fr !important;
   }
 }
@@ -909,7 +919,7 @@ img {
 
 /* Larger tap targets on mobile */
 @media (max-width: 600px) {
-  button, a {
+  button:not(.no-tap-target), a:not(.no-tap-target) {
     min-height: 44px;
     min-width: 44px;
   }
