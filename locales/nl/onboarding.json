@@ -102,5 +102,11 @@
   "welcome_title": "Welkom bij AskBiz",
   "done_title_pos_named": "Goed gedaan, {name}!",
   "done_subtitle_pos": "Je bedrijf is ingesteld. Voeg nu toe wat je verkoopt en open je kassa.",
-  "done_cta_pos": "Mijn kassa instellen →"
+  "done_cta_pos": "Mijn kassa instellen →",
+  "location_detecting": "Je locatie zoeken…",
+  "location_confirm_question": "Klopt dit?",
+  "location_confirm_yes": "Ja, dat klopt →",
+  "location_confirm_change": "Wijzigen",
+  "location_use_detected": "Gedetecteerde locatie gebruiken",
+  "business_name_label": "Bedrijfsnaam (optioneel)"
 }

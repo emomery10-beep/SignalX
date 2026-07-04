@@ -102,5 +102,11 @@
   "welcome_title": "Bienvenido a AskBiz",
   "done_title_pos_named": "¡Buen trabajo, {name}!",
   "done_subtitle_pos": "Tu negocio está configurado. Ahora añade lo que vendes y abre tu caja.",
-  "done_cta_pos": "Configurar mi caja →"
+  "done_cta_pos": "Configurar mi caja →",
+  "location_detecting": "Buscando tu ubicación…",
+  "location_confirm_question": "¿Es correcto?",
+  "location_confirm_yes": "Sí, es correcto →",
+  "location_confirm_change": "Cambiar",
+  "location_use_detected": "Usar la ubicación detectada",
+  "business_name_label": "Nombre del negocio (opcional)"
 }

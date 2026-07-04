@@ -102,5 +102,11 @@
   "welcome_title": "Willkommen bei AskBiz",
   "done_title_pos_named": "Gut gemacht, {name}!",
   "done_subtitle_pos": "Dein Geschäft ist eingerichtet. Füge jetzt hinzu, was du verkaufst, und richte deine Kasse ein.",
-  "done_cta_pos": "Kasse einrichten →"
+  "done_cta_pos": "Kasse einrichten →",
+  "location_detecting": "Standort wird ermittelt…",
+  "location_confirm_question": "Ist das richtig?",
+  "location_confirm_yes": "Ja, das stimmt →",
+  "location_confirm_change": "Ändern",
+  "location_use_detected": "Erkannten Standort verwenden",
+  "business_name_label": "Name des Unternehmens (optional)"
 }
