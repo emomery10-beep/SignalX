@@ -598,7 +598,7 @@ export default function ForecastsPage() {
             )}
 
             {/* ── Method guide ────────────────────────────────── */}
-            <details style={card} open={!result}>
+            <details style={card}>
               <summary style={{ ...sectionLabel, cursor: 'pointer' }}>{tc('forecasts.method_guide')}</summary>
               <div style={{ marginTop: 8 }}>
                 {[
@@ -929,7 +929,7 @@ function scenarioBtn(s: string, active: string): React.CSSProperties {
 const card: React.CSSProperties = { background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '10px 12px' }
 const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0, lineHeight: 1 }
 const formGroup: React.CSSProperties = { marginTop: 6, marginBottom: 0 }
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--tx2)', margin: 0, padding: 0, lineHeight: 1 }
+const labelStyle: React.CSSProperties = { display: 'block', minHeight: 0, fontSize: 13, fontWeight: 500, color: 'var(--tx2)', margin: 0, padding: 0, lineHeight: 1 }
 const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', marginTop: 1 }
 const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 1 }
 const warningBox: React.CSSProperties = { marginTop: 5, fontSize: 11, color: '#f59e0b', lineHeight: 1.5, padding: '6px 8px', background: 'rgba(245,158,11,.06)', borderRadius: 6 }
