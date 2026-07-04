@@ -7,7 +7,7 @@ export const POS_SEO_AFRICA_BATCH1 = [
     cluster: 'POS — Africa Informal Business',
     pillar: 'SEO — Small Business Africa',
     publishDate: '2026-07-01',
-    readTime: 6,
+    readTime: 5,
     tldr: 'Kenyan duka owners can now run a full POS system from their phone — tracking sales, stock, and M-Pesa payments automatically. AskBiz POS is free to start and works on any Android device without a barcode scanner or receipt printer.',
     sections: [
       {
@@ -34,6 +34,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         heading: 'Setting Up in Under 10 Minutes',
         level: 2 as const,
         body: 'Go to pos.askbiz.co on your Android phone. Add your products — either scan the barcode or type the name and price. Connect your M-Pesa Lipa Na number. That is it. You can start recording sales the same day. There is no installation, no shop visit from a technician, and no training day required. If you run multiple dukas — say one in Kawangware and one in Kangemi — both connect to the same account and you see both from one dashboard. Your most trusted staff member gets their own login and you can see exactly what they sold each day.',
+      },
+      {
+        heading: 'A Worked Example: What the Morning Brief Actually Shows',
+        level: 2 as const,
+        body: 'A duka owner in Umoja opens AskBiz on his phone at 6 AM before unlocking the shutters. The morning brief reads: yesterday\'s sales KSh 18,400 (KSh 11,200 M-Pesa, KSh 7,200 cash), business health score 78 out of 100 (up from 71 the week before), three items approaching reorder level (Blue Band, sugar 2kg, and cooking oil 1L), and two customers with outstanding credit totalling KSh 1,850. In under a minute, before serving a single customer, he knows what to order from his supplier that morning, which customers to remind about their balance if they stop by, and that his business is trending in the right direction compared to last week. This is the same kind of morning briefing a manager at a chain supermarket gets from a full reporting team — condensed into a single screen for a one-person duka.',
+      },
+      {
+        heading: 'Common Mistakes Duka Owners Make Without a POS',
+        level: 2 as const,
+        body: 'The first mistake is judging the health of the business purely by how much cash is in the drawer at closing time, without separating what was spent on restocking that day from what was actually earned — a duka that took in KSh 20,000 but spent KSh 16,000 restocking is in a very different position from one that took in KSh 20,000 with no restocking that day, but both can look identical from the cash drawer alone. The second mistake is not tracking spoilage and shrinkage separately from sales — bread that goes stale, sodas that go missing, or stock that simply cannot be accounted for at month-end all reduce real profit the same way a bad sale does, but without a system tracking expected stock against actual stock, this loss stays invisible. The third mistake is treating every regular customer\'s credit the same way regardless of how reliably they pay — a customer who always settles within a week is a very different risk from one who has let a balance sit for two months, but without a dated record of every credit sale, both look the same on a mental tally, and the slow payer quietly accumulates a balance that eventually becomes unrecoverable.',
       },
     ],
     paa: [
@@ -95,6 +105,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         level: 2 as const,
         body: 'AskBiz POS works on basic data — even 3G is enough. If you are in an area with poor signal, the app queues your sales and syncs when you get connection. You do not need a WiFi router or a strong data bundle. A standard Safaricom daily data bundle is enough to keep the system running all day. Many mama mboga in Nairobi estates like Mathare, Mukuru, and Korogocho are already using phone-based tools for M-Pesa — AskBiz simply adds the sale tracking on top.',
       },
+      {
+        heading: 'A Worked Example: Finding the Spoilage That Was Eating the Profit',
+        level: 2 as const,
+        body: 'A mama mboga selling from a stall near Kawangware market was buying the same quantity of tomatoes every morning at Wakulima, believing tomatoes were her best product because they sold fast. After two weeks of recording every sale in AskBiz, the picture looked different: tomatoes did sell fast, but she was also buying 20% more than she was selling most days, and the leftover stock spoiled overnight and had to be thrown away or sold at a steep discount the next morning. Sukuma wiki, which she had always thought of as a smaller, less important line, was actually more reliably profitable because she rarely over-bought it and almost nothing spoiled. Once she saw the pattern in the weekly numbers, she cut her tomato order by a fifth and used the freed-up capital to add a new vegetable line. Within a month, her total daily profit had gone up even though her total spending at the market stayed roughly the same — the improvement came entirely from buying less of what was spoiling and more of what was reliably selling.',
+      },
+      {
+        heading: 'Common Mistakes Mama Mboga Vendors Make Without Tracking',
+        level: 2 as const,
+        body: 'The first mistake is judging a product\'s value by how fast it sells rather than by what it actually earns after spoilage and credit losses — a fast-selling item that spoils often or is frequently given on credit that never gets repaid can be less profitable than a slower-selling item that never goes to waste. The second mistake is not separating today\'s market spending from today\'s sales revenue in your own mind — many vendors mentally treat all the cash in their pocket at day\'s end as profit, without subtracting what was spent that morning at the market, which overstates how well the business is actually doing. The third mistake is not tracking credit given to regular customers with the same seriousness as a cash sale — a bunch of sukuma given on credit and forgotten is identical in cost to one that spoiled unsold, but it feels different because the vendor remembers making the sale, even though the money was never actually collected.',
+      },
     ],
     paa: [
       {
@@ -128,7 +148,7 @@ export const POS_SEO_AFRICA_BATCH1 = [
     cluster: 'POS — Africa Informal Business',
     pillar: 'SEO — Small Business Africa',
     publishDate: '2026-07-03',
-    readTime: 6,
+    readTime: 5,
     tldr: 'Jua kali artisans — welders, carpenters, mechanics, tailors — can use AskBiz to track job payments, record material costs, flag customers who have not paid, and see their true monthly profit. Works on any phone, no accounting knowledge needed.',
     sections: [
       {
@@ -150,6 +170,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         heading: 'See Real Profit — Not Just Cash in Pocket',
         level: 2 as const,
         body: 'The hardest thing in jua kali is knowing whether you are actually making money. You might have collected KSh 40,000 this month but spent KSh 28,000 on materials and KSh 8,000 on casual labour. That leaves KSh 4,000 — but your rent for the yard is also due. AskBiz tracks all of this and gives you a monthly profit figure after costs. The Business Health Score shows whether your business is improving month by month or whether costs are creeping up. This is the same visibility that big companies pay accountants for — available to a fundi in Ziwani for KSh 500 a month.',
+      },
+      {
+        heading: 'Setting Up Your First Job in AskBiz',
+        level: 2 as const,
+        body: 'Step 1: create a free account at pos.askbiz.co on your Android phone. Step 2: when a customer brings work — say a gate to weld — create a new job entry with the customer\'s name, the agreed price, and any deposit paid on the spot. Step 3: as you buy materials for that specific job, log the cost against it, so you can see exactly what margin the job leaves once it is finished, not just a guess based on the final price. Step 4: when the customer pays the balance, mark the job as settled. Step 5: at any point, check your dashboard to see jobs in progress, money owed to you across all customers, and your running profit for the month. For a welder or carpenter juggling three or four jobs at once, this replaces the mental math and scraps of paper that usually get lost between one job and the next.',
+      },
+      {
+        heading: 'A Worked Example: Discovering a Job Was Actually a Loss',
+        level: 2 as const,
+        body: 'A carpenter in Githurai quoted a customer KSh 15,000 for a wardrobe, based on a rough estimate of timber and hardware costs he carried in his head. He logged the job in AskBiz and recorded material costs as he bought them: KSh 6,500 in timber (more than expected, due to a supplier price increase he had not accounted for), KSh 2,200 in hinges and handles, and KSh 1,800 in varnish and glue — a total of KSh 10,500 in materials against a KSh 15,000 price. That left KSh 4,500 for his own labour on a job that took four full days, working out to just over KSh 1,100 a day — far below what he needed to cover his workshop rent and living costs. Without the job-level tracking, he would have simply banked the KSh 15,000 and felt like the job went fine. With the breakdown in front of him, he realised his pricing had not kept pace with rising timber costs, and he raised his quotes on the next three wardrobe orders by 20%, restoring a workable margin.',
       },
     ],
     paa: [
@@ -207,6 +237,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         level: 2 as const,
         body: 'You need: an Android phone, your Safaricom Lipa Na M-Pesa till number, and a free AskBiz account. Setup takes about 10 minutes. You do not need a receipt printer, a barcode scanner, or any other hardware. You do not need to be technically skilled. If you can use WhatsApp, you can use AskBiz POS. The business intelligence layer — daily brief, health score, forecasting — is included free. The POS add-on that enables M-Pesa tracking costs KSh 500 per device per month.',
       },
+      {
+        heading: 'A Worked Example: Reconciling a Real Trading Day',
+        level: 2 as const,
+        body: 'Consider a hardware shop in Kayole taking payments all day. By 7 PM, the owner has 74 M-Pesa notifications on their phone and a rough idea of what was sold. Without AskBiz, matching each notification to the item sold means scrolling through Safaricom messages one by one, cross-checking against memory, and usually giving up halfway through — writing off the mismatch as "normal." With AskBiz, each of those 74 payments was already linked to a specific sale the moment it came in, because the sale was recorded in the POS first and the M-Pesa confirmation matched to it automatically. The dashboard at closing shows: KSh 42,300 in M-Pesa (all matched), KSh 8,150 in cash, and one outstanding balance of KSh 1,200 from a customer who paid a deposit and promised the rest by Friday. The entire reconciliation that used to eat an hour of tired, end-of-day concentration is done the moment the shop closes.',
+      },
+      {
+        heading: 'Common Mistakes Businesses Make With M-Pesa Reconciliation',
+        level: 2 as const,
+        body: 'The most common mistake is relying on the Safaricom SMS notification list as the source of truth — it shows the payment but not what the payment was for, so a business owner still has to reconstruct the sale from memory days or weeks later when a dispute comes up. The second mistake is not recording cash sales with the same discipline as M-Pesa sales, since M-Pesa leaves an automatic trail while cash does not — this creates a blind spot where cash shrinkage goes unnoticed because there was never a complete record to compare against. The third mistake is treating reconciliation as an end-of-day or end-of-week task instead of something that happens continuously — the longer the gap between a sale and matching it to a payment, the harder it becomes to remember the details needed to resolve a mismatch, which is exactly why AskBiz matches payments the moment they arrive rather than in a batch at closing time.',
+      },
     ],
     paa: [
       {
@@ -241,7 +281,7 @@ export const POS_SEO_AFRICA_BATCH1 = [
     cluster: 'POS — Africa Informal Business',
     pillar: 'SEO — Small Business Africa',
     publishDate: '2026-07-05',
-    readTime: 6,
+    readTime: 5,
     tldr: 'Nigerian kiosk and corner shop owners can now track daily sales, stock levels, and profit from a basic Android phone — for free. AskBiz POS works without barcode scanners, receipt printers, or internet routers, and shows your business health score every morning.',
     sections: [
       {
@@ -263,6 +303,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         heading: 'Works With Bank Transfer and POS Machine',
         level: 2 as const,
         body: 'Many Nigerian kiosks now have a POS machine for card payments as well as accepting bank transfers via account number. AskBiz tracks all payment types — cash, bank transfer, POS card payment — and shows you a combined daily total. You do not have to add them up yourself. The system also flags if a transfer payment comes in but no corresponding sale is recorded, helping catch the gaps that lead to end-of-day shortfalls.',
+      },
+      {
+        heading: 'Setting Up Your Kiosk in AskBiz — Step by Step',
+        level: 2 as const,
+        body: 'Step 1: open pos.askbiz.co on your Android phone and create a free account — no app store download needed, it works straight from your browser. Step 2: add your top products first — pure water, biscuits, airtime, soft drinks — using the name and current price, since these move fastest and give you the most useful data immediately. Step 3: as customers pay, tap the item sold and choose cash, transfer, or POS card as the payment type. Step 4: for any customer taking goods on credit, record it against their name so the balance shows up automatically instead of being tracked in your head. Step 5: check your morning brief each day before opening — it shows yesterday\'s total, which items are running low, and which credit customers have the oldest outstanding balances. Most kiosk owners are fully recording sales within the first hour of setup, since there is nothing to install and nothing to configure beyond entering your product list.',
+      },
+      {
+        heading: 'Why Naira Price Volatility Makes Tracking More Important, Not Less',
+        level: 2 as const,
+        body: 'When prices are stable, a rough mental estimate of daily profit is close enough to be useful. When prices move every few weeks — as they have for many kiosk staples in recent years — a mental estimate stops being reliable, because the cost of restocking today is not the cost you paid last time, and the margin you think you are making can quietly shrink without you noticing. A kiosk owner who bought pure water at N40 a bag and sold at N50 was making a comfortable margin. If the next restock costs N55 and the selling price has not been adjusted yet, every bag sold at the old price is now a loss — invisible unless the actual cost per sale is tracked against the actual price charged. AskBiz records the real numbers on both sides so a margin squeeze shows up in the weekly review instead of being discovered three months later as an unexplained cash shortfall.',
       },
     ],
     paa: [
@@ -320,6 +370,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         level: 2 as const,
         body: 'In Nigerian markets, credit is how relationships work. Your regular buyers — other traders, restaurant owners, caterers — expect to take goods and settle weekly or monthly. AskBiz tracks every credit transaction and shows you a clean list of who owes what. When a customer comes to settle, you can pull up their full balance in seconds. The system works for Ariaria in Aba, Onitsha Main Market, Balogun in Lagos, and any market where relationships and credit are the norm.',
       },
+      {
+        heading: 'Getting Started at Your Stall — A Simple First Week',
+        level: 2 as const,
+        body: 'Day 1: create your free AskBiz account and add your 15-20 fastest-moving products by name and price — you can add the rest gradually rather than trying to enter your entire stock in one sitting. Day 2-3: use AskBiz alongside your normal routine, tapping each sale as it happens and recording any goods given on credit against the customer\'s name. Day 4-7: at the end of each trading day, spend two minutes checking your dashboard — total sales, cash versus transfer, and outstanding credit. By the end of the first week, you have seven full days of real trading data, which is enough to start seeing which products actually drive your profit rather than just your turnover. Most market women find that the habit of tapping each sale becomes automatic within days, since it adds only a few seconds to a transaction they were completing anyway.',
+      },
+      {
+        heading: 'Common Mistakes That Undermine Manual Tracking',
+        level: 2 as const,
+        body: 'The first mistake is recording sales in a notebook only when trade is slow, and skipping it entirely during a rush — which means the busiest, most profitable hours of the day are exactly the ones missing from the record. The second mistake is mixing personal spending with stall cash without separating the two — money taken from the till for a personal expense during the day makes the end-of-day cash count look like a loss when it was really a withdrawal, and over weeks this confusion makes it impossible to trust any profit figure calculated from cash alone. The third mistake is not tracking restocking cost against the specific products it was spent on — buying N150,000 of mixed goods and only tracking the lump sum, rather than what was spent on which product line, makes it impossible to know afterward which items were actually worth restocking and which were a waste of capital.',
+      },
     ],
     paa: [
       {
@@ -354,7 +414,7 @@ export const POS_SEO_AFRICA_BATCH1 = [
     cluster: 'POS — Africa Informal Business',
     pillar: 'SEO — Small Business Africa',
     publishDate: '2026-07-07',
-    readTime: 6,
+    readTime: 5,
     tldr: 'South African spaza shop owners can track stock, record sales in Rand, manage credit accounts for regular customers, and see daily profit — all from an Android phone. AskBiz POS requires no hardware, no installation, and is free to start.',
     sections: [
       {
@@ -376,6 +436,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         heading: 'Daily Profit — The Number That Actually Matters',
         level: 2 as const,
         body: 'Most spaza owners know their daily takings — the cash and cards they received. But profit after buying stock, paying casual staff, and covering store costs is a different number. AskBiz calculates real daily profit by subtracting cost of goods sold from revenue. Over the month you can see whether your margins are healthy (typically 15% to 25% for spaza FMCG) or whether rising stock costs are eating into your take-home. The Business Health Score gives you a single 0-100 number each morning so you know at a glance whether your business is doing well or needs attention.',
+      },
+      {
+        heading: 'Setting Up Your Spaza Shop in AskBiz',
+        level: 2 as const,
+        body: 'Step 1: on your Android phone, go to pos.askbiz.co and create a free account — no download from an app store is required. Step 2: add your top 20-30 products first, using your phone camera to scan barcodes on branded FMCG items like Coke, Sunlight, and Sasko, or typing the name and price for loose or unbranded goods. Step 3: as you trade through the day, tap each item sold and select cash, card, or credit as the payment type — for credit sales, attach the customer\'s name so the balance is tracked automatically. Step 4: check your morning brief before opening the shutters — it shows yesterday\'s profit, what is running low, and which credit customers have the oldest outstanding balances. There is no technician visit, no cabling, and no waiting period — most spaza owners are recording real sales within the same day they set up their account.',
+      },
+      {
+        heading: 'A Worked Example: Turning "Score" Into Collected Cash',
+        level: 2 as const,
+        body: 'A spaza owner in a Cape Town township estimated she was owed "around R2,000, maybe more" in outstanding customer credit — a guess based on memory rather than any written record. After a month of recording every credit sale in AskBiz, the real total was R4,600 spread across 23 customers, with some balances going back over two months. Seeing the exact figure, sorted by size and age, changed how she approached collection — instead of vaguely asking regulars to "please pay soon," she followed up specifically with the five customers owing the most and the longest overdue, starting with a customer who owed R650 from seven weeks earlier. Within three weeks she had collected R3,100 of the outstanding balance, money that had effectively been sitting invisible and uncollected because there had never been an accurate list to work from. The lesson was not that customers were dishonest — most paid readily once reminded with a specific number — it was that without a record, there was nothing concrete to follow up on.',
       },
     ],
     paa: [
@@ -433,6 +503,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         level: 2 as const,
         body: 'If your tuck shop makes between R500 and R5,000 per day in sales, AskBiz is a strong fit. The business intelligence layer is free. The POS add-on is R90 per device per month — less than the cost of one wholesale trip for most tuck shops. If you are running the tuck shop on your own, you only need one device. If you have a helper, they get their own login and you can see what they sold separately — useful for making sure the numbers add up at end of day.',
       },
+      {
+        heading: 'Handling the School Break Rush Without Losing the Record',
+        level: 2 as const,
+        body: 'The hardest part of tuck shop trading is that the busiest ten minutes of the day happen in a crush — twenty kids shouting orders, coins changing hands fast, and no time to think about record-keeping. The quick-tap grid in AskBiz is built specifically for this moment: your ten best-selling items sit as large buttons on the screen, so a sale is one or two taps, not a search through a menu. If a queue builds up and there genuinely is no time to tap between customers, AskBiz lets you log a bulk total for the rush period and reconcile the item-level detail once things calm down — better to capture the total accurately and detail it later than to lose the record entirely because the counter got too busy to use the phone.',
+      },
+      {
+        heading: 'A Worked Example: Spotting a Restock Mistake Before It Repeats',
+        level: 2 as const,
+        body: 'A school tuck shop operator was buying the same quantity of chips and cooldrinks every week regardless of how fast they actually sold, simply because that was the order they had always placed. After two weeks of AskBiz tracking, the morning brief showed a clear pattern: chips sold out by first break every single day, while a specific cooldrink flavour was still sitting unsold from Monday by the following Monday. The operator adjusted the next order — more chips, fewer of the slow cooldrink flavour — and the following week saw two extra chip sales per day captured that would previously have been lost to a stockout, while the shelf space freed up from the slow-moving cooldrink went to a second chip flavour that also sold well. Over a month, this single adjustment added a meaningful amount to take-home profit, and it came entirely from data the operator had never had visibility into before — not from working harder or longer hours.',
+      },
     ],
     paa: [
       {
@@ -484,6 +564,16 @@ export const POS_SEO_AFRICA_BATCH1 = [
         heading: 'Mobile Money Integration for Ghana',
         level: 2 as const,
         body: 'MTN Mobile Money and Telecel Cash (formerly Vodafone Cash) are the payment backbone for Ghanaian small business. AskBiz tracks mobile money payments alongside cash and gives you a single end-of-day total. No more adding up mobile money transactions from your phone and cross-referencing with your sales book. For provisions shops in Accra\'s suburbs like Ashaiman, Madina, or Adenta, where mobile money is used for most purchases above GH₵10, this automatic tracking saves significant time and prevents losses from unrecorded payments.',
+      },
+      {
+        heading: 'Managing Credit Customers Without Losing Track',
+        level: 2 as const,
+        body: 'Credit is part of daily life in a Ghanaian provisions shop. A regular customer takes a bag of rice, tin tomatoes, and cooking oil and says she will pay at the end of the week when her husband\'s salary clears, or a neighbour buys on account and settles once a month. Without a written record, it is easy to lose track of who owes what — especially when three or four customers are running a tab at the same time. AskBiz records every credit sale against the customer\'s name and shows the outstanding balance whenever you need it. When the customer comes back to settle, you pull up their account instead of relying on memory or a torn page in an exercise book. For a shop giving out GH₵500 to GH₵2,000 in credit at any one time, having an accurate record is often the difference between collecting what you are owed and quietly writing it off as a loss you never noticed.',
+      },
+      {
+        heading: 'A Simple Way to Set Up Your Shop in AskBiz',
+        level: 2 as const,
+        body: 'Getting started does not require any technical background. Step 1: open pos.askbiz.co on your Android phone and create a free account. Step 2: add your products — type the name and price, or use your phone camera to scan a barcode for branded items like Milo, Peak milk, or Frytol. Step 3: as you make sales through the day, tap each item and select cash or mobile money as the payment type. Step 4: at closing time, check your dashboard — it shows total sales, cash versus mobile money, and any outstanding credit. There is no receipt printer to buy, no technician visit required, and no monthly contract to sign before you can start. Most shop owners are fully set up and recording sales within the same afternoon they first open the app.',
       },
     ],
     paa: [

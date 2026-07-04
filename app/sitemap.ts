@@ -119,6 +119,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // ── BLOG: all blog posts ────────────────────────────────────────────────────
     { url: `${base}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    // Global Trade Intelligence hub pages (hub-and-spoke: each of the 63
+    // trade-news articles links back to its cluster's hub here)
+    { url: `${base}/blog/topic/us-china-tariffs`,        lastModified: now, changeFrequency: "monthly", priority: 0.75 },
+    { url: `${base}/blog/topic/supply-chain-disruption`, lastModified: now, changeFrequency: "monthly", priority: 0.75 },
+    { url: `${base}/blog/topic/trade-finance`,           lastModified: now, changeFrequency: "monthly", priority: 0.75 },
     ...posts.map((post) => ({
       url: `${base}/blog/${post.slug}`,
       lastModified: hashModifiedDate(post.slug, post.publishDate),

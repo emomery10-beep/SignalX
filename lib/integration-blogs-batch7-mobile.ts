@@ -16,7 +16,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'POS Systems',
     publishDate: '2026-08-20',
-    readTime: 6,
+    readTime: 5,
     tldr: 'A traditional cash register costs £800–£2,000 upfront, can\'t report in real time, and takes 4 minutes to ring up a multi-item sale. An iPad POS like AskBiz costs £29/month, rings up the same sale in 90 seconds, and pushes the data straight to your accounting software. Across 60 customers a day, that\'s 3.5 hours of staff time you get back — every single day.',
     sections: [
       {
@@ -43,6 +43,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Migration Is Simpler Than You Think',
         body: 'The biggest fear owners have is losing their product catalogue. AskBiz imports from a CSV file — if you have a spreadsheet of your products, you\'re set up in under two hours. If you\'re on Shopify, the sync is automatic: product names, SKUs, prices, and stock levels pull across immediately. Card readers pair in minutes. And because AskBiz pushes daily sales totals to Xero, your accountant sees the change as a pleasant surprise — not a problem.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Switching Mid-Season',
+        body: 'A homeware shop in Bristol switched from a ten-year-old till to an iPad POS running AskBiz in late September — deliberately before the Christmas trading period rather than after it, because the owner didn\'t want to learn a new system during the busiest six weeks of the year. The migration took ninety minutes: a CSV export of 340 products from the old till\'s back office, a straight import into AskBiz, and a Saturday morning where the owner and one staff member ran both systems side by side for two hours to confirm prices matched. By the following Monday, the old till was in a cupboard. The owner\'s only regret, in her words, was "not doing it two years earlier" — she\'d assumed the migration would take a week and put it off three separate times.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Switching',
+        body: 'The most common error is trying to migrate and retrain staff on the same day as a big trading event — don\'t install a new POS the morning of a Saturday market or a bank holiday weekend. The second mistake is skipping the parallel-run step: run the new system alongside the old one for a few hours before fully cutting over, so a pricing mismatch surfaces on a quiet Tuesday rather than mid-queue on Saturday. The third is under-training the team — ten minutes showing one cashier the search function saves an afternoon of fumbling later. None of these are AskBiz-specific problems; they\'re the same mistakes that sink any hardware change, and they\'re avoidable with a single planning conversation before go-live.',
+        level: 3
       }
     ],
     paa: [
@@ -94,6 +104,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'From Alert to Action in Three Minutes',
         body: 'The alert is only valuable if it triggers action you can take remotely. When AskBiz flags a slow afternoon, you can push a discount code to your loyalty app, text your shift manager, or call a quick promotion. Restaurants using AskBiz have used midday alerts to trigger "happy hour starts now" texts to nearby customers — pulling in £300–£500 on afternoons that would have been dead. The alert doesn\'t fix the problem; it just gives you the chance to fix it while it\'s still fixable.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Wednesday That Wasn\'t Lost',
+        body: 'A greengrocer in Leeds set a single AskBiz alert: notify if daily pace drops more than 25% below the same day last week. On a wet Wednesday in November, the 1pm check showed £190 against a normal £310 — an 8-minute glance from the owner\'s phone while she was at the cash and carry. She called the shop, found out the fresh bread delivery hadn\'t arrived and the counter looked half-empty, and told her assistant to move the fruit display forward to fill the gap and put a "fresh in today" sign on the veg. By close, the shop had recovered to £275 — still below target, but £85 more than it would have been left unaddressed. Over a year, catching even one bad afternoon a month like this adds roughly £1,000 to the bottom line, for a tool that costs a fraction of that.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes Owners Make With Alerts',
+        body: 'The most frequent mistake is setting the threshold too sensitive out of the gate — a 10% alert on a business with naturally noisy daily sales means constant pings that get muted within a week, defeating the purpose entirely. The second is treating every alert as a crisis rather than a prompt to check context — sometimes sales genuinely are down because of weather or a local event, and no promotion will fix that; the value is knowing rather than reacting blindly. The third is not having a pre-agreed action ready: if you don\'t know in advance what you\'ll do when an alert fires (which promotion, who to call, what discount code), the notification just becomes another source of anxiety rather than a tool. Decide your playbook once, then let AskBiz tell you when to run it.',
+        level: 3
       }
     ],
     paa: [
@@ -150,6 +170,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'From Count to Purchase Order in One Step',
         body: 'Once the count is done, AskBiz compares actuals to your reorder thresholds. Items below reorder point are highlighted. One tap generates a draft purchase order — pre-populated with your preferred suppliers and last purchase prices. You approve it on your phone, it emails to the supplier automatically. What used to take a stock count plus a separate ordering session on a laptop is now one twenty-minute flow from your phone on the shop floor.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Quarterly Count That Used to Take a Weekend',
+        body: 'A hardware shop carrying 900 SKUs used to close early one Sunday a quarter to run a full stocktake — two staff, six hours, and a Monday spent chasing down the discrepancies that showed up between the count and the till system. After switching to AskBiz phone scanning, the owner split the shop into five zones and assigned each to a different staff member scanning on their own phone during a normal trading day, working through their zone between customers. The count was complete by Tuesday evening without ever closing the shop, and the variance report showed only 11 SKUs needing a recount — versus the 60-plus discrepancies a clipboard count used to generate. The Sunday closure, and the lost trading day it represented, was eliminated entirely.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes That Undermine Stock Counts',
+        body: 'The most common mistake is counting once a quarter instead of little and often — a rolling cycle count, where a handful of SKUs get checked every day, catches errors while they\'re still small and keeps staff practised at using the scanner, rather than facing a daunting full count nobody wants to do. The second is not investigating why a count is wrong, only correcting the number — if the same SKU is consistently short, that\'s a signal of shrinkage or a receiving error worth chasing, not just a figure to overwrite. The third is letting one person do the whole count alone in a large shop, which both takes longer and removes the natural cross-check of a second set of eyes on high-value or easily miscounted items.',
+        level: 3
       }
     ],
     paa: [
@@ -179,7 +209,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Field Service',
     publishDate: '2026-08-23',
-    readTime: 6,
+    readTime: 5,
     tldr: 'Most small repair and field service businesses run their technicians on WhatsApp group chats and paper job sheets. The result: 20% of jobs have parts missing on arrival, invoices get sent two days late (or not at all), and the owner has no idea which tech is where. AskBiz gives every technician a mobile job card — parts checklist, customer notes, on-site invoicing — that feeds back to the office in real time. Average improvement: 14 days faster payment, 60% fewer return visits.',
     sections: [
       {
@@ -206,6 +236,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Owner Visibility Without Micromanaging',
         body: 'The dashboard shows every live job on a map: which tech is where, which jobs are complete, which are overdue, and which have outstanding invoices. You can see it from your phone in ten seconds. If a job is running two hours over schedule, AskBiz flags it so you can call ahead to the next customer. That proactive communication — "your tech is running late, here\'s the new ETA" — is the difference between a five-star review and a one-star review. All from your phone, without calling your technician every hour.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Callback Rate That Halved',
+        body: 'A boiler repair business with four technicians used to run entirely on a WhatsApp group and paper job sheets, and was averaging just over one return visit per technician per week — mostly for missing parts that hadn\'t been flagged clearly in the original booking notes. After switching to AskBiz mobile job cards, the booking process required a parts checklist to be confirmed before a job could be marked ready, forcing the office to think through what each job actually needed at the point of booking rather than leaving it to the technician\'s guesswork on arrival. Within two months, return visits dropped from roughly one per technician per week to less than one every two weeks — a saving the owner calculated at around £280/month in avoided fuel and lost labour time.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes in Field Service Job Management',
+        body: 'The most common mistake is not capturing enough detail at the booking stage — a vague fault description ("boiler not working") gives the technician nothing to prepare against, while a specific one ("no hot water, pilot light won\'t stay lit") lets them bring the right part first time. The second is treating on-site invoicing as optional rather than the default — technicians who "will do it later" often don\'t, and the 14-day payment acceleration this article describes only materialises if invoicing genuinely happens before the van leaves. The third is not reviewing the parts-usage data that job costing generates — this data quietly reveals which jobs are actually profitable and which are being systematically underquoted, information most field service businesses never had before going digital.',
+        level: 3
       }
     ],
     paa: [
@@ -235,7 +275,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Restaurant Operations',
     publishDate: '2026-08-24',
-    readTime: 6,
+    readTime: 5,
     tldr: 'The average restaurant loses 12 minutes per table to the order-taking cycle: flag the server, wait for them to arrive, go through the menu, write it down, walk to the POS, enter it. Tableside tablets cut this to under three minutes — and that recovered time is the difference between 1.8 and 2.4 table turns per service. For a 40-cover restaurant at £25 average spend, one extra turn per day is £1,000 per week. That\'s £52,000 a year.',
     sections: [
       {
@@ -262,6 +302,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Hardware Cost vs Revenue Gain',
         body: 'A basic 10-inch Android tablet suitable for tableside use costs £150–£200. A 40-cover restaurant needs 15–20 tablets: £3,000–£4,000. AskBiz software is £79/month for the restaurant plan. Total year-one cost: roughly £5,000. Against a conservative £52,000/year revenue gain from one extra table turn, the payback period is 35 days. Even a 10% improvement in table turns — rather than the full 33% — pays back the hardware in under four months.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Friday Service That Used to Buckle',
+        body: 'A 40-cover Italian restaurant used to see its Friday dinner service consistently run behind by 8pm, with the 8:30pm reservation slot regularly waiting at the bar while earlier tables lingered over paper-order delays. After rolling out AskBiz tableside tablets across all tables, the restaurant\'s owner tracked the same Friday service six weeks later: kitchen tickets were firing an average of nine minutes earlier per table, and the 8:30pm sitting started on time for the first time in over a year. The knock-on effect was calmer, less apologetic service from the front-of-house team, who reported the shift itself felt less chaotic even though covers served were higher than before.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Rolling Out Tableside Tablets',
+        body: 'The most common mistake is deploying tablets without simplifying the menu structure first — a photo-heavy, deeply nested menu that made sense on paper can be clumsy to navigate on a small screen if categories aren\'t rebuilt with tablet browsing in mind. The second is under-training servers on their new host-focused role — tablets remove order-taking but the time saved only becomes value if servers actively use it for table touches and upselling rather than drifting to other tasks. The third is not planning for tablet charging and cleaning between services — a dead battery or a sticky screen mid-Friday-service undoes the entire investment for that table until it\'s swapped out.',
+        level: 3
       }
     ],
     paa: [
@@ -291,7 +341,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Logistics & Delivery',
     publishDate: '2026-08-25',
-    readTime: 7,
+    readTime: 5,
     tldr: 'A Singapore-based logistics SMB with six drivers was spending SGD 8,400/month on fuel. Routes were planned in the morning by the operations manager using Google Maps and a whiteboard. Drivers called in when they finished each drop. AskBiz\'s driver app with live route optimization cut fuel costs by 22% (SGD 1,848/month), reduced failed deliveries by 65% (saving SGD 2,400/month in re-delivery fees), and eliminated the two-hour daily planning session.',
     sections: [
       {
@@ -318,6 +368,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'The Fuel Cost Math',
         body: 'Shorter routes mean less fuel. A 15% distance reduction on six vans each driving 120km/day = 108km saved daily. At SGD 2.20/litre and 10L/100km, that\'s SGD 23.76 saved per day. Over 22 working days: SGD 522/month. Add driver time saved (90 minutes per driver per day at SGD 18/hour = SGD 2,916/month) and the failed delivery recoveries (SGD 2,400/month) and the total monthly benefit is SGD 5,838 — against a software cost of SGD 99/month.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Whiteboard Retired for Good',
+        body: 'The Singapore logistics SMB from this article\'s opening had, for three years, run its morning planning session with the ops manager arriving at 6am to beat the 7am driver briefing. After the AskBiz rollout, that same ops manager now imports the day\'s 60 delivery addresses from the order system, lets the route optimizer calculate sequences for all six drivers, and reviews the result over coffee — a process that now finishes before 7am starts rather than eating into it. The genuine surprise for the business wasn\'t the fuel savings, which they\'d expected; it was that the ops manager, freed from two hours of route-planning drudgery every morning, redirected that time to calling clients about recurring delivery issues — a task that had been on the to-do list for over a year and never had space.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Adopting Route Optimization',
+        body: 'The most common mistake is not feeding the system accurate delivery time windows — if customer availability constraints are missing or wrong, the "optimal" route will confidently send a driver to an address at a time nobody is there to receive it. The second is ignoring driver feedback on routes that look efficient on a map but don\'t reflect local realities like a road that floods after rain or a loading bay that\'s only accessible from one direction — a route optimizer improves with driver corrections fed back in, it doesn\'t replace local knowledge entirely. The third is measuring success purely on distance saved rather than on-time delivery rate, which is usually the metric customers actually notice and complain about.',
+        level: 3
       }
     ],
     paa: [
@@ -369,6 +429,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'The Error Cost You\'re Not Counting',
         body: 'Manual timesheet entry errors are more expensive than the time they take to find. An overpayment of two hours per week per five employees — just from misread handwriting — is ten hours at £12/hour = £120/week = £6,240/year. AskBiz\'s digital clock-in eliminates transcription entirely. Hours are what the system recorded; there\'s no re-entry step where errors creep in. For businesses with variable-hour staff (hospitality, retail, cleaning), this accuracy difference is material.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Payroll From a Hospital Waiting Room',
+        body: 'A café owner with six staff needed to be at a hospital appointment with a family member on the Sunday she\'d normally process payroll. In previous years this meant either delaying pay by a day or asking a staff member to cover the admin — awkward for a task involving everyone\'s wages. With AskBiz, she received her usual push notification — "6 timesheets awaiting approval, total hours 187.5" — reviewed it on her phone in the waiting room, flagged one shift that looked unusually long for a query later, approved the rest, and had the whole batch synced to Xero Payroll before the appointment finished. Staff were paid on time despite the disruption, and nobody at the café needed to know anything unusual had happened that day.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes in Mobile Payroll Approval',
+        body: 'The most common mistake is approving without actually reviewing — treating the push notification as a rubber stamp rather than a genuine check, which defeats the purpose of having an approval step at all; a ten-second scan for anomalies (a shift twice as long as usual, a clock-in with no matching clock-out) catches most real errors. The second is not setting up GPS confirmation on clock-ins for remote or multi-site staff, which reopens the door to the exact time-fraud risk digital systems are meant to close. The third is inconsistent approval timing — approving whenever convenient rather than on a fixed schedule tied to your pay run, which can leave staff wondering when they\'ll actually be paid even though the underlying process is faster than before.',
+        level: 3
       }
     ],
     paa: [
@@ -420,6 +490,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'What to Tell Your Manager Before You Leave',
         body: 'Set up AskBiz before you go: configure your alert thresholds, assign your manager as an approver for orders under £500, and make sure your low-stock reorder points are current. Share the dashboard read-only view with a trusted deputy. Brief them on the two or three KPIs you care most about. Then leave. If those KPIs stay green, they don\'t need to call you. If they go red, AskBiz tells you both simultaneously — and you can discuss via message rather than a panicked phone call.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Two Weeks in Portugal',
+        body: 'An owner of a two-site bakery took a genuine two-week holiday for the first time in six years, having set up AskBiz alerts on sales pace, stock, and staff clock-ins for both sites before leaving. In week one, she checked the dashboard for sixty seconds each morning over breakfast — everything green, no action needed. On day nine, an alert fired: one site\'s Saturday sales were tracking 22% below baseline. She messaged her deputy manager, who discovered the till roll had jammed and staff had been taking orders on paper for two hours, unrecorded in the system. The deputy fixed the printer and reconciled the missed sales that afternoon. Total owner involvement: a two-line message from a beach. Total holiday quality: intact.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes That Ruin a Remote-Monitoring Setup',
+        body: 'The most common failure is not testing the alert thresholds before leaving — an owner sets a generic "sales down 20%" trigger without checking it against a normal quiet Tuesday, and ends up getting pinged constantly for nothing, so they mute notifications by day three and lose the whole benefit. The second is failing to actually delegate authority alongside visibility — giving a manager the dashboard but not the permission to approve a £300 emergency supplier order means every alert still routes back to the owner regardless of location. The third is briefing nobody on what "good" looks like: a deputy who\'s never seen the dashboard before the owner leaves won\'t know whether a metric is actually a problem or just normal Tuesday noise. A twenty-minute walkthrough before departure avoids all three.',
+        level: 3
       }
     ],
     paa: [
@@ -471,6 +551,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'The Data That Changes Your Decisions',
         body: 'Within 90 days of running a digital loyalty scheme, most AskBiz users can answer questions they\'ve never been able to before: What\'s my average customer visit frequency? Which customers have the highest lifetime value? What product does my most loyal customer always buy? Which reward threshold is most effective — buy-5-get-1 or buy-8-get-1? This data shapes your promotions, your stock ordering, and your staffing. None of it is available from a paper stamp card.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Converting a Paper Base Overnight',
+        body: 'A café that had run a paper stamp card for six years switched to AskBiz digital loyalty over one weekend. Rather than discard the old cards, staff were trained to say "let\'s put your remaining stamps onto our new app — takes ten seconds" whenever someone presented a paper card. Within a month, 340 of the estimated 500 active paper-card holders had converted, each one now a named, trackable customer record instead of an anonymous punch card. The café discovered something it never knew: its top 40 loyalty customers accounted for 31% of coffee revenue. That single insight justified a small "VIP" perk — a free pastry every tenth visit for the top tier — which the owner could never have targeted under the paper system because she had no way of knowing who those customers were.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Launching Digital Loyalty',
+        body: 'The biggest mistake is making sign-up require too many steps — if the QR code leads to a form asking for phone number, email, birthday, and marketing preferences all at once, conversion at the counter drops sharply; name and email is enough to start. The second is setting the reward threshold too far away — a scheme requiring 15 visits before any reward feels unreachable and doesn\'t drive the frequency effect you want; most successful cafés and salons use 5 to 8 visits. The third is launching the scheme and never using the data — collecting visit and spend information but never sending a single re-engagement message defeats the entire purpose of going digital in the first place.',
+        level: 3
       }
     ],
     paa: [
@@ -522,6 +612,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'The Reconciliation That Happens While You Sleep',
         body: 'Without integration, every card payment from your Stripe reader becomes a line in your bank statement that someone has to match to an invoice. For a business doing 40 transactions a day, that\'s 40 manual reconciliations — or more likely, 40 transactions that pile up for the bookkeeper. AskBiz pulls Stripe or Square settlement data daily and matches it to POS transactions automatically. Your Xero bank feed arrives pre-reconciled. Your accountant\'s monthly review takes minutes instead of hours.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Market Stall That Went Card-Only',
+        body: 'A weekend food market trader used to keep a cash tin and turn away the roughly one in three customers who asked for card. After connecting a £39 Stripe Reader to AskBiz, she found tap-to-pay was actually faster than counting change for a busy queue — three seconds per transaction versus the fifteen to twenty seconds of fumbling for coins. Her average Saturday takings rose by around £180 in the first month, almost entirely from customers who would previously have walked past. The bigger surprise was the admin saving: instead of counting a cash float at the end of every market day, her AskBiz dashboard showed the day\'s total reconciled against Stripe settlement automatically, ready for her bookkeeper without a single manual entry.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Adopting Mobile Card Readers',
+        body: 'The most common mistake is treating the reader as a standalone gadget rather than connecting it to the POS — without integration, you still end up manually matching payments to sales, which erases most of the time-saving benefit. The second is not testing the reader\'s connectivity in the actual environment you\'ll use it — a market stall or outdoor event with patchy signal needs to be checked in advance, not discovered mid-queue on launch day. The third is ignoring the receipt step: forgetting to offer an emailed or printed receipt loses an easy opportunity to capture a customer\'s contact details for a loyalty scheme or follow-up marketing, something cash transactions never offered in the first place.',
+        level: 3
       }
     ],
     paa: [
@@ -551,7 +651,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Salon Operations',
     publishDate: '2026-08-30',
-    readTime: 6,
+    readTime: 5,
     tldr: 'A busy salon loses 8–12 appointment slots per week to no-shows and last-minute cancellations. If the average service is £45, that\'s £360–£540/week in unrecovered revenue. AskBiz\'s client booking app sends automated reminders 48 hours and 2 hours before each appointment — reducing no-shows by 60%. Clients who do cancel get an instant rebooking prompt via their phone, filling the slot from the waitlist automatically.',
     sections: [
       {
@@ -578,6 +678,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Revenue Reporting by Stylist and Service',
         body: 'At month end, AskBiz shows you which stylist generated the most revenue, which services have the highest margin, and which appointment times have the highest no-show rate. This lets you make real decisions: if Saturday 9am has a 28% no-show rate, you require card details at booking for that slot. If colour is your highest-margin service but it\'s underbooked, you push a promotion specifically to clients who haven\'t had a colour in four months. This is the difference between managing a salon by feel and managing it by data.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Filling a Stylist\'s Quiet Tuesday',
+        body: 'A four-chair salon noticed through AskBiz\'s revenue-by-stylist report that one stylist\'s Tuesday column was consistently 40% emptier than her other days, while the same stylist\'s Saturdays were fully booked weeks out. Rather than guess at a fix, the owner used AskBiz to send a targeted promotion — 15% off any Tuesday appointment — only to clients who had booked with that stylist in the past six months. Within two weeks, Tuesday bookings for that chair rose from an average of three to six appointments, filling the gap with existing loyal clients rather than discounting to strangers who might never return. The whole campaign was set up and sent from the salon owner\'s phone between clients.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes With Self-Booking Systems',
+        body: 'The most common mistake is launching self-booking without also enabling the waitlist and reminder features — a bare booking calendar solves the "can\'t get through on the phone" problem but does nothing for no-shows, which is usually the bigger revenue leak. The second is not requiring card details for high-risk slots (first-time bookers, peak weekend times) even after seeing a clear no-show pattern in the data — the tool exists specifically to let you apply that friction selectively rather than to every client. The third is failing to keep stylist availability accurate in the system — a stylist who\'s actually off sick but still shows as bookable creates the exact phone-tag chaos self-booking was meant to eliminate.',
+        level: 3
       }
     ],
     paa: [
@@ -607,7 +717,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Manufacturing Quality',
     publishDate: '2026-08-31',
-    readTime: 6,
+    readTime: 5,
     tldr: 'A mid-size manufacturing SMB with 40 production staff was using paper QC sheets that got completed at end of shift, batched, and data-entered the next morning. Defects discovered on Monday were from Friday\'s production — too late to trace to root cause. Switching to AskBiz mobile QC forms caught defects in real time, reduced rework costs by £18,000 in the first quarter, and cut customer returns by 44%.',
     sections: [
       {
@@ -634,6 +744,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Rework Cost vs QC Investment',
         body: 'The cost of reworking a defective unit is typically 3–7x the cost of catching the defect at source. A £4 component defect caught on the line costs £4 to fix. The same defect found after final assembly costs £28 in rework labour. Found by the customer: £85 in returns handling, replacements, and relationship damage. AskBiz\'s mobile QC module is included in the manufacturing plan at £99/month for up to 20 users. Against £18,000 in quarterly rework savings, the payback is measured in days.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Root Cause Found in Minutes, Not Weeks',
+        body: 'The manufacturing SMB referenced above had a recurring dimensional defect on one product line that had shown up intermittently for months under the paper QC system, always discovered too late to trace back to a specific cause. With AskBiz mobile QC forms logging operator, machine setting, and material batch against every check, the pattern became visible within three weeks: the defect correlated tightly with a specific material batch from one supplier, not with any particular operator or shift as the team had assumed. The quality manager pulled the filterable report, contacted the supplier with the specific batch numbers affected, and negotiated a credit — closing an issue that paper records had never been detailed enough to properly diagnose.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Digitising Quality Checks',
+        body: 'The most common mistake is digitising the existing paper form exactly as-is rather than redesigning it for mobile entry — long free-text fields that worked on paper are slow to fill on a tablet, and forms should favour dropdowns, checkboxes, and photo capture wherever possible. The second is not acting on real-time alerts promptly — a defect notification that sits unread for two hours defeats the purpose of real-time flagging, so supervisors need a clear expectation of response time built into the process. The third is collecting quality data without ever reviewing the aggregate trends — the real payback of digital QC isn\'t any single catch, it\'s the pattern analysis across weeks and months that paper records could never support.',
+        level: 3
       }
     ],
     paa: [
@@ -685,6 +805,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Protecting High-Value Deliveries',
         body: 'For electronics, jewellery, or any high-value item, photo POD alone may not be enough. AskBiz supports digital signature capture — the recipient signs on the driver\'s screen, and the signature image is stored against the order with the same timestamp and GPS data. For B2B deliveries requiring a named receiver, the system can require the recipient\'s printed name plus signature. This level of documentation satisfies insurance requirements and gives you a strong position in any payment dispute.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Chargeback That Didn\'t Happen',
+        body: 'A furniture delivery business in Manchester had a customer dispute a £900 sofa delivery through their card provider, claiming the item never arrived. Before photo POD, this would have meant a refund, a written-off sofa, and a lost afternoon arguing with the payment processor. Instead, the ops manager pulled up the AskBiz order record: a photo of the sofa in the customer\'s hallway, timestamped 11:14am, GPS-tagged to the delivery address, alongside a signature from someone named on the order. The chargeback was submitted to the card provider with the evidence attached and rejected within four days. Total time spent resolving the dispute: fifteen minutes, versus the two to three hours a chargeback fight normally consumes.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes That Undermine POD Evidence',
+        body: 'The most common failure is drivers taking the photo too early — snapping the parcel still in the van rather than at the actual delivery point, which proves nothing about where it ended up. The second is skipping POD on "easy" regulars, the customers you deliver to weekly and trust — these are statistically the deliveries most likely to generate a "didn\'t arrive" query eventually, because familiarity breeds shortcuts on both sides. The third is not training drivers on what makes a useful photo: the house number or business signage should be visible in frame, not just the parcel on a generic doorstep. A five-minute driver briefing on these three points turns POD from a box-ticking exercise into evidence that actually holds up.',
+        level: 3
       }
     ],
     paa: [
@@ -736,6 +866,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Building the Habit in Three Days',
         body: 'The first morning: you check and nothing is urgent. Takes 60 seconds. Second morning: there\'s an overdue invoice from a customer you forgot to follow up. You send a quick WhatsApp before 8am. They pay by noon. Third morning: projected cash shows a gap in ten days — you move a supplier payment by a week after a quick call. By day four, you\'re hooked. The habit costs 60 seconds and has already identified £6,800 in cash that wasn\'t moving. This is what financial control looks like for a small business owner.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Spotting the Collision Before It Hit',
+        body: 'A print shop owner checked his AskBiz dashboard one Monday and noticed his projected balance for the following Friday was showing negative £1,200 — his VAT payment, his print supplies bill, and his part-time designer\'s invoice were all due the same day, and two of his largest client invoices weren\'t expected to land until the following week. Rather than discover this on Friday morning with the direct debits already queued, he had four days to act: he called his best client and asked for early payment on a £3,000 invoice in exchange for a small discount, which they agreed to, and delayed the print supplies order by a week since stock on hand was sufficient. The Friday collision never happened. Without the daily check, he\'d have found out via a bounced direct debit notification and a bank charge.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes That Undermine Cash Flow Monitoring',
+        body: 'The most common mistake is checking the bank balance alone rather than the projected position — a healthy-looking balance today can mask a gap forming ten days out if you\'re not also looking at what\'s due to leave and arrive. The second is not chasing overdue invoices the moment they\'re flagged, letting them drift for another week "because it\'s awkward" — the earlier you chase, the more likely the customer simply forgot rather than has a genuine problem paying. The third is treating the morning check as optional on busy days, which is exactly when a forming cash gap is most likely to be missed until it\'s too late to fix cheaply.',
+        level: 3
       }
     ],
     paa: [
@@ -787,6 +927,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Multi-Channel Stock Accuracy',
         body: 'If you sell on Shopify as well as in-store, stock alerts are only useful if they reflect both channels. AskBiz syncs with Shopify in real time — every online sale reduces the same inventory pool your push notification is monitoring. If an online order takes your vanilla protein from 52 to 44 units while you\'re reviewing the alert, the alert updates. You\'re always looking at live inventory, not a snapshot from last night\'s import.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Avoiding a Bank Holiday Stockout',
+        body: 'A convenience store owner set AskBiz reorder alerts on her top 25 SKUs ahead of a bank holiday weekend, when sales typically run 40% above a normal Saturday and suppliers are closed for an extra day. On the Thursday before, three alerts fired: soft drinks, bread, and charcoal were all tracking toward a stockout by Saturday afternoon based on the accelerated bank-holiday sales pace AskBiz was already picking up from that morning\'s trading. She placed emergency top-up orders with her supplier that same afternoon, well before their Friday cut-off. Without the alert, she\'d have discovered the gap on Saturday at 2pm — exactly the point in previous years when she\'d had to turn away customers on her three best-selling lines of the year.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Setting Reorder Points',
+        body: 'The most common mistake is setting one blanket reorder point across every product rather than basing it on each item\'s actual sales velocity and lead time — a slow-moving product and a fast-moving one need very different buffers. The second is not adjusting for seasonality: a reorder point calculated from average daily sales in a quiet month will be far too low heading into a busy one, which is exactly when a stockout costs the most. The third is ignoring supplier lead time volatility — if your usual two-day delivery sometimes stretches to four during holidays or bad weather, your safety stock buffer needs to reflect the worst case, not the average case, or the alert fires too late to matter.',
+        level: 3
       }
     ],
     paa: [
@@ -838,6 +988,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Month-End in Minutes Instead of Hours',
         body: 'When expenses are captured in real time via mobile scanning, month-end is not an event — it\'s just a report. Your accountant logs into Xero, sees every expense already entered with receipts attached, reconciles to the bank feed in under an hour, and produces the P&L. Compare that to a month-end where the shoebox arrives three weeks late, expenses need re-entering, and half the receipts need chasing. Most AskBiz users report a 35–50% reduction in accountant time per quarter — which translates directly to a lower accountant bill.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Van Full of Receipts',
+        body: 'A plumbing business with three vans and four technicians used to collect a carrier bag of fuel, parts, and parking receipts every month, which the office manager would spend a full day sorting and entering before handing to the accountant. After switching to AskBiz photo scanning, each technician was given a simple rule: scan it in the van before you start the engine, or it doesn\'t get claimed. Within the first month, the office manager\'s monthly sorting day disappeared entirely — expenses were already categorised and in Xero by the time she looked. More usefully, the business discovered technicians had been under-claiming parking and toll costs for years simply because keeping the paper receipt was too much friction; recorded expenses rose by around £180/month, all of it legitimate and previously unclaimed.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes That Undermine Receipt Scanning',
+        body: 'The most common failure is not scanning immediately — receipts left in a pocket for a week fade, crease, or get lost in the wash, defeating the entire point of a system designed to capture them at the moment of purchase. The second is sloppy categorisation: tapping the first category in the list rather than the correct one creates a P&L that looks tidy but is quietly wrong, which your accountant will eventually have to unpick. The third is not setting spend limits or approval rules for staff-submitted expenses — without a threshold that routes anything over, say, £50 to the owner for review, expense creep goes unnoticed until the quarterly numbers look off. AskBiz\'s approval workflow exists specifically to catch this before it becomes a pattern.',
+        level: 3
       }
     ],
     paa: [
@@ -889,6 +1049,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Last-Minute Gap Fill in Under Ten Minutes',
         body: 'Staff member calls in sick at 7am for the 9am shift. AskBiz lets you broadcast a shift offer to your available pool with one tap: "Urgent: Saturday 9am–5pm available. First to accept gets the shift." Staff on their day off who want the hours accept instantly. For café, retail, and hospitality businesses where weekend shifts are in demand, gaps fill in under ten minutes. For businesses where they don\'t fill instantly, you at least know by 7:30am that you have a gap and can adjust staffing before open — not scramble at 9:05am when the shift starts without enough cover.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Sunday Rota That Built Itself',
+        body: 'A café with nine part-time staff used to have its owner spend most of Sunday evening on the following week\'s rota, checking a group chat for availability replies that trickled in over three days. After switching to AskBiz, staff enter their availability directly in the app once a week — updated any time, visible to the owner as she builds the schedule. Drag-and-drop scheduling with built-in conflict warnings (someone marked unavailable Thursday, someone already at 38 hours for the week) cut the actual build time from ninety minutes to twenty. Publishing takes one tap, and by Monday morning every notification has been read — something that never reliably happened with a WhatsApp broadcast.',
+        level: 3
+      },
+      {
+        heading: 'Common Scheduling Mistakes AskBiz Helps Avoid',
+        body: 'The most frequent rota mistake is publishing too late — staff need at least a few days\' notice to plan around a schedule, and a rota that lands on Thursday for the following Monday generates far more swap requests than one published a week ahead. The second is ignoring accumulated fatigue: scheduling the same person for five closing shifts in a row because it\'s easiest, then wondering why they\'re burning out or making mistakes. The third is failing to track contracted hours against actual scheduled hours, which quietly creates overtime liabilities that only surface at payroll. AskBiz flags all three automatically — late publishing, consecutive closing shifts, and overtime risk — before they become a problem rather than after.',
+        level: 3
       }
     ],
     paa: [
@@ -918,7 +1088,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Restaurant Operations',
     publishDate: '2026-09-06',
-    readTime: 6,
+    readTime: 5,
     tldr: 'A QR menu costs £0 to print (it\'s a QR code on a table tent) and lets customers order and pay from their own phone. For a 60-cover restaurant doing two services a day, replacing one server with QR ordering saves £22,000/year in labour while simultaneously increasing average order value by 18% through consistent upsell prompts. The maths is uncomfortable if you\'re still handing out printed menus.',
     sections: [
       {
@@ -945,6 +1115,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Addressing the "We Prefer Personal Service" Concern',
         body: 'QR ordering and genuine hospitality are not mutually exclusive. The server who\'s freed from order-taking can spend that time on table touches, wine recommendations, and checking satisfaction — the things that earn five-star reviews. Many fine-casual restaurants use a hybrid: QR for drinks and starters, server-taken for mains. AskBiz supports this — some items can be configured as server-only, with the QR menu prompting "please ask your server for our tasting menu." You control the experience; AskBiz handles the technology.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Menu Engineering From Real Data',
+        body: 'A casual burger restaurant running an AskBiz QR menu noticed after a month that its £14 "deluxe" burger was viewed almost as often as the standard £9 burger but ordered far less. Rather than guess why, the owner checked the abandonment pattern and found most customers viewed the deluxe description, then scrolled straight back to the standard option — the listed ingredients weren\'t communicating why it cost £5 more. A simple rewrite highlighting the specific difference (double patty, specific cheese, brioche bun) lifted deluxe burger orders by 34% within two weeks, entirely from a menu wording change the owner would never have known to make without seeing the view-versus-order data.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Launching a QR Menu',
+        body: 'The most common mistake is not testing the QR code at the actual table height and lighting conditions before launch — a code that scans perfectly in a bright kitchen can be frustratingly slow to scan in dim evening restaurant lighting, and that friction turns customers off in the first ten seconds. The second is porting the printed menu over verbatim rather than restructuring it for a smaller screen — long paragraph descriptions that read fine on paper become a wall of text on a phone. The third is not having a fallback for customers with low phone battery, no signal, or simply a preference not to use their phone — a small stock of physical menus avoids ever making a paying customer feel unable to order.',
+        level: 3
       }
     ],
     paa: [
@@ -996,6 +1176,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Purchase Orders That Feed Your Books',
         body: 'When a PO is sent via AskBiz, it creates a bill in Xero or QuickBooks automatically — in draft status, pending the delivery confirmation. When the goods arrive and you confirm receipt in AskBiz, the bill moves to Awaiting Payment in your accounting software. Your accounts payable is always current without anyone manually entering bill data. When the supplier\'s invoice arrives, your accountant matches it to the bill in seconds. This two-way flow — PO out, bill in — eliminates the most common source of accounts payable errors in small business.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Tuesday Ordering in Twenty Minutes',
+        body: 'A deli owner used to spend her Tuesday mornings on eight separate supplier emails, working from a handwritten shelf-walk list and often forgetting an item until the supplier had already dispatched. After switching to AskBiz automated reorder triggers, her Tuesday now starts with a single screen showing everything that\'s crossed its reorder point across all eight suppliers, grouped and pre-filled with quantities based on her normal order cycle. She reviews, nudges two quantities up ahead of a bank holiday weekend, and taps Send All. The whole process — that used to run past lunchtime some weeks — now takes under twenty minutes, and she has never again discovered mid-week that she forgot to reorder a bestselling cheese.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes in Supplier Ordering',
+        body: 'The most common mistake is ordering purely from memory or habit rather than actual sales velocity, which leads to either overstocking slow lines or running short on fast ones — automated reorder points fix this by basing the trigger on what\'s actually selling, not what you assume is selling. The second is not maintaining a backup supplier relationship for critical lines, so a single stock-out at your primary supplier becomes your stock-out too, with no fallback ready to go. The third is failing to review supplier pricing periodically — if you never compare what you paid six months ago to what you\'re paying now, small creeping price increases go unnoticed until margins have quietly eroded across dozens of SKUs.',
+        level: 3
       }
     ],
     paa: [
@@ -1047,6 +1237,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Turn Time Tracking Without a Stopwatch',
         body: 'AskBiz logs when a table is seated and when it clears. Over time, you build a real picture of average turn time by day, by service, and by table section. If your average Saturday dinner turn time is 68 minutes but table 12 (near the kitchen door) averages 53 minutes, you know which table to offer walk-ins who are on a time constraint. If your 7pm service is running long and your 8:30pm reservations are arriving, the floor plan shows you the tension before it becomes a problem — giving you five minutes to manage the situation proactively.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Saturday That Didn\'t Turn Away Anyone',
+        body: 'A bistro with 18 tables used to run its Saturday host stand on instinct and a paper reservation book, and regularly quoted 45-minute waits to walk-ins even when tables were genuinely close to clearing — the host simply couldn\'t tell the difference between "still eating" and "finishing up." After moving to a live AskBiz floor plan, the host could see three tables sitting in the orange "bill requested" state at 7:40pm and quoted a party of two an accurate 10-minute wait instead of turning them away. Over the course of one Saturday service, the restaurant seated five additional walk-in parties it would previously have lost to a defensive, over-cautious wait estimate — worth roughly £400 in additional covers from a single evening.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes With Floor Plan Management',
+        body: 'The most common mistake is not updating table status promptly — if servers forget to mark a table as "bill requested" or "clear," the floor plan becomes as unreliable as the paper system it replaced, so the habit needs to be drilled in during training, not left optional. The second is over-promising to walk-ins based on optimistic timing rather than the data the floor plan is actually showing, which just moves the disappointment from the door to the table. The third is not reviewing turn-time data after service — the real value of tracking table clear times isn\'t just tonight\'s seating decisions, it\'s spotting which tables or time slots consistently run long so you can adjust reservation spacing for next week.',
+        level: 3
       }
     ],
     paa: [
@@ -1076,7 +1276,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Inventory Management',
     publishDate: '2026-09-09',
-    readTime: 6,
+    readTime: 5,
     tldr: 'A dedicated handheld barcode scanner costs £200–£800 and scans 300–500 barcodes per minute with near-perfect read rates. A modern smartphone camera scans 80–120 per minute with 96–98% read accuracy. For most retail and small warehouse operations, the phone is good enough and the saving of £600+ per device is real money. For high-throughput warehouses scanning 10,000+ items per shift, the handheld scanner\'s speed and durability pays back within three months.',
     sections: [
       {
@@ -1103,6 +1303,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'ROI Calculation for Your Operation',
         body: 'Calculate your scan volume per day. Under 500: use your phone, save £400–£800 per scanner. 500–2,000: ring scanner at £60, pays back vs productivity loss of camera scanning in under two weeks. Over 2,000: dedicated handheld at £400–£600. At 2,000 scans/shift, the speed difference (phone: 25 minutes, handheld: 7 minutes) saves 18 minutes per shift. At £15/hour, that\'s £4.50/shift saved. The handheld pays back in 89 shifts — approximately four months of daily use. After that, it\'s pure productivity gain.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Right-Sizing a Growing Warehouse',
+        body: 'A wholesale distributor started with two staff scanning goods-in on their phones through AskBiz, handling around 300 items a day — well within phone camera range. As the business grew and daily volume crept past 1,500 items, staff began complaining that scanning was slowing down goods-in processing, with parcels backing up at the loading bay. Rather than jumping straight to enterprise handhelds, the owner tried £60 Bluetooth ring scanners first, which cleared the bottleneck at a fraction of the cost of dedicated hardware. It was only eighteen months later, once daily volume exceeded 4,000 scans and the warehouse added a cold-storage section where phone touchscreens struggled with condensation, that the business finally invested in two Zebra handhelds — by which point the decision was an easy one because the scan volume clearly justified it.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes in Scanner Hardware Decisions',
+        body: 'The most common mistake is buying enterprise hardware on day one "to be safe," which ties up capital in equipment that may be overkill for years — starting with a phone and upgrading only when volume data actually demands it is the lower-risk path. The second is not accounting for the operating environment when choosing hardware — cold stores, dusty yards, and wet loading bays all shorten the life of consumer devices and favour ruggedised equipment regardless of scan volume. The third is mixing device types without a consistent process — as long as AskBiz treats every scan identically regardless of source device, this isn\'t a technical problem, but staff still need a clear standard for which device to use where, or inconsistent habits creep in.',
+        level: 3
       }
     ],
     paa: [
@@ -1205,6 +1415,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Turning Positive Scores Into Reviews',
         body: 'The same system works in reverse for high scores. A customer replies 9 or 10. AskBiz sends an automatic follow-up: "Brilliant, thanks! If you have 30 seconds, we\'d love a Google review: [link]." Customers who just gave a 9 or 10 are in a positive mindset — the conversion rate to Google review is 20–30% for this prompt, compared to 2–5% for generic "please leave us a review" signs at the counter. Three months of this automation can transform a business from 50 reviews to 200+.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Recovery That Became a Regular',
+        body: 'A hair salon in Cardiff started sending post-appointment surveys and got a 4/10 from a client whose colour hadn\'t come out as discussed. The owner called within the hour, apologised, and offered a complimentary correction appointment the following week. The client accepted, the fix went well, and she\'s since become one of the salon\'s most frequent bookers — referring two friends in the following three months. Without the survey, the salon would never have known she was unhappy; she\'d already decided not to complain in person and simply wasn\'t planning to rebook. The two-hour window between the appointment and her leaving to tell friends about it was the only chance to intervene, and the survey caught it with a single text message.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes When Running Feedback Surveys',
+        body: 'The most common mistake is over-engineering the survey — a ten-question form gets a fraction of the response rate of a single "rate 1–10" text, and most of that extra detail goes unused anyway. The second is not having a real plan for what happens after a low score: if nobody is actually assigned to follow up on flagged responses, the alert becomes noise and the tool loses credibility with the team. The third is treating every response as gospel — a single grumpy 3/10 from someone having a bad day is different from a pattern of 3/10s on Tuesday evenings, and only the pattern deserves a systemic fix. AskBiz surfaces both the individual alert and the trend view for exactly this reason — react to the one, investigate the pattern.',
+        level: 3
       }
     ],
     paa: [
@@ -1256,6 +1476,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Redundancy Planning for the Cautious Owner',
         body: 'If you\'re in an area with unreliable broadband, add a 4G mobile hotspot as a backup connection — £15/month from any carrier. AskBiz can automatically detect the primary connection failure and route through the hotspot. A restaurant that has invested £80,000 in fit-out and generates £400,000 per year in revenue should spend £180/year on mobile backup internet. The cost of one lost Saturday service exceeds ten years of backup internet subscription.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: The Outage Nobody Noticed',
+        body: 'A busy takeaway on a Friday night lost its main broadband connection at 6:50pm — historically its worst possible moment, with orders coming in fast and a queue at the counter. The owner had set up AskBiz\'s offline mode plus a £15/month 4G backup hotspot six months earlier after a previous outage cost an estimated £600 in walked-away customers. This time, the AskBiz tablet silently failed over to the hotspot within thirty seconds; card payments kept processing through the cellular-connected reader, and only the small connectivity indicator on screen showed anything had happened at all. Staff didn\'t notice, customers didn\'t notice, and the router issue wasn\'t fixed until the following morning. Total lost sales: zero.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes That Undermine Offline Resilience',
+        body: 'The most common mistake is assuming offline mode is automatic without ever testing it — the first time many owners discover their card reader doesn\'t have cellular backup, or their kitchen display relies on a cloud connection, is during a real outage, which is the worst possible time to find out. The second is not reconciling the offline stock discrepancies promptly after sync — if two items were sold from the same "last unit" during an outage, that negative stock figure needs correcting the same day, not left to compound into a bigger inventory mismatch. The third is skipping the cheap 4G backup entirely to save £15 a month, which is a rounding error next to the cost of even one lost Saturday service.',
+        level: 3
       }
     ],
     paa: [
@@ -1285,7 +1515,7 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
     cluster: 'Mobile Operations',
     pillar: 'Multi-Location Management',
     publishDate: '2026-09-13',
-    readTime: 6,
+    readTime: 5,
     tldr: 'Running two or more locations on separate POS systems means you never have a real-time picture of how the business is doing as a whole. By the time you compile yesterday\'s reports from three locations on Monday morning, four days of divergence have already happened. AskBiz\'s multi-site dashboard shows all locations live on one screen — sales pace, stock alerts, and staff status — so you spot the underperforming branch at 2pm, not 9am Monday.',
     sections: [
       {
@@ -1312,6 +1542,16 @@ export const INTEGRATION_BLOGS_BATCH_7_MOBILE: BlogPost[] = [
         heading: 'Permissioned Access for Managers',
         body: 'Not every manager needs to see every location\'s financials. AskBiz\'s role-based access lets you grant each site manager full visibility of their own location and read-only access to aggregate benchmarks. They can see where they rank on key metrics without seeing another branch\'s detailed financials or payroll. The owner sees everything. Regional managers see their cluster. Branch managers see their site plus benchmarks. This structure drives accountability without overexposure — and it\'s configurable in ten minutes from your phone.',
         level: 2
+      },
+      {
+        heading: 'A Worked Example: Spotting the Underperforming Branch Early',
+        body: 'An owner running four coffee shops used to rely on a Sunday evening phone call round to each manager, comparing week-on-week takings from memory and a scribbled note. After switching to the AskBiz multi-site dashboard, she noticed on a Wednesday afternoon that her newest branch was tracking 15% below the other three for the same week, a gap that historically wouldn\'t have surfaced until the Sunday call — four days later. A same-day conversation with that branch\'s manager revealed a new barista was consistently slow during the morning rush, creating a queue that was turning customers away. Retraining started that week rather than the following one, and the branch\'s numbers recovered within ten days.',
+        level: 3
+      },
+      {
+        heading: 'Common Mistakes in Multi-Location Management',
+        body: 'The most common mistake is comparing locations on raw revenue alone rather than normalising for footfall, size, or local market conditions — a smaller branch in a quieter area will always look worse on gross sales even if it\'s actually the most efficiently run site per square foot or per labour hour. The second is using benchmarking data to criticise rather than to genuinely investigate — a branch consistently behind on a metric might have a real local explanation (roadworks outside, a competitor opening nearby) that a spreadsheet comparison alone won\'t reveal. The third is over-centralising decisions once the data is visible — the dashboard is meant to flag where to look and start a conversation, not to replace the branch manager\'s judgement about what\'s actually happening on the ground.',
+        level: 3
       }
     ],
     paa: [

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch, type TavilySearchResponse } from '@/lib/tavily'
 import { serperSearch } from '@/lib/serper'
 import { logUsage } from '@/lib/log-usage'
-import { waitForGroqBudget, parseGroqRetryAfterMs } from '@/lib/groq-rate-limiter'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations, countSectionWords, MIN_WORD_COUNT, generateWithLengthRetry } from '@/lib/scout-citation-guard'
 
 export const runtime = 'nodejs'
 export const maxDuration = 800
@@ -11,44 +11,56 @@ const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SCOUT_QUERIES = [
-  // ── Trend / news queries ──────────────────────────────────────────────────
-  { query: 'small business cash flow crisis warning signs 2026', cluster: 'Financial Intelligence', pillar: 'Cash Flow' },
-  { query: 'SME pricing strategy inflation margin squeeze 2026', cluster: 'Business Strategy', pillar: 'Pricing Strategy' },
-  { query: 'ecommerce inventory management stockout cost 2026', cluster: 'Inventory & Supply Chain', pillar: 'Inventory Management' },
-  { query: 'AI tools small business automation ROI results 2026', cluster: 'AI Chief of Staff', pillar: 'AI Automation' },
-  { query: 'UK small business tax changes HMRC compliance 2026', cluster: 'UK Business & Tax', pillar: 'Tax Compliance' },
-  { query: 'retail POS system omnichannel ecommerce trends 2026', cluster: 'eCommerce Intelligence', pillar: 'Retail Technology' },
-  { query: 'SME supplier negotiation procurement cost reduction 2026', cluster: 'Inventory & Supply Chain', pillar: 'Supplier Management' },
-  { query: 'small business data analytics decision making 2026', cluster: 'Data-Driven Decisions', pillar: 'Analytics' },
-  { query: 'startup growth metrics funding challenges 2026', cluster: 'Startup Growth', pillar: 'Growth Strategy' },
-  { query: 'cross border ecommerce trade tariff regulations SME 2026', cluster: 'Global Trade Intelligence', pillar: 'Cross-Border Commerce' },
-  { query: 'small business customer churn retention cost 2026', cluster: 'Marketing Intelligence', pillar: 'Customer Retention' },
-  { query: 'SME cybersecurity data breach cost small business 2026', cluster: 'Efficiency & Tools', pillar: 'Security' },
-  { query: 'Africa ecommerce market growth mobile payments 2026', cluster: 'Africa eCommerce', pillar: 'Market Opportunities' },
-  { query: 'restaurant food business rising costs technology 2026', cluster: 'Local & Vertical Growth', pillar: 'Food & Beverage' },
-  { query: 'small business hiring staff cost management 2026', cluster: 'Business Strategy', pillar: 'People Management' },
-  { query: 'ecommerce returns cost management policy 2026', cluster: 'eCommerce Intelligence', pillar: 'Returns Management' },
-  { query: 'SME working capital loan funding options UK 2026', cluster: 'Financial Intelligence', pillar: 'Working Capital' },
-  { query: 'supply chain disruption small business contingency 2026', cluster: 'Inventory & Supply Chain', pillar: 'Supply Chain Risk' },
-  { query: 'small business VAT Making Tax Digital MTD 2026', cluster: 'UK Business & Tax', pillar: 'VAT Compliance' },
-  { query: 'ecommerce marketplace fees Amazon Shopify comparison 2026', cluster: 'eCommerce Intelligence', pillar: 'Marketplace Strategy' },
+  // ── Retail / duka ──────────────────────────────────────────────────────────
+  { query: 'duka shopkeeper Kenya losing money poor record keeping', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
+  { query: 'Kenya kiosk business stock theft shrinkage small shop', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
+  { query: 'Kenya shopkeeper credit sales customers not paying deni', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
+  { query: 'Kenya small shop stock count phone inventory 2026', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
+
+  // ── Mama mboga / mama ntilie / food ─────────────────────────────────────────
+  { query: 'mama mboga vegetable vendor Kenya daily profit tracking', cluster: 'Kenya Micro Business', pillar: 'Food & Market Trading' },
+  { query: 'mama ntilie food kiosk Kenya pricing profit margin', cluster: 'Kenya Micro Business', pillar: 'Food & Market Trading' },
+  { query: 'Nairobi market trader wholesale stock cash Kenya 2026', cluster: 'Kenya Micro Business', pillar: 'Food & Market Trading' },
+
+  // ── Jua kali / artisans ──────────────────────────────────────────────────────
+  { query: 'jua kali artisan Kenya Kamukunji pricing a job costing', cluster: 'Kenya Micro Business', pillar: 'Jua Kali & Trades' },
+  { query: 'welder carpenter fundi Kenya business finances tracking', cluster: 'Kenya Micro Business', pillar: 'Jua Kali & Trades' },
+  { query: 'Kenya informal manufacturer small workshop material cost', cluster: 'Kenya Micro Business', pillar: 'Jua Kali & Trades' },
+
+  // ── Transport: boda boda / matatu ────────────────────────────────────────────
+  { query: 'boda boda rider Kenya daily income fuel expense tracking', cluster: 'Kenya Micro Business', pillar: 'Boda Boda & Transport' },
+  { query: 'matatu sacco Kenya daily collections record keeping', cluster: 'Kenya Micro Business', pillar: 'Boda Boda & Transport' },
+
+  // ── Salon / beauty / tailoring / mitumba ─────────────────────────────────────
+  { query: 'salon barbershop Kenya daily takings client tracking', cluster: 'Kenya Micro Business', pillar: 'Salon & Personal Care' },
+  { query: 'mitumba second hand clothes trader Kenya stock tracking', cluster: 'Kenya Micro Business', pillar: 'Mitumba & Tailoring' },
+  { query: 'tailor fundi cherehani Kenya order and payment tracking', cluster: 'Kenya Micro Business', pillar: 'Mitumba & Tailoring' },
+
+  // ── Agrovet / smallholder farming ────────────────────────────────────────────
+  { query: 'agrovet farm inputs shop Kenya credit customers deni', cluster: 'Kenya Micro Business', pillar: 'Agrovet & Farming' },
+  { query: 'small scale farmer Kenya selling produce cash tracking', cluster: 'Kenya Micro Business', pillar: 'Agrovet & Farming' },
+  { query: 'Kenya hardware shop credit sales customer debt tracking', cluster: 'Kenya Micro Business', pillar: 'Hardware & Building' },
+
+  // ── Chama / savings groups / mobile money ────────────────────────────────────
+  { query: 'chama savings group Kenya record keeping accountability', cluster: 'Kenya Micro Business', pillar: 'Chama & Group Savings' },
+  { query: 'M-Pesa till reconciliation Kenya small business shop', cluster: 'Kenya Micro Business', pillar: 'Mobile Money' },
+  { query: 'Kenya small business multiple M-Pesa accounts confusion cash', cluster: 'Kenya Micro Business', pillar: 'Mobile Money' },
+
+  // ── Financial literacy / informal sector struggles ───────────────────────────
+  { query: 'Kenya jua kali micro business financial literacy struggle', cluster: 'Kenya Micro Business', pillar: 'Financial Literacy' },
+  { query: 'Kenya informal sector business collapse poor bookkeeping', cluster: 'Kenya Micro Business', pillar: 'Financial Literacy' },
+  { query: 'Kenya micro business no accountant simple bookkeeping', cluster: 'Kenya Micro Business', pillar: 'Financial Literacy' },
+  { query: 'Kenya small business seasonal cash flow school fees January', cluster: 'Kenya Micro Business', pillar: 'Seasonal Cash Flow' },
 
   // ── Buyer-intent queries ──────────────────────────────────────────────────
-  { query: 'how to track profit margin small business step by step', cluster: 'Financial Intelligence', pillar: 'Margin Analysis' },
-  { query: 'best cash flow forecasting tools for small business UK', cluster: 'Financial Intelligence', pillar: 'Cash Flow' },
-  { query: 'how to reduce shipping costs ecommerce small business', cluster: 'Inventory & Supply Chain', pillar: 'Shipping Costs' },
-  { query: 'how to improve gross margin retail business practical guide', cluster: 'Business Strategy', pillar: 'Margin Improvement' },
-  { query: 'best inventory management software small business comparison', cluster: 'Inventory & Supply Chain', pillar: 'Inventory Management' },
-  { query: 'how to forecast sales small business without spreadsheets', cluster: 'Data-Driven Decisions', pillar: 'Sales Forecasting' },
-  { query: 'best POS system for retail shop UK independent', cluster: 'eCommerce Intelligence', pillar: 'POS Systems' },
-  { query: 'how to manage cash flow seasonal business practical', cluster: 'Financial Intelligence', pillar: 'Seasonal Cash Flow' },
-  { query: 'ecommerce analytics which products make money Shopify', cluster: 'Data-Driven Decisions', pillar: 'eCommerce Analytics' },
-  { query: 'how to negotiate better payment terms suppliers SME', cluster: 'Inventory & Supply Chain', pillar: 'Supplier Negotiation' },
-  { query: 'how to reduce overheads small business without cutting quality', cluster: 'Business Strategy', pillar: 'Cost Reduction' },
-  { query: 'best accounting software for small business UK Xero QuickBooks', cluster: 'Efficiency & Tools', pillar: 'Accounting Tools' },
-  { query: 'how to calculate break even point small business', cluster: 'Financial Intelligence', pillar: 'Break-Even Analysis' },
-  { query: 'what business metrics should founders track monthly', cluster: 'Data-Driven Decisions', pillar: 'KPI Tracking' },
-  { query: 'how AI can replace CFO function small business', cluster: 'AI Chief of Staff', pillar: 'AI Finance' },
+  { query: 'how to track daily sales without a notebook Kenya duka', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
+  { query: 'how mama mboga can track profit simple way Kenya', cluster: 'Kenya Micro Business', pillar: 'Food & Market Trading' },
+  { query: 'how to know who owes you money shop Kenya deni', cluster: 'Kenya Micro Business', pillar: 'Credit & Deni Tracking' },
+  { query: 'best way small business Kenya track stock using phone', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
+  { query: 'how jua kali artisan should price a job correctly Kenya', cluster: 'Kenya Micro Business', pillar: 'Jua Kali & Trades' },
+  { query: 'how boda boda rider can track fuel and income Kenya', cluster: 'Kenya Micro Business', pillar: 'Boda Boda & Transport' },
+  { query: 'simple bookkeeping for Kenya shopkeeper with no accountant', cluster: 'Kenya Micro Business', pillar: 'Financial Literacy' },
+  { query: 'how to stop losing money in a small shop Kenya duka', cluster: 'Kenya Micro Business', pillar: 'Duka & Retail' },
 ]
 
 export async function GET(request: NextRequest) {
@@ -228,9 +240,24 @@ async function runBlogScout() {
         }
         existingSlugs.add(slug)
 
+        const citableSources = (result.value as Record<string, unknown>)._citableSources as string[] | undefined
+        delete (result.value as Record<string, unknown>)._citableSources
+
+        const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
+        const wordCount = countSectionWords(result.value.sections)
+        const isThin = wordCount < MIN_WORD_COUNT
         const quality = scoreBlogQuality(result.value)
-        // Auto-publish if quality ≥ 80, otherwise hold for review
-        const status = quality >= 80 ? 'published' : 'pending'
+        // Auto-publish if quality is high AND no ungrounded attributions were
+        // found — a fabricated "According to Reuters..." is worse than a
+        // low-quality article, so it always forces human review regardless
+        // of how well the article otherwise scores.
+        const status = quality >= 80 && fabricated.length === 0 && !isThin ? 'published' : 'pending'
+        if (fabricated.length > 0) {
+          log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
+        if (isThin) {
+          log.push(`  ⚠ "${result.value.title}" is thin (${wordCount} words, needs ${MIN_WORD_COUNT}) — held for review`)
+        }
         inserts.push({
           run_id: runId,
           type: 'blog',
@@ -291,9 +318,14 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
   const articles = searchResult.results.slice(0, 5)
   const aiSummary = searchResult.answer || ''
 
-  const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
-    .join('\n\n')
+  const articleContext = buildArticleContext(articles)
+
+  // Whitelist of publication names the model is allowed to name — anything else
+  // gets stripped post-generation, since an LLM given thin 500-char snippets
+  // and told to "name real companies, real regulations" will otherwise invent
+  // plausible-sounding attributions ("According to Reuters...") that were
+  // never actually in the source material.
+  const citableSources = buildCitableSources(articles)
 
   // Provide Alice with recent published posts for relatedSlugs selection
   const relatedContext = recentPublished.length > 0
@@ -302,34 +334,41 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
       }\n`
     : ''
 
-  const _SYSTEM_ = `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
+  const _SYSTEM_ = `You are Alice Watson, AskBiz's SEO & Financial Inclusion Correspondent for Kenya. You write for the millions of Kenyans running micro and informal businesses — duka owners, mama mboga, jua kali artisans, boda boda riders, salon owners, tailors, market traders — who are good at their trade but were never taught bookkeeping, and who are losing real money every week because they can't answer "did I actually make a profit today?" You are an SEO optimisation expert: every post is built to rank and to be cited by AI answer engines, while staying genuinely useful to someone running a duka on thin margins. Your style:
 
 VOICE & TONE:
-- You write like someone who reads the FT, The Economist, and CB Insights before breakfast
-- You lead with the number, the shift, or the tension — never with waffle
-- You use short, punchy sentences. You break up walls of text. You let the data breathe.
-- You're direct ("This will squeeze your margins") not passive ("Margins may be impacted")
-- You use contrasts: "Last year X. This year Y. Here's what changed."
-- You occasionally use rhetorical questions, but sparingly
-- You name real companies, real regulations, real numbers from the sources
+- You write for someone who left formal schooling early or never had a bookkeeping lesson in their life — not for an MBA. No jargon without an immediate plain-English explanation.
+- You lead with the specific problem, not a lecture: "You sold KSh 8,400 of stock today. You have KSh 6,100 in the till. Where did the other KSh 2,300 go?" — not "Cash reconciliation is important for small businesses."
+- You use short, punchy sentences. You break up walls of text. Nobody reading this has time for a wall of text.
+- You're direct and warm, like a trusted neighbour who understands numbers, not a bank manager talking down to them
+- You use contrasts: "Last month you thought you made KSh 12,000. When we actually counted, it was KSh 4,000. Here's where the rest went."
+- You use real Kenyan business language naturally and explain it once on first use: duka, deni (credit owed to you), mama mboga, jua kali, boda boda, chama, fundi, mitumba — write for readers who use these words every day, and for readers who don't yet know them
+- Currency: KSh (Kenyan Shillings) always, written in full the first time in a section ("KSh 4,200"), then KSh thereafter
+- You name real companies, real regulations, real numbers — but ONLY when they appear in the source articles provided below
+${citationRulePrompt(citableSources, articles.length)}
 - You never use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "cutting-edge", "game-changer", "robust"
-- You sound like a smart colleague sharing a briefing, not a blog post
+- You sound like someone who has sat at the counter of a duka in Gikomba or Kawangware and watched exactly how money disappears — not a blog post written from an office
 
 ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
 - Never open a post or section with: "In today's...", "In an era of...", "As businesses navigate...", "With the rise of..."
 - Never use: "It's worth noting", "It's important to remember", "It's no secret", "needless to say", "at the end of the day"
 - Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise", "In summary"
 - Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
-- Never round numbers when specifics exist. "63% of SMEs" beats "most businesses". "£4,200/month" beats "thousands of pounds".
+- Never round numbers when specifics exist. "63% of dukas" beats "most shops". "KSh 4,200/week" beats "thousands of shillings".
 - Vary sentence length sharply. Short. Then a longer sentence that carries the weight of the explanation and gives the reader real context. Short again. Never three long sentences in a row.
-- Write to "you" not "businesses" or "founders" — direct second person throughout
+- Write to "you" not "business owners" or "traders" — direct second person throughout
 - Never start two consecutive paragraphs with the same word
 - No hedging constructions: "This may help...", "Consider whether...", "You might want to..."
 - Lead every section with a fact, a number, or a tension — not scene-setting prose
-- One concrete example per major section: a real business type, a real number, a real outcome — not "a typical founder"
+- One concrete example per major section: a real business type in a real Kenyan town or estate, a real KSh number, a real outcome — not "a typical trader"
+
+WORD COUNT — THIS IS A HARD REQUIREMENT, NOT A SUGGESTION:
+- The finished article MUST be between 1,200 and 1,500 words across the sections. This is checked automatically after you write it — articles under 1,200 words are rejected and never published, wasting the whole run.
+- Every section has a minimum word count listed below. If you're unsure you've hit it, do not stop — add a second concrete example, walk through the numbers a different way, or add a common-mistake callout. Never end a section short just because you've made the main point once.
+- Do not pad with repetition or filler to hit the count — add genuine additional value: another worked example, a second scenario (a different sector), a specific number you haven't used yet.
 
 AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
-- Write H2s as questions where the article answers them: "What does X mean for your margins?", "How do you calculate Y without an accountant?", "Why is Z the wrong benchmark for UK founders?"
+- Write H2s as questions where the article answers them: "How do you know if your duka actually made a profit today?", "What is deni and why does it sink small shops?", "How much stock should a mama mboga carry before market day?"
 - Define key terms on first use in one clear sentence — AI engines extract these as direct answers
 - Include at least one "quick answer" paragraph (2–3 sentences) near the top that directly answers the core question
 - Use specific numbers, dates, and named sources — vague claims don't get cited
@@ -337,20 +376,18 @@ AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claud
 CONTENT TYPE: Match the format to the topic. Use one of: Guide, How-To, Comparison, Explainer, Report. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. Reflect this in the title and section structure.
 
 ASKBIZ PRODUCT KNOWLEDGE (use this naturally — never dump it all):
-AskBiz is an AI business intelligence platform for SME founders. Key capabilities:
-- ASK: Founders type plain-English questions ("What's my true landed cost per unit?", "Which product has the best margin after returns?", "Am I spending more on shipping than last quarter?") and get instant data-backed answers
-- DATA SOURCES: Connects to Shopify, Amazon, Stripe, Xero, QuickBooks, Google Sheets, CSV uploads — pulls live data from the tools founders already use
-- CFO DASHBOARD: Cash flow forecasting, margin analysis, break-even tracking, tax estimation, working capital cycle, EBITDA valuation, budget vs actual, receivables tracking, expense categorisation, receipt scanning
-- MARKET INTELLIGENCE: Live competitor monitoring, pricing benchmarks, industry comparisons, supply chain alerts, regulatory change tracking
-- PROACTIVE ALERTS: Daily briefings on stock levels, cash position, anomalies, margin shifts — sent via email or WhatsApp before the founder even asks
-- POS SYSTEM: Integrated point-of-sale with real-time sales tracking, staff management, inventory sync, multi-branch support
-- FORECASTING: Predictive demand, seasonal trend analysis, "what-if" scenario modelling
-- EXPANSION: Cross-border trade intelligence, tariff calculators, market entry analysis for 54 African markets, EU, UK, US, Middle East
-- TEMPLATES: Pre-built dashboards for retail, restaurant, repair shops, logistics, manufacturing, salon, and service businesses
-- PRICING: Free plan (10 questions/month, no card), Growth (£19/mo — 3 months free trial), Business (£39/mo — 3 months free trial), Enterprise (custom)
-- COMPETITORS: Unlike Looker or Tableau (built for data teams), AskBiz needs no setup or SQL. Unlike asking ChatGPT directly, answers are grounded in your actual connected data — no hallucination risk.
+AskBiz is an AI business tool built so a duka owner, mama mboga, or jua kali artisan can track their real financial position without any accounting knowledge. Key capabilities relevant to Kenya's micro and informal sector:
+- ASK: Owners type or speak plain-Swahili-or-English questions ("Ni nani ananidai pesa?" / "Who owes me money?", "Did I make a profit today?", "How much stock do I have left?") and get instant, specific answers
+- DAILY TALLY: Records every sale and expense as it happens — from a phone, works on low-end Android, works with patchy data — and shows a simple end-of-day picture: what came in, what went out, what's left
+- M-PESA INTEGRATION: Reconciles till and paybill transactions automatically, so an owner juggling cash and M-Pesa doesn't have to manually match every entry
+- DENI (CREDIT) TRACKING: Tracks exactly who owes what and since when, and sends a reminder — the single biggest reason informal businesses run out of cash is untracked credit sales
+- STOCK TRACKING: Photograph-based stock counting and low-stock alerts — no barcode scanner or spreadsheet needed
+- OFFLINE-FIRST: Keeps working when there's no signal, syncs when connection returns — built for real Kenyan network conditions, not assuming constant 4G
+- NO ACCOUNTING KNOWLEDGE REQUIRED: No debits, credits, or ledgers — just plain answers to the questions an owner actually has
+- CHAMA & GROUP RECORDS: Simple shared record-keeping for savings groups and chamas, so contributions and payouts are transparent to every member
+- PRICING: Built to be affordable for a business making a few thousand shillings a day, with a free tier to start
 
-When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a founder typing a real question and getting a specific answer. Don't list features.`
+When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a duka owner or mama mboga asking a real question and getting a specific answer with real KSh figures. Don't list features.`
   const userPrompt = `Write a blog post based on today's market intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
@@ -371,22 +408,22 @@ Return ONLY valid JSON (no markdown fences):
   "publishDate": "${new Date().toISOString().slice(0, 10)}",
   "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
-  "tldr": "3 punchy sentences. The shift. The impact. What founders should do.",
+  "tldr": "3 punchy sentences. The problem. The impact in KSh. What to do about it.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Lead with the concrete number, policy change, or market shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or event from the source. Name the publication, regulator, or company. Set the stakes in the first sentence. Use a contrast structure: what was true before, what changed, why it matters now."},
-    {"heading": "What this means for a business doing £200k-£2m revenue", "level": 2, "body": "250-300 words. Translate the macro story into founder-level impact. Use a concrete business scenario — 'a Leicester-based Shopify seller doing £40k/month', not 'businesses'. Quantify the impact in pounds, percentages, or hours."},
-    {"heading": "The three moves smart operators are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics. Name tools, platforms, and timelines. No vague advice — tell them exactly what to do and when. Each tactic should be a standalone sentence that could be extracted as a bullet."},
-    {"heading": "A concrete heading showing AskBiz solving this exact problem", "level": 2, "body": "200 words. Open AskBiz scene: a founder types a specific question relevant to this topic — give the exact question text. Describe what AskBiz returns: which feature responds, what the output looks like, what decision it enables. Be specific — 'AskBiz surfaces a cash flow warning: 11 days of runway left based on your Xero data.'"},
-    {"heading": "The warning signs to watch for in the next 30 days", "level": 2, "body": "150 words. 3-4 specific signals this issue is getting worse in their business. Actionable watch items — things they can check today."},
-    {"heading": "Your action plan for this week", "level": 2, "body": "150 words. One primary action to take before Friday. One thing to set up once. One metric to track monthly. Be prescriptive — no 'consider' or 'think about'."}
+    {"heading": "Lead with the concrete number, real scenario, or tension — not the topic name", "level": 2, "body": "MUST BE AT LEAST 280 WORDS — this is checked and short sections get the whole article rejected. Open with a specific KSh figure or a real situation (a duka running out of stock mid-week, a mama mboga who can't tell if she made money today). Set the stakes in the first sentence. Use a contrast structure: what most owners assume, what's actually true, why it matters."},
+    {"heading": "What this actually costs a small business in Kenya each month", "level": 2, "body": "MUST BE AT LEAST 280 WORDS. Translate the problem into a concrete KSh cost. Use a specific business scenario — 'a duka in Kawangware doing KSh 15,000/day', 'a mama mboga in Gikomba market', 'a boda boda rider covering 80km a day' — not 'businesses' or 'traders' in general. Quantify the impact in shillings, percentages, or hours lost."},
+    {"heading": "The three things owners who don't lose money to this are doing", "level": 2, "body": "MUST BE AT LEAST 280 WORDS. 3 specific, practical tactics an owner can start today — no smartphone-app jargon, no accounting jargon. Name exactly what to do, when, and how often. Each tactic should be concrete enough to act on immediately, e.g. 'count your till against your notebook every closing time, not once a week.'"},
+    {"heading": "A concrete heading showing AskBiz solving this exact problem", "level": 2, "body": "MUST BE AT LEAST 220 WORDS. Open with a scene: a duka owner or mama mboga asks AskBiz a specific question — give the exact question text, in plain English or a natural Swahili-English mix. Describe what AskBiz shows: which feature responds, what the answer looks like, what decision it makes possible. Be specific with real KSh numbers — 'AskBiz shows: 3 customers owe you a total of KSh 4,800 in deni, two of them over 3 weeks old.'"},
+    {"heading": "The warning signs this is already happening in your business", "level": 2, "body": "AT LEAST 160 WORDS. 3-4 specific, checkable signals — things an owner can look for in their own till, notebook, or stock today, not vague symptoms."},
+    {"heading": "What to do this week", "level": 2, "body": "AT LEAST 160 WORDS. One primary action to take before the weekend. One thing to set up once. One thing to check daily going forward. Be specific and practical — no 'consider' or 'think about'."}
   ],
   "paa": [
-    {"q": "Exact Google search query about the primary problem in this post (e.g. 'how to improve cash flow small business')", "a": "40-70 word direct answer. Lead with the key action or fact. Cite a specific number if available from the sources. End with what the best operators do."},
+    {"q": "Exact Google search query about the primary problem in this post, in the way a Kenyan small business owner would actually search it", "a": "40-70 word direct answer. Lead with the key action or fact. Cite a specific KSh number if available from the sources. End with what owners who get this right do differently."},
     {"q": "Second high-volume search query about a sub-topic in this post", "a": "40-70 word direct answer. Factual, complete sentence. No cliffhangers."},
-    {"q": "Third search query a founder would type when facing this problem", "a": "40-70 word direct answer. Include a specific benchmark or timeframe if relevant."},
-    {"q": "A 'what is' or 'how does' question about the core concept in this post", "a": "40-70 word direct answer. Plain English definition or explanation, grounded in practical SME context."},
-    {"q": "How does AskBiz help with [specific problem from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows or does. Give a specific example of the output."}
+    {"q": "Third search query an owner would type when facing this problem", "a": "40-70 word direct answer. Include a specific benchmark, KSh figure, or timeframe if relevant."},
+    {"q": "A 'what is' or 'how does' question about the core concept in this post (e.g. what deni means, how a chama works)", "a": "40-70 word direct answer. Plain English definition, grounded in real Kenyan micro-business context."},
+    {"q": "How does AskBiz help with [specific problem from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows or does. Give a specific example with real KSh figures."}
   ],
   "cta": {
     "heading": "A CTA headline that names the specific problem solved in this post",
@@ -394,83 +431,42 @@ Return ONLY valid JSON (no markdown fences):
   },
   "author": {
     "name": "Alice Watson",
-    "role": "Head of Market Intelligence",
-    "bio": "Alice Watson is AskBiz's Head of Market Intelligence. She tracks regulatory shifts, pricing trends, and growth signals across global SME markets — and turns them into briefings founders can act on before their competitors notice."
+    "role": "SEO & Financial Inclusion Correspondent, Kenya",
+    "bio": "Alice Watson covers Kenya's micro and informal business sector for AskBiz — dukas, mama mboga, jua kali artisans, boda boda riders, and everyone running a business without a bookkeeping lesson to their name. She turns real money problems into briefings owners can act on the same day."
   }
 }`
 
-  const MIN_TOTAL_WORDS = 1200
-  const MAX_ATTEMPTS = 3
-  let lastError: Error | null = null
+  // The requested article is ~1,380 words of body copy (per-section minimums
+  // above) plus title, metaDescription, tldr, 5 PAA answers, and a CTA —
+  // comfortably over 1,600 words of total content. At ~1.4 tokens/word plus
+  // JSON escaping overhead, 3000 tokens was forcing truncation. If the model
+  // still undershoots the word floor with 6500 tokens of room,
+  // generateWithLengthRetry sends one follow-up asking it to expand the
+  // short sections rather than accepting a thin first draft. Every call it
+  // makes is paced against Groq's real per-minute token cap internally.
+  const parsed = await generateWithLengthRetry({
+    groqUrl: GROQ_URL,
+    apiKey: process.env.GROQ_API_KEY!,
+    model: GROQ_MODEL,
+    maxTokens: 6500,
+    systemPrompt: _SYSTEM_,
+    userPrompt,
+    logRoute: 'agent/blog-scout',
+    logUsage,
+  })
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    // Nudge the model harder on retries — truncation or a thin draft both
-    // mean it undershot the requested length the first time.
-    const retryNote = attempt > 1
-      ? `\n\nIMPORTANT: your previous attempt was rejected for being too short or malformed. Write the FULL length specified for every section — do not summarise or compress. Every section body must hit its stated word count.`
-      : ''
-    let finishReason: string | undefined
-
-    try {
-      await waitForGroqBudget(10_800)
-      const groqRes = await fetch(GROQ_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          max_tokens: 6500,
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: _SYSTEM_ },
-            { role: 'user', content: userPrompt + retryNote },
-          ],
-        }),
-      })
-      const bodyText = await groqRes.text()
-      let groqData: any
-      try {
-        groqData = JSON.parse(bodyText)
-      } catch {
-        throw new Error(`Groq API returned non-JSON (status ${groqRes.status}): ${bodyText.slice(0, 200)}`)
-      }
-      if (!groqRes.ok) {
-        throw new Error(`Groq API error ${groqRes.status}: ${groqData?.error?.message || bodyText.slice(0, 200)}`)
-      }
-
-      logUsage({ route: 'agent/blog-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
-
-      finishReason = groqData.choices?.[0]?.finish_reason
-      const raw = groqData.choices?.[0]?.message?.content || ''
-      const clean = raw.replace(/```json\n?|```/g, '').trim()
-
-      const parsed = JSON.parse(clean)
-
-      if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
-        throw new Error('Invalid blog structure — missing slug, title, or sections')
-      }
-
-      const totalWords = (parsed.sections as Array<{ body?: string }>)
-        .reduce((sum, s) => sum + (s.body?.trim().split(/\s+/).filter(Boolean).length || 0), 0)
-
-      if (totalWords < MIN_TOTAL_WORDS) {
-        throw new Error(`Draft too short (${totalWords} words, need ${MIN_TOTAL_WORDS}+)`)
-      }
-
-      // Always use today's date — model may pick the date of a news event instead
-      parsed.publishDate = new Date().toISOString().slice(0, 10)
-
-      return parsed
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err))
-      if (finishReason === 'length') lastError.message += ' (truncated by max_tokens)'
-      // Rate limits carry their own cooldown — honour it before retrying
-      // instead of hammering straight back into the same 429.
-      const retryAfterMs = parseGroqRetryAfterMs(lastError.message)
-      if (retryAfterMs && attempt < MAX_ATTEMPTS) await new Promise(res => setTimeout(res, retryAfterMs))
-    }
+  if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
+    throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
 
-  throw lastError || new Error('Blog generation failed after retries')
+  // Always use today's date — model may pick the date of a news event instead
+  parsed.publishDate = new Date().toISOString().slice(0, 10)
+
+  // Carry the whitelist through so the publish gate can check for fabricated
+  // attributions — the caller strips this before saving to the DB.
+  parsed._citableSources = citableSources
+
+  return parsed
 }
 
 function scoreBlogQuality(blog: Record<string, unknown>): number {

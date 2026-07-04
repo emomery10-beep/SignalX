@@ -110,6 +110,107 @@ export function isCountryMapped(countryCode?: string | null): boolean {
   return !!countryCode && !!COUNTRIES[countryCode.toUpperCase()]
 }
 
+// ── Real-world country names ──────────────────────────────────────────────────
+// `SupplierSource.sourceCountry` is a free-text field ("ISO country code — or
+// free text country name"), and nothing validates it against real geography.
+// A user recording where they source a product from can just as easily type
+// a local town ("Lamu", "Wajir") as an actual country. Generating a "shipping
+// disruption {source} to {destination}" search query for a local place name
+// produces nonsense once an LLM writes it up as prose (e.g. "elevated
+// shipping freight disruptions between Lamu and Wajir to Kenya" when both are
+// towns inside Kenya). This is a real, bounded list of world country names —
+// used as an allow-list so only genuine international origins generate a
+// shipping-lane query; anything that doesn't resolve to a real country is
+// treated as local and skipped.
+const KNOWN_COUNTRY_NAMES = new Set([
+  'afghanistan', 'albania', 'algeria', 'andorra', 'angola', 'argentina', 'armenia', 'australia', 'austria',
+  'azerbaijan', 'bahamas', 'bahrain', 'bangladesh', 'barbados', 'belarus', 'belgium', 'belize', 'benin', 'bhutan',
+  'bolivia', 'bosnia', 'bosnia and herzegovina', 'botswana', 'brazil', 'brunei', 'bulgaria', 'burkina faso',
+  'burundi', 'cambodia', 'cameroon', 'canada', 'cape verde', 'central african republic', 'chad', 'chile', 'china',
+  'colombia', 'comoros', 'congo', 'democratic republic of congo', 'costa rica', 'croatia', 'cuba', 'cyprus',
+  'czechia', 'czech republic', 'denmark', 'djibouti', 'dominica', 'dominican republic', 'ecuador', 'egypt',
+  'el salvador', 'equatorial guinea', 'eritrea', 'estonia', 'eswatini', 'ethiopia', 'fiji', 'finland', 'france',
+  'gabon', 'gambia', 'georgia', 'germany', 'ghana', 'greece', 'grenada', 'guatemala', 'guinea', 'guinea-bissau',
+  'guyana', 'haiti', 'honduras', 'hong kong', 'hungary', 'iceland', 'india', 'indonesia', 'iran', 'iraq',
+  'ireland', 'israel', 'italy', 'ivory coast', "cote d'ivoire", 'jamaica', 'japan', 'jordan', 'kazakhstan',
+  'kenya', 'kiribati', 'kosovo', 'kuwait', 'kyrgyzstan', 'laos', 'latvia', 'lebanon', 'lesotho', 'liberia',
+  'libya', 'liechtenstein', 'lithuania', 'luxembourg', 'madagascar', 'malawi', 'malaysia', 'maldives', 'mali',
+  'malta', 'mauritania', 'mauritius', 'mexico', 'moldova', 'monaco', 'mongolia', 'montenegro', 'morocco',
+  'mozambique', 'myanmar', 'burma', 'namibia', 'nepal', 'netherlands', 'new zealand', 'nicaragua', 'niger',
+  'nigeria', 'north korea', 'north macedonia', 'macedonia', 'norway', 'oman', 'pakistan', 'palau', 'palestine',
+  'panama', 'papua new guinea', 'paraguay', 'peru', 'philippines', 'poland', 'portugal', 'qatar', 'romania',
+  'russia', 'rwanda', 'saudi arabia', 'senegal', 'serbia', 'seychelles', 'sierra leone', 'singapore', 'slovakia',
+  'slovenia', 'somalia', 'south africa', 'south korea', 'korea', 'south sudan', 'spain', 'sri lanka', 'sudan',
+  'suriname', 'sweden', 'switzerland', 'syria', 'taiwan', 'tajikistan', 'tanzania', 'thailand', 'togo', 'tonga',
+  'trinidad and tobago', 'tunisia', 'turkey', 'turkiye', 'turkmenistan', 'uganda', 'ukraine',
+  'united arab emirates', 'uae', 'united kingdom', 'uk', 'britain', 'great britain', 'united states', 'usa',
+  'us', 'america', 'united states of america', 'uruguay', 'uzbekistan', 'vanuatu', 'vatican', 'venezuela',
+  'vietnam', 'yemen', 'zambia', 'zimbabwe',
+])
+
+/** True when `name` resolves to a real country (allow-list, not a heuristic). */
+export function isKnownCountryName(name: string): boolean {
+  return KNOWN_COUNTRY_NAMES.has(name.trim().toLowerCase())
+}
+
+// ── City → country resolution ─────────────────────────────────────────────────
+// A country-name allow-list alone is too blunt: most real supplier data is a
+// CITY, not a country ("we source from Guangzhou", "our supplier is in
+// Dubai"), and those are exactly the entries a shipping-lane signal should
+// fire for — they're genuine foreign sourcing origins, the single most common
+// real input for an African SME's supplier context. Skipping every city name
+// would silently drop that signal for the majority of users. This maps the
+// major sourcing/trade cities (manufacturing hubs SMEs actually source from)
+// and the major domestic cities of each destination market this app supports,
+// so "Guangzhou" resolves to "China" (fires a real lane), while "Lamu" or
+// "Wajir" resolve to "Kenya" (recognised as local, correctly skipped) —
+// rather than either case falling through as an unrecognised string.
+const CITY_TO_COUNTRY: Record<string, string> = {
+  // China — dominant manufacturing/sourcing hub for African SME imports
+  'guangzhou': 'china', 'shenzhen': 'china', 'yiwu': 'china', 'shanghai': 'china', 'beijing': 'china',
+  'ningbo': 'china', 'foshan': 'china', 'dongguan': 'china', 'hong kong': 'hong kong', 'chengdu': 'china',
+  'guangdong': 'china', 'wenzhou': 'china', 'quanzhou': 'china', 'xiamen': 'china',
+  // India
+  'mumbai': 'india', 'delhi': 'india', 'new delhi': 'india', 'chennai': 'india', 'surat': 'india',
+  'bangalore': 'india', 'bengaluru': 'india', 'kolkata': 'india', 'ahmedabad': 'india', 'tirupur': 'india',
+  // UAE / Gulf — major re-export/trans-shipment hub for African importers
+  'dubai': 'united arab emirates', 'sharjah': 'united arab emirates', 'abu dhabi': 'united arab emirates',
+  'jebel ali': 'united arab emirates', 'doha': 'qatar', 'jeddah': 'saudi arabia', 'riyadh': 'saudi arabia',
+  // Turkey
+  'istanbul': 'turkey', 'izmir': 'turkey', 'ankara': 'turkey',
+  // Europe / UK
+  'london': 'united kingdom', 'manchester': 'united kingdom', 'birmingham': 'united kingdom',
+  'rotterdam': 'netherlands', 'hamburg': 'germany', 'antwerp': 'belgium', 'paris': 'france', 'milan': 'italy',
+  // USA
+  'new york': 'united states', 'los angeles': 'united states', 'miami': 'united states', 'chicago': 'united states',
+  // Domestic Kenya — local, correctly resolves to the destination market itself
+  'nairobi': 'kenya', 'mombasa': 'kenya', 'kisumu': 'kenya', 'nakuru': 'kenya', 'eldoret': 'kenya',
+  'lamu': 'kenya', 'wajir': 'kenya', 'garissa': 'kenya', 'malindi': 'kenya', 'kakamega': 'kenya',
+  'nyeri': 'kenya', 'machakos': 'kenya', 'kitale': 'kenya', 'thika': 'kenya', 'kericho': 'kenya',
+  'meru': 'kenya', 'embu': 'kenya', 'isiolo': 'kenya', 'lodwar': 'kenya', 'marsabit': 'kenya',
+  // Domestic Nigeria
+  'lagos': 'nigeria', 'abuja': 'nigeria', 'kano': 'nigeria', 'port harcourt': 'nigeria', 'ibadan': 'nigeria',
+  // Domestic Ghana
+  'accra': 'ghana', 'kumasi': 'ghana', 'tema': 'ghana',
+  // Domestic South Africa
+  'johannesburg': 'south africa', 'cape town': 'south africa', 'durban': 'south africa', 'pretoria': 'south africa',
+}
+
+/**
+ * Resolves free-text supplier location to a real country name — trying an
+ * exact country match first, then a known-city lookup. Returns null if the
+ * text doesn't resolve to anywhere recognised (e.g. a typo, or a place too
+ * small/obscure to be in the city map) — callers should treat that as
+ * "can't confirm this is a foreign origin" and skip rather than guess.
+ */
+export function resolveCountryFromLocation(input: string): string | null {
+  const normalized = input.trim().toLowerCase()
+  if (!normalized) return null
+  if (KNOWN_COUNTRY_NAMES.has(normalized)) return normalized
+  if (CITY_TO_COUNTRY[normalized]) return CITY_TO_COUNTRY[normalized]
+  return null
+}
+
 // ISO code → display name, for surfacing the user's actual country even when unmapped.
 const COUNTRY_NAMES: Record<string, string> = {
   NG: 'Nigeria', KE: 'Kenya', GH: 'Ghana', ZA: 'South Africa', GB: 'United Kingdom', US: 'United States',

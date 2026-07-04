@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import { logUsage } from '@/lib/log-usage'
-import { waitForGroqBudget, parseGroqRetryAfterMs } from '@/lib/groq-rate-limiter'
+import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations, countSectionWords, MIN_WORD_COUNT, generateWithLengthRetry } from '@/lib/scout-citation-guard'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 800
@@ -177,8 +177,22 @@ async function runVictorScout() {
         }
         existingSlugs.add(slug)
 
+        const citableSources = (result.value as Record<string, unknown>)._citableSources as string[] | undefined
+        delete (result.value as Record<string, unknown>)._citableSources
+
+        const fabricated = findFabricatedCitations(result.value.sections, citableSources || [], { allowedNames: ['AskBiz'] })
+        const wordCount = countSectionWords(result.value.sections)
+        const isThin = wordCount < MIN_WORD_COUNT
         const quality = scoreAfricanMktgBlogQuality(result.value)
-        const status  = quality >= 80 ? 'published' : 'pending'
+        // A fabricated "According to Reuters..." always forces human review,
+        // regardless of how well the article otherwise scores.
+        const status  = quality >= 80 && fabricated.length === 0 && !isThin ? 'published' : 'pending'
+        if (fabricated.length > 0) {
+          log.push(`  ⚠ "${result.value.title}" cites unverified source(s): ${fabricated.join('; ')} — held for review`)
+        }
+        if (isThin) {
+          log.push(`  ⚠ "${result.value.title}" is thin (${wordCount} words, needs ${MIN_WORD_COUNT}) — held for review`)
+        }
         inserts.push({
           run_id:           runId,
           type:             'blog',
@@ -233,9 +247,8 @@ async function writeAfricanMktgBlogPost(input: SearchInput, recentPublished: Rec
   const articles  = searchResult.results.slice(0, 5)
   const aiSummary = searchResult.answer || ''
 
-  const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
-    .join('\n\n')
+  const citableSources = buildCitableSources(articles)
+  const articleContext = buildArticleContext(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
@@ -265,6 +278,8 @@ VOICE & TONE:
 - Currencies: ₦ (NGN) primarily for Nigeria content; GH₵ for Ghana; ZAR for South Africa; note USD equivalent where useful
 - You NEVER use: "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer", "best practices" without challenge
 - No corporate speak. Real wins. Real failures. Real African context. Real numbers.
+${citationRulePrompt(citableSources, articles.length)}
+- The named-brand list above (Paystack, Flutterwave, GTBank, etc.) is for tone/context only — never invent a specific statistic, quote, or claim about any of these companies unless it's actually in the source articles below.
 
 ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
 - Never open with: "In today's Nigeria...", "As African marketers navigate...", "With the rise of digital...", "In an era of..."
@@ -344,74 +359,25 @@ Return ONLY valid JSON (no markdown fences):
   }
 }`
 
-  const MIN_TOTAL_WORDS = 1200
-  const MAX_ATTEMPTS = 3
-  let lastError: Error | null = null
+  const parsed = await generateWithLengthRetry({
+    groqUrl: GROQ_URL,
+    apiKey: process.env.GROQ_API_KEY!,
+    model: GROQ_MODEL,
+    maxTokens: 6500,
+    systemPrompt: _SYSTEM_,
+    userPrompt,
+    logRoute: 'agent/victor-scout',
+    logUsage,
+  })
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const retryNote = attempt > 1
-      ? `\n\nIMPORTANT: your previous attempt was rejected for being too short or malformed. Write the FULL length specified for every section — do not summarise or compress. Every section body must hit its stated word count.`
-      : ''
-
-    let finishReason: string | undefined
-
-    try {
-      await waitForGroqBudget(10_800)
-      const groqRes = await fetch(GROQ_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          max_tokens: 6500,
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: _SYSTEM_ },
-            { role: 'user',   content: userPrompt + retryNote },
-          ],
-        }),
-      })
-      const bodyText = await groqRes.text()
-      let groqData: any
-      try {
-        groqData = JSON.parse(bodyText)
-      } catch {
-        throw new Error(`Groq API returned non-JSON (status ${groqRes.status}): ${bodyText.slice(0, 200)}`)
-      }
-      if (!groqRes.ok) {
-        throw new Error(`Groq API error ${groqRes.status}: ${groqData?.error?.message || bodyText.slice(0, 200)}`)
-      }
-
-      logUsage({ route: 'agent/victor-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
-
-      finishReason = groqData.choices?.[0]?.finish_reason
-      const raw   = groqData.choices?.[0]?.message?.content || ''
-      const clean = raw.replace(/```json\n?|```/g, '').trim()
-
-      const parsed = JSON.parse(clean)
-
-      if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
-        throw new Error('Invalid blog structure — missing slug, title, or sections')
-      }
-
-      const totalWords = (parsed.sections as Array<{ body?: string }>)
-        .reduce((sum, s) => sum + (s.body?.trim().split(/\s+/).filter(Boolean).length || 0), 0)
-
-      if (totalWords < MIN_TOTAL_WORDS) {
-        throw new Error(`Draft too short (${totalWords} words, need ${MIN_TOTAL_WORDS}+)`)
-      }
-
-      parsed.publishDate = new Date().toISOString().slice(0, 10)
-
-      return parsed
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err))
-      if (finishReason === 'length') lastError.message += ' (truncated by max_tokens)'
-      const retryAfterMs = parseGroqRetryAfterMs(lastError.message)
-      if (retryAfterMs && attempt < MAX_ATTEMPTS) await new Promise(res => setTimeout(res, retryAfterMs))
-    }
+  if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
+    throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
 
-  throw lastError || new Error('Blog generation failed after retries')
+  parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed._citableSources = citableSources
+
+  return parsed
 }
 
 function scoreAfricanMktgBlogQuality(blog: Record<string, unknown>): number {

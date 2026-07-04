@@ -1138,6 +1138,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "wholesale-channel-adding-to-retail-smb",
     title: "Adding a Wholesale Channel to Your Retail SMB: The £50,000 Opportunity Most Owners Miss",
     metaDescription: "Retail SMBs adding a wholesale channel can unlock £50,000–£200,000 in incremental revenue. Here's how to structure pricing, manage inventory, and integrate wholesale with your existing retail operation.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Channel Expansion",
+    publishDate: "2025-10-05",
+    readTime: 6,
+    tldr: "Retail SMBs sitting on a proven product range are leaving £50,000–£200,000 in incremental revenue on the table by never formalising a wholesale channel. This covers wholesale pricing maths, dual-channel inventory management, and the B2B sales process — including where it differs from retail in every way.",
     sections: [
       {
         heading: "The wholesale opportunity hiding in your existing product range",
@@ -1196,6 +1201,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "smb-annual-planning-okr-framework-practical",
     title: "Annual Planning for SMBs: A Practical OKR Framework That Actually Works for Businesses Under £2M",
     metaDescription: "Most SMB annual planning sessions produce goals that are forgotten by February. This practical OKR framework gives businesses under £2M revenue a planning process that drives accountability and real growth.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Strategic Planning",
+    publishDate: "2025-10-07",
+    readTime: 6,
+    tldr: "Most SMB annual planning produces a document that's forgotten by February. This practical OKR framework — scaled for businesses under £2M revenue — gives founders a planning process that actually drives quarterly accountability instead of an annual ritual nobody revisits.",
     sections: [
       {
         heading: "Why SMB annual planning fails — and what to do instead",
@@ -1254,6 +1264,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "logistics-fleet-expansion-lease-buy-outsource",
     title: "Fleet Expansion for Growing SMBs: Lease, Buy, or Outsource — The Numbers Behind the Decision",
     metaDescription: "When your SMB needs more delivery or logistics capacity, the lease vs. buy vs. outsource decision can make or break your cash flow. Here's the financial framework to choose correctly.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Fleet Management",
+    publishDate: "2025-10-09",
+    readTime: 6,
+    tldr: "Growing SMBs facing a delivery or logistics capacity crunch have three options — lease, buy, or outsource — and the wrong choice can break cash flow for years. This is the financial framework for choosing correctly at each growth stage.",
     sections: [
       {
         heading: "The fleet decision that can cost you £80,000 if you get it wrong",
@@ -1312,6 +1327,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "adding-b2b-sales-to-b2c-smb-transition",
     title: "Adding B2B Sales to a B2C Business: How SMBs Make the Transition Without Breaking What Works",
     metaDescription: "Moving from B2C to B2B sales is one of the highest-leverage growth moves an SMB can make. Here's the playbook for adding a B2B channel without disrupting your existing retail or consumer operation.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Channel Expansion",
+    publishDate: "2025-10-11",
+    readTime: 6,
+    tldr: "Adding a B2B sales channel to a B2C business is one of the highest-leverage growth moves an SMB can make — but done carelessly it disrupts the retail or consumer operation that's already working. Here's the playbook for adding B2B without breaking B2C.",
     sections: [
       {
         heading: "The B2B opportunity most B2C SMBs overlook",
@@ -1370,6 +1390,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "smb-growth-through-partnerships-joint-ventures",
     title: "SMB Growth Through Partnerships and Joint Ventures: When to Partner and How to Structure It",
     metaDescription: "Strategic partnerships and joint ventures can accelerate SMB growth faster than organic expansion. Here's how to identify the right partner, structure the deal, and measure whether it's working.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Strategic Partnerships",
+    publishDate: "2025-10-13",
+    readTime: 5,
+    tldr: "Strategic partnerships and joint ventures can accelerate SMB growth faster than organic expansion — but most fall apart from a badly structured deal, not a bad partner. Here's how to identify the right partner, structure the agreement, and measure whether it's actually working.",
     sections: [
       {
         heading: "The partnership shortcut to growth most SMBs don't take",
@@ -1428,6 +1453,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "factory-production-capacity-doubling-planning",
     title: "Doubling Factory Production Capacity: The Planning Framework That Prevents Costly Mistakes",
     metaDescription: "Doubling production capacity without doubling costs requires careful planning. Here's the financial model, sequencing logic, and operational checklist SMB manufacturers need before committing capital.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Manufacturing Scaling",
+    publishDate: "2025-10-15",
+    readTime: 6,
+    tldr: "Doubling factory production capacity without doubling costs takes careful sequencing — get the order of capital commitments wrong and you can sink working capital into capacity you can't yet sell into. Here's the financial model and operational checklist SMB manufacturers need before committing capital.",
     sections: [
       {
         heading: "The £200,000 decision most manufacturer SMBs get wrong",
@@ -1486,6 +1516,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "when-to-get-smb-board-advisors-growth-stage",
     title: "When to Get SMB Board Advisors: The Growth Stage Trigger Points and How to Make It Work",
     metaDescription: "SMB founders often wait too long to bring in external advisors. Here's how to recognise the right growth stage triggers, recruit advisors who add real value, and structure the relationship to avoid wasted time.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Governance & Advisors",
+    publishDate: "2025-10-17",
+    readTime: 6,
+    tldr: "SMB founders typically wait too long to bring in external board advisors, missing the growth-stage trigger points where outside expertise would have prevented costly mistakes. Here's how to recognise those triggers, recruit advisors who add real value, and structure the relationship so it isn't wasted time.",
     sections: [
       {
         heading: "The lonely growth problem and why most SMB founders delay too long",
@@ -1544,6 +1579,11 @@ export const batch20GrowthScalingPosts: BlogPost[] = [
     slug: "customer-concentration-risk-one-client-40-percent",
     title: "Customer Concentration Risk: What to Do When One Client Is 40% of Your SMB Revenue",
     metaDescription: "When one customer accounts for 40% or more of your SMB revenue, your business has a critical vulnerability. Here's how to assess the risk, reduce concentration, and protect the business if that client leaves.",
+    cluster: "SMB Growth & Scaling",
+    pillar: "Risk Management",
+    publishDate: "2025-10-19",
+    readTime: 6,
+    tldr: "When one customer accounts for 40% or more of SMB revenue, the business carries a critical concentration risk that most owners underestimate until the client leaves. Here's how to assess the exposure, actively reduce concentration, and protect the business if that relationship ends.",
     sections: [
       {
         heading: "The client that is slowly making your business fragile",
