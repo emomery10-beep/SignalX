@@ -4,7 +4,7 @@ import { logUsage } from '@/lib/log-usage'
 import { waitForGroqBudget, parseGroqRetryAfterMs } from '@/lib/groq-rate-limiter'
 
 export const runtime     = 'nodejs'
-export const maxDuration = 300
+export const maxDuration = 800
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
