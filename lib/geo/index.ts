@@ -108,6 +108,33 @@ export function toE164(dial: string, raw: string): string | null {
   return /^\+[1-9]\d{6,14}$/.test(n) ? n : null
 }
 
+// Country code → display name (mirror of the map in app/api/geo/route.ts).
+export const COUNTRY_NAMES: Record<string, string> = {
+  KE: 'Kenya', NG: 'Nigeria', ZA: 'South Africa', UG: 'Uganda', TZ: 'Tanzania',
+  GH: 'Ghana', ET: 'Ethiopia', RW: 'Rwanda', ZM: 'Zambia', ZW: 'Zimbabwe',
+  MW: 'Malawi', MZ: 'Mozambique', US: 'United States', GB: 'United Kingdom',
+  IE: 'Ireland', DE: 'Germany', FR: 'France', ES: 'Spain', IT: 'Italy',
+  NL: 'Netherlands', BE: 'Belgium', PT: 'Portugal', AT: 'Austria', FI: 'Finland',
+  AE: 'UAE', IN: 'India', SG: 'Singapore', AU: 'Australia', CA: 'Canada',
+  MX: 'Mexico', BR: 'Brazil',
+}
+
+// E.164 phone → ISO country code, by longest matching dial prefix. This is
+// the RELIABLE location signal for mobile-money vendors: African carriers
+// often present a non-local IP, so the signup phone number beats IP geo.
+// Shared codes (+1) resolve to the first COUNTRY_DIAL entry (US); returns
+// null when nothing matches (malformed / not +-prefixed).
+export function countryFromPhone(e164: string | null | undefined): string | null {
+  if (!e164) return null
+  const n = e164.replace(/[^\d+]/g, '')
+  if (!n.startsWith('+')) return null
+  const sorted = [...COUNTRY_DIAL].sort((a, b) => b.dial.length - a.dial.length)
+  for (const c of sorted) {
+    if (n.startsWith(c.dial)) return c.code
+  }
+  return null
+}
+
 // ── Sector hints per country ──────────────────────────────────
 export const SECTOR_HINTS: Record<string, string> = {
   KE: 'FMCG distribution, M-Pesa mobile payments, tea & coffee export, horticulture, construction materials',

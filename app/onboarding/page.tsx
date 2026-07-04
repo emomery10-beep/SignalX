@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES } from '@/lib/geo'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
 
@@ -149,35 +150,56 @@ export default function OnboardingPage() {
   const [geoLoading,     setGeoLoading]     = useState(true)
   const [manualLocation, setManualLocation] = useState(false)
 
-  // First/last name is already known from signup (email or phone+PIN) —
-  // fetch it once instead of asking again.
+  // One pass on mount: pull the first name from signup, then set the default
+  // location. Location prefers the SIGNUP PHONE's country — reliable for
+  // mobile-money vendors, since African carrier IPs frequently geolocate to
+  // the wrong country. IP geo (/api/geo) is only the fallback (e.g. email
+  // signups with no phone). The manual picker remains available either way.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || cancelled) return
-      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
-      const fn = (profile?.full_name || '').trim().split(/\s+/)[0] || ''
-      if (!cancelled && fn) setFirstName(fn)
+
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+        const fn = (profile?.full_name || '').trim().split(/\s+/)[0] || ''
+        if (!cancelled && fn) setFirstName(fn)
+      }
+
+      // 1) Phone-first: derive country → currency from the signup number.
+      const phone = (user?.user_metadata as { phone?: string } | undefined)?.phone || user?.phone || ''
+      const cc = countryFromPhone(phone)
+      if (cc && COUNTRY_CURRENCY[cc]) {
+        const currency: string = COUNTRY_CURRENCY[cc]!
+        const name = COUNTRY_NAMES[cc] || cc
+        // ISO country code → flag emoji (regional indicator symbols).
+        const flag = cc.replace(/[A-Za-z]/g, c => String.fromCodePoint(127397 + c.toUpperCase().charCodeAt(0)))
+        if (!cancelled) {
+          setGeo({ countryCode: cc, country: name, currency, currencySymbol: CURRENCY_SYMBOLS[currency] || '£', region: name, flag })
+          setCurrency(currency)
+          setRegion(name)
+          setGeoLoading(false)
+        }
+        return
+      }
+
+      // 2) Fallback: IP geolocation.
+      try {
+        const r = await fetch('/api/geo')
+        if (!r.ok) throw new Error('geo unavailable')
+        const d = await r.json()
+        if (cancelled) return
+        setGeo({ countryCode: d.countryCode, country: d.country, currency: d.currency, currencySymbol: d.currencySymbol, region: d.region || d.country, flag: d.flag })
+        setCurrency(d.currency)
+        setRegion(d.region || d.country)
+      } catch {
+        if (!cancelled) setManualLocation(true)
+      } finally {
+        if (!cancelled) setGeoLoading(false)
+      }
     })()
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/geo')
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        if (cancelled) return
-        const g: Geo = { countryCode: d.countryCode, country: d.country, currency: d.currency, currencySymbol: d.currencySymbol, region: d.region || d.country, flag: d.flag }
-        setGeo(g)
-        setCurrency(g.currency)
-        setRegion(g.region)
-      })
-      .catch(() => { if (!cancelled) setManualLocation(true) })
-      .finally(() => { if (!cancelled) setGeoLoading(false) })
-    return () => { cancelled = true }
-  }, [])
 
   const stepIndex = STEPS.indexOf(step)
   const progress  = (stepIndex / (STEPS.length - 1)) * 100
