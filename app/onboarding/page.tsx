@@ -24,6 +24,8 @@ type Step = typeof STEPS[number]
 const NEEDS_SECTOR = new Set(['ecommerce', 'distributor', 'manufacturer', 'importer', 'exporter'])
 // Business types that should see the export markets step
 const NEEDS_EXPORT = new Set(['exporter', 'ecommerce', 'importer'])
+// Business types that run a till day-to-day — land them straight in the POS
+const POS_LANDING_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon'])
 
 const buildBizTypes = (tc: TC) => [
   { id: 'retail',       label: tc('onboarding.biz_retail_label'),       icon: '🏪', desc: tc('onboarding.biz_retail_desc') },
@@ -143,7 +145,7 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
-      router.push('/home')
+      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home')
     } catch (e) { console.error(e) } finally { setSaving(false) }
   }
 
@@ -166,7 +168,7 @@ export default function OnboardingPage() {
         onboarded:           true,
       }).eq('id', user.id)
 
-      router.push('/home')
+      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home')
     } catch (e) {
       console.error(e)
     } finally {

@@ -18,6 +18,7 @@ import PosPulse from '@/components/intelligence/PosPulse'
 import DailyActions from '@/components/intelligence/DailyActions'
 import CrossSectorIntel from '@/components/intelligence/CrossSectorIntel'
 import HealthTimeMachine from '@/components/intelligence/HealthTimeMachine'
+import GettingStartedChecklist from '@/components/onboarding/GettingStartedChecklist'
 
 export default function IntelligencePage() {
   const router = useRouter()
@@ -265,8 +266,10 @@ export default function IntelligencePage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>
+                <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/>
+                <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>
               </svg>
             </div>
             <div>
@@ -339,6 +342,8 @@ export default function IntelligencePage() {
                 </div>
               </div>
             </div>
+
+            <GettingStartedChecklist />
 
             {/* ── Hero KPI section ── */}
             <KpiStrip cards={kpiCards} />
