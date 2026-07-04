@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosOwner } from '@/lib/pos-auth'
+import { resolvePosOwner, posEntitled } from '@/lib/pos-auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -25,6 +25,15 @@ export async function POST(req: NextRequest) {
   const ownerId = await resolvePosOwner(req)
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
+  // Charging customers is a selling action — requires an active POS
+  // subscription or trial (same gate as recording a transaction).
+  if (!(await posEntitled(ownerId))) {
+    return NextResponse.json(
+      { error: 'POS is not active — activate your till to start selling.', code: 'pos_not_active' },
+      { status: 402 },
+    )
+  }
+
   const service = createServiceClient()
   const body = await req.json()
 
@@ -39,7 +48,7 @@ export async function POST(req: NextRequest) {
     // Verify transaction exists and fetch details
     const { data: transaction } = await service
       .from('pos_transactions')
-      .select('id, total_amount, total_tax, customer_id')
+      .select('id, total, tax_amount, customer_id')
       .eq('id', transaction_id)
       .eq('owner_id', ownerId)
       .single()
@@ -140,6 +149,8 @@ export async function handlePaymentResult(
       payment_method: paymentMethod,
       paid_at: new Date().toISOString(),
     })
+      .eq('id', transactionId)
+      .eq('owner_id', ownerId)
 
     return NextResponse.json({
       success: true,
