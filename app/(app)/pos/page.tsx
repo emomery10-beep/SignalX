@@ -433,6 +433,8 @@ export default function POSPage() {
   const lowStock = sectorFilteredInventory.filter(i => i.stock_qty <= i.low_stock_threshold && i.stock_qty > 0)
   const outOfStock = sectorFilteredInventory.filter(i => i.stock_qty === 0)
   const alertCount = lowStock.length + outOfStock.length
+  // Same isolation rule as sectorFilteredInventory: a suggestion only shows under the sector its item is tagged to.
+  const sectorFilteredReorderSuggestions = selectedSector === 'all' ? reorderSuggestions : reorderSuggestions.filter((s: any) => s.sector === selectedSector)
 
   // Profit calc
   const totalCost = completedTx.reduce((s, t) => s + (t.pos_items || []).reduce((is, i) => is + (i.cost_price || 0) * i.qty, 0), 0)
@@ -1342,14 +1344,14 @@ export default function POSPage() {
             )}
 
             {/* Smart reorder suggestions from AI agent */}
-            {reorderSuggestions.length > 0 && (
+            {sectorFilteredReorderSuggestions.length > 0 && (
               <div style={{ marginBottom: 24 }}>
                 <div style={sectionLabel}>
                   <span>🤖 {tc('pos_app.reorder_suggestions')}</span>
                   <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--tx3)', marginLeft: 8 }}>{tc('pos_app.ai_powered')}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {reorderSuggestions.slice(0, 10).map((s: any) => {
+                  {sectorFilteredReorderSuggestions.slice(0, 10).map((s: any) => {
                     const urgColors = { critical: { bg: 'rgba(220,38,38,.06)', border: 'rgba(220,38,38,.2)', text: '#dc2626', label: tc('pos_app.urgency_urgent') }, high: { bg: 'rgba(245,158,11,.06)', border: 'rgba(245,158,11,.25)', text: '#d97706', label: tc('pos_app.urgency_order_soon') }, medium: { bg: 'rgba(59,130,246,.06)', border: 'rgba(59,130,246,.2)', text: '#2563eb', label: tc('pos_app.urgency_plan_ahead') } }
                     const uc = urgColors[s.urgency as keyof typeof urgColors] || urgColors.medium
                     const isRestocking = reorderRestockId === s.inventory_id

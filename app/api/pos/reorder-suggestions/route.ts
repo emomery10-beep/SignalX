@@ -31,7 +31,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('agent_content')
     .select('id, content, verdict, created_at')
-    .eq('type', 'smart_reply')
+    .eq('type', 'reorder_suggestion')
     .eq('run_id', `reorder_${user.id}`)
     .eq('status', 'pending')
     .order('created_at', { ascending: false })

@@ -135,6 +135,7 @@ interface ReorderSuggestion {
   sku: string | null
   supplier: string | null
   category: string | null
+  sector: string | null
   unit: string
   current_stock: number
   low_stock_threshold: number
@@ -157,7 +158,7 @@ async function analyseOwnerInventory(
   // Fetch active inventory for this owner
   const { data: inventory } = await supabase
     .from('inventory')
-    .select('id, name, sku, stock_qty, low_stock_threshold, cost_price, sale_price, unit, supplier, category, last_sold_at')
+    .select('id, name, sku, stock_qty, low_stock_threshold, cost_price, sale_price, unit, supplier, category, sector, last_sold_at')
     .eq('owner_id', ownerId)
     .eq('active', true)
 
@@ -255,6 +256,7 @@ async function analyseOwnerInventory(
       sku: item.sku,
       supplier: item.supplier,
       category: item.category,
+      sector: item.sector,
       unit: item.unit || 'item',
       current_stock: item.stock_qty,
       low_stock_threshold: item.low_stock_threshold ?? 0,
