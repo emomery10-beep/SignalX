@@ -346,17 +346,7 @@ AskBiz is an AI business intelligence platform for SME founders. Key capabilitie
 - COMPETITORS: Unlike Looker or Tableau (built for data teams), AskBiz needs no setup or SQL. Unlike asking ChatGPT directly, answers are grounded in your actual connected data — no hallucination risk.
 
 When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a founder typing a real question and getting a specific answer. Don't list features.`
-  const groqRes = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      max_tokens: 3000,
-      messages: [
-        { role: 'system', content: _SYSTEM_ },
-        {
-      role: 'user',
-      content: `Write a blog post based on today's market intelligence. Research topic: "${query}"
+  const userPrompt = `Write a blog post based on today's market intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
 
@@ -364,6 +354,8 @@ ${aiSummary ? `Tavily AI summary:\n${aiSummary}\n` : ''}
 Source articles:
 ${articleContext}
 ${relatedContext}
+The six section bodies below must total 1200+ words combined — do not compress or shorten them to save space. Write every section to its full stated word count.
+
 Return ONLY valid JSON (no markdown fences):
 {
   "slug": "keyword-rich-kebab-case-slug-under-60-chars",
@@ -401,24 +393,65 @@ Return ONLY valid JSON (no markdown fences):
     "bio": "Alice Watson is AskBiz's Head of Market Intelligence. She tracks regulatory shifts, pricing trends, and growth signals across global SME markets — and turns them into briefings founders can act on before their competitors notice."
   }
 }`
-      }],
-    }),
-  })
-  const groqData = await groqRes.json()
 
-  logUsage({ route: 'agent/blog-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
-  const raw = groqData.choices?.[0]?.message?.content || ''
-  const clean = raw.replace(/```json\n?|```/g, '').trim()
-  const parsed = JSON.parse(clean)
+  const MIN_TOTAL_WORDS = 1200
+  const MAX_ATTEMPTS = 3
+  let lastError: Error | null = null
 
-  if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
-    throw new Error('Invalid blog structure — missing slug, title, or sections')
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    // Nudge the model harder on retries — truncation or a thin draft both
+    // mean it undershot the requested length the first time.
+    const retryNote = attempt > 1
+      ? `\n\nIMPORTANT: your previous attempt was rejected for being too short or malformed. Write the FULL length specified for every section — do not summarise or compress. Every section body must hit its stated word count.`
+      : ''
+
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 6500,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: _SYSTEM_ },
+          { role: 'user', content: userPrompt + retryNote },
+        ],
+      }),
+    })
+    const groqData = await groqRes.json()
+
+    logUsage({ route: 'agent/blog-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+
+    const finishReason = groqData.choices?.[0]?.finish_reason
+    const raw = groqData.choices?.[0]?.message?.content || ''
+    const clean = raw.replace(/```json\n?|```/g, '').trim()
+
+    try {
+      const parsed = JSON.parse(clean)
+
+      if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
+        throw new Error('Invalid blog structure — missing slug, title, or sections')
+      }
+
+      const totalWords = (parsed.sections as Array<{ body?: string }>)
+        .reduce((sum, s) => sum + (s.body?.trim().split(/\s+/).filter(Boolean).length || 0), 0)
+
+      if (totalWords < MIN_TOTAL_WORDS) {
+        throw new Error(`Draft too short (${totalWords} words, need ${MIN_TOTAL_WORDS}+)`)
+      }
+
+      // Always use today's date — model may pick the date of a news event instead
+      parsed.publishDate = new Date().toISOString().slice(0, 10)
+
+      return parsed
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err))
+      if (finishReason === 'length') lastError.message += ' (truncated by max_tokens)'
+      // Try again unless this was the last attempt
+    }
   }
 
-  // Always use today's date — model may pick the date of a news event instead
-  parsed.publishDate = new Date().toISOString().slice(0, 10)
-
-  return parsed
+  throw lastError || new Error('Blog generation failed after retries')
 }
 
 function scoreBlogQuality(blog: Record<string, unknown>): number {

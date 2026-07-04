@@ -300,6 +300,8 @@ Cluster: "${cluster}" | Pillar: "${pillar}"
 ${aiSummary ? `Tavily AI summary:\n${aiSummary}\n` : ''}Source articles:
 ${articleContext}
 ${relatedContext}
+The six section bodies below must total 1200+ words combined — do not compress or shorten them to save space. Write every section to its full stated word count.
+
 Return ONLY valid JSON (no markdown fences):
 {
   "slug": "keyword-rich-kebab-case-slug-under-60-chars",
@@ -339,32 +341,60 @@ Return ONLY valid JSON (no markdown fences):
   }
 }`
 
-  const groqRes = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      max_tokens: 3000,
-      messages: [
-        { role: 'system', content: _SYSTEM_ },
-        { role: 'user',   content: userPrompt },
-      ],
-    }),
-  })
-  const groqData = await groqRes.json()
+  const MIN_TOTAL_WORDS = 1200
+  const MAX_ATTEMPTS = 3
+  let lastError: Error | null = null
 
-  logUsage({ route: 'agent/victor-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
-  const raw   = groqData.choices?.[0]?.message?.content || ''
-  const clean = raw.replace(/```json\n?|```/g, '').trim()
-  const parsed = JSON.parse(clean)
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const retryNote = attempt > 1
+      ? `\n\nIMPORTANT: your previous attempt was rejected for being too short or malformed. Write the FULL length specified for every section — do not summarise or compress. Every section body must hit its stated word count.`
+      : ''
 
-  if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
-    throw new Error('Invalid blog structure — missing slug, title, or sections')
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 6500,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: _SYSTEM_ },
+          { role: 'user',   content: userPrompt + retryNote },
+        ],
+      }),
+    })
+    const groqData = await groqRes.json()
+
+    logUsage({ route: 'agent/victor-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+
+    const finishReason = groqData.choices?.[0]?.finish_reason
+    const raw   = groqData.choices?.[0]?.message?.content || ''
+    const clean = raw.replace(/```json\n?|```/g, '').trim()
+
+    try {
+      const parsed = JSON.parse(clean)
+
+      if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
+        throw new Error('Invalid blog structure — missing slug, title, or sections')
+      }
+
+      const totalWords = (parsed.sections as Array<{ body?: string }>)
+        .reduce((sum, s) => sum + (s.body?.trim().split(/\s+/).filter(Boolean).length || 0), 0)
+
+      if (totalWords < MIN_TOTAL_WORDS) {
+        throw new Error(`Draft too short (${totalWords} words, need ${MIN_TOTAL_WORDS}+)`)
+      }
+
+      parsed.publishDate = new Date().toISOString().slice(0, 10)
+
+      return parsed
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err))
+      if (finishReason === 'length') lastError.message += ' (truncated by max_tokens)'
+    }
   }
 
-  parsed.publishDate = new Date().toISOString().slice(0, 10)
-
-  return parsed
+  throw lastError || new Error('Blog generation failed after retries')
 }
 
 function scoreAfricanMktgBlogQuality(blog: Record<string, unknown>): number {
