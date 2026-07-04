@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import { logUsage } from '@/lib/log-usage'
+import { waitForGroqBudget, parseGroqRetryAfterMs } from '@/lib/groq-rate-limiter'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
@@ -154,10 +155,10 @@ async function runBenScout() {
 
     log.push(`Got results for ${validResults.length}/${selected.length} queries. Writing posts...`)
 
-    // Stagger dispatch — 5 topics x up to 3 retries each can burst well past
-    // Groq's per-minute rate limit if fired simultaneously.
+    // Pacing against Groq's per-minute token cap happens inside writeUSBlogPost
+    // via waitForGroqBudget — safe to dispatch all topics concurrently here.
     const blogResults = await Promise.allSettled(
-      validResults.map((r, i) => new Promise(res => setTimeout(res, i * 2000)).then(() => writeUSBlogPost(r, recentPublished)))
+      validResults.map(r => writeUSBlogPost(r, recentPublished))
     )
 
     const inserts: Record<string, unknown>[] = []
@@ -350,6 +351,7 @@ Return ONLY valid JSON (no markdown fences):
     let finishReason: string | undefined
 
     try {
+      await waitForGroqBudget(10_800)
       const groqRes = await fetch(GROQ_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
@@ -399,6 +401,8 @@ Return ONLY valid JSON (no markdown fences):
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err))
       if (finishReason === 'length') lastError.message += ' (truncated by max_tokens)'
+      const retryAfterMs = parseGroqRetryAfterMs(lastError.message)
+      if (retryAfterMs && attempt < MAX_ATTEMPTS) await new Promise(res => setTimeout(res, retryAfterMs))
     }
   }
 
