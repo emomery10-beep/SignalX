@@ -1451,17 +1451,17 @@ export default function POSPage() {
             )}
 
             {/* Inventory intelligence — Retail only */}
-            {selectedSector === 'retail' && inventory.length > 0 && (() => {
+            {selectedSector === 'retail' && sectorFilteredInventory.length > 0 && (() => {
               const todayMs = new Date().setHours(0,0,0,0)
-              const stockValue = inventory.reduce((s, i) => s + (i.cost_price || 0) * i.stock_qty, 0)
-              const retailValue = inventory.reduce((s, i) => s + i.sale_price * i.stock_qty, 0)
-              const expiredItems = inventory.filter(i => i.expiry_date && new Date(i.expiry_date).getTime() < todayMs)
-              const expiringSoon = inventory.filter(i => {
+              const stockValue = sectorFilteredInventory.reduce((s, i) => s + (i.cost_price || 0) * i.stock_qty, 0)
+              const retailValue = sectorFilteredInventory.reduce((s, i) => s + i.sale_price * i.stock_qty, 0)
+              const expiredItems = sectorFilteredInventory.filter(i => i.expiry_date && new Date(i.expiry_date).getTime() < todayMs)
+              const expiringSoon = sectorFilteredInventory.filter(i => {
                 if (!i.expiry_date) return false
                 const d = Math.floor((new Date(i.expiry_date).getTime() - todayMs) / 86400000)
                 return d >= 0 && d <= 30
               })
-              const deadStock = inventory.filter(i => !i.last_sold_at || (new Date().getTime() - new Date(i.last_sold_at).getTime()) > 90 * 86400000)
+              const deadStock = sectorFilteredInventory.filter(i => !i.last_sold_at || (new Date().getTime() - new Date(i.last_sold_at).getTime()) > 90 * 86400000)
               return (
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ ...sectionLabel, marginBottom: 12 }}>{tc('pos_app.inventory_intelligence')}</div>
