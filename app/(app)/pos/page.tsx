@@ -1208,7 +1208,9 @@ export default function POSPage() {
             </div>
 
             {/* Repair metrics */}
-            <RepairMetrics currencySymbol={currencySymbol} selectedLocation={selectedLocation} />
+            {selectedSector === 'repair' && (
+              <RepairMetrics currencySymbol={currencySymbol} selectedLocation={selectedLocation} />
+            )}
 
             {/* Sales chart (hourly) */}
             {completedTx.length > 0 && (
