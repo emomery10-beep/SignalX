@@ -203,23 +203,39 @@ export const MARKET_DISCOUNT: Record<string, { code: string; pct: number }> = {
 // payments charge the STRIPE_PRICE_POS_SEAT price object — these display
 // amounts are only exact for cards if that Stripe price carries matching
 // multi-currency options; otherwise Stripe falls back to its base currency.
+// Per-seat monthly price by profile currency (amount + symbol), so a total
+// can be computed for any seat count. Amounts mirror the marketing site's
+// POS pricing (app/api/geo/route.ts APP_PRICING.pos).
+export const POS_SEAT: Record<string, { amount: number; sym: string }> = {
+  GBP: { amount: 5, sym: '£' },
+  USD: { amount: 5, sym: '$' },
+  EUR: { amount: 5, sym: '€' },
+  KES: { amount: 500, sym: 'KSh ' },
+  NGN: { amount: 2500, sym: '₦' },
+  GHS: { amount: 25, sym: '₵' },
+  ZAR: { amount: 90, sym: 'R ' },
+  AED: { amount: 18, sym: 'AED ' },
+  INR: { amount: 400, sym: '₹' },
+  AUD: { amount: 8, sym: 'A$' },
+  CAD: { amount: 7, sym: 'CA$' },
+  SGD: { amount: 7, sym: 'S$' },
+  UGX: { amount: 18000, sym: 'USh ' },
+  TZS: { amount: 12000, sym: 'TSh ' },
+  ETB: { amount: 250, sym: 'Br ' },
+}
+
+// Formatted price for N seats in the user's currency, e.g.
+// posSeatPrice('KES', 3) → "KSh 1,500". Defaults to GBP when unknown.
+export function posSeatPrice(currency: string, seats = 1): string {
+  const c = POS_SEAT[currency] || { amount: 5, sym: '£' }
+  return `${c.sym}${(c.amount * Math.max(1, seats)).toLocaleString()}`
+}
+
+// Back-compat single-seat display map (used by existing callers).
 export const POS_SEAT_PRICE_DISPLAY: Record<string, string> = {
-  GBP: '£5',
-  USD: '$5',
-  EUR: '€5',
-  KES: 'KSh 500',
-  NGN: '₦2,500',
-  GHS: '₵25',
-  ZAR: 'R 90',
-  AED: 'AED 18',
-  INR: '₹400',
-  AUD: 'A$8',
-  CAD: 'CA$7',
-  SGD: 'S$7',
-  UGX: 'USh 18,000',
-  TZS: 'TSh 12,000',
-  ETB: 'Br 250',
-  DEFAULT: '£5',
+  GBP: '£5', USD: '$5', EUR: '€5', KES: 'KSh 500', NGN: '₦2,500', GHS: '₵25',
+  ZAR: 'R 90', AED: 'AED 18', INR: '₹400', AUD: 'A$8', CAD: 'CA$7', SGD: 'S$7',
+  UGX: 'USh 18,000', TZS: 'TSh 12,000', ETB: 'Br 250', DEFAULT: '£5',
 }
 
 // ── Timezone → currency fallback ─────────────────────────────

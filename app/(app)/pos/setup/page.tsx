@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { COUNTRY_DIAL, toE164, posSeatPrice } from '@/lib/geo'
 
 // ── AskBiz tokens (match onboarding) ──────────────────────────
 const ACC = '#d08a59'
@@ -17,7 +18,12 @@ const BG  = '#f9f8f6'
 const OK  = '#2e7d54'
 
 type Item = { id: string; name: string; sale_price: number; stock_qty: number; image_url?: string | null }
-type Screen = 'list' | 'capture' | 'ready'
+type Draft = { id: string; name: string; role: string; phone?: string | null; email?: string | null }
+type Screen = 'list' | 'capture' | 'team' | 'team-add' | 'ready'
+
+// Business types that get the "add your team" step. market_stall (solo
+// street vendor) is deliberately excluded — it stays items → pay.
+const TEAM_STEP_TYPES = new Set(['retail', 'food_bev', 'salon'])
 
 // Sound + haptic feedback — a channel beyond sight and text for users who
 // can't lean on reading. Best-effort everywhere: silently no-ops when the
@@ -58,7 +64,22 @@ export default function PosSetupPage() {
   const [loading, setLoading]   = useState(true)
   const [firstName, setFirstName] = useState('')
   const [currencySymbol, setCurrencySymbol] = useState('£')
+  const [currency, setCurrency] = useState('GBP')
+  const [bizType, setBizType]   = useState('')
   const [alreadyEnabled, setAlreadyEnabled] = useState(false)
+
+  // Team (ghost staff) — built during setup, provisioned into real accounts
+  // on payment. seats = 1 (owner/operator) + one per team member.
+  const [drafts, setDrafts]     = useState<Draft[]>([])
+  const [memberName, setMemberName]   = useState('')
+  const [memberRole, setMemberRole]   = useState<'cashier' | 'inventory'>('cashier')
+  const [memberMethod, setMemberMethod] = useState<'phone' | 'email'>('phone')
+  const [memberCountry, setMemberCountry] = useState('KE')
+  const [memberPhone, setMemberPhone] = useState('')
+  const [memberEmail, setMemberEmail] = useState('')
+  const [memberPin, setMemberPin]     = useState('')
+  const [teamSaving, setTeamSaving]   = useState(false)
+  const [teamError, setTeamError]     = useState('')
 
   // Item being captured
   const [photo, setPhoto]       = useState<string | null>(null)
@@ -87,15 +108,23 @@ export default function PosSetupPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, currency_symbol, pos_enabled')
+        .select('full_name, currency_symbol, currency, business_type, pos_enabled')
         .eq('id', user.id)
         .maybeSingle()
 
       if (cancelled) return
       if (profile?.full_name) setFirstName(profile.full_name.trim().split(/\s+/)[0] || '')
       if (profile?.currency_symbol) setCurrencySymbol(profile.currency_symbol)
+      if (profile?.currency) setCurrency(profile.currency)
+      if (profile?.business_type) setBizType(profile.business_type)
       // Already paying / trialing — no need for the pre-pay setup flow.
       if (profile?.pos_enabled) { setAlreadyEnabled(true) }
+
+      // Load existing team drafts (resume-safe).
+      try {
+        const res = await fetch('/api/pos/staff-draft')
+        if (res.ok) { const d = await res.json(); if (!cancelled) setDrafts(d.drafts || []) }
+      } catch { /* no drafts yet is the expected first-run state */ }
 
       // Ensure a default branch. The locations POST is idempotent on
       // (owner_id, name) — a 409 just means it already exists, which is fine.
@@ -244,6 +273,53 @@ export default function PosSetupPage() {
     }).catch(() => { /* worst case: item disappears on next load */ })
   }
 
+  // ── Team (ghost staff) ────────────────────────────────────────
+  const seatCount = drafts.length + 1 // +1 for the owner/operator's own seat
+
+  const openAddMember = () => {
+    setMemberName(''); setMemberRole('cashier'); setMemberMethod('phone')
+    setMemberPhone(''); setMemberEmail(''); setMemberPin(''); setTeamError('')
+    setScreen('team-add')
+  }
+
+  const saveMember = async () => {
+    if (!memberName.trim()) { setTeamError(tc('pos_setup.team_err_name')); return }
+    if (!/^\d{4}$/.test(memberPin)) { setTeamError(tc('pos_setup.team_err_pin')); return }
+    let credential: { phone: string } | { email: string }
+    if (memberMethod === 'phone') {
+      const dial = COUNTRY_DIAL.find(c => c.code === memberCountry)?.dial || '+254'
+      const e164 = toE164(dial, memberPhone)
+      if (!e164) { setTeamError(tc('pos_setup.team_err_phone')); return }
+      credential = { phone: e164 }
+    } else {
+      if (!memberEmail.trim()) { setTeamError(tc('pos_setup.team_err_email')); return }
+      credential = { email: memberEmail.trim() }
+    }
+    setTeamSaving(true); setTeamError('')
+    try {
+      const res = await fetch('/api/pos/staff-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: memberName.trim(), role: memberRole, pin: memberPin, ...credential }),
+      })
+      const d = await res.json()
+      if (!res.ok) { feedback('err'); setTeamError(d.error || tc('pos_setup.team_err_save')); setTeamSaving(false); return }
+      feedback('ok')
+      setDrafts(prev => [...prev, d.draft])
+      setScreen('team')
+    } catch {
+      feedback('err'); setTeamError(tc('pos_setup.team_err_save'))
+    } finally {
+      setTeamSaving(false)
+    }
+  }
+
+  const removeDraft = (id: string) => {
+    setDrafts(prev => prev.filter(d => d.id !== id))
+    fetch(`/api/pos/staff-draft?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      .catch(() => { /* worst case: reappears on next load */ })
+  }
+
   const bigBtn: React.CSSProperties = {
     width: '100%', padding: '16px', borderRadius: 14, border: 'none',
     background: ACC, color: '#fff', fontSize: 17, fontWeight: 700,
@@ -340,7 +416,7 @@ export default function PosSetupPage() {
             </button>
 
             {items.length > 0 && (
-              <button style={ghostBtn} onClick={() => setScreen('ready')}>
+              <button style={ghostBtn} onClick={() => setScreen(TEAM_STEP_TYPES.has(bizType) ? 'team' : 'ready')}>
                 {tc('pos_setup.im_ready')}
               </button>
             )}
@@ -404,6 +480,110 @@ export default function PosSetupPage() {
             <button style={ghostBtn} onClick={() => { stopCamera(); setScreen('list') }} disabled={saving}>
               {tc('pos_setup.cancel')}
             </button>
+          </>
+        )}
+
+        {/* ── TEAM: add ghost staff (retail / salon / restaurant) ── */}
+        {screen === 'team' && (
+          <>
+            <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 6 }}>
+              {tc('pos_setup.team_title')}
+            </h1>
+            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 20 }}>
+              {tc('pos_setup.team_subtitle')}
+            </p>
+
+            {/* Live seat count + price — you + each team member */}
+            <div style={{ padding: '14px 16px', borderRadius: 14, background: SF, border: `1px solid ${B}`, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 14, color: TX2 }}>{seatCount === 1 ? tc('pos_setup.team_seats_one') : tc('pos_setup.team_seats', { seats: seatCount })}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: ACC }}>{posSeatPrice(currency, seatCount)}<span style={{ fontSize: 12, color: TX3, fontWeight: 500 }}>{tc('pos_setup.team_per_month')}</span></span>
+            </div>
+
+            {drafts.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                {drafts.map(d => (
+                  <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, background: SF, border: `1px solid ${B}` }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: TX, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
+                      <div style={{ fontSize: 12, color: TX3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tc(`pos_setup.role_${d.role}`)} · {d.phone || d.email}</div>
+                    </div>
+                    <button onClick={() => removeDraft(d.id)} aria-label={`${tc('pos_setup.team_remove')} ${d.name}`}
+                      style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 10, border: 'none', background: 'transparent', color: TX3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button style={{ ...bigBtn, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={openAddMember}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+              {drafts.length === 0 ? tc('pos_setup.team_add_first') : tc('pos_setup.team_add_another')}
+            </button>
+
+            <button style={ghostBtn} onClick={() => setScreen('ready')}>
+              {drafts.length === 0 ? tc('pos_setup.team_no_staff') : tc('pos_setup.team_continue')}
+            </button>
+          </>
+        )}
+
+        {/* ── TEAM ADD: create one ghost staff member ── */}
+        {screen === 'team-add' && (
+          <>
+            <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(20px,5vw,26px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 20 }}>
+              {tc('pos_setup.team_add_title')}
+            </h1>
+
+            <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.team_name_label')}</label>
+            <input value={memberName} onChange={e => setMemberName(e.target.value)} placeholder={tc('pos_setup.team_name_placeholder')}
+              style={{ width: '100%', padding: '13px 15px', fontSize: 16, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 16 }} />
+
+            <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.team_role_label')}</label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              {(['cashier', 'inventory'] as const).map(r => (
+                <button key={r} onClick={() => setMemberRole(r)}
+                  style={{ flex: 1, padding: '12px', borderRadius: 12, border: `1.5px solid ${memberRole === r ? ACC : B2}`, background: memberRole === r ? 'rgba(208,138,89,.08)' : 'transparent', color: memberRole === r ? ACC : TX2, fontFamily: 'inherit', fontSize: 14, fontWeight: memberRole === r ? 700 : 500, cursor: 'pointer' }}>
+                  {tc(`pos_setup.role_${r}`)}
+                </button>
+              ))}
+            </div>
+
+            {/* login credential — phone (default) or email */}
+            <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.team_login_label')}</label>
+            <div style={{ position: 'relative', display: 'flex', background: EV, borderRadius: 10, padding: 3, marginBottom: 10 }}>
+              <div aria-hidden style={{ position: 'absolute', top: 3, bottom: 3, left: 3, width: 'calc(50% - 3px)', borderRadius: 8, background: SF, boxShadow: '0 1px 4px rgba(0,0,0,.08)', transform: memberMethod === 'email' ? 'translateX(100%)' : 'translateX(0)', transition: 'transform .25s ease' }}/>
+              {(['phone', 'email'] as const).map(m => (
+                <button key={m} onClick={() => { setMemberMethod(m); setTeamError('') }}
+                  style={{ position: 'relative', zIndex: 1, flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: 'transparent', color: memberMethod === m ? TX : TX2, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  {m === 'phone' ? tc('pos_setup.team_method_phone') : tc('pos_setup.team_method_email')}
+                </button>
+              ))}
+            </div>
+            {memberMethod === 'phone' ? (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }} dir="ltr">
+                <select value={memberCountry} onChange={e => setMemberCountry(e.target.value)} aria-label={tc('pos_setup.team_method_phone')}
+                  style={{ width: 92, flexShrink: 0, padding: '13px 8px', borderRadius: 12, border: `1.5px solid ${B2}`, fontSize: 15, fontFamily: 'inherit', background: EV, color: TX, cursor: 'pointer', appearance: 'none' }}>
+                  {COUNTRY_DIAL.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>)}
+                </select>
+                <input value={memberPhone} onChange={e => setMemberPhone(e.target.value)} type="tel" inputMode="tel" dir="ltr" placeholder="712 345678"
+                  style={{ flex: 1, minWidth: 0, padding: '13px 15px', fontSize: 16, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+            ) : (
+              <input value={memberEmail} onChange={e => setMemberEmail(e.target.value)} type="email" placeholder={tc('pos_setup.team_email_placeholder')}
+                style={{ width: '100%', padding: '13px 15px', fontSize: 16, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 16 }} />
+            )}
+
+            <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.team_pin_label')}</label>
+            <input value={memberPin} onChange={e => setMemberPin(e.target.value.replace(/\D/g, '').slice(0, 4))} type="tel" inputMode="numeric"
+              placeholder="••••" style={{ width: '100%', padding: '13px 15px', fontSize: 22, letterSpacing: memberPin ? '.4em' : 'normal', textAlign: 'center', background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8 }} />
+            <p style={{ fontSize: 12, color: TX3, marginBottom: 16, lineHeight: 1.5 }}>{tc('pos_setup.team_pin_hint')}</p>
+
+            {teamError && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>{teamError}</div>}
+
+            <button style={{ ...bigBtn, marginBottom: 10, opacity: teamSaving ? .7 : 1 }} onClick={saveMember} disabled={teamSaving}>
+              {teamSaving ? tc('pos_setup.saving') : tc('pos_setup.team_save_member')}
+            </button>
+            <button style={ghostBtn} onClick={() => setScreen('team')} disabled={teamSaving}>{tc('pos_setup.cancel')}</button>
           </>
         )}
 

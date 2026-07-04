@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
-import { POS_SEAT_PRICE_DISPLAY } from '@/lib/geo'
+import { posSeatPrice } from '@/lib/geo'
 
 // ── AskBiz tokens (match onboarding / setup) ─────────────────
 const ACC = '#d08a59'
@@ -24,8 +24,15 @@ export default function PosActivatePage() {
 
   const [phase, setPhase]       = useState<Phase>('loading')
   const [currency, setCurrency] = useState('GBP')
+  const [seats, setSeats]       = useState(1) // 1 (owner) + team drafts
   const [error, setError]       = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Turn any staff drafts into real accounts once payment is confirmed.
+  // Idempotent + best-effort — never blocks reaching the "live" screen.
+  const provisionTeam = useCallback(async () => {
+    try { await fetch('/api/pos/staff-draft/provision', { method: 'POST' }) } catch { /* retried on next POS load */ }
+  }, [])
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
@@ -43,14 +50,14 @@ export default function PosActivatePage() {
         const res = await fetch('/api/billing')
         if (res.ok) {
           const d = await res.json()
-          if (d?.pos?.enabled) { stopPolling(); setPhase('active'); return }
+          if (d?.pos?.enabled) { stopPolling(); await provisionTeam(); setPhase('active'); return }
         }
       } catch { /* transient network error — keep polling */ }
       if (tries >= 30) { stopPolling(); setPhase('pending') } // ~90s, then manual retry
     }
     tick()
     pollRef.current = setInterval(tick, 3000)
-  }, [stopPolling])
+  }, [stopPolling, provisionTeam])
 
   useEffect(() => {
     let cancelled = false
@@ -66,6 +73,12 @@ export default function PosActivatePage() {
       if (cancelled) return
 
       if (profile?.currency) setCurrency(profile.currency)
+
+      // Seats = the owner's own seat + one per team draft.
+      try {
+        const dr = await fetch('/api/pos/staff-draft')
+        if (dr.ok) { const d = await dr.json(); if (!cancelled) setSeats(1 + (d.drafts?.length || 0)) }
+      } catch { /* default 1 seat */ }
 
       if (profile?.pos_enabled) { setPhase('active'); return }
 
@@ -84,7 +97,7 @@ export default function PosActivatePage() {
   // Show the price in the currency the vendor confirmed at onboarding —
   // never a foreign symbol at the moment they're asked for money.
   const isKenyan = currency === 'KES' // KES → M-Pesa (PesaPal) is the primary path
-  const price = POS_SEAT_PRICE_DISPLAY[currency] || POS_SEAT_PRICE_DISPLAY.DEFAULT
+  const price = posSeatPrice(currency, seats)
 
   const payMpesa = async () => {
     setPhase('redirecting'); setError('')
@@ -92,7 +105,7 @@ export default function PosActivatePage() {
       const res = await fetch('/api/pesapal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'submit_order', plan: 'pos', seats: 1, return_path: '/pos/activate' }),
+        body: JSON.stringify({ action: 'submit_order', plan: 'pos', seats, return_path: '/pos/activate' }),
       })
       const d = await res.json()
       if (d.redirectUrl) { window.location.href = d.redirectUrl; return }
@@ -106,7 +119,7 @@ export default function PosActivatePage() {
       const res = await fetch('/api/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'checkout_pos_seat', seats: 1, return_path: '/pos/activate' }),
+        body: JSON.stringify({ action: 'checkout_pos_seat', seats, return_path: '/pos/activate' }),
       })
       const d = await res.json()
       if (d.url) { window.location.href = d.url; return }
@@ -159,6 +172,11 @@ export default function PosActivatePage() {
               <div style={{ fontSize: 13, color: TX2, marginTop: 10 }}>
                 {tc('pos_setup.activate_price_note', { price })}
               </div>
+              {seats > 1 && (
+                <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>
+                  {tc('pos_setup.activate_seats', { seats })}
+                </div>
+              )}
             </div>
 
             {error && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>{error}</div>}
