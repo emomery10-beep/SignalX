@@ -125,7 +125,9 @@ async function runMarketingScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    // 5 topics couldn't safely finish within Vercel's 300s function limit
+    // once Groq's real TPM rate limit is respected — 3 fits with margin.
+    const selected = scoredQueries.slice(0, 3)
 
     log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for marketing intelligence...')

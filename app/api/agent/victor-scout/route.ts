@@ -127,7 +127,7 @@ async function runVictorScout() {
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
     const selected = scoredQueries.slice(0, 1)
 
-    log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
+    log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for Nigerian & African marketing intelligence...')
 
     const searchResults = await Promise.allSettled(

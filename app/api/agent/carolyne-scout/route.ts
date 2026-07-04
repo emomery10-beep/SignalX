@@ -125,7 +125,9 @@ async function runCarolyneScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    // 5 topics couldn't safely finish within Vercel's 300s function limit
+    // once Groq's real TPM rate limit is respected — 3 fits with margin.
+    const selected = scoredQueries.slice(0, 3)
 
     const hasTavily = !!process.env.TAVILY_API_KEY
     const hasSerper = !!process.env.SERPER_API_KEY
