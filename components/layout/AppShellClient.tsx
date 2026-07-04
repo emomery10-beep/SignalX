@@ -525,20 +525,34 @@ export default function AppShellClient({ user, conversations, children }: {
         />
       )}
 
-      {/* Mobile top bar — floating hamburger, own background so it never blends into or collides with a page's own header */}
+      {/* Mobile top bar — a real bar (not a floating orphan icon), so the space it
+          reserves reads as intentional chrome rather than dead padding. */}
       <div
         className="mobile-header"
         id="mobile-topbar"
-        style={{ display: 'none', position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 12, zIndex: 150 }}
+        style={{
+          display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 150,
+          height: 'calc(env(safe-area-inset-top, 0px) + 52px)',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          background: 'var(--sf)', borderBottom: '1px solid var(--b)',
+          alignItems: 'center',
+        }}
       >
         <button
           onClick={() => setSidebarOpen(v => !v)}
           aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-          style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', boxShadow: '0 2px 8px rgba(0,0,0,.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+          aria-expanded={sidebarOpen}
+          style={{ width: 36, height: 36, marginLeft: 12, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
-            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
+          {sidebarOpen ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          )}
         </button>
       </div>
 
