@@ -329,12 +329,9 @@ export default function AppShellClient({ user, conversations, children }: {
                   padding: '7px 4px', borderRadius: 8,
                   textDecoration: 'none', fontSize: 12, fontWeight: active ? 600 : 500,
                   color: active ? activeColor : 'var(--tx3)',
-                  background: active ? 'var(--sf)' : 'transparent',
-                  boxShadow: active ? '0 1px 4px rgba(0,0,0,.08), 0 0 0 1px var(--b)' : 'none',
-                  transition: 'all 120ms',
+                  background: 'transparent',
+                  transition: 'color 120ms',
                 }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--ev)' }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d={n.icon}/>
@@ -525,24 +522,17 @@ export default function AppShellClient({ user, conversations, children }: {
         />
       )}
 
-      {/* Mobile top bar — a real bar (not a floating orphan icon), so the space it
-          reserves reads as intentional chrome rather than dead padding. */}
+      {/* Mobile menu toggle — floats over page content, no bar/background behind it. */}
       <div
         className="mobile-header"
         id="mobile-topbar"
-        style={{
-          display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 150,
-          height: 'calc(env(safe-area-inset-top, 0px) + 52px)',
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          background: 'var(--sf)', borderBottom: '1px solid var(--b)',
-          alignItems: 'center',
-        }}
+        style={{ display: 'none', position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 12, zIndex: 150 }}
       >
         <button
           onClick={() => setSidebarOpen(v => !v)}
           aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={sidebarOpen}
-          style={{ width: 36, height: 36, marginLeft: 12, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+          style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
         >
           {sidebarOpen ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

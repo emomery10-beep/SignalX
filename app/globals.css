@@ -536,16 +536,14 @@ img {
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;
-    /* Matches #mobile-topbar's own height exactly — single source of truth,
-       so content starts right at the bar's bottom edge, not below a padded void. */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 52px);
+    padding-top: 0;
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
   .desktop-sidebar {
     display: flex !important;
   }
   .mobile-header {
-    display: flex !important;
+    display: block !important;
   }
   .mobile-bottom-nav {
     display: flex !important;
@@ -566,7 +564,7 @@ img {
     z-index: 99 !important;
   }
   #mobile-topbar {
-    display: flex !important;
+    display: block !important;
   }
   .desktop-sidebar {
     width: 280px !important;
