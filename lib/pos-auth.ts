@@ -66,6 +66,27 @@ export async function resolvePosOwner(
   return result?.ownerId || null
 }
 
+/**
+ * Whether this owner's POS is active (paid subscription or live trial).
+ * Reads profiles.pos_enabled — the same flag the billing webhooks
+ * (Stripe / M-Pesa / PesaPal) and trial logic maintain.
+ *
+ * Used to gate SELLING actions (recording transactions, charging cards).
+ * Setup actions (inventory, locations) intentionally stay open pre-payment
+ * so a new vendor can build their stall before paying.
+ *
+ * Fails closed: if the profile can't be read, selling is blocked.
+ */
+export async function posEntitled(ownerId: string): Promise<boolean> {
+  const service = createServiceClient()
+  const { data } = await service
+    .from('profiles')
+    .select('pos_enabled')
+    .eq('id', ownerId)
+    .maybeSingle()
+  return !!data?.pos_enabled
+}
+
 export async function resolvePosAuth(
   req: NextRequest,
   requiredRole?: string,

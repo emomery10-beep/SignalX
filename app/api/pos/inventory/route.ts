@@ -54,16 +54,41 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { name, sku, cost_price, sale_price, stock_qty, low_stock_threshold, unit, sector, expiry_date, batch_number, supplier, brand, category } = body
+  const { name, sku, cost_price, sale_price, stock_qty, low_stock_threshold, unit, sector, expiry_date, batch_number, supplier, brand, category, image } = body
   const locationId = auth.locationId || body.location_id || null
 
   if (!name?.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 })
+
+  // Optional product photo (base64 data URL) → product-photos bucket.
+  // The photo is the product's visual identity for low-literacy vendors,
+  // but a failed upload must never block the save — insert without it.
+  let imageUrl: string | null = null
+  if (typeof image === 'string' && image.startsWith('data:image/')) {
+    try {
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+      if (buffer.length > 0 && buffer.length <= 5 * 1024 * 1024) { // cap at 5MB
+        const filename = `${auth.ownerId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`
+        const { error: uploadErr } = await service.storage
+          .from('product-photos')
+          .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
+        if (!uploadErr) {
+          imageUrl = service.storage.from('product-photos').getPublicUrl(filename).data.publicUrl
+        } else {
+          console.error('[inventory] photo upload failed (saving without photo):', uploadErr.message)
+        }
+      }
+    } catch (e) {
+      console.error('[inventory] photo processing failed (saving without photo):', e)
+    }
+  }
 
   const { data, error } = await service
     .from('inventory')
     .insert({
       owner_id:            auth.ownerId,
       location_id:         locationId,
+      image_url:           imageUrl,
       name:                name.trim(),
       sku:                 sku?.trim() || null,
       cost_price:          Number(cost_price) || 0,

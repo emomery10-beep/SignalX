@@ -298,9 +298,15 @@ export default function SellPage() {
           setScreen('receipt')
         }
         // card/mobile: stay on checkout, payment components render below
+      } else if (!res.ok) {
+        // 402 pos_not_active = the owner's subscription/trial isn't active —
+        // surface it instead of failing silently so the cashier can tell the
+        // owner, rather than losing sales to a mystery.
+        setPaymentError(data.error || 'Sale could not be recorded — please try again.')
       }
     } catch {
       setProcessing(false)
+      setPaymentError('Sale could not be recorded — check your connection and try again.')
     }
   }
 

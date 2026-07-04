@@ -33,7 +33,7 @@ export default function AuthPage() {
 
   // Phone + PIN login — no SMS, rides on Supabase's real password auth via
   // a synthetic email (see lib/phone-auth.ts)
-  const [method, setMethod] = useState<Method>('email')
+  const [method, setMethod] = useState<Method>('phone')
   const [phoneCountry, setPhoneCountry] = useState('KE')
   const [phoneLocal, setPhoneLocal] = useState('')
   const [pin, setPin] = useState('')
@@ -465,7 +465,7 @@ export default function AuthPage() {
             transform: method === 'phone' ? 'translateX(100%)' : 'translateX(0)',
             transition: 'transform .28s var(--ease)',
           }}/>
-          {(['email', 'phone'] as Method[]).map(m => (
+          {(['phone', 'email'] as Method[]).map(m => (
             <button key={m} onClick={() => { setMethod(m); setError(''); setSuccess('') }}
               style={{
                 position: 'relative', zIndex: 1, minHeight: 0,
@@ -513,7 +513,7 @@ export default function AuthPage() {
           {/* Email */}
           <div className="animate-fade-up stagger-7" style={{ marginBottom: 5 }}>
             <label htmlFor="email" style={lbl}>{tc('auth.email_placeholder')}</label>
-            <input id="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={inp}
+            <input id="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" style={inp}
               onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
           </div>
 
@@ -537,7 +537,7 @@ export default function AuthPage() {
                 ))}
               </select>
               <input id="phoneLocal" value={phoneLocal} onChange={e => setPhoneLocal(e.target.value)} placeholder={tc('auth.phone_placeholder')}
-                type="tel" inputMode="tel" autoComplete="tel" dir="ltr" style={{ ...inp, flex: 1 }}
+                type="tel" inputMode="tel" autoComplete="tel" autoFocus dir="ltr" style={{ ...inp, flex: 1 }}
                 onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
             </div>
           </div>

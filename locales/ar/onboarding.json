@@ -99,5 +99,8 @@
   "welcome_first_name_label": "اسمك الأول",
   "welcome_first_name_placeholder": "مثال: سارة",
   "welcome_subtitle": "لنُعِدّ ملف عملك التجاري حتى تحصل من AskBiz على إجابات مبنية على بياناتك الفعلية — لا على نصائح عامة.",
-  "welcome_title": "مرحبًا بك في AskBiz"
+  "welcome_title": "مرحبًا بك في AskBiz",
+  "done_title_pos_named": "أحسنت يا {name}!",
+  "done_subtitle_pos": "تم إعداد نشاطك التجاري. أضف الآن ما تبيعه وابدأ صندوقك.",
+  "done_cta_pos": "إعداد صندوقي ←"
 }

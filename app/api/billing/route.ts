@@ -317,13 +317,18 @@ async function handlePost(request: NextRequest) {
     const priceId = process.env.STRIPE_PRICE_POS_SEAT
     if (!priceId) return NextResponse.json({ error: 'POS seat price not configured. Add STRIPE_PRICE_POS_SEAT to env vars.' }, { status: 400 })
 
+    // Whitelisted return path — the vendor setup flow returns to its own
+    // activation screen instead of the plan-comparison billing page.
+    // Exact-match whitelist only (never interpolate arbitrary paths into redirects).
+    const returnToActivate = body.return_path === '/pos/activate'
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: seatCount }],
-      success_url: `${APP_URL}/billing?pos_success=true&seats=${seatCount}`,
-      cancel_url:  `${APP_URL}/billing`,
+      success_url: returnToActivate ? `${APP_URL}/pos/activate?paid=1` : `${APP_URL}/billing?pos_success=true&seats=${seatCount}`,
+      cancel_url:  returnToActivate ? `${APP_URL}/pos/activate?cancelled=1` : `${APP_URL}/billing`,
       subscription_data: {
         metadata: { supabase_user_id: user.id, type: 'pos_seats', seats: String(seatCount) },
       },

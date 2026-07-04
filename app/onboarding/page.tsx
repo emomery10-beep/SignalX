@@ -17,28 +17,54 @@ const EV   = '#f3f2ef'
 const BG   = '#f9f8f6'
 
 // ── Step definitions ──────────────────────────────────────────
-const STEPS = ['welcome', 'business', 'location', 'sector', 'export', 'connect', 'done'] as const
+// 'welcome' was removed: first/last name is already known from signup
+// (email or phone+PIN both collect it), so onboarding never re-asks for it.
+const STEPS = ['business', 'location', 'sector', 'export', 'connect', 'done'] as const
 type Step = typeof STEPS[number]
 
 // Business types that need a sector (product category) step
 const NEEDS_SECTOR = new Set(['ecommerce', 'distributor', 'manufacturer', 'importer', 'exporter'])
 // Business types that should see the export markets step
 const NEEDS_EXPORT = new Set(['exporter', 'ecommerce', 'importer'])
-// Business types that run a till day-to-day — land them straight in the POS
+// Business types that run a till day-to-day — land them straight in the POS.
+// These are also the "simple setup" persona: no business-name typing, no
+// Connect Data Sources step — straight from business type to done.
 const POS_LANDING_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon'])
 
+// Consistent stroke-based icon set (no emoji as functional icons — emoji
+// render inconsistently across devices/fonts and can't be themed/sized).
+// market_stall and food_bev are listed first below: the primary target
+// persona for the simplified flow taps one of the first two tiles.
+const bizIcon = (id: string) => {
+  const p = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  switch (id) {
+    case 'market_stall': return <svg {...p}><path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.6-7.4"/><path d="M4.5 15.5h15"/></svg>
+    case 'food_bev': return <svg {...p}><path d="M3 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7"/></svg>
+    case 'retail': return <svg {...p}><path d="M3 9 4.8 4h14.4L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 21v-8h6v8"/></svg>
+    case 'salon': return <svg {...p}><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="m14.47 14.48 5.53 5.52"/><path d="M8.12 8.12 12 12"/></svg>
+    case 'courier': return <svg {...p}><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+    case 'ecommerce': return <svg {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 3h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57L22 8H6"/></svg>
+    case 'services': return <svg {...p}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    case 'distributor': return <svg {...p}><path d="M14 18V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.36A1 1 0 0 0 17.52 8H14v10"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+    case 'manufacturer': return <svg {...p}><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-6 4V8l-6 4V8l-6 4Z"/><path d="M7 18v-2"/><path d="M12 18v-2"/><path d="M17 18v-2"/></svg>
+    case 'importer': return <svg {...p}><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+    case 'exporter': return <svg {...p}><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+    default: return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+  }
+}
+
 const buildBizTypes = (tc: TC) => [
-  { id: 'retail',       label: tc('onboarding.biz_retail_label'),       icon: '🏪', desc: tc('onboarding.biz_retail_desc') },
-  { id: 'market_stall', label: tc('onboarding.biz_market_stall_label'), icon: '🧺', desc: tc('onboarding.biz_market_stall_desc') },
-  { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     icon: '🍽️', desc: tc('onboarding.biz_food_bev_desc') },
-  { id: 'salon',        label: tc('onboarding.biz_salon_label'),        icon: '✂️', desc: tc('onboarding.biz_salon_desc') },
-  { id: 'courier',      label: tc('onboarding.biz_courier_label'),      icon: '🛵', desc: tc('onboarding.biz_courier_desc') },
-  { id: 'ecommerce',    label: tc('onboarding.biz_ecommerce_label'),    icon: '🛒', desc: tc('onboarding.biz_ecommerce_desc') },
-  { id: 'services',     label: tc('onboarding.biz_services_label'),     icon: '💼', desc: tc('onboarding.biz_services_desc') },
-  { id: 'distributor',  label: tc('onboarding.biz_distributor_label'),  icon: '🚚', desc: tc('onboarding.biz_distributor_desc') },
-  { id: 'manufacturer', label: tc('onboarding.biz_manufacturer_label'), icon: '🏭', desc: tc('onboarding.biz_manufacturer_desc') },
-  { id: 'importer',     label: tc('onboarding.biz_importer_label'),     icon: '📦', desc: tc('onboarding.biz_importer_desc') },
-  { id: 'exporter',     label: tc('onboarding.biz_exporter_label'),     icon: '🌍', desc: tc('onboarding.biz_exporter_desc') },
+  { id: 'market_stall', label: tc('onboarding.biz_market_stall_label'), desc: tc('onboarding.biz_market_stall_desc') },
+  { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     desc: tc('onboarding.biz_food_bev_desc') },
+  { id: 'retail',       label: tc('onboarding.biz_retail_label'),       desc: tc('onboarding.biz_retail_desc') },
+  { id: 'salon',        label: tc('onboarding.biz_salon_label'),        desc: tc('onboarding.biz_salon_desc') },
+  { id: 'courier',      label: tc('onboarding.biz_courier_label'),      desc: tc('onboarding.biz_courier_desc') },
+  { id: 'ecommerce',    label: tc('onboarding.biz_ecommerce_label'),    desc: tc('onboarding.biz_ecommerce_desc') },
+  { id: 'services',     label: tc('onboarding.biz_services_label'),     desc: tc('onboarding.biz_services_desc') },
+  { id: 'distributor',  label: tc('onboarding.biz_distributor_label'),  desc: tc('onboarding.biz_distributor_desc') },
+  { id: 'manufacturer', label: tc('onboarding.biz_manufacturer_label'), desc: tc('onboarding.biz_manufacturer_desc') },
+  { id: 'importer',     label: tc('onboarding.biz_importer_label'),     desc: tc('onboarding.biz_importer_desc') },
+  { id: 'exporter',     label: tc('onboarding.biz_exporter_label'),     desc: tc('onboarding.biz_exporter_desc') },
 ]
 
 const SECTOR_IDS = [
@@ -86,6 +112,8 @@ const buildExportMarkets = (tc: TC) => [
   { id: 'jp', label: tc('onboarding.market_jp_label') },
 ]
 
+type Geo = { countryCode: string; country: string; currency: string; currencySymbol: string; region: string; flag: string }
+
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 13px', fontSize: 14,
   background: EV, border: `1.5px solid ${B2}`, borderRadius: 10,
@@ -102,8 +130,9 @@ export default function OnboardingPage() {
   const CURRENCIES = buildCurrencies(tc)
   const EXPORT_MARKETS = buildExportMarkets(tc)
 
-  const [step,         setStep]         = useState<Step>('welcome')
+  const [step,         setStep]         = useState<Step>('business')
   const [saving,       setSaving]       = useState(false)
+  const [saveError,    setSaveError]    = useState('')
   const [firstName,    setFirstName]    = useState('')
   const [businessName, setBusinessName] = useState('')
   const [bizType,      setBizType]      = useState('')
@@ -113,8 +142,46 @@ export default function OnboardingPage() {
   const [exportMkts,   setExportMkts]   = useState<string[]>([])
   const [wantsExport,  setWantsExport]  = useState<boolean | null>(null)
 
+  // Location auto-detect — mirrors the pattern already used on the sign-in
+  // page. Confirmed with one tap instead of a 12-item dropdown; manual
+  // pickers stay available as a fallback if detection fails or is wrong.
+  const [geo,            setGeo]            = useState<Geo | null>(null)
+  const [geoLoading,     setGeoLoading]     = useState(true)
+  const [manualLocation, setManualLocation] = useState(false)
+
+  // First/last name is already known from signup (email or phone+PIN) —
+  // fetch it once instead of asking again.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || cancelled) return
+      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+      const fn = (profile?.full_name || '').trim().split(/\s+/)[0] || ''
+      if (!cancelled && fn) setFirstName(fn)
+    })()
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/geo')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        if (cancelled) return
+        const g: Geo = { countryCode: d.countryCode, country: d.country, currency: d.currency, currencySymbol: d.currencySymbol, region: d.region || d.country, flag: d.flag }
+        setGeo(g)
+        setCurrency(g.currency)
+        setRegion(g.region)
+      })
+      .catch(() => { if (!cancelled) setManualLocation(true) })
+      .finally(() => { if (!cancelled) setGeoLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
   const stepIndex = STEPS.indexOf(step)
   const progress  = (stepIndex / (STEPS.length - 1)) * 100
+  const isPosPersona = POS_LANDING_TYPES.has(bizType)
 
   const toggleSector = (s: string) =>
     setSectors(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
@@ -123,6 +190,10 @@ export default function OnboardingPage() {
     setExportMkts(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
   const next = () => {
+    // Simple-setup persona: business type -> location -> done. No business
+    // name to type, no Connect Data Sources step (M-Pesa/Shopify/QuickBooks
+    // concepts don't apply to a solo food-stall/veg-seller).
+    if (step === 'location' && POS_LANDING_TYPES.has(bizType)) { setStep('done'); return }
     // Skip sector for informal business types (shops, salons, couriers, food stalls, etc.)
     if (step === 'location' && !NEEDS_SECTOR.has(bizType)) { setStep('connect'); return }
     // Skip export markets for non-exporters
@@ -132,6 +203,7 @@ export default function OnboardingPage() {
   }
 
   const back = () => {
+    if (step === 'done' && POS_LANDING_TYPES.has(bizType)) { setStep('location'); return }
     // Reverse the same skips
     if (step === 'connect' && !NEEDS_SECTOR.has(bizType)) { setStep('location'); return }
     if (step === 'connect' && NEEDS_SECTOR.has(bizType) && !NEEDS_EXPORT.has(bizType)) { setStep('sector'); return }
@@ -145,19 +217,28 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
-      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home')
+      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home')
     } catch (e) { console.error(e) } finally { setSaving(false) }
+  }
+
+  // A solo food-stall/veg-seller never types a business name — this fills
+  // in a sensible default silently. Renameable later from settings.
+  const resolvedBusinessName = () => {
+    if (businessName.trim()) return businessName.trim()
+    const label = BIZ_TYPES.find(b => b.id === bizType)?.label || ''
+    return firstName ? `${firstName}'s ${label}` : (label || 'My Business')
   }
 
   const finish = async () => {
     setSaving(true)
+    setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      await supabase.from('profiles').update({
+      const { error } = await supabase.from('profiles').update({
         first_name:          firstName,
-        business_name:       businessName,
+        business_name:       resolvedBusinessName(),
         business_type:       bizType,
         currency:            currency,
         currency_symbol:     CURRENCY_SYMBOLS[currency] || '£',
@@ -168,16 +249,23 @@ export default function OnboardingPage() {
         onboarded:           true,
       }).eq('id', user.id)
 
-      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home')
+      // Surface save failures instead of navigating anyway — a silent
+      // failure here previously meant an update was dropped (e.g. a check
+      // constraint violation) while the user was bounced back to
+      // onboarding on their next visit with no explanation.
+      if (error) { setSaveError(error.message); return }
+
+      // POS personas go to the pre-payment setup flow (build the stall, then
+      // pay), not straight to the paywalled dashboard.
+      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home')
     } catch (e) {
-      console.error(e)
+      setSaveError(e instanceof Error ? e.message : 'Something went wrong — please try again.')
     } finally {
       setSaving(false)
     }
   }
 
   const canNext: Record<Step, boolean> = {
-    welcome:  true,
     business: !!bizType,
     location: !!currency,
     sector:   sectors.length > 0,
@@ -191,6 +279,12 @@ export default function OnboardingPage() {
     background: ACC, color: '#fff', fontSize: 15, fontWeight: 600,
     cursor: 'pointer', fontFamily: 'inherit',
     boxShadow: '0 2px 12px rgba(208,138,89,.3)',
+  }
+
+  const ghostBtn: React.CSSProperties = {
+    padding: '12px 28px', borderRadius: 10, border: `1.5px solid ${B2}`,
+    background: 'transparent', color: TX2, fontSize: 15, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit',
   }
 
   const chipBase: React.CSSProperties = {
@@ -221,53 +315,16 @@ export default function OnboardingPage() {
           </svg>
         </div>
         <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 16, fontWeight: 700, color: TX }}>AskBiz</span>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: STEPS.length })}</span>
+        {!POS_LANDING_TYPES.has(bizType) && (
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: STEPS.length })}</span>
+        )}
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 16px 40px' }}>
         <div style={{ width: '100%', maxWidth: 560 }}>
 
-          {/* ── Welcome ── */}
-          {step === 'welcome' && (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>👋</div>
-              <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(26px,5vw,36px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 12 }}>
-                {tc('onboarding.welcome_title')}
-              </h1>
-              <p style={{ fontSize: 16, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
-                {tc('onboarding.welcome_subtitle')}
-              </p>
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6, textAlign: 'left' }}>
-                  {tc('onboarding.welcome_first_name_label')}
-                </label>
-                <input
-                  style={inp}
-                  value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
-                  placeholder={tc('onboarding.welcome_first_name_placeholder')}
-                  autoFocus
-                />
-              </div>
-              <div style={{ marginBottom: 28 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6, textAlign: 'left' }}>
-                  {tc('onboarding.welcome_business_name_label')}
-                </label>
-                <input
-                  style={inp}
-                  value={businessName}
-                  onChange={e => setBusinessName(e.target.value)}
-                  placeholder={tc('onboarding.welcome_business_name_placeholder')}
-                />
-              </div>
-              <button style={btn} onClick={next} disabled={!firstName}>
-                {tc('onboarding.welcome_cta')}
-              </button>
-            </div>
-          )}
-
-          {/* ── Business type ── */}
+          {/* ── Business type (first step — one tap) ── */}
           {step === 'business' && (
             <div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
@@ -283,10 +340,11 @@ export default function OnboardingPage() {
                     onClick={() => setBizType(bt.id)}
                     style={{
                       ...(bizType === bt.id ? chipActive : chipBase),
-                      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px',
+                      display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px',
+                      minHeight: 64,
                     }}
                   >
-                    <span style={{ fontSize: 20, flexShrink: 0 }}>{bt.icon}</span>
+                    <span style={{ flexShrink: 0, color: bizType === bt.id ? ACC : TX2, marginTop: 1 }}>{bizIcon(bt.id)}</span>
                     <div style={{ textAlign: 'left' }}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: bizType === bt.id ? ACC : TX }}>{bt.label}</div>
                       <div style={{ fontSize: 12, color: TX3, marginTop: 2 }}>{bt.desc}</div>
@@ -295,7 +353,6 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
                 <button style={{ ...btn, opacity: canNext.business ? 1 : .5 }} onClick={next} disabled={!canNext.business}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
@@ -304,7 +361,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* ── Location / Currency ── */}
+          {/* ── Location / Currency (one tap when auto-detected) ── */}
           {step === 'location' && (
             <div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
@@ -313,28 +370,72 @@ export default function OnboardingPage() {
               <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
                 {tc('onboarding.location_subtitle')}
               </p>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
-                <input style={inp} value={region} onChange={e => setRegion(e.target.value)} placeholder={tc('onboarding.location_region_placeholder')}/>
-              </div>
-              <div style={{ marginBottom: 28 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>{tc('onboarding.location_currency_label')}</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
-                  {CURRENCIES.map(c => (
-                    <button
-                      key={c.code}
-                      onClick={() => setCurrency(c.code)}
-                      style={currency === c.code ? chipActive : chipBase}
-                    >
-                      <span style={{ fontWeight: 600 }}>{c.symbol}</span> {c.code} — {c.label}
-                    </button>
-                  ))}
+
+              {geoLoading && (
+                <div style={{ padding: '32px 0', textAlign: 'center', color: TX3, fontSize: 14 }}>
+                  {tc('onboarding.location_detecting')}
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
-                <button style={btn} onClick={next}>{tc('onboarding.continue')}</button>
-              </div>
+              )}
+
+              {!geoLoading && geo && !manualLocation && (
+                <div>
+                  <div style={{ padding: '24px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, textAlign: 'center', marginBottom: 20 }}>
+                    <div style={{ fontSize: 40, marginBottom: 10 }} aria-hidden>{geo.flag}</div>
+                    <div style={{ fontWeight: 700, fontSize: 18, color: TX, marginBottom: 4 }}>{geo.country}</div>
+                    <div style={{ fontSize: 14, color: TX2 }}>{geo.currencySymbol} · {geo.currency}</div>
+                    <div style={{ fontSize: 13, color: TX3, marginTop: 10 }}>{tc('onboarding.location_confirm_question')}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button style={btn} onClick={() => { setCurrency(geo.currency); setRegion(geo.region); next() }}>
+                      {tc('onboarding.location_confirm_yes')}
+                    </button>
+                    <button style={ghostBtn} onClick={() => setManualLocation(true)}>
+                      {tc('onboarding.location_confirm_change')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!geoLoading && manualLocation && (
+                <>
+                  {geo && (
+                    <button
+                      onClick={() => setManualLocation(false)}
+                      style={{ background: 'none', border: 'none', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '0 0 14px', fontFamily: 'inherit' }}
+                    >
+                      ← {tc('onboarding.location_use_detected')}
+                    </button>
+                  )}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
+                    <input style={inp} value={region} onChange={e => setRegion(e.target.value)} placeholder={tc('onboarding.location_region_placeholder')}/>
+                  </div>
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>{tc('onboarding.location_currency_label')}</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
+                      {CURRENCIES.map(c => (
+                        <button
+                          key={c.code}
+                          onClick={() => setCurrency(c.code)}
+                          style={currency === c.code ? chipActive : chipBase}
+                        >
+                          <span style={{ fontWeight: 600 }}>{c.symbol}</span> {c.code} — {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {!POS_LANDING_TYPES.has(bizType) && (
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.business_name_label')}</label>
+                      <input style={inp} value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder={resolvedBusinessName()}/>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
+                    <button style={btn} onClick={next}>{tc('onboarding.continue')}</button>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -359,7 +460,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
                 <button style={{ ...btn, opacity: canNext.sector ? 1 : .5 }} onClick={next} disabled={!canNext.sector}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
@@ -380,15 +481,14 @@ export default function OnboardingPage() {
 
               <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                 {[
-                  { val: true,  label: tc('onboarding.export_opt_yes'), icon: '🌍' },
-                  { val: false, label: tc('onboarding.export_opt_no'), icon: '🏠' },
+                  { val: true,  label: tc('onboarding.export_opt_yes') },
+                  { val: false, label: tc('onboarding.export_opt_no') },
                 ].map(opt => (
                   <button
                     key={String(opt.val)}
                     onClick={() => setWantsExport(opt.val)}
                     style={{ flex: 1, padding: '14px', borderRadius: 12, border: `1.5px solid ${wantsExport === opt.val ? ACC : B2}`, background: wantsExport === opt.val ? 'rgba(208,138,89,.08)' : 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: wantsExport === opt.val ? 600 : 400, color: wantsExport === opt.val ? ACC : TX2 }}
                   >
-                    <div style={{ fontSize: 24, marginBottom: 6 }}>{opt.icon}</div>
                     {opt.label}
                   </button>
                 ))}
@@ -412,7 +512,7 @@ export default function OnboardingPage() {
               )}
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
                 <button style={{ ...btn, opacity: canNext.export ? 1 : .5 }} onClick={next} disabled={!canNext.export}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
@@ -424,7 +524,6 @@ export default function OnboardingPage() {
           {/* ── Connect data ── */}
           {step === 'connect' && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 44, marginBottom: 16 }}>🔌</div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 12 }}>
                 {tc('onboarding.connect_title')}
               </h2>
@@ -432,26 +531,15 @@ export default function OnboardingPage() {
                 {tc('onboarding.connect_subtitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
-                {(NEEDS_SECTOR.has(bizType)
-                  ? [
-                      { icon: '📱', label: 'M-Pesa' },
-                      { icon: '🛍️', label: tc('onboarding.connect_source_shopify') },
-                      { icon: '📒', label: tc('onboarding.connect_source_quickbooks') },
-                      { icon: '💳', label: tc('onboarding.connect_source_stripe') },
-                      { icon: '📦', label: tc('onboarding.connect_source_amazon') },
-                      { icon: '📊', label: tc('onboarding.connect_source_sheets') },
-                    ]
-                  : [
-                      { icon: '📱', label: 'M-Pesa' },
-                      { icon: '📱', label: 'MTN Money' },
-                      { icon: '📱', label: 'Airtel Money' },
-                      { icon: '💳', label: tc('onboarding.connect_source_stripe') },
-                      { icon: '🛍️', label: tc('onboarding.connect_source_shopify') },
-                      { icon: '📒', label: tc('onboarding.connect_source_quickbooks') },
-                    ]
-                ).map(s => (
+                {[
+                  { label: tc('onboarding.connect_source_shopify') },
+                  { label: tc('onboarding.connect_source_quickbooks') },
+                  { label: tc('onboarding.connect_source_stripe') },
+                  { label: tc('onboarding.connect_source_amazon') },
+                  { label: tc('onboarding.connect_source_sheets') },
+                  { label: tc('onboarding.connect_source_tiktok') },
+                ].map(s => (
                   <div key={s.label} style={{ padding: '14px 10px', borderRadius: 12, border: `1px solid ${B}`, background: SF, textAlign: 'center' }}>
-                    <div style={{ fontSize: 24, marginBottom: 6 }}>{s.icon}</div>
                     <div style={{ fontSize: 12, color: TX2, fontWeight: 500 }}>{s.label}</div>
                   </div>
                 ))}
@@ -470,16 +558,22 @@ export default function OnboardingPage() {
           {/* ── Done ── */}
           {step === 'done' && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(24px,4vw,34px)', fontWeight: 700, color: TX, marginBottom: 12, letterSpacing: '-.03em' }}>
-                {firstName ? tc('onboarding.done_title_named', { name: firstName }) : tc('onboarding.done_title')}
+                {isPosPersona
+                  ? (firstName ? tc('onboarding.done_title_pos_named', { name: firstName }) : tc('onboarding.done_title'))
+                  : (firstName ? tc('onboarding.done_title_named', { name: firstName }) : tc('onboarding.done_title'))}
               </h2>
               <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
-                {tc('onboarding.done_subtitle')}
+                {isPosPersona ? tc('onboarding.done_subtitle_pos') : tc('onboarding.done_subtitle')}
               </p>
+              {saveError && (
+                <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
+                  {saveError}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
                 <button style={btn} onClick={finish} disabled={saving}>
-                  {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta')}
+                  {saving ? tc('onboarding.done_saving') : (isPosPersona ? tc('onboarding.done_cta_pos') : tc('onboarding.done_cta'))}
                 </button>
               </div>
             </div>

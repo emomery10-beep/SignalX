@@ -99,5 +99,8 @@
   "welcome_first_name_label": "Tu nombre",
   "welcome_first_name_placeholder": "p. ej. Sara",
   "welcome_subtitle": "Configuremos tu perfil de negocio para que AskBiz te dé respuestas basadas en tus datos reales, no en consejos genéricos.",
-  "welcome_title": "Bienvenido a AskBiz"
+  "welcome_title": "Bienvenido a AskBiz",
+  "done_title_pos_named": "¡Buen trabajo, {name}!",
+  "done_subtitle_pos": "Tu negocio está configurado. Ahora añade lo que vendes y abre tu caja.",
+  "done_cta_pos": "Configurar mi caja →"
 }

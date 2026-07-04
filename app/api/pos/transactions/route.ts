@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosOwner, resolvePosAuth } from '@/lib/pos-auth'
+import { resolvePosOwner, resolvePosAuth, posEntitled } from '@/lib/pos-auth'
 
 // GET — fetch transactions with date/cashier/location filters
 export async function GET(req: NextRequest) {
@@ -50,6 +50,15 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   const ownerId = auth.ownerId
+
+  // Selling requires an active POS subscription or trial. Reads stay open;
+  // setup routes (inventory, locations) intentionally stay open pre-payment.
+  if (!(await posEntitled(ownerId))) {
+    return NextResponse.json(
+      { error: 'POS is not active — activate your till to start selling.', code: 'pos_not_active' },
+      { status: 402 },
+    )
+  }
 
   const service = createServiceClient()
   const body = await req.json()

@@ -43,7 +43,11 @@ export async function POST(request: NextRequest) {
         email: user.email!,
         firstName: names[0] || '',
         lastName: names.slice(1).join(' ') || '',
-        callbackUrl: `${APP_URL}/billing?pesapal=complete`,
+        // Whitelisted return path — vendor setup flow returns to its own
+        // activation screen. Exact match only; default stays /billing.
+        callbackUrl: body.return_path === '/pos/activate'
+          ? `${APP_URL}/pos/activate?pesapal=complete`
+          : `${APP_URL}/billing?pesapal=complete`,
       })
 
       if (result.error) {

@@ -99,5 +99,8 @@
   "welcome_first_name_label": "Je voornaam",
   "welcome_first_name_placeholder": "bijv. Sarah",
   "welcome_subtitle": "Laten we je bedrijfsprofiel instellen zodat AskBiz je antwoorden geeft op basis van je eigen gegevens — niet op generiek advies.",
-  "welcome_title": "Welkom bij AskBiz"
+  "welcome_title": "Welkom bij AskBiz",
+  "done_title_pos_named": "Goed gedaan, {name}!",
+  "done_subtitle_pos": "Je bedrijf is ingesteld. Voeg nu toe wat je verkoopt en open je kassa.",
+  "done_cta_pos": "Mijn kassa instellen →"
 }

@@ -74,10 +74,16 @@
   "continue": "Continue →",
   "skip": "Skip setup — go straight to AskBiz",
   "location_title": "Where are you based?",
-  "location_subtitle": "AskBiz uses your location to set your currency, calculate duty rates, and personalise export market recommendations.",
+  "location_subtitle": "This sets your currency and location for pricing, tax, and market insights.",
   "location_region_label": "Country / Region",
   "location_region_placeholder": "e.g. United Kingdom, Kenya, Nigeria…",
   "location_currency_label": "Your primary currency",
+  "location_detecting": "Finding your location…",
+  "location_confirm_question": "Is this right?",
+  "location_confirm_yes": "Yes, that's right →",
+  "location_confirm_change": "Change",
+  "location_use_detected": "Use detected location instead",
+  "business_name_label": "Business name (optional)",
   "sector_title": "What do you sell?",
   "sector_subtitle": "Select all that apply. AskBiz uses this to match export market opportunities, duty rates, and competitor intelligence to your specific products.",
   "export_title": "Are you selling internationally?",
@@ -99,5 +105,8 @@
   "done_title_named": "You’re all set, {name}!",
   "done_subtitle": "AskBiz is ready. Ask it anything about your business — upload a file, connect a source, or just start typing.",
   "done_saving": "Setting up…",
-  "done_cta": "Go to AskBiz →"
+  "done_cta": "Go to AskBiz →",
+  "done_title_pos_named": "Nice work, {name}!",
+  "done_subtitle_pos": "Your business is set up. Next, add what you sell and start your till.",
+  "done_cta_pos": "Set up my till →"
 }

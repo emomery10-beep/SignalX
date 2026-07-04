@@ -168,6 +168,33 @@ export const MARKET_DISCOUNT: Record<string, { code: string; pct: number }> = {
   BRL: { code: 'BR15', pct: 15 },
 }
 
+// ── POS seat price, per profile currency (display strings) ───
+// Mirrors APP_PRICING.pos in app/api/geo/route.ts (which is keyed by
+// country for the marketing site); this map is keyed by the currency the
+// user confirmed at onboarding, covering every currency onboarding offers.
+// NOTE: the KES price is what PesaPal actually charges (KSh 500). Card
+// payments charge the STRIPE_PRICE_POS_SEAT price object — these display
+// amounts are only exact for cards if that Stripe price carries matching
+// multi-currency options; otherwise Stripe falls back to its base currency.
+export const POS_SEAT_PRICE_DISPLAY: Record<string, string> = {
+  GBP: '£5',
+  USD: '$5',
+  EUR: '€5',
+  KES: 'KSh 500',
+  NGN: '₦2,500',
+  GHS: '₵25',
+  ZAR: 'R 90',
+  AED: 'AED 18',
+  INR: '₹400',
+  AUD: 'A$8',
+  CAD: 'CA$7',
+  SGD: 'S$7',
+  UGX: 'USh 18,000',
+  TZS: 'TSh 12,000',
+  ETB: 'Br 250',
+  DEFAULT: '£5',
+}
+
 // ── Timezone → currency fallback ─────────────────────────────
 const TZ_CURRENCY: Record<string, string> = {
   'Africa/Nairobi': 'KES', 'Africa/Lagos': 'NGN', 'Africa/Johannesburg': 'ZAR',
