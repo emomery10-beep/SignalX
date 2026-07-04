@@ -302,8 +302,8 @@ export default function AuthPage() {
     <div style={{
       minHeight: '100vh', background: 'var(--bg)',
       display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      padding: '16px 12px', fontFamily: 'var(--font-dm, DM Sans, sans-serif)',
+      alignItems: 'center', justifyContent: 'flex-start',
+      padding: '28px 12px 16px', fontFamily: 'var(--font-dm, DM Sans, sans-serif)',
       position: 'fixed', inset: 0, overflowY: 'auto',
     }}>
 
@@ -335,7 +335,7 @@ export default function AuthPage() {
       )}
 
       {/* Logo */}
-      <Link href="/" className="animate-fade-down" style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 20, textDecoration: 'none', color: 'var(--tx)' }}>
+      <Link href="/" className="animate-fade-down" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, textDecoration: 'none', color: 'var(--tx)', flexShrink: 0 }}>
         <div style={{ width: 26, height: 26, borderRadius: 8, background: '#d08a59', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="13" height="13" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
@@ -354,9 +354,9 @@ export default function AuthPage() {
         onMouseEnter={() => setCardHover(true)}
         onMouseLeave={() => { setCardHover(false); setCardTilt({ rx: 0, ry: 0 }) }}
         style={{
-          width: '100%', maxWidth: 'min(300px, 100%)',
+          width: '100%', maxWidth: 'min(300px, 100%)', flexShrink: 0,
           background: 'var(--sf)', border: '1px solid var(--b)',
-          borderRadius: 'var(--r-lg)', padding: '20px',
+          borderRadius: 'var(--r-lg)', padding: '16px',
           transformStyle: 'preserve-3d',
           ...(cardHover
             ? { transform: `perspective(1200px) rotateX(${cardTilt.rx}deg) rotateY(${cardTilt.ry}deg)`, transition: 'transform .12s ease-out' }
@@ -393,7 +393,7 @@ export default function AuthPage() {
         {/* Mode tabs */}
         <div style={{
           position: 'relative', display: 'flex', background: 'var(--ev)',
-          borderRadius: 9, padding: 3, marginBottom: 16,
+          borderRadius: 9, padding: 3, marginBottom: 10,
           width: '100%'
         }}>
           <div aria-hidden style={{
@@ -418,28 +418,28 @@ export default function AuthPage() {
           ))}
         </div>
 
-        <h1 className="animate-fade-up stagger-2" style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 700, marginBottom: 4, textAlign: 'center', letterSpacing: '-.02em' }}>
+        <h1 className="animate-fade-up stagger-2" style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 14, fontWeight: 700, marginBottom: 2, textAlign: 'center', letterSpacing: '-.02em' }}>
           {mode === 'signin' ? tc('auth.welcome_back') : tc('auth.get_started')}
         </h1>
-        <p className="animate-fade-up stagger-2" style={{ fontSize: 11, color: 'var(--tx2)', marginBottom: 14, textAlign: 'center', lineHeight: 1.5 }}>
+        <p className="animate-fade-up stagger-2" style={{ fontSize: 10, color: 'var(--tx2)', marginBottom: 9, textAlign: 'center', lineHeight: 1.4 }}>
           {mode === 'signin' ? tc('auth.signin_subtitle') : tc('auth.signup_subtitle')}
         </p>
 
         {/* Social sign-in */}
         <button className="animate-fade-up stagger-3" onClick={() => triggerAuth('google')} disabled={loading}
-          style={{ width: '100%', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 7 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          style={{ width: '100%', padding: '0 12px', height: 28, borderRadius: 7, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 5 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           {tc('auth.continue_google')}
         </button>
         <button className="animate-fade-up stagger-4" onClick={() => triggerAuth('azure')} disabled={loading}
-          style={{ width: '100%', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 7 }}>
-          <svg width="13" height="13" viewBox="0 0 23 23" fill="none"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>
+          style={{ width: '100%', padding: '0 12px', height: 28, borderRadius: 7, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 5 }}>
+          <svg width="12" height="12" viewBox="0 0 23 23" fill="none"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>
           {tc('auth.continue_microsoft')}
         </button>
         {mode === 'signin' && (
           <button className="animate-fade-up stagger-5" onClick={handlePasskeySignIn} disabled={loading}
-            style={{ width: '100%', padding: '0 12px', height: 32, borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 10 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            style={{ width: '100%', padding: '0 12px', height: 28, borderRadius: 7, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 7 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <circle cx="12" cy="16" r="1"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -447,17 +447,17 @@ export default function AuthPage() {
             {tc('auth.signin_passkey')}
           </button>
         )}
-        {mode === 'signup' && <div style={{ marginBottom: 4 }}/>}
+        {mode === 'signup' && <div style={{ marginBottom: 2 }}/>}
 
         {/* Divider */}
-        <div className="animate-fade-up stagger-5" style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
+        <div className="animate-fade-up stagger-5" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
           <div style={{ flex: 1, height: 1, background: 'var(--b)' }}></div>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('auth.or')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('auth.or')}</span>
           <div style={{ flex: 1, height: 1, background: 'var(--b)' }}></div>
         </div>
 
         {/* Email / Phone method toggle */}
-        <div className="animate-fade-up stagger-6" style={{ position: 'relative', display: 'flex', background: 'var(--ev)', borderRadius: 8, padding: 2, marginBottom: 9 }}>
+        <div className="animate-fade-up stagger-6" style={{ position: 'relative', display: 'flex', background: 'var(--ev)', borderRadius: 8, padding: 2, marginBottom: 7 }}>
           <div aria-hidden style={{
             position: 'absolute', top: 2, bottom: 2, left: 2,
             width: 'calc(50% - 2px)', borderRadius: 6,
@@ -490,10 +490,10 @@ export default function AuthPage() {
             credential fields read as two distinct steps, not one long wall */}
         {mode === 'signup' && (
           <>
-            <p className="animate-fade-up" style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
+            <p className="animate-fade-up" style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>
               {tc('auth.signup_identity_heading')}
             </p>
-            <div className="animate-fade-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
+            <div className="animate-fade-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 7 }}>
               <div>
                 <label htmlFor="firstName" style={lbl}>{tc('auth.first_name')}</label>
                 <input id="firstName" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={tc('auth.first_name')} style={inp}/>
@@ -503,7 +503,7 @@ export default function AuthPage() {
                 <input id="lastName" value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('auth.last_name')} style={inp}/>
               </div>
             </div>
-            <p className="animate-fade-up" style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
+            <p className="animate-fade-up" style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>
               {tc('auth.signup_credentials_heading')}
             </p>
           </>
@@ -511,14 +511,14 @@ export default function AuthPage() {
 
         {method === 'email' && (<>
           {/* Email */}
-          <div className="animate-fade-up stagger-7" style={{ marginBottom: 7 }}>
+          <div className="animate-fade-up stagger-7" style={{ marginBottom: 5 }}>
             <label htmlFor="email" style={lbl}>{tc('auth.email_placeholder')}</label>
             <input id="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={inp}
               onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
           </div>
 
           {/* Password */}
-          <div className="animate-fade-up stagger-8" style={{ marginBottom: 10 }}>
+          <div className="animate-fade-up stagger-8" style={{ marginBottom: 7 }}>
             <label htmlFor="password" style={lbl}>{tc('auth.password_placeholder')}</label>
             <input id="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={tc('auth.password_placeholder')} type="password" style={inp}
               onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
@@ -527,11 +527,11 @@ export default function AuthPage() {
 
         {method === 'phone' && (<>
           {/* Country dial code + local number */}
-          <div className="animate-fade-up" style={{ marginBottom: 7 }}>
+          <div className="animate-fade-up" style={{ marginBottom: 5 }}>
             <label htmlFor="phoneLocal" style={lbl}>{tc('auth.phone_label')}</label>
-            <div style={{ display: 'flex', gap: 6 }} dir="ltr">
+            <div style={{ display: 'flex', gap: 5 }} dir="ltr">
               <select value={phoneCountry} onChange={e => setPhoneCountry(e.target.value)} aria-label={tc('auth.method_phone')}
-                style={{ ...inp, width: 90, flexShrink: 0, cursor: 'pointer', appearance: 'none' }}>
+                style={{ ...inp, width: 82, flexShrink: 0, cursor: 'pointer', appearance: 'none' }}>
                 {COUNTRY_DIAL.map(c => (
                   <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>
                 ))}
@@ -543,12 +543,12 @@ export default function AuthPage() {
           </div>
 
           {/* PIN entry — single field to sign in, confirm field added on signup */}
-          <div style={{ display: 'grid', gridTemplateColumns: mode === 'signup' ? '1fr 1fr' : '1fr', gap: 7, marginBottom: 7 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mode === 'signup' ? '1fr 1fr' : '1fr', gap: 6, marginBottom: 5 }}>
             <div>
               <label htmlFor="pin" style={lbl}>{tc('auth.pin_placeholder')}</label>
               <input id="pin" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder={tc('auth.pin_placeholder')} type="password" inputMode="numeric" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pin ? '.5em' : 'normal', fontSize: 14 }}
+                dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pin ? '.5em' : 'normal', fontSize: 13 }}
                 onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
             </div>
             {mode === 'signup' && (
@@ -556,27 +556,27 @@ export default function AuthPage() {
                 <label htmlFor="pinConfirm" style={lbl}>{tc('auth.pin_confirm_placeholder')}</label>
                 <input id="pinConfirm" value={pinConfirm} onChange={e => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   placeholder={tc('auth.pin_confirm_placeholder')} type="password" inputMode="numeric" autoComplete="new-password"
-                  dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pinConfirm ? '.5em' : 'normal', fontSize: 14 }}
+                  dir="ltr" style={{ ...inp, textAlign: 'center', letterSpacing: pinConfirm ? '.5em' : 'normal', fontSize: 13 }}
                   onKeyDown={e => e.key === 'Enter' && handlePhoneAuth()}/>
               </div>
             )}
           </div>
-          <p className="animate-fade-up" style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 10, lineHeight: 1.5 }}>
+          <p className="animate-fade-up" style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 7, lineHeight: 1.4 }}>
             {tc('auth.phone_hint')}
           </p>
         </>)}
 
         {/* Affirmative consent checkbox for signup */}
         {mode === 'signup' && (
-          <label htmlFor="consent" className="animate-fade-up" style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: 10, cursor: 'pointer' }}>
+          <label htmlFor="consent" className="animate-fade-up" style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 7, cursor: 'pointer' }}>
             <input
               id="consent"
               type="checkbox"
               checked={consentChecked}
               onChange={e => { setConsentChecked(e.target.checked); if (e.target.checked) setError('') }}
-              style={{ width: 13, height: 13, marginTop: 2, flexShrink: 0, accentColor: 'var(--acc)', cursor: 'pointer' }}
+              style={{ width: 12, height: 12, marginTop: 2, flexShrink: 0, accentColor: 'var(--acc)', cursor: 'pointer' }}
             />
-            <span style={{ fontSize: 10, color: 'var(--tx2)', lineHeight: 1.5 }}>
+            <span style={{ fontSize: 9, color: 'var(--tx2)', lineHeight: 1.4 }}>
               {tc('auth.consent_prefix')}{' '}
               <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>{tc('auth.terms_of_service')}</a>{' '}
               {tc('auth.and')}{' '}
@@ -586,8 +586,8 @@ export default function AuthPage() {
         )}
 
         {/* Error / Success */}
-        {error && <div role="alert" aria-live="polite" className="msg-in" style={{ padding: '7px 10px', borderRadius: 8, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 11, color: '#b91c1c', marginBottom: 9 }}>{error}</div>}
-        {success && <div role="status" aria-live="polite" className="msg-in" style={{ padding: '7px 10px', borderRadius: 8, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 11, color: '#15803d', marginBottom: 9 }}>✓ {success}</div>}
+        {error && <div role="alert" aria-live="polite" className="msg-in" style={{ padding: '6px 9px', borderRadius: 7, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 10, color: '#b91c1c', marginBottom: 6 }}>{error}</div>}
+        {success && <div role="status" aria-live="polite" className="msg-in" style={{ padding: '6px 9px', borderRadius: 7, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 10, color: '#15803d', marginBottom: 6 }}>✓ {success}</div>}
 
         {/* Primary CTA */}
         {(() => {
@@ -598,10 +598,10 @@ export default function AuthPage() {
           const onClick = method === 'email' ? () => triggerAuth('email') : handlePhoneAuth
           return (
             <button onClick={onClick} disabled={disabled}
-              style={{ width: '100%', padding: '9px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 12, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .6 : 1, marginBottom: 7 }}>
+              style={{ width: '100%', padding: '7px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 11, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .6 : 1, marginBottom: 5 }}>
               {loading ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <svg style={{ animation: 'spin .7s linear infinite' }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <svg style={{ animation: 'spin .7s linear infinite' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                   {tc('auth.please_wait')}
                 </span>
               ) : label}
@@ -611,7 +611,7 @@ export default function AuthPage() {
 
         {/* Inline consent details for signup */}
         {mode === 'signup' && (
-          <p style={{ fontSize: 9, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginTop: 5 }}>
+          <p style={{ fontSize: 8, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5, marginTop: 3 }}>
             {tc('auth.age_confirm')}{' '}
             <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>.
           </p>
@@ -619,9 +619,9 @@ export default function AuthPage() {
 
         {/* Quick switch for signup mode */}
         {mode === 'signup' && (
-          <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
+          <p style={{ fontSize: 10, color: 'var(--tx3)', textAlign: 'center', marginTop: 5 }}>
             Already have an account?{' '}
-            <button onClick={() => setMode('signin')} style={{ background: 'none', border: 'none', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+            <button onClick={() => setMode('signin')} style={{ background: 'none', border: 'none', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 10, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
               Sign in
             </button>
           </p>
@@ -630,7 +630,7 @@ export default function AuthPage() {
         {/* Magic link */}
         {method === 'email' && (
         <button onClick={handleMagicLink} disabled={loading || !email}
-          style={{ width: '100%', padding: '8px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 12, cursor: loading || !email ? 'not-allowed' : 'pointer', opacity: loading || !email ? .6 : 1 }}>
+          style={{ width: '100%', padding: '6px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 11, cursor: loading || !email ? 'not-allowed' : 'pointer', opacity: loading || !email ? .6 : 1 }}>
           {loading ? '…' : tc('auth.send_magic_link')}
         </button>
         )}
@@ -638,7 +638,7 @@ export default function AuthPage() {
         </>)}
       </div>
 
-      <p style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 14, textAlign: 'center' }}>
+      <p style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 10, textAlign: 'center', flexShrink: 0 }}>
         {tc('auth.footer_consent_prefix')} <Link href="/terms" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.terms_short')}</Link> {tc('auth.and')} <Link href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.privacy_policy')}</Link>
       </p>
     </div>
