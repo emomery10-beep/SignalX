@@ -112,6 +112,15 @@ export default function POSPage() {
   const [sectorOverride, setSectorOverride] = useState<string | null>(null)
   const [staffSector, setStaffSector] = useState<string | null>(null) // set when a staff member is logged in
 
+  const detectedSector = useMemo(() => {
+    const bt = (businessType || '').toLowerCase()
+    return ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
+      : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
+      : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
+      : 'retail'
+  }, [businessType])
+  const currentSector = sectorOverride || detectedSector
+
   // Toast
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
   const notify = useCallback((msg: string, ok = true) => setToast({ msg, ok }), [])
@@ -856,7 +865,9 @@ export default function POSPage() {
               </div>
             </div>
 
-            <RepairMetrics currencySymbol={currencySymbol} selectedLocation={'all'} />
+            {currentSector === 'repair' && (
+              <RepairMetrics currencySymbol={currencySymbol} selectedLocation={'all'} />
+            )}
 
             {/* Sales chart (hourly) */}
             {completedTx.length > 0 && (
@@ -1029,12 +1040,7 @@ export default function POSPage() {
 
         {/* ══════════════ SECTOR TAB (adapts per business_type) ══════════════ */}
         {tab === 'services' && (() => {
-          const bt = (businessType || '').toLowerCase()
-          const detectedSector = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
-            : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
-            : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
-            : 'retail'
-          const sector = sectorOverride || detectedSector
+          const sector = currentSector
 
           const isRestaurant = sector === 'restaurant'
           const isRepair     = sector === 'repair'
