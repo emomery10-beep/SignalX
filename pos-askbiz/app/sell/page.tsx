@@ -191,6 +191,9 @@ export default function SellPage() {
   const [shiftAction, setShiftAction] = useState<'open' | 'close'>('open')
   const [closingCash, setClosingCash] = useState('')
   const [shiftLoading, setShiftLoading] = useState(false)
+  const [closeVarianceReason, setCloseVarianceReason] = useState('')
+  const [closeRequiresReason, setCloseRequiresReason] = useState(false)
+  const [closeError, setCloseError] = useState('')
 
   // ── Init ────────────────────────────────────────────────────
   useEffect(() => {
@@ -317,16 +320,41 @@ export default function SellPage() {
   const handleCloseShift = async () => {
     if (!staff) return
     setShiftLoading(true)
-    // Remove from localStorage immediately
-    localStorage.removeItem(shiftKey(staff))
-    setShiftOpen(false); setShiftId(null); setShowShiftModal(false); setClosingCash('')
+    setCloseError('')
 
-    // Best-effort DB write
-    fetch(`${API}/api/pos/shift/close`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
-      body: JSON.stringify({ shift_id: shiftId, closing_cash_balance: parseFloat(closingCash) || 0 }),
-    }).catch(() => {})
+    const finishLocally = () => {
+      localStorage.removeItem(shiftKey(staff))
+      setShiftOpen(false); setShiftId(null); setShowShiftModal(false)
+      setClosingCash(''); setCloseVarianceReason(''); setCloseRequiresReason(false)
+    }
+
+    try {
+      const res = await fetch(`${API}/api/pos/shift/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+        body: JSON.stringify({
+          shift_id: shiftId,
+          physical_cash_count: parseFloat(closingCash) || 0,
+          variance_reason: closeVarianceReason || undefined,
+        }),
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        finishLocally()
+      } else if (data.requires_reason) {
+        // Cash count doesn't match expected — keep the shift open and ask
+        // the cashier to explain before we let them close it.
+        setCloseRequiresReason(true)
+        setCloseError(tc('sell.shift_variance_detected', { amount: `${sym}${Math.abs(data.variance_amount).toFixed(2)}` }))
+      } else {
+        setCloseError(data.error || tc('sell.shift_close_failed'))
+      }
+    } catch {
+      // Offline / unreachable — close locally so the cashier isn't blocked;
+      // reconciliation will be missing server-side until connectivity returns.
+      finishLocally()
+    }
 
     setShiftLoading(false)
   }
@@ -712,7 +740,7 @@ export default function SellPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {staff?.location_id && shiftOpen !== null && (
               <button
-                onClick={() => { setShiftAction(shiftOpen ? 'close' : 'open'); setShowShiftModal(true) }}
+                onClick={() => { setShiftAction(shiftOpen ? 'close' : 'open'); setCloseError(''); setCloseRequiresReason(false); setCloseVarianceReason(''); setShowShiftModal(true) }}
                 className="pos-tab"
                 style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${shiftOpen ? 'var(--pos-success)' : 'var(--pos-accent)'}`, background: shiftOpen ? 'var(--pos-success-pale)' : 'var(--pos-accent-pale)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: shiftOpen ? 'var(--pos-success)' : 'var(--pos-accent)' }}
               >
@@ -877,7 +905,26 @@ export default function SellPage() {
                   type="number" placeholder="0.00" value={closingCash} onChange={e => setClosingCash(e.target.value)}
                   style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 14 }}
                 />
-                <button onClick={handleCloseShift} disabled={shiftLoading} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--pos-ink)', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                {closeError && (
+                  <div role="alert" style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--pos-danger-pale)', border: '1px solid rgba(220,38,38,.2)', fontSize: 13, color: 'var(--pos-danger)', lineHeight: 1.4 }}>
+                    {closeError}
+                  </div>
+                )}
+                {closeRequiresReason && (
+                  <>
+                    <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>{tc('sell.shift_variance_reason_label')}</div>
+                    <input
+                      type="text" placeholder={tc('sell.shift_variance_reason_placeholder')} value={closeVarianceReason}
+                      onChange={e => setCloseVarianceReason(e.target.value)}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 14 }}
+                    />
+                  </>
+                )}
+                <button
+                  onClick={handleCloseShift}
+                  disabled={shiftLoading || (closeRequiresReason && !closeVarianceReason.trim())}
+                  style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--pos-ink)', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', opacity: (closeRequiresReason && !closeVarianceReason.trim()) ? 0.5 : 1 }}
+                >
                   {shiftLoading ? tc('sell.closing') : tc('sell.close_shift')}
                 </button>
               </>
