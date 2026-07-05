@@ -52,6 +52,13 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
   const [inventory, setInventory] = useState<InventoryLite[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [detailPo, setDetailPo] = useState<PurchaseOrderWithItems | null>(null)
+
+  // Replace a PO in the list (and the open detail sheet) after send/receive.
+  const upsertOrder = useCallback((po: PurchaseOrderWithItems) => {
+    setOrders((prev) => prev.map((o) => (o.id === po.id ? po : o)))
+    setDetailPo((prev) => (prev && prev.id === po.id ? po : prev))
+  }, [])
 
   const loadOrders = useCallback(async () => {
     try {
@@ -131,7 +138,13 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
             return (
               <div
                 key={po.id}
-                style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 16 }}
+                onClick={() => setDetailPo(po)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailPo(po) } }}
+                style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 16, cursor: 'pointer', transition: 'border-color .15s' }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = ACC)}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--b)')}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ minWidth: 0 }}>
@@ -173,6 +186,119 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
           notify={notify}
         />
       )}
+
+      {detailPo && (
+        <PODetailModal
+          po={detailPo}
+          currencySymbol={currencySymbol}
+          onClose={() => setDetailPo(null)}
+          onUpdated={upsertOrder}
+          notify={notify}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Detail sheet (view + Send to supplier) ───────────────────
+function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
+  po: PurchaseOrderWithItems
+  currencySymbol: string
+  onClose: () => void
+  onUpdated: (po: PurchaseOrderWithItems) => void
+  notify: (msg: string, ok?: boolean) => void
+}) {
+  const [sending, setSending] = useState(false)
+  const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  const meta = STATUS_META[po.status] ?? STATUS_META.draft
+  const supplierPhone = po.supplier?.phone
+  const canSend = po.status !== 'received' && po.status !== 'cancelled'
+
+  async function handleSend() {
+    setSending(true)
+    // Pre-open a tab synchronously inside the click gesture — opening it after
+    // the await would lose the user-gesture context and get popup-blocked, which
+    // is the common path until the Meta template is approved (link fallback).
+    const pending = window.open('', '_blank')
+    try {
+      const res = await fetch(`/api/pos/purchase-orders/${po.id}/send`, { method: 'POST' })
+      if (!res.ok) {
+        pending?.close()
+        const j = await res.json().catch(() => ({}))
+        notify(j.error === 'supplier_no_phone' ? 'Add a WhatsApp number to this supplier first' : 'Could not send order', false)
+        setSending(false)
+        return
+      }
+      const data = await res.json()
+      onUpdated(data.purchase_order)
+      if (data.sent_via === 'link' && data.wa_link) {
+        if (pending) pending.location.href = data.wa_link
+        else window.open(data.wa_link, '_blank')
+        notify('Opening WhatsApp…', true)
+      } else {
+        pending?.close()
+        notify('Sent to supplier on WhatsApp', true)
+      }
+    } catch {
+      pending?.close()
+      notify('Could not send order', false)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 -8px 30px rgba(0,0,0,.25)' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{po.supplier?.name || 'No supplier'}</div>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
+        </div>
+        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: meta.text, background: meta.bg, padding: '3px 9px', borderRadius: 9999, marginBottom: 14 }}>{meta.label}</span>
+
+        <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
+            <span>Item</span><span style={{ textAlign: 'center' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
+          </div>
+          {(po.items || []).map((it) => (
+            <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--b)' }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</span>
+              <span style={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{it.qty_ordered}</span>
+              <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(it.line_total)}</span>
+            </div>
+          ))}
+        </div>
+
+        {po.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 14 }}>{po.notes}</div>}
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <span style={{ fontSize: 13, color: 'var(--tx3)' }}>Total</span>
+          <span style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(po.total_cost)}</span>
+        </div>
+
+        {canSend && (
+          <>
+            <button
+              onClick={handleSend}
+              disabled={sending || !supplierPhone}
+              style={{ width: '100%', minHeight: 44, background: sending || !supplierPhone ? 'var(--ev)' : '#25D366', color: sending || !supplierPhone ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: sending || !supplierPhone ? 'default' : 'pointer', fontFamily: 'inherit' }}
+            >
+              {sending ? 'Sending…' : po.status === 'draft' ? 'Send to supplier on WhatsApp' : 'Resend on WhatsApp'}
+            </button>
+            {!supplierPhone && (
+              <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
+                This supplier has no WhatsApp number yet.
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }

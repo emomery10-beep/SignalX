@@ -112,6 +112,55 @@ export async function sendReceipt(phone: string, receiptText: string): Promise<{
   return { ok: true }
 }
 
+// ── Send a purchase order to a supplier via utility template ────────────────
+// Template "askbiz_purchase_order" should be:
+//   Category: Utility
+//   Body:     "{{1}}"   ← single variable containing the full PO text
+//
+// Until this template is approved in Meta Business Manager, callers fall back
+// to a wa.me link (see /api/pos/purchase-orders/[id]/send).
+export async function sendPurchaseOrder(phone: string, poText: string): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.META_WHATSAPP_TOKEN
+  const numId = phoneId()
+  if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
+
+  const template = process.env.META_PO_TEMPLATE   || 'askbiz_purchase_order'
+  const lang     = process.env.META_TEMPLATE_LANG || 'en_GB'
+
+  const res = await fetch(`${BASE}/${numId}/messages`, {
+    method:  'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to:   normalisePhone(phone),
+      type: 'template',
+      template: {
+        name:     template,
+        language: { code: lang },
+        components: [{
+          type:       'body',
+          parameters: [{ type: 'text', text: poText }],
+        }],
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    const msg = err?.error?.message || `Meta API error ${res.status}`
+    console.error('[whatsapp] sendPurchaseOrder failed:', msg)
+    return { ok: false, error: msg }
+  }
+
+  return { ok: true }
+}
+
+// Build a click-to-chat wa.me link with prefilled text — the fallback that
+// works with no approved template and no prior conversation with the supplier.
+export function waLink(phone: string, text: string): string {
+  return `https://wa.me/${normalisePhone(phone)}?text=${encodeURIComponent(text)}`
+}
+
 // ── Send a free-form text message (only works within 24h of customer messaging you) ──
 // Useful for replies within an existing conversation.
 export async function sendText(phone: string, text: string): Promise<{ ok: boolean; error?: string }> {
