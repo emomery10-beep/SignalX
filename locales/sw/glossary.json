@@ -1,1 +1,18 @@
-{}
+{
+  "title": "Kamusi ya Biashara",
+  "subtitle": "Maneno {n} ya biashara yaliyofafanuliwa kwa lugha rahisi — kutoka ARR hadi mtaji wa kufanyia kazi. Hakuna msamiati mgumu bila ufafanuzi.",
+  "search_placeholder": "Tafuta maneno — jaribu 'churn', 'EBITDA', 'IR35'...",
+  "filter_label": "Chuja kwa Kategoria",
+  "all_categories": "Kategoria Zote",
+  "showing": "Inaonyesha",
+  "of_n_terms": "kati ya maneno {n}",
+  "clear_filters": "Futa vichujio",
+  "no_terms": "Hakuna maneno yaliyopatikana kwa \"{query}\"",
+  "all": "YOTE",
+  "term_count": "maneno {n}",
+  "cta_heading": "Angalia vipimo hivi kwa biashara yako",
+  "cta_body": "AskBiz inaunganisha na data yako na inaonyesha kila kipimo katika kamusi hii — kiotomatiki.",
+  "cta_button": "Anza Jaribio la Bure",
+  "meta_title": "Kamusi ya Biashara — Maneno 300 Yamefafanuliwa | AskBiz",
+  "meta_description": "Kamusi ya bure ya biashara inayojumuisha maneno 300 kuhusu mkakati, fedha, biashara mtandaoni, FX, masoko, HR, kodi, rejareja, na AI — yaliyofafanuliwa kwa lugha rahisi kwa wamiliki wa biashara ndogo."
+}

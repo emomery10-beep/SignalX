@@ -1,1 +1,16 @@
-{}
+{
+  "title": "Tunatumia vidakuzi",
+  "description": "Tunatumia vidakuzi muhimu ili AskBiz ifanye kazi, na vidakuzi vya hiari vya uchambuzi ili kuboresha matumizi yako. Angalia",
+  "manage": "Simamia mapendeleo",
+  "essential_only": "Muhimu tu",
+  "accept_all": "Kubali vyote",
+  "prefs_title": "Mapendeleo ya vidakuzi",
+  "essential_label": "Vidakuzi muhimu",
+  "essential_desc": "Vinahitajika kwa kuingia, usalama, na vipengele vya msingi. Haviwezi kuzimwa.",
+  "analytics_label": "Vidakuzi vya uchambuzi",
+  "analytics_desc": "Vinatusaidia kuelewa jinsi unavyotumia AskBiz ili tuweze kuiboresha. Hakuna data binafsi inayoshirikiwa na wahusika wengine.",
+  "marketing_label": "Vidakuzi vya masoko",
+  "marketing_desc": "Vinatumika kuonyesha maudhui yanayohusiana na vipengele vya AskBiz. Vimezimwa kwa chaguo-msingi.",
+  "always_on": "Vimewashwa kila wakati",
+  "save_prefs": "Hifadhi mapendeleo"
+}
