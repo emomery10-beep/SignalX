@@ -15,14 +15,100 @@ const TAB_KEYS: Record<Tab, string> = {
   Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
 }
 
-function KV({ label, value, sub, color }: { label: string; value: any; sub?: string; color?: string }) {
+function KV({ label, value, sub, color, onClick, active }: { label: string; value: any; sub?: string; color?: string; onClick?: () => void; active?: boolean }) {
+  const clickable = !!onClick
   return (
-    <div style={{padding:'18px',borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
+    <div
+      onClick={onClick}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-expanded={clickable ? !!active : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick!() } } : undefined}
+      className={clickable ? 'kv-clickable' : undefined}
+      style={{position:'relative',padding:'18px',borderRadius:14,border:'1px solid '+(active?(color||'#6366F1'):'var(--b)'),background:'var(--sf)',cursor:clickable?'pointer':'default',transition:'border-color .15s, box-shadow .15s, transform .15s',boxShadow:active?'0 0 0 3px '+(color||'#6366F1')+'22':undefined}}
+    >
       <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:8}}>{label}</div>
       <div style={{fontSize:28,fontWeight:700,fontFamily:'var(--font-sora)',color:color||'var(--tx)',marginBottom:4}}>{value}</div>
       {sub && <div style={{fontSize:12,color:'var(--tx3)'}}>{sub}</div>}
+      {clickable && (
+        <span aria-hidden style={{position:'absolute',top:14,right:14,display:'flex',color:active?(color||'#6366F1'):'var(--tx3)',transition:'transform .2s',transform:active?'rotate(180deg)':'none'}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      )}
     </div>
   )
+}
+
+// ── Drill-down helpers (Overview) ──
+function DetailShell({ title, subtitle, accent, onClose, children }: { title: string; subtitle?: string; accent: string; onClose: () => void; children: any }) {
+  return (
+    <div className="ov-detail" style={{marginBottom:24,borderRadius:14,border:'1px solid '+accent+'55',background:'var(--sf)',overflow:'hidden'}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,padding:'14px 20px',borderBottom:'1px solid var(--b)',background:accent+'0d'}}>
+        <div>
+          <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-sora)',color:accent}}>{title}</div>
+          {subtitle && <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>{subtitle}</div>}
+        </div>
+        <button onClick={onClose} aria-label="Close details" style={{flexShrink:0,width:28,height:28,borderRadius:8,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx3)',cursor:'pointer',fontSize:18,lineHeight:1,fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+      </div>
+      <div style={{padding:'14px 20px'}}>{children}</div>
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: any }) {
+  return <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.06em',margin:'18px 0 10px'}}>{children}</div>
+}
+
+function Chip({ text, color }: { text: string; color: string }) {
+  return <span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:color+'20',color,textTransform:'capitalize'}}>{text}</span>
+}
+
+function ChipStats({ items }: { items: { label: string; value: any }[] }) {
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:10}}>
+      {items.map(({label,value}) => (
+        <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--bg)',border:'1px solid var(--b)'}}>
+          <div style={{fontSize:10,color:'var(--tx3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
+          <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Bar({ label, pct, color, right }: { label: string; pct: number; color: string; right: string }) {
+  return (
+    <div style={{marginBottom:12}}>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:12,gap:8}}>
+        <span style={{textTransform:'capitalize',fontWeight:500}}>{label}</span>
+        <span style={{color:'var(--tx3)',whiteSpace:'nowrap'}}>{right}</span>
+      </div>
+      <div style={{height:6,borderRadius:3,background:'var(--ev)'}}>
+        <div style={{height:'100%',width:Math.min(100,Math.max(0,pct))+'%',background:color,borderRadius:3}} />
+      </div>
+    </div>
+  )
+}
+
+function PersonRow({ name, sub, right }: { name: any; sub?: any; right?: any }) {
+  return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 0',borderBottom:'1px solid var(--b)',gap:12}}>
+      <div style={{minWidth:0}}>
+        <div style={{fontWeight:600,fontSize:13,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
+        {sub && <div style={{fontSize:12,color:'var(--tx3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{sub}</div>}
+      </div>
+      {right && <div style={{flexShrink:0}}>{right}</div>}
+    </div>
+  )
+}
+
+function EmptyNote({ text }: { text: string }) {
+  return <div style={{textAlign:'center',padding:'24px 12px',color:'var(--tx3)',fontSize:13}}>{text}</div>
+}
+
+function MoreNote({ n }: { n: number }) {
+  if (n <= 0) return null
+  return <div style={{fontSize:12,color:'var(--tx3)',textAlign:'center',paddingTop:10}}>+{n} more</div>
 }
 
 export default function AdminPage() {
@@ -32,6 +118,7 @@ export default function AdminPage() {
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('Overview')
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [stats, setStats] = useState<any>(null)
   const [users, setUsers] = useState<any[]>([])
   const [candidates, setCandidates] = useState<any[]>([])
@@ -121,8 +208,281 @@ export default function AdminPage() {
   const counts = signups.map(s => s.count as number)
   const maxS = counts.length > 0 ? Math.max(...counts, 1) : 1
 
+  // ── Overview drill-down data (all client-side, no extra fetch) ──
+  const nowD = new Date()
+  const sinceDays = (n: number) => { const d = new Date(nowD); d.setDate(d.getDate() - n); return d }
+  const fmtDate = (d: any) => d ? new Date(d).toLocaleDateString('en-GB') : '—'
+  const totalUsers = stats?.totalUsers || 0
+  const paidUsers = users.filter(u => u.plan_id && u.plan_id !== 'free')
+  const freeUsersList = users.filter(u => !u.plan_id || u.plan_id === 'free')
+  const newWeekUsers = users.filter(u => u.created_at && new Date(u.created_at) >= sinceDays(7)).sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+  const newMonthUsers = users.filter(u => u.created_at && new Date(u.created_at) >= sinceDays(30)).sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+  const flaggedUsers = users.filter(u => u.is_suspicious)
+  const subs: any[] = stripeData?.subscriptions || []
+  const mrrByPlan: Record<string, { count: number; monthly: number }> = {}
+  subs.forEach(s => {
+    const p = (s.plan || 'unknown').toLowerCase()
+    const monthly = s.interval === 'year' ? (s.amount || 0) / 12 : (s.amount || 0)
+    if (!mrrByPlan[p]) mrrByPlan[p] = { count: 0, monthly: 0 }
+    mrrByPlan[p].count++; mrrByPlan[p].monthly += monthly
+  })
+  const mrrByPlanArr = Object.entries(mrrByPlan).sort((a, b) => b[1].monthly - a[1].monthly)
+
+  // Revenue / Activity / Growth drill-down data
+  const recentPayments: any[] = stripeData?.recentPayments || []
+  const monthStart = new Date(nowD.getFullYear(), nowD.getMonth(), 1)
+  const monthPayments = recentPayments.filter(p => p.created && new Date(p.created) >= monthStart)
+  const totalQuestions = users.reduce((s, u) => s + (u.questions_used || 0), 0)
+  const avgQuestions = users.length > 0 ? totalQuestions / users.length : 0
+  const topAskers = users.filter(u => (u.questions_used || 0) > 0).sort((a, b) => (b.questions_used || 0) - (a.questions_used || 0))
+  const powerUsersList = users.filter(u => (u.questions_used || 0) >= 5).sort((a, b) => (b.questions_used || 0) - (a.questions_used || 0))
+  const qBuckets = [
+    { label: '0 questions', n: users.filter(u => !((u.questions_used || 0) > 0)).length, color: '#94a3b8' },
+    { label: '1–4', n: users.filter(u => u.questions_used >= 1 && u.questions_used <= 4).length, color: '#60a5fa' },
+    { label: '5–9', n: users.filter(u => u.questions_used >= 5 && u.questions_used <= 9).length, color: '#8b5cf6' },
+    { label: '10+', n: users.filter(u => u.questions_used >= 10).length, color: '#f59e0b' },
+  ]
+  const byCountry: [string, number][] = (Object.entries(users.reduce((acc: any, u) => { const c = u.registration_country || 'Unknown'; acc[c] = (acc[c] || 0) + 1; return acc }, {})) as [string, number][]).sort((a, b) => b[1] - a[1])
+  const byPlanAll = ['free', 'growth', 'business', 'enterprise'].map(p => ({ plan: p, n: users.filter(u => (u.plan_id || 'free') === p).length }))
+
+  const overviewMetrics = [
+    { key: 'mrr', label: tc('admin.kv_mrr'), value: '£' + mrr, sub: tc('admin.kv_mrr_sub'), color: '#f59e0b' },
+    { key: 'arr', label: tc('admin.kv_arr'), value: '£' + arr, sub: tc('admin.kv_arr_sub'), color: '#8b5cf6' },
+    { key: 'paying', label: tc('admin.kv_paying_users'), value: payingCount, sub: tc('admin.kv_paying_users_sub'), color: '#10b981' },
+    { key: 'free', label: tc('admin.kv_free_users'), value: stats?.freeUsers, sub: tc('admin.kv_free_users_sub'), color: '#94a3b8' },
+    { key: 'conversion', label: tc('admin.kv_conversion'), value: conv + '%', sub: tc('admin.kv_conversion_sub'), color: '#6366F1' },
+    { key: 'newWeek', label: tc('admin.kv_new_this_week'), value: stats?.newThisWeek, sub: tc('admin.kv_new_this_week_sub'), color: '#60a5fa' },
+    { key: 'newMonth', label: tc('admin.kv_new_this_month'), value: stats?.newThisMonth, sub: tc('admin.kv_new_this_month_sub'), color: '#34d399' },
+    { key: 'flagged', label: tc('admin.kv_flagged'), value: stats?.suspiciousCount, sub: tc('admin.kv_flagged_sub'), color: '#f87171' },
+  ]
+
+  const closeDetail = () => setExpanded(null)
+  const signupWindow = (list: any[], title: string, days: number, accent: string) => {
+    const dayBars = signups.slice(-days)
+    const dmax = Math.max(...dayBars.map(x => x.count as number), 1)
+    return (
+      <DetailShell title={title} subtitle={list.length + ' new ' + (list.length === 1 ? 'signup' : 'signups') + ' in the last ' + days + ' days'} accent={accent} onClose={closeDetail}>
+        <SectionLabel>Daily signups</SectionLabel>
+        <div style={{display:'flex',alignItems:'flex-end',gap:3,height:70,marginBottom:2}}>
+          {dayBars.map((s, i) => (
+            <div key={i} title={s.date + ': ' + s.count} style={{flex:1,display:'flex',alignItems:'flex-end',height:'100%'}}>
+              <div style={{width:'100%',background:s.count > 0 ? accent : 'var(--ev)',borderRadius:'3px 3px 0 0',height:(s.count / dmax * 64) + 'px',minHeight:s.count > 0 ? 3 : 0,opacity:s.count > 0 ? 0.85 : 0.3}} />
+            </div>
+          ))}
+        </div>
+        <SectionLabel>New accounts</SectionLabel>
+        {list.length > 0 ? list.slice(0, 25).map(u => (
+          <PersonRow key={u.id} name={u.full_name || u.email} sub={u.email + (u.registration_country ? ' · ' + u.registration_country : '')}
+            right={<span style={{display:'flex',alignItems:'center',gap:8}}><Chip text={u.plan_id || 'free'} color={PLAN_COLORS[u.plan_id] || '#94a3b8'} /><span style={{fontSize:12,color:'var(--tx3)',whiteSpace:'nowrap'}}>{fmtDate(u.created_at)}</span></span>} />
+        )) : <EmptyNote text="No new signups in this window." />}
+        <MoreNote n={list.length - 25} />
+      </DetailShell>
+    )
+  }
+
+  const renderDetail = () => {
+    switch (expanded) {
+      case 'mrr':
+        return (
+          <DetailShell title="Monthly Recurring Revenue" subtitle="Normalised monthly value of active subscriptions" accent="#f59e0b" onClose={closeDetail}>
+            <ChipStats items={[
+              { label: 'MRR', value: '£' + mrr },
+              { label: 'This month', value: '£' + (stripeData?.monthRevenue ?? 0) },
+              { label: 'All-time', value: '£' + (stripeData?.totalRevenue ?? 0) },
+              { label: 'Active subs', value: stripeData?.activeSubscriptions ?? subs.length },
+            ]} />
+            {mrrByPlanArr.length > 0 ? <>
+              <SectionLabel>MRR by plan</SectionLabel>
+              {mrrByPlanArr.map(([plan, d]) => (
+                <Bar key={plan} label={plan} pct={mrr > 0 ? d.monthly / mrr * 100 : 0} color={PLAN_COLORS[plan] || '#f59e0b'} right={'£' + Math.round(d.monthly) + ' · ' + d.count + ' sub' + (d.count !== 1 ? 's' : '')} />
+              ))}
+              <SectionLabel>Active subscriptions</SectionLabel>
+              {subs.slice(0, 20).map(s => (
+                <PersonRow key={s.id} name={s.customerName || s.customerEmail || '—'} sub={(s.customerEmail || '') + ' · renews ' + fmtDate(s.currentPeriodEnd)}
+                  right={<span style={{display:'flex',alignItems:'center',gap:8}}><Chip text={s.plan} color="#6366F1" /><span style={{fontWeight:700,fontSize:13}}>£{s.amount}</span></span>} />
+              ))}
+              <MoreNote n={subs.length - 20} />
+            </> : <EmptyNote text="No Stripe subscription data available — MRR is estimated from plan assignments." />}
+          </DetailShell>
+        )
+      case 'arr':
+        return (
+          <DetailShell title="Annual Run Rate" subtitle="Current MRR projected over 12 months" accent="#8b5cf6" onClose={closeDetail}>
+            <div style={{display:'flex',alignItems:'baseline',gap:10,flexWrap:'wrap',padding:'4px 0 6px'}}>
+              <span style={{fontSize:26,fontWeight:700,fontFamily:'var(--font-sora)'}}>£{mrr}</span>
+              <span style={{color:'var(--tx3)',fontSize:13}}>MRR × 12 months =</span>
+              <span style={{fontSize:26,fontWeight:700,fontFamily:'var(--font-sora)',color:'#8b5cf6'}}>£{arr}</span>
+            </div>
+            {mrrByPlanArr.length > 0 && <>
+              <SectionLabel>Annualised by plan</SectionLabel>
+              {mrrByPlanArr.map(([plan, d]) => (
+                <Bar key={plan} label={plan} pct={arr > 0 ? d.monthly * 12 / arr * 100 : 0} color={PLAN_COLORS[plan] || '#8b5cf6'} right={'£' + Math.round(d.monthly * 12) + '/yr'} />
+              ))}
+            </>}
+          </DetailShell>
+        )
+      case 'paying':
+        return (
+          <DetailShell title="Paying Users" subtitle={payingCount + ' active paid ' + (payingCount === 1 ? 'subscription' : 'subscriptions')} accent="#10b981" onClose={closeDetail}>
+            <SectionLabel>By plan</SectionLabel>
+            {['growth', 'business', 'enterprise'].map(plan => {
+              const c = paidUsers.filter(u => u.plan_id === plan).length
+              return <Bar key={plan} label={plan} pct={paidUsers.length > 0 ? c / paidUsers.length * 100 : 0} color={PLAN_COLORS[plan]} right={String(c)} />
+            })}
+            <SectionLabel>Subscribers</SectionLabel>
+            {paidUsers.length > 0 ? paidUsers.slice(0, 25).map(u => (
+              <PersonRow key={u.id} name={u.full_name || u.email} sub={u.email + (u.registration_country ? ' · ' + u.registration_country : '')} right={<Chip text={u.plan_id} color={PLAN_COLORS[u.plan_id] || '#10b981'} />} />
+            )) : <EmptyNote text="No paying users yet." />}
+            <MoreNote n={paidUsers.length - 25} />
+          </DetailShell>
+        )
+      case 'free':
+        return (
+          <DetailShell title="Free Users" subtitle={freeUsersList.length + ' on the free plan'} accent="#94a3b8" onClose={closeDetail}>
+            <ChipStats items={[
+              { label: 'Free users', value: freeUsersList.length },
+              { label: '% of total', value: (totalUsers > 0 ? Math.round(freeUsersList.length / totalUsers * 100) : 0) + '%' },
+              { label: 'Upgrade-ready', value: candidates.length },
+            ]} />
+            <SectionLabel>Upgrade candidates (near free limit)</SectionLabel>
+            {candidates.length > 0 ? candidates.slice(0, 20).map(c => (
+              <PersonRow key={c.id} name={c.full_name || '—'} sub={c.email} right={<span style={{fontSize:12,fontWeight:700,color:'#f59e0b'}}>{c.questions_used}/10</span>} />
+            )) : <EmptyNote text="No free users are near the usage limit yet." />}
+            <MoreNote n={candidates.length - 20} />
+          </DetailShell>
+        )
+      case 'conversion':
+        return (
+          <DetailShell title="Free → Paid Conversion" subtitle={conv + '% of users are on a paid plan'} accent="#6366F1" onClose={closeDetail}>
+            <SectionLabel>Funnel</SectionLabel>
+            <Bar label="Total users" pct={100} color="#94a3b8" right={String(totalUsers)} />
+            <Bar label="Free" pct={totalUsers > 0 ? freeUsersList.length / totalUsers * 100 : 0} color="#94a3b8" right={String(freeUsersList.length)} />
+            <Bar label="Paying" pct={totalUsers > 0 ? payingCount / totalUsers * 100 : 0} color="#10b981" right={payingCount + ' (' + conv + '%)'} />
+            <SectionLabel>Ready to convert</SectionLabel>
+            {candidates.length > 0 ? candidates.slice(0, 15).map(c => (
+              <PersonRow key={c.id} name={c.full_name || '—'} sub={c.email} right={<span style={{fontSize:12,fontWeight:700,color:'#f59e0b'}}>{c.questions_used}/10</span>} />
+            )) : <EmptyNote text="No upgrade candidates right now." />}
+            <MoreNote n={candidates.length - 15} />
+          </DetailShell>
+        )
+      case 'newWeek':
+        return signupWindow(newWeekUsers, 'New This Week', 7, '#60a5fa')
+      case 'newMonth':
+        return signupWindow(newMonthUsers, 'New This Month', 30, '#34d399')
+      case 'flagged':
+        return (
+          <DetailShell title="Flagged Accounts" subtitle={flaggedUsers.length + ' account' + (flaggedUsers.length !== 1 ? 's' : '') + ' marked suspicious'} accent="#f87171" onClose={closeDetail}>
+            {flaggedUsers.length > 0 ? flaggedUsers.slice(0, 30).map(u => (
+              <PersonRow key={u.id} name={(u.full_name || u.email) + ' ⚠️'} sub={u.email + ' · ' + (u.questions_used || 0) + ' questions · joined ' + fmtDate(u.created_at)} right={<Chip text={u.plan_id || 'free'} color={PLAN_COLORS[u.plan_id] || '#94a3b8'} />} />
+            )) : <EmptyNote text="No flagged accounts — all clear." />}
+            <MoreNote n={flaggedUsers.length - 30} />
+          </DetailShell>
+        )
+      case 'subs':
+        return (
+          <DetailShell title="Active Subscriptions" subtitle={(stripeData?.activeSubscriptions ?? subs.length) + ' paying ' + ((stripeData?.activeSubscriptions ?? subs.length) === 1 ? 'subscription' : 'subscriptions')} accent="#10b981" onClose={closeDetail}>
+            {mrrByPlanArr.length > 0 && <>
+              <SectionLabel>By plan</SectionLabel>
+              {mrrByPlanArr.map(([plan, d]) => (
+                <Bar key={plan} label={plan} pct={subs.length > 0 ? d.count / subs.length * 100 : 0} color={PLAN_COLORS[plan] || '#10b981'} right={d.count + ' · £' + Math.round(d.monthly) + '/mo'} />
+              ))}
+            </>}
+            <SectionLabel>Subscriptions</SectionLabel>
+            {subs.length > 0 ? subs.slice(0, 25).map(s => (
+              <PersonRow key={s.id} name={s.customerName || s.customerEmail || '—'} sub={(s.customerEmail || '') + ' · ' + s.interval + 'ly · renews ' + fmtDate(s.currentPeriodEnd)}
+                right={<span style={{display:'flex',alignItems:'center',gap:8}}><Chip text={s.plan} color="#6366F1" /><span style={{fontWeight:700,fontSize:13}}>£{s.amount}</span></span>} />
+            )) : <EmptyNote text="No active subscriptions." />}
+            <MoreNote n={subs.length - 25} />
+          </DetailShell>
+        )
+      case 'monthRev':
+        return (
+          <DetailShell title="Revenue This Month" subtitle={monthPayments.length + ' payment' + (monthPayments.length !== 1 ? 's' : '') + ' since ' + fmtDate(monthStart)} accent="#60a5fa" onClose={closeDetail}>
+            <ChipStats items={[
+              { label: 'This month', value: '£' + (stripeData?.monthRevenue ?? 0) },
+              { label: 'Payments', value: monthPayments.length },
+            ]} />
+            <SectionLabel>Payments this month</SectionLabel>
+            {monthPayments.length > 0 ? monthPayments.slice(0, 25).map(p => (
+              <PersonRow key={p.id} name={<span>£{p.amount} <span style={{fontSize:11,fontWeight:500,color:p.status === 'succeeded' ? '#10b981' : '#f87171'}}>{p.status}</span></span>} sub={p.email + (p.description ? ' · ' + p.description : '')} right={<span style={{fontSize:12,color:'var(--tx3)',whiteSpace:'nowrap'}}>{fmtDate(p.created)}</span>} />
+            )) : <EmptyNote text="No payments recorded this month yet." />}
+            <MoreNote n={monthPayments.length - 25} />
+          </DetailShell>
+        )
+      case 'totalRev':
+        return (
+          <DetailShell title="Total Revenue" subtitle="All-time gross payments" accent="#34d399" onClose={closeDetail}>
+            <ChipStats items={[
+              { label: 'All-time', value: '£' + (stripeData?.totalRevenue ?? 0) },
+              { label: 'This month', value: '£' + (stripeData?.monthRevenue ?? 0) },
+              { label: 'MRR', value: '£' + mrr },
+            ]} />
+            <SectionLabel>Recent payments</SectionLabel>
+            {recentPayments.length > 0 ? recentPayments.slice(0, 25).map(p => (
+              <PersonRow key={p.id} name={<span>£{p.amount} <span style={{fontSize:11,fontWeight:500,color:p.status === 'succeeded' ? '#10b981' : '#f87171'}}>{p.status}</span></span>} sub={p.email + (p.description ? ' · ' + p.description : '')} right={<span style={{fontSize:12,color:'var(--tx3)',whiteSpace:'nowrap'}}>{fmtDate(p.created)}</span>} />
+            )) : <EmptyNote text="No payment history available." />}
+            <MoreNote n={recentPayments.length - 25} />
+          </DetailShell>
+        )
+      case 'questions':
+        return (
+          <DetailShell title="Total Questions Asked" subtitle={totalQuestions + ' questions across ' + users.length + ' users'} accent="#10b981" onClose={closeDetail}>
+            <ChipStats items={[
+              { label: 'Total', value: totalQuestions },
+              { label: 'Avg / user', value: avgQuestions.toFixed(1) },
+              { label: 'Active askers', value: topAskers.length },
+            ]} />
+            <SectionLabel>Top askers</SectionLabel>
+            {topAskers.length > 0 ? topAskers.slice(0, 25).map(u => (
+              <PersonRow key={u.id} name={u.full_name || u.email} sub={u.email} right={<span style={{display:'flex',alignItems:'center',gap:8}}><Chip text={u.plan_id || 'free'} color={PLAN_COLORS[u.plan_id] || '#94a3b8'} /><span style={{fontWeight:700,fontSize:13}}>{u.questions_used}</span></span>} />
+            )) : <EmptyNote text="No questions asked yet." />}
+            <MoreNote n={topAskers.length - 25} />
+          </DetailShell>
+        )
+      case 'avgQuestions':
+        return (
+          <DetailShell title="Questions per User" subtitle={'Average ' + avgQuestions.toFixed(1) + ' questions per user'} accent="#f59e0b" onClose={closeDetail}>
+            <SectionLabel>Usage distribution</SectionLabel>
+            {qBuckets.map(b => (
+              <Bar key={b.label} label={b.label} pct={users.length > 0 ? b.n / users.length * 100 : 0} color={b.color} right={b.n + ' user' + (b.n !== 1 ? 's' : '')} />
+            ))}
+          </DetailShell>
+        )
+      case 'powerUsers':
+        return (
+          <DetailShell title="Power Users" subtitle={powerUsersList.length + ' user' + (powerUsersList.length !== 1 ? 's' : '') + ' with 5+ questions'} accent="#8b5cf6" onClose={closeDetail}>
+            {powerUsersList.length > 0 ? powerUsersList.slice(0, 30).map(u => (
+              <PersonRow key={u.id} name={u.full_name || u.email} sub={u.email + (u.registration_country ? ' · ' + u.registration_country : '')} right={<span style={{display:'flex',alignItems:'center',gap:8}}><Chip text={u.plan_id || 'free'} color={PLAN_COLORS[u.plan_id] || '#94a3b8'} /><span style={{fontWeight:700,fontSize:13}}>{u.questions_used}</span></span>} />
+            )) : <EmptyNote text="No power users yet." />}
+            <MoreNote n={powerUsersList.length - 30} />
+          </DetailShell>
+        )
+      case 'totalUsers':
+        return (
+          <DetailShell title="Total Users" subtitle={totalUsers + ' registered ' + (totalUsers === 1 ? 'user' : 'users')} accent="#94a3b8" onClose={closeDetail}>
+            <SectionLabel>By plan</SectionLabel>
+            {byPlanAll.map(({ plan, n }) => (
+              <Bar key={plan} label={plan} pct={users.length > 0 ? n / users.length * 100 : 0} color={PLAN_COLORS[plan]} right={String(n)} />
+            ))}
+            <SectionLabel>By country</SectionLabel>
+            {byCountry.slice(0, 12).map(([c, n]) => (
+              <Bar key={c} label={c} pct={users.length > 0 ? n / users.length * 100 : 0} color="#6366F1" right={String(n)} />
+            ))}
+          </DetailShell>
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)',fontFamily:'var(--font-dm,DM Sans,sans-serif)'}}>
+      <style>{`
+        .kv-clickable:hover { border-color: var(--tx3); box-shadow: 0 4px 14px rgba(0,0,0,.07); transform: translateY(-1px); }
+        .kv-clickable:focus-visible { outline: 2px solid #6366F1; outline-offset: 2px; }
+        .ov-detail { animation: fadeUp .22s ease-out; }
+        @media (prefers-reduced-motion: reduce) { .kv-clickable:hover { transform: none; } .ov-detail { animation: none; } }
+      `}</style>
       {actionMsg && <div style={{position:'fixed',top:16,right:16,zIndex:999,padding:'10px 16px',borderRadius:10,background:'rgba(34,197,94,.15)',border:'1px solid rgba(34,197,94,.3)',color:'#16a34a',fontSize:13,fontWeight:500}}>✓ {actionMsg}</div>}
       <div style={{padding:'20px 24px',borderBottom:'1px solid var(--b)',background:'var(--sf)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
         <div>
@@ -136,7 +496,7 @@ export default function AdminPage() {
       </div>
       <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
         {TABS.map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
+          <button key={t} onClick={() => { setTab(t); setExpanded(null) }} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
             {tc('admin.' + TAB_KEYS[t])}{t==='Users'?' (' + users.length + ')':''}
           </button>
         ))}
@@ -145,16 +505,14 @@ export default function AdminPage() {
         {loading ? <div style={{textAlign:'center',padding:60,color:'var(--tx3)'}}>{tc('admin.loading')}</div> : <>
 
           {tab==='Overview' && <>
+            <div style={{fontSize:12,color:'var(--tx3)',marginBottom:10}}>{tc('admin.tap_card_hint') !== 'admin.tap_card_hint' ? tc('admin.tap_card_hint') : 'Tap any metric to expand a detailed breakdown.'}</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-              <KV label={tc('admin.kv_mrr')} value={"£"+mrr} sub={tc('admin.kv_mrr_sub')} color="#f59e0b" />
-              <KV label={tc('admin.kv_arr')} value={"£"+arr} sub={tc('admin.kv_arr_sub')} color="#8b5cf6" />
-              <KV label={tc('admin.kv_paying_users')} value={payingCount} sub={tc('admin.kv_paying_users_sub')} color="#10b981" />
-              <KV label={tc('admin.kv_free_users')} value={stats?.freeUsers} sub={tc('admin.kv_free_users_sub')} color="#94a3b8" />
-              <KV label={tc('admin.kv_conversion')} value={conv+"%"} sub={tc('admin.kv_conversion_sub')} color="#6366F1" />
-              <KV label={tc('admin.kv_new_this_week')} value={stats?.newThisWeek} sub={tc('admin.kv_new_this_week_sub')} color="#60a5fa" />
-              <KV label={tc('admin.kv_new_this_month')} value={stats?.newThisMonth} sub={tc('admin.kv_new_this_month_sub')} color="#34d399" />
-              <KV label={tc('admin.kv_flagged')} value={stats?.suspiciousCount} sub={tc('admin.kv_flagged_sub')} color="#f87171" />
+              {overviewMetrics.map(m => (
+                <KV key={m.key} label={m.label} value={m.value} sub={m.sub} color={m.color}
+                  active={expanded === m.key} onClick={() => setExpanded(expanded === m.key ? null : m.key)} />
+              ))}
             </div>
+            {expanded && renderDetail()}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.plan_distribution')}</div>
@@ -186,13 +544,14 @@ export default function AdminPage() {
 
           {tab==='Revenue' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label={tc('admin.kv_mrr')} value={"£"+mrr} sub={tc('admin.kv_mrr_stripe_sub')} color="#f59e0b" />
-              <KV label={tc('admin.kv_arr')} value={"£"+arr} sub={tc('admin.kv_arr_annualised_sub')} color="#8b5cf6" />
-              <KV label={tc('admin.kv_active_subs')} value={stripeData?.activeSubscriptions??0} sub={tc('admin.kv_active_subs_sub')} color="#10b981" />
-              <KV label={tc('admin.kv_conversion')} value={conv+"%"} sub={tc('admin.kv_conversion_sub')} color="#6366F1" />
-              <KV label={tc('admin.kv_this_month')} value={"£"+(stripeData?.monthRevenue??0)} sub={tc('admin.kv_this_month_sub')} color="#60a5fa" />
-              <KV label={tc('admin.kv_total_revenue')} value={"£"+(stripeData?.totalRevenue??0)} sub={tc('admin.kv_total_revenue_sub')} color="#34d399" />
+              <KV label={tc('admin.kv_mrr')} value={"£"+mrr} sub={tc('admin.kv_mrr_stripe_sub')} color="#f59e0b" active={expanded==='mrr'} onClick={()=>setExpanded(expanded==='mrr'?null:'mrr')} />
+              <KV label={tc('admin.kv_arr')} value={"£"+arr} sub={tc('admin.kv_arr_annualised_sub')} color="#8b5cf6" active={expanded==='arr'} onClick={()=>setExpanded(expanded==='arr'?null:'arr')} />
+              <KV label={tc('admin.kv_active_subs')} value={stripeData?.activeSubscriptions??0} sub={tc('admin.kv_active_subs_sub')} color="#10b981" active={expanded==='subs'} onClick={()=>setExpanded(expanded==='subs'?null:'subs')} />
+              <KV label={tc('admin.kv_conversion')} value={conv+"%"} sub={tc('admin.kv_conversion_sub')} color="#6366F1" active={expanded==='conversion'} onClick={()=>setExpanded(expanded==='conversion'?null:'conversion')} />
+              <KV label={tc('admin.kv_this_month')} value={"£"+(stripeData?.monthRevenue??0)} sub={tc('admin.kv_this_month_sub')} color="#60a5fa" active={expanded==='monthRev'} onClick={()=>setExpanded(expanded==='monthRev'?null:'monthRev')} />
+              <KV label={tc('admin.kv_total_revenue')} value={"£"+(stripeData?.totalRevenue??0)} sub={tc('admin.kv_total_revenue_sub')} color="#34d399" active={expanded==='totalRev'} onClick={()=>setExpanded(expanded==='totalRev'?null:'totalRev')} />
             </div>
+            {expanded && renderDetail()}
 
             {stripeData?.subscriptions?.length > 0 && <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
               <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>{tc('admin.active_subscriptions')}</div>
@@ -294,11 +653,12 @@ export default function AdminPage() {
 
           {tab==='Activity' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label={tc('admin.kv_new_this_month')} value={stats?.newThisMonth} sub={tc('admin.kv_new_signups_sub')} color="#6366F1" />
-              <KV label={tc('admin.kv_total_questions')} value={users.reduce((s,u)=>s+(u.questions_used||0),0)} sub={tc('admin.kv_total_questions_sub')} color="#10b981" />
-              <KV label={tc('admin.kv_avg_questions')} value={(users.reduce((s,u)=>s+(u.questions_used||0),0)/(users.length||1)).toFixed(1)} sub={tc('admin.kv_avg_questions_sub')} color="#f59e0b" />
-              <KV label={tc('admin.kv_power_users')} value={users.filter(u=>u.questions_used>=5).length} sub={tc('admin.kv_power_users_sub')} color="#8b5cf6" />
+              <KV label={tc('admin.kv_new_this_month')} value={stats?.newThisMonth} sub={tc('admin.kv_new_signups_sub')} color="#6366F1" active={expanded==='newMonth'} onClick={()=>setExpanded(expanded==='newMonth'?null:'newMonth')} />
+              <KV label={tc('admin.kv_total_questions')} value={totalQuestions} sub={tc('admin.kv_total_questions_sub')} color="#10b981" active={expanded==='questions'} onClick={()=>setExpanded(expanded==='questions'?null:'questions')} />
+              <KV label={tc('admin.kv_avg_questions')} value={avgQuestions.toFixed(1)} sub={tc('admin.kv_avg_questions_sub')} color="#f59e0b" active={expanded==='avgQuestions'} onClick={()=>setExpanded(expanded==='avgQuestions'?null:'avgQuestions')} />
+              <KV label={tc('admin.kv_power_users')} value={powerUsersList.length} sub={tc('admin.kv_power_users_sub')} color="#8b5cf6" active={expanded==='powerUsers'} onClick={()=>setExpanded(expanded==='powerUsers'?null:'powerUsers')} />
             </div>
+            {expanded && renderDetail()}
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
               <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.daily_signups')}</div>
               <div style={{display:'flex',alignItems:'flex-end',gap:4,height:100}}>
@@ -553,11 +913,12 @@ export default function AdminPage() {
 
           {tab==='Growth' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label={tc('admin.kv_weekly_growth')} value={"+"+stats?.newThisWeek} sub={tc('admin.kv_weekly_growth_sub')} color="#10b981" />
-              <KV label={tc('admin.kv_monthly_growth')} value={"+"+stats?.newThisMonth} sub={tc('admin.kv_monthly_growth_sub')} color="#6366F1" />
-              <KV label={tc('admin.kv_paying_ratio')} value={conv+"%"} sub={tc('admin.kv_paying_ratio_sub')} color="#f59e0b" />
-              <KV label={tc('admin.kv_total_users')} value={stats?.totalUsers} sub={tc('admin.kv_total_users_sub')} color="#94a3b8" />
+              <KV label={tc('admin.kv_weekly_growth')} value={"+"+stats?.newThisWeek} sub={tc('admin.kv_weekly_growth_sub')} color="#10b981" active={expanded==='newWeek'} onClick={()=>setExpanded(expanded==='newWeek'?null:'newWeek')} />
+              <KV label={tc('admin.kv_monthly_growth')} value={"+"+stats?.newThisMonth} sub={tc('admin.kv_monthly_growth_sub')} color="#6366F1" active={expanded==='newMonth'} onClick={()=>setExpanded(expanded==='newMonth'?null:'newMonth')} />
+              <KV label={tc('admin.kv_paying_ratio')} value={conv+"%"} sub={tc('admin.kv_paying_ratio_sub')} color="#f59e0b" active={expanded==='conversion'} onClick={()=>setExpanded(expanded==='conversion'?null:'conversion')} />
+              <KV label={tc('admin.kv_total_users')} value={stats?.totalUsers} sub={tc('admin.kv_total_users_sub')} color="#94a3b8" active={expanded==='totalUsers'} onClick={()=>setExpanded(expanded==='totalUsers'?null:'totalUsers')} />
             </div>
+            {expanded && renderDetail()}
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
               <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.daily_signups')}</div>
               <div style={{display:'flex',alignItems:'flex-end',gap:3,height:120}}>
