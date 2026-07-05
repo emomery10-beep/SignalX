@@ -108,5 +108,6 @@
   "location_confirm_yes": "Oui, c’est correct →",
   "location_confirm_change": "Modifier",
   "location_use_detected": "Utiliser la position détectée",
-  "business_name_label": "Nom de l’entreprise (facultatif)"
+  "business_name_label": "Nom de l’entreprise (facultatif)",
+  "helper_hint": "Appuyez sur le haut-parleur pour écouter — ou laissez quelqu’un vous aider à configurer."
 }

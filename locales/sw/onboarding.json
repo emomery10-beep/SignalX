@@ -108,5 +108,6 @@
   "done_cta": "Nenda kwa AskBiz →",
   "done_title_pos_named": "Vizuri, {name}!",
   "done_subtitle_pos": "Biashara yako imepangwa. Ifuatayo, ongeza kile unauza na anza kufanya kazi kwa kiotomatiki.",
-  "done_cta_pos": "Panga kiotomatiki changu →"
+  "done_cta_pos": "Panga kiotomatiki changu →",
+  "helper_hint": "Gusa spika kusikiliza haya — au mwache mtu akusaidie kusanidi."
 }

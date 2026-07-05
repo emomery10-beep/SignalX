@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { posSeatPrice } from '@/lib/geo'
+import SpeakButton from '@/components/SpeakButton'
 
 // ── AskBiz tokens (match onboarding / setup) ─────────────────
 const ACC = '#d08a59'
@@ -155,6 +156,9 @@ export default function PosActivatePage() {
         {/* ── PAY: the one-screen checkout ── */}
         {(phase === 'pay' || phase === 'redirecting') && (
           <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+              <SpeakButton text={`${tc('pos_setup.activate_title')}. ${price} ${tc('pos_setup.team_per_month')}`} size={48} />
+            </div>
             <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(24px,5vw,30px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 8 }}>
               {tc('pos_setup.activate_title')}
             </h1>

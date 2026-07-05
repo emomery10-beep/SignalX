@@ -9,6 +9,8 @@
 // it may actually cite, and (b) the post-generation check that catches
 // ungrounded attributions the model invents anyway.
 
+import { waitForGroqBudget, parseGroqRetryAfterMs } from './groq-rate-limiter'
+
 export interface SourceArticle {
   title: string
   url: string
@@ -118,16 +120,40 @@ export async function generateWithLengthRetry(opts: {
 }): Promise<Record<string, any>> {
   const { groqUrl, apiKey, model, maxTokens, systemPrompt, userPrompt, logRoute, logUsage } = opts
 
+  // Each call here counts against Groq's real per-minute token cap for the
+  // whole account (12k TPM on the on-demand tier) — with 3-5 topics running
+  // concurrently, uncoordinated calls blow straight through it. waitForGroqBudget
+  // paces every call (initial + the one length-expand retry) against a shared
+  // rolling-window budget instead of firing blind.
   async function call(messages: Array<{ role: string; content: string }>) {
-    const res = await fetch(groqUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model, max_tokens: maxTokens, messages }),
-    })
-    const data = await res.json()
-    logUsage({ route: logRoute, model, usage: { input_tokens: data.usage?.prompt_tokens || 0, output_tokens: data.usage?.completion_tokens || 0 } })
-    const raw = data.choices?.[0]?.message?.content || ''
-    return raw.replace(/```json\n?|```/g, '').trim()
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      await waitForGroqBudget(maxTokens + 4300)
+      const res = await fetch(groqUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, max_tokens: maxTokens, response_format: { type: 'json_object' }, messages }),
+      })
+      const bodyText = await res.text()
+      let data: any
+      try {
+        data = JSON.parse(bodyText)
+      } catch {
+        throw new Error(`Groq API returned non-JSON (status ${res.status}): ${bodyText.slice(0, 200)}`)
+      }
+      if (!res.ok) {
+        const msg = `Groq API error ${res.status}: ${data?.error?.message || bodyText.slice(0, 200)}`
+        const retryAfterMs = parseGroqRetryAfterMs(msg)
+        if (retryAfterMs && attempt === 1) {
+          await new Promise(r => setTimeout(r, retryAfterMs))
+          continue
+        }
+        throw new Error(msg)
+      }
+      logUsage({ route: logRoute, model, usage: { input_tokens: data.usage?.prompt_tokens || 0, output_tokens: data.usage?.completion_tokens || 0 } })
+      const raw = data.choices?.[0]?.message?.content || ''
+      return raw.replace(/```json\n?|```/g, '').trim()
+    }
+    throw new Error('Groq API call failed after rate-limit retry')
   }
 
   const messages = [

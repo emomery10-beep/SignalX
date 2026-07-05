@@ -108,5 +108,6 @@
   "location_confirm_yes": "نعم، هذا صحيح ←",
   "location_confirm_change": "تغيير",
   "location_use_detected": "استخدام الموقع المكتشف",
-  "business_name_label": "اسم النشاط التجاري (اختياري)"
+  "business_name_label": "اسم النشاط التجاري (اختياري)",
+  "helper_hint": "اضغط على مكبر الصوت للاستماع — أو دع شخصًا يساعدك في الإعداد."
 }

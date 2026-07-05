@@ -108,5 +108,6 @@
   "done_cta": "Go to AskBiz →",
   "done_title_pos_named": "Nice work, {name}!",
   "done_subtitle_pos": "Your business is set up. Next, add what you sell and start your till.",
-  "done_cta_pos": "Set up my till →"
+  "done_cta_pos": "Set up my till →",
+  "helper_hint": "Tap the speaker to hear this — or let someone help you set up."
 }

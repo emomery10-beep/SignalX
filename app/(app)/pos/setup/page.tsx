@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { COUNTRY_DIAL, toE164, posSeatPrice } from '@/lib/geo'
+import { speak } from '@/lib/speak'
+import SpeakButton from '@/components/SpeakButton'
 
 // ── AskBiz tokens (match onboarding) ──────────────────────────
 const ACC = '#d08a59'
@@ -57,7 +59,7 @@ const feedback = (kind: 'ok' | 'err') => {
 export default function PosSetupPage() {
   const router = useRouter()
   const supabase = createClient()
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
 
   const [screen, setScreen]     = useState<Screen>('list')
   const [items, setItems]       = useState<Item[]>([])
@@ -248,6 +250,9 @@ export default function PosSetupPage() {
       const d = await res.json()
       if (!res.ok) { feedback('err'); setError(d.error || tc('pos_setup.err_save')); setSaving(false); return }
       feedback('ok')
+      // Read the saved item + price back aloud — confirmation for a vendor who
+      // can't read the row they just created (research: always confirm amounts).
+      speak(`${resolvedName()}. ${currencySymbol}${priceNum}`, lang)
       setItems(prev => [...prev, { id: d.product.id, name: d.product.name, sale_price: d.product.sale_price, stock_qty: d.product.stock_qty, image_url: d.product.image_url || null }])
       stopCamera()
       setScreen('list')
@@ -381,11 +386,28 @@ export default function PosSetupPage() {
     )
   }
 
+  // What the read-aloud button speaks for the current screen.
+  const screenSpokenText = (() => {
+    switch (screen) {
+      case 'list':     return `${items.length === 0 ? (firstName ? tc('pos_setup.title_empty_named', { name: firstName }) : tc('pos_setup.title_empty')) : (items.length === 1 ? tc('pos_setup.title_count_one') : tc('pos_setup.title_count', { count: items.length }))}. ${tc('pos_setup.subtitle')}`
+      case 'capture':  return `${tc('pos_setup.name_label')}. ${tc('pos_setup.price_label')}`
+      case 'team':     return `${tc('pos_setup.team_title')}. ${tc('pos_setup.team_subtitle')}`
+      case 'team-add': return tc('pos_setup.team_add_title')
+      case 'ready':    return `${firstName ? tc('pos_setup.ready_title_named', { name: firstName }) : tc('pos_setup.ready_title')}`
+      default:         return ''
+    }
+  })()
+
   return (
     <div style={{ minHeight: '100%', background: BG, fontFamily: 'DM Sans, sans-serif', display: 'flex', flexDirection: 'column' }}>
       {/* On mobile the app shell floats a menu button top-left; clear it so
           the page heading isn't overlapped. No effect on desktop. */}
       <style>{`@media (max-width: 768px) { .pos-setup-shell { padding-top: 56px !important; } }`}</style>
+      {screenSpokenText && (
+        <div style={{ position: 'fixed', right: 16, bottom: 80, zIndex: 90 }}>
+          <SpeakButton text={screenSpokenText} size={52} />
+        </div>
+      )}
       <div className="pos-setup-shell" style={{ width: '100%', maxWidth: 480, margin: '0 auto', padding: '20px 16px 40px', flex: 1 }}>
 
         {/* Already enabled — nudge to the real POS instead of the pre-pay flow */}

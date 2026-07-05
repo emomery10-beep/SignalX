@@ -108,5 +108,6 @@
   "location_confirm_yes": "Ja, das stimmt →",
   "location_confirm_change": "Ändern",
   "location_use_detected": "Erkannten Standort verwenden",
-  "business_name_label": "Name des Unternehmens (optional)"
+  "business_name_label": "Name des Unternehmens (optional)",
+  "helper_hint": "Tippe auf den Lautsprecher, um dies zu hören — oder lass dir beim Einrichten helfen."
 }

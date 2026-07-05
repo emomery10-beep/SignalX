@@ -108,5 +108,6 @@
   "location_confirm_yes": "Ja, dat klopt →",
   "location_confirm_change": "Wijzigen",
   "location_use_detected": "Gedetecteerde locatie gebruiken",
-  "business_name_label": "Bedrijfsnaam (optioneel)"
+  "business_name_label": "Bedrijfsnaam (optioneel)",
+  "helper_hint": "Tik op de luidspreker om dit te horen — of laat iemand je helpen met instellen."
 }

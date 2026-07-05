@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES } from '@/lib/geo'
+import SpeakButton from '@/components/SpeakButton'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
 
@@ -37,7 +38,7 @@ const POS_LANDING_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon'
 // market_stall and food_bev are listed first below: the primary target
 // persona for the simplified flow taps one of the first two tiles.
 const bizIcon = (id: string) => {
-  const p = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  const p = { width: 30, height: 30, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   switch (id) {
     case 'market_stall': return <svg {...p}><path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.6-7.4"/><path d="M4.5 15.5h15"/></svg>
     case 'food_bev': return <svg {...p}><path d="M3 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7"/></svg>
@@ -205,6 +206,19 @@ export default function OnboardingPage() {
   const progress  = (stepIndex / (STEPS.length - 1)) * 100
   const isPosPersona = POS_LANDING_TYPES.has(bizType)
 
+  // Text the read-aloud button speaks for the current step (heading + guidance).
+  const spokenText = (() => {
+    switch (step) {
+      case 'business': return `${firstName ? tc('onboarding.business_title_named', { name: firstName }) : tc('onboarding.business_title')}. ${tc('onboarding.business_subtitle')}`
+      case 'location': return `${tc('onboarding.location_title')}. ${tc('onboarding.location_subtitle')}`
+      case 'sector':   return `${tc('onboarding.sector_title')}. ${tc('onboarding.sector_subtitle')}`
+      case 'export':   return `${tc('onboarding.export_title')}. ${tc('onboarding.export_subtitle')}`
+      case 'connect':  return `${tc('onboarding.connect_title')}. ${tc('onboarding.connect_subtitle')}`
+      case 'done':     return isPosPersona ? `${firstName ? tc('onboarding.done_title_pos_named', { name: firstName }) : tc('onboarding.done_title')}. ${tc('onboarding.done_subtitle_pos')}` : `${tc('onboarding.done_title')}. ${tc('onboarding.done_subtitle')}`
+      default:         return ''
+    }
+  })()
+
   const toggleSector = (s: string) =>
     setSectors(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
 
@@ -322,6 +336,12 @@ export default function OnboardingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, display: 'flex', flexDirection: 'column', fontFamily: 'DM Sans, sans-serif' }}>
+      {/* Read-aloud — audio channel for vendors who can't read the screen */}
+      {spokenText && (
+        <div style={{ position: 'fixed', right: 16, bottom: 20, zIndex: 90 }}>
+          <SpeakButton text={spokenText} size={52} />
+        </div>
+      )}
       {/* Progress bar */}
       <div style={{ height: 3, background: B, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
         <div style={{ height: '100%', width: `${progress}%`, background: ACC, transition: 'width 400ms ease' }}/>
@@ -362,13 +382,16 @@ export default function OnboardingPage() {
                     onClick={() => setBizType(bt.id)}
                     style={{
                       ...(bizType === bt.id ? chipActive : chipBase),
-                      display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px',
-                      minHeight: 64,
+                      display: 'flex', alignItems: 'center', gap: 14, padding: '14px',
+                      minHeight: 72,
                     }}
                   >
-                    <span style={{ flexShrink: 0, color: bizType === bt.id ? ACC : TX2, marginTop: 1 }}>{bizIcon(bt.id)}</span>
+                    {/* Larger, filled-tint icon block — more concrete/prominent
+                        than a bare thin glyph (research: concrete > abstract).
+                        Real photo/illustration assets + vendor validation next. */}
+                    <span style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bizType === bt.id ? ACC : EV, color: bizType === bt.id ? '#fff' : TX }}>{bizIcon(bt.id)}</span>
                     <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: bizType === bt.id ? ACC : TX }}>{bt.label}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: bizType === bt.id ? ACC : TX }}>{bt.label}</div>
                       <div style={{ fontSize: 12, color: TX3, marginTop: 2 }}>{bt.desc}</div>
                     </div>
                   </button>
