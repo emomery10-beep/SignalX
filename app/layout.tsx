@@ -60,6 +60,10 @@ export const metadata: Metadata = {
       'en-UG': 'https://askbiz.co',
       'en-GB': 'https://askbiz.co',
       'en-US': 'https://askbiz.co',
+      // Swahili — Kenya/Tanzania default; tells search engines a sw version exists
+      'sw': 'https://askbiz.co/sw',
+      'sw-KE': 'https://askbiz.co/sw',
+      'sw-TZ': 'https://askbiz.co/sw',
     },
   },
   icons: {

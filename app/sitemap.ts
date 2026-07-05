@@ -76,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ── CORE: landing pages, tools, comparisons, integrations, case studies ──
     { url: base,                                                  lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
     // Localized homepages — self-canonicalizing hreflang variants of the root
-    ...(['es', 'fr', 'de', 'nl', 'ar'] as const).map(l => ({ url: `${base}/${l}`, lastModified: now, changeFrequency: "weekly" as const, priority: 0.9 })),
+    ...(['es', 'fr', 'de', 'nl', 'ar', 'sw'] as const).map(l => ({ url: `${base}/${l}`, lastModified: now, changeFrequency: "weekly" as const, priority: 0.9 })),
     { url: `${base}/pricing`,                                    lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/point-of-sale`,                              lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/pos-preview`,                                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
