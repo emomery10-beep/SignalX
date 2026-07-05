@@ -846,5 +846,8 @@
   "delete": "Delete",
   "confirm_delete_branch_empty": "Delete \"{name}\"? This can't be undone.",
   "confirm_delete_branch_with_data": "Delete \"{name}\"? It has {staff} staff and {products} products — they'll be unassigned, not deleted. This can't be undone.",
-  "toast_branch_deleted": "Branch deleted"
+  "toast_branch_deleted": "Branch deleted",
+  "resume_setup_title": "Finish setting up your shop",
+  "resume_setup_desc": "You’re almost there — add your items and activate your till.",
+  "resume_setup_cta": "Continue setup →"
 }

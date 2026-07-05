@@ -846,5 +846,8 @@
   "delete": "حذف",
   "confirm_delete_branch_empty": "حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
   "confirm_delete_branch_with_data": "حذف \"{name}\"؟ يضم {staff} موظف و{products} منتج — سيتم إلغاء ربطهم بالفرع، وليس حذفهم. لا يمكن التراجع عن هذا الإجراء.",
-  "toast_branch_deleted": "تم حذف الفرع"
+  "toast_branch_deleted": "تم حذف الفرع",
+  "resume_setup_title": "أكمل إعداد متجرك",
+  "resume_setup_desc": "أوشكت على الانتهاء — أضف منتجاتك وفعّل صندوقك.",
+  "resume_setup_cta": "متابعة الإعداد ←"
 }

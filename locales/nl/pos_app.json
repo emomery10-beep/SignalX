@@ -846,5 +846,8 @@
   "delete": "Verwijderen",
   "confirm_delete_branch_empty": "\"{name}\" verwijderen? Dit kan niet ongedaan worden gemaakt.",
   "confirm_delete_branch_with_data": "\"{name}\" verwijderen? Deze heeft {staff} medewerker(s) en {products} product(en) — ze worden losgekoppeld, niet verwijderd. Dit kan niet ongedaan worden gemaakt.",
-  "toast_branch_deleted": "Filiaal verwijderd"
+  "toast_branch_deleted": "Filiaal verwijderd",
+  "resume_setup_title": "Maak je winkel af",
+  "resume_setup_desc": "Je bent er bijna — voeg je artikelen toe en activeer je kassa.",
+  "resume_setup_cta": "Verder met instellen →"
 }

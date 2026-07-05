@@ -846,5 +846,8 @@
   "delete": "Löschen",
   "confirm_delete_branch_empty": "„{name}“ löschen? Dies kann nicht rückgängig gemacht werden.",
   "confirm_delete_branch_with_data": "„{name}“ löschen? Sie hat {staff} Mitarbeiter und {products} Produkte — diese werden nur zugeordnet entfernt, nicht gelöscht. Dies kann nicht rückgängig gemacht werden.",
-  "toast_branch_deleted": "Filiale gelöscht"
+  "toast_branch_deleted": "Filiale gelöscht",
+  "resume_setup_title": "Richte deinen Laden fertig ein",
+  "resume_setup_desc": "Fast geschafft — füge deine Artikel hinzu und aktiviere deine Kasse.",
+  "resume_setup_cta": "Einrichtung fortsetzen →"
 }

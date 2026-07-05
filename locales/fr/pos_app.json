@@ -846,5 +846,8 @@
   "delete": "Supprimer",
   "confirm_delete_branch_empty": "Supprimer « {name} » ? Cette action est irréversible.",
   "confirm_delete_branch_with_data": "Supprimer « {name} » ? Elle compte {staff} employé(s) et {products} produit(s) — ils seront désassignés, pas supprimés. Cette action est irréversible.",
-  "toast_branch_deleted": "Filiale supprimée"
+  "toast_branch_deleted": "Filiale supprimée",
+  "resume_setup_title": "Terminez la configuration de votre boutique",
+  "resume_setup_desc": "Vous y êtes presque : ajoutez vos articles et activez votre caisse.",
+  "resume_setup_cta": "Continuer la configuration →"
 }

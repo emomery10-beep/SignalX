@@ -999,6 +999,21 @@ export default function POSPage() {
   // ── POS NOT ENABLED ────────────────────────────────────
   if (!posEnabled) return (
     <div className="page-shell">
+      {/* Resume banner: a POS-persona vendor who onboarded but hasn't finished
+          setup + payment gets sent back into the guided flow, not left on this
+          generic paywall. */}
+      {['retail', 'market_stall', 'food_bev', 'salon'].includes((businessType || '').toLowerCase()) && (
+        <a href="/pos/setup" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', margin: '16px', padding: '16px 18px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, color: 'inherit' }}>
+          <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 10, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_app.resume_setup_title')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 2 }}>{tc('pos_app.resume_setup_desc')}</div>
+          </div>
+          <span style={{ flexShrink: 0, fontSize: 14, fontWeight: 700, color: ACC }}>{tc('pos_app.resume_setup_cta')}</span>
+        </a>
+      )}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
         <div style={{ maxWidth: 480, textAlign: 'center' }}>
           <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
