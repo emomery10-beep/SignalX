@@ -9,7 +9,7 @@ const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 
 // Inactive locale codes that once had URL prefixes — redirect to strip them.
 // Prevents 404s for users with /sw/..., /pt/..., etc. in their browser history.
-const INACTIVE_LOCALE_PREFIXES = ['sw', 'pt', 'it', 'pl']
+const INACTIVE_LOCALE_PREFIXES = ['pt', 'it', 'pl']
 
 export async function middleware(request: NextRequest) {
   // ── Locale prefix → content locale (URL is the source of truth) ─────────────
