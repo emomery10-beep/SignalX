@@ -79,5 +79,10 @@
   "team_err_email": "أدخل بريده",
   "team_err_save": "تعذّر الحفظ — حاول مرة أخرى",
   "activate_seats": "{seats} مقاعد · أنت + فريقك",
-  "team_seats_one": "مقعد واحد (أنت فقط)"
+  "team_seats_one": "مقعد واحد (أنت فقط)",
+  "team_pending_count": "{count} في انتظار التفعيل",
+  "team_pending_note": "ادفع {price}/شهر إضافية لمنحهم تسجيل دخول.",
+  "team_pending_badge": "قيد الانتظار",
+  "team_pay_pending": "ادفع {price}/شهر — فعّل {count}",
+  "team_done": "تم"
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { getTransactionStatus, isPaymentComplete } from '@/lib/pesapal'
+import { provisionStaffDrafts } from '@/lib/pos-staff-provision'
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
           .eq('id', userId)
         // Mark PoS trial as converted
         await supabaseAdmin.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'pos')
+        // Reliable server-side provisioning of any staff drafts
+        await provisionStaffDrafts(userId).catch(() => {})
       } else {
         await supabaseAdmin
           .from('subscriptions')

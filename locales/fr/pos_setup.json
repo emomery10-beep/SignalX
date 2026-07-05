@@ -79,5 +79,10 @@
   "team_err_email": "Entrez son e-mail",
   "team_err_save": "Enregistrement impossible — réessayez",
   "activate_seats": "{seats} sièges · vous + votre équipe",
-  "team_seats_one": "1 siège (juste vous)"
+  "team_seats_one": "1 siège (juste vous)",
+  "team_pending_count": "{count} en attente d’activation",
+  "team_pending_note": "Payez {price}/mois de plus pour leur donner un accès.",
+  "team_pending_badge": "En attente",
+  "team_pay_pending": "Payer {price}/mois — activer {count}",
+  "team_done": "Terminé"
 }

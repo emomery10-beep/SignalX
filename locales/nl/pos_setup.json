@@ -79,5 +79,10 @@
   "team_err_email": "Voer hun e-mail in",
   "team_err_save": "Opslaan mislukt — probeer opnieuw",
   "activate_seats": "{seats} plekken · jij + je team",
-  "team_seats_one": "1 plek (alleen jij)"
+  "team_seats_one": "1 plek (alleen jij)",
+  "team_pending_count": "{count} wachten op activering",
+  "team_pending_note": "Betaal {price}/mnd extra om ze een login te geven.",
+  "team_pending_badge": "In afwachting",
+  "team_pay_pending": "Betaal {price}/mnd — activeer {count}",
+  "team_done": "Klaar"
 }

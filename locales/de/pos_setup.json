@@ -79,5 +79,10 @@
   "team_err_email": "E-Mail eingeben",
   "team_err_save": "Speichern fehlgeschlagen — erneut versuchen",
   "activate_seats": "{seats} Plätze · du + dein Team",
-  "team_seats_one": "1 Platz (nur du)"
+  "team_seats_one": "1 Platz (nur du)",
+  "team_pending_count": "{count} warten auf Aktivierung",
+  "team_pending_note": "Zahle {price}/Mon. mehr, um ihnen einen Login zu geben.",
+  "team_pending_badge": "Ausstehend",
+  "team_pay_pending": "{price}/Mon. zahlen — {count} aktivieren",
+  "team_done": "Fertig"
 }

@@ -79,5 +79,10 @@
   "team_err_email": "Enter their email",
   "team_err_save": "Could not save — please try again",
   "activate_seats": "{seats} seats · you + your team",
-  "team_seats_one": "1 seat (just you)"
+  "team_seats_one": "1 seat (just you)",
+  "team_pending_count": "{count} waiting to be activated",
+  "team_pending_note": "Pay {price}/mo more to give them a login.",
+  "team_pending_badge": "Pending",
+  "team_pay_pending": "Pay {price}/mo — activate {count}",
+  "team_done": "Done"
 }

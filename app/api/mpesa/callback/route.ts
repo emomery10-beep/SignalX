@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { provisionStaffDrafts } from '@/lib/pos-staff-provision'
 
 // Safaricom sends the STK Push result here
 export async function POST(request: NextRequest) {
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
           .from('profiles')
           .update({ pos_enabled: true, pos_seat_count: seatCount })
           .eq('id', payment.user_id)
+        // Reliable server-side provisioning of any staff drafts
+        await provisionStaffDrafts(payment.user_id as string).catch(() => {})
       } else {
         // Activate subscription plan
         await supabase

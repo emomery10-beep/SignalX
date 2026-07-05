@@ -79,5 +79,10 @@
   "team_err_email": "Introduce su correo",
   "team_err_save": "No se pudo guardar — inténtalo de nuevo",
   "activate_seats": "{seats} puestos · tú + tu equipo",
-  "team_seats_one": "1 puesto (solo tú)"
+  "team_seats_one": "1 puesto (solo tú)",
+  "team_pending_count": "{count} esperando activación",
+  "team_pending_note": "Paga {price}/mes más para darles acceso.",
+  "team_pending_badge": "Pendiente",
+  "team_pay_pending": "Pagar {price}/mes — activar {count}",
+  "team_done": "Listo"
 }

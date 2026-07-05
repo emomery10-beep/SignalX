@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { provisionStaffDrafts } from '@/lib/pos-staff-provision'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
@@ -71,6 +72,8 @@ export async function POST(request: NextRequest) {
           }).eq('id', userId)
           // Mark PoS trial as converted
           await supabase.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'pos')
+          // Reliable server-side provisioning of any staff drafts (browser-independent)
+          await provisionStaffDrafts(userId).catch(() => {})
           break
         }
 
@@ -104,6 +107,7 @@ export async function POST(request: NextRequest) {
             pos_enabled:    active,
             pos_seat_count: active ? seats : 0,
           }).eq('id', userId)
+          if (active) await provisionStaffDrafts(userId).catch(() => {})
           break
         }
 

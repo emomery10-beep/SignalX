@@ -80,6 +80,8 @@ export default function PosSetupPage() {
   const [memberPin, setMemberPin]     = useState('')
   const [teamSaving, setTeamSaving]   = useState(false)
   const [teamError, setTeamError]     = useState('')
+  const [paidSeats, setPaidSeats]     = useState(0)   // seats already paid for (0 = not paid yet)
+  const [payingSeats, setPayingSeats] = useState(false)
 
   // Item being captured
   const [photo, setPhoto]       = useState<string | null>(null)
@@ -108,7 +110,7 @@ export default function PosSetupPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, currency_symbol, currency, business_type, pos_enabled')
+        .select('full_name, currency_symbol, currency, business_type, pos_enabled, pos_seat_count')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -117,8 +119,16 @@ export default function PosSetupPage() {
       if (profile?.currency_symbol) setCurrencySymbol(profile.currency_symbol)
       if (profile?.currency) setCurrency(profile.currency)
       if (profile?.business_type) setBizType(profile.business_type)
-      // Already paying / trialing — no need for the pre-pay setup flow.
-      if (profile?.pos_enabled) { setAlreadyEnabled(true) }
+      if (profile?.pos_seat_count) setPaidSeats(Number(profile.pos_seat_count) || 0)
+      const enabled = !!profile?.pos_enabled
+      if (enabled) setAlreadyEnabled(true)
+
+      // If already paid, run provisioning first (safety net — converts any
+      // drafts covered by paid seats even if the webhook/activate-page missed
+      // them). Then load whatever drafts remain (these are the pending ones).
+      if (enabled) {
+        try { await fetch('/api/pos/staff-draft/provision', { method: 'POST' }) } catch { /* idempotent, retried on next visit */ }
+      }
 
       // Load existing team drafts (resume-safe).
       try {
@@ -320,6 +330,38 @@ export default function PosSetupPage() {
       .catch(() => { /* worst case: reappears on next load */ })
   }
 
+  // For an already-paid owner whose drafts exceed their paid seats: buy the
+  // extra seats so the pending members get provisioned. New total seats =
+  // seats already paid + the pending drafts. Returns to /pos/activate, which
+  // provisions once payment confirms.
+  const isKenyan = currency === 'KES'
+  const pendingSeats = alreadyEnabled ? drafts.length : 0
+  const payForPendingSeats = async () => {
+    if (pendingSeats <= 0) return
+    setPayingSeats(true); setTeamError('')
+    const totalSeats = paidSeats + pendingSeats
+    try {
+      if (isKenyan) {
+        const res = await fetch('/api/pesapal', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'submit_order', plan: 'pos', seats: totalSeats, return_path: '/pos/activate' }),
+        })
+        const d = await res.json()
+        if (d.redirectUrl) { window.location.href = d.redirectUrl; return }
+        setTeamError(d.error || tc('pos_setup.team_err_save'))
+      } else {
+        const res = await fetch('/api/billing', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'checkout_pos_seat', seats: totalSeats, return_path: '/pos/activate' }),
+        })
+        const d = await res.json()
+        if (d.url) { window.location.href = d.url; return }
+        setTeamError(d.error || tc('pos_setup.team_err_save'))
+      }
+    } catch { setTeamError(tc('pos_setup.team_err_save')) }
+    finally { setPayingSeats(false) }
+  }
+
   const bigBtn: React.CSSProperties = {
     width: '100%', padding: '16px', borderRadius: 14, border: 'none',
     background: ACC, color: '#fff', fontSize: 17, fontWeight: 700,
@@ -493,11 +535,19 @@ export default function PosSetupPage() {
               {tc('pos_setup.team_subtitle')}
             </p>
 
-            {/* Live seat count + price — you + each team member */}
-            <div style={{ padding: '14px 16px', borderRadius: 14, background: SF, border: `1px solid ${B}`, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, color: TX2 }}>{seatCount === 1 ? tc('pos_setup.team_seats_one') : tc('pos_setup.team_seats', { seats: seatCount })}</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: ACC }}>{posSeatPrice(currency, seatCount)}<span style={{ fontSize: 12, color: TX3, fontWeight: 500 }}>{tc('pos_setup.team_per_month')}</span></span>
-            </div>
+            {/* First-time: live seat count + running total.
+                Already paid + pending drafts: the extra cost to activate them. */}
+            {!alreadyEnabled ? (
+              <div style={{ padding: '14px 16px', borderRadius: 14, background: SF, border: `1px solid ${B}`, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 14, color: TX2 }}>{seatCount === 1 ? tc('pos_setup.team_seats_one') : tc('pos_setup.team_seats', { seats: seatCount })}</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: ACC }}>{posSeatPrice(currency, seatCount)}<span style={{ fontSize: 12, color: TX3, fontWeight: 500 }}>{tc('pos_setup.team_per_month')}</span></span>
+              </div>
+            ) : pendingSeats > 0 ? (
+              <div style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: `1px solid ${ACC}`, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TX }}>{tc('pos_setup.team_pending_count', { count: pendingSeats })}</div>
+                <div style={{ fontSize: 13, color: TX2, marginTop: 2 }}>{tc('pos_setup.team_pending_note', { price: posSeatPrice(currency, pendingSeats) })}</div>
+              </div>
+            ) : null}
 
             {drafts.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -507,6 +557,9 @@ export default function PosSetupPage() {
                       <div style={{ fontSize: 15, fontWeight: 600, color: TX, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
                       <div style={{ fontSize: 12, color: TX3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tc(`pos_setup.role_${d.role}`)} · {d.phone || d.email}</div>
                     </div>
+                    {alreadyEnabled && (
+                      <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: ACC, background: 'rgba(208,138,89,.12)', borderRadius: 9999, padding: '3px 9px' }}>{tc('pos_setup.team_pending_badge')}</span>
+                    )}
                     <button onClick={() => removeDraft(d.id)} aria-label={`${tc('pos_setup.team_remove')} ${d.name}`}
                       style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 10, border: 'none', background: 'transparent', color: TX3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -516,14 +569,29 @@ export default function PosSetupPage() {
               </div>
             )}
 
-            <button style={{ ...bigBtn, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={openAddMember}>
+            {/* Pay-to-activate: already paid, drafts exceed paid seats */}
+            {alreadyEnabled && pendingSeats > 0 && (
+              <button style={{ ...bigBtn, marginBottom: 12, opacity: payingSeats ? .7 : 1 }} onClick={payForPendingSeats} disabled={payingSeats}>
+                {payingSeats ? tc('pos_setup.saving') : tc('pos_setup.team_pay_pending', { count: pendingSeats, price: posSeatPrice(currency, pendingSeats) })}
+              </button>
+            )}
+
+            <button
+              style={{ ...(alreadyEnabled && pendingSeats > 0 ? ghostBtn : bigBtn), marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+              onClick={openAddMember}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
               {drafts.length === 0 ? tc('pos_setup.team_add_first') : tc('pos_setup.team_add_another')}
             </button>
 
-            <button style={ghostBtn} onClick={() => setScreen('ready')}>
-              {drafts.length === 0 ? tc('pos_setup.team_no_staff') : tc('pos_setup.team_continue')}
-            </button>
+            {alreadyEnabled ? (
+              <button style={ghostBtn} onClick={() => router.push('/pos')}>
+                {tc('pos_setup.team_done')}
+              </button>
+            ) : (
+              <button style={ghostBtn} onClick={() => setScreen('ready')}>
+                {drafts.length === 0 ? tc('pos_setup.team_no_staff') : tc('pos_setup.team_continue')}
+              </button>
+            )}
           </>
         )}
 
