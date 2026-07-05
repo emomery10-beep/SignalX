@@ -14,6 +14,12 @@ import {
   makeBranches, makeTruckLocations, makeStaffList, makeRestaurantTables,
   makeAppointments, makeScanDeviceResult, FIRST, LAST,
 } from './preview-fixtures'
+import { CURRENCY_META, DEFAULT_CURRENCY, currencyToPreview } from './preview-currency'
+
+// The logistics fixtures (routes/parcels) are authored in KES-magnitude figures
+// rather than the USD-scale used by the retail/restaurant/salon catalogues, so
+// they scale off a KES baseline instead of the USD one.
+const KES_FACTOR = CURRENCY_META.KES.factor
 
 export interface PreviewStaffSession {
   id: string
@@ -21,29 +27,40 @@ export interface PreviewStaffSession {
   role: string
   owner_id: string
   location_id: string
+  currency: string
   currency_symbol: string
+  money_factor: number
   business_type: Sector
 }
 
 const PREVIEW_OWNER_ID = 'owner-preview'
 const PREVIEW_LOCATION_ID = 'loc-preview'
 
-export function buildMockSession(role: string, sector: Sector = 'retail', name = 'Preview Staff'): PreviewStaffSession {
+export function buildMockSession(
+  role: string,
+  sector: Sector = 'retail',
+  name = 'Preview Staff',
+  currency: string = DEFAULT_CURRENCY,
+): PreviewStaffSession {
+  const { currency: code, symbol, factor } = currencyToPreview(currency)
   return {
     id: `staff-preview-${role}`,
     name,
     role,
     owner_id: PREVIEW_OWNER_ID,
     location_id: PREVIEW_LOCATION_ID,
-    currency_symbol: makeConfig(sector).currency_symbol,
+    currency: code,
+    currency_symbol: makeConfig(sector, symbol).currency_symbol,
+    money_factor: factor,
     business_type: sector,
   }
 }
 
 /** Same identity key usePreviewHarness re-seeds on. Pass as `key={...}` on the
- *  dynamically-imported real page so it only remounts once the reseed lands. */
+ *  dynamically-imported real page so it only remounts once the reseed lands.
+ *  Includes currency so switching market re-seeds the mock data at new prices. */
 export function previewSessionKey(session: PreviewStaffSession): string {
-  return `${session.role}:${session.business_type}`
+  return `${session.role}:${session.business_type}:${session.currency}`
 }
 
 function seedPosStaff(session: PreviewStaffSession) {
@@ -62,20 +79,24 @@ type Handler = (url: URL, init?: RequestInit) => any
 
 function buildPreviewHandlers(session: PreviewStaffSession): Record<string, Handler> {
   const seed = mulberry32(1)() * 100000 | 0
-  const inventory = makeInventory(session.business_type, seed)
-  const transactions = makeTransactions(session.business_type, seed, session.id, session.name)
-  const serviceJobs = makeServiceJobs(seed)
+  const factor = session.money_factor
+  // Logistics fixtures are KES-authored (see KES_FACTOR note above), so they
+  // rescale off a KES baseline; everything else is USD-authored.
+  const logisticsFactor = factor / KES_FACTOR
+  const inventory = makeInventory(session.business_type, seed, factor)
+  const transactions = makeTransactions(session.business_type, seed, session.id, session.name, factor)
+  const serviceJobs = makeServiceJobs(seed, factor)
   const factoryCaptures = makeFactoryCaptures(seed)
   const branches = makeBranches(seed)
   const trucks = makeTrucks(seed)
-  const routes = makeRoutes(seed, branches)
-  const parcels = makeParcels(seed)
+  const routes = makeRoutes(seed, branches, logisticsFactor)
+  const parcels = makeParcels(seed, logisticsFactor)
   const truckLocations = makeTruckLocations(seed, trucks)
   const staffList = makeStaffList(seed)
-  const restaurantTables = makeRestaurantTables(seed, staffList)
-  const appointments = makeAppointments(seed, staffList)
+  const restaurantTables = makeRestaurantTables(seed, staffList, factor)
+  const appointments = makeAppointments(seed, staffList, factor)
 
-  const config = makeConfig(session.business_type)
+  const config = makeConfig(session.business_type, session.currency_symbol)
 
   return {
     'GET /api/pos/config': () => config,

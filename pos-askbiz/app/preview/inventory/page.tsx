@@ -3,6 +3,7 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { PreviewGate, PreviewBanner } from '@/lib/preview-gate'
 import { buildMockSession, usePreviewHarness, previewSessionKey } from '@/lib/preview-mock'
+import { usePreviewCurrency, CurrencySelect } from '@/lib/preview-currency-ui'
 import type { Sector } from '@/lib/preview-fixtures'
 
 const RealInventoryPage = dynamic(() => import('../../inventory/page'), { ssr: false })
@@ -17,7 +18,8 @@ const SECTORS: { id: Sector; label: string }[] = [
 
 export default function InventoryPreviewPage() {
   const [sector, setSector] = useState<Sector>('retail')
-  const session = buildMockSession('inventory', sector, 'Preview Inventory Clerk')
+  const cur = usePreviewCurrency()
+  const session = buildMockSession('inventory', sector, 'Preview Inventory Clerk', cur.currency)
   const ready = usePreviewHarness(session)
 
   return (
@@ -34,6 +36,7 @@ export default function InventoryPreviewPage() {
             {s.label}
           </button>
         ))}
+        <CurrencySelect value={cur.currency} onChange={cur.setCurrency} />
       </div>
       {ready
         ? <RealInventoryPage key={previewSessionKey(session)} />

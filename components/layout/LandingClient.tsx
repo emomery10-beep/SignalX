@@ -1403,7 +1403,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
                   {tc('landing.hero_cta_primary')}
                 </Link>
-                <Link href={localePath('/pos-preview', lang as Locale)} style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
+                <Link href="/demo" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
                   {tc('landing.hero_cta_secondary')}
                 </Link>
               </div>
@@ -1512,7 +1512,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
               {tc('landing.pos_cta')}
             </Link>
-            <Link href={localePath('/pos-preview', lang as Locale)} style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
+            <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
               {tc('landing.pos_demo_cta')}
             </Link>
             <span style={{ fontSize:12,color:T.tx3,alignSelf:'center',width:'100%' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>

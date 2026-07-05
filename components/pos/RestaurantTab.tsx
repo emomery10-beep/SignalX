@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 // ── Color constants ──────────────────────────────────────────────────────────
 const ACC    = '#d08a59'   // restaurant accent
@@ -163,10 +164,7 @@ function pctChange(today: number, prev: number): number | null {
 }
 
 function fmtMoney(sym: string, n: number): string {
-  return `${sym}${(Number.isFinite(n) ? n : 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`
+  return formatMoney(sym, n, { space: false })
 }
 
 function fmtTime(iso?: string): string {

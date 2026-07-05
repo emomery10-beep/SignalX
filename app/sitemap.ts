@@ -14,6 +14,7 @@ import { getAllArticles as getTransparencyArticles } from "@/lib/transparency-co
 import { academyArticles, academyCategories } from "@/lib/academy-content";
 import { getAllHowTo, getAllTranslate } from "@/lib/seo-content";
 import { COUNTRY_HUBS } from "@/lib/country-hub-content";
+import { DEMO_MARKETS } from "@/lib/demo-markets";
 import { SECTORS } from "@/lib/pos-sectors";
 import { POS_FEATURES } from "@/lib/pos-features";
 import { LEARNING_PATHS } from "@/lib/learning-paths-content";
@@ -80,6 +81,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/pricing`,                                    lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/point-of-sale`,                              lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/pos-preview`,                                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    // Per-country live-demo pages (app/demo/[country])
+    ...DEMO_MARKETS.map(m => ({ url: `${base}/demo/${m.slug}`,   lastModified: now, changeFrequency: "monthly" as const, priority: 0.8 })),
     ...SECTORS.map(s => ({ url: `${base}/point-of-sale/${s.id}`,  lastModified: now, changeFrequency: "monthly" as const, priority: 0.8 })),
     ...POS_FEATURES.map(f => ({ url: `${base}/point-of-sale/feature/${f.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/compare`,                                     lastModified: now, changeFrequency: "monthly", priority: 0.9 },

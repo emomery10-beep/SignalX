@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 // ── Color constants ──────────────────────────────────────────────────────────
 const GREEN  = '#16a34a'
@@ -136,8 +137,7 @@ function isRetailItem(name: string): boolean {
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
 function fmtMoney(sym: string, n: number): string {
-  const v = Number.isFinite(n) ? n : 0
-  return sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatMoney(sym, n, { space: false })
 }
 
 function fmtMoneyShort(sym: string, n: number): string {

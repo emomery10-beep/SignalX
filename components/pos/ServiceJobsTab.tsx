@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -67,9 +68,7 @@ function buildStatusColors(tc: (key: string) => string): Record<JobStatus, { bg:
 }
 
 function fmt(symbol: string, amount: number): string {
-  const num = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const needsSpace = symbol.length > 1 && /[a-zA-Z]$/.test(symbol)
-  return `${symbol}${needsSpace ? ' ' : ''}${num}`
+  return formatMoney(symbol, amount)
 }
 
 function timeAgo(date: string): string {

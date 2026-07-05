@@ -22,6 +22,8 @@ export default function robots(): MetadataRoute.Robots {
         '/ai-business-analytics',
         '/point-of-sale',
         '/pos-preview',
+        '/demo',
+        '/demo/',
         '/pricing',
         '/vs',
         '/integrations',

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 const GREEN = '#16a34a'
 const RED = '#dc2626'
@@ -21,9 +22,7 @@ interface RetailTabProps {
 
 // ---------- helpers ----------
 function fmt(symbol: string, amount: number): string {
-  const n = (amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const needsSpace = symbol.length > 1 && /[a-zA-Z]$/.test(symbol)
-  return `${symbol}${needsSpace ? ' ' : ''}${n}`
+  return formatMoney(symbol, amount)
 }
 
 function fmtInt(amount: number): string {

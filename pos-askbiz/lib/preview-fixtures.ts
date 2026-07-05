@@ -6,6 +6,8 @@
 // against live data. Never used outside pos-askbiz/app/preview/**.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { scaleMoney } from './preview-currency'
+
 export type Sector = 'retail' | 'restaurant' | 'salon' | 'repair' | 'factory' | 'logistics'
 
 // ── deterministic pseudo-random so a given seed always renders the same demo ──
@@ -79,10 +81,12 @@ const CATALOG: Record<Sector, { name: string; price: number; cost: number; cat: 
   logistics: [],
 }
 
-const CURRENCY: Record<string, string> = { retail: '£', restaurant: '₦', salon: 'KSh', repair: '₵', factory: '₦', logistics: '₦' }
+// Fallback symbol per sector, used only when the caller doesn't pass a
+// geo-detected currency symbol (see buildMockSession / usePreviewCurrency).
+const CURRENCY: Record<string, string> = { retail: 'KSh', restaurant: '₦', salon: 'KSh', repair: '₵', factory: '₦', logistics: '₦' }
 
-export function makeConfig(sector: Sector) {
-  return { currency_symbol: CURRENCY[sector] || '£', business_type: sector, staff_sector: sector }
+export function makeConfig(sector: Sector, currencySymbol?: string) {
+  return { currency_symbol: currencySymbol || CURRENCY[sector] || 'KSh', business_type: sector, staff_sector: sector }
 }
 
 export function makeStaffRoster(seed: number, count = 6) {
@@ -96,7 +100,7 @@ export function makeStaffRoster(seed: number, count = 6) {
 
 // ── Inventory ── matches InventoryItem (inventory/page.tsx + sell/page.tsx) and
 // the real GET /api/pos/inventory shape ({ inventory: InventoryRow[], total }).
-export function makeInventory(sector: Sector, seed: number, count = 12) {
+export function makeInventory(sector: Sector, seed: number, factor = 1, count = 12) {
   const { pick, between, uuid, daysAgo } = makeHelpers(seed)
   const cat = CATALOG[sector].length ? CATALOG[sector] : CATALOG.retail
   return Array.from({ length: count }, (_, i) => {
@@ -106,8 +110,8 @@ export function makeInventory(sector: Sector, seed: number, count = 12) {
       id,
       name: base.name,
       sku: `SKU${1000 + i}`,
-      sale_price: base.price,
-      cost_price: base.cost,
+      sale_price: scaleMoney(base.price, factor),
+      cost_price: scaleMoney(base.cost, factor),
       stock_qty: Math.floor(between(0, 80)),
       low_stock_threshold: 10,
       unit: 'pcs',
@@ -127,7 +131,7 @@ export function makeInventory(sector: Sector, seed: number, count = 12) {
 // ── Transactions ── matches GET /api/pos/transactions shape exactly, and biases
 // ~35% into "today" attributed to `cashierId` so sell/page.tsx's loadTodayStats
 // (which filters `t.cashier?.id === s.id && status === 'completed'`) populates.
-export function makeTransactions(sector: Sector, seed: number, cashierId: string, cashierName: string, count = 40) {
+export function makeTransactions(sector: Sector, seed: number, cashierId: string, cashierName: string, factor = 1, count = 40) {
   const { rnd, pick, between, uuid, daysAgo } = makeHelpers(seed + 1)
   const cat = CATALOG[sector].length ? CATALOG[sector] : CATALOG.retail
   return Array.from({ length: count }, (_, i) => {
@@ -136,7 +140,7 @@ export function makeTransactions(sector: Sector, seed: number, cashierId: string
       const idx = Math.floor(rnd() * cat.length)
       const p = cat[idx]
       const qty = Math.max(1, Math.floor(between(1, 3)))
-      return { name: p.name, sku: `SKU${1000 + idx}`, qty, unit_price: p.price, cost_price: p.cost, inventory_id: uuid() }
+      return { name: p.name, sku: `SKU${1000 + idx}`, qty, unit_price: scaleMoney(p.price, factor), cost_price: scaleMoney(p.cost, factor), inventory_id: uuid() }
     })
     const subtotal = items.reduce((s, it) => s + it.unit_price * it.qty, 0)
     const discount = rnd() < 0.15 ? Math.round(subtotal * between(0.05, 0.15) * 100) / 100 : 0
@@ -172,7 +176,7 @@ export function makeTransactions(sector: Sector, seed: number, cashierId: string
 
 // ── Service jobs (repair sector, manager dashboard) ── superset of ServiceJob
 // (dashboard/page.tsx) + the real GET /api/pos/service-jobs shape.
-export function makeServiceJobs(seed: number, count = 20) {
+export function makeServiceJobs(seed: number, factor = 1, count = 20) {
   const { pick, between, uuid, daysAgo } = makeHelpers(seed + 2)
   const devices = ['iPhone 13', 'Samsung A52', 'iPhone 15 Pro', 'Tecno Spark', 'Infinix Hot']
   const faults = ['Cracked screen', 'Battery replacement', 'Charging port', 'Water damage', "Won't power on"]
@@ -188,7 +192,7 @@ export function makeServiceJobs(seed: number, count = 20) {
       device_model: pick(devices),
       fault_description: pick(faults),
       customer_name: `${pick(FIRST)} ${pick(LAST)}`,
-      quoted_price: Math.round(between(25, 240)),
+      quoted_price: scaleMoney(Math.round(between(25, 240)), factor),
       assigned_to: staff.name,
       created_at: daysAgo(created),
       checked_in_staff: staff,
@@ -197,7 +201,7 @@ export function makeServiceJobs(seed: number, count = 20) {
       customer: { id: uuid(), phone: `+234 80${Math.floor(between(10000000, 99999999))}`, name: `${pick(FIRST)} ${pick(LAST)}` },
       location: { id: 'loc-preview', name: 'Main Branch' },
       preset: { id: uuid(), name: pick(faults), category: 'repair' },
-      transaction: ['completed', 'collected'].includes(status) ? { id: uuid(), total: Math.round(between(25, 240)), payment_type: 'cash', status: 'completed' } : null,
+      transaction: ['completed', 'collected'].includes(status) ? { id: uuid(), total: scaleMoney(Math.round(between(25, 240)), factor), payment_type: 'cash', status: 'completed' } : null,
     }
   })
 }
@@ -249,7 +253,7 @@ export function makeTrucks(seed: number, count = 5) {
   }))
 }
 
-export function makeRoutes(seed: number, branches: { id: string; name: string }[]) {
+export function makeRoutes(seed: number, branches: { id: string; name: string }[], factor = 1) {
   const { between } = makeHelpers(seed + 6)
   return branches.map((b, i) => ({
     id: `route-${i}`,
@@ -257,13 +261,13 @@ export function makeRoutes(seed: number, branches: { id: string; name: string }[
     destination_branch_id: b.id,
     destination: b,
     origin: branches[0],
-    flat_rate: Math.round(between(200, 800)),
-    price_per_kg: Math.round(between(20, 80)),
+    flat_rate: scaleMoney(Math.round(between(200, 800)), factor),
+    price_per_kg: scaleMoney(Math.round(between(20, 80)), factor),
     active: true,
   }))
 }
 
-export function makeParcels(seed: number, count = 18) {
+export function makeParcels(seed: number, factor = 1, count = 18) {
   const { pick, between, uuid, daysAgo, hoursAgo } = makeHelpers(seed + 7)
   const branches = makeBranches(seed)
   const trucks = makeTrucks(seed)
@@ -285,7 +289,7 @@ export function makeParcels(seed: number, count = 18) {
       description: pick(['Documents', 'Electronics', 'Clothing parcel', 'Spare parts']),
       weight_kg: Math.round(between(1, 40)),
       parcel_size: pick(['small', 'medium', 'large']),
-      fee_charged: Math.round(between(200, 2000)),
+      fee_charged: scaleMoney(Math.round(between(200, 2000)), factor),
       payment_status: pick(['paid', 'paid', 'pending']),
       payment_method: pick(['cash', 'mobile']),
       created_at: daysAgo(Math.floor(between(0, 10))),
@@ -302,7 +306,7 @@ export function makeParcels(seed: number, count = 18) {
       current_branch: destBranch,
       sender_branch: branches[0],
       received_staff: { id: uuid(), name: `${pick(FIRST)} ${pick(LAST)}` },
-      route: { id: `route-0`, name: `To ${destBranch.name}`, price_per_kg: Math.round(between(20, 80)), flat_rate: Math.round(between(200, 800)) },
+      route: { id: `route-0`, name: `To ${destBranch.name}`, price_per_kg: scaleMoney(Math.round(between(20, 80)), factor), flat_rate: scaleMoney(Math.round(between(200, 800)), factor) },
     }
   })
 }
@@ -348,7 +352,7 @@ export function makeStaffList(seed: number, count = 6) {
 // GET /api/pos/restaurant/tables → { tables: [...] } — matches Table
 // interface in restaurant/floor/page.tsx exactly (x_pos/y_pos/width/height
 // drive the floor-plan layout, so these need to be sane, non-overlapping).
-export function makeRestaurantTables(seed: number, staff: { id: string; name: string }[], count = 10) {
+export function makeRestaurantTables(seed: number, staff: { id: string; name: string }[], factor = 1, count = 10) {
   const { rnd, pick, between, uuid, hoursAgo } = makeHelpers(seed + 10)
   const sections = ['Main Floor', 'Patio', 'Bar']
   const statuses = ['available', 'available', 'seated', 'seated', 'reserved', 'available']
@@ -376,7 +380,7 @@ export function makeRestaurantTables(seed: number, staff: { id: string; name: st
       server: status !== 'available' ? { id: server.id, name: server.name, role: 'waiter' } : null,
       current_order: hasOrder ? {
         id: uuid(), status: 'in_progress', covers: pick([2, 3, 4]),
-        total: Math.round(between(15, 90)), created_at: hoursAgo(0.5), seated_at: hoursAgo(0.5),
+        total: scaleMoney(Math.round(between(15, 90)), factor), created_at: hoursAgo(0.5), seated_at: hoursAgo(0.5),
         order_items: [
           { id: uuid(), name: 'Jollof Rice & Chicken', qty: 2, status: 'fired' },
           { id: uuid(), name: 'Bottled Water', qty: 2, status: 'served' },
@@ -389,14 +393,14 @@ export function makeRestaurantTables(seed: number, staff: { id: string; name: st
 
 // GET /api/pos/salon/appointments → { appointments: [...] } — matches
 // Appointment interface in salon/bookings/page.tsx exactly.
-export function makeAppointments(seed: number, staff: { id: string; name: string }[], count = 14) {
+export function makeAppointments(seed: number, staff: { id: string; name: string }[], factor = 1, count = 14) {
   const { pick, between, uuid, hoursAgo, daysAgo } = makeHelpers(seed + 11)
   const services = [
-    { name: "Ladies' Haircut & Style", cat: 'Hair', price: 35, mins: 45 },
-    { name: 'Full Head Colour', cat: 'Colour', price: 75, mins: 120 },
-    { name: 'Gel Manicure', cat: 'Nails', price: 30, mins: 40 },
-    { name: 'Pedicure', cat: 'Nails', price: 35, mins: 45 },
-    { name: 'Keratin Treatment', cat: 'Treatment', price: 90, mins: 150 },
+    { name: "Ladies' Haircut & Style", cat: 'Hair', price: scaleMoney(35, factor), mins: 45 },
+    { name: 'Full Head Colour', cat: 'Colour', price: scaleMoney(75, factor), mins: 120 },
+    { name: 'Gel Manicure', cat: 'Nails', price: scaleMoney(30, factor), mins: 40 },
+    { name: 'Pedicure', cat: 'Nails', price: scaleMoney(35, factor), mins: 45 },
+    { name: 'Keratin Treatment', cat: 'Treatment', price: scaleMoney(90, factor), mins: 150 },
   ]
   const statuses = ['booked', 'booked', 'confirmed', 'completed', 'cancelled']
   return Array.from({ length: count }, (_, i) => {

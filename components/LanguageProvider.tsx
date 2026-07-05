@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import type { Lang, TranslationKey } from '@/lib/i18n'
 import { TRANSLATIONS, LANG_NAMES, LANG_FLAGS, RTL_LANGS, t as tFn } from '@/lib/i18n'
@@ -96,3 +96,25 @@ export function LanguageProvider({ children, initialLang = 'en' }: { children: R
 }
 
 export function useLang() { return useContext(LangContext) }
+
+/** Side-effect-free language scope for embedded widgets (e.g. the per-country
+ *  live demo) that must render in a fixed language WITHOUT touching the
+ *  visitor's askbiz_lang cookie, document.lang, or direction. It only overrides
+ *  the LangContext for its subtree, so the surrounding page keeps its own lang. */
+export function ScopedLangProvider({ lang, children }: { lang: Lang; children: React.ReactNode }) {
+  const value = useMemo<LangContextType>(() => ({
+    lang,
+    setLang: () => {},
+    t: (key, vars) => tFn(lang, key, vars),
+    tc: (key, vars) => catalogT(lang, key, vars),
+    fmtCurrency: (n, currency, opts) => formatCurrency(lang, n, currency, opts),
+    fmtNumber: (n, opts) => formatNumber(lang, n, opts),
+    fmtPercent: (f, opts) => formatPercent(lang, f, opts),
+    fmtDate: (d, opts) => formatDate(lang, d, opts),
+    fmtDateTime: (d) => formatDateTime(lang, d),
+    isRTL: RTL_LANGS.includes(lang),
+    langNames: LANG_NAMES,
+    langFlags: LANG_FLAGS,
+  }), [lang])
+  return <LangContext.Provider value={value}>{children}</LangContext.Provider>
+}

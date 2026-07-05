@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 const ACC = '#d08a59'
 const GREEN = '#16a34a'
@@ -24,9 +25,7 @@ interface Metrics {
 }
 
 function fmt(symbol: string, amount: number): string {
-  const num = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const needsSpace = symbol.length > 1 && /[a-zA-Z]$/.test(symbol)
-  return `${symbol}${needsSpace ? ' ' : ''}${num}`
+  return formatMoney(symbol, amount)
 }
 
 export default function RepairMetrics({ currencySymbol, selectedLocation }: Props) {

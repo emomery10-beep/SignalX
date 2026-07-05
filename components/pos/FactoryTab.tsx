@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 // ── Color constants ──────────────────────────────────────────
 const GREEN = '#16a34a'
@@ -66,9 +67,7 @@ interface FactoryTabProps {
 
 // ── Helpers ──────────────────────────────────────────────────
 function fmt(symbol: string, amount: number): string {
-  const num = (isFinite(amount) ? amount : 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const needsSpace = symbol.length > 1 && /[a-zA-Z]$/.test(symbol)
-  return `${symbol}${needsSpace ? ' ' : ''}${num}`
+  return formatMoney(symbol, amount)
 }
 
 function fmtInt(n: number): string {

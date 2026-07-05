@@ -49,8 +49,14 @@ interface Transaction {
 }
 
 // ── Helpers ────────────────────────────────────────────────
+// Large-denomination currencies (African shillings, naira, birr) are shown on
+// a POS without minor units — "KSh 5,950", not "KSh 5,950.00". Everything else
+// (USD, GBP, EUR, …) keeps 2 decimals. Keyed by symbol since the dashboard only
+// carries currency_symbol, not the ISO code.
+const NO_DECIMAL_SYMBOLS = new Set(['KSh', 'USh', 'TSh', 'RF', 'FRw', '₦', 'Br', 'FCFA'])
 function fmt(sym: string, n: number) {
-  return `${sym}${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const digits = NO_DECIMAL_SYMBOLS.has(sym) ? 0 : 2
+  return `${sym}${n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })}`
 }
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -97,11 +103,21 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
   )
 }
 
+// Shrink the value to fit the narrow tile so large local-currency amounts
+// (e.g. "USh1,967,598") stay on one line instead of clipping or wrapping.
+function statTileFontSize(value: string | number): number {
+  const len = String(value).length
+  if (len <= 7) return 26
+  if (len <= 9) return 22
+  if (len <= 11) return 19
+  if (len <= 14) return 16
+  return 14
+}
 function StatTile({ label, value, color = 'var(--pos-ink)', sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
     <Card>
       <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: statTileFontSize(value), fontWeight: 700, color, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 4 }}>{sub}</div>}
     </Card>
   )

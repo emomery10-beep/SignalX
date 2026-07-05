@@ -3,6 +3,7 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { PreviewGate, PreviewBanner } from '@/lib/preview-gate'
 import { buildMockSession, usePreviewHarness, previewSessionKey } from '@/lib/preview-mock'
+import { usePreviewCurrency, CurrencySelect } from '@/lib/preview-currency-ui'
 import type { Sector } from '@/lib/preview-fixtures'
 
 // Each sector's REAL front-of-house screen — not the same checkout reskinned.
@@ -28,7 +29,8 @@ export default function CashierPreviewPage() {
   // Role stays fixed at 'cashier' — none of these screens gate on role, only
   // on session presence (usePosAuth) and, for repair, on staff_sector via the
   // /api/pos/config response, which already carries the selected sector.
-  const session = buildMockSession('cashier', sector, 'Preview Staff')
+  const cur = usePreviewCurrency()
+  const session = buildMockSession('cashier', sector, 'Preview Staff', cur.currency)
   const ready = usePreviewHarness(session)
   const Active = active.Component
 
@@ -46,6 +48,7 @@ export default function CashierPreviewPage() {
             {s.label}
           </button>
         ))}
+        <CurrencySelect value={cur.currency} onChange={cur.setCurrency} />
       </div>
       {ready
         ? <Active key={previewSessionKey(session)} />

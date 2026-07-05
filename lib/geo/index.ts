@@ -19,33 +19,73 @@ export interface GeoResult {
 }
 
 // ── Currency map ──────────────────────────────────────────────
-export const CURRENCIES: Record<string, { sym: string; name: string; flag: string; locale: string }> = {
-  KES: { sym: 'KSh', name: 'Kenyan Shilling',     flag: '🇰🇪', locale: 'sw-KE' },
-  NGN: { sym: '₦',   name: 'Nigerian Naira',       flag: '🇳🇬', locale: 'en-NG' },
-  ZAR: { sym: 'R',   name: 'South African Rand',   flag: '🇿🇦', locale: 'en-ZA' },
-  UGX: { sym: 'USh', name: 'Ugandan Shilling',     flag: '🇺🇬', locale: 'sw-UG' },
-  TZS: { sym: 'TSh', name: 'Tanzanian Shilling',   flag: '🇹🇿', locale: 'sw-TZ' },
-  GHS: { sym: '₵',   name: 'Ghanaian Cedi',        flag: '🇬🇭', locale: 'en-GH' },
-  ETB: { sym: 'Br',  name: 'Ethiopian Birr',       flag: '🇪🇹', locale: 'am-ET' },
-  RWF: { sym: 'RF',  name: 'Rwandan Franc',        flag: '🇷🇼', locale: 'rw-RW' },
-  ZMW: { sym: 'ZK',  name: 'Zambian Kwacha',       flag: '🇿🇲', locale: 'en-ZM' },
-  USD: { sym: '$',   name: 'US Dollar',            flag: '🇺🇸', locale: 'en-US' },
-  GBP: { sym: '£',   name: 'British Pound',        flag: '🇬🇧', locale: 'en-GB' },
-  EUR: { sym: '€',   name: 'Euro',                 flag: '🇪🇺', locale: 'en-EU' },
-  AED: { sym: 'AED', name: 'UAE Dirham',           flag: '🇦🇪', locale: 'ar-AE' },
-  INR: { sym: '₹',   name: 'Indian Rupee',         flag: '🇮🇳', locale: 'en-IN' },
-  CAD: { sym: 'CA$', name: 'Canadian Dollar',      flag: '🇨🇦', locale: 'en-CA' },
-  AUD: { sym: 'A$',  name: 'Australian Dollar',    flag: '🇦🇺', locale: 'en-AU' },
-  SGD: { sym: 'S$',  name: 'Singapore Dollar',     flag: '🇸🇬', locale: 'en-SG' },
-  MXN: { sym: 'MX$', name: 'Mexican Peso',         flag: '🇲🇽', locale: 'es-MX' },
-  BRL: { sym: 'R$',  name: 'Brazilian Real',       flag: '🇧🇷', locale: 'pt-BR' },
-  ZWL: { sym: 'ZWL', name: 'Zimbabwean Dollar',    flag: '🇿🇼', locale: 'en-ZW' },
+// `factor` is the magnitude multiplier from the demo's authored ~USD units to
+// this currency's typical scale (roughly FX-aligned — order of magnitude is
+// what matters, not precision). 1 = keep base numbers as-is. Single source of
+// truth for demo money-scaling (see app/pos-preview + app/demo/[country]).
+export const CURRENCIES: Record<string, { sym: string; name: string; flag: string; locale: string; factor: number }> = {
+  KES: { sym: 'KSh',  name: 'Kenyan Shilling',           flag: '🇰🇪', locale: 'sw-KE', factor: 155 },
+  NGN: { sym: '₦',    name: 'Nigerian Naira',            flag: '🇳🇬', locale: 'en-NG', factor: 1550 },
+  ZAR: { sym: 'R',    name: 'South African Rand',        flag: '🇿🇦', locale: 'en-ZA', factor: 18 },
+  UGX: { sym: 'USh',  name: 'Ugandan Shilling',          flag: '🇺🇬', locale: 'sw-UG', factor: 3800 },
+  TZS: { sym: 'TSh',  name: 'Tanzanian Shilling',        flag: '🇹🇿', locale: 'sw-TZ', factor: 2550 },
+  GHS: { sym: '₵',    name: 'Ghanaian Cedi',             flag: '🇬🇭', locale: 'en-GH', factor: 15 },
+  ETB: { sym: 'Br',   name: 'Ethiopian Birr',            flag: '🇪🇹', locale: 'am-ET', factor: 125 },
+  RWF: { sym: 'RF',   name: 'Rwandan Franc',             flag: '🇷🇼', locale: 'rw-RW', factor: 1350 },
+  ZMW: { sym: 'ZK',   name: 'Zambian Kwacha',            flag: '🇿🇲', locale: 'en-ZM', factor: 27 },
+  // ── Rest of Africa ──
+  XOF: { sym: 'FCFA', name: 'West African CFA Franc',    flag: '🌍', locale: 'fr-SN', factor: 600 },
+  XAF: { sym: 'FCFA', name: 'Central African CFA Franc', flag: '🌍', locale: 'fr-CM', factor: 600 },
+  EGP: { sym: 'E£',   name: 'Egyptian Pound',            flag: '🇪🇬', locale: 'ar-EG', factor: 48 },
+  MAD: { sym: 'DH',   name: 'Moroccan Dirham',           flag: '🇲🇦', locale: 'fr-MA', factor: 10 },
+  TND: { sym: 'DT',   name: 'Tunisian Dinar',            flag: '🇹🇳', locale: 'fr-TN', factor: 3.1 },
+  DZD: { sym: 'DA',   name: 'Algerian Dinar',            flag: '🇩🇿', locale: 'fr-DZ', factor: 135 },
+  LYD: { sym: 'LD',   name: 'Libyan Dinar',              flag: '🇱🇾', locale: 'ar-LY', factor: 4.8 },
+  SDG: { sym: 'SDG',  name: 'Sudanese Pound',            flag: '🇸🇩', locale: 'ar-SD', factor: 600 },
+  MWK: { sym: 'MK',   name: 'Malawian Kwacha',           flag: '🇲🇼', locale: 'en-MW', factor: 1730 },
+  MZN: { sym: 'MT',   name: 'Mozambican Metical',        flag: '🇲🇿', locale: 'pt-MZ', factor: 64 },
+  AOA: { sym: 'Kz',   name: 'Angolan Kwanza',            flag: '🇦🇴', locale: 'pt-AO', factor: 910 },
+  CDF: { sym: 'FC',   name: 'Congolese Franc',           flag: '🇨🇩', locale: 'fr-CD', factor: 2800 },
+  GNF: { sym: 'FG',   name: 'Guinean Franc',             flag: '🇬🇳', locale: 'fr-GN', factor: 8600 },
+  SLE: { sym: 'Le',   name: 'Sierra Leonean Leone',      flag: '🇸🇱', locale: 'en-SL', factor: 22 },
+  LRD: { sym: 'L$',   name: 'Liberian Dollar',           flag: '🇱🇷', locale: 'en-LR', factor: 190 },
+  MGA: { sym: 'Ar',   name: 'Malagasy Ariary',           flag: '🇲🇬', locale: 'fr-MG', factor: 4600 },
+  SOS: { sym: 'Sh',   name: 'Somali Shilling',           flag: '🇸🇴', locale: 'so-SO', factor: 570 },
+  DJF: { sym: 'Fdj',  name: 'Djiboutian Franc',          flag: '🇩🇯', locale: 'fr-DJ', factor: 178 },
+  ERN: { sym: 'Nfk',  name: 'Eritrean Nakfa',            flag: '🇪🇷', locale: 'ti-ER', factor: 15 },
+  BWP: { sym: 'P',    name: 'Botswana Pula',             flag: '🇧🇼', locale: 'en-BW', factor: 13.5 },
+  NAD: { sym: 'N$',   name: 'Namibian Dollar',           flag: '🇳🇦', locale: 'en-NA', factor: 18 },
+  LSL: { sym: 'L',    name: 'Lesotho Loti',              flag: '🇱🇸', locale: 'en-LS', factor: 18 },
+  SZL: { sym: 'E',    name: 'Eswatini Lilangeni',        flag: '🇸🇿', locale: 'en-SZ', factor: 18 },
+  // ── Non-Africa (existing) ──
+  USD: { sym: '$',    name: 'US Dollar',                 flag: '🇺🇸', locale: 'en-US', factor: 1 },
+  GBP: { sym: '£',    name: 'British Pound',             flag: '🇬🇧', locale: 'en-GB', factor: 1 },
+  EUR: { sym: '€',    name: 'Euro',                      flag: '🇪🇺', locale: 'en-EU', factor: 1 },
+  AED: { sym: 'AED',  name: 'UAE Dirham',                flag: '🇦🇪', locale: 'ar-AE', factor: 3.7 },
+  INR: { sym: '₹',    name: 'Indian Rupee',              flag: '🇮🇳', locale: 'en-IN', factor: 84 },
+  CAD: { sym: 'CA$',  name: 'Canadian Dollar',           flag: '🇨🇦', locale: 'en-CA', factor: 1.4 },
+  AUD: { sym: 'A$',   name: 'Australian Dollar',         flag: '🇦🇺', locale: 'en-AU', factor: 1.5 },
+  SGD: { sym: 'S$',   name: 'Singapore Dollar',          flag: '🇸🇬', locale: 'en-SG', factor: 1.35 },
+  MXN: { sym: 'MX$',  name: 'Mexican Peso',              flag: '🇲🇽', locale: 'es-MX', factor: 18 },
+  BRL: { sym: 'R$',   name: 'Brazilian Real',            flag: '🇧🇷', locale: 'pt-BR', factor: 5.5 },
+  ZWL: { sym: 'ZWL',  name: 'Zimbabwean Dollar',         flag: '🇿🇼', locale: 'en-ZW', factor: 36 },
 }
 
 // ── Country → currency ────────────────────────────────────────
 export const COUNTRY_CURRENCY: Record<string, string> = {
-  KE: 'KES', NG: 'NGN', ZA: 'ZAR', UG: 'UGX', TZ: 'TZS', GH: 'GHS',
-  ET: 'ETB', RW: 'RWF', ZM: 'ZMW', ZW: 'ZWL', MW: 'MWK', MZ: 'MZN',
+  // East Africa
+  KE: 'KES', UG: 'UGX', TZ: 'TZS', ET: 'ETB', RW: 'RWF', SO: 'SOS', DJ: 'DJF', ER: 'ERN',
+  // West Africa
+  NG: 'NGN', GH: 'GHS', SN: 'XOF', CI: 'XOF', ML: 'XOF', BF: 'XOF', NE: 'XOF', TG: 'XOF',
+  BJ: 'XOF', GW: 'XOF', GN: 'GNF', SL: 'SLE', LR: 'LRD',
+  // Central Africa
+  CM: 'XAF', GA: 'XAF', CG: 'XAF', TD: 'XAF', CF: 'XAF', GQ: 'XAF', CD: 'CDF',
+  // North Africa
+  EG: 'EGP', MA: 'MAD', TN: 'TND', DZ: 'DZD', LY: 'LYD', SD: 'SDG',
+  // Southern Africa
+  ZA: 'ZAR', ZM: 'ZMW', ZW: 'ZWL', MW: 'MWK', MZ: 'MZN', AO: 'AOA', MG: 'MGA',
+  BW: 'BWP', NA: 'NAD', LS: 'LSL', SZ: 'SZL',
+  // Rest of world
   US: 'USD', CA: 'CAD', GB: 'GBP', AU: 'AUD', SG: 'SGD',
   AE: 'AED', IN: 'INR', MX: 'MXN', BR: 'BRL',
   DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR',

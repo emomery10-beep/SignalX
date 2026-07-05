@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, Fragment } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { formatMoney } from '@/lib/pos-format'
 
 // ── Color constants ──────────────────────────────────────────────────────────
 const GREEN  = '#16a34a'
@@ -92,9 +93,7 @@ const PRIORITY_COLOR: Record<string, string> = {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(symbol: string, amount: number): string {
-  const num = (amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const needsSpace = symbol.length > 1 && /[a-zA-Z]$/.test(symbol)
-  return `${symbol}${needsSpace ? ' ' : ''}${num}`
+  return formatMoney(symbol, amount)
 }
 
 function daysBetween(a?: string, b?: string): number {

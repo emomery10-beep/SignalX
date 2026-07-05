@@ -3,6 +3,7 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { PreviewGate, PreviewBanner } from '@/lib/preview-gate'
 import { buildMockSession, usePreviewHarness, previewSessionKey } from '@/lib/preview-mock'
+import { usePreviewCurrency, CurrencySelect } from '@/lib/preview-currency-ui'
 import type { Sector } from '@/lib/preview-fixtures'
 
 const RealDashboardPage = dynamic(() => import('../../dashboard/page'), { ssr: false })
@@ -24,7 +25,8 @@ const ROLES: { role: string; label: string; sector: Sector }[] = [
 export default function ManagerPreviewPage() {
   const [roleIdx, setRoleIdx] = useState(0)
   const active = ROLES[roleIdx]
-  const session = buildMockSession(active.role, active.sector, 'Preview Manager')
+  const cur = usePreviewCurrency()
+  const session = buildMockSession(active.role, active.sector, 'Preview Manager', cur.currency)
   const ready = usePreviewHarness(session)
 
   return (
@@ -41,6 +43,7 @@ export default function ManagerPreviewPage() {
             {r.label}
           </button>
         ))}
+        <CurrencySelect value={cur.currency} onChange={cur.setCurrency} />
       </div>
       {ready
         ? <RealDashboardPage key={previewSessionKey(session)} />
