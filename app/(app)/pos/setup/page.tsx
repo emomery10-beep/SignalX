@@ -21,7 +21,75 @@ const OK  = '#2e7d54'
 
 type Item = { id: string; name: string; sale_price: number; stock_qty: number; image_url?: string | null }
 type Draft = { id: string; name: string; role: string; phone?: string | null; email?: string | null }
-type Screen = 'list' | 'capture' | 'team' | 'team-add' | 'ready'
+type Screen = 'list' | 'capture' | 'import' | 'team' | 'team-add' | 'ready'
+
+// An item on its way into the catalogue. Camera extraction fills name+price;
+// a CSV import fills the richer fields too — all carried through to commit.
+type ImportItem = {
+  name: string
+  sale_price: number
+  cost_price?: number
+  stock_qty?: number
+  unit?: string
+  category?: string
+  sku?: string
+}
+
+// Minimal CSV reader — handles quoted fields, escaped "" quotes, and \r\n, so
+// a product name or price containing a comma doesn't split into two columns.
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = [], cur = '', inQuotes = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (inQuotes) {
+      if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++ } else inQuotes = false }
+      else cur += c
+    } else if (c === '"') { inQuotes = true }
+    else if (c === ',') { row.push(cur); cur = '' }
+    else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = '' }
+    else if (c !== '\r') { cur += c }
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row) }
+  return rows.filter(r => r.some(c => c.trim() !== ''))
+}
+
+// Map a Loyverse "Export items" CSV onto ImportItems. Loyverse is the dominant
+// free POS in these markets, so its export is the one worth supporting by name.
+// Column matching is by header text (order-independent); the stock column is
+// named after the store ("In stock (Mama's Shop)") so it's matched by prefix.
+function mapLoyverseCsv(rows: string[][]): ImportItem[] {
+  if (rows.length < 2) return []
+  const header = rows[0].map(h => h.trim().toLowerCase())
+  const find = (pred: (h: string) => boolean) => header.findIndex(pred)
+  const iName   = find(h => h === 'name')
+  if (iName < 0) return []   // not a recognisable item export
+  const iPrice  = find(h => h === 'price')
+  const iCost   = find(h => h === 'cost')
+  const iCat    = find(h => h === 'category')
+  const iSku    = find(h => h === 'sku')
+  const iStock  = find(h => h.startsWith('in stock'))
+  const iWeight = find(h => h.includes('sold by weight'))
+  const num = (s: string) => { const n = parseFloat(String(s || '').replace(/[^\d.-]/g, '')); return isFinite(n) ? n : 0 }
+  const out: ImportItem[] = []
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r]
+    const name = (row[iName] || '').trim()
+    if (!name) continue
+    const weightVal = iWeight >= 0 ? String(row[iWeight] || '').trim().toLowerCase() : ''
+    const byWeight = ['y', 'yes', '1', 'true', 'weight'].includes(weightVal)
+    out.push({
+      name,
+      sale_price: iPrice  >= 0 ? num(row[iPrice]) : 0,
+      cost_price: iCost   >= 0 ? num(row[iCost])  : 0,
+      stock_qty:  iStock  >= 0 ? Math.max(0, num(row[iStock])) : 0,  // numeric(10,3): keep weight decimals
+      unit:       byWeight ? 'kg' : 'item',
+      category:   iCat >= 0 ? (row[iCat] || '').trim() : '',
+      sku:        iSku >= 0 ? (row[iSku] || '').trim() : '',
+    })
+  }
+  return out
+}
 
 // Business types that get the "add your team" step. market_stall (solo
 // street vendor) is deliberately excluded — it stays items → pay.
@@ -93,6 +161,17 @@ export default function PosSetupPage() {
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState('')
   const [aiNaming, setAiNaming] = useState(false)
+
+  // Bulk import — bring a whole existing list in from ONE photo (wall/notebook
+  // price list, another POS's item screen, an IG/TikTok shop grid) or a gallery
+  // screenshot. Extraction is best-effort, so 'review' is always shown: the
+  // vendor confirms/edits every line before it's saved.
+  const [importPhase, setImportPhase] = useState<'camera' | 'review'>('camera')
+  const [importItems, setImportItems] = useState<ImportItem[]>([])
+  const [importBusy, setImportBusy]   = useState(false)
+  const [importError, setImportError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const csvInputRef  = useRef<HTMLInputElement>(null)
 
   // Delete-with-undo: removal is a deactivation (PATCH active:false), so
   // "Undo" is a reactivation — never a destructive loss from a mis-tap.
@@ -264,6 +343,113 @@ export default function PosSetupPage() {
     }
   }
 
+  // ── Bulk import ───────────────────────────────────────────────
+  const openImport = async () => {
+    setImportItems([]); setImportPhase('camera'); setImportError('')
+    setScreen('import')
+    await startCamera()
+  }
+
+  // One photo of a list → many items for review. Shared by the live camera and
+  // the "choose from gallery" path (a social-shop screenshot lives in the
+  // gallery, not behind the lens).
+  const runImportExtract = async (dataUrl: string) => {
+    stopCamera()
+    setImportBusy(true); setImportError('')
+    try {
+      const res = await fetch('/api/pos/import-catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'extract', image: dataUrl }),
+      })
+      const d = await res.json()
+      const list = Array.isArray(d.items) ? d.items : []
+      if (list.length === 0) { feedback('err'); setImportError(tc('pos_setup.import_none')); await startCamera(); return }
+      feedback('ok')
+      setImportItems(list)
+      setImportPhase('review')
+    } catch {
+      feedback('err'); setImportError(tc('pos_setup.import_failed')); await startCamera()
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
+  const captureListPhoto = () => {
+    const video = videoRef.current, canvas = canvasRef.current
+    if (!video || !canvas) return
+    const w = video.videoWidth || 640, h = video.videoHeight || 480
+    canvas.width = w; canvas.height = h
+    canvas.getContext('2d')?.drawImage(video, 0, 0, w, h)
+    runImportExtract(canvas.toDataURL('image/jpeg', 0.7))
+  }
+
+  const onPickListImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-picking the same file
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => { if (typeof reader.result === 'string') runImportExtract(reader.result) }
+    reader.readAsDataURL(file)
+  }
+
+  // Spreadsheet path — a Loyverse (or similar) item export. No camera/AI: parse
+  // the CSV, map its columns, and drop straight into the same review screen.
+  const onPickCsv = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImportError('')
+    const reader = new FileReader()
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : ''
+      const mapped = mapLoyverseCsv(parseCsv(text))
+      if (mapped.length === 0) { feedback('err'); setImportError(tc('pos_setup.import_csv_none')); return }
+      feedback('ok')
+      stopCamera()
+      setImportItems(mapped)
+      setImportPhase('review')
+    }
+    reader.readAsText(file)
+  }
+
+  const editImportItem = (i: number, patch: Partial<ImportItem>) =>
+    setImportItems(prev => prev.map((it, idx) => idx === i ? { ...it, ...patch } : it))
+
+  const removeImportItem = (i: number) =>
+    setImportItems(prev => prev.filter((_, idx) => idx !== i))
+
+  const commitImport = async () => {
+    const clean = importItems.filter(it => it.name.trim())
+    if (clean.length === 0) { setScreen('list'); return }
+    setImportBusy(true); setImportError('')
+    try {
+      const res = await fetch('/api/pos/import-catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'commit', items: clean }),
+      })
+      const d = await res.json()
+      if (!res.ok) { feedback('err'); setImportError(d.error || tc('pos_setup.err_save')); setImportBusy(false); return }
+      feedback('ok')
+      // Reload from the server — commit dedups, so the authoritative catalogue
+      // may differ from what was on screen (some rows skipped as duplicates).
+      try {
+        const inv = await fetch('/api/pos/inventory?limit=200')
+        if (inv.ok) {
+          const id = await inv.json()
+          setItems((id.inventory || []).map((p: any) => ({ id: p.id, name: p.name, sale_price: p.sale_price, stock_qty: p.stock_qty, image_url: p.image_url || null })))
+        }
+      } catch { /* the list already reflects the adds optimistically enough */ }
+      speak(tc('pos_setup.import_added', { count: d.added || 0 }), lang)
+      setScreen('list')
+    } catch {
+      feedback('err'); setImportError(tc('pos_setup.err_save'))
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
   // Remove = deactivate with a 6s undo window; the list updates instantly.
   const removeItem = (it: Item) => {
     setItems(prev => prev.filter(x => x.id !== it.id))
@@ -423,42 +609,8 @@ export default function PosSetupPage() {
         {/* ── LIST: your items so far ── */}
         {screen === 'list' && (
           <>
-            <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 6 }}>
-              {items.length === 0
-                ? (firstName ? tc('pos_setup.title_empty_named', { name: firstName }) : tc('pos_setup.title_empty'))
-                : items.length === 1
-                  ? tc('pos_setup.title_count_one')
-                  : tc('pos_setup.title_count', { count: items.length })}
-            </h1>
-            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 24 }}>
-              {tc('pos_setup.subtitle')}
-            </p>
-
-            {items.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                {items.map(it => (
-                  <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, background: SF, border: `1px solid ${B}` }}>
-                    {it.image_url ? (
-                      <img src={it.image_url} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0, background: EV }} />
-                    ) : (
-                      <div aria-hidden style={{ width: 44, height: 44, borderRadius: 10, background: EV, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                        </svg>
-                      </div>
-                    )}
-                    <span style={{ fontSize: 15, fontWeight: 600, color: TX, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.name}</span>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: ACC, flexShrink: 0 }}>{currencySymbol}{it.sale_price}</span>
-                    <button onClick={() => removeItem(it)} aria-label={tc('pos_setup.removed_toast', { name: it.name })}
-                      style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 10, border: 'none', background: 'transparent', color: TX3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Undo bar — a mis-tap is never a loss */}
+            {/* Undo bar — kept above both states so removing the last item
+                still offers Undo (a mis-tap is never a loss). */}
             {undoItem && (
               <div role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 15px', borderRadius: 12, background: TX, color: '#fff', marginBottom: 16 }}>
                 <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -471,18 +623,95 @@ export default function PosSetupPage() {
               </div>
             )}
 
-            <button style={{ ...bigBtn, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={openCapture}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-                <circle cx="12" cy="13" r="3"/>
-              </svg>
-              {items.length === 0 ? tc('pos_setup.add_first_item') : tc('pos_setup.add_another_item')}
-            </button>
+            {items.length === 0 ? (
+              /* ── First run: how do you keep track today? Migration and start-
+                 fresh are equal first choices — both are camera-first. ── */
+              <>
+                <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 8 }}>
+                  {firstName ? tc('pos_setup.fork_title_named', { name: firstName }) : tc('pos_setup.fork_title')}
+                </h1>
+                <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 24 }}>
+                  {tc('pos_setup.fork_subtitle')}
+                </p>
 
-            {items.length > 0 && (
-              <button style={ghostBtn} onClick={() => setScreen(TEAM_STEP_TYPES.has(bizType) ? 'team' : 'ready')}>
-                {tc('pos_setup.im_ready')}
-              </button>
+                {/* Already selling somewhere → bring the whole list in at once */}
+                <button onClick={openImport}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: '16px', marginBottom: 12, borderRadius: 16, border: `1.5px solid ${ACC}`, background: 'rgba(208,138,89,.06)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 13, background: ACC, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 16, fontWeight: 700, color: TX }}>{tc('pos_setup.fork_have_title')}</span>
+                    <span style={{ display: 'block', fontSize: 13, color: TX2, marginTop: 2, lineHeight: 1.45 }}>{tc('pos_setup.fork_have_desc')}</span>
+                  </span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+
+                {/* Nothing digital yet → add each item with the camera */}
+                <button onClick={openCapture}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: '16px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 13, background: EV, color: TX, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 16, fontWeight: 700, color: TX }}>{tc('pos_setup.fork_fresh_title')}</span>
+                    <span style={{ display: 'block', fontSize: 13, color: TX2, marginTop: 2, lineHeight: 1.45 }}>{tc('pos_setup.fork_fresh_desc')}</span>
+                  </span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              </>
+            ) : (
+              /* ── Have items: the working list ── */
+              <>
+                <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 6 }}>
+                  {items.length === 1 ? tc('pos_setup.title_count_one') : tc('pos_setup.title_count', { count: items.length })}
+                </h1>
+                <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 24 }}>
+                  {tc('pos_setup.subtitle')}
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                  {items.map(it => (
+                    <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, background: SF, border: `1px solid ${B}` }}>
+                      {it.image_url ? (
+                        <img src={it.image_url} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0, background: EV }} />
+                      ) : (
+                        <div aria-hidden style={{ width: 44, height: 44, borderRadius: 10, background: EV, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                          </svg>
+                        </div>
+                      )}
+                      <span style={{ fontSize: 15, fontWeight: 600, color: TX, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.name}</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: ACC, flexShrink: 0 }}>{currencySymbol}{it.sale_price}</span>
+                      <button onClick={() => removeItem(it)} aria-label={tc('pos_setup.removed_toast', { name: it.name })}
+                        style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 10, border: 'none', background: 'transparent', color: TX3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <button style={{ ...bigBtn, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={openCapture}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                  </svg>
+                  {tc('pos_setup.add_another_item')}
+                </button>
+
+                {/* Still got more elsewhere? Bring another list in. */}
+                <button style={{ ...ghostBtn, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={openImport}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/>
+                  </svg>
+                  {tc('pos_setup.import_cta')}
+                </button>
+
+                <button style={ghostBtn} onClick={() => setScreen(TEAM_STEP_TYPES.has(bizType) ? 'team' : 'ready')}>
+                  {tc('pos_setup.im_ready')}
+                </button>
+              </>
             )}
           </>
         )}
@@ -531,8 +760,8 @@ export default function PosSetupPage() {
 
             <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.qty_label')}</label>
             <input
-              value={qty} onChange={e => setQty(e.target.value.replace(/[^\d]/g, ''))}
-              inputMode="numeric" placeholder={tc('pos_setup.qty_placeholder')}
+              value={qty} onChange={e => setQty(e.target.value.replace(/[^\d.]/g, ''))}
+              inputMode="decimal" placeholder={tc('pos_setup.qty_placeholder')}
               style={{ width: '100%', padding: '13px 15px', fontSize: 16, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 20 }}
             />
 
@@ -544,6 +773,95 @@ export default function PosSetupPage() {
             <button style={ghostBtn} onClick={() => { stopCamera(); setScreen('list') }} disabled={saving}>
               {tc('pos_setup.cancel')}
             </button>
+          </>
+        )}
+
+        {/* ── IMPORT: bring a whole existing list in from one photo ── */}
+        {screen === 'import' && (
+          <>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={onPickListImage} style={{ display: 'none' }} />
+            <input ref={csvInputRef} type="file" accept=".csv,text/csv,text/plain" onChange={onPickCsv} style={{ display: 'none' }} />
+
+            {importPhase === 'camera' && (
+              <>
+                <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(20px,5vw,26px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 6 }}>
+                  {tc('pos_setup.import_title')}
+                </h1>
+                <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 16 }}>
+                  {tc('pos_setup.import_subtitle')}
+                </p>
+
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', borderRadius: 16, overflow: 'hidden', background: '#000', marginBottom: 16 }}>
+                  <video ref={videoRef} playsInline muted autoPlay style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {importBusy && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 15, fontWeight: 600 }}>
+                      {tc('pos_setup.import_reading')}
+                    </div>
+                  )}
+                </div>
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+                {importError && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>{importError}</div>}
+
+                <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? .7 : 1 }} onClick={captureListPhoto} disabled={importBusy}>
+                  {importBusy ? tc('pos_setup.import_reading') : tc('pos_setup.import_snap')}
+                </button>
+                <button style={{ ...ghostBtn, marginBottom: 10 }} onClick={() => fileInputRef.current?.click()} disabled={importBusy}>
+                  {tc('pos_setup.import_gallery')}
+                </button>
+                {/* Came from another POS (e.g. Loyverse)? Upload its export. */}
+                <button style={{ ...ghostBtn, marginBottom: 10 }} onClick={() => csvInputRef.current?.click()} disabled={importBusy}>
+                  {tc('pos_setup.import_csv')}
+                </button>
+                <button style={ghostBtn} onClick={() => { stopCamera(); setScreen('list') }} disabled={importBusy}>
+                  {tc('pos_setup.cancel')}
+                </button>
+              </>
+            )}
+
+            {importPhase === 'review' && (
+              <>
+                <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(20px,5vw,26px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 6 }}>
+                  {importItems.length === 1 ? tc('pos_setup.import_review_one') : tc('pos_setup.import_review', { count: importItems.length })}
+                </h1>
+                <p style={{ fontSize: 14, color: TX2, lineHeight: 1.6, marginBottom: 20 }}>
+                  {tc('pos_setup.import_review_hint')}
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                  {importItems.map((it, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 12, background: SF, border: `1px solid ${B}` }}>
+                      <input
+                        value={it.name} onChange={e => editImportItem(i, { name: e.target.value })}
+                        placeholder={tc('pos_setup.name_placeholder')}
+                        style={{ flex: 1, minWidth: 0, padding: '10px 12px', fontSize: 15, background: EV, border: `1.5px solid ${B2}`, borderRadius: 10, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: TX2 }}>{currencySymbol}</span>
+                        <input
+                          value={it.sale_price ? String(it.sale_price) : ''} onChange={e => editImportItem(i, { sale_price: parseFloat(e.target.value.replace(/[^\d.]/g, '')) || 0 })}
+                          inputMode="decimal" placeholder="0"
+                          style={{ width: 72, padding: '10px 8px', fontSize: 15, fontWeight: 700, textAlign: 'right', background: EV, border: `1.5px solid ${B2}`, borderRadius: 10, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <button onClick={() => removeImportItem(i)} aria-label={tc('pos_setup.team_remove')}
+                        style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 10, border: 'none', background: 'transparent', color: TX3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {importError && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>{importError}</div>}
+
+                <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? .7 : 1 }} onClick={commitImport} disabled={importBusy}>
+                  {importBusy ? tc('pos_setup.saving') : (importItems.length === 1 ? tc('pos_setup.import_save_one') : tc('pos_setup.import_save', { count: importItems.filter(it => it.name.trim()).length }))}
+                </button>
+                <button style={ghostBtn} onClick={openImport} disabled={importBusy}>
+                  {tc('pos_setup.import_retake')}
+                </button>
+              </>
+            )}
           </>
         )}
 

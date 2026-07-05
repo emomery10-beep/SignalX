@@ -10,8 +10,10 @@ const RED = '#dc2626'
 const AMBER = '#ca8a04'
 const BLUE = '#3b82f6'
 
-// NOTE (i18n — Phase 4): user-facing strings are English literals for now.
-// Phase 4 swaps these for tc('pos_app.po_*') keys + Swahili translations.
+// Translator injected by the host page, already namespaced to that app's
+// catalogue (pos_app.* in the main app, pos.* in pos-askbiz). Keys are the
+// bare `poui_*` ids below.
+type Translate = (key: string, vars?: Record<string, string | number>) => string
 
 interface InventoryLite {
   id: string
@@ -34,17 +36,21 @@ interface Props {
   currencySymbol: string
   selectedLocation: string
   notify: (msg: string, ok?: boolean) => void
+  t: Translate
 }
 
-const STATUS_META: Record<PurchaseOrderStatus, { bg: string; text: string; label: string }> = {
-  draft:     { bg: 'rgba(148,163,184,.14)', text: '#64748b', label: 'Draft' },
-  ordered:   { bg: 'rgba(59,130,246,.12)',  text: BLUE,      label: 'Ordered' },
-  partial:   { bg: 'rgba(202,138,4,.12)',   text: AMBER,     label: 'Partially received' },
-  received:  { bg: 'rgba(22,163,74,.12)',   text: GREEN,     label: 'Received' },
-  cancelled: { bg: 'rgba(220,38,38,.10)',   text: RED,       label: 'Cancelled' },
+// Colours only — the label comes from t('poui_status_<status>').
+const STATUS_STYLE: Record<PurchaseOrderStatus, { bg: string; text: string }> = {
+  draft:     { bg: 'rgba(148,163,184,.14)', text: '#64748b' },
+  ordered:   { bg: 'rgba(59,130,246,.12)',  text: BLUE },
+  partial:   { bg: 'rgba(202,138,4,.12)',   text: AMBER },
+  received:  { bg: 'rgba(22,163,74,.12)',   text: GREEN },
+  cancelled: { bg: 'rgba(220,38,38,.10)',   text: RED },
 }
+const statusStyle = (s: PurchaseOrderStatus) => STATUS_STYLE[s] ?? STATUS_STYLE.draft
+const statusLabel = (t: Translate, s: PurchaseOrderStatus) => t(`poui_status_${s}`)
 
-export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, notify }: Props) {
+export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, notify, t }: Props) {
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
   const [orders, setOrders] = useState<PurchaseOrderWithItems[]>([])
@@ -68,11 +74,11 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
       const json = await res.json()
       setOrders(json.purchase_orders || [])
     } catch {
-      notify('Could not load purchase orders', false)
+      notify(t('poui_toast_load_err'), false)
     } finally {
       setLoading(false)
     }
-  }, [notify])
+  }, [notify, t])
 
   const loadPickers = useCallback(async () => {
     try {
@@ -101,9 +107,8 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
     <div style={{ maxWidth: 860 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          {/* i18n — Phase 4 */}
-          <div style={{ fontSize: 16, fontWeight: 700 }}>📋 Purchase orders</div>
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Order stock from suppliers and track deliveries</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>📋 {t('poui_title')}</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_subtitle')}</div>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -116,22 +121,22 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
         >
-          <span style={{ fontSize: 16 }}>＋</span> New order
+          <span style={{ fontSize: 16 }}>＋</span> {t('poui_new_order')}
         </button>
       </div>
 
       {!loading && lowStock.length > 0 && (
         <div style={{ fontSize: 12, color: AMBER, marginBottom: 12 }}>
-          {lowStock.length} item{lowStock.length === 1 ? '' : 's'} low on stock — tap New order to reorder.
+          {t(lowStock.length === 1 ? 'poui_low_stock_one' : 'poui_low_stock_other', { count: lowStock.length })}
         </div>
       )}
 
       {!loading && orders.length > 0 && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
           {([
-            { k: 'all', label: 'All' },
-            { k: 'backorders', label: `Back-orders${backorderCount > 0 ? ` (${backorderCount})` : ''}` },
-            { k: 'received', label: 'Received' },
+            { k: 'all', label: t('poui_filter_all') },
+            { k: 'backorders', label: `${t('poui_filter_backorders')}${backorderCount > 0 ? ` (${backorderCount})` : ''}` },
+            { k: 'received', label: t('poui_filter_received') },
           ] as const).map((c) => (
             <button
               key={c.k}
@@ -151,27 +156,27 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
       )}
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{t('poui_loading')}</div>
       ) : orders.length === 0 ? (
         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No purchase orders yet</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{t('poui_empty_title')}</div>
           <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 380, margin: '0 auto 16px' }}>
-            Build an order from your low-stock items, send it to a supplier, then receive stock when it arrives.
+            {t('poui_empty_body')}
           </div>
           <button
             onClick={() => setShowCreate(true)}
             style={{ minHeight: 40, background: ACC, color: '#fff', border: 'none', borderRadius: 9, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Create your first order
+            {t('poui_empty_cta')}
           </button>
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 28, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No orders in this view.</div>
+        <div style={{ padding: 28, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{t('poui_none_in_view')}</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map((po) => {
-            const meta = STATUS_META[po.status] ?? STATUS_META.draft
+            const style = statusStyle(po.status)
             const itemCount = po.items?.length ?? 0
             return (
               <div
@@ -188,14 +193,14 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 14, fontWeight: 700 }}>
-                        {po.supplier?.name || 'No supplier'}
+                        {po.supplier?.name || t('poui_no_supplier')}
                       </span>
-                      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: meta.text, background: meta.bg, padding: '3px 9px', borderRadius: 9999 }}>
-                        {meta.label}
+                      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999 }}>
+                        {statusLabel(t, po.status)}
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>
-                      {itemCount} {itemCount === 1 ? 'item' : 'items'} · {new Date(po.created_at).toLocaleDateString()}
+                      {t(itemCount === 1 ? 'poui_items_one' : 'poui_items_other', { count: itemCount })} · {new Date(po.created_at).toLocaleDateString()}
                     </div>
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
@@ -214,11 +219,12 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
           lowStock={lowStock}
           allInventory={inventory}
           currencySymbol={currencySymbol}
+          t={t}
           onClose={() => setShowCreate(false)}
           onCreated={(po) => {
             setOrders((prev) => [po, ...prev])
             setShowCreate(false)
-            notify('Purchase order created', true)
+            notify(t('poui_toast_created'), true)
           }}
           onSupplierAdded={(s) => setSuppliers((prev) => [...prev, s].sort((a, b) => a.name.localeCompare(b.name)))}
           notify={notify}
@@ -229,6 +235,7 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
         <PODetailModal
           po={detailPo}
           currencySymbol={currencySymbol}
+          t={t}
           onClose={() => setDetailPo(null)}
           onUpdated={upsertOrder}
           notify={notify}
@@ -238,10 +245,11 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
   )
 }
 
-// ── Detail sheet (view + Send to supplier) ───────────────────
-function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
+// ── Detail sheet (view + Send to supplier + Receive stock) ───
+function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
   po: PurchaseOrderWithItems
   currencySymbol: string
+  t: Translate
   onClose: () => void
   onUpdated: (po: PurchaseOrderWithItems) => void
   notify: (msg: string, ok?: boolean) => void
@@ -251,7 +259,7 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
   const [receiving, setReceiving] = useState(false)
   const [receiveQtys, setReceiveQtys] = useState<Record<string, string>>({})
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-  const meta = STATUS_META[po.status] ?? STATUS_META.draft
+  const style = statusStyle(po.status)
   const supplierPhone = po.supplier?.phone
   const canSend = po.status !== 'received' && po.status !== 'cancelled'
   const canReceive = po.status !== 'received' && po.status !== 'cancelled'
@@ -274,7 +282,7 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
     const receipts = (po.items || [])
       .map((it) => ({ item_id: it.id, qty: parseFloat(receiveQtys[it.id] || '0') || 0 }))
       .filter((r) => r.qty > 0)
-    if (receipts.length === 0) { notify('Enter what arrived', false); return }
+    if (receipts.length === 0) { notify(t('poui_toast_need_qty'), false); return }
     setReceiving(true)
     try {
       const res = await fetch(`/api/pos/purchase-orders/${po.id}/receive`, {
@@ -282,13 +290,13 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receipts, client_tx_id: `recv-${crypto.randomUUID()}` }),
       })
-      if (!res.ok) { notify('Could not receive stock', false); setReceiving(false); return }
+      if (!res.ok) { notify(t('poui_toast_receive_err'), false); setReceiving(false); return }
       const data = await res.json()
       onUpdated(data.purchase_order)
       setReceiveMode(false)
-      notify('Stock received — inventory updated', true)
+      notify(t('poui_toast_received'), true)
     } catch {
-      notify('Could not receive stock', false)
+      notify(t('poui_toast_receive_err'), false)
     } finally {
       setReceiving(false)
     }
@@ -305,7 +313,7 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
       if (!res.ok) {
         pending?.close()
         const j = await res.json().catch(() => ({}))
-        notify(j.error === 'supplier_no_phone' ? 'Add a WhatsApp number to this supplier first' : 'Could not send order', false)
+        notify(j.error === 'supplier_no_phone' ? t('poui_toast_no_phone') : t('poui_toast_send_err'), false)
         setSending(false)
         return
       }
@@ -314,14 +322,14 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
       if (data.sent_via === 'link' && data.wa_link) {
         if (pending) pending.location.href = data.wa_link
         else window.open(data.wa_link, '_blank')
-        notify('Opening WhatsApp…', true)
+        notify(t('poui_toast_opening'), true)
       } else {
         pending?.close()
-        notify('Sent to supplier on WhatsApp', true)
+        notify(t('poui_toast_sent'), true)
       }
     } catch {
       pending?.close()
-      notify('Could not send order', false)
+      notify(t('poui_toast_send_err'), false)
     } finally {
       setSending(false)
     }
@@ -337,14 +345,14 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
         style={{ background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 -8px 30px rgba(0,0,0,.25)' }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{po.supplier?.name || 'No supplier'}</div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{po.supplier?.name || t('poui_no_supplier')}</div>
+          <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
         </div>
-        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: meta.text, background: meta.bg, padding: '3px 9px', borderRadius: 9999, marginBottom: 14 }}>{meta.label}</span>
+        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999, marginBottom: 14 }}>{statusLabel(t, po.status)}</span>
 
         <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
-            <span>Item</span><span style={{ textAlign: 'center' }}>Qty</span><span style={{ textAlign: 'right' }}>Total</span>
+            <span>{t('poui_col_item')}</span><span style={{ textAlign: 'center' }}>{t('poui_col_qty')}</span><span style={{ textAlign: 'right' }}>{t('poui_col_total')}</span>
           </div>
           {(po.items || []).map((it) => (
             <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--b)' }}>
@@ -358,7 +366,7 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
         {po.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 14 }}>{po.notes}</div>}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--tx3)' }}>Total</span>
+          <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_total')}</span>
           <span style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(po.total_cost)}</span>
         </div>
 
@@ -367,13 +375,13 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
             onClick={startReceive}
             style={{ width: '100%', minHeight: 44, background: BLUE, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10 }}
           >
-            Receive stock
+            {t('poui_receive')}
           </button>
         )}
 
         {receiveMode && (
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>How much arrived?</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{t('poui_how_much')}</div>
             {(po.items || []).map((it) => {
               const outstanding = Math.max(0, Number(it.qty_ordered) - Number(it.qty_received))
               return (
@@ -381,22 +389,26 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
                     <div style={{ fontSize: 11, color: outstanding <= 0 ? GREEN : 'var(--tx3)' }}>
-                      {outstanding <= 0 ? 'fully received' : Number(it.qty_received) > 0 ? `received ${it.qty_received} of ${it.qty_ordered}` : `ordered ${it.qty_ordered}`}
+                      {outstanding <= 0
+                        ? t('poui_fully_received')
+                        : Number(it.qty_received) > 0
+                          ? t('poui_received_of', { received: it.qty_received, ordered: it.qty_ordered })
+                          : t('poui_ordered_n', { ordered: it.qty_ordered })}
                     </div>
                   </div>
                   <input
                     type="number" min={0} inputMode="decimal" disabled={outstanding <= 0}
                     value={receiveQtys[it.id] ?? ''}
                     onChange={(e) => setReceiveQtys((p) => ({ ...p, [it.id]: e.target.value }))}
-                    aria-label={`Received now for ${it.name}`}
+                    aria-label={t('poui_aria_received_now', { name: it.name })}
                     style={{ ...receiveInput, opacity: outstanding <= 0 ? 0.5 : 1 }}
                   />
                 </div>
               )
             })}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={() => setReceiveMode(false)} style={{ minHeight: 44, padding: '0 16px', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 10, color: 'var(--tx)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleReceive} disabled={receiving} style={{ flex: 1, minHeight: 44, background: receiving ? 'var(--ev)' : GREEN, color: receiving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: receiving ? 'default' : 'pointer', fontFamily: 'inherit' }}>{receiving ? 'Saving…' : 'Confirm receipt'}</button>
+              <button onClick={() => setReceiveMode(false)} style={{ minHeight: 44, padding: '0 16px', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 10, color: 'var(--tx)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{t('poui_cancel')}</button>
+              <button onClick={handleReceive} disabled={receiving} style={{ flex: 1, minHeight: 44, background: receiving ? 'var(--ev)' : GREEN, color: receiving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: receiving ? 'default' : 'pointer', fontFamily: 'inherit' }}>{receiving ? t('poui_saving') : t('poui_confirm_receipt')}</button>
             </div>
           </div>
         )}
@@ -408,11 +420,11 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
               disabled={sending || !supplierPhone}
               style={{ width: '100%', minHeight: 44, background: sending || !supplierPhone ? 'var(--ev)' : '#25D366', color: sending || !supplierPhone ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: sending || !supplierPhone ? 'default' : 'pointer', fontFamily: 'inherit' }}
             >
-              {sending ? 'Sending…' : po.status === 'draft' ? 'Send to supplier on WhatsApp' : 'Resend on WhatsApp'}
+              {sending ? t('poui_sending') : po.status === 'draft' ? t('poui_send') : t('poui_resend')}
             </button>
             {!supplierPhone && (
               <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
-                This supplier has no WhatsApp number yet.
+                {t('poui_no_phone_hint')}
               </div>
             )}
           </>
@@ -428,13 +440,14 @@ interface ModalProps {
   lowStock: InventoryLite[]
   allInventory: InventoryLite[]
   currencySymbol: string
+  t: Translate
   onClose: () => void
   onCreated: (po: PurchaseOrderWithItems) => void
   onSupplierAdded: (s: Supplier) => void
   notify: (msg: string, ok?: boolean) => void
 }
 
-function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, onClose, onCreated, onSupplierAdded, notify }: ModalProps) {
+function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t, onClose, onCreated, onSupplierAdded, notify }: ModalProps) {
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
 
   const [supplierId, setSupplierId] = useState('')
@@ -473,7 +486,7 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, o
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newSupName.trim(), phone: newSupPhone.trim() || null }),
     })
-    if (!res.ok) { notify('Could not save supplier', false); return null }
+    if (!res.ok) { notify(t('poui_toast_supplier_err'), false); return null }
     const { supplier } = await res.json()
     onSupplierAdded(supplier)
     return supplier.id
@@ -481,8 +494,8 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, o
 
   async function handleSave() {
     const validItems = items.filter((it) => it.name.trim() && Number(it.qty_ordered) > 0)
-    if (validItems.length === 0) { notify('Add at least one item with a quantity', false); return }
-    if (addingSupplier && !newSupName.trim()) { notify('Enter a supplier name', false); return }
+    if (validItems.length === 0) { notify(t('poui_toast_need_item'), false); return }
+    if (addingSupplier && !newSupName.trim()) { notify(t('poui_toast_need_supplier'), false); return }
 
     setSaving(true)
     try {
@@ -497,11 +510,11 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, o
           items: validItems,
         }),
       })
-      if (!res.ok) { notify('Could not create order', false); setSaving(false); return }
+      if (!res.ok) { notify(t('poui_toast_create_err'), false); setSaving(false); return }
       const { purchase_order } = await res.json()
       onCreated(purchase_order)
     } catch {
-      notify('Could not create order', false)
+      notify(t('poui_toast_create_err'), false)
       setSaving(false)
     }
   }
@@ -523,46 +536,46 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, o
         style={{ background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 -8px 30px rgba(0,0,0,.25)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>New purchase order</div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{t('poui_create_title')}</div>
+          <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
         </div>
 
         {/* Supplier */}
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', marginBottom: 6 }}>Supplier</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', marginBottom: 6 }}>{t('poui_supplier')}</label>
         {addingSupplier ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
-            <input style={inputStyle} placeholder="Supplier name" value={newSupName} onChange={(e) => setNewSupName(e.target.value)} />
-            <input style={inputStyle} type="tel" inputMode="tel" placeholder="WhatsApp number (for sending later)" value={newSupPhone} onChange={(e) => setNewSupPhone(e.target.value)} />
+            <input style={inputStyle} placeholder={t('poui_supplier_name_ph')} value={newSupName} onChange={(e) => setNewSupName(e.target.value)} />
+            <input style={inputStyle} type="tel" inputMode="tel" placeholder={t('poui_supplier_phone_ph')} value={newSupPhone} onChange={(e) => setNewSupPhone(e.target.value)} />
             {suppliers.length > 0 && (
               <button onClick={() => setAddingSupplier(false)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: ACC, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-                ← Pick an existing supplier
+                {t('poui_pick_existing')}
               </button>
             )}
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             <select style={{ ...inputStyle, flex: 1 }} value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
-              <option value="">— Select supplier —</option>
+              <option value="">{t('poui_select_supplier')}</option>
               {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <button onClick={() => setAddingSupplier(true)} style={{ minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '0 12px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx)', whiteSpace: 'nowrap' }}>+ New</button>
+            <button onClick={() => setAddingSupplier(true)} style={{ minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '0 12px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx)', whiteSpace: 'nowrap' }}>{t('poui_new_supplier')}</button>
           </div>
         )}
 
         {/* Items */}
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>
-          Items {lowStock.length > 0 && <span style={{ fontWeight: 400 }}>· {lowStock.length} low-stock item{lowStock.length === 1 ? '' : 's'} prefilled</span>}
+          {t('poui_items')} {lowStock.length > 0 && <span style={{ fontWeight: 400 }}>{t(lowStock.length === 1 ? 'poui_prefilled_one' : 'poui_prefilled_other', { count: lowStock.length })}</span>}
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.length === 0 && (
-            <div style={{ fontSize: 12, color: 'var(--tx3)', padding: '8px 0' }}>No items yet — add one below.</div>
+            <div style={{ fontSize: 12, color: 'var(--tx3)', padding: '8px 0' }}>{t('poui_no_items')}</div>
           )}
           {items.map((it, idx) => (
             <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 84px 28px', gap: 6, alignItems: 'center' }}>
               <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
-              <input style={{ ...inputStyle, textAlign: 'center' }} type="number" min={0} inputMode="decimal" value={it.qty_ordered} onChange={(e) => updateItem(idx, { qty_ordered: parseFloat(e.target.value) || 0 })} aria-label={`Quantity for ${it.name}`} />
-              <input style={{ ...inputStyle, textAlign: 'right' }} type="number" min={0} inputMode="decimal" value={it.unit_cost} onChange={(e) => updateItem(idx, { unit_cost: parseFloat(e.target.value) || 0 })} aria-label={`Unit cost for ${it.name}`} />
-              <button onClick={() => removeItem(idx)} aria-label={`Remove ${it.name}`} style={{ background: 'none', border: 'none', color: RED, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
+              <input style={{ ...inputStyle, textAlign: 'center' }} type="number" min={0} inputMode="decimal" value={it.qty_ordered} onChange={(e) => updateItem(idx, { qty_ordered: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_qty', { name: it.name })} />
+              <input style={{ ...inputStyle, textAlign: 'right' }} type="number" min={0} inputMode="decimal" value={it.unit_cost} onChange={(e) => updateItem(idx, { unit_cost: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_cost', { name: it.name })} />
+              <button onClick={() => removeItem(idx)} aria-label={t('poui_aria_remove', { name: it.name })} style={{ background: 'none', border: 'none', color: RED, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
           ))}
         </div>
@@ -573,24 +586,24 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, o
             onChange={(e) => { addItemFromInventory(e.target.value); e.target.value = '' }}
             style={{ ...inputStyle, marginTop: 8 }}
           >
-            <option value="">+ Add another product…</option>
+            <option value="">{t('poui_add_product')}</option>
             {notAdded.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
         )}
 
         {/* Notes */}
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>Notes (optional)</label>
-        <textarea style={{ ...inputStyle, minHeight: 56, padding: 10, resize: 'vertical' }} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Delivery instructions, reference…" />
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>{t('poui_notes')}</label>
+        <textarea style={{ ...inputStyle, minHeight: 56, padding: 10, resize: 'vertical' }} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('poui_notes_ph')} />
 
         {/* Footer */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, gap: 12 }}>
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Total <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</span></div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_total')} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</span></div>
           <button
             onClick={handleSave}
             disabled={saving}
             style={{ minHeight: 44, background: saving ? 'var(--ev)' : ACC, color: saving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, padding: '0 22px', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
           >
-            {saving ? 'Saving…' : 'Create order'}
+            {saving ? t('poui_saving') : t('poui_create')}
           </button>
         </div>
       </div>

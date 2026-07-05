@@ -1578,7 +1578,7 @@ export default function POSPage() {
 
         {tab === 'purchase_orders' && (
           <div style={{ maxWidth: 860 }}>
-            <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={'all'} notify={notify} />
+            <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={'all'} notify={notify} t={(k, v) => tc('pos.' + k, v)} />
           </div>
         )}
       </div>

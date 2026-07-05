@@ -11,6 +11,11 @@ export function createClient() {
 
   const cookieStore = cookies()
   return createServerClient(url, key, {
+    // Shared cookie Domain so the owner's askbiz.co login is seen here too.
+    // Set NEXT_PUBLIC_COOKIE_DOMAIN=.askbiz.co in production; unset on localhost.
+    cookieOptions: process.env.NEXT_PUBLIC_COOKIE_DOMAIN
+      ? { domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN }
+      : undefined,
     cookies: {
       get(name: string) { return cookieStore.get(name)?.value },
       set(name: string, value: string, options: CookieOptions) {

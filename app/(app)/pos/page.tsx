@@ -3645,7 +3645,7 @@ export default function POSPage() {
         {tab === 'purchase_orders' && (
           <div style={{ maxWidth: 860 }}>
             <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12 }}>{tc('pos_app.back')}</button>
-            <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={selectedLocation} notify={notify} />
+            <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={selectedLocation} notify={notify} t={(k, v) => tc('pos_app.' + k, v)} />
           </div>
         )}
 

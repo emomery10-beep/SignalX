@@ -130,7 +130,7 @@ export async function PUT(req: NextRequest) {
     name:                (i.name || '').trim(),
     sale_price:          Number(i.sale_price) || 0,
     cost_price:          0,
-    stock_qty:           Math.max(0, parseInt(String(i.stock_qty)) || 0),
+    stock_qty:           Math.max(0, parseFloat(String(i.stock_qty)) || 0),  // numeric(10,3): keep decimals for weight items
     low_stock_threshold: 5,
     unit:                i.unit || 'item',
   })).filter(r => r.name)

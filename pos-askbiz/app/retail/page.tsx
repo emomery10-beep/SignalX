@@ -107,6 +107,7 @@ export default function RetailHub() {
     { label: tc('retail.nav_products_label'), href: '/retail/products', desc: tc('retail.nav_products_desc') },
     { label: tc('retail.nav_stocktake_label'), href: '/retail/stocktake', desc: tc('retail.nav_stocktake_desc') },
     { label: tc('retail.nav_customers_label'), href: '/retail/customers', desc: tc('retail.nav_customers_desc') },
+    { label: tc('retail.nav_credit_label'), href: '/retail/credit', desc: tc('retail.nav_credit_desc') },
   ]
 
   return (
