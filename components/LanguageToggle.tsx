@@ -14,7 +14,20 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  // Flip the menu upward when the button sits near the bottom of the viewport
+  // (e.g. the sidebar footer) so it never opens off-screen.
+  const toggleOpen = () => {
+    setOpen(o => {
+      if (!o && ref.current) {
+        const spaceBelow = window.innerHeight - ref.current.getBoundingClientRect().bottom
+        setDropUp(spaceBelow < 220)
+      }
+      return !o
+    })
+  }
 
   // Switching updates provider state + cookie + profile. App routes are
   // cookie-driven, so we just refresh to re-render the server tree in the new
@@ -44,7 +57,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
     <div ref={ref} style={{ position: 'relative', zIndex: 50 }}>
       {/* Toggle button */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={toggleOpen}
         aria-label={tc('lang_toggle.changeLanguage')}
         title={tc('lang_toggle.changeLanguage')}
         style={compact ? {
@@ -86,12 +99,13 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
       {open && (
         <div style={{
           position: 'absolute',
-          top: 'calc(100% + 6px)',
+          ...(dropUp ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
           ...(lang === 'ar' ? { left: 0 } : { right: 0 }),
           background: 'var(--sf, #1a1a2e)', border: '1px solid var(--b, rgba(255,255,255,.12))',
           borderRadius: 12, padding: 6, minWidth: 160,
           boxShadow: '0 8px 32px rgba(0,0,0,.4)',
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2,
+          maxHeight: 'min(60vh, 340px)', overflowY: 'auto',
         }}>
           {LANGS.map(l => (
             <button
