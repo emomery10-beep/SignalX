@@ -33,6 +33,7 @@ create table if not exists public.merchant_payment_config (
 
 alter table public.merchant_payment_config enable row level security;
 
+drop policy if exists "Users can manage own payment config" on public.merchant_payment_config;
 create policy "Users can manage own payment config"
   on public.merchant_payment_config for all using (auth.uid() = owner_id);
 
@@ -43,6 +44,7 @@ create index if not exists idx_merchant_payment_provider
   on public.merchant_payment_config(payment_provider);
 
 -- ── TRIGGER: auto-update updated_at ─────────────────────────
+drop trigger if exists set_merchant_payment_config_updated_at on public.merchant_payment_config;
 create trigger set_merchant_payment_config_updated_at
   before update on public.merchant_payment_config
   for each row execute procedure public.set_updated_at();

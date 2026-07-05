@@ -18,5 +18,6 @@ create index if not exists idx_security_audits_status on security_audits (overal
 
 alter table security_audits enable row level security;
 
+drop policy if exists "Service role only" on security_audits;
 create policy "Service role only" on security_audits
   for all using (auth.role() = 'service_role');

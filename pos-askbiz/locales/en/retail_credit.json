@@ -31,5 +31,6 @@
   "remove": "Remove",
   "err_amount": "Enter an amount greater than 0",
   "err_who": "Enter a name or phone number",
-  "err_save": "Could not save — please try again"
+  "err_save": "Could not save — please try again",
+  "err_load": "Could not check who owes you — please try again"
 }

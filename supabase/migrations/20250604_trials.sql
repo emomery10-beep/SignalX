@@ -16,6 +16,7 @@ create table if not exists public.trials (
 
 alter table public.trials enable row level security;
 
+drop policy if exists "Own trials" on public.trials;
 create policy "Own trials" on public.trials
   for all using (auth.uid() = user_id);
 

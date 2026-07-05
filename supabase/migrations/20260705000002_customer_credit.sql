@@ -93,9 +93,12 @@ begin
   end if;
 end $$;
 
+-- Includes 'mobile'/'mpesa' (added by 20260606_add_mobile_payment_type.sql,
+-- and in real use in production) alongside the original set — this constraint
+-- replaces whatever was there, so it must be a superset, not just +credit.
 alter table public.pos_transactions
   add constraint pos_transactions_payment_type_check
-  check (payment_type in ('cash', 'card', 'other', 'credit'));
+  check (payment_type in ('cash', 'card', 'mobile', 'mpesa', 'other', 'credit'));
 
 -- 5. RLS — same owner-only pattern as every other POS table.
 alter table public.pos_customer_credit enable row level security;

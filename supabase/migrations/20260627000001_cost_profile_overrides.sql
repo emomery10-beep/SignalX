@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.cost_profile_overrides (
 
 ALTER TABLE public.cost_profile_overrides ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS cpo_own ON public.cost_profile_overrides;
 CREATE POLICY cpo_own ON public.cost_profile_overrides
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
