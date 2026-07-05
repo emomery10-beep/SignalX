@@ -1,0 +1,56 @@
+{
+  "loading": "Inachukua…",
+
+  "status_received": "Kimepokelewa",
+  "status_at_branch": "Kipo Tawini",
+  "status_assigned": "Kimekabidhiwa",
+  "status_loaded": "Kimepakiwa",
+  "status_in_transit": "Kinasafirishwa",
+  "status_at_destination": "Kimefika Marudioni",
+  "status_out_for_delivery": "Kinapelekwa",
+  "status_delivered": "Kimefikishwa",
+  "status_collected": "Kimechukuliwa",
+  "status_failed_delivery": "Halijafanikiwa",
+  "status_returned": "Kimerejeshwa",
+
+  "time_just_now": "sasa hivi",
+  "time_minutes_ago": "dakika {minutes} zilizopita",
+  "time_hours_ago": "saa {hours} zilizopita",
+
+  "tab_pending": "Vinavyosubiri",
+  "tab_assigned": "Vilivyokabidhiwa",
+  "tab_transit": "Vinavyosafirishwa",
+  "tab_arrived": "Vilivyofika",
+
+  "header_title": "🚛 Usafirishaji",
+  "header_subtitle": "{name} · jumla ya vifurushi {count}",
+  "refresh": "↻ Onyesha upya",
+
+  "search_placeholder": "Tafuta namba ya ufuatiliaji, jina, mji…",
+
+  "bulk_cancel": "✕ Futa",
+  "bulk_assign": "☐ Kabidhi kwa wingi",
+  "bulk_selected": "{count} vimechaguliwa",
+
+  "loading_parcels": "Inapakia vifurushi…",
+  "empty_category": "Hakuna vifurushi katika kundi hili bado",
+
+  "no_description": "Hakuna maelezo",
+  "dash": "—",
+
+  "assign_arrow": "Kabidhi →",
+  "mark_loaded": "Weka Kimepakiwa",
+  "dispatch_check": "Safirisha ✓",
+
+  "bulk_assign_count": "Kabidhi vifurushi {count}",
+  "select_truck": "Chagua lori…",
+  "select_driver": "Chagua dereva…",
+  "select_route_optional": "Chagua njia (si lazima)…",
+  "assigning": "Inakabidhi…",
+
+  "assign_title": "Kabidhi {tracking}",
+  "label_truck_required": "Lori *",
+  "label_driver_required": "Dereva *",
+  "label_route": "Njia",
+  "assign_parcel": "Kabidhi Kifurushi"
+}

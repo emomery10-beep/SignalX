@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Inapakia malipo…",
+  "title": "💳 Mipango na Malipo",
+  "sign_out": "Toka",
+  "upgrade_success": "✅ Umefanikiwa kupandisha daraja! Nafasi zako mpya sasa zinatumika.",
+  "upgrade_cancelled": "❌ Kupandisha daraja kumefutwa. Hakuna malipo yaliyotolewa.",
+  "seats_title": "Nafasi za Point of Sale",
+  "seats_active_one": "Inatumika — nafasi {count}",
+  "seats_active_other": "Zinatumika — nafasi {count}",
+  "loading_seat_info": "Inapakia taarifa za nafasi…",
+  "seats_blurb_1": "Ongeza wafanyakazi wa keshia na hisa kwenye duka lako kwa £5/nafasi/mwezi. Kila nafasi humruhusu mfanyakazi mmoja kuingia ",
+  "seats_blurb_2": " kupitia barua pepe au WhatsApp OTP kwenye simu yake mwenyewe. Dashibodi ya mmiliki inajumuishwa kila wakati — nafasi ni za wafanyakazi wa ziada tu.",
+  "bullet_roles": "✓ Majukumu ya keshia na hisa",
+  "bullet_login": "✓ Kuingia kwa barua pepe au WhatsApp OTP",
+  "bullet_receipts": "✓ Risiti za WhatsApp kwa wateja",
+  "bullet_vat": "✓ Utoaji wa VAT unaoendana na MTD",
+  "bullet_cancel": "✓ Ghairi wakati wowote"
+}

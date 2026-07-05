@@ -292,6 +292,55 @@ import arSalonClients from '@/locales/ar/salon_clients.json'
 import arSalonProducts from '@/locales/ar/salon_products.json'
 import arSell from '@/locales/ar/sell.json'
 
+import swCommon from '@/locales/sw/common.json'
+import swDashboard from '@/locales/sw/dashboard.json'
+import swFactory from '@/locales/sw/factory.json'
+import swFactoryApprovals from '@/locales/sw/factory_approvals.json'
+import swFactoryBatch from '@/locales/sw/factory_batch.json'
+import swFactoryCapture from '@/locales/sw/factory_capture.json'
+import swFactoryDowntime from '@/locales/sw/factory_downtime.json'
+import swFactoryProduction from '@/locales/sw/factory_production.json'
+import swFactoryQuality from '@/locales/sw/factory_quality.json'
+import swFactoryShift from '@/locales/sw/factory_shift.json'
+import swFactoryStaff from '@/locales/sw/factory_staff.json'
+import swFactoryWaybill from '@/locales/sw/factory_waybill.json'
+import swIntelligence from '@/locales/sw/intelligence.json'
+import swInventory from '@/locales/sw/inventory.json'
+import swLogistics from '@/locales/sw/logistics.json'
+import swLogisticsCollect from '@/locales/sw/logistics_collect.json'
+import swLogisticsDashboard from '@/locales/sw/logistics_dashboard.json'
+import swLogisticsDispatch from '@/locales/sw/logistics_dispatch.json'
+import swLogisticsIntake from '@/locales/sw/logistics_intake.json'
+import swPos from '@/locales/sw/pos.json'
+import swPosBilling from '@/locales/sw/pos_billing.json'
+import swPosLogin from '@/locales/sw/pos_login.json'
+import swPosPaymentSuccess from '@/locales/sw/pos_payment_success.json'
+import swRepair from '@/locales/sw/repair.json'
+import swRepairIntake from '@/locales/sw/repair_intake.json'
+import swRepairParts from '@/locales/sw/repair_parts.json'
+import swRepairTickets from '@/locales/sw/repair_tickets.json'
+import swRestaurant from '@/locales/sw/restaurant.json'
+import swRestaurantDeliveries from '@/locales/sw/restaurant_deliveries.json'
+import swRestaurantFloor from '@/locales/sw/restaurant_floor.json'
+import swRestaurantKitchen from '@/locales/sw/restaurant_kitchen.json'
+import swRestaurantLabor from '@/locales/sw/restaurant_labor.json'
+import swRestaurantMenu from '@/locales/sw/restaurant_menu.json'
+import swRestaurantOnlineOrders from '@/locales/sw/restaurant_online_orders.json'
+import swRestaurantOrders from '@/locales/sw/restaurant_orders.json'
+import swRestaurantReservations from '@/locales/sw/restaurant_reservations.json'
+import swRestaurantStaff from '@/locales/sw/restaurant_staff.json'
+import swRestaurantWaste from '@/locales/sw/restaurant_waste.json'
+import swRetail from '@/locales/sw/retail.json'
+import swRetailCredit from '@/locales/sw/retail_credit.json'
+import swRetailCustomers from '@/locales/sw/retail_customers.json'
+import swRetailProducts from '@/locales/sw/retail_products.json'
+import swRetailStocktake from '@/locales/sw/retail_stocktake.json'
+import swSalon from '@/locales/sw/salon.json'
+import swSalonBookings from '@/locales/sw/salon_bookings.json'
+import swSalonClients from '@/locales/sw/salon_clients.json'
+import swSalonProducts from '@/locales/sw/salon_products.json'
+import swSell from '@/locales/sw/sell.json'
+
 type Dict = Record<string, unknown>
 
 // English-only for now — translation gated on API credits. The resolver falls
@@ -303,6 +352,7 @@ const CATALOG: Record<string, Record<string, Dict>> = {
   de: { common: deCommon, dashboard: deDashboard, factory: deFactory, factory_approvals: deFactoryApprovals, factory_batch: deFactoryBatch, factory_capture: deFactoryCapture, factory_downtime: deFactoryDowntime, factory_production: deFactoryProduction, factory_quality: deFactoryQuality, factory_shift: deFactoryShift, factory_staff: deFactoryStaff, factory_waybill: deFactoryWaybill, intelligence: deIntelligence, inventory: deInventory, logistics: deLogistics, logistics_collect: deLogisticsCollect, logistics_dashboard: deLogisticsDashboard, logistics_dispatch: deLogisticsDispatch, logistics_intake: deLogisticsIntake, pos: dePos, pos_billing: dePosBilling, pos_login: dePosLogin, pos_payment_success: dePosPaymentSuccess, repair: deRepair, repair_intake: deRepairIntake, repair_parts: deRepairParts, repair_tickets: deRepairTickets, restaurant: deRestaurant, restaurant_deliveries: deRestaurantDeliveries, restaurant_floor: deRestaurantFloor, restaurant_kitchen: deRestaurantKitchen, restaurant_labor: deRestaurantLabor, restaurant_menu: deRestaurantMenu, restaurant_online_orders: deRestaurantOnlineOrders, restaurant_orders: deRestaurantOrders, restaurant_reservations: deRestaurantReservations, restaurant_staff: deRestaurantStaff, restaurant_waste: deRestaurantWaste, retail: deRetail, retail_customers: deRetailCustomers, retail_products: deRetailProducts, retail_stocktake: deRetailStocktake, salon: deSalon, salon_bookings: deSalonBookings, salon_clients: deSalonClients, salon_products: deSalonProducts, sell: deSell },
   nl: { common: nlCommon, dashboard: nlDashboard, factory: nlFactory, factory_approvals: nlFactoryApprovals, factory_batch: nlFactoryBatch, factory_capture: nlFactoryCapture, factory_downtime: nlFactoryDowntime, factory_production: nlFactoryProduction, factory_quality: nlFactoryQuality, factory_shift: nlFactoryShift, factory_staff: nlFactoryStaff, factory_waybill: nlFactoryWaybill, intelligence: nlIntelligence, inventory: nlInventory, logistics: nlLogistics, logistics_collect: nlLogisticsCollect, logistics_dashboard: nlLogisticsDashboard, logistics_dispatch: nlLogisticsDispatch, logistics_intake: nlLogisticsIntake, pos: nlPos, pos_billing: nlPosBilling, pos_login: nlPosLogin, pos_payment_success: nlPosPaymentSuccess, repair: nlRepair, repair_intake: nlRepairIntake, repair_parts: nlRepairParts, repair_tickets: nlRepairTickets, restaurant: nlRestaurant, restaurant_deliveries: nlRestaurantDeliveries, restaurant_floor: nlRestaurantFloor, restaurant_kitchen: nlRestaurantKitchen, restaurant_labor: nlRestaurantLabor, restaurant_menu: nlRestaurantMenu, restaurant_online_orders: nlRestaurantOnlineOrders, restaurant_orders: nlRestaurantOrders, restaurant_reservations: nlRestaurantReservations, restaurant_staff: nlRestaurantStaff, restaurant_waste: nlRestaurantWaste, retail: nlRetail, retail_customers: nlRetailCustomers, retail_products: nlRetailProducts, retail_stocktake: nlRetailStocktake, salon: nlSalon, salon_bookings: nlSalonBookings, salon_clients: nlSalonClients, salon_products: nlSalonProducts, sell: nlSell },
   ar: { common: arCommon, dashboard: arDashboard, factory: arFactory, factory_approvals: arFactoryApprovals, factory_batch: arFactoryBatch, factory_capture: arFactoryCapture, factory_downtime: arFactoryDowntime, factory_production: arFactoryProduction, factory_quality: arFactoryQuality, factory_shift: arFactoryShift, factory_staff: arFactoryStaff, factory_waybill: arFactoryWaybill, intelligence: arIntelligence, inventory: arInventory, logistics: arLogistics, logistics_collect: arLogisticsCollect, logistics_dashboard: arLogisticsDashboard, logistics_dispatch: arLogisticsDispatch, logistics_intake: arLogisticsIntake, pos: arPos, pos_billing: arPosBilling, pos_login: arPosLogin, pos_payment_success: arPosPaymentSuccess, repair: arRepair, repair_intake: arRepairIntake, repair_parts: arRepairParts, repair_tickets: arRepairTickets, restaurant: arRestaurant, restaurant_deliveries: arRestaurantDeliveries, restaurant_floor: arRestaurantFloor, restaurant_kitchen: arRestaurantKitchen, restaurant_labor: arRestaurantLabor, restaurant_menu: arRestaurantMenu, restaurant_online_orders: arRestaurantOnlineOrders, restaurant_orders: arRestaurantOrders, restaurant_reservations: arRestaurantReservations, restaurant_staff: arRestaurantStaff, restaurant_waste: arRestaurantWaste, retail: arRetail, retail_customers: arRetailCustomers, retail_products: arRetailProducts, retail_stocktake: arRetailStocktake, salon: arSalon, salon_bookings: arSalonBookings, salon_clients: arSalonClients, salon_products: arSalonProducts, sell: arSell },
+  sw: { common: swCommon, dashboard: swDashboard, factory: swFactory, factory_approvals: swFactoryApprovals, factory_batch: swFactoryBatch, factory_capture: swFactoryCapture, factory_downtime: swFactoryDowntime, factory_production: swFactoryProduction, factory_quality: swFactoryQuality, factory_shift: swFactoryShift, factory_staff: swFactoryStaff, factory_waybill: swFactoryWaybill, intelligence: swIntelligence, inventory: swInventory, logistics: swLogistics, logistics_collect: swLogisticsCollect, logistics_dashboard: swLogisticsDashboard, logistics_dispatch: swLogisticsDispatch, logistics_intake: swLogisticsIntake, pos: swPos, pos_billing: swPosBilling, pos_login: swPosLogin, pos_payment_success: swPosPaymentSuccess, repair: swRepair, repair_intake: swRepairIntake, repair_parts: swRepairParts, repair_tickets: swRepairTickets, restaurant: swRestaurant, restaurant_deliveries: swRestaurantDeliveries, restaurant_floor: swRestaurantFloor, restaurant_kitchen: swRestaurantKitchen, restaurant_labor: swRestaurantLabor, restaurant_menu: swRestaurantMenu, restaurant_online_orders: swRestaurantOnlineOrders, restaurant_orders: swRestaurantOrders, restaurant_reservations: swRestaurantReservations, restaurant_staff: swRestaurantStaff, restaurant_waste: swRestaurantWaste, retail: swRetail, retail_credit: swRetailCredit, retail_customers: swRetailCustomers, retail_products: swRetailProducts, retail_stocktake: swRetailStocktake, salon: swSalon, salon_bookings: swSalonBookings, salon_clients: swSalonClients, salon_products: swSalonProducts, sell: swSell },
 }
 
 const BASE = 'en'
