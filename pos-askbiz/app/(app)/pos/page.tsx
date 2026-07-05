@@ -5,6 +5,7 @@ import { useLang } from '@/components/LanguageProvider'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
 import RestaurantSnapshot from '@/components/pos/RestaurantSnapshot'
+import PurchaseOrdersTab from '@/components/pos/PurchaseOrdersTab'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -90,7 +91,7 @@ interface Transaction {
 interface InventoryItem {
   id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'audit' | 'map'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'purchase_orders' | 'audit' | 'map'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -779,7 +780,7 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'services', 'staff', 'inventory', 'audit', 'map'] as Tab[]).map(t => {
+          {(['overview', 'services', 'staff', 'inventory', 'purchase_orders', 'audit', 'map'] as Tab[]).map(t => {
             const bt = (businessType || '').toLowerCase()
             const _detected = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
               : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
@@ -794,6 +795,7 @@ export default function POSPage() {
             const tabLabel = t === 'services'
               ? sectorLabel
               : t === 'map' ? tc('pos.tab_map')
+              : t === 'purchase_orders' ? 'Orders' /* i18n — Phase 4 */
               : tc('pos.tab_' + t)
 
             return (
@@ -1571,6 +1573,12 @@ export default function POSPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === 'purchase_orders' && (
+          <div style={{ maxWidth: 860 }}>
+            <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={'all'} notify={notify} />
           </div>
         )}
       </div>

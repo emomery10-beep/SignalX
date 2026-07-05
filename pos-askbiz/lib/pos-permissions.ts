@@ -41,6 +41,11 @@ export type PosPermission =
   // Reports
   | 'reports.view'          // view shift + production reports
   | 'reports.financial'     // view financial reports (revenue, margins)
+  // Purchase orders / supplier orders
+  | 'purchase_order.view'   // read purchase orders & suppliers
+  | 'purchase_order.create' // create/edit POs & suppliers
+  | 'purchase_order.send'   // send a PO to the supplier (WhatsApp)
+  | 'purchase_order.receive'// receive stock against a PO
 
 // ── Role → permissions map ───────────────────────────────────
 const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
@@ -55,6 +60,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
     'capture.approve',
     'reports.view', 'reports.financial',
+    'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive',
   ],
   manager: [
     'sales.view', 'sales.view_all',
@@ -65,6 +71,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
     'capture.approve',
     'reports.view', 'reports.financial',
+    'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive',
   ],
   supervisor: [
     'sales.view',
@@ -74,6 +81,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
     'capture.approve',
     'reports.view',
+    'purchase_order.view',
   ],
   repair: [
     'sales.view',
@@ -88,6 +96,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'inventory.view', 'inventory.manage',
     'sales.view',
     'camera.intake',
+    'purchase_order.view', 'purchase_order.create', 'purchase_order.receive',
   ],
   cashier: [
     'sales.create', 'sales.view',
@@ -98,6 +107,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'shift.view',
     'capture.approve',
     'reports.view', 'reports.financial',
+    'purchase_order.view',
   ],
   dispatcher: [
     'sales.view',

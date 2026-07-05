@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
+import PurchaseOrdersTab from '@/components/pos/PurchaseOrdersTab'
 import AuditTab from '@/components/pos/AuditTab'
 import RestaurantTab from '@/components/pos/RestaurantTab'
 import RepairTab from '@/components/pos/RepairTab'
@@ -3642,36 +3643,9 @@ export default function POSPage() {
 
         {/* ══════════════ PURCHASE ORDERS TAB ══════════════ */}
         {tab === 'purchase_orders' && (
-          <div style={{ maxWidth: 800 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>📋 {tc('pos_app.purchase_orders_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.purchase_orders_desc')}</div>
-              </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
-            </div>
-            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.supplier_orders')}</div>
-              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>{tc('pos_app.coming_soon')}</span>
-              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>{tc('pos_app.supplier_orders_desc')}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
-                {[
-                  { icon: '📝', title: tc('pos_app.po_create'), desc: tc('pos_app.po_create_desc') },
-                  { icon: '📧', title: tc('pos_app.po_send'), desc: tc('pos_app.po_send_desc') },
-                  { icon: '📥', title: tc('pos_app.po_receive'), desc: tc('pos_app.po_receive_desc') },
-                  { icon: '🔄', title: tc('pos_app.po_backorders'), desc: tc('pos_app.po_backorders_desc') },
-                  { icon: '🤖', title: tc('pos_app.po_auto_reorder'), desc: tc('pos_app.po_auto_reorder_desc') },
-                  { icon: '📊', title: tc('pos_app.po_insights'), desc: tc('pos_app.po_insights_desc') },
-                ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div style={{ maxWidth: 860 }}>
+            <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12 }}>{tc('pos_app.back')}</button>
+            <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={selectedLocation} notify={notify} />
           </div>
         )}
 

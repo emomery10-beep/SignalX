@@ -35,6 +35,11 @@ export type PosAuditEvent =
   // Inventory
   | 'inventory.restocked'
   | 'inventory.adjusted'
+  // Purchase orders
+  | 'purchase_order.created'
+  | 'purchase_order.sent'
+  | 'purchase_order.received'
+  | 'purchase_order.cancelled'
 
 export interface PosAuditPayload {
   auth:        PosAuthResult
