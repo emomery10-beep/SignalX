@@ -53,6 +53,7 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [detailPo, setDetailPo] = useState<PurchaseOrderWithItems | null>(null)
+  const [filter, setFilter] = useState<'all' | 'backorders' | 'received'>('all')
 
   // Replace a PO in the list (and the open detail sheet) after send/receive.
   const upsertOrder = useCallback((po: PurchaseOrderWithItems) => {
@@ -90,6 +91,11 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
   useEffect(() => { loadOrders(); loadPickers() }, [loadOrders, loadPickers])
 
   const lowStock = inventory.filter((i) => (i.stock_qty ?? 0) <= (i.low_stock_threshold ?? 0))
+  const backorderCount = orders.filter((o) => o.status === 'partial').length
+  const filtered =
+    filter === 'backorders' ? orders.filter((o) => o.status === 'partial')
+    : filter === 'received' ? orders.filter((o) => o.status === 'received')
+    : orders
 
   return (
     <div style={{ maxWidth: 860 }}>
@@ -114,6 +120,36 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
         </button>
       </div>
 
+      {!loading && lowStock.length > 0 && (
+        <div style={{ fontSize: 12, color: AMBER, marginBottom: 12 }}>
+          {lowStock.length} item{lowStock.length === 1 ? '' : 's'} low on stock — tap New order to reorder.
+        </div>
+      )}
+
+      {!loading && orders.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+          {([
+            { k: 'all', label: 'All' },
+            { k: 'backorders', label: `Back-orders${backorderCount > 0 ? ` (${backorderCount})` : ''}` },
+            { k: 'received', label: 'Received' },
+          ] as const).map((c) => (
+            <button
+              key={c.k}
+              onClick={() => setFilter(c.k)}
+              style={{
+                minHeight: 32, padding: '0 12px', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
+                border: `1px solid ${filter === c.k ? ACC : 'var(--b)'}`,
+                background: filter === c.k ? ACC : 'transparent',
+                color: filter === c.k ? '#fff' : 'var(--tx3)',
+                fontWeight: filter === c.k ? 600 : 400,
+              }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading…</div>
       ) : orders.length === 0 ? (
@@ -130,9 +166,11 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
             Create your first order
           </button>
         </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ padding: 28, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No orders in this view.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {orders.map((po) => {
+          {filtered.map((po) => {
             const meta = STATUS_META[po.status] ?? STATUS_META.draft
             const itemCount = po.items?.length ?? 0
             return (
