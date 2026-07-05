@@ -25,7 +25,7 @@ function KV({ label, value, sub, color, onClick, active }: { label: string; valu
       aria-expanded={clickable ? !!active : undefined}
       onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick!() } } : undefined}
       className={clickable ? 'kv-clickable' : undefined}
-      style={{position:'relative',padding:'18px',borderRadius:14,border:'1px solid '+(active?(color||'#6366F1'):'var(--b)'),background:'var(--sf)',cursor:clickable?'pointer':'default',transition:'border-color .15s, box-shadow .15s, transform .15s',boxShadow:active?'0 0 0 3px '+(color||'#6366F1')+'22':undefined}}
+      style={{display:'flex',flexDirection:'column',alignItems:'flex-start',position:'relative',padding:'18px',borderRadius:14,border:'1px solid '+(active?(color||'#6366F1'):'var(--b)'),background:'var(--sf)',cursor:clickable?'pointer':'default',transition:'border-color .15s, box-shadow .15s, transform .15s',boxShadow:active?'0 0 0 3px '+(color||'#6366F1')+'22':undefined}}
     >
       <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:8}}>{label}</div>
       <div style={{fontSize:28,fontWeight:700,fontFamily:'var(--font-sora)',color:color||'var(--tx)',marginBottom:4}}>{value}</div>
@@ -219,9 +219,11 @@ export default function AdminPage() {
   const newMonthUsers = users.filter(u => u.created_at && new Date(u.created_at) >= sinceDays(30)).sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
   const flaggedUsers = users.filter(u => u.is_suspicious)
   const subs: any[] = stripeData?.subscriptions || []
+  // Stripe prices without a nickname come through as a raw price id (price_…) — show a friendly label instead.
+  const prettyPlan = (p: string) => (!p || /^price_/i.test(p)) ? 'Subscription' : p.charAt(0).toUpperCase() + p.slice(1)
   const mrrByPlan: Record<string, { count: number; monthly: number }> = {}
   subs.forEach(s => {
-    const p = (s.plan || 'unknown').toLowerCase()
+    const p = prettyPlan(s.plan)
     const monthly = s.interval === 'year' ? (s.amount || 0) / 12 : (s.amount || 0)
     if (!mrrByPlan[p]) mrrByPlan[p] = { count: 0, monthly: 0 }
     mrrByPlan[p].count++; mrrByPlan[p].monthly += monthly
@@ -294,7 +296,7 @@ export default function AdminPage() {
             {mrrByPlanArr.length > 0 ? <>
               <SectionLabel>MRR by plan</SectionLabel>
               {mrrByPlanArr.map(([plan, d]) => (
-                <Bar key={plan} label={plan} pct={mrr > 0 ? d.monthly / mrr * 100 : 0} color={PLAN_COLORS[plan] || '#f59e0b'} right={'£' + Math.round(d.monthly) + ' · ' + d.count + ' sub' + (d.count !== 1 ? 's' : '')} />
+                <Bar key={plan} label={plan} pct={mrr > 0 ? d.monthly / mrr * 100 : 0} color={PLAN_COLORS[plan.toLowerCase()] || '#f59e0b'} right={'£' + Math.round(d.monthly) + ' · ' + d.count + ' sub' + (d.count !== 1 ? 's' : '')} />
               ))}
               <SectionLabel>Active subscriptions</SectionLabel>
               {subs.slice(0, 20).map(s => (
@@ -316,7 +318,7 @@ export default function AdminPage() {
             {mrrByPlanArr.length > 0 && <>
               <SectionLabel>Annualised by plan</SectionLabel>
               {mrrByPlanArr.map(([plan, d]) => (
-                <Bar key={plan} label={plan} pct={arr > 0 ? d.monthly * 12 / arr * 100 : 0} color={PLAN_COLORS[plan] || '#8b5cf6'} right={'£' + Math.round(d.monthly * 12) + '/yr'} />
+                <Bar key={plan} label={plan} pct={arr > 0 ? d.monthly * 12 / arr * 100 : 0} color={PLAN_COLORS[plan.toLowerCase()] || '#8b5cf6'} right={'£' + Math.round(d.monthly * 12) + '/yr'} />
               ))}
             </>}
           </DetailShell>
@@ -384,7 +386,7 @@ export default function AdminPage() {
             {mrrByPlanArr.length > 0 && <>
               <SectionLabel>By plan</SectionLabel>
               {mrrByPlanArr.map(([plan, d]) => (
-                <Bar key={plan} label={plan} pct={subs.length > 0 ? d.count / subs.length * 100 : 0} color={PLAN_COLORS[plan] || '#10b981'} right={d.count + ' · £' + Math.round(d.monthly) + '/mo'} />
+                <Bar key={plan} label={plan} pct={subs.length > 0 ? d.count / subs.length * 100 : 0} color={PLAN_COLORS[plan.toLowerCase()] || '#10b981'} right={d.count + ' · £' + Math.round(d.monthly) + '/mo'} />
               ))}
             </>}
             <SectionLabel>Subscriptions</SectionLabel>
