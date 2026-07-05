@@ -372,9 +372,15 @@ export default function OnboardingPage() {
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
                 {firstName ? tc('onboarding.business_title_named', { name: firstName }) : tc('onboarding.business_title')}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: TX2, marginBottom: 14, lineHeight: 1.6 }}>
                 {tc('onboarding.business_subtitle')}
               </p>
+              {/* Helper-mode: acknowledge a helper/family member is often present
+                  (the real driver of M-Pesa-style adoption for low-literacy users). */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(208,138,89,.08)', marginBottom: 24 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span style={{ fontSize: 12.5, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.helper_hint')}</span>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, marginBottom: 28 }}>
                 {BIZ_TYPES.map(bt => (
                   <button
