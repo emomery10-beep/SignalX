@@ -1,1 +1,21 @@
-{}
+{
+  "heading": "Uhisivu wa Bei",
+  "productsCount": "bidhaa {n}",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Chambua uhisivu wa bei za bidhaa zangu. Ni bidhaa zipi ninaweza kupandisha bei kwa usalama?",
+  "sensitivityElastic": "Nyeti kwa Bei",
+  "sensitivityInelastic": "Sugu kwa Bei",
+  "sensitivityUnitElastic": "Yenye Uwiano",
+  "sensitivityInverse": "Athari ya Ubora",
+  "sensitivityStable": "Thabiti",
+  "priceLabel": "Bei",
+  "volumeLabel": "Kiasi",
+  "marginLabel": "Faida:",
+  "suggestedPrice": "💰 Bei inayopendekezwa kwa faida ya {targetMargin}%: {sym}{price} (+{pct}%)",
+  "simulatorHeading": "Mtengeneza Athari ya P&L",
+  "priceChangeLabel": "Mabadiliko ya bei:",
+  "perMonth": "/mwezi",
+  "statCurrent": "Ya Sasa",
+  "statProjected": "Iliyokadiriwa",
+  "statChange": "Mabadiliko"
+}

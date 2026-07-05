@@ -1,1 +1,20 @@
-{}
+{
+  "title": "Kadi ya Alama za KPI",
+  "onTargetBadge": "{met}/{total} kwenye lengo",
+  "askAi": "Uliza AI",
+  "askPrompt": "Kadi yangu ya alama za KPI inaonyesha {met}/{total} kwenye lengo. Nje ya lengo: {missed}. Ni nini ninapaswa kutanguliza ili kuboresha?",
+  "askPromptNone": "hakuna",
+  "colKpi": "KPI",
+  "colTarget": "Lengo",
+  "colActual": "Halisi",
+  "colStatus": "Hali",
+  "colTrend": "Mwelekeo",
+  "labelGrossMargin": "Faida Ghafi",
+  "labelNetMargin": "Faida Halisi",
+  "labelRevenueGrowth": "Ukuaji wa Mapato",
+  "labelStockoutRate": "Kiwango cha Kuisha kwa Hisa",
+  "labelCashRunway": "Muda wa Kufikia wa Taslimu",
+  "labelHealthScore": "Alama ya Afya",
+  "editTargetTitle": "Bofya ili kuhariri lengo",
+  "footerHint": "Bofya thamani yoyote ya lengo ili kubinafsisha. Malengo yanahifadhiwa kwenye kivinjari chako."
+}

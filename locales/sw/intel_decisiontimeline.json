@@ -1,1 +1,25 @@
-{}
+{
+  "emptyTitle": "Bado hakuna maamuzi yaliyorekodiwa",
+  "emptyDesc": "Rekodi uamuzi wako wa kwanza wa biashara na AskBiz itakagua tena baada ya wiki 6 kuona jinsi ulivyofanikiwa.",
+  "statTotal": "Jumla ya maamuzi",
+  "statReviewed": "Yaliyokaguliwa",
+  "statGoodCalls": "Maamuzi mazuri",
+  "statMissedCalls": "Maamuzi yaliyokosewa",
+  "statSuccessRate": "Kiwango cha mafanikio",
+  "statDueForReview": "Yanayostahili kukaguliwa",
+  "badgeReviewDue": "Ukaguzi unahitajika",
+  "verdictGood": "Uamuzi mzuri",
+  "verdictBad": "Haukufanya kazi",
+  "verdictNeutral": "Mchanganyiko",
+  "labelBefore": "Kabla:",
+  "labelAfter": "Baada:",
+  "reviewedOn": "Ilikaguliwa {date}",
+  "reviewScheduled": "Ukaguzi umepangwa: {date}",
+  "askAskBiz": "Uliza AskBiz →",
+  "askPrompt": "Changanua uamuzi huu niliofanya: {title}. {description}",
+  "typeLabels_pricing": "Bei",
+  "typeLabels_stock": "Hisa",
+  "typeLabels_supplier": "Msambazaji",
+  "typeLabels_product": "Bidhaa",
+  "typeLabels_strategy": "Mkakati"
+}

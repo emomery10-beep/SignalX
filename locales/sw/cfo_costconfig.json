@@ -1,1 +1,47 @@
-{}
+{
+  "drawerTitle": "Usanidi wa Gharama",
+  "drawerSubtitle": "Weka mara moja · Husasisha muda wa kufikia na hesabu za matumizi",
+
+  "tabCashBalance": "Salio la Taslimu",
+  "tabFixedCosts": "Gharama za Kudumu",
+  "tabVariableCosts": "Gharama Zinazobadilika",
+
+  "tableHeaderCategory": "Kundi",
+  "tableHeaderMonthly": "Kwa Mwezi",
+
+  "categoryNamePlaceholder": "Jina la kundi",
+  "addRow": "+ Ongeza safu",
+  "monthlyTotal": "Jumla ya Kila Mwezi",
+
+  "balanceDescription": "Taslimu uliyo nayo mkononi sasa hivi — akaunti za malipo, akiba, taslimu ndogo. Hii huendesha hesabu yako ya muda wa kufikia.",
+  "balanceLabel": "Salio la Taslimu la Sasa",
+  "balancePlaceholder": "mfano 50000",
+  "balanceSetMessage": "Salio limewekwa kuwa",
+  "balanceSetRunway": "Muda wako wa kufikia utahesabiwa upya kwa kutumia thamani hii.",
+
+  "fixedDescription": "Gharama zinazobaki sawa kila mwezi bila kujali mapato. Hizi hutolewa kutoka faida ghafi ili kuhesabu faida halisi na kiwango cha matumizi ya kila siku.",
+  "variableDescription": "Gharama zinazobadilika kulingana na kiasi chako — komisheni, usafirishaji, matumizi ya matangazo. Hizi hutumika katika uchambuzi wa kiwango cha mchango.",
+
+  "fixedRent": "Kodi / Upangishaji",
+  "fixedSalaries": "Mishahara na Ujira",
+  "fixedHealthInsurance": "Bima ya Afya",
+  "fixedBizInsurance": "Bima ya Biashara",
+  "fixedSoftware": "Michango ya Programu",
+  "fixedEquipment": "Upangishaji wa Vifaa",
+  "fixedLoans": "Malipo ya Mkopo / Deni",
+  "fixedPhone": "Simu na Intaneti",
+  "fixedAccounting": "Uhasibu / Sheria",
+
+  "varCommissions": "Komisheni za Mauzo",
+  "varShipping": "Usafirishaji na Ukamilishaji",
+  "varAdSpend": "Uuzaji wa Kulipia / Matumizi ya Matangazo",
+  "varProcessing": "Ada za Uchakataji wa Malipo",
+  "varPackaging": "Ufungashaji",
+  "varContract": "Kazi ya Mkataba",
+
+  "footerFixed": "Kudumu",
+  "footerVariable": "Zinazobadilika",
+
+  "btnCancel": "Ghairi",
+  "btnSave": "Hifadhi"
+}

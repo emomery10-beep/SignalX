@@ -1,1 +1,11 @@
-{}
+{
+  "bellTitle": "Arifa",
+  "tabPulse": "Mapigo",
+  "tabNotifications": "Arifa",
+  "pulseEmptyHeading": "Kila kitu kiko sawa",
+  "pulseEmptyBody": "Hakuna hatua za dharura zinazohitajika. Pakia data mpya kuendesha ukaguzi wa afya.",
+  "signalDismiss": "Ondoa",
+  "pulseRefresh": "Endesha ukaguzi wa afya",
+  "notifMarkAllRead": "Weka zote kama zilizosomwa",
+  "notifEmpty": "Hakuna arifa bado"
+}

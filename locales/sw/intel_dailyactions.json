@@ -1,1 +1,13 @@
-{}
+{
+  "title": "Hatua za Leo",
+  "urgentBadge": "{n} za dharura",
+  "actionCount": "hatua {n}",
+  "actionCountPlural": "hatua {n}",
+  "askAi": "Uliza AI",
+  "dismiss": "Ondoa",
+  "viewAll": "Tazama hatua zote {n} →",
+  "priorityNow": "Sasa",
+  "priorityToday": "Leo",
+  "priorityThisWeek": "Wiki hii",
+  "askActionPrompt": "Nisaidie na hatua hii: {title}. Muktadha: {why}"
+}

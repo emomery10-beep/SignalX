@@ -1,1 +1,23 @@
-{}
+{
+  "title": "Muhtasari wa Msambazaji",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Chambua uhusiano wangu na wasambazaji na upendekeze mikakati ya majadiliano kwa faida bora.",
+  "negotiationLeverage": "Nguvu ya Majadiliano",
+  "monthlySpend": "Matumizi ya kila mwezi",
+  "savingTarget": "lengo la kuokoa 5%",
+  "annualImpact": "Athari ya mwaka",
+  "concentrationRiskLabel": "Hatari ya mkusanyiko:",
+  "concentrationRiskSuffix": "— tofautisha ili kuimarisha msimamo wa majadiliano",
+  "lowMarginLabel": "Wasambazaji wa faida ndogo:",
+  "lowMarginSuffix": "— tanguliza kwa majadiliano mapya",
+  "risingCostsLabel": "Gharama zinazopanda:",
+  "risingCostsSuffix": "— fungia viwango au tafuta mbadala",
+  "saveBadge": "Okoa ~{amount}/mwezi",
+  "supplierRowMeta": "bidhaa {n} • {spend}/mwezi • faida {margin}%",
+  "depBadge": "utegemezi {dep}%",
+  "generatingBrief": "Inatengeneza muhtasari kwa {name}...",
+  "negotiationBriefHeader": "Muhtasari wa Majadiliano — {name}",
+  "sectionLeverage": "NGUVU",
+  "sectionRisks": "HATARI",
+  "sectionTalkingPoints": "HOJA ZA MAZUNGUMZO"
+}

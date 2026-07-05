@@ -1,1 +1,6 @@
-{}
+{
+  "featureLabel": "Kipengele cha {label}",
+  "upgradeTo": "Pandisha hadi {label} →",
+  "seeAllPlans": "Ona mipango yote",
+  "currentPlan": "Upo kwenye mpango wa {plan}"
+}

@@ -1,1 +1,18 @@
-{}
+{
+  "title": "Usafirishaji na Vifurushi",
+  "provider": "Track17",
+  "emptyState": "Hakuna vifurushi vinavyofuatiliwa kwa sasa. Ongeza vifurushi kupitia muunganisho wa Track17 ili kuona athari za usafirishaji kwenye mtaji wa kufanyia kazi.",
+  "askAi": "Uliza AI",
+  "askPrompt": "Vifurushi vyangu: {inTransitCount} vinasafirishwa vyenye thamani ya {inTransitValue}, {delayedCount} vimechelewa ({delayedValue} viko hatarini), gharama ya ufadhili {financingCost}, wastani wa uwasilishaji {avgDays} siku. Ninawezaje kupunguza gharama za usafirishaji na mtaji wa kufanyia kazi uliofungwa njiani?",
+  "metricInTransit": "Vinasafirishwa",
+  "metricDelayed": "Vimechelewa",
+  "metricAvgDelivery": "Wastani wa Uwasilishaji",
+  "metricFinanceCost": "Gharama ya Fedha",
+  "workingCapitalDays": "siku za mtaji wa kufanyia kazi",
+  "capitalTiedUp": "mtaji uliofungwa",
+  "shipmentHealth": "Afya ya Vifurushi",
+  "onTime": "{n} kwa wakati",
+  "delayedCount": "{n} vimechelewa",
+  "atRiskWarning": "kifurushi {n} kimewekwa alama ya hatari — kinaweza kusababisha kuisha kwa hisa au hasara ya mapato kikichelewa zaidi.",
+  "inTransitSummary": "{value} ya bidhaa inasafirishwa kwa sasa. Mtaji huu umefungwa kwa wastani wa siku {days} hadi bidhaa zifike na ziweze kuuzwa."
+}

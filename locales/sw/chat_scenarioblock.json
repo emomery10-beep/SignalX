@@ -1,1 +1,9 @@
-{}
+{
+  "headerLabel": "⚡ Uchambuzi wa Hali",
+  "verdictAct": "✓ Inafaa kufanya",
+  "verdictWatch": "~ Ya kadiri — kagua kwa makini",
+  "verdictProblem": "✕ Haipendekezwi",
+  "columnCurrent": "Sasa",
+  "columnAfter": "Baada ya Mabadiliko",
+  "wasBadge": "← ilikuwa {value}"
+}

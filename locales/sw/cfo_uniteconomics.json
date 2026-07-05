@@ -1,1 +1,45 @@
-{}
+{
+  "title": "Uchumi wa Kipande",
+  "ltv_cac_badge": "LTV:CAC {ratio}x · {label}",
+  "ask_ai": "Uliza AI",
+
+  "health_healthy": "Nzuri",
+  "health_borderline": "Mpakani",
+  "health_unprofitable": "Isiyo na faida",
+
+  "section_per_unit": "Uchanganuzi kwa Kila Kipande",
+  "label_revenue": "Mapato",
+  "label_cogs": "COGS",
+  "label_contribution": "Mchango",
+  "label_net_profit": "Faida Halisi",
+
+  "section_customer_value": "Thamani ya Mteja",
+  "cac_label": "CAC {sym}",
+  "ltv_months_label": "Miezi ya LTV",
+  "ltv_with_months": "LTV (miezi {months})",
+  "ltv_cac_ratio": "Uwiano wa LTV:CAC",
+  "cac_payback": "Kurejesha CAC",
+  "bar_target": "3x+ (lengo)",
+
+  "section_top_performers": "Wanaofanya Vizuri Zaidi",
+  "section_underperformers": "Wasiofanya Vizuri",
+  "product_margin_contribution": "faida {margin}% · {contribution}",
+
+  "section_contribution_by_category": "Mchango kwa Kategoria",
+  "category_with_count": "{category} ({count})",
+  "category_value_margin": "{contribution} · {margin}%",
+  "uncategorized": "Isiyowekwa kategoria",
+
+  "section_product_detail": "Maelezo ya Bidhaa",
+  "sort_contribution": "Mchango",
+  "sort_margin": "Faida",
+  "sort_revenue": "Mapato",
+  "col_product": "Bidhaa",
+  "col_revenue": "Mapato",
+  "col_margin": "Faida",
+  "col_contribution": "Mchango",
+
+  "ask_prompt": "Uchumi wangu wa kipande: Wastani wa mapato/kipande {revPerUnit}, COGS/kipande {cogsPerUnit}, mchango/kipande {contribPerUnit}, faida/kipande {profitPerUnit}. Uwiano wa LTV:CAC {ratio}x, kurejesha {payback} miezi. {heroes}{zeros}Ni jinsi gani niboreshe mchanganyiko wa bidhaa zangu kwa faida ya juu zaidi kwa kila kipande?",
+  "ask_prompt_heroes": "Bidhaa bora: {names}. ",
+  "ask_prompt_zeros": "Faida ya chini: {names}. "
+}

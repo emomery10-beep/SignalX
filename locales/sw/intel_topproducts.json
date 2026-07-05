@@ -1,1 +1,18 @@
-{}
+{
+  "noData": "Bado hakuna data ya mauzo",
+  "noDataAsk": "Uliza AskBiz →",
+  "noDataAskPrompt": "Ni bidhaa gani nizingatie kuuza?",
+  "title": "Bidhaa Bora",
+  "kpiProducts": "Bidhaa",
+  "kpiAvgMargin": "Wastani wa faida",
+  "kpiUnitsSold": "Vipande vilivyouzwa",
+  "colRank": "#",
+  "colProduct": "Bidhaa",
+  "colRevenue": "Mapato",
+  "colQty": "Idadi",
+  "colMargin": "Faida",
+  "qtySold": "{n} zimeuzwa",
+  "footnote": "Zimepangwa kwa mapato · kutoka data ya POS",
+  "collapse": "← Kunja",
+  "tapToAnalyse": "Gusa ili kuchambua →"
+}

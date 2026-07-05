@@ -1,1 +1,27 @@
-{}
+{
+  "sectionHeading": "Uhifadhi wa wateja",
+  "riskLabelAtRisk": "🔴 Hatarini",
+  "riskLabelWatch": "🟡 Fuatilia",
+  "riskLabelChurned": "⚫ Wameondoka",
+  "riskLabelHealthy": "🟢 Afya njema",
+  "emptyHeading": "Changanua wateja wako kwa hatari ya churn",
+  "emptyBody": "Pakia CSV yenye data ya oda za wateja na AskBiz itaonyesha kiotomatiki ni nani aliye hatarini kutorudi.",
+  "scanNow": "Changanua sasa",
+  "scanning": "Inachanganua…",
+  "uploadDataFirst": "Pakia data kwanza",
+  "noDataBody": "Data uliyopakia haina safu za wateja. Pakia CSV yenye safu za kitambulisho cha mteja na tarehe ya oda ili kuwezesha uchanganuzi wa churn.",
+  "uploadCustomerData": "Pakia data ya wateja →",
+  "allHealthy": "Wateja wote wana afya njema",
+  "customersScored": "Wateja {n} wamepimwa · Uchanganuzi wa mwisho {date}",
+  "rescan": "Changanua tena",
+  "askAskBiz": "Uliza AskBiz ↗",
+  "askAllAtRisk": "Nionyeshe wateja wangu wote walio hatarini na alama zao za hatari ya churn",
+  "atRiskStat": "{n} hatarini · {symbol}{ltv} LTV",
+  "watchStat": "{n} wa kufuatilia",
+  "watchExtra": "+ {n} wa kufuatilia",
+  "customerRowMeta": "Siku {days} tangu oda ya mwisho · oda {orders} · {symbol}{ltv} LTV",
+  "analyse": "Changanua →",
+  "showLess": "Onyesha kidogo",
+  "showMore": "Onyesha wateja {n} zaidi",
+  "askCustomerPrompt": "Nieleze kuhusu historia ya ununuzi ya {name} na kwa nini wanaweza kuwa wanaondoka. Oda ya mwisho ilikuwa siku {days} zilizopita, jumla ya oda {orders}, thamani ya maisha {symbol}{ltv}."
+}

@@ -1,1 +1,47 @@
-{}
+{
+  "header_title": "Kodi na Ufuataji Sheria",
+  "ask_ai": "Uliza AI",
+  "ask_prompt": "Mapato yangu ya kila mwezi ni {revenue}, faida halisi {netProfit}. Kiasi kinachotengwa kwa kodi ni {setAside} ({pct}% ya mapato). Je, ninatenga vya kutosha? Ni njia gani za kupunguza kodi zinapatikana kwa {smbLabel}?",
+
+  "set_aside_this_month": "Kilichotengwa Mwezi Huu",
+  "pct_of_revenue": "({pct}% ya mapato)",
+
+  "income_tax": "Kodi ya Mapato",
+  "turnover_tax": "Kodi ya Mauzo ({rate}%)",
+  "vat_with_rate": "{name} ({rate}%)",
+  "vat_detail": "{rate}% kwenye bidhaa zinazotozwa kodi",
+  "turnover_detail": "{rate}% ya mauzo ghafi",
+
+  "bracket_covered_by_turnover": "Imefunikwa na kodi ya mauzo",
+  "bracket_corporate_rate": "{rate}% kiwango cha kampuni",
+  "bracket_smb_rate": "{rate}% kiwango cha SMB",
+
+  "compliance_title": "Ufuataji wa {system}",
+  "hide_details": "Ficha maelezo",
+  "learn_more": "Jifunze zaidi",
+  "what_you_need": "Unachohitaji:",
+  "tip_prefix": "Kidokezo: {tip}",
+
+  "opportunities_title": "Fursa za Kuokoa Kodi",
+  "tip_pension_title": "Michango ya Pensheni / Uzeeni",
+  "tip_pension_desc": "Kuchangia kwenye {pension} hupunguza mapato yanayotozwa kodi. Hadi {pct}% ya faida kwa kawaida yanaweza kupunguzwa.",
+  "default_pension_scheme": "mpango wa pensheni",
+  "tip_capital_title": "Ruzuku za Mtaji",
+  "tip_capital_desc": "Vifaa, kompyuta, na magari yaliyonunuliwa kwa matumizi ya biashara yanaweza kupunguza faida inayotozwa kodi kupitia ruzuku za mtaji.",
+  "tip_input_credits_title": "Dai Krediti za Ingizo za {name}",
+  "tip_input_credits_desc": "Hakikisha manunuzi yote ya biashara yana risiti halali za {name}. SMB nyingi hukosa 2-5% ya {name} ya ingizo inayoweza kudaiwa.",
+  "tip_opt_income_title": "Fikiria Kuchagua Kodi ya Mapato",
+  "tip_opt_income_desc": "Kwa faida halisi ya {margin}%, kodi ya kawaida ya mapato kwenye faida inaweza kuwa chini ya kodi ya mauzo ya {rate}%.",
+  "tip_timing_title": "Kupanga Wakati wa Gharama Kabla ya Mwisho wa Mwaka",
+  "tip_timing_desc": "Kuleta mbele manunuzi yaliyopangwa (hisa, vifaa, uuzaji) katika kipindi cha sasa hupunguza bili ya kodi ya mwaka huu.",
+
+  "upcoming_deadlines": "Tarehe za Mwisho Zinazokuja",
+  "vat_return": "Marejesho ya {name}",
+  "annual_return": "Marejesho ya Mwaka",
+
+  "due_date": "Inatakiwa {date}",
+  "overdue": "IMECHELEWA",
+  "days_until": "Siku {days}",
+  "days_short": "{days}s",
+  "save_approx": "Okoa ~{amount}"
+}

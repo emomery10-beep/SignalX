@@ -1,1 +1,21 @@
-{}
+{
+  "heading": "Kumbukumbu ya Maamuzi",
+  "subheading": "AskBiz hukumbuka kila uamuzi na kufuatilia tena baada ya wiki 6",
+  "logDecisionBtn": "+ Rekodi Uamuzi",
+  "logFormTitle": "Rekodi uamuzi",
+  "titlePlaceholder": "Uliamua nini? k.m. Nilipandisha bei ya Earbuds Zisizo na Waya kwa £1.50",
+  "beforePlaceholder": "Kabla (k.m. £12.99)",
+  "afterPlaceholder": "Baada (k.m. £14.49)",
+  "saving": "Inahifadhi…",
+  "saveDecision": "Hifadhi Uamuzi — AskBiz atafuatilia tena baada ya wiki 6",
+  "cancel": "Ghairi",
+  "reviewBannerSingular": "🔔 uamuzi {n} uko tayari kwa ukaguzi",
+  "reviewBannerPlural": "🔔 maamuzi {n} yako tayari kwa ukaguzi",
+  "askReviewBtn": "Uliza AskBiz kukagua matokeo →",
+  "askReviewPrompt": "Kagua maamuzi yangu ya hivi karibuni ya biashara na uniambie matokeo yanadokeza nini — kilichofanya kazi na nijifunze nini?",
+  "noDecisions": "Bado hakuna maamuzi yaliyorekodiwa. Kila uamuzi wa biashara utakaorekodi utakaguliwa baada ya wiki 6.",
+  "checksBack": "AskBiz atafuatilia tena: {date}",
+  "verdictGoodCall": "✓ Uamuzi mzuri",
+  "verdictBadCall": "✗ Haikufanya kazi",
+  "verdictNeutral": "~ Matokeo mchanganyiko"
+}

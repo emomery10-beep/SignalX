@@ -1,1 +1,17 @@
-{}
+{
+  "trackShipmentsTitle": "Fuatilia vifurushi vyako",
+  "trackShipmentsDesc": "Ongeza nambari za ufuatiliaji ili kupata arifa za kuisha kwa hisa, maonyo ya forodha, na athari za kifedha kwa wakati halisi.",
+  "addShipment": "Ongeza kifurushi →",
+  "shipmentsAtRiskSingular": "Kifurushi {n} kiko hatarini",
+  "shipmentsAtRiskPlural": "Vifurushi {n} viko hatarini",
+  "view": "Tazama →",
+  "shipmentAlertFallback": "Arifa ya Kifurushi",
+  "financialImpact": "Athari ya £{amount}",
+  "viewShipment": "Tazama kifurushi →",
+  "askAskBiz": "Uliza AskBiz →",
+  "askBizPrompt": "Nifanye nini kuhusu kifurushi {trackingNumber}? Chaguo zangu ni zipi?",
+  "onTrack": "{n} viko sawa",
+  "delayed": "{n} vimechelewa",
+  "customsHold": "{n} vimezuiwa forodha",
+  "viewAll": "Tazama vyote →"
+}

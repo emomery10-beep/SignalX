@@ -1,1 +1,36 @@
-{}
+{
+  "title": "Mpangaji wa Hali",
+  "subtitle": "Nini kitatokea ikiwa...? Rekebisha slaidi ili kuiga hali tofauti.",
+
+  "quickScenariosLabel": "Hali za Haraka",
+  "adjustAssumptionsLabel": "Rekebisha Mawazo",
+  "projectedMonthlyLabel": "Makadirio ya Kila Mwezi",
+
+  "presetLose20Revenue": "Poteza 20% ya mapato",
+  "presetHireEmployee": "Ajiri mfanyakazi mpya",
+  "presetSupplierCosts": "Msambazaji +15% gharama",
+  "presetOpen2ndLocation": "Fungua eneo la 2",
+  "presetRaisePrices": "Panda bei kwa 10%",
+  "presetSeasonalDip": "Kushuka kwa msimu 30%",
+
+  "sliderRevenue": "Mabadiliko ya mapato",
+  "sliderCogs": "Mabadiliko ya COGS",
+  "sliderNewMonthly": "Gharama mpya ya kila mwezi",
+  "sliderOneTime": "Gharama ya mara moja",
+
+  "rowRevenue": "Mapato",
+  "rowCogs": "COGS",
+  "rowFixedCosts": "Gharama zisizobadilika",
+  "rowNetProfit": "Faida Halisi",
+  "rowNetMargin": "Faida Halisi",
+
+  "cashRunwayLabel": "Muda wa Kufikia wa Taslimu",
+  "runwayMonths": "Miezi {n}",
+  "runwayCashPositive": "Taslimu chanya",
+  "runwaySetBalance": "Weka salio la taslimu",
+  "runwayComparison": "Kwa sasa: miezi {base} → Hali: miezi {scenario}",
+  "runwayChangeSuffix": "Miezi {delta}",
+
+  "aboveBreakEven": "{amount}/mwezi juu ya kuvunja-sawa",
+  "belowBreakEven": "{amount}/mwezi chini ya kuvunja-sawa — unahitaji kuongeza mapato au kupunguza gharama"
+}

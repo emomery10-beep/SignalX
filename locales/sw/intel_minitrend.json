@@ -1,1 +1,24 @@
-{}
+{
+  "perHundred": "/100",
+  "thirtyDaysAgo": "siku 30 zilizopita",
+  "today": "Leo",
+  "legendHealthy": "Nzuri 65+",
+  "legendWatch": "Angalia 45–64",
+  "legendRisk": "Hatari <45",
+  "scoreLabel": "Alama:",
+  "vsThirtyDays": "dhidi ya siku 30 zilizopita",
+  "clickBarHint": "Bofya pau lolote kuona uchambuzi kamili wa afya kwa siku hiyo",
+  "vsPreviousDay": "dhidi ya siku iliyopita",
+  "clickComponentHint": "Bofya kipengele chochote kuchunguza zaidi",
+  "benchmarkLabel": "Kigezo",
+  "analysisLabel": "Uchambuzi",
+  "recommendedAction": "Hatua Inayopendekezwa",
+  "askAiButton": "Uliza AI kwa uchambuzi wa kina zaidi wa {name} →",
+  "totalComponentScore": "Jumla ya alama za vipengele",
+  "noBreakdownTitle": "Uchambuzi wa vipengele haupatikani kwa siku hii.",
+  "noBreakdownBody": "Ukaguzi mpya wa afya hujumuisha data kamili ya kiwango cha kipengele.",
+  "modalLegendHealthy": "Nzuri (65+)",
+  "modalLegendWatch": "Angalia (45–64)",
+  "modalLegendAtRisk": "Hatarini (<45)",
+  "perTwenty": "/20"
+}

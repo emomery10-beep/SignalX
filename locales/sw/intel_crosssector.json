@@ -1,1 +1,20 @@
-{}
+{
+  "title": "Ufahamu wa Sekta Mtambuka",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Je, vipimo vyangu vinalinganaje na sekta nyingine? Ni wapi nafanya vibaya na nini naweza kujifunza kutoka sekta bora?",
+  "compareWithSectors": "Linganisha na sekta",
+  "youBadge": "WEWE",
+  "businesses": "biashara {n}",
+  "sectorRetail": "Rejareja",
+  "sectorEcommerce": "Biashara-mtandao",
+  "sectorRestaurant": "Mgahawa",
+  "sectorFoodBev": "Chakula na Vinywaji",
+  "sectorImportExport": "Uagizaji/Usafirishaji",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Huduma",
+  "sectorFashion": "Mitindo",
+  "sectorHealthBeauty": "Afya na Urembo",
+  "sectorSalon": "Saluni",
+  "sectorRepair": "Ukarabati",
+  "sectorFactory": "Kiwanda"
+}

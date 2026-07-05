@@ -1,1 +1,22 @@
-{}
+{
+  "empty": "Hakuna data inayopatikana kwa kipindi hiki. Unganisha chanzo cha data ili kuona mielekeo ya mapato.",
+  "title": "Mapato dhidi ya Gharama",
+  "legendRevenue": "Mapato",
+  "legendCogs": "COGS",
+  "legendFixed": "Zisizobadilika",
+  "legendNet": "Halisi",
+  "tipRev": "Mapato",
+  "tipCogs": "COGS",
+  "tipFixed": "Zisizobadilika",
+  "tipNet": "Halisi",
+  "detailedBreakdown": "Uchanganuzi wa Kina",
+  "close": "Funga",
+  "rowRevenue": "Mapato",
+  "rowCogs": "COGS",
+  "rowFixedCosts": "Gharama Zisizobadilika",
+  "grossProfit": "Faida Ghafi",
+  "totalCosts": "Jumla ya Gharama",
+  "netProfit": "Faida Halisi",
+  "margin": "faida {n}%",
+  "ofRevenue": "{n}% ya mapato"
+}

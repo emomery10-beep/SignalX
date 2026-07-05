@@ -1,1 +1,26 @@
-{}
+{
+  "title": "Utabiri wa Fedha wa Wiki 13",
+  "subtitle": "4 halisi · 9 zilizokadiriwa",
+  "legend_inflow": "Ingizo",
+  "legend_outflow": "Toko",
+  "legend_cash": "Taslimu",
+  "ask_ai": "Uliza AI",
+  "ask_prompt": "Utabiri wangu wa fedha wa wiki 13 unaonyesha: salio la sasa {balance}, taslimu ya chini zaidi iliyokadiriwa {lowest} (wiki ya {week}). Wastani wa ingizo la kila wiki {avgIn}, wastani wa toko {avgOut}. Nifanye nini ili kuboresha muda wangu wa kufikia wa fedha?",
+  "axis_actual": "← Halisi",
+  "axis_forecast": "Utabiri →",
+  "week_of": "Wiki ya {label}",
+  "metric_inflow": "Ingizo",
+  "metric_outflow": "Toko",
+  "metric_net": "Net",
+  "metric_cash_end": "Taslimu Mwisho",
+  "known_cash_flows": "Mitiririko ya Fedha Inayojulikana",
+  "receivable": "Deni la Kudai",
+  "payable": "Deni la Kulipa",
+  "forecast_note": "Utabiri unatokana na wastani wa wiki uliopita. Ongeza madeni ya kudai/kulipa ili kujumuisha mitiririko inayojulikana.",
+  "summary_current_cash": "Taslimu ya Sasa",
+  "summary_avg_in": "Wastani wa Ingizo la Wiki",
+  "summary_avg_out": "Wastani wa Toko la Wiki",
+  "summary_projection": "Makadirio ya Wiki 13",
+  "negative_warning": "⚠ Taslimu inakuwa hasi katika wiki ya {week} — hatua inahitajika",
+  "unknown_counterparty": "Haijulikani"
+}

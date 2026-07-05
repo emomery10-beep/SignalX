@@ -1,1 +1,13 @@
-{}
+{
+  "sectionTitle": "Huduma za Ukarabati",
+  "activeJobsLabel": "Kazi zinazoendelea",
+  "activeJobsSub": "{intake} zimepokewa · {inProgress} zinaendelea · {completed} tayari",
+  "collectedTodayLabel": "Zilizokusanywa leo",
+  "repairRevenueLabel": "Mapato ya ukarabati",
+  "repairRevenueSub": "leo",
+  "avgTurnaroundLabel": "Wastani wa muda wa kukamilika",
+  "warrantyClaimsLabel": "Madai ya udhamini",
+  "inProgress": "zinaendelea",
+  "intake": "zimepokewa",
+  "ready": "tayari"
+}

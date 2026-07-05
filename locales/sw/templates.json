@@ -1,1 +1,22 @@
-{}
+{
+  "page_title": "Violezo vya Sekta",
+  "feature_name": "Violezo vya Sekta",
+  "loading": "Inapakia…",
+  "count_suffix_one": "kiolezo — bonyeza swali lolote kulitumia",
+  "count_suffix_other": "violezo — bonyeza swali lolote kulitumia",
+  "search_placeholder": "Tafuta violezo au maswali…",
+  "filter_all": "Vyote",
+  "filter_retail": "Rejareja",
+  "filter_ecommerce": "Ecommerce",
+  "filter_distributor": "Msambazaji",
+  "filter_exporter": "Msafirishaji nje",
+  "questions_count": "maswali",
+  "use_arrow": "Tumia →",
+  "hide_questions": "↑ Ficha",
+  "see_all_prefix": "↓ Ona yote",
+  "see_all_suffix": "maswali",
+  "use": "Tumia",
+  "use_first_in_chat": "Tumia swali la kwanza kwenye gumzo →",
+  "empty_title": "Hakuna violezo vilivyopatikana",
+  "empty_desc": "Jaribu utafutaji tofauti au kichujio cha aina ya biashara"
+}

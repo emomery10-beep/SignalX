@@ -1,1 +1,11 @@
-{}
+{
+  "title": "Urejeshaji wa Malipo",
+  "askAi": "Uliza AI",
+  "askPrompt": "Tuna malipo {failedCount} yaliyoshindikana yenye jumla ya {totalAmount}. Tumerejesha {recoveredAmount} (kiwango cha {recoveryRate}%). Malipo {pendingRetry} yanasubiri kujaribiwa tena. Tunawezaje kuboresha kiwango chetu cha urejeshaji?",
+  "atRisk": "Katika Hatari",
+  "recovered": "Yaliyorejeshwa",
+  "recoveryRate": "Kiwango cha Urejeshaji",
+  "failedPayments": "malipo {n} yaliyoshindikana",
+  "payments": "malipo {n}",
+  "pending": "{n} yanasubiri"
+}

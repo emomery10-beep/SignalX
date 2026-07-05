@@ -1,1 +1,17 @@
-{}
+{
+  "title": "Miunganisho ya Data",
+  "sourcesConnected": "Vyanzo {connected} kati ya {total} vimeunganishwa",
+  "sourcesConnectedSuffix": "kati ya vyanzo {total} vimeunganishwa",
+  "manageSources": "Simamia vyanzo →",
+  "coverageNone": "Unganisha chanzo ili kuanza kupata maarifa halisi",
+  "coverageLow": "Miunganisho {n} zaidi inapendekezwa kwa ufikaji kamili",
+  "coverageMid": "Ufikaji mzuri — miunganisho zaidi huboresha usahihi wa data",
+  "coverageHigh": "Ufikaji bora wa data katika biashara yako yote",
+  "filterAll": "Vyote",
+  "statusNotConnected": "Haijaunganishwa",
+  "statusSyncError": "⚠ Hitilafu ya kulandanisha",
+  "statusSynced": "Imelandanishwa {time}",
+  "detailName": "Jina:",
+  "detailActive": "Hai · inalandanisha",
+  "connect": "Unganisha →"
+}

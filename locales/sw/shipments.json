@@ -1,1 +1,103 @@
-{}
+{
+  "status_delivered": "Imewasilishwa",
+  "status_in_transit": "Iko Safarini",
+  "status_out_for_delivery": "Iko Njiani Kuwasilishwa",
+  "status_customs_hold": "Imeshikiliwa na Forodha",
+  "status_exception": "Tatizo",
+  "status_pending": "Inasubiri",
+  "status_picked_up": "Imechukuliwa",
+  "status_delayed": "Imechelewa",
+
+  "plan_free": "Bila Malipo",
+  "plan_growth": "Ukuaji",
+  "plan_business": "Biashara",
+
+  "locked_upgrade_arrow": "{plan} →",
+
+  "toast_tracking_required": "Nambari ya ufuatiliaji inahitajika",
+  "toast_failed_to_add": "Imeshindwa kuongeza",
+  "toast_added": "Kifurushi kimeongezwa na kusajiliwa ✓",
+
+  "free_banner_title": "Fungua akili kamili ya vifurushi",
+  "free_banner_growth": "🔒 Ukuaji — vifurushi 5, ufuatiliaji wa thamani jumla, arifa za ucheleweshaji",
+  "free_banner_business": "🔒 Biashara — Vifurushi visivyo na kikomo, athari ya kifedha, arifa za forodha, alama za wasambazaji, hatari ya kuisha hisa, akili ya mtaji wa kufanyia kazi",
+  "see_plans": "Ona mipango →",
+
+  "growth_nudge": "🔒 Mpango wa Biashara hufungua: athari ya kifedha kwa kila kifurushi · arifa za kushikiliwa na forodha · alama za uaminifu wa wasambazaji · injini ya hatari ya kuisha hisa · akili ya mtaji wa kufanyia kazi",
+  "upgrade_to_business": "Boresha hadi Biashara →",
+
+  "stat_logistics_score": "Alama ya Usafirishaji",
+  "stat_active": "Hai",
+  "stat_at_risk": "Hatarini",
+  "stat_customs_holds": "Kushikiliwa na Forodha",
+  "stat_in_transit_value": "Safarini £",
+  "stat_daily_finance": "Fedha za Kila Siku",
+
+  "filter_active": "hai",
+  "filter_all": "yote",
+  "filter_delivered": "zimewasilishwa",
+
+  "loading": "Inapakia…",
+  "empty_title": "Bado hakuna vifurushi",
+  "empty_body": "Ongeza nambari yako ya kwanza ya ufuatiliaji ili kuanza kufuatilia mnyororo wako wa usambazaji.",
+  "empty_cta": "Ongeza kifurushi →",
+
+  "badge_customs_hold": "IMESHIKILIWA NA FORODHA",
+  "from_supplier": "kutoka {supplier}",
+  "qty_suffix": "×{qty}",
+  "financial_impact_suffix": "£{amount} athari",
+  "days_delayed": "imechelewa siku {days}",
+  "eta": "ETA {date}",
+
+  "feature_total_value": "Thamani jumla",
+  "feature_financial_impact": "Athari ya kifedha",
+
+  "intelligence_locked_title": "🔒 Akili ya mpango wa Biashara",
+  "intelligence_locked_body": "Boresha hadi Biashara ili kufungua: siku za mtaji wa kufanyia kazi · gharama ya ufadhili ya kila siku · athari ya kifedha · arifa za hatari ya kuisha hisa · uigaji wa kifedha wa kushikiliwa na forodha · alama ya uaminifu wa msambazaji",
+
+  "detail_working_capital_days": "Siku za Mtaji wa Kufanyia Kazi",
+  "detail_working_capital_days_value": "siku {days}",
+  "detail_daily_financing": "Ufadhili wa Kila Siku",
+  "detail_daily_financing_value": "£{amount}/siku",
+  "detail_financial_impact": "Athari ya Kifedha",
+  "detail_financial_impact_value": "£{amount}",
+
+  "ask_askbiz": "Uliza AskBiz →",
+  "view_on_17track": "Tazama kwenye 17Track ↗",
+  "ask_prompt": "Chambua kifurushi {tracking}{sku}. Hali: {status}. {delay} Chaguo zangu ni zipi?",
+  "ask_prompt_sku": " kwa {sku}",
+  "ask_prompt_delay": "kimechelewa siku {days}.",
+
+  "modal_title": "Ongeza Kifurushi",
+  "modal_slots_free": "nafasi 1 kati ya 1 zimetumika · ",
+  "modal_slots_growth": "nafasi {count} kati ya 5 zimetumika · ",
+  "modal_sub_free": "Ufuatiliaji wa hali pekee",
+  "modal_sub_growth": "Data ya msingi ya kifedha imejumuishwa",
+  "modal_sub_business": "Akili kamili imejumuishwa",
+
+  "label_tracking_number": "Nambari ya Ufuatiliaji *",
+  "placeholder_tracking_number": "mfano RR123456789CN",
+  "label_shipment_type": "Aina ya Kifurushi",
+  "type_inbound": "kinachoingia",
+  "type_outbound": "kinachotoka",
+  "type_container": "kontena",
+  "label_supplier": "Msambazaji",
+  "placeholder_supplier": "Jina la msambazaji",
+  "label_sku": "SKU / Bidhaa",
+  "placeholder_sku": "Jina la bidhaa",
+  "label_quantity": "Idadi",
+  "placeholder_quantity": "500",
+  "label_unit_cost": "Gharama ya Kipande",
+  "unit_cost_growth_tag": "Ukuaji",
+  "placeholder_unit_cost": "12.50",
+  "label_expected_arrival": "Kuwasili Kunakotarajiwa",
+  "label_po_reference": "Kumbukumbu ya PO",
+  "placeholder_po_reference": "PO-2026-0042",
+
+  "value_preview": "💰 Thamani ya kifurushi: ",
+  "value_preview_financing": " · Ufadhili wa kila siku: ",
+
+  "btn_registering": "Inasajili…",
+  "btn_add_track": "Ongeza na Fuatilia →",
+  "btn_cancel": "Ghairi"
+}

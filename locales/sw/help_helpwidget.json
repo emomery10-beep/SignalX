@@ -1,1 +1,19 @@
-{}
+{
+  "help_helpwidget": {
+    "panelTitle": "Kituo cha Msaada",
+    "searchPlaceholder": "Tafuta makala za msaada…",
+    "searchResults": "Matokeo ya utafutaji",
+    "suggestedArticles": "Makala zinazopendekezwa",
+    "popularArticles": "Makala maarufu",
+    "helpFor": "Msaada kwa {topic}",
+    "quickLinks": "Viungo vya haraka",
+    "minRead": "Dakika {min} za kusoma",
+    "fullHelpCentre": "Kituo kamili cha Msaada →",
+    "emailSupport": "Barua pepe ya usaidizi",
+    "openHelp": "Fungua msaada",
+    "closeHelp": "Funga msaada",
+    "gettingStarted": "Kuanza",
+    "faq": "Maswali Yanayoulizwa Mara kwa Mara",
+    "glossary": "Kamusi"
+  }
+}

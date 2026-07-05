@@ -1,1 +1,17 @@
-{}
+{
+  "title": "Mtiririko wa Fedha",
+  "askAi": "Uliza AI",
+  "askPrompt": "Changanua mtiririko wangu wa fedha na muda wa kufikia. Nifanye nini ili kuuboresha?",
+  "balanceLabel": "Salio la {amount}",
+  "revenueTrend": "Mapato {pct}%",
+  "addBalanceCta": "Ongeza salio lako la taslimu kwenye mipangilio ili kufuatilia muda wa kufikia",
+  "dailyRevenue": "Mapato ya kila siku",
+  "dailyCosts": "Gharama za kila siku",
+  "dailyNet": "Halisi ya kila siku",
+  "weeklyTitle": "Mtiririko halisi wa fedha wa kila wiki",
+  "twelveWeeksAgo": "Wiki 12 zilizopita",
+  "thisWeek": "Wiki hii",
+  "monthlyLabel": "Kila mwezi: {income} ndani, {expenses} nje",
+  "aboveBreakeven": "Unapata {amount}/siku juu ya kuvunja-sawa",
+  "belowBreakeven": "Unahitaji {amount}/siku zaidi ili kuvunja-sawa"
+}

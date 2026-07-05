@@ -1,1 +1,77 @@
-{}
+{
+  "title": "Chaguzi za Ufadhili",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Ninahitaji ushauri wa ufadhili. Mapato: {revenue}/mwezi, faida halisi: {netProfit}/mwezi, taslimu: {cash}, madeni ya kupokea: {receivables}. Uwezo wa juu wa kukopa: ~{maxBorrow}. Ni chaguo gani la ufadhili bora kwa hali yangu?",
+
+  "capacityIncomeBased": "Kulingana na Mapato",
+  "capacityIncomeNote": "40% halisi × miaka 3",
+  "capacityRevenueBased": "Kulingana na Mapato",
+  "capacityRevenueNote": "15% ya mapato ya mwaka",
+  "capacityInvoiceFinance": "Ufadhili wa Ankara",
+  "capacityInvoiceNote": "85% ya madeni ya kupokea",
+
+  "calcTitle": "Kikokotoo cha Mkopo",
+  "calcAmountLabel": "Kiasi ({sym})",
+  "calcTermLabel": "Muda",
+  "calcMonths": "miezi {n}",
+  "calcMonthlyPayment": "Malipo ya kila mwezi",
+  "calcTotalInterest": "Riba yote",
+  "calcOfNetProfit": "ya faida halisi",
+  "calcAffordabilityWarning": "Malipo yanazidi 40% ya faida halisi ya kila mwezi — zingatia muda mrefu zaidi au kiasi kidogo",
+
+  "availableOptionsLabel": "Chaguzi Zinazopatikana",
+
+  "eligible": "Anastahili",
+  "notEligible": "Hastahili",
+  "upTo": "Hadi",
+
+  "detailRate": "Kiwango:",
+  "detailTerm": "Muda:",
+  "detailBestFor": "Bora kwa:",
+  "requirements": "Mahitaji:",
+
+  "optionRevenueBasedType": "Ufadhili wa Kulingana na Mapato",
+  "optionRevenueBasedDesc": "Lipa asilimia isiyobadilika ya mapato ya kila siku/wiki. Rahisi — malipo yanalingana na mauzo.",
+  "optionRevenueBasedRate": "8-15% kizidishi",
+  "optionRevenueBasedTerm": "miezi 6-18",
+  "optionRevenueBasedBestFor": "Biashara zenye mapato ya msimu au yanayobadilika",
+  "reqRevenueBasedTrading": "historia ya biashara ya miezi 6+",
+  "reqRevenueBasedConsistent": "Mapato thabiti",
+  "reqRevenueBasedDigital": "Rekodi za malipo ya kidijitali",
+
+  "optionInvoiceType": "Uuzaji wa Ankara",
+  "optionInvoiceDesc": "Uza ankara zisizolipwa kwa taslimu ya papo hapo (kwa kawaida 80-90% ya thamani halisi).",
+  "optionInvoiceRate": "2-5% kwa ankara",
+  "optionInvoiceTerm": "Kwa ankara",
+  "optionInvoiceBestFor": "Biashara za B2B zenye madeni ya kupokea yasiyolipwa",
+  "reqInvoiceOutstanding": "Ankara zisizolipwa",
+  "reqInvoiceCreditworthy": "Wadaiwa wanaostahili mkopo",
+  "reqInvoiceRecords": "Rekodi za utoaji ankara",
+
+  "optionTermLoanType": "Mkopo wa Muda",
+  "optionTermLoanDesc": "Malipo ya kila mwezi yasiyobadilika katika kipindi kilichowekwa. Bora kwa uwekezaji uliopangwa.",
+  "optionTermLoanRate": "8-20% APR",
+  "optionTermLoanTerm": "miaka 1-5",
+  "optionTermLoanBestFor": "Vifaa, upanuzi, au mtaji wa uendeshaji",
+  "reqTermLoanTrading": "biashara ya miezi 12+",
+  "reqTermLoanProfit": "Faida halisi chanya",
+  "reqTermLoanPlan": "Mpango wa biashara",
+
+  "optionOverdraftType": "Ukopaji wa Ziada / Mstari wa Mkopo",
+  "optionOverdraftDesc": "Ukopaji rahisi hadi kikomo. Lipa riba tu kwa unachotumia.",
+  "optionOverdraftRate": "10-22% APR",
+  "optionOverdraftTerm": "Unaozunguka",
+  "optionOverdraftBestFor": "Mapengo ya muda mfupi ya mtiririko wa fedha",
+  "reqOverdraftAccount": "Akaunti hai ya benki",
+  "reqOverdraftDeposits": "Amana za kawaida",
+  "reqOverdraftHistory": "historia ya miezi 3+",
+
+  "optionAssetType": "Ufadhili wa Rasilimali / Ukodishaji",
+  "optionAssetDesc": "Fadhili vifaa au magari maalum. Rasilimali hufanya kazi kama dhamana.",
+  "optionAssetRate": "5-12% APR",
+  "optionAssetTerm": "miaka 2-5",
+  "optionAssetBestFor": "Vifaa, magari, mashine",
+  "reqAssetQuote": "Nukuu ya rasilimali",
+  "reqAssetHistory": "Historia ya biashara",
+  "reqAssetDeposit": "Uwezo wa kulipa amana"
+}

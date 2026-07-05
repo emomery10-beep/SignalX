@@ -18,5 +18,20 @@
   "attainment_title": "Kufikia Bajeti",
   "pct_of_budget": "{n}% ya bajeti",
   "actual_suffix": "{v} halisi",
-  "budget_suffix": "{v} bajeti"
+  "budget_suffix": "{v} bajeti",
+  "monthly_trend_title": "Mwelekeo wa Mwezi dhidi ya Bajeti",
+  "click_month_hint": "Bofya mwezi ili kujua zaidi",
+  "col_month": "Mwezi",
+  "col_bgt_rev": "Mapato ya Bajeti",
+  "col_gm": "Asilimia ya Gharama",
+  "col_net": "Net",
+  "col_bgt_net": "Net ya Bajeti",
+  "detail_suffix": "Maelezo",
+  "detail_revenue": "Mapato",
+  "detail_cogs": "Gharama za Kuuza",
+  "detail_gross_profit": "Faida ya Jumla",
+  "detail_fixed_costs": "Gharama za Mara kwa Mara",
+  "detail_net_profit": "Faida ya Jumla",
+  "budget_inline": "bajeti: {v}",
+  "ask_prompt": "Bajeti yangu dhidi ya halisi kwa kipindi hiki: Mapato halisi {revActual} dhidi ya bajeti {revBudget} ({revVar}). Faida ya jumla halisi {netActual} dhidi ya bajeti {netBudget} ({netVar}). Nini kinachosababisha tofauti na nini ninapaswa kuzingatia?"
 }

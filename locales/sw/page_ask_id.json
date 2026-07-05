@@ -1,1 +1,27 @@
-{}
+{
+  "newConversation": "Mazungumzo mapya",
+  "uploadingLabel": "Inapakia…",
+  "uploadLabel": "Pakia",
+  "emptyHeading": "Uliza chochote kuhusu data yako",
+  "emptySubGeo": "Inaonyesha bei kwa {symbol} · {country}",
+  "emptySubDefault": "Pakia faili kisha uliza swali la biashara kwa Kiingereza rahisi.",
+  "tapToAsk": "Gusa ili kuuliza",
+  "aiError": "Haikuweza kufikia AI. Angalia muunganisho wako na ujaribu tena.",
+  "inputPlaceholder": "Uliza swali la BI kuhusu data yako… (Bonyeza Enter kutuma)",
+  "bizRetail0": "Ni bidhaa zipi ninapaswa kuongeza hisa haraka?",
+  "bizRetail1": "Ni bidhaa gani yenye faida bora zaidi?",
+  "bizRetail2": "Je, naweza kuongeza bei zangu kwa 5%?",
+  "bizRetail3": "Ninapoteza wapi pesa?",
+  "bizEcommerce0": "Ni SKU zipi zenye kiwango cha juu zaidi cha marejesho?",
+  "bizEcommerce1": "Nionyeshe kategoria yangu inayofanya vizuri zaidi",
+  "bizEcommerce2": "Gharama yangu ya utekelezaji kwa kila oda ni kiasi gani?",
+  "bizEcommerce3": "Ni bidhaa zipi ninapaswa kuweka punguzo?",
+  "bizDistributor0": "Ni njia zipi zenye faida zaidi?",
+  "bizDistributor1": "Nionyeshe mielekeo ya faida kwa kanda",
+  "bizDistributor2": "Mahitaji yanakua kwa kasi zaidi wapi?",
+  "bizDistributor3": "Ni wateja gani waliochelewa kulipa?",
+  "bizExporter0": "FX inaathiri vipi faida zangu?",
+  "bizExporter1": "Ni soko gani lenye mahitaji ya juu zaidi?",
+  "bizExporter2": "Nionyeshe bidhaa zangu bora kwa thamani",
+  "bizExporter3": "Wastani wa gharama yangu kwa kila kifurushi ni kiasi gani?"
+}

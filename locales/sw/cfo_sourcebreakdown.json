@@ -1,1 +1,11 @@
-{}
+{
+  "heading": "Mapato kwa Chanzo",
+  "channels": "(chaneli {n})",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Mapato kwa chanzo: {summary}. Ni chaneli zipi nizingatie kukuza na zipi zinafanya vibaya?",
+  "transactions": "miamala {n} · {pct}% ya mapato",
+  "marginPct": "{n}% faida",
+  "metricRevenue": "Mapato",
+  "metricCogs": "COGS",
+  "metricGrossProfit": "Faida Ghafi"
+}

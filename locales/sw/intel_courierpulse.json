@@ -1,1 +1,17 @@
-{}
+{
+  "courierOperations": "🚛 Uendeshaji wa Wasafirishaji",
+  "scoreOutOf": "/100",
+  "labelHealthy": "Nzuri",
+  "labelAtRisk": "Hatarini",
+  "labelCritical": "Hatari Kubwa",
+  "today": "leo",
+  "inTransit": "vinasafirishwa",
+  "atBranch": "kwenye tawi",
+  "failed": "yameshindwa",
+  "deliveryRate": "kiwango cha uwasilishaji {rate}%",
+  "stuckOver48h": "{n} vimekwama >saa 48",
+  "unpaidRevenue": "KES {amount} hayajalipwa",
+  "fleetAvailable": "Yanapatikana",
+  "fleetInTransit": "Yanasafiri",
+  "fleetMaintenance": "Matengenezo"
+}

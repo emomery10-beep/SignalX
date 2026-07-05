@@ -1,1 +1,8 @@
-{}
+{
+  "titleDefault": "Tengeneza kiungo cha kushirikisha kwa ufahamu huu",
+  "titleWithUrl": "Shirikisha: {url}",
+  "labelIdle": "Shirikisha",
+  "labelLoading": "Inatengeneza kiungo…",
+  "labelCopied": "Kiungo kimenakiliwa!",
+  "labelError": "Jaribu tena"
+}

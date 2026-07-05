@@ -1,1 +1,82 @@
-{}
+{
+  "title": "Kikokotoo cha Gharama ya Kufikishwa",
+  "subtitle": "Kokotoa gharama yako halisi kwa kila kipande ikijumuisha usafirishaji, ushuru, VAT, na FX — kisha uone faida yako halisi.",
+
+  "sectionProduct": "Maelezo ya bidhaa",
+  "labelOrigin": "Chanzo",
+  "labelQuantity": "Idadi",
+  "placeholderQuantity": "k.m. 500",
+  "labelSupplierPrice": "Bei ya msambazaji / kipande ({sym})",
+  "placeholderSupplierPrice": "k.m. 8.50",
+  "labelSellingPrice": "Bei ya mauzo / kipande ({sym})",
+  "placeholderSellingPrice": "k.m. 24.99",
+  "labelFxBuffer": "Akiba ya FX (%)",
+  "placeholderFxBuffer": "2",
+  "labelDutyCategory": "Kategoria ya ushuru",
+  "labelCustomDutyRate": "Kiwango cha ushuru maalum (%)",
+  "placeholderCustomDutyRate": "k.m. 6.5",
+
+  "sectionShipping": "Usafirishaji na ushughulikiaji",
+  "placeholderCostDescription": "Maelezo ya gharama",
+
+  "btnCalculate": "Kokotoa →",
+
+  "alertOverEstimatingTitle": "Ulikuwa unakadiria faida kupita kiasi kwa {gap}",
+  "alertOverEstimatingBody": "Faida ya juujuu: {naive} → Faida halisi: {true}",
+
+  "statLandedCostPerUnit": "Gharama ya kufikishwa / kipande",
+  "statActualMargin": "Faida halisi",
+  "statBreakEvenPrice": "Bei ya kuvunja-sawa",
+
+  "importDutyLabel": "Ushuru wa uagizaji ({rate})",
+  "supplierCostLabel": "Gharama ya msambazaji (pamoja na akiba ya FX)",
+  "costFallbackLabel": "Gharama {n}",
+
+  "importVatLabel": "VAT ya uagizaji:",
+  "importVatRecoverable": "{amount} (inaweza kurudishwa ikiwa umesajiliwa kwa VAT)",
+  "vatToggleHide": "Ficha",
+  "vatToggleShow": "Hii ni nini?",
+  "vatExplanation": "VAT ya uagizaji hulipwa mpakani lakini inaweza kurudishwa kwenye rejesho lako lijalo la VAT ikiwa umesajiliwa kwa VAT. Ni gharama ya mtiririko wa fedha — kwa kawaida siku 30-60 — si gharama ya kudumu.",
+
+  "btnAskAskBiz": "Uliza AskBiz kuchambua hili →",
+  "btnReset": "Weka upya",
+
+  "askPrompt": "Ni ipi gharama yangu halisi ya kufikishwa na faida? Naagiza kutoka {origin} kwa {sym}{unitCost}/kipande, nauza kwa {sym}{sellingPrice}, kiwango cha ushuru {dutyRate}%.",
+
+  "emptyHeading": "Jua faida yako halisi kabla ya kununua",
+  "emptyBody": "Weka maelezo ya bidhaa yako hapo juu. Usafirishaji, ushuru, na FX kwa kawaida huongeza 15-30% kwenye gharama yako halisi kwa kila kipande.",
+
+  "dutySelectCategory": "Chagua kategoria…",
+  "dutyElectronics": "Elektroniki na vipengele",
+  "dutyClothing": "Nguo na mavazi",
+  "dutyFootwear": "Viatu",
+  "dutyFurniture": "Samani na vifaa vya nyumbani",
+  "dutyToys": "Vinyago na michezo",
+  "dutyFood": "Chakula na vinywaji",
+  "dutyBeauty": "Urembo na utunzaji wa mwili",
+  "dutyMachinery": "Mashine na vifaa",
+  "dutyPlastics": "Bidhaa za plastiki na mpira",
+  "dutyMetals": "Metali na bidhaa za metali",
+  "dutyTextiles": "Nguo (si mavazi)",
+  "dutyBags": "Mikoba na mizigo",
+  "dutySports": "Vifaa vya michezo",
+  "dutyCustomRate": "Kiwango maalum",
+
+  "originCN": "🇨🇳 China",
+  "originIN": "🇮🇳 India",
+  "originTR": "🇹🇷 Uturuki",
+  "originBD": "🇧🇩 Bangladesh",
+  "originVN": "🇻🇳 Vietnam",
+  "originPK": "🇵🇰 Pakistan",
+  "originEU": "🇪🇺 Umoja wa Ulaya",
+  "originUS": "🇺🇸 Marekani",
+  "originNG": "🇳🇬 Nigeria",
+  "originGH": "🇬🇭 Ghana",
+  "originOT": "🌍 Nyingine",
+
+  "extraSeaFreight": "Usafirishaji wa bahari/anga",
+  "extraFreightInsurance": "Bima ya usafirishaji",
+  "extraPortHandling": "Ada za bandari na ushughulikiaji",
+  "extraCustomsBroker": "Ada ya wakala wa forodha",
+  "extraLastMile": "Uwasilishaji wa hatua ya mwisho"
+}

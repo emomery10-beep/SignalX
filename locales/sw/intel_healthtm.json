@@ -1,1 +1,12 @@
-{}
+{
+  "timeMachine": "Mashine ya Wakati",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Afya ya biashara yangu imebadilikaje kwa muda? Ni ipi mielekeo muhimu na ni nini ninapaswa kuzingatia?",
+  "now": "Sasa",
+  "clickBarToCompare": "Bofya baa ili kulinganisha",
+  "analysingChanges": "Inachambua mabadiliko tangu {date}...",
+  "changesSince": "Mabadiliko tangu {date}",
+  "keyEvents": "MATUKIO MUHIMU",
+  "barTooltip": "{date}: {score}/100",
+  "totalChangePts": "pointi {pts}"
+}

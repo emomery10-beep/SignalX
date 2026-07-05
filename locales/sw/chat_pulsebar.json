@@ -1,1 +1,9 @@
-{}
+{
+  "clickToAsk": "Bofya ili kuuliza kuhusu hili",
+  "defaultSignal0Text": "Kiwango changu cha faida kinapaswa kuwa kipi hasa kwa aina ya biashara yangu?",
+  "defaultSignal0Query": "Ni kiwango gani cha faida chenye afya kwa aina ya biashara yangu na ninawezaje kukifikia?",
+  "defaultSignal1Text": "Ni wapi nina uwezekano mkubwa wa kupoteza pesa bila kutambua?",
+  "defaultSignal1Query": "Ni wapi nina uwezekano mkubwa wa kupoteza pesa bila kutambua katika biashara yangu?",
+  "defaultSignal2Text": "Ninajuaje ni bidhaa zipi zinastahili kuendelea nazo na zipi za kuacha?",
+  "defaultSignal2Query": "Ni vigezo gani nitumie kuamua ni bidhaa zipi za kuendelea kuuza na zipi za kuacha?"
+}

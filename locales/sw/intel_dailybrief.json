@@ -1,1 +1,7 @@
-{}
+{
+  "title": "Muhtasari wa Kila Siku",
+  "improvedPrompt": "Nieleze zaidi kuhusu uboreshaji huu: {detail}",
+  "worsenedPrompt": "Eleza tatizo hili na nifanye nini: {detail}",
+  "todayPrefix": "Leo:",
+  "askAskBiz": "Uliza AskBiz"
+}

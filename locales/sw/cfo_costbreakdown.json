@@ -1,1 +1,13 @@
-{}
+{
+  "heading": "Muundo wa Gharama",
+  "askAi": "Uliza AI",
+  "askAiPrompt": "Muundo wangu wa gharama: COGS ni {cogsPct}% ya mapato ({cogsAmt}), gharama za kudumu ni {fixedPct}% ({fixedAmt}). Ni maeneo gani 3 bora ambayo ningeweza kupunguza gharama bila kudhuru ukuaji?",
+  "totalCosts": "Jumla ya gharama",
+  "labelCogs": "Gharama ya Bidhaa Zilizouzwa",
+  "labelFixed": "Gharama za Kudumu / Uendeshaji",
+  "ofRevenue": "ya mapato",
+  "netProfit": "Faida Halisi",
+  "whereEveryGoes": "Kila {sym}100 inapoenda",
+  "profitSuffix": " faida",
+  "costsExceed": "Gharama zinazidi mapato kwa {sym}{n} kwa kila {sym}100 iliyopatikana"
+}
