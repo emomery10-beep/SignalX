@@ -13,6 +13,11 @@
 -- inventory_restock.supplier fields to a real table so a PO can
 -- be sent to a phone number over WhatsApp. The old free-text
 -- columns are left untouched.
+--
+-- NOTE: This is a byte-identical mirror of pos-askbiz's
+-- 20260705_purchase_orders.sql. Both POS apps share one Supabase
+-- project (benptbfiudpfvmvwxcjm), so every statement is idempotent
+-- (if-not-exists / drop-first) and safe to apply from either side.
 -- ============================================================
 
 -- ── POS SUPPLIERS ────────────────────────────────────────────
