@@ -1,0 +1,22 @@
+{
+  "article_count": "{count} makala",
+  "article_count_plural": "{count} makala",
+  "sort_newest": "Mpya zaidi",
+  "sort_quickest": "Haraka zaidi",
+  "ctype_how_to": "Namna ya",
+  "ctype_guide": "Mwongozo",
+  "ctype_explainer": "Maelezo",
+  "ctype_comparison": "Linganisho",
+  "ctype_case_study": "Tafiti za kesi",
+  "ctype_report": "Ripoti",
+  "ctype_template": "Kifaa",
+  "no_results": "Hakuna makala zilizopatikana.",
+  "no_results_for": "Hakuna makala zilizopatikana kwa “{query}”.",
+  "back_to_all_topics": "Nyuma kwa mada zote",
+  "load_more": "Tafuta {count} makala zaidi",
+  "showing_count": "Inaonyesha {shown} kati ya {total}",
+  "post_min": "{count} dk",
+  "date_today": "Leo",
+  "date_yesterday": "Jana",
+  "date_days_ago": "{count} siku zilizopita"
+}

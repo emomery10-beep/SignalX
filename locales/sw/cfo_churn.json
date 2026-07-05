@@ -1,0 +1,18 @@
+{
+  "high_churn_value": "{churn}% kila mwezi — hasara {atRisk} kila mwezi",
+  "net_shrinking": "Mapato yanayopungua",
+  "net_shrinking_value": "Mapato ya upanuzi hayatoshi hasara — lengo kuu ni kuongeza mauzo kwa wateja waliopo",
+  "strong_expansion": "Upanuzi thabiti",
+  "strong_expansion_value": "{nrr}% NRR — wateja waliopo wanakuza matumizi yao",
+  "reduce_churn": "Punguza hasara kwa 1%",
+  "reduce_churn_value": "Inafaa {monthly}/mwezi ({yearly}/mwaka)",
+  "col_month": "Mwezi",
+  "col_revenue": "Mapato",
+  "col_retention": "Kudumisha",
+  "col_churn": "Kupoteza",
+  "col_nrr": "NRR",
+  "orders": "{n} agizo",
+  "margin": "{n}% faida",
+  "pct_of_revenue": "{n}% ya mapato",
+  "concentration_risk": "Hatari ya mkusanyiko: {n}% ya mapato kutoka kwa njia moja"
+}

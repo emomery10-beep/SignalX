@@ -1,0 +1,10 @@
+{
+  "sectionTitle": "Maelezo ya AI",
+  "poweredBy": "imeendeshwa na Claude",
+  "refreshBtn": "Safisha",
+  "analyzingBtn": "Inachambua...",
+  "analyzingBody": "Inachambua fedha zako...",
+  "noInsights": "Hakuna maelezo yaliyotolewa. Bofya Safisha jaribu tena.",
+  "askAi": "Uliza AI →",
+  "expandPrompt": "Panua ufahamu huu wa CFO: “{title}” — {body}. Nipatie hatua mahususi zinazofuata."
+}

@@ -1,0 +1,21 @@
+{
+  "rowCogs": "Gharama za Kuzalisha",
+  "rowGrossProfit": "Faida Kabiri",
+  "rowOpex": "Matumizi ya Uendeshaji",
+  "rowNetProfit": "Faida Safi",
+  "section3Title": "3. Hali ya Fedha",
+  "metricCashBalance": "Salio la Fedha",
+  "notSet": "Haijapangwa",
+  "metricMonthlyBurn": "Matumizi ya Kila Mwezi",
+  "metricRunway": "Uwezo wa Kuendelea",
+  "cashPositiveShort": "Fedha +ve",
+  "section4Title": "4. Hatari na Matatizo muhimu",
+  "criticalLabel": "Muhimu:",
+  "warningLabel": "Tahadhari:",
+  "sectionInventoryTitle": "{n}. Hali ya Mauzo",
+  "metricProducts": "Bidhaa",
+  "metricStockValue": "Thamani ya Mauzo",
+  "metricLowOos": "Chini/Amekwisha",
+  "metricStockoutRate": "Kiwango cha Kukosekana kwa Mauzo",
+  "footerText": "Imetayarishwa na AskBiz CFO · {date} · Siri"
+}

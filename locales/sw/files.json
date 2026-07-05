@@ -1,0 +1,20 @@
+{
+  "heading": "Faili",
+  "subheading": "Pakia na usimamie seti zako za CSV na XLSX",
+  "upload_button": "Pakia faili",
+  "uploading_button": "Inapakia…",
+  "uploading_status": "Inapakia {name}…",
+  "upload_success": "✓ {name} imopakia — {count} safu zimepakia",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Kupakia kwa kutofaulu",
+  "dropzone_uploading": "Inapakia faili yako…",
+  "dropzone_idle": "Acha faili yako hapa au bofya ili kutafuta",
+  "dropzone_hint": "CSV au XLSX · Hadidi 50 MB · Data yako inabaki siri",
+  "empty_state": "Hakuna faili zilizopakia. Acha faili ya CSV au Excel hapo juu ili kuanza.",
+  "meta_rows": "{count} safu",
+  "meta_columns": "{count} safu wima",
+  "meta_size": "{size} KB",
+  "status_ready": "✓ Tayari",
+  "ask_about_this": "Uliza kuhusu hii →",
+  "delete": "Ondoa"
+}

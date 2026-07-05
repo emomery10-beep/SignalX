@@ -1,0 +1,22 @@
+{
+  "card_title": "Bajeti dhidi ya Halisi",
+  "no_budget_badge": "Hakuna bajeti iliyowekwa",
+  "use_actuals_btn": "Tumia halisi kama bajeti",
+  "ask_ai": "Ask AI",
+  "col_line_item": "Kipengele cha Mstari",
+  "col_budget": "Bajeti",
+  "col_actual": "Halisi",
+  "col_variance": "Tofauti",
+  "col_pct_var": "% Tof",
+  "row_revenue": "Mapato",
+  "row_cogs": "Gharama za Bidhaa",
+  "row_gross_profit": "Faida ya Jumla",
+  "row_operating_expenses": "Gharama za Uendeshaji",
+  "row_net_profit": "Faida ya Jumla",
+  "set_budget_hint": "Bofya seli yoyote ya Bajeti juu ili kuweka malengo yako, au bofya “Tumia halisi kama bajeti” ili kuanza kutoka kwa nambari za kipindi hiki.",
+  "set_label": "+ Weka",
+  "attainment_title": "Kufikia Bajeti",
+  "pct_of_budget": "{n}% ya bajeti",
+  "actual_suffix": "{v} halisi",
+  "budget_suffix": "{v} bajeti"
+}

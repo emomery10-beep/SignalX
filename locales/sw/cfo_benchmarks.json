@@ -1,0 +1,21 @@
+{
+  "iconInvertedGood": "↓ Nzuri",
+  "iconOk": "✓ Sawa",
+  "iconLow": "↓ Duni",
+  "iconGreat": "↑ Kizuri",
+  "vsRange": "vs {low}-{high}{suffix}",
+  "askPrompt": "Linganisha biashara yangu na viwango vya {industry}. Mipango yangu: Gross margin {grossMargin}% (jumla {gmLow}-{gmHigh}%), Net margin {netMargin}% (jumla {nmLow}-{nmHigh}%), OpEx ratio {opexRatio}% (jumla {opexLow}-{opexHigh}%). {gapSuffix} Hatua gani mahususi ninapaswa kuchukua kufikia roboduara ya juu?",
+  "askPromptGapSuffix": "Pakia: {gaps}.",
+  "industryEcommerceGeneral": "Biashara ya mtandaoni (Jumla)",
+  "industryEcommerceFashion": "Mitindo & Nguo",
+  "industryEcommerceElectronics": "Elektroniki & Teknolojia",
+  "industryFoodBev": "Chakula & Kinywaji",
+  "industryHealthBeauty": "Afya & Urembo",
+  "industryHomeGarden": "Nyumba & Bustani",
+  "industryRetailGeneral": "Mauzo (Jumla)",
+  "industryWholesale": "Uuzaji kwa Pamoja / Usambazaji",
+  "industrySaas": "SaaS / Bidhaa za Kidijitali",
+  "industryServices": "Huduma za Kitaaluma",
+  "industryManufacturing": "Uzalishaji",
+  "industryHospitality": "Mageni & Utalii"
+}

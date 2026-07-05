@@ -1,0 +1,22 @@
+{
+  "title": "Mzigo wa Michango kwa Kipindi",
+  "edit_rates": "Hariri Viwango",
+  "done": "Tayari",
+  "ask_ai": "Ask AI",
+  "cm1_formula": "Mapato − Gharama za Kuuza",
+  "cm2_formula": "CM1 − Ada za Jukwaa",
+  "cm3_formula": "CM2 − Gharama za Kuangazia",
+  "col_channel": "Kipindi",
+  "col_revenue": "Mapato",
+  "col_cm1": "CM1",
+  "col_plat_fee": "Ada za Jukwaa",
+  "col_cm2": "CM2",
+  "col_ad_spend": "Gharama za Kuangazia",
+  "col_cm3": "CM3",
+  "col_visual": "Muonekano",
+  "orders": "{n} maagizo",
+  "total": "Jumla",
+  "drill_title": "{label} — Mvutano wa Mzigo wa Michango",
+  "step_revenue": "Mapato",
+  "step_cogs": "− Gharama za Kuuza"
+}
