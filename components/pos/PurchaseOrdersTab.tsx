@@ -209,10 +209,52 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
   notify: (msg: string, ok?: boolean) => void
 }) {
   const [sending, setSending] = useState(false)
+  const [receiveMode, setReceiveMode] = useState(false)
+  const [receiving, setReceiving] = useState(false)
+  const [receiveQtys, setReceiveQtys] = useState<Record<string, string>>({})
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
   const meta = STATUS_META[po.status] ?? STATUS_META.draft
   const supplierPhone = po.supplier?.phone
   const canSend = po.status !== 'received' && po.status !== 'cancelled'
+  const canReceive = po.status !== 'received' && po.status !== 'cancelled'
+  const receiveInput: CSSProperties = {
+    width: '100%', minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)',
+    borderRadius: 8, padding: '0 8px', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit', textAlign: 'center',
+  }
+
+  function startReceive() {
+    const init: Record<string, string> = {}
+    for (const it of po.items || []) {
+      const outstanding = Math.max(0, Number(it.qty_ordered) - Number(it.qty_received))
+      if (outstanding > 0) init[it.id] = String(outstanding)
+    }
+    setReceiveQtys(init)
+    setReceiveMode(true)
+  }
+
+  async function handleReceive() {
+    const receipts = (po.items || [])
+      .map((it) => ({ item_id: it.id, qty: parseFloat(receiveQtys[it.id] || '0') || 0 }))
+      .filter((r) => r.qty > 0)
+    if (receipts.length === 0) { notify('Enter what arrived', false); return }
+    setReceiving(true)
+    try {
+      const res = await fetch(`/api/pos/purchase-orders/${po.id}/receive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receipts, client_tx_id: `recv-${crypto.randomUUID()}` }),
+      })
+      if (!res.ok) { notify('Could not receive stock', false); setReceiving(false); return }
+      const data = await res.json()
+      onUpdated(data.purchase_order)
+      setReceiveMode(false)
+      notify('Stock received — inventory updated', true)
+    } catch {
+      notify('Could not receive stock', false)
+    } finally {
+      setReceiving(false)
+    }
+  }
 
   async function handleSend() {
     setSending(true)
@@ -282,7 +324,46 @@ function PODetailModal({ po, currencySymbol, onClose, onUpdated, notify }: {
           <span style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(po.total_cost)}</span>
         </div>
 
-        {canSend && (
+        {canReceive && !receiveMode && (
+          <button
+            onClick={startReceive}
+            style={{ width: '100%', minHeight: 44, background: BLUE, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10 }}
+          >
+            Receive stock
+          </button>
+        )}
+
+        {receiveMode && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>How much arrived?</div>
+            {(po.items || []).map((it) => {
+              const outstanding = Math.max(0, Number(it.qty_ordered) - Number(it.qty_received))
+              return (
+                <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '1fr 72px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
+                    <div style={{ fontSize: 11, color: outstanding <= 0 ? GREEN : 'var(--tx3)' }}>
+                      {outstanding <= 0 ? 'fully received' : Number(it.qty_received) > 0 ? `received ${it.qty_received} of ${it.qty_ordered}` : `ordered ${it.qty_ordered}`}
+                    </div>
+                  </div>
+                  <input
+                    type="number" min={0} inputMode="decimal" disabled={outstanding <= 0}
+                    value={receiveQtys[it.id] ?? ''}
+                    onChange={(e) => setReceiveQtys((p) => ({ ...p, [it.id]: e.target.value }))}
+                    aria-label={`Received now for ${it.name}`}
+                    style={{ ...receiveInput, opacity: outstanding <= 0 ? 0.5 : 1 }}
+                  />
+                </div>
+              )
+            })}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={() => setReceiveMode(false)} style={{ minHeight: 44, padding: '0 16px', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 10, color: 'var(--tx)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+              <button onClick={handleReceive} disabled={receiving} style={{ flex: 1, minHeight: 44, background: receiving ? 'var(--ev)' : GREEN, color: receiving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: receiving ? 'default' : 'pointer', fontFamily: 'inherit' }}>{receiving ? 'Saving…' : 'Confirm receipt'}</button>
+            </div>
+          </div>
+        )}
+
+        {canSend && !receiveMode && (
           <>
             <button
               onClick={handleSend}
