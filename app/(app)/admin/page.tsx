@@ -25,14 +25,14 @@ function KV({ label, value, sub, color, onClick, active }: { label: string; valu
       aria-expanded={clickable ? !!active : undefined}
       onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick!() } } : undefined}
       className={clickable ? 'kv-clickable' : undefined}
-      style={{display:'flex',flexDirection:'column',alignItems:'flex-start',position:'relative',padding:'18px',borderRadius:14,border:'1px solid '+(active?(color||'#6366F1'):'var(--b)'),background:'var(--sf)',cursor:clickable?'pointer':'default',transition:'border-color .15s, box-shadow .15s, transform .15s',boxShadow:active?'0 0 0 3px '+(color||'#6366F1')+'22':undefined}}
+      style={{display:'flex',flexDirection:'column',alignItems:'flex-start',position:'relative',padding:'20px 20px 18px',borderRadius:16,border:'1px solid '+(active?(color||'#6366F1'):'var(--b)'),background:'var(--sf)',cursor:clickable?'pointer':'default',minHeight:112,transition:'border-color .18s, box-shadow .18s, transform .18s',boxShadow:active?'0 0 0 3px '+(color||'#6366F1')+'1f':undefined}}
     >
-      <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:8}}>{label}</div>
-      <div style={{fontSize:28,fontWeight:700,fontFamily:'var(--font-sora)',color:color||'var(--tx)',marginBottom:4}}>{value}</div>
-      {sub && <div style={{fontSize:12,color:'var(--tx3)'}}>{sub}</div>}
+      <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.07em',lineHeight:1.3,marginBottom:'auto',paddingRight:clickable?22:0}}>{label}</div>
+      <div style={{fontSize:30,fontWeight:700,fontFamily:'var(--font-sora)',color:color||'var(--tx)',lineHeight:1.05,letterSpacing:'-.02em',marginTop:14}}>{value}</div>
+      {sub && <div style={{fontSize:12,color:'var(--tx2)',marginTop:6,lineHeight:1.4}}>{sub}</div>}
       {clickable && (
-        <span aria-hidden style={{position:'absolute',top:14,right:14,display:'flex',color:active?(color||'#6366F1'):'var(--tx3)',transition:'transform .2s',transform:active?'rotate(180deg)':'none'}}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <span aria-hidden style={{position:'absolute',top:18,right:18,display:'flex',color:active?(color||'#6366F1'):'var(--tx3)',opacity:active?1:.5,transition:'transform .2s',transform:active?'rotate(180deg)':'none'}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </span>
       )}
     </div>
@@ -42,34 +42,34 @@ function KV({ label, value, sub, color, onClick, active }: { label: string; valu
 // ── Drill-down helpers (Overview) ──
 function DetailShell({ title, subtitle, accent, onClose, children }: { title: string; subtitle?: string; accent: string; onClose: () => void; children: any }) {
   return (
-    <div className="ov-detail" style={{marginBottom:24,borderRadius:14,border:'1px solid '+accent+'55',background:'var(--sf)',overflow:'hidden'}}>
-      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,padding:'14px 20px',borderBottom:'1px solid var(--b)',background:accent+'0d'}}>
+    <div className="ov-detail" style={{marginBottom:28,borderRadius:16,border:'1px solid '+accent+'44',background:'var(--sf)',overflow:'hidden',boxShadow:'0 8px 28px '+accent+'12'}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,padding:'16px 22px',borderBottom:'1px solid var(--b)',background:accent+'0d'}}>
         <div>
-          <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-sora)',color:accent}}>{title}</div>
-          {subtitle && <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>{subtitle}</div>}
+          <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-sora)',color:accent,letterSpacing:'-.01em'}}>{title}</div>
+          {subtitle && <div style={{fontSize:12,color:'var(--tx3)',marginTop:3}}>{subtitle}</div>}
         </div>
-        <button onClick={onClose} aria-label="Close details" style={{flexShrink:0,width:28,height:28,borderRadius:8,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx3)',cursor:'pointer',fontSize:18,lineHeight:1,fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+        <button onClick={onClose} aria-label="Close details" style={{flexShrink:0,width:30,height:30,borderRadius:9,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx3)',cursor:'pointer',fontSize:18,lineHeight:1,fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
       </div>
-      <div style={{padding:'14px 20px'}}>{children}</div>
+      <div style={{padding:'18px 22px'}}>{children}</div>
     </div>
   )
 }
 
 function SectionLabel({ children }: { children: any }) {
-  return <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.06em',margin:'18px 0 10px'}}>{children}</div>
+  return <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.06em',margin:'22px 0 12px'}}>{children}</div>
 }
 
 function Chip({ text, color }: { text: string; color: string }) {
-  return <span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:color+'20',color,textTransform:'capitalize'}}>{text}</span>
+  return <span style={{padding:'3px 9px',borderRadius:9999,fontSize:11,fontWeight:600,background:color+'1f',color,textTransform:'capitalize'}}>{text}</span>
 }
 
 function ChipStats({ items }: { items: { label: string; value: any }[] }) {
   return (
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:10}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(128px,1fr))',gap:12}}>
       {items.map(({label,value}) => (
-        <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--bg)',border:'1px solid var(--b)'}}>
-          <div style={{fontSize:10,color:'var(--tx3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
-          <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
+        <div key={label} style={{padding:'12px 14px',borderRadius:12,background:'var(--bg)',border:'1px solid var(--b)'}}>
+          <div style={{fontSize:10,color:'var(--tx3)',marginBottom:6,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
+          <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--font-sora)',letterSpacing:'-.01em'}}>{value}</div>
         </div>
       ))}
     </div>
@@ -78,13 +78,13 @@ function ChipStats({ items }: { items: { label: string; value: any }[] }) {
 
 function Bar({ label, pct, color, right }: { label: string; pct: number; color: string; right: string }) {
   return (
-    <div style={{marginBottom:12}}>
-      <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:12,gap:8}}>
+    <div style={{marginBottom:14}}>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:12.5,gap:8}}>
         <span style={{textTransform:'capitalize',fontWeight:500}}>{label}</span>
         <span style={{color:'var(--tx3)',whiteSpace:'nowrap'}}>{right}</span>
       </div>
-      <div style={{height:6,borderRadius:3,background:'var(--ev)'}}>
-        <div style={{height:'100%',width:Math.min(100,Math.max(0,pct))+'%',background:color,borderRadius:3}} />
+      <div style={{height:7,borderRadius:4,background:'var(--ev)'}}>
+        <div style={{height:'100%',width:Math.min(100,Math.max(0,pct))+'%',background:color,borderRadius:4}} />
       </div>
     </div>
   )
@@ -92,10 +92,10 @@ function Bar({ label, pct, color, right }: { label: string; pct: number; color: 
 
 function PersonRow({ name, sub, right }: { name: any; sub?: any; right?: any }) {
   return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 0',borderBottom:'1px solid var(--b)',gap:12}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'11px 0',borderBottom:'1px solid var(--b)',gap:12}}>
       <div style={{minWidth:0}}>
         <div style={{fontWeight:600,fontSize:13,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
-        {sub && <div style={{fontSize:12,color:'var(--tx3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{sub}</div>}
+        {sub && <div style={{fontSize:12,color:'var(--tx3)',marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{sub}</div>}
       </div>
       {right && <div style={{flexShrink:0}}>{right}</div>}
     </div>
@@ -503,12 +503,15 @@ export default function AdminPage() {
           </button>
         ))}
       </div>
-      <div style={{padding:'24px',maxWidth:1100,margin:'0 auto'}}>
+      <div style={{padding:'24px',maxWidth:1160,margin:'0 auto'}}>
         {loading ? <div style={{textAlign:'center',padding:60,color:'var(--tx3)'}}>{tc('admin.loading')}</div> : <>
 
           {tab==='Overview' && <>
-            <div style={{fontSize:12,color:'var(--tx3)',marginBottom:10}}>{tc('admin.tap_card_hint') !== 'admin.tap_card_hint' ? tc('admin.tap_card_hint') : 'Tap any metric to expand a detailed breakdown.'}</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
+            <div style={{fontSize:12.5,color:'var(--tx3)',marginBottom:14,display:'flex',alignItems:'center',gap:7}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+              {tc('admin.tap_card_hint') !== 'admin.tap_card_hint' ? tc('admin.tap_card_hint') : 'Tap any metric to expand a detailed breakdown.'}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(198px,1fr))',gap:14,marginBottom:28}}>
               {overviewMetrics.map(m => (
                 <KV key={m.key} label={m.label} value={m.value} sub={m.sub} color={m.color}
                   active={expanded === m.key} onClick={() => setExpanded(expanded === m.key ? null : m.key)} />
@@ -516,28 +519,25 @@ export default function AdminPage() {
             </div>
             {expanded && renderDetail()}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-              <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.plan_distribution')}</div>
+              <div style={{padding:22,borderRadius:16,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                <div style={{fontSize:13,fontWeight:700,letterSpacing:'-.01em',marginBottom:16}}>{tc('admin.plan_distribution')}</div>
                 {['free','growth','business','enterprise'].map(plan => {
                   const count = users.filter(u => u.plan_id === plan).length
                   const pct = stats?.totalUsers > 0 ? Math.round(count/stats.totalUsers*100) : 0
-                  return <div key={plan} style={{marginBottom:12}}>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:12}}>
-                      <span style={{textTransform:'capitalize',fontWeight:500}}>{plan}</span>
-                      <span style={{color:'var(--tx3)'}}>{count} ({pct}%)</span>
-                    </div>
-                    <div style={{height:6,borderRadius:3,background:'var(--ev)'}}>
-                      <div style={{height:'100%',width:pct+"%",background:PLAN_COLORS[plan],borderRadius:3}} />
-                    </div>
-                  </div>
+                  return <Bar key={plan} label={plan} pct={pct} color={PLAN_COLORS[plan]} right={count + ' (' + pct + '%)'} />
                 })}
               </div>
-              <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.quick_stats')}</div>
-                {[{label:tc('admin.upgrade_candidates_label'),value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
-                  <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:13}}>
+              <div style={{padding:22,borderRadius:16,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                <div style={{fontSize:13,fontWeight:700,letterSpacing:'-.01em',marginBottom:16}}>{tc('admin.quick_stats')}</div>
+                {[
+                  {label:tc('admin.kv_total_users'),value:stats?.totalUsers??0,color:'var(--tx)'},
+                  {label:tc('admin.kv_paying_users'),value:payingCount,color:'#10b981'},
+                  {label:tc('admin.kv_new_this_week'),value:stats?.newThisWeek??0,color:'#60a5fa'},
+                  {label:tc('admin.upgrade_candidates_label'),value:candidates.length,color:'#f59e0b'},
+                ].map(({label,value,color}) => (
+                  <div key={label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'11px 0',borderBottom:'1px solid var(--b)',fontSize:13}}>
                     <span style={{color:'var(--tx2)'}}>{label}</span>
-                    <span style={{fontWeight:700,color}}>{value}</span>
+                    <span style={{fontWeight:700,fontFamily:'var(--font-sora)',color}}>{value}</span>
                   </div>
                 ))}
               </div>
@@ -545,7 +545,7 @@ export default function AdminPage() {
           </>}
 
           {tab==='Revenue' && <>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14,marginBottom:28}}>
               <KV label={tc('admin.kv_mrr')} value={"£"+mrr} sub={tc('admin.kv_mrr_stripe_sub')} color="#f59e0b" active={expanded==='mrr'} onClick={()=>setExpanded(expanded==='mrr'?null:'mrr')} />
               <KV label={tc('admin.kv_arr')} value={"£"+arr} sub={tc('admin.kv_arr_annualised_sub')} color="#8b5cf6" active={expanded==='arr'} onClick={()=>setExpanded(expanded==='arr'?null:'arr')} />
               <KV label={tc('admin.kv_active_subs')} value={stripeData?.activeSubscriptions??0} sub={tc('admin.kv_active_subs_sub')} color="#10b981" active={expanded==='subs'} onClick={()=>setExpanded(expanded==='subs'?null:'subs')} />
@@ -654,7 +654,7 @@ export default function AdminPage() {
           </>}
 
           {tab==='Activity' && <>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14,marginBottom:28}}>
               <KV label={tc('admin.kv_new_this_month')} value={stats?.newThisMonth} sub={tc('admin.kv_new_signups_sub')} color="#6366F1" active={expanded==='newMonth'} onClick={()=>setExpanded(expanded==='newMonth'?null:'newMonth')} />
               <KV label={tc('admin.kv_total_questions')} value={totalQuestions} sub={tc('admin.kv_total_questions_sub')} color="#10b981" active={expanded==='questions'} onClick={()=>setExpanded(expanded==='questions'?null:'questions')} />
               <KV label={tc('admin.kv_avg_questions')} value={avgQuestions.toFixed(1)} sub={tc('admin.kv_avg_questions_sub')} color="#f59e0b" active={expanded==='avgQuestions'} onClick={()=>setExpanded(expanded==='avgQuestions'?null:'avgQuestions')} />
@@ -914,7 +914,7 @@ export default function AdminPage() {
           })()}
 
           {tab==='Growth' && <>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14,marginBottom:28}}>
               <KV label={tc('admin.kv_weekly_growth')} value={"+"+stats?.newThisWeek} sub={tc('admin.kv_weekly_growth_sub')} color="#10b981" active={expanded==='newWeek'} onClick={()=>setExpanded(expanded==='newWeek'?null:'newWeek')} />
               <KV label={tc('admin.kv_monthly_growth')} value={"+"+stats?.newThisMonth} sub={tc('admin.kv_monthly_growth_sub')} color="#6366F1" active={expanded==='newMonth'} onClick={()=>setExpanded(expanded==='newMonth'?null:'newMonth')} />
               <KV label={tc('admin.kv_paying_ratio')} value={conv+"%"} sub={tc('admin.kv_paying_ratio_sub')} color="#f59e0b" active={expanded==='conversion'} onClick={()=>setExpanded(expanded==='conversion'?null:'conversion')} />
