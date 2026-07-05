@@ -1,0 +1,22 @@
+{
+  "headingFactory": "Sanidi Timu ya Kiwanda Chako",
+  "headingRestaurant": "Sanidi Timu ya Mgahawa Wako",
+  "headingSubtitle": "Chagua au sanidi majukumu ya wafanyakazi kwa ajili ya timu yako. Kila jukumu linajumuisha ruhusa na majukumu yaliyotangulizwa.",
+  "quickStartTitle": "Inapendekezwa kwa timu za {size}",
+  "quickStartSubtitle": "Tunapendekeza majukumu {count} yafuatayo kuanza:",
+  "quickStartButton": "Tumia Majukumu Yanayopendekezwa",
+  "allRolesLabel": "Majukumu Yote Yaliyopo",
+  "teamSizeLabel": "Ukubwa wa Timu:",
+  "permissionsLabel": "Ruhusa:",
+  "viewResponsibilities": "Tazama Majukumu",
+  "responsibilitiesHeading": "Majukumu",
+  "permissionsHeading": "Ruhusa",
+  "moreItems": "+ {count} zaidi",
+  "recommendedBadge": "⭐ Imependekezwa",
+  "selectedRoles": "Majukumu Yaliyochaguliwa:",
+  "clearButton": "Safisha",
+  "confirmRoleSingular": "Thibitisha Jukumu {count}",
+  "confirmRolePlural": "Thibitisha Majukumu {count}",
+  "selectAtLeastOne": "Chagua angalau jukumu moja",
+  "tipText": "💡 Vidokezo: Unaweza kubinafsisha ruhusa kwa kila jukumu baada ya kuweka. Washiriki wa timu wanaweza kuteuliwa jukumu moja au zaidi."
+}

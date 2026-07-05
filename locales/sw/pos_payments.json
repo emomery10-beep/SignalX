@@ -1,0 +1,18 @@
+{
+  "title": "Mbinu za Malipo",
+  "subtitle": "Sanidi watoa huduma za malipo na uwezeshe wateja kulipa kwa njia ya Paystack au Stripe",
+  "loadingConfig": "Kupakia mpangilio wa malipo...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Kaditi zimefungwa",
+  "stripeLoadingLink": "Kupakia kiungo cha Stripe…",
+  "stripeCompleteOnboarding": "Bofya ili kumaliza usajili wa Stripe",
+  "stripeStatusActive": "● Imefungwa",
+  "stripeStatusPending": "Inasubiri KYC",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ Mgawanyo wa jukwaa haufanyi kazi",
+  "splitsNotActiveBody": "Malipo yanakwenda kwenye akaunti kuu bila kugawanywa. Salimisha hili ili kufungua kodi ya 2% ya jukwaa la AskBiz kwa kila muamala.",
+  "splitsEnterPhone": "Ingiza nambari yako ya M-Pesa ili kuiunganisha:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Weka",
+  "splitsFixBtn": "Sahihisha Migawanyiko Sasa",
+  "splitsFixingBtn": "Kinasahihishwa..."
+}

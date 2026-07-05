@@ -1,0 +1,20 @@
+{
+  "mPesaPayment": "Malipo ya M-Pesa",
+  "askCustomerForNumber": "Uliza mteja nambari yake ya M-Pesa",
+  "phonePlaceholder": "07XX XXX XXX",
+  "sendMpesaPrompt": "📲 Tuma tahadhari ya M-Pesa",
+  "customerWillGetPopup": "Mteja atapata tahadhari kwenye simu yake ili kuthibitisha malipo",
+  "sendingTo": "Tukituma kwa {phone}...",
+  "justAMoment": "Subiri kidogo",
+  "waitingForCustomer": "Tunamsubiri mteja",
+  "checkTheirPhone": "Angalia simu yake",
+  "mpesaPromptSentTo": "Tahadhari ya M-Pesa imetumwa kwa",
+  "askThemToEnterPin": "Uliza waweke nambari yao ya siri ya M-Pesa ili kuthibitisha",
+  "waitingForPinConfirmation": "⏳ Tunaosubiri uthibitishaji wa PIN...",
+  "updatesAutomatically": "Inasasishwa kiotomatiki unapolipa",
+  "wrongNumberSendAgain": "Nambari si sahihi? Tuma tena",
+  "mpesaPaymentReceived": "M-Pesa malipo yamepokelewa!",
+  "amountFrom": "{currencySymbol}{amount} kutoka {phone}",
+  "paymentFailedOrTimedOut": "Malipo yamekosolewa au kuchelewa",
+  "tryAgain": "Jaribu tena"
+}

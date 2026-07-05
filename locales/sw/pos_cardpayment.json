@@ -1,0 +1,18 @@
+{
+  "generatingTitle": "Tunatengeneza kiungo cha malipo...",
+  "generatingSubtitle": "Subiri kidogo",
+  "amountDue": "Kiasi kinachohitajika",
+  "showQrInstruction": "Onyesha QR code hii kwa mteja",
+  "scanToPayAlt": "Nunua kwa kuchukua picha",
+  "scanQrTitle": "Chukua picha ya QR",
+  "scanQrSubtitle": "kwa kamera yoyote",
+  "walletTitle": "Apple / Google Pay",
+  "walletSubtitle": "gonga ili kulipia kwenye kifaa",
+  "waitingMessage": "⏳ Tukisubiri mteja kulipa...",
+  "waitingSubtitle": "Ukurasa huu unabadilika kiotomatiki",
+  "shareLink": "Shiriki kiungo cha malipo badala yake",
+  "paymentReceived": "Malipo yamepokelewa!",
+  "paymentReceivedDetail": "{symbol}{amount} kwa njia ya kadi",
+  "paymentFailed": "Malipo yameshindika",
+  "tryAgain": "Jaribu tena"
+}

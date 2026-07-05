@@ -1,0 +1,20 @@
+{
+  "title": "Malipo Yaliyopokelewa",
+  "headerBadge": "{count} yamepokelewa · {total}",
+  "statReceivedLabel": "Yaliyopokelewa",
+  "statReceivedSub": "malipo",
+  "statTotalLabel": "Jumla",
+  "statTotalSub": "yaliyokusanywa",
+  "statAvgLabel": "Wastani",
+  "statAvgSub": "kwa malipo",
+  "loading": "Inachukua...",
+  "emptyTitle": "Hakuna malipo ya kidijitali yaliyopokelewa bado.",
+  "emptyBody": "Malipo kwa njia ya M-Pesa, kadi, au pesa za simu zitajionyesha hapa mara tu zinapothibitishwa.",
+  "defaultCustomer": "Mteja",
+  "statusPaid": "Imelipwa",
+  "statusReceived": "Imepokelewa",
+  "justNow": "Hivi karibuni",
+  "minutesAgo": "{mins}dakika iliyopita",
+  "hoursAgo": "{h}masa iliyopita",
+  "daysAgo": "{d}siku iliyopita"
+}

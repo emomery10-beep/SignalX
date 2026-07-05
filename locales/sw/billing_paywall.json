@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "Unapata manufaa mengi kutoka AskBiz",
+    "softWarningBody": "Umechukua {questionsUsed} kati ya {questionLimit} maswali ya kila mwezi. Ni wazi unapata thamani — funika zaidi ili usiwe na kusimama katikati ya uchambuzi.",
+    "softWarningCta": "Funika maswali zaidi →",
+    "softWarningSecondary": "Angalia mipango",
+    "limitReachedTitle": "Umeifanya mipaka ya mpango wa bure",
+    "limitReachedBody": "Umechukua maswali {questionLimit} bure yote kwa mwezi huu. Boresha ili uendelee — data yako na majadiliano yote yamehifadhiwa na yanakusubiri.",
+    "limitReachedCta": "Endelea na Ukuaji — £19/mwezi →",
+    "limitReachedSecondary": "Angalia mipango yote",
+    "featureLockedTitle": "{feature} iko kwenye Ukuaji",
+    "featureLockedBody": "{feature} ipo kwenye mpango wa Ukuaji. Boresha ili ufungue akili ya kupanuka, usakinishaji wa moja kwa moja, tahadhari, utabiri, na zaidi.",
+    "featureLockedCta": "Funika Ukuaji — £19/mwezi →",
+    "featureLockedSecondary": "Ona nini zingine zimejumuishwa",
+    "feature500Questions": "Maswali 500 ya AI kwa mwezi",
+    "feature10Uploads": "Kuweka kumbukumbu 10",
+    "featureExpansion": "Akili ya kupanuka",
+    "featureLiveSync": "Usakinishaji wa moja kwa moja",
+    "featureAlerts": "Tahadhari & utabiri",
+    "featureTrial": "Jaribio la siku 7",
+    "footer": "Jaribio la siku 7 · Futa bila malipo · Bei imewekwa kwa wateja wa kwanza"
+  }
+}
