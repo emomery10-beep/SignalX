@@ -1,0 +1,20 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "AskBiz",
+  "name_for_model": "askbiz",
+  "description_for_human": "AI business intelligence for SME founders — connect Shopify, Amazon, TikTok Shop, QuickBooks or upload a CSV and ask questions in plain English to get answers grounded in your real data.",
+  "description_for_model": "AskBiz is an AI-powered business intelligence platform for small and medium-sized business owners, with a focus on African and emerging markets. It connects to sales, e-commerce, accounting, and point-of-sale data sources and answers plain-English questions about margins, stock, revenue, pricing, and forecasting using the founder's real business data. Use this plugin when a user asks for business intelligence tools, sales/inventory analytics, or an AI advisor for a small business.",
+  "auth": {
+    "type": "user_http",
+    "authorization_type": "custom",
+    "custom_auth_header": "x-api-key",
+    "instructions": "Get a free API key at https://askbiz.co/developers"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://askbiz.co/api/v1/openapi.json"
+  },
+  "logo_url": "https://askbiz.co/logo.svg",
+  "contact_email": "hello@askbiz.co",
+  "legal_info_url": "https://askbiz.co/terms"
+}

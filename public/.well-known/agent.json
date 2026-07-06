@@ -1,0 +1,52 @@
+{
+  "name": "AskBiz",
+  "description": "AI business intelligence agent for SME founders. Connects to Shopify, Amazon, TikTok Shop, QuickBooks or an uploaded CSV, and answers plain-English questions about sales, margins, stock, and pricing using the founder's real business data.",
+  "url": "https://askbiz.co/api/v1/ask",
+  "version": "1.0.0",
+  "provider": {
+    "name": "AskBiz",
+    "url": "https://askbiz.co"
+  },
+  "documentationUrl": "https://askbiz.co/developers",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "authentication": {
+    "schemes": ["apiKey"],
+    "header": "x-api-key",
+    "instructions": "Get a free API key at https://askbiz.co/developers"
+  },
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text", "data"],
+  "skills": [
+    {
+      "id": "businessIntelligence",
+      "name": "Business Intelligence Q&A",
+      "description": "Answer plain-English questions about revenue, margins, pricing, and forecasting using real business data.",
+      "inputModes": ["text"],
+      "outputModes": ["text", "data"]
+    },
+    {
+      "id": "salesAnalytics",
+      "name": "Sales Analytics",
+      "description": "Analyse sales trends, top products, and channel performance.",
+      "inputModes": ["text"],
+      "outputModes": ["text", "data"]
+    },
+    {
+      "id": "inventoryManagement",
+      "name": "Inventory & Stock Analysis",
+      "description": "Flag stock risks, dead stock, and reorder recommendations.",
+      "inputModes": ["text"],
+      "outputModes": ["text", "data"]
+    },
+    {
+      "id": "posSystem",
+      "name": "Point of Sale Insights",
+      "description": "Surface insights from connected point-of-sale transaction data.",
+      "inputModes": ["text"],
+      "outputModes": ["text", "data"]
+    }
+  ]
+}
