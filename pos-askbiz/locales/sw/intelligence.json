@@ -1,0 +1,21 @@
+{
+  "header_title": "Ramani ya Mauzo",
+  "header_subtitle": "Miamala yenye alama za mahali",
+  "back": "← Nyuma",
+  "period_today": "Leo",
+  "period_7_days": "Siku 7",
+  "period_30_days": "Siku 30",
+  "period_90_days": "Siku 90",
+  "stat_sales": "Mauzo",
+  "stat_revenue": "Mapato",
+  "stat_on_map": "Kwenye ramani",
+  "popup_by": "na {name}",
+  "no_location_title": "Bado hakuna taarifa za mahali",
+  "no_location_subtitle": "Ruhusu location kwenye kifaa cha keshia wakati wa kuuza — kila mauzo yataonekana hapa kama alama",
+  "loading": "Inachukua…",
+  "geo_tagged_sale": "Mauzo {count} yenye alama ya mahali",
+  "geo_tagged_sale_plural": "Mauzo {count} yenye alama za mahali",
+  "none_geo_tagged_title": "Mauzo {count} — bado hakuna yenye alama ya mahali",
+  "none_geo_tagged_subtitle": "Kifaa cha keshia lazima kiruhusu location kabla ya kulipa.",
+  "no_sales_period": "Bado hakuna mauzo katika kipindi hiki — jaribu tarehe nyingine."
+}

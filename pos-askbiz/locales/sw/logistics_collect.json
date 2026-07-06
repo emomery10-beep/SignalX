@@ -1,0 +1,58 @@
+{
+  "loading": "Inachukua…",
+
+  "err_photo_type": "Tumia picha ya JPEG/PNG/WebP/HEIC.",
+  "err_photo_process": "Imeshindwa kuchakata picha hiyo.",
+  "err_id_read": "Imeshindwa kusoma kitambulisho — kiandike mwenyewe.",
+  "id_low_confidence": "⚠️ Uhakika mdogo — angalia kama inalingana.",
+  "id_captured": "✓ Kitambulisho kimepigwa picha — thibitisha kinalingana.",
+  "err_id_failed": "Uchanganuzi wa kitambulisho umeshindwa — kiandike mwenyewe.",
+  "err_verify_receiver": "Thibitisha mpokeaji — changanua au andika namba ya kitambulisho chake.",
+  "err_photo_required": "Piga picha ya kifurushi wakati wa kukabidhi.",
+  "err_confirm_payment": "Kifurushi hiki ni {status} ({symbol}{amount}). Thibitisha malipo kabla ya kutoa.",
+  "err_photo_upload_failed": "Kupakia picha kumeshindwa — piga tena.",
+  "err_release_failed": "Imeshindwa kutoa kifurushi.",
+  "err_network_retry": "Hitilafu ya mtandao — jaribu tena.",
+
+  "header_title": "Uchukuaji wa Vifurushi",
+  "header_subtitle": "{name} · kabidhi vifurushi kwa wateja",
+
+  "tab_outgoing": "📤 Vinavyotoka",
+  "tab_incoming": "📥 Vinavyoingia",
+
+  "search_placeholder": "Tafuta namba ya ufuatiliaji, jina, simu…",
+  "empty_state": "Hakuna vifurushi vinavyosubiri kuchukuliwa tawini hapa. Vitaonekana hapa mara mhudumu atakapovipokea.",
+
+  "status_paid": "Imelipwa",
+  "status_unpaid": "haijalipwa",
+  "card_to_label": "📥 Kwa: {name}",
+  "card_dash": "—",
+  "card_parcel_fallback": "Kifurushi",
+  "card_from": "kutoka {origin}",
+
+  "sheet_aria": "Toa kifurushi",
+  "sheet_release_title": "Toa {tracking}",
+  "sheet_to_line": "Kwa {name} · {phone}",
+
+  "step_payment": "1 · Malipo",
+  "already_paid": "✓ Tayari imelipwa",
+  "collect_on_delivery": "Kusanya wakati wa ulazi",
+  "pay_method_cash": "💵 Fedha taslimu",
+  "pay_method_card": "💳 Kadi",
+  "pay_method_mobile": "📱 Simu",
+  "payment_received_full": "Malipo yamepokelewa kikamilifu",
+
+  "step_verify_id": "2 · Thibitisha kitambulisho cha mpokeaji",
+  "id_placeholder": "Kitambulisho cha Taifa / Pasipoti",
+  "scan_reading_id": "⏳ Inasoma kitambulisho…",
+  "scan_id_autofill": "📷 Changanua kitambulisho kujaza kiotomatiki",
+
+  "step_photo": "3 · Picha ya kifurushi wakati wa kukabidhi",
+  "alt_parcel_handover": "Kifurushi wakati wa kukabidhi",
+  "photo_retake": "Piga tena",
+  "photo_processing": "Inachakata…",
+  "photo_take": "📷 Piga picha ya kifurushi",
+
+  "releasing": "⏳ Inatoa…",
+  "release_button": "✅ Toa kwa mteja"
+}

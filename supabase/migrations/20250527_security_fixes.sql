@@ -28,6 +28,7 @@ having count(distinct owner_id) >= 3;
 alter table public.geo_cache enable row level security;
 
 -- Allow service role full access (API routes use service role client)
+drop policy if exists "Service role full access" on public.geo_cache;
 create policy "Service role full access"
   on public.geo_cache
   for all

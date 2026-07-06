@@ -240,28 +240,33 @@ ALTER TABLE public.pos_webhook_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pos_menu_sync_state ENABLE ROW LEVEL SECURITY;
 
 -- Integration owners can see/modify their own integrations
+DROP POLICY IF EXISTS "integrations_owner_access" ON public.pos_integrations;
 CREATE POLICY "integrations_owner_access" ON public.pos_integrations
   FOR ALL
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
 -- Order financials visible to restaurant owner
+DROP POLICY IF EXISTS "order_financials_owner_access" ON public.pos_order_financials;
 CREATE POLICY "order_financials_owner_access" ON public.pos_order_financials
   FOR ALL
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
 -- Audit logs visible to restaurant owner
+DROP POLICY IF EXISTS "integration_audit_owner_access" ON public.pos_integration_audit;
 CREATE POLICY "integration_audit_owner_access" ON public.pos_integration_audit
   FOR ALL
   USING (owner_id = auth.uid());
 
 -- Webhook queue visible to restaurant owner
+DROP POLICY IF EXISTS "webhook_queue_owner_access" ON public.pos_webhook_queue;
 CREATE POLICY "webhook_queue_owner_access" ON public.pos_webhook_queue
   FOR ALL
   USING (owner_id = auth.uid());
 
 -- Menu sync state visible to restaurant owner
+DROP POLICY IF EXISTS "menu_sync_state_owner_access" ON public.pos_menu_sync_state;
 CREATE POLICY "menu_sync_state_owner_access" ON public.pos_menu_sync_state
   FOR ALL
   USING (owner_id = auth.uid())
@@ -296,21 +301,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_integrations_updated_at ON public.pos_integrations;
 CREATE TRIGGER update_integrations_updated_at
   BEFORE UPDATE ON public.pos_integrations
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_order_financials_updated_at ON public.pos_order_financials;
 CREATE TRIGGER update_order_financials_updated_at
   BEFORE UPDATE ON public.pos_order_financials
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_webhook_queue_updated_at ON public.pos_webhook_queue;
 CREATE TRIGGER update_webhook_queue_updated_at
   BEFORE UPDATE ON public.pos_webhook_queue
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_menu_sync_state_updated_at ON public.pos_menu_sync_state;
 CREATE TRIGGER update_menu_sync_state_updated_at
   BEFORE UPDATE ON public.pos_menu_sync_state
   FOR EACH ROW

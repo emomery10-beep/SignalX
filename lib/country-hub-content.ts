@@ -452,42 +452,6 @@ export const COUNTRY_HUBS: CountryHub[] = [
 
   // ── EAST AFRICA ──────────────────────────────────────────────
   {
-    slug: "kenya",
-    country: "Kenya",
-    region: "East Africa",
-    flag: "\u{1F1F0}\u{1F1EA}",
-    metaTitle: "Business Intelligence for Kenya | AskBiz",
-    metaDescription: "Business intelligence tools for Kenya. AskBiz helps Kenyan businesses in technology, agriculture, tourism, and financial services make data-driven decisions.",
-    heroHeading: "Business Intelligence for Kenya",
-    heroSubtitle: "Scale your Kenyan business with analytics built for East Africa's innovation and economic hub.",
-    marketOverview: "Kenya's $110 billion economy is East Africa's largest and most diversified, with Nairobi serving as the region's financial, technology, and logistics hub. The country pioneered mobile money with M-Pesa, which processes over $30 billion annually and has been replicated worldwide. Kenya's tech ecosystem, anchored by iHub and Silicon Savannah, attracts more venture capital than any other African country outside Nigeria and South Africa. Agriculture remains vital, with tea and horticulture as top exports. Over 7 million SMEs drive the economy, but most still rely on basic tools for financial management despite operating in one of Africa's most digitally advanced markets.",
-    challenges: [
-      { title: "Intense Market Competition", description: "Nairobi's vibrant economy attracts both local and international competitors, requiring businesses to constantly optimize pricing, costs, and customer acquisition strategies with real data." },
-      { title: "County-Level Tax Complexity", description: "Kenya's devolved government structure means businesses operating across multiple counties face varying regulations, fees, and licensing requirements that complicate financial planning." },
-      { title: "Credit Access Despite Digital Maturity", description: "Despite Kenya's digital sophistication, many SMEs still struggle to package their financial data in ways that satisfy bank and investor requirements for growth capital." },
-      { title: "Supply Chain Price Volatility", description: "Agricultural and FMCG businesses face rapid input cost changes driven by weather, fuel prices, and cross-border trade dynamics that erode margins without constant monitoring." }
-    ],
-    solutions: [
-      { title: "M-Pesa Integration", description: "AskBiz connects directly with M-Pesa, Airtel Money, and bank APIs to pull all your transaction data into a single analytics dashboard with zero manual entry required." },
-      { title: "Multi-County Operations", description: "Manage business performance across Kenyan counties with location-level reporting, helping you track revenue, costs, and compliance requirements by region." },
-      { title: "Investor-Ready Analytics", description: "AskBiz packages your financial data into the formats that Kenyan banks, SACCOs, and venture capital firms expect, making fundraising and loan applications significantly easier." },
-      { title: "Real-Time Margin Alerts", description: "Set automated alerts for when input costs change enough to threaten your margins, enabling you to adjust pricing or sourcing before profitability is impacted." }
-    ],
-    keyStats: [
-      { label: "GDP", value: "$110B" },
-      { label: "M-Pesa Annual Volume", value: "$30B+" },
-      { label: "SMEs", value: "7M+" },
-      { label: "Tech VC Funding", value: "Top 3 in Africa" }
-    ],
-    industries: ["Technology & Fintech", "Agriculture & Tea", "Tourism", "Financial Services", "Manufacturing"],
-    faqs: [
-      { q: "Does AskBiz integrate with M-Pesa in Kenya?", a: "Yes. AskBiz connects with M-Pesa through the Safaricom API, automatically pulling your transaction data into your analytics dashboard. You can track M-Pesa payments alongside bank transfers and cash in a single unified view." },
-      { q: "How can AskBiz help my tea or horticulture business?", a: "AskBiz tracks production costs per farm or greenhouse, labor expenses, transport to auction or direct buyer, and revenue per kilogram. You can analyze seasonal yield patterns and optimize your production mix for maximum profitability." },
-      { q: "Is AskBiz suitable for Kenyan tech startups?", a: "Yes. AskBiz helps startups track burn rate, unit economics, and customer acquisition costs in the formats that East African VCs and angel investors expect. Many Nairobi-based startups use AskBiz for financial clarity." },
-      { q: "Can AskBiz handle KRA tax reporting?", a: "AskBiz generates reports aligned with Kenya Revenue Authority requirements including iTax-compatible VAT returns, withholding tax tracking, and income tax computations. Your accountant can export data directly for filing." }
-    ]
-  },
-  {
     slug: "tanzania",
     country: "Tanzania",
     region: "East Africa",
@@ -557,42 +521,6 @@ export const COUNTRY_HUBS: CountryHub[] = [
       { q: "Can AskBiz help my Ethiopian coffee export business?", a: "Yes. AskBiz tracks costs from farm purchase through washing station, grading, ECX listing, and export. You can analyze margins per grade and destination, monitor international coffee prices, and optimize your buying strategy." },
       { q: "Does AskBiz work with Ethiopian banks?", a: "AskBiz supports data imports from major Ethiopian banks including CBE, Dashen, Awash, and others. While direct API connections are limited by the banking system, structured statement imports make reconciliation straightforward." },
       { q: "Is AskBiz available in Amharic?", a: "AskBiz currently operates in English with plans to add Amharic support. The platform's visual dashboard design minimizes language barriers, using charts, color codes, and numerical displays that communicate clearly regardless of language." }
-    ]
-  },
-  {
-    slug: "uganda",
-    country: "Uganda",
-    region: "East Africa",
-    flag: "\u{1F1FA}\u{1F1EC}",
-    metaTitle: "Business Intelligence for Uganda | AskBiz",
-    metaDescription: "Analytics tools for Ugandan businesses. AskBiz helps SMEs in coffee, agriculture, tourism, and services across Uganda grow with data-driven insights.",
-    heroHeading: "Business Intelligence for Uganda",
-    heroSubtitle: "Drive growth with data in East Africa's agricultural heartland and emerging oil economy.",
-    marketOverview: "Uganda's $45 billion economy is transitioning from agriculture-dominated to a more diversified structure, with oil production from the Albertine Graben expected to begin adding significant revenue. Coffee is the primary export, with Uganda ranking among Africa's top producers. Agriculture employs about 70% of the workforce. Kampala is the commercial hub with a growing tech ecosystem. Mobile money penetration is among the highest in Africa, with over 30 million registered accounts. Uganda's young, entrepreneurial population drives a dynamic SME sector, but most businesses lack the analytics tools needed to graduate from informal operations to structured, scalable enterprises.",
-    challenges: [
-      { title: "Agricultural Value Chain Informality", description: "Coffee, maize, and other agricultural supply chains involve numerous intermediaries and cash transactions, making cost tracking and margin analysis extremely difficult." },
-      { title: "Oil Economy Transition", description: "The anticipated oil revenues are creating new opportunities and uncertainties, with businesses needing to position themselves for a changing economic landscape." },
-      { title: "High Cost of Capital", description: "Ugandan interest rates frequently exceed 20%, making it critical for businesses to demonstrate financial credibility and optimize cash flow to minimize borrowing needs." },
-      { title: "Regional Trade Documentation", description: "Exporting to Kenya, Tanzania, Rwanda, and DRC requires managing different standards, documentation, and payment modalities that complicate cross-border business." }
-    ],
-    solutions: [
-      { title: "Agricultural Supply Chain Tracking", description: "AskBiz traces costs from farm-gate purchase through processing and export, giving coffee growers and traders clear visibility into margins at each stage of the value chain." },
-      { title: "Cash Flow Optimization", description: "Reduce your borrowing needs by identifying cash flow inefficiencies. AskBiz highlights where money gets stuck in your business cycle and suggests ways to accelerate collections." },
-      { title: "Mobile Money Analytics", description: "Connect MTN Mobile Money and Airtel Money data directly to your dashboard, giving you real-time revenue tracking without manual data entry from your primary payment channels." },
-      { title: "Cross-Border Trade Tools", description: "Track sales, duties, and logistics across EAC and COMESA markets with automated reporting that simplifies compliance and profitability analysis by destination country." }
-    ],
-    keyStats: [
-      { label: "GDP", value: "$45B" },
-      { label: "Coffee Ranking", value: "Top 10 Global" },
-      { label: "Mobile Money Accounts", value: "30M+" },
-      { label: "Agriculture Employment", value: "70%" }
-    ],
-    industries: ["Coffee", "Agriculture", "Tourism", "Oil & Gas (Emerging)", "Financial Services"],
-    faqs: [
-      { q: "Does AskBiz integrate with MTN Mobile Money in Uganda?", a: "Yes. AskBiz connects with MTN Mobile Money Uganda and Airtel Money, pulling transaction data directly into your analytics dashboard. You can track payments, disbursements, and reconcile mobile money alongside bank transactions in real time." },
-      { q: "How can AskBiz help Ugandan coffee businesses?", a: "AskBiz tracks your costs from cherry purchase through wet processing, dry milling, grading, and export. You can analyze margins per grade, compare buyer prices, and forecast revenue based on your pipeline and international coffee market trends." },
-      { q: "Is AskBiz compliant with URA reporting?", a: "AskBiz generates reports aligned with Uganda Revenue Authority requirements including VAT returns, withholding tax tracking, and income tax computations. Data can be exported in formats compatible with URA's e-filing system." },
-      { q: "Can AskBiz help my business prepare for Uganda's oil economy?", a: "AskBiz helps businesses track opportunities, costs, and contracts related to the emerging oil sector. If you supply goods or services to oil companies, AskBiz templates help you manage procurement pipelines and compliance requirements." }
     ]
   },
   {

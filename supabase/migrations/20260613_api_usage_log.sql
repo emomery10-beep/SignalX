@@ -13,9 +13,10 @@ CREATE TABLE IF NOT EXISTS api_usage (
 -- Admin reads all rows; users can't access this table
 ALTER TABLE api_usage ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "service_role_all" ON api_usage;
 CREATE POLICY "service_role_all" ON api_usage
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- Index for monthly cost queries
-CREATE INDEX idx_api_usage_created_at ON api_usage (created_at DESC);
-CREATE INDEX idx_api_usage_route ON api_usage (route);
+CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_api_usage_route ON api_usage (route);

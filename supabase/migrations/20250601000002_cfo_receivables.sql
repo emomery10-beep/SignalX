@@ -15,11 +15,12 @@ CREATE TABLE IF NOT EXISTS public.cfo_receivables (
 
 ALTER TABLE public.cfo_receivables ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can manage their own receivables" ON public.cfo_receivables;
 CREATE POLICY "Users can manage their own receivables"
   ON public.cfo_receivables
   FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE INDEX idx_cfo_receivables_user ON public.cfo_receivables(user_id);
-CREATE INDEX idx_cfo_receivables_type ON public.cfo_receivables(user_id, type);
+CREATE INDEX IF NOT EXISTS idx_cfo_receivables_user ON public.cfo_receivables(user_id);
+CREATE INDEX IF NOT EXISTS idx_cfo_receivables_type ON public.cfo_receivables(user_id, type);

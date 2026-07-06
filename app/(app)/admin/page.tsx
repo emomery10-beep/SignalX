@@ -128,12 +128,15 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
+  const [testEmailTo, setTestEmailTo] = useState('')
+  const [sendingTestEmail, setSendingTestEmail] = useState(false)
 
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || !ADMIN_EMAILS.includes(user.email || '')) { router.push('/'); return }
       setAuthorized(true)
+      setTestEmailTo(user.email || '') // default to your own inbox — never a real user's
       loadAll()
     }
     init()
@@ -192,6 +195,30 @@ export default function AdminPage() {
     } catch (err: any) {
       setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
       setTimeout(() => setActionMsg(''), 4000)
+    }
+  }
+
+  const sendTestEmail = async () => {
+    if (!testEmailTo.trim() || sendingTestEmail) return
+    setSendingTestEmail(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/send-test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ to: testEmailTo.trim() }),
+      })
+      const d = await res.json()
+      setActionMsg(d.success ? tc('admin.test_email_sent', { to: testEmailTo.trim() }) : tc('admin.test_email_failed', { error: d.error || res.statusText }))
+      setTimeout(() => setActionMsg(''), 4000)
+    } catch (err: any) {
+      setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
+      setTimeout(() => setActionMsg(''), 4000)
+    } finally {
+      setSendingTestEmail(false)
     }
   }
 
@@ -491,7 +518,21 @@ export default function AdminPage() {
           <h1 style={{fontFamily:'var(--font-sora)',fontSize:20,fontWeight:700,margin:0}}>🔐 {tc('admin.title')}</h1>
           <p style={{fontSize:12,color:'var(--tx3)',margin:'2px 0 0'}}>{tc('admin.subtitle')}</p>
         </div>
-        <div style={{display:'flex',gap:8}}>
+        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+          <input
+            type="email"
+            value={testEmailTo}
+            onChange={e => setTestEmailTo(e.target.value)}
+            placeholder={tc('admin.test_email_placeholder')}
+            style={{padding:'7px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'var(--bg)',fontSize:12,fontFamily:'inherit',width:190}}
+          />
+          <button
+            onClick={sendTestEmail}
+            disabled={sendingTestEmail || !testEmailTo.trim()}
+            style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:sendingTestEmail?'default':'pointer',fontFamily:'inherit',opacity:sendingTestEmail||!testEmailTo.trim()?.6:1}}
+          >
+            ✉️ {sendingTestEmail ? tc('admin.test_email_sending') : tc('admin.test_email_send')}
+          </button>
           <a href="/admin/agent" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #6366F1',background:'rgba(99,102,241,.08)',color:'#6366F1',fontSize:12,fontWeight:600,textDecoration:'none'}}>⚡ {tc('admin.growth_agent')}</a>
           <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>↻ {tc('admin.refresh')}</button>
         </div>

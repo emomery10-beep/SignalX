@@ -1,0 +1,16 @@
+{
+  "staff_login": "Kuingia kwa wafanyakazi",
+  "email_label": "Anwani ya barua pepe",
+  "email_hint": "Weka barua pepe yako ya kazi ili kuendelea.",
+  "err_email_unrecognised": "Barua pepe haijatambuliwa",
+  "err_network": "Hitilafu ya mtandao — tafadhali jaribu tena",
+  "err_pin_incorrect": "PIN si sahihi",
+  "checking": "Inakagua…",
+  "continue": "Endelea →",
+  "greeting": "Habari {name} 👋",
+  "pin_hint": "Weka PIN yako ili kuingia.",
+  "signing_in": "Inaingia…",
+  "sign_in": "Ingia →",
+  "use_different_email": "Tumia barua pepe nyingine",
+  "loading_login": "Inapakia kuingia…"
+}

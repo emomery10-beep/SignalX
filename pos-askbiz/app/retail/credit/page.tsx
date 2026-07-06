@@ -67,13 +67,17 @@ export default function CreditPage() {
 
   const loadList = useCallback(async () => {
     setLoading(true)
+    setError('')
     try {
       const res = await fetch(`${API}/api/pos/customer-credit?owing=1`, { headers: staffHeaders })
       const d = await res.json()
-      setCustomers(res.ok ? (d.customers || []) : [])
-    } catch { setCustomers([]) }
+      // A failed fetch must never render as an empty list — on a screen
+      // showing money owed, "no debts" and "couldn't check" must look different.
+      if (!res.ok) { setError(d.error || tc('retail_credit.err_load')); setCustomers([]); return }
+      setCustomers(d.customers || [])
+    } catch { setError(tc('retail_credit.err_load')); setCustomers([]) }
     finally { setLoading(false) }
-  }, [staffHeaders])
+  }, [staffHeaders]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (ready) loadList() }, [ready, loadList])
 
@@ -205,7 +209,7 @@ export default function CreditPage() {
       </div>
 
       <div style={{ padding: '24px', maxWidth: 640, margin: '0 auto' }}>
-        {error && screen !== 'list' && (
+        {error && (
           <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>
         )}
 
@@ -220,7 +224,7 @@ export default function CreditPage() {
             </div>
 
             {loading && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_credit.loading')}</div>}
-            {!loading && customers.length === 0 && (
+            {!loading && !error && customers.length === 0 && (
               <div style={{ color: '#64748b', fontSize: 13, textAlign: 'center', padding: '30px 0' }}>{tc('retail_credit.no_one_owes')}</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

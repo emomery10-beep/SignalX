@@ -13,5 +13,6 @@ create table if not exists phone_pin_attempts (
 
 alter table phone_pin_attempts enable row level security;
 
+drop policy if exists "no direct client access" on phone_pin_attempts;
 create policy "no direct client access" on phone_pin_attempts
   for all using (false);

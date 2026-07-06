@@ -15,6 +15,7 @@ create table if not exists public.pending_shopify_installs (
 alter table public.pending_shopify_installs enable row level security;
 
 -- Only the service role (backend) can read/write this table
+drop policy if exists "service role only" on public.pending_shopify_installs;
 create policy "service role only" on public.pending_shopify_installs
   as permissive for all
   to service_role
