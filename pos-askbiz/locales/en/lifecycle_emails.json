@@ -1,0 +1,36 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Don't want emails like this?",
+    "unsubscribe_link": "Unsubscribe"
+  },
+  "fallback_name": "there",
+  "plan_upgrade": {
+    "subject": "Welcome to {planName}, {firstName}!",
+    "heading": "Hi {firstName}, welcome to {planName}!",
+    "body": "We're thrilled you've upgraded. Here's what just switched on for you:",
+    "cta": "Go to your dashboard →",
+    "closing": "If anything about {planName} isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.",
+    "signoff": "— Idarus<br/>Founder &amp; CEO of AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Welcome to AskBiz POS, {firstName}!",
+    "heading": "Hi {firstName}, welcome to AskBiz POS!",
+    "body1": "We're thrilled you've added AskBiz POS — welcome to the family.",
+    "body2": "Your till, your stock tracker, and your end-of-day report are live now, right alongside the rest of your AskBiz account.",
+    "cta": "Open AskBiz POS →",
+    "closing": "If anything isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.",
+    "signoff": "— Idarus<br/>Founder &amp; CEO of AskBiz"
+  },
+  "plan_names": {
+    "free": "Free",
+    "growth": "Growth",
+    "business": "Business",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": ["10 AI questions per month", "1 file upload", "Basic business Q&amp;A", "Dashboard overview", "Email support"],
+    "growth": ["500 AI questions per month", "10 file uploads", "Expansion intelligence", "Alerts &amp; forecasts", "Live data sync (Shopify, Stripe, Sheets)", "Industry templates", "Priority email support"],
+    "business": ["2,000 AI questions per month", "Unlimited file uploads", "5 team members", "API access", "All Growth features", "Dedicated support", "Early adopter pricing — guaranteed forever"],
+    "enterprise": ["Unlimited everything", "Unlimited team members", "Custom integrations", "SSO &amp; advanced security", "SLA guarantee", "Dedicated account manager", "Custom onboarding", "White-label option"]
+  }
+}

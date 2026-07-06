@@ -1,0 +1,70 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Hutaki barua pepe kama hii?",
+    "unsubscribe_link": "Jiondoe"
+  },
+  "fallback_name": "rafiki",
+  "welcome": {
+    "subject": "Karibu AskBiz — mauzo yako ya kwanza yanachukua dakika 2",
+    "heading": "Habari {firstName}, umeshaingia.",
+    "body": "AskBiz ni till yako, mfuatiliaji wa hisa zako, na ripoti yako ya mwisho wa siku — kwenye simu ambayo tayari iko mfukoni mwako. Hivi ndivyo inavyofanya kazi:",
+    "step1": "Elekeza kamera yako kwenye bidhaa — hakuna kifaa cha barcode, hakuna usanidi.",
+    "step2": "Pokea M-Pesa, pesa za simu, fedha taslimu au kadi.",
+    "step3": "Usiku wa leo, ona hasa ulichopata na kinachokaribia kuisha.",
+    "cta": "Fanya mauzo yako ya kwanza →",
+    "closing": "Umekwama mahali popote? Jibu barua pepe hii — mtu halisi anaisoma."
+  },
+  "reengage_7": {
+    "subject": "Habari {firstName} — ukaguzi wa haraka kutoka AskBiz",
+    "heading": "Nakuangalia tu.",
+    "body1": "Habari {firstName} — nimegundua tu imepita karibu wiki. Hakuna shinikizo, kuendesha biashara ni kazi yenye shughuli nyingi.",
+    "body2": "Kila kitu kiko pale ulipokiacha: data yako, dashibodi yako, mpango wako wa bure. Kama umekwama mahali popote, jibu tu na nitakusaidia moja kwa moja.",
+    "cta": "Endelea pale ulipoishia →",
+    "closing": "Akaunti yako na mpango wa bure viko hasa pale ulipoviacha."
+  },
+  "reengage_14": {
+    "subject": "Umekuwa wapi, {firstName}? Namba zako zinakukumbuka",
+    "heading": "Imepita muda.",
+    "body1": "Habari {firstName} — tumegundua hujaingia hivi karibuni. Hakuna kulaumiwa. Ni ukumbusho tu wa kinachokusubiri:",
+    "body2": "Kila mauzo yanayopigwa kwenye simu yako. Hisa zinazokuonya kabla hazijaisha. Na mwisho wa siku, namba moja inayohusika: <strong>ulichopata kwa kweli.</strong>",
+    "cta": "Endelea pale ulipoishia →",
+    "closing": "Akaunti yako na mpango wa bure viko hasa pale ulipoviacha. Kama kitu hakikufanya kazi kwako, jibu na utuambie — tunasoma kila moja."
+  },
+  "reengage_30": {
+    "subject": "Tumehifadhi kila kitu kwa ajili yako, {firstName}",
+    "heading": "Imepita mwezi.",
+    "body1": "Habari {firstName} — imepita mwezi mmoja, kwa hivyo nilitaka kukuangalia mwenyewe badala ya kuacha hili likae kimya.",
+    "body2": "Akaunti yako, data yako, mpango wako wa bure — hakuna hata kimoja kilichoenda popote. Kama AskBiz haikuwa sahihi kwako, ningependa kujua kwa nini — jibu na uniambie, hakuna tatizo. Kama ulikuwa na shughuli tu, mauzo yako ya kwanza bado ni dakika 2 tu unapokuwa tayari.",
+    "cta": "Rudi AskBiz →",
+    "signoff": "— Idarus, Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
+  },
+  "plan_upgrade": {
+    "subject": "Karibu {planName}, {firstName}!",
+    "heading": "Habari {firstName}, karibu {planName}!",
+    "body": "Tumefurahi umeboresha mpango wako. Hivi ndivyo vimeshaanza kufanya kazi kwako:",
+    "cta": "Nenda kwenye dashibodi yako →",
+    "closing": "Kama kitu chochote kuhusu {planName} hakifanyi kazi jinsi unavyohitaji, jibu tu barua pepe hii — nitahakikisha binafsi kimetatuliwa.",
+    "signoff": "— Idarus<br/>Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Karibu AskBiz POS, {firstName}!",
+    "heading": "Habari {firstName}, karibu AskBiz POS!",
+    "body1": "Tumefurahi umeongeza AskBiz POS — karibu kwenye familia.",
+    "body2": "Till yako, mfuatiliaji wa hisa zako, na ripoti yako ya mwisho wa siku sasa vinafanya kazi, sambamba na akaunti yako yote ya AskBiz.",
+    "cta": "Fungua AskBiz POS →",
+    "closing": "Kama kitu chochote hakifanyi kazi jinsi unavyohitaji, jibu tu barua pepe hii — nitahakikisha binafsi kimetatuliwa.",
+    "signoff": "— Idarus<br/>Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
+  },
+  "plan_names": {
+    "free": "Bure",
+    "growth": "Kukua",
+    "business": "Biashara",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": ["Maswali 10 ya AI kwa mwezi", "Kupakia faili 1", "Maswali na majibu ya msingi ya biashara", "Muhtasari wa dashibodi", "Msaada kwa barua pepe"],
+    "growth": ["Maswali 500 ya AI kwa mwezi", "Kupakia faili 10", "Akili ya upanuzi", "Tahadhari &amp; utabiri", "Usawazishaji wa data ya wakati halisi (Shopify, Stripe, Sheets)", "Violezo vya sekta", "Msaada wa kipaumbele kwa barua pepe"],
+    "business": ["Maswali 2,000 ya AI kwa mwezi", "Kupakia faili bila kikomo", "Wanachama 5 wa timu", "Upatikanaji wa API", "Vipengele vyote vya Kukua", "Msaada maalum", "Bei ya mtumiaji wa mapema — imehakikishwa milele"],
+    "enterprise": ["Kila kitu bila kikomo", "Wanachama wa timu bila kikomo", "Miunganisho maalum", "SSO &amp; usalama wa hali ya juu", "Uhakikisho wa SLA", "Meneja maalum wa akaunti", "Uanzishaji maalum", "Chaguo la alama nyeupe (white-label)"]
+  }
+}

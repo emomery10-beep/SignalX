@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createHmac } from 'crypto'
-import { sendEmail, welcomeEmail, reEngagementEmail } from '@/lib/email'
+import { sendEmail, welcomeEmail, reEngagementEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
+import { resolveLocale, type Lang } from '@/lib/i18n-locale'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -24,16 +24,6 @@ const INACTIVE_MIN_DAYS   = 14
 const INACTIVE_MAX_DAYS   = 60
 const MAX_SENDS_PER_TYPE  = 200 // per run — the daily cadence drains any backlog
 const LIST_USERS_MAX_PAGES = 10 // 1000/page via the admin API
-
-function unsubscribeUrl(userId: string): string {
-  const key = process.env.TOKEN_ENCRYPTION_KEY || process.env.CRON_SECRET || ''
-  const token = createHmac('sha256', key).update(userId).digest('hex')
-  return `https://askbiz.co/api/email/unsubscribe?uid=${userId}&t=${token}`
-}
-
-function firstNameOf(fullName?: string | null): string {
-  return (fullName || '').trim().split(/\s+/)[0] || ''
-}
 
 export async function GET(request: NextRequest) {
   const secret = new URL(request.url).searchParams.get('secret')
@@ -59,7 +49,7 @@ export async function GET(request: NextRequest) {
   const ids = users.map(u => u.id)
   const { data: profiles } = await service
     .from('profiles')
-    .select('id, full_name, marketing_emails')
+    .select('id, full_name, marketing_emails, preferred_locale, registration_country')
     .in('id', ids)
   const profileById = new Map((profiles || []).map(p => [p.id, p]))
 
@@ -80,14 +70,16 @@ export async function GET(request: NextRequest) {
   const sendFlow = async (
     user: AuthUser,
     type: 'welcome' | 're_engagement',
-    build: (opts: { firstName: string; unsubscribeUrl: string }) => { subject: string; html: string },
+    build: (opts: { firstName: string; unsubscribeUrl: string; locale: Lang }) => { subject: string; html: string },
   ) => {
     if (!user.email) return
     if (results[type].sent >= MAX_SENDS_PER_TYPE) return
     if (!(await claim(user.id, type))) return
 
+    const profile = profileById.get(user.id)
+    const locale = resolveLocale({ profile: profile?.preferred_locale, country: profile?.registration_country })
     const unsub = unsubscribeUrl(user.id)
-    const { subject, html } = build({ firstName: firstNameOf(profileById.get(user.id)?.full_name), unsubscribeUrl: unsub })
+    const { subject, html } = build({ firstName: firstNameOf(profile?.full_name), unsubscribeUrl: unsub, locale })
     const ok = await sendEmail({
       to: user.email,
       subject,

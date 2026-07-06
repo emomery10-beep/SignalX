@@ -1,0 +1,70 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Don't want emails like this?",
+    "unsubscribe_link": "Unsubscribe"
+  },
+  "fallback_name": "there",
+  "welcome": {
+    "subject": "Welcome to AskBiz — your first sale takes 2 minutes",
+    "heading": "Hi {firstName}, you're in.",
+    "body": "AskBiz is your till, your stock tracker, and your end-of-day report — on the phone already in your pocket. Here's all it takes:",
+    "step1": "Point your camera at a product — no barcode gun, no setup.",
+    "step2": "Take M-Pesa, mobile money, cash or card.",
+    "step3": "Tonight, see exactly what you made and what's running low.",
+    "cta": "Make your first sale →",
+    "closing": "Stuck on anything? Reply to this email — a real person reads it."
+  },
+  "reengage_7": {
+    "subject": "Hi {firstName} — quick check-in from AskBiz",
+    "heading": "Just checking in.",
+    "body1": "Hi {firstName} — just noticed it's been about a week. No pressure, running a business is busy work.",
+    "body2": "Everything's exactly where you left it: your data, your dashboard, your free plan. If you got stuck on anything, reply and I'll help directly.",
+    "cta": "Pick up where you left off →",
+    "closing": "Your account and the free plan are exactly where you left them."
+  },
+  "reengage_14": {
+    "subject": "Where have you been, {firstName}? Your numbers miss you",
+    "heading": "It's been a while.",
+    "body1": "Hi {firstName} — we noticed you haven't been in lately. No guilt trip. Just a reminder of what's waiting:",
+    "body2": "Every sale rung on your phone. Stock that warns you before it runs out. And at the end of the day, one number that matters: <strong>what you actually made.</strong>",
+    "cta": "Pick up where you left off →",
+    "closing": "Your account and the free plan are exactly where you left them. If something didn't work for you, reply and tell us — we read every one."
+  },
+  "reengage_30": {
+    "subject": "We've kept everything for you, {firstName}",
+    "heading": "It's been a month.",
+    "body1": "Hi {firstName} — it's been a month, so I wanted to check in myself rather than let this go quiet.",
+    "body2": "Your account, your data, your free plan — none of it has gone anywhere. If AskBiz wasn't the right fit, I'd genuinely like to know why — reply and tell me, no hard feelings. If you just got busy, your first sale is still 2 minutes away whenever you're ready.",
+    "cta": "Come back to AskBiz →",
+    "signoff": "— Idarus, Founder &amp; CEO of AskBiz"
+  },
+  "plan_upgrade": {
+    "subject": "Welcome to {planName}, {firstName}!",
+    "heading": "Hi {firstName}, welcome to {planName}!",
+    "body": "We're thrilled you've upgraded. Here's what just switched on for you:",
+    "cta": "Go to your dashboard →",
+    "closing": "If anything about {planName} isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.",
+    "signoff": "— Idarus<br/>Founder &amp; CEO of AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Welcome to AskBiz POS, {firstName}!",
+    "heading": "Hi {firstName}, welcome to AskBiz POS!",
+    "body1": "We're thrilled you've added AskBiz POS — welcome to the family.",
+    "body2": "Your till, your stock tracker, and your end-of-day report are live now, right alongside the rest of your AskBiz account.",
+    "cta": "Open AskBiz POS →",
+    "closing": "If anything isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.",
+    "signoff": "— Idarus<br/>Founder &amp; CEO of AskBiz"
+  },
+  "plan_names": {
+    "free": "Free",
+    "growth": "Growth",
+    "business": "Business",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": ["10 AI questions per month", "1 file upload", "Basic business Q&amp;A", "Dashboard overview", "Email support"],
+    "growth": ["500 AI questions per month", "10 file uploads", "Expansion intelligence", "Alerts &amp; forecasts", "Live data sync (Shopify, Stripe, Sheets)", "Industry templates", "Priority email support"],
+    "business": ["2,000 AI questions per month", "Unlimited file uploads", "5 team members", "API access", "All Growth features", "Dedicated support", "Early adopter pricing — guaranteed forever"],
+    "enterprise": ["Unlimited everything", "Unlimited team members", "Custom integrations", "SSO &amp; advanced security", "SLA guarantee", "Dedicated account manager", "Custom onboarding", "White-label option"]
+  }
+}

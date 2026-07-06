@@ -1,0 +1,70 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "¿No quieres recibir correos como este?",
+    "unsubscribe_link": "Cancelar suscripción"
+  },
+  "fallback_name": "",
+  "welcome": {
+    "subject": "Bienvenido a AskBiz — tu primera venta toma 2 minutos",
+    "heading": "Hola {firstName}, ya estás dentro.",
+    "body": "AskBiz es tu caja registradora, tu control de stock y tu reporte de fin de día — en el teléfono que ya tienes en el bolsillo. Esto es todo lo que necesitas:",
+    "step1": "Apunta tu cámara a un producto — sin lector de código de barras, sin configuración.",
+    "step2": "Acepta M-Pesa, dinero móvil, efectivo o tarjeta.",
+    "step3": "Esta noche, mira exactamente cuánto ganaste y qué está por agotarse.",
+    "cta": "Haz tu primera venta →",
+    "closing": "¿Te atoraste en algo? Responde a este correo — una persona real lo lee."
+  },
+  "reengage_7": {
+    "subject": "Hola {firstName} — un saludo rápido de AskBiz",
+    "heading": "Solo saludando.",
+    "body1": "Hola {firstName} — notamos que ha pasado como una semana. Sin presión, llevar un negocio es mucho trabajo.",
+    "body2": "Todo está exactamente donde lo dejaste: tus datos, tu panel, tu plan gratuito. Si te atoraste en algo, responde y te ayudo directamente.",
+    "cta": "Continúa donde lo dejaste →",
+    "closing": "Tu cuenta y el plan gratuito están exactamente donde los dejaste."
+  },
+  "reengage_14": {
+    "subject": "¿Dónde has estado, {firstName}? Tus números te extrañan",
+    "heading": "Ha pasado un tiempo.",
+    "body1": "Hola {firstName} — notamos que no has entrado últimamente. Sin culpas. Solo un recordatorio de lo que te espera:",
+    "body2": "Cada venta registrada en tu teléfono. Stock que te avisa antes de agotarse. Y al final del día, un número que importa: <strong>lo que realmente ganaste.</strong>",
+    "cta": "Continúa donde lo dejaste →",
+    "closing": "Tu cuenta y el plan gratuito están exactamente donde los dejaste. Si algo no te funcionó, responde y cuéntanos — leemos todos los correos."
+  },
+  "reengage_30": {
+    "subject": "Te guardamos todo, {firstName}",
+    "heading": "Ha pasado un mes.",
+    "body1": "Hola {firstName} — ha pasado un mes, así que quise escribirte yo mismo en vez de dejar esto en silencio.",
+    "body2": "Tu cuenta, tus datos, tu plan gratuito — nada de eso se ha ido a ningún lado. Si AskBiz no era lo que buscabas, de verdad me gustaría saber por qué — responde y cuéntame, sin resentimientos. Si solo estuviste ocupado, tu primera venta sigue a solo 2 minutos de distancia cuando estés listo.",
+    "cta": "Vuelve a AskBiz →",
+    "signoff": "— Idarus, Fundador &amp; CEO de AskBiz"
+  },
+  "plan_upgrade": {
+    "subject": "¡Bienvenido a {planName}, {firstName}!",
+    "heading": "Hola {firstName}, ¡bienvenido a {planName}!",
+    "body": "Nos encanta que hayas mejorado tu plan. Esto es lo que se acaba de activar para ti:",
+    "cta": "Ir a tu panel →",
+    "closing": "Si algo de {planName} no funciona como necesitas, solo responde a este correo — yo mismo me aseguro de resolverlo.",
+    "signoff": "— Idarus<br/>Fundador &amp; CEO de AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "¡Bienvenido a AskBiz POS, {firstName}!",
+    "heading": "Hola {firstName}, ¡bienvenido a AskBiz POS!",
+    "body1": "Nos encanta que hayas agregado AskBiz POS — bienvenido a la familia.",
+    "body2": "Tu caja registradora, tu control de stock y tu reporte de fin de día ya están activos, junto al resto de tu cuenta de AskBiz.",
+    "cta": "Abrir AskBiz POS →",
+    "closing": "Si algo no funciona como necesitas, solo responde a este correo — yo mismo me aseguro de resolverlo.",
+    "signoff": "— Idarus<br/>Fundador &amp; CEO de AskBiz"
+  },
+  "plan_names": {
+    "free": "Gratis",
+    "growth": "Crecimiento",
+    "business": "Negocios",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": ["10 preguntas de IA al mes", "1 carga de archivo", "Preguntas y respuestas básicas de negocio", "Resumen del panel", "Soporte por correo"],
+    "growth": ["500 preguntas de IA al mes", "10 cargas de archivos", "Inteligencia de expansión", "Alertas &amp; pronósticos", "Sincronización de datos en vivo (Shopify, Stripe, Sheets)", "Plantillas por industria", "Soporte prioritario por correo"],
+    "business": ["2.000 preguntas de IA al mes", "Cargas de archivos ilimitadas", "5 miembros del equipo", "Acceso a API", "Todas las funciones de Crecimiento", "Soporte dedicado", "Precio de early adopter — garantizado para siempre"],
+    "enterprise": ["Todo ilimitado", "Miembros del equipo ilimitados", "Integraciones personalizadas", "SSO &amp; seguridad avanzada", "Garantía de SLA", "Gerente de cuenta dedicado", "Incorporación personalizada", "Opción de marca blanca"]
+  }
+}

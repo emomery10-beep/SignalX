@@ -8,10 +8,10 @@ const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
   free: '#64748b', growth: '#b45309', business: '#7c3aed', enterprise: '#047857',
 }
-const TABS = ['Overview','Revenue','Users','Emails','Activity','Costs','Growth'] as const
+const TABS = ['Overview','Revenue','Users','Activity','Costs','Growth'] as const
 type Tab = typeof TABS[number]
 const TAB_KEYS: Record<Tab, string> = {
-  Overview: 'tab_overview', Revenue: 'tab_revenue', Users: 'tab_users', Emails: 'tab_emails',
+  Overview: 'tab_overview', Revenue: 'tab_revenue', Users: 'tab_users',
   Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
 }
 
@@ -128,8 +128,7 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
-  const [sendingWelcomeId, setSendingWelcomeId] = useState<string | null>(null)
-  const [welcomeSentIds, setWelcomeSentIds] = useState<Set<string>>(new Set())
+  const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -197,33 +196,26 @@ export default function AdminPage() {
     }
   }
 
-
-  const sendWelcomeEmail = async (userId: string) => {
-    if (sendingWelcomeId) return
-    setSendingWelcomeId(userId)
+  const sendLifecycleEmail = async (userId: string, emailType: string) => {
+    setSendingEmailFor(userId)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin/send-welcome-email', {
+      const res = await fetch('/api/admin/send-test-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, emailType }),
       })
       const d = await res.json()
-      if (d.success) {
-        setWelcomeSentIds(prev => new Set(prev).add(userId))
-        setActionMsg(tc('admin.welcome_email_sent', { to: d.to }))
-      } else {
-        setActionMsg(tc('admin.welcome_email_failed', { error: d.error || res.statusText }))
-      }
+      setActionMsg(d.success ? tc('admin.lifecycle_email_sent', { type: emailType }) : tc('admin.lifecycle_email_failed', { error: d.error || res.statusText }))
       setTimeout(() => setActionMsg(''), 4000)
     } catch (err: any) {
       setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
       setTimeout(() => setActionMsg(''), 4000)
     } finally {
-      setSendingWelcomeId(null)
+      setSendingEmailFor(null)
     }
   }
 
@@ -676,41 +668,20 @@ export default function AdminPage() {
                           <select onChange={e=>changePlan(u.id,e.target.value)} value={u.plan_id} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer'}}>
                             {['free','growth','business','enterprise'].map(p=><option key={p} value={p}>{p}</option>)}
                           </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>}
-
-          {tab==='Emails' && <>
-            <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>{tc('admin.emails_tab_desc')}</p>
-            <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-                  <thead>
-                    <tr style={{background:'var(--ev)'}}>
-                      {[tc('admin.th_name'),tc('admin.th_email'),tc('admin.th_joined'),tc('admin.th_actions')].map(h => (
-                        <th key={h} style={{padding:'10px 12px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...users].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).map((u,i) => (
-                      <tr key={u.id} style={{borderTop:'1px solid var(--b)',background:i%2===0?'var(--sf)':'var(--bg)'}}>
-                        <td style={{padding:'9px 12px',fontWeight:500}}>{u.full_name||tc('admin.empty_dash')}</td>
-                        <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.email}</td>
-                        <td style={{padding:'9px 12px',color:'var(--tx3)'}}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
-                        <td style={{padding:'9px 12px'}}>
-                          <button
-                            onClick={() => sendWelcomeEmail(u.id)}
-                            disabled={sendingWelcomeId === u.id}
-                            style={{padding:'5px 12px',borderRadius:9999,border:'1px solid var(--b)',background:welcomeSentIds.has(u.id)?'rgba(34,197,94,.1)':'transparent',color:welcomeSentIds.has(u.id)?'#16a34a':'inherit',fontSize:11,fontWeight:600,cursor:sendingWelcomeId===u.id?'default':'pointer',fontFamily:'inherit',opacity:sendingWelcomeId===u.id?.6:1}}
+                          <select
+                            value=""
+                            disabled={sendingEmailFor===u.id}
+                            onChange={e=>{ if(e.target.value) sendLifecycleEmail(u.id, e.target.value); e.target.value='' }}
+                            style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer',marginLeft:6}}
                           >
-                            {sendingWelcomeId === u.id ? tc('admin.welcome_email_sending') : welcomeSentIds.has(u.id) ? '✓ ' + tc('admin.welcome_email_sent_short') : '✉️ ' + tc('admin.welcome_email_send')}
-                          </button>
+                            <option value="" disabled>{sendingEmailFor===u.id?tc('admin.sending'):tc('admin.send_email')}</option>
+                            <option value="welcome">Welcome</option>
+                            <option value="re_engagement_7">Re-engagement (7d)</option>
+                            <option value="re_engagement_14">Re-engagement (14d)</option>
+                            <option value="re_engagement_30">Re-engagement (30d)</option>
+                            <option value="plan_upgrade">Plan upgrade welcome</option>
+                            <option value="pos_seats_welcome">POS seats welcome</option>
+                          </select>
                         </td>
                       </tr>
                     ))}

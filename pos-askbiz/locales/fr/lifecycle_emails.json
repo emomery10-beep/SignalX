@@ -1,0 +1,67 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Tu ne veux plus recevoir d'e-mails comme celui-ci ?",
+    "unsubscribe_link": "Se désabonner"
+  },
+  "fallback_name": "l'ami",
+  "plan_upgrade": {
+    "subject": "Bienvenue sur {planName}, {firstName} !",
+    "heading": "Salut {firstName}, bienvenue sur {planName} !",
+    "body": "On est ravis que tu aies mis à niveau. Voici ce qui vient de s'activer pour toi :",
+    "cta": "Accède à ton tableau de bord →",
+    "closing": "Si quoi que ce soit avec {planName} ne fonctionne pas comme tu le souhaites, réponds simplement à cet e-mail — je m'assurerai personnellement que ce soit réglé.",
+    "signoff": "— Idarus<br/>Fondateur &amp; PDG d'AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Bienvenue sur AskBiz POS, {firstName} !",
+    "heading": "Salut {firstName}, bienvenue sur AskBiz POS !",
+    "body1": "On est ravis que tu aies ajouté AskBiz POS — bienvenue dans la famille.",
+    "body2": "Ta caisse, ton suivi de stock et ton rapport de fin de journée sont maintenant actifs, juste à côté du reste de ton compte AskBiz.",
+    "cta": "Ouvrir AskBiz POS →",
+    "closing": "Si quelque chose ne fonctionne pas comme tu le souhaites, réponds simplement à cet e-mail — je m'assurerai personnellement que ce soit réglé.",
+    "signoff": "— Idarus<br/>Fondateur &amp; PDG d'AskBiz"
+  },
+  "plan_names": {
+    "free": "Gratuit",
+    "growth": "Croissance",
+    "business": "Business",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": [
+      "10 questions IA par mois",
+      "1 import de fichier",
+      "Q&amp;R business de base",
+      "Aperçu du tableau de bord",
+      "Support par e-mail"
+    ],
+    "growth": [
+      "500 questions IA par mois",
+      "10 imports de fichiers",
+      "Intelligence d'expansion",
+      "Alertes &amp; prévisions",
+      "Synchronisation des données en direct (Shopify, Stripe, Sheets)",
+      "Modèles sectoriels",
+      "Support par e-mail prioritaire"
+    ],
+    "business": [
+      "2 000 questions IA par mois",
+      "Imports de fichiers illimités",
+      "5 membres d'équipe",
+      "Accès API",
+      "Toutes les fonctionnalités Croissance",
+      "Support dédié",
+      "Tarif adopteur précoce — garanti à vie"
+    ],
+    "enterprise": [
+      "Tout illimité",
+      "Membres d'équipe illimités",
+      "Intégrations personnalisées",
+      "SSO &amp; sécurité avancée",
+      "Garantie SLA",
+      "Gestionnaire de compte dédié",
+      "Intégration personnalisée",
+      "Option marque blanche"
+    ]
+  }
+}
