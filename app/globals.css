@@ -497,6 +497,18 @@ img {
   }
 }
 
+@keyframes voiceListenPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, .55); }
+  70%  { box-shadow: 0 0 0 14px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+@keyframes voiceSpin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .help-widget-fab button { animation: none !important; }
+}
+
 /* ── MAIN LAYOUT ────────────────────────────────────────────── */
 .main-content {
   min-width: 0;
