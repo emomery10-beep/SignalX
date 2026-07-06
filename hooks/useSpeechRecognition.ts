@@ -9,7 +9,7 @@ declare global {
 }
 
 'use client'
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 export interface UseSpeechRecognitionResult {
   startListening: () => void
@@ -24,26 +24,43 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   const [transcript, setTranscript] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Always false on the server and on the client's first render so SSR HTML
+  // matches the initial client render; flipped to the real value in an effect
+  // (post-mount, browser-only), matching React's hydration contract.
+  const [isSupported, setIsSupported] = useState(false)
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const isListeningRef = useRef(false)
 
-  const isSupported = useMemo(() => {
-    if (typeof window === 'undefined') return false
-    return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition)
+  useEffect(() => {
+    setIsSupported(Boolean(window.SpeechRecognition || window.webkitSpeechRecognition))
   }, [])
 
   const stopListening = useCallback(() => {
-    isListeningRef.current = false
+    // Do NOT flip isListening/recognitionRef synchronously here — the browser's
+    // async onend/final onresult for the in-flight recognition.stop() call are
+    // still pending. Real state is finalized in onend/onerror below; this only
+    // requests the stop.
     if (recognitionRef.current) {
       try { recognitionRef.current.stop() } catch (_) {}
-      recognitionRef.current = null
     }
-    setIsListening(false)
   }, [])
 
   const startListening = useCallback(() => {
     if (typeof window === 'undefined') return
+
+    // Stop/detach any prior in-flight recognition instance first so its
+    // onresult/onend callbacks can no longer mutate state after this new
+    // session takes over recognitionRef.current.
+    if (recognitionRef.current) {
+      const prev = recognitionRef.current
+      prev.onresult = null
+      prev.onerror = null
+      prev.onend = null
+      try { prev.stop() } catch (_) {}
+      recognitionRef.current = null
+    }
+
     setError(null)
     setTranscript('')
 
@@ -77,11 +94,13 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
       }
       isListeningRef.current = false
       setIsListening(false)
+      if (recognitionRef.current === recognition) recognitionRef.current = null
     }
 
     recognition.onend = () => {
       isListeningRef.current = false
       setIsListening(false)
+      if (recognitionRef.current === recognition) recognitionRef.current = null
     }
 
     try {
