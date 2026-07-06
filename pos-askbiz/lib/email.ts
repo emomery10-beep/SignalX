@@ -2,6 +2,8 @@
 // No package needed — uses the Resend REST API directly
 
 import { createHmac } from 'crypto'
+import { t, tList } from '@/lib/i18n-catalog'
+import { isRTL, type Lang } from '@/lib/i18n-locale'
 
 const RESEND_API = 'https://api.resend.com/emails'
 const FROM = 'AskBiz <noreply@askbiz.co>'
@@ -213,14 +215,18 @@ export function firstNameOf(fullName?: string | null): string {
 
 // ── Lifecycle emails: shared shell ───────────────────────────────────────────
 // Same visual system as the alert email: #d08a59 header, white card, quiet footer.
-function lifecycleShell(body: string, unsubscribeUrl: string): string {
+// `dir` is set on html/body AND every nested table — table-based RTL email
+// rendering isn't reliable enough in older Outlook/Windows Mail to trust
+// inheritance alone.
+function lifecycleShell(body: string, unsubscribeUrl: string, locale: Lang): string {
+  const dir = isRTL(locale) ? 'rtl' : 'ltr'
   return `<!DOCTYPE html>
-<html>
+<html dir="${dir}" lang="${locale}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f3f1;font-family:system-ui,-apple-system,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3f1;padding:40px 20px;">
+<body dir="${dir}" style="margin:0;padding:0;background:#f4f3f1;font-family:system-ui,-apple-system,sans-serif;">
+  <table dir="${dir}" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3f1;padding:40px 20px;">
     <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+      <table dir="${dir}" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:#d08a59;padding:24px 36px;text-align:center;">
             <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em;">AskBiz</span>
@@ -231,7 +237,7 @@ function lifecycleShell(body: string, unsubscribeUrl: string): string {
           <td style="padding:16px 36px;border-top:1px solid #e8e6e1;text-align:center;">
             <p style="margin:0 0 4px;font-size:11px;color:#a39e97;">AskBiz &middot; <a href="https://askbiz.co" style="color:#d08a59;text-decoration:none;">askbiz.co</a></p>
             <p style="margin:0;font-size:11px;color:#a39e97;">
-              Don't want emails like this? <a href="${unsubscribeUrl}" style="color:#a39e97;text-decoration:underline;">Unsubscribe</a>
+              ${t(locale, 'lifecycle_emails.shell.unsubscribe_prompt')} <a href="${unsubscribeUrl}" style="color:#a39e97;text-decoration:underline;">${t(locale, 'lifecycle_emails.shell.unsubscribe_link')}</a>
             </p>
           </td>
         </tr>
@@ -242,18 +248,33 @@ function lifecycleShell(body: string, unsubscribeUrl: string): string {
 </html>`
 }
 
+// Recipient's first name, or a locale-appropriate generic greeting word when
+// none is on file (matches the old `opts.firstName || 'there'` behavior, made
+// locale-aware since "there" doesn't translate as a literal word).
+function nameOr(locale: Lang, firstName: string): string {
+  return firstName || t(locale, 'lifecycle_emails.fallback_name')
+}
+
 // ── Plan upgrade welcome — sent once per plan tier reached ───────────────────
-export function planUpgradeEmail(opts: { firstName: string; planName: string; features: string[]; unsubscribeUrl: string }): { subject: string; html: string } {
-  const name = opts.firstName || 'there'
-  const featureRows = opts.features.map(f =>
+// Plan name/features are resolved from the i18n catalog by planId+locale, not
+// passed in by the caller — keeps callers simple (they already have planId)
+// and keeps every language, including English, reading the same single source
+// of copy instead of English alone reading live from the `plans` table.
+export function planUpgradeEmail(opts: { firstName: string; planId: string; unsubscribeUrl: string; locale: Lang }): { subject: string; html: string } {
+  const { locale, planId } = opts
+  const name = nameOr(locale, opts.firstName)
+  const planName = t(locale, `lifecycle_emails.plan_names.${planId}`)
+  const features = tList(locale, `lifecycle_emails.plan_features.${planId}`)
+  const k = (key: string) => t(locale, `lifecycle_emails.plan_upgrade.${key}`, { firstName: name, planName })
+  const featureRows = features.map(f =>
     `<p style="margin:0 0 8px;font-size:14px;color:#1a1916;line-height:1.6;">✓&nbsp; ${f}</p>`
   ).join('')
   return {
-    subject: `Welcome to ${opts.planName}, ${name}!`,
+    subject: k('subject'),
     html: lifecycleShell(`
-      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">Hi ${name}, welcome to ${opts.planName}!</h1>
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">${k('heading')}</h1>
       <p style="margin:0 0 16px;font-size:15px;color:#6b6760;line-height:1.65;">
-        We're thrilled you've upgraded. Here's what just switched on for you:
+        ${k('body')}
       </p>
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
         <tr><td style="padding:14px 18px;background:#f4f3f1;border-radius:12px;">
@@ -262,44 +283,46 @@ export function planUpgradeEmail(opts: { firstName: string; planName: string; fe
       </table>
       <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
         <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
-          <a href="https://askbiz.co/dashboard" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">Go to your dashboard &rarr;</a>
+          <a href="https://askbiz.co/dashboard" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">${k('cta')}</a>
         </td></tr>
       </table>
       <p style="margin:0 0 20px;font-size:14px;color:#1a1916;line-height:1.6;">
-        If anything about ${opts.planName} isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.
+        ${k('closing')}
       </p>
       <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">
-        — Idarus<br/>Founder &amp; CEO of AskBiz
+        ${k('signoff')}
       </p>
-    `, opts.unsubscribeUrl),
+    `, opts.unsubscribeUrl, locale),
   }
 }
 
 // ── POS seats welcome — sent once, the first time pos_enabled flips on ──────
-export function posSeatsWelcomeEmail(opts: { firstName: string; unsubscribeUrl: string }): { subject: string; html: string } {
-  const name = opts.firstName || 'there'
+export function posSeatsWelcomeEmail(opts: { firstName: string; unsubscribeUrl: string; locale: Lang }): { subject: string; html: string } {
+  const { locale } = opts
+  const name = nameOr(locale, opts.firstName)
+  const k = (key: string) => t(locale, `lifecycle_emails.pos_welcome.${key}`, { firstName: name })
   return {
-    subject: `Welcome to AskBiz POS, ${name}!`,
+    subject: k('subject'),
     html: lifecycleShell(`
-      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">Hi ${name}, welcome to AskBiz POS!</h1>
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">${k('heading')}</h1>
       <p style="margin:0 0 16px;font-size:15px;color:#6b6760;line-height:1.65;">
-        We're thrilled you've added AskBiz POS — welcome to the family.
+        ${k('body1')}
       </p>
       <p style="margin:0 0 24px;font-size:15px;color:#1a1916;line-height:1.7;">
-        Your till, your stock tracker, and your end-of-day report are live now, right alongside the rest of your AskBiz account.
+        ${k('body2')}
       </p>
       <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
         <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
-          <a href="https://pos.askbiz.co" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">Open AskBiz POS &rarr;</a>
+          <a href="https://pos.askbiz.co" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">${k('cta')}</a>
         </td></tr>
       </table>
       <p style="margin:0 0 20px;font-size:14px;color:#1a1916;line-height:1.6;">
-        If anything isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.
+        ${k('closing')}
       </p>
       <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">
-        — Idarus<br/>Founder &amp; CEO of AskBiz
+        ${k('signoff')}
       </p>
-    `, opts.unsubscribeUrl),
+    `, opts.unsubscribeUrl, locale),
   }
 }
 

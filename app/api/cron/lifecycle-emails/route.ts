@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, welcomeEmail, reEngagementEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
+import { resolveLocale, type Lang } from '@/lib/i18n-locale'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
   const ids = users.map(u => u.id)
   const { data: profiles } = await service
     .from('profiles')
-    .select('id, full_name, marketing_emails')
+    .select('id, full_name, marketing_emails, preferred_locale, registration_country')
     .in('id', ids)
   const profileById = new Map((profiles || []).map(p => [p.id, p]))
 
@@ -69,14 +70,16 @@ export async function GET(request: NextRequest) {
   const sendFlow = async (
     user: AuthUser,
     type: 'welcome' | 're_engagement',
-    build: (opts: { firstName: string; unsubscribeUrl: string }) => { subject: string; html: string },
+    build: (opts: { firstName: string; unsubscribeUrl: string; locale: Lang }) => { subject: string; html: string },
   ) => {
     if (!user.email) return
     if (results[type].sent >= MAX_SENDS_PER_TYPE) return
     if (!(await claim(user.id, type))) return
 
+    const profile = profileById.get(user.id)
+    const locale = resolveLocale({ profile: profile?.preferred_locale, country: profile?.registration_country })
     const unsub = unsubscribeUrl(user.id)
-    const { subject, html } = build({ firstName: firstNameOf(profileById.get(user.id)?.full_name), unsubscribeUrl: unsub })
+    const { subject, html } = build({ firstName: firstNameOf(profile?.full_name), unsubscribeUrl: unsub, locale })
     const ok = await sendEmail({
       to: user.email,
       subject,

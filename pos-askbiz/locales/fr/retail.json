@@ -23,6 +23,8 @@
   "nav_stocktake_desc": "Comptage assisté par caméra",
   "nav_customers_label": "👤 Clients",
   "nav_customers_desc": "Profils & segments",
+  "nav_credit_label": "🧾 Deni / Crédit",
+  "nav_credit_desc": "Qui vous doit, et combien",
   "recent_sales_title": "Ventes récentes",
   "loading": "Chargement…",
   "no_sales_yet": "Aucune vente pour l'instant",

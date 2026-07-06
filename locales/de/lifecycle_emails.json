@@ -1,0 +1,70 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Willst du keine E-Mails wie diese mehr erhalten?",
+    "unsubscribe_link": "Abmelden"
+  },
+  "fallback_name": "zusammen",
+  "welcome": {
+    "subject": "Willkommen bei AskBiz — dein erster Verkauf dauert 2 Minuten",
+    "heading": "Hallo {firstName}, du bist dabei.",
+    "body": "AskBiz ist deine Kasse, dein Lagerbestand-Tracker und dein Tagesabschlussbericht — auf dem Handy, das du sowieso schon in der Tasche hast. Das ist alles, was du brauchst:",
+    "step1": "Halte deine Kamera auf ein Produkt — kein Barcode-Scanner, keine Einrichtung nötig.",
+    "step2": "Nimm M-Pesa, Mobile Money, Bargeld oder Karte an.",
+    "step3": "Heute Abend siehst du genau, was du verdient hast und was knapp wird.",
+    "cta": "Mach deinen ersten Verkauf →",
+    "closing": "Kommst du bei etwas nicht weiter? Antworte einfach auf diese E-Mail — ein echter Mensch liest sie."
+  },
+  "reengage_7": {
+    "subject": "Hallo {firstName} — kurzer Check-in von AskBiz",
+    "heading": "Nur mal kurz nachgefragt.",
+    "body1": "Hallo {firstName} — mir ist aufgefallen, dass es etwa eine Woche her ist. Kein Druck, ein Geschäft zu führen ist arbeitsreich.",
+    "body2": "Alles ist genau da, wo du es gelassen hast: deine Daten, dein Dashboard, dein kostenloser Tarif. Falls du bei etwas nicht weitergekommen bist, antworte einfach — ich helfe dir direkt.",
+    "cta": "Mach weiter, wo du aufgehört hast →",
+    "closing": "Dein Konto und der kostenlose Tarif sind genau da, wo du sie gelassen hast."
+  },
+  "reengage_14": {
+    "subject": "Wo warst du, {firstName}? Deine Zahlen vermissen dich",
+    "heading": "Es ist eine Weile her.",
+    "body1": "Hallo {firstName} — uns ist aufgefallen, dass du in letzter Zeit nicht mehr da warst. Kein schlechtes Gewissen. Nur eine Erinnerung daran, was auf dich wartet:",
+    "body2": "Jeder Verkauf auf deinem Handy erfasst. Lagerbestand, der dich warnt, bevor er zur Neige geht. Und am Ende des Tages eine Zahl, auf die es ankommt: <strong>was du tatsächlich verdient hast.</strong>",
+    "cta": "Mach weiter, wo du aufgehört hast →",
+    "closing": "Dein Konto und der kostenlose Tarif sind genau da, wo du sie gelassen hast. Falls etwas nicht für dich funktioniert hat, antworte und sag es uns — wir lesen jede einzelne Nachricht."
+  },
+  "reengage_30": {
+    "subject": "Wir haben alles für dich aufbewahrt, {firstName}",
+    "heading": "Es ist einen Monat her.",
+    "body1": "Hallo {firstName} — es ist einen Monat her, deshalb wollte ich mich persönlich melden, statt es einfach verstummen zu lassen.",
+    "body2": "Dein Konto, deine Daten, dein kostenloser Tarif — nichts davon ist verschwunden. Falls AskBiz nicht das Richtige für dich war, würde ich wirklich gerne wissen, warum — antworte und sag es mir, ohne Groll. Falls du einfach nur beschäftigt warst: Dein erster Verkauf ist immer noch nur 2 Minuten entfernt, sobald du bereit bist.",
+    "cta": "Komm zurück zu AskBiz →",
+    "signoff": "— Idarus, Gründer &amp; CEO von AskBiz"
+  },
+  "plan_upgrade": {
+    "subject": "Willkommen bei {planName}, {firstName}!",
+    "heading": "Hallo {firstName}, willkommen bei {planName}!",
+    "body": "Wir freuen uns riesig, dass du upgegradet hast. Das ist jetzt neu für dich freigeschaltet:",
+    "cta": "Zu deinem Dashboard →",
+    "closing": "Falls irgendetwas bei {planName} nicht so funktioniert, wie du es brauchst, antworte einfach auf diese E-Mail — ich sorge persönlich dafür, dass es in Ordnung gebracht wird.",
+    "signoff": "— Idarus<br/>Gründer &amp; CEO von AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Willkommen bei AskBiz POS, {firstName}!",
+    "heading": "Hallo {firstName}, willkommen bei AskBiz POS!",
+    "body1": "Wir freuen uns riesig, dass du AskBiz POS hinzugefügt hast — willkommen in der Familie.",
+    "body2": "Deine Kasse, dein Lagerbestand-Tracker und dein Tagesabschlussbericht sind jetzt live, direkt neben dem Rest deines AskBiz-Kontos.",
+    "cta": "AskBiz POS öffnen →",
+    "closing": "Falls irgendetwas nicht so funktioniert, wie du es brauchst, antworte einfach auf diese E-Mail — ich sorge persönlich dafür, dass es in Ordnung gebracht wird.",
+    "signoff": "— Idarus<br/>Gründer &amp; CEO von AskBiz"
+  },
+  "plan_names": {
+    "free": "Free",
+    "growth": "Growth",
+    "business": "Business",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": ["10 KI-Fragen pro Monat", "1 Datei-Upload", "Grundlegende Geschäfts-Q&amp;A", "Dashboard-Übersicht", "E-Mail-Support"],
+    "growth": ["500 KI-Fragen pro Monat", "10 Datei-Uploads", "Expansions-Intelligenz", "Warnmeldungen &amp; Prognosen", "Live-Datensynchronisierung (Shopify, Stripe, Sheets)", "Branchenvorlagen", "Priorisierter E-Mail-Support"],
+    "business": ["2.000 KI-Fragen pro Monat", "Unbegrenzte Datei-Uploads", "5 Teammitglieder", "API-Zugriff", "Alle Growth-Funktionen", "Persönlicher Support", "Early-Adopter-Preise — für immer garantiert"],
+    "enterprise": ["Unbegrenzt alles", "Unbegrenzte Teammitglieder", "Individuelle Integrationen", "SSO &amp; erweiterte Sicherheit", "SLA-Garantie", "Persönlicher Account Manager", "Individuelles Onboarding", "White-Label-Option"]
+  }
+}

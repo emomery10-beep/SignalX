@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, planUpgradeEmail, posSeatsWelcomeEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
+import { resolveLocale, type Lang } from '@/lib/i18n-locale'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
@@ -66,19 +67,20 @@ export async function POST(request: NextRequest) {
   const claimAndSend = async (
     userId: string,
     emailType: string,
-    buildEmail: (firstName: string) => { subject: string; html: string },
+    buildEmail: (firstName: string, locale: Lang) => { subject: string; html: string },
   ) => {
     const { error: claimError } = await supabase.from('lifecycle_emails').insert({ user_id: userId, email_type: emailType })
     if (claimError) return // already claimed — nothing to do
 
     const [{ data: authData }, { data: profile }] = await Promise.all([
       supabase.auth.admin.getUserById(userId),
-      supabase.from('profiles').select('full_name').eq('id', userId).single(),
+      supabase.from('profiles').select('full_name, preferred_locale, registration_country').eq('id', userId).single(),
     ])
     const email = authData?.user?.email
     if (!email) return
 
-    const { subject, html } = buildEmail(firstNameOf(profile?.full_name))
+    const locale = resolveLocale({ profile: profile?.preferred_locale, country: profile?.registration_country })
+    const { subject, html } = buildEmail(firstNameOf(profile?.full_name), locale)
     await sendEmail({
       to: email,
       subject,
@@ -112,8 +114,8 @@ export async function POST(request: NextRequest) {
           }).eq('id', userId)
 
           if (!wasEnabled) {
-            await claimAndSend(userId, 'pos_seats_welcome', (firstName) =>
-              posSeatsWelcomeEmail({ firstName, unsubscribeUrl: unsubscribeUrl(userId) }))
+            await claimAndSend(userId, 'pos_seats_welcome', (firstName, locale) =>
+              posSeatsWelcomeEmail({ firstName, unsubscribeUrl: unsubscribeUrl(userId), locale }))
           }
           break
         }
@@ -133,11 +135,8 @@ export async function POST(request: NextRequest) {
         })
 
         if ((PLAN_RANK[plan] ?? 0) > oldRank) {
-          const { data: planRow } = await supabase.from('plans').select('name, features').eq('id', plan).single()
-          if (planRow) {
-            await claimAndSend(userId, `plan_upgrade:${plan}`, (firstName) =>
-              planUpgradeEmail({ firstName, planName: planRow.name, features: planRow.features || [], unsubscribeUrl: unsubscribeUrl(userId) }))
-          }
+          await claimAndSend(userId, `plan_upgrade:${plan}`, (firstName, locale) =>
+            planUpgradeEmail({ firstName, planId: plan, unsubscribeUrl: unsubscribeUrl(userId), locale }))
         }
         break
       }
@@ -160,8 +159,8 @@ export async function POST(request: NextRequest) {
           }).eq('id', userId)
 
           if (active && !wasEnabled) {
-            await claimAndSend(userId, 'pos_seats_welcome', (firstName) =>
-              posSeatsWelcomeEmail({ firstName, unsubscribeUrl: unsubscribeUrl(userId) }))
+            await claimAndSend(userId, 'pos_seats_welcome', (firstName, locale) =>
+              posSeatsWelcomeEmail({ firstName, unsubscribeUrl: unsubscribeUrl(userId), locale }))
           }
           break
         }
@@ -185,11 +184,8 @@ export async function POST(request: NextRequest) {
         })
 
         if ((PLAN_RANK[plan] ?? 0) > oldRank) {
-          const { data: planRow } = await supabase.from('plans').select('name, features').eq('id', plan).single()
-          if (planRow) {
-            await claimAndSend(userId, `plan_upgrade:${plan}`, (firstName) =>
-              planUpgradeEmail({ firstName, planName: planRow.name, features: planRow.features || [], unsubscribeUrl: unsubscribeUrl(userId) }))
-          }
+          await claimAndSend(userId, `plan_upgrade:${plan}`, (firstName, locale) =>
+            planUpgradeEmail({ firstName, planId: plan, unsubscribeUrl: unsubscribeUrl(userId), locale }))
         }
         break
       }

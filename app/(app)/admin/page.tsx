@@ -128,15 +128,13 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
-  const [testEmailTo, setTestEmailTo] = useState('')
-  const [sendingTestEmail, setSendingTestEmail] = useState(false)
+  const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || !ADMIN_EMAILS.includes(user.email || '')) { router.push('/'); return }
       setAuthorized(true)
-      setTestEmailTo(user.email || '') // default to your own inbox — never a real user's
       loadAll()
     }
     init()
@@ -198,9 +196,8 @@ export default function AdminPage() {
     }
   }
 
-  const sendTestEmail = async () => {
-    if (!testEmailTo.trim() || sendingTestEmail) return
-    setSendingTestEmail(true)
+  const sendLifecycleEmail = async (userId: string, emailType: string) => {
+    setSendingEmailFor(userId)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/admin/send-test-email', {
@@ -209,16 +206,16 @@ export default function AdminPage() {
           'Content-Type': 'application/json',
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ to: testEmailTo.trim() }),
+        body: JSON.stringify({ userId, emailType }),
       })
       const d = await res.json()
-      setActionMsg(d.success ? tc('admin.test_email_sent', { to: testEmailTo.trim() }) : tc('admin.test_email_failed', { error: d.error || res.statusText }))
+      setActionMsg(d.success ? tc('admin.lifecycle_email_sent', { type: emailType }) : tc('admin.lifecycle_email_failed', { error: d.error || res.statusText }))
       setTimeout(() => setActionMsg(''), 4000)
     } catch (err: any) {
       setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
       setTimeout(() => setActionMsg(''), 4000)
     } finally {
-      setSendingTestEmail(false)
+      setSendingEmailFor(null)
     }
   }
 
@@ -519,20 +516,6 @@ export default function AdminPage() {
           <p style={{fontSize:12,color:'var(--tx3)',margin:'2px 0 0'}}>{tc('admin.subtitle')}</p>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-          <input
-            type="email"
-            value={testEmailTo}
-            onChange={e => setTestEmailTo(e.target.value)}
-            placeholder={tc('admin.test_email_placeholder')}
-            style={{padding:'7px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'var(--bg)',fontSize:12,fontFamily:'inherit',width:190}}
-          />
-          <button
-            onClick={sendTestEmail}
-            disabled={sendingTestEmail || !testEmailTo.trim()}
-            style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:sendingTestEmail?'default':'pointer',fontFamily:'inherit',opacity:sendingTestEmail||!testEmailTo.trim()?.6:1}}
-          >
-            ✉️ {sendingTestEmail ? tc('admin.test_email_sending') : tc('admin.test_email_send')}
-          </button>
           <a href="/admin/agent" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #6366F1',background:'rgba(99,102,241,.08)',color:'#6366F1',fontSize:12,fontWeight:600,textDecoration:'none'}}>⚡ {tc('admin.growth_agent')}</a>
           <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>↻ {tc('admin.refresh')}</button>
         </div>
@@ -684,6 +667,20 @@ export default function AdminPage() {
                         <td style={{padding:'9px 12px'}}>
                           <select onChange={e=>changePlan(u.id,e.target.value)} value={u.plan_id} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer'}}>
                             {['free','growth','business','enterprise'].map(p=><option key={p} value={p}>{p}</option>)}
+                          </select>
+                          <select
+                            value=""
+                            disabled={sendingEmailFor===u.id}
+                            onChange={e=>{ if(e.target.value) sendLifecycleEmail(u.id, e.target.value); e.target.value='' }}
+                            style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer',marginLeft:6}}
+                          >
+                            <option value="" disabled>{sendingEmailFor===u.id?tc('admin.sending'):tc('admin.send_email')}</option>
+                            <option value="welcome">Welcome</option>
+                            <option value="re_engagement_7">Re-engagement (7d)</option>
+                            <option value="re_engagement_14">Re-engagement (14d)</option>
+                            <option value="re_engagement_30">Re-engagement (30d)</option>
+                            <option value="plan_upgrade">Plan upgrade welcome</option>
+                            <option value="pos_seats_welcome">POS seats welcome</option>
                           </select>
                         </td>
                       </tr>
