@@ -8,10 +8,10 @@ const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
   free: '#64748b', growth: '#b45309', business: '#7c3aed', enterprise: '#047857',
 }
-const TABS = ['Overview','Revenue','Users','Activity','Costs','Growth'] as const
+const TABS = ['Overview','Revenue','Users','Emails','Activity','Costs','Growth'] as const
 type Tab = typeof TABS[number]
 const TAB_KEYS: Record<Tab, string> = {
-  Overview: 'tab_overview', Revenue: 'tab_revenue', Users: 'tab_users',
+  Overview: 'tab_overview', Revenue: 'tab_revenue', Users: 'tab_users', Emails: 'tab_emails',
   Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
 }
 
@@ -128,15 +128,14 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
-  const [testEmailTo, setTestEmailTo] = useState('')
-  const [sendingTestEmail, setSendingTestEmail] = useState(false)
+  const [sendingWelcomeId, setSendingWelcomeId] = useState<string | null>(null)
+  const [welcomeSentIds, setWelcomeSentIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || !ADMIN_EMAILS.includes(user.email || '')) { router.push('/'); return }
       setAuthorized(true)
-      setTestEmailTo(user.email || '') // default to your own inbox — never a real user's
       loadAll()
     }
     init()
@@ -198,27 +197,33 @@ export default function AdminPage() {
     }
   }
 
-  const sendTestEmail = async () => {
-    if (!testEmailTo.trim() || sendingTestEmail) return
-    setSendingTestEmail(true)
+
+  const sendWelcomeEmail = async (userId: string) => {
+    if (sendingWelcomeId) return
+    setSendingWelcomeId(userId)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin/send-test-email', {
+      const res = await fetch('/api/admin/send-welcome-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ to: testEmailTo.trim() }),
+        body: JSON.stringify({ userId }),
       })
       const d = await res.json()
-      setActionMsg(d.success ? tc('admin.test_email_sent', { to: testEmailTo.trim() }) : tc('admin.test_email_failed', { error: d.error || res.statusText }))
+      if (d.success) {
+        setWelcomeSentIds(prev => new Set(prev).add(userId))
+        setActionMsg(tc('admin.welcome_email_sent', { to: d.to }))
+      } else {
+        setActionMsg(tc('admin.welcome_email_failed', { error: d.error || res.statusText }))
+      }
       setTimeout(() => setActionMsg(''), 4000)
     } catch (err: any) {
       setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
       setTimeout(() => setActionMsg(''), 4000)
     } finally {
-      setSendingTestEmail(false)
+      setSendingWelcomeId(null)
     }
   }
 
@@ -519,20 +524,6 @@ export default function AdminPage() {
           <p style={{fontSize:12,color:'var(--tx3)',margin:'2px 0 0'}}>{tc('admin.subtitle')}</p>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-          <input
-            type="email"
-            value={testEmailTo}
-            onChange={e => setTestEmailTo(e.target.value)}
-            placeholder={tc('admin.test_email_placeholder')}
-            style={{padding:'7px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'var(--bg)',fontSize:12,fontFamily:'inherit',width:190}}
-          />
-          <button
-            onClick={sendTestEmail}
-            disabled={sendingTestEmail || !testEmailTo.trim()}
-            style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:sendingTestEmail?'default':'pointer',fontFamily:'inherit',opacity:sendingTestEmail||!testEmailTo.trim()?.6:1}}
-          >
-            ✉️ {sendingTestEmail ? tc('admin.test_email_sending') : tc('admin.test_email_send')}
-          </button>
           <a href="/admin/agent" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #6366F1',background:'rgba(99,102,241,.08)',color:'#6366F1',fontSize:12,fontWeight:600,textDecoration:'none'}}>⚡ {tc('admin.growth_agent')}</a>
           <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>↻ {tc('admin.refresh')}</button>
         </div>
@@ -685,6 +676,41 @@ export default function AdminPage() {
                           <select onChange={e=>changePlan(u.id,e.target.value)} value={u.plan_id} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer'}}>
                             {['free','growth','business','enterprise'].map(p=><option key={p} value={p}>{p}</option>)}
                           </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>}
+
+          {tab==='Emails' && <>
+            <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>{tc('admin.emails_tab_desc')}</p>
+            <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                  <thead>
+                    <tr style={{background:'var(--ev)'}}>
+                      {[tc('admin.th_name'),tc('admin.th_email'),tc('admin.th_joined'),tc('admin.th_actions')].map(h => (
+                        <th key={h} style={{padding:'10px 12px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...users].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).map((u,i) => (
+                      <tr key={u.id} style={{borderTop:'1px solid var(--b)',background:i%2===0?'var(--sf)':'var(--bg)'}}>
+                        <td style={{padding:'9px 12px',fontWeight:500}}>{u.full_name||tc('admin.empty_dash')}</td>
+                        <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.email}</td>
+                        <td style={{padding:'9px 12px',color:'var(--tx3)'}}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
+                        <td style={{padding:'9px 12px'}}>
+                          <button
+                            onClick={() => sendWelcomeEmail(u.id)}
+                            disabled={sendingWelcomeId === u.id}
+                            style={{padding:'5px 12px',borderRadius:9999,border:'1px solid var(--b)',background:welcomeSentIds.has(u.id)?'rgba(34,197,94,.1)':'transparent',color:welcomeSentIds.has(u.id)?'#16a34a':'inherit',fontSize:11,fontWeight:600,cursor:sendingWelcomeId===u.id?'default':'pointer',fontFamily:'inherit',opacity:sendingWelcomeId===u.id?.6:1}}
+                          >
+                            {sendingWelcomeId === u.id ? tc('admin.welcome_email_sending') : welcomeSentIds.has(u.id) ? '✓ ' + tc('admin.welcome_email_sent_short') : '✉️ ' + tc('admin.welcome_email_send')}
+                          </button>
                         </td>
                       </tr>
                     ))}
