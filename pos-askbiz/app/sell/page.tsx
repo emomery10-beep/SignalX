@@ -762,6 +762,13 @@ export default function SellPage() {
               style={{ padding: '4px 8px', borderRadius: 20, border: `1px solid ${geoCoords ? 'var(--pos-success)' : 'var(--pos-border)'}`, background: geoCoords ? 'var(--pos-success-pale)' : 'rgba(229,226,220,.5)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: geoCoords ? 'var(--pos-success)' : 'var(--pos-hint)', display: 'flex', alignItems: 'center', gap: 4 }}>
               {geoCoords ? '📍' : '📍?'}
             </button>
+            <button
+              onClick={startPractice}
+              aria-label={tc('sell.practice_reopen')}
+              title={tc('sell.practice_reopen')}
+              style={{ padding: '4px 8px', borderRadius: 20, border: '1px solid var(--pos-border)', background: 'rgba(229,226,220,.5)', fontSize: 13, cursor: 'pointer', color: 'var(--pos-hint)', lineHeight: 1 }}>
+              🎓
+            </button>
             <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>
               {tc('sell.sign_out')}
             </button>
