@@ -631,9 +631,12 @@ export default function CfoDashboard({ onAsk }: Props) {
       )}
 
       {/* ─── FLOATING CAMERA BUTTON ─── */}
-      <div style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 50 }}>
+      {/* Moved to bottom-left (was bottom-right) to stop overlapping the voice-nav
+          mic FAB, which lives bottom-right across the whole app. Semi-transparent
+          per request — full opacity on hover so it's easy to see while interacting. */}
+      <div style={{ position: 'fixed', bottom: 80, left: 20, zIndex: 50 }}>
         {quickScanOpen && (
-          <div style={{ position: 'absolute', bottom: 52, right: 0, width: 340 }}>
+          <div style={{ position: 'absolute', bottom: 52, left: 0, width: 340 }}>
             <ReceiptScanner
               currencySymbol={sym}
               onConfirm={async (expense) => {
@@ -650,9 +653,9 @@ export default function CfoDashboard({ onAsk }: Props) {
         <button
           onClick={() => setQuickScanOpen(v => !v)}
           title={tc('cfo_dashboard.scan_a_receipt')}
-          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#6366F1', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,.4)', transition: 'transform 150ms, box-shadow 150ms' }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,.5)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,.4)' }}
+          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#6366F1', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,.4)', opacity: 0.6, transition: 'transform 150ms, box-shadow 150ms, opacity 150ms' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,.5)'; e.currentTarget.style.opacity = '1' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,.4)'; e.currentTarget.style.opacity = '0.6' }}
         >
           📷
         </button>
