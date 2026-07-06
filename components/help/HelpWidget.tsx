@@ -87,7 +87,18 @@ function voiceBg(state: VoiceUIState, open: boolean): string {
   }
 }
 
-function renderGlyph(state: VoiceUIState, open: boolean) {
+function MicIcon() {
+  return (
+    <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={SF} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="8" y1="22" x2="16" y2="22" />
+    </svg>
+  )
+}
+
+function renderGlyph(state: VoiceUIState, open: boolean, voiceNavActive: boolean) {
   switch (state) {
     case 'listening':
       return <span aria-hidden style={{ width: 10, height: 10, borderRadius: '50%', background: SF }} />
@@ -112,7 +123,13 @@ function renderGlyph(state: VoiceUIState, open: boolean) {
     case 'confirm':
       return <span aria-hidden style={{ fontSize: 16, fontWeight: 700, lineHeight: 1 }}>?</span>
     default:
-      return open ? '×' : '?'
+      // Long-press (or held Space/Enter) now opens the help panel instead of the
+      // old tap-to-open — so the idle glyph is the mic whenever voice is capable,
+      // and only falls back to '?' when there's no voice capability to represent
+      // (voiceNavActive false: this button is byte-identical to the original plain
+      // Help FAB, including its glyph).
+      if (open) return '×'
+      return voiceNavActive ? <MicIcon /> : '?'
   }
 }
 
@@ -211,22 +228,26 @@ export default function HelpWidget() {
 
   const voiceNavActive = VOICE_NAV_CLIENT_ENABLED && isSupported
 
-  const pressTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null)  // long-press hold timer
   const revertTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)  // success/error auto-revert
   const maxListenTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)  // safety net if recognition hangs
   const confirmTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)  // safety net if a confirm is never answered
-  const longPressFiredRef    = useRef(false)                                       // did THIS press cross the threshold?
-  const suppressNextClickRef = useRef(false)                                       // swallow the click after a desktop long-press
+  const suppressNextClickRef = useRef(false)                                       // swallow the click after a long-press-for-help fires
   const activePointerIdRef   = useRef<number | null>(null)                         // which pointer started the press
   const abortRef             = useRef<AbortController | null>(null)                // in-flight fetch
   const voiceStateRef        = useRef<VoiceUIState>('idle')                        // fresh-state mirror for async closures
   const submitPendingRef     = useRef(false)                                       // gates the transcript-submit effect
-  const keyPressFiredRef     = useRef(false)                                       // did a held Space/Enter cross the long-press threshold?
-  const keyHeldRef           = useRef(false)                                       // ignore key-repeat retriggers while a key is already held
   const speakCancelRef       = useRef<(() => void) | null>(null)                   // cancels speakText's pending voiceschanged-fallback timer
   const isMountedRef         = useRef(true)                                        // guards async fetch continuations against post-unmount state/speech side effects
-  const pressOwnerRef        = useRef<'pointer' | 'key' | null>(null)              // which gesture currently owns pressTimerRef, so one can't clobber the other's timer
   const confirmYesRef        = useRef<HTMLButtonElement>(null)                     // focus target when the confirm alertdialog appears
+
+  // Long-press (pointer) / held-Space-Enter (keyboard) now open the Help panel —
+  // a single tap is the primary voice start/stop action, so opening Help moved to
+  // the secondary gesture. Separate timer refs per input modality (no shared-owner
+  // arbitration needed): worst case on a hybrid device is a redundant/skipped Help
+  // panel open, not a corrupted voice session, so the extra complexity isn't worth it.
+  const helpPressTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)  // pointer long-press-for-help timer
+  const helpKeyPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)  // keyboard held-Space/Enter-for-help timer
+  const helpKeyHeldRef       = useRef(false)                                       // ignore OS key-repeat while Space/Enter is held
 
   voiceStateRef.current = voiceState
 
@@ -284,14 +305,12 @@ export default function HelpWidget() {
 
   // ── Voice-nav: gesture handlers, TTS, submit + keyboard-shortcut effects ──
 
-  // Clears the shared long-press timer. When `owner` is passed, only clears/cancels it if
-  // pressTimerRef is currently armed by that same gesture — prevents the pointer gesture's
-  // handlers from clobbering an in-flight keyboard long-press timer (and vice versa) when a
-  // hybrid input device fires both within the same press window.
-  const clearPressTimer = useCallback((owner?: 'pointer' | 'key') => {
-    if (owner && pressOwnerRef.current !== null && pressOwnerRef.current !== owner) return
-    if (pressTimerRef.current) { clearTimeout(pressTimerRef.current); pressTimerRef.current = null }
-    pressOwnerRef.current = null
+  const clearHelpPressTimer = useCallback(() => {
+    if (helpPressTimerRef.current) { clearTimeout(helpPressTimerRef.current); helpPressTimerRef.current = null }
+  }, [])
+
+  const clearHelpKeyPressTimer = useCallback(() => {
+    if (helpKeyPressTimerRef.current) { clearTimeout(helpKeyPressTimerRef.current); helpKeyPressTimerRef.current = null }
   }, [])
 
   const clearMaxListenTimer = useCallback(() => {
@@ -347,29 +366,19 @@ export default function HelpWidget() {
     runSpeak(fn(label), CONFIRM_SPEECH[language] ? language : 'en')
   }, [runSpeak])
 
-  // Consumes the in-flight gesture and shows the error state. Used both when the
+  // Consumes the in-flight capture and shows the error state. Used both when the
   // hook reports a real error (e.g. mic permission denied) and when the safety
   // timeout below fires because recognition never resolved at all.
-  //
-  // Deliberately does NOT touch suppressNextClickRef here: that flag is only ever
-  // set true by handlePointerDown/handleToggleKeyDown at the moment a long-press is
-  // confirmed, because only THOSE gestures produce a native click/keyup afterward.
-  // A capture started via the global Ctrl+Shift+V shortcut never produces a click on
-  // this button at all, so forcing the flag true here would wrongly swallow the
-  // user's next genuine tap on the button.
   const enterErrorState = useCallback(() => {
     clearMaxListenTimer()
-    clearPressTimer()
     abortRef.current?.abort()
-    longPressFiredRef.current = false
-    keyPressFiredRef.current = false
     submitPendingRef.current = false
     setVoiceState('error')
     voiceStateRef.current = 'error'   // mirror immediately; do not wait for the next render
     speakError()
     if (revertTimerRef.current) clearTimeout(revertTimerRef.current)
     revertTimerRef.current = setTimeout(() => setVoiceState('idle'), REVERT_MS)
-  }, [clearMaxListenTimer, clearPressTimer, speakError])
+  }, [clearMaxListenTimer, speakError])
 
   // Entry point for a low-confidence voice-nav result. Mirrors the MAX_LISTEN_MS /
   // enterErrorState watchdog pattern exactly: schedule a setTimeout, guard the
@@ -423,8 +432,14 @@ export default function HelpWidget() {
   const beginVoiceCapture = useCallback(() => {
     if (voiceStateRef.current !== 'idle') return   // ignore if a capture/processing/result cycle is already in flight
     if (revertTimerRef.current) { clearTimeout(revertTimerRef.current); revertTimerRef.current = null }
-    setOpen(v => (v ? false : v))      // long-press always wins; force-close the help panel if open
+    setOpen(false)      // starting to listen always wins; force-close the help panel if open
     setVoiceState('listening')
+    voiceStateRef.current = 'listening'   // mirror immediately; do not wait for the next render
+    // Mark intent to submit whenever listening ends, however it ends: the browser's
+    // own silence detection finishing the recognition "by itself" (continuous=false),
+    // or the user tapping/pressing the shortcut again to stop it early. Either way
+    // isListening flips false and the submit effect below picks up the transcript.
+    submitPendingRef.current = true
     startListening()
     clearMaxListenTimer()
     maxListenTimerRef.current = setTimeout(() => {
@@ -432,99 +447,88 @@ export default function HelpWidget() {
     }, MAX_LISTEN_MS)
   }, [startListening, clearMaxListenTimer, enterErrorState])
 
+  const openHelpPanel = useCallback(() => {
+    // Don't pop the help panel open at the same position as the confirm popover
+    // (the exact collision handleToggleClick already guards against below).
+    if (voiceStateRef.current === 'confirm') return
+    setOpen(true)
+  }, [])
+
+  // Long-press opens the Help panel — the secondary gesture now that a single tap
+  // is the primary voice start/stop action.
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return   // ignore right/middle click
-    if (voiceStateRef.current !== 'idle') return   // don't arm a long-press while a prior capture is in flight
     // Do NOT preventDefault() here — we don't yet know this will become a long-press,
     // and doing so unconditionally suppresses the touch compatibility click (and can
     // suppress mouse focus-follows-click), breaking short taps that should just toggle
-    // the panel via the native onClick. Suppression for the long-press case is instead
+    // voice via the native onClick. Suppression for the long-press case is instead
     // handled by suppressNextClickRef, set only once a long-press actually fires.
     activePointerIdRef.current = e.pointerId
-    longPressFiredRef.current = false
-    clearPressTimer('pointer')
-    pressOwnerRef.current = 'pointer'
-    pressTimerRef.current = setTimeout(() => {
-      longPressFiredRef.current = true
+    clearHelpPressTimer()
+    helpPressTimerRef.current = setTimeout(() => {
       suppressNextClickRef.current = true   // long-press confirmed: swallow the click/tap that follows on release
-      beginVoiceCapture()
+      openHelpPanel()
       if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(100)
     }, LONG_PRESS_MS)
-  }, [beginVoiceCapture, clearPressTimer])
+  }, [openHelpPanel, clearHelpPressTimer])
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (activePointerIdRef.current !== e.pointerId) return
     activePointerIdRef.current = null
-    clearPressTimer('pointer')
-    if (longPressFiredRef.current) {
-      stopListening()
-      submitPendingRef.current = true     // effect below submits once isListening flips false
-      longPressFiredRef.current = false
-      suppressNextClickRef.current = true // native click (mouse only) fires right after this
-    }
-    // else: short tap. Do nothing here — the native onClick (untouched) handles toggle.
-  }, [clearPressTimer, stopListening])
+    clearHelpPressTimer()
+    // If the long-press already fired, the help panel is already open — nothing
+    // further to do here. If it hadn't fired (short tap), the native onClick
+    // (untouched) handles the voice toggle.
+  }, [clearHelpPressTimer])
 
   const handlePointerCancelOrLeave = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (activePointerIdRef.current !== e.pointerId) return
     activePointerIdRef.current = null
-    clearPressTimer('pointer')
-    if (longPressFiredRef.current) {
-      // finger/mouse dragged off the button mid-hold, or OS interrupted: cancel, don't submit.
-      clearMaxListenTimer()
-      stopListening()
-      setVoiceState('idle')
-      voiceStateRef.current = 'idle'   // mirror immediately; do not wait for the next render
-      longPressFiredRef.current = false
-      submitPendingRef.current = false
-      // The long-press timer already set suppressNextClickRef true in anticipation of the
-      // click/tap that normally follows release. That click never arrives on this cancel
-      // path (pointerleave/pointercancel, not pointerup), so undo it here — otherwise it
-      // stays stuck true and silently swallows the user's next unrelated tap on the FAB.
-      suppressNextClickRef.current = false
-    }
-  }, [clearPressTimer, clearMaxListenTimer, stopListening])
+    clearHelpPressTimer()
+    // No voice-state cleanup needed here (unlike the old long-press-for-voice
+    // design) — a cancelled long-press-for-help just means the timer never fired,
+    // or the panel is already open and simply stays open. suppressNextClickRef is
+    // left as-is: if the timer already fired it's correctly true awaiting the
+    // click that follows release; if it never fired it's correctly untouched.
+  }, [clearHelpPressTimer])
 
   const handleToggleClick = useCallback(() => {
     if (suppressNextClickRef.current) { suppressNextClickRef.current = false; return }
-    // A pending low-confidence confirmation renders its own popover at the same
-    // position as the help panel — don't let a stray tap on the FAB pop the panel
-    // open underneath/over it. The Yes/No buttons are the only way to resolve it.
-    if (voiceStateRef.current === 'confirm') return
-    setOpen(v => !v)
-  }, [])
+    // A tap always closes an already-open help panel (opened via long-press),
+    // regardless of voice capability — closing shouldn't have the side effect of
+    // also kicking off a live listening session.
+    if (open) { setOpen(false); return }
+    if (!voiceNavActive) { setOpen(true); return }   // no voice capability: exactly the original plain Help button
+    // Voice-capable, panel closed: a tap is now the primary start/stop action.
+    // Extra taps while a capture is already resolving (processing/success/error),
+    // or while a low-confidence confirmation is pending, are ignored — Yes/No are
+    // the only way to resolve 'confirm', matching the collision guard used elsewhere.
+    if (voiceStateRef.current === 'idle') { beginVoiceCapture(); return }
+    if (voiceStateRef.current === 'listening') { stopListening(); return }
+  }, [open, voiceNavActive, beginVoiceCapture, stopListening])
 
   // Keyboard equivalent of the pointer long-press: holding Space/Enter on the
-  // focused button starts voice capture the same way holding it with a pointer does.
+  // focused button opens the Help panel the same way holding it with a pointer does.
   const handleToggleKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (!voiceNavActive) return
     if (e.key !== ' ' && e.key !== 'Enter') return
-    if (e.repeat || keyHeldRef.current) return   // ignore OS key-repeat while held
-    if (voiceStateRef.current !== 'idle') return
-    keyHeldRef.current = true
-    keyPressFiredRef.current = false
-    clearPressTimer('key')
-    pressOwnerRef.current = 'key'
-    pressTimerRef.current = setTimeout(() => {
-      keyPressFiredRef.current = true
+    if (e.repeat || helpKeyHeldRef.current) return   // ignore OS key-repeat while held
+    helpKeyHeldRef.current = true
+    clearHelpKeyPressTimer()
+    helpKeyPressTimerRef.current = setTimeout(() => {
       suppressNextClickRef.current = true   // long-press confirmed: swallow the keyup-triggered click
-      beginVoiceCapture()
+      openHelpPanel()
     }, LONG_PRESS_MS)
-  }, [voiceNavActive, beginVoiceCapture, clearPressTimer])
+  }, [voiceNavActive, openHelpPanel, clearHelpKeyPressTimer])
 
   const handleToggleKeyUp = useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (!voiceNavActive) return
     if (e.key !== ' ' && e.key !== 'Enter') return
-    if (!keyHeldRef.current) return
-    keyHeldRef.current = false
-    clearPressTimer('key')
-    if (keyPressFiredRef.current) {
-      stopListening()
-      submitPendingRef.current = true
-      keyPressFiredRef.current = false
-    }
-    // else: short press. Native click (fired on Space/Enter keyup) handles toggle.
-  }, [voiceNavActive, clearPressTimer, stopListening])
+    if (!helpKeyHeldRef.current) return
+    helpKeyHeldRef.current = false
+    clearHelpKeyPressTimer()
+    // else: short press. Native click (fired on Space/Enter keyup) handles the voice toggle.
+  }, [voiceNavActive, clearHelpKeyPressTimer])
 
   // Transcript submission: fires once isListening transitions to false while a submit is pending.
   useEffect(() => {
@@ -607,10 +611,9 @@ export default function HelpWidget() {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'v') {
         e.preventDefault()
         if (voiceStateRef.current === 'idle') {
-          beginVoiceCapture()
+          beginVoiceCapture()   // submitPendingRef is set here; listening then ends either on its own or via a second press
         } else if (voiceStateRef.current === 'listening') {
-          stopListening()
-          submitPendingRef.current = true
+          stopListening()      // manual early stop — submitPendingRef is already true
         }
       }
     }
@@ -627,7 +630,8 @@ export default function HelpWidget() {
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
-      clearPressTimer()
+      if (helpPressTimerRef.current) clearTimeout(helpPressTimerRef.current)
+      if (helpKeyPressTimerRef.current) clearTimeout(helpKeyPressTimerRef.current)
       if (maxListenTimerRef.current) clearTimeout(maxListenTimerRef.current)
       if (revertTimerRef.current) clearTimeout(revertTimerRef.current)
       if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current)
@@ -776,7 +780,7 @@ export default function HelpWidget() {
           onKeyDown: handleToggleKeyDown,
           onKeyUp: handleToggleKeyUp,
         } : {})}
-        aria-label={ARIA_LABEL_FOR_STATE[voiceState] ?? (open ? tc('help_helpwidget.closeHelp') : tc('help_helpwidget.openHelp'))}
+        aria-label={ARIA_LABEL_FOR_STATE[voiceState] ?? (open ? tc('help_helpwidget.closeHelp') : (voiceNavActive ? tc('help_helpwidget.voiceStartAria') : tc('help_helpwidget.openHelp')))}
         aria-keyshortcuts={voiceNavActive ? 'Control+Shift+V' : undefined}
         aria-describedby={voiceNavActive && tooltipText ? 'help-widget-voice-hint' : undefined}
         style={{
@@ -797,7 +801,7 @@ export default function HelpWidget() {
         onFocus={() => setShowTooltip(true)}
         onBlur={() => setShowTooltip(false)}
       >
-        {renderGlyph(voiceState, open)}
+        {renderGlyph(voiceState, open, voiceNavActive)}
       </button>
       {/* ── Confirm popover (force-visible; supersedes tooltip/recent-commands) ── */}
       {voiceState === 'confirm' && pendingConfirm && (
