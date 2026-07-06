@@ -1,6 +1,8 @@
 // ── Email sender via Resend API ───────────────────────────────────────────────
 // No package needed — uses the Resend REST API directly
 
+import { createHmac } from 'crypto'
+
 const RESEND_API = 'https://api.resend.com/emails'
 const FROM = 'AskBiz <noreply@askbiz.co>'
 
@@ -9,6 +11,8 @@ interface SendOptions {
   subject: string
   html: string
   replyTo?: string
+  /** Extra message headers, e.g. List-Unsubscribe for one-click opt-out */
+  headers?: Record<string, string>
 }
 
 export async function sendEmail(opts: SendOptions): Promise<boolean> {
@@ -31,6 +35,7 @@ export async function sendEmail(opts: SendOptions): Promise<boolean> {
         subject: opts.subject,
         html: opts.html,
         reply_to: opts.replyTo,
+        ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     })
 
@@ -192,6 +197,110 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, na
       </div>
     </div>`,
   })
+}
+
+// ── Lifecycle email helpers — shared by the lifecycle-emails cron and any
+// webhook-triggered lifecycle email (e.g. plan-upgrade welcome) ──────────────
+export function unsubscribeUrl(userId: string): string {
+  const key = process.env.TOKEN_ENCRYPTION_KEY || process.env.CRON_SECRET || ''
+  const token = createHmac('sha256', key).update(userId).digest('hex')
+  return `https://askbiz.co/api/email/unsubscribe?uid=${userId}&t=${token}`
+}
+
+export function firstNameOf(fullName?: string | null): string {
+  return (fullName || '').trim().split(/\s+/)[0] || ''
+}
+
+// ── Lifecycle emails: shared shell ───────────────────────────────────────────
+// Same visual system as the alert email: #d08a59 header, white card, quiet footer.
+function lifecycleShell(body: string, unsubscribeUrl: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f3f1;font-family:system-ui,-apple-system,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3f1;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#d08a59;padding:24px 36px;text-align:center;">
+            <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em;">AskBiz</span>
+          </td>
+        </tr>
+        <tr><td style="padding:32px 36px 28px;">${body}</td></tr>
+        <tr>
+          <td style="padding:16px 36px;border-top:1px solid #e8e6e1;text-align:center;">
+            <p style="margin:0 0 4px;font-size:11px;color:#a39e97;">AskBiz &middot; <a href="https://askbiz.co" style="color:#d08a59;text-decoration:none;">askbiz.co</a></p>
+            <p style="margin:0;font-size:11px;color:#a39e97;">
+              Don't want emails like this? <a href="${unsubscribeUrl}" style="color:#a39e97;text-decoration:underline;">Unsubscribe</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+// ── Plan upgrade welcome — sent once per plan tier reached ───────────────────
+export function planUpgradeEmail(opts: { firstName: string; planName: string; features: string[]; unsubscribeUrl: string }): { subject: string; html: string } {
+  const name = opts.firstName || 'there'
+  const featureRows = opts.features.map(f =>
+    `<p style="margin:0 0 8px;font-size:14px;color:#1a1916;line-height:1.6;">✓&nbsp; ${f}</p>`
+  ).join('')
+  return {
+    subject: `Welcome to ${opts.planName}, ${name}!`,
+    html: lifecycleShell(`
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">Hi ${name}, welcome to ${opts.planName}!</h1>
+      <p style="margin:0 0 16px;font-size:15px;color:#6b6760;line-height:1.65;">
+        We're thrilled you've upgraded. Here's what just switched on for you:
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="padding:14px 18px;background:#f4f3f1;border-radius:12px;">
+          ${featureRows}
+        </td></tr>
+      </table>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
+          <a href="https://askbiz.co/dashboard" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">Go to your dashboard &rarr;</a>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 20px;font-size:14px;color:#1a1916;line-height:1.6;">
+        If anything about ${opts.planName} isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.
+      </p>
+      <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">
+        — Idarus<br/>Founder &amp; CEO of AskBiz
+      </p>
+    `, opts.unsubscribeUrl),
+  }
+}
+
+// ── POS seats welcome — sent once, the first time pos_enabled flips on ──────
+export function posSeatsWelcomeEmail(opts: { firstName: string; unsubscribeUrl: string }): { subject: string; html: string } {
+  const name = opts.firstName || 'there'
+  return {
+    subject: `Welcome to AskBiz POS, ${name}!`,
+    html: lifecycleShell(`
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">Hi ${name}, welcome to AskBiz POS!</h1>
+      <p style="margin:0 0 16px;font-size:15px;color:#6b6760;line-height:1.65;">
+        We're thrilled you've added AskBiz POS — welcome to the family.
+      </p>
+      <p style="margin:0 0 24px;font-size:15px;color:#1a1916;line-height:1.7;">
+        Your till, your stock tracker, and your end-of-day report are live now, right alongside the rest of your AskBiz account.
+      </p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
+          <a href="https://pos.askbiz.co" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">Open AskBiz POS &rarr;</a>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 20px;font-size:14px;color:#1a1916;line-height:1.6;">
+        If anything isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.
+      </p>
+      <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">
+        — Idarus<br/>Founder &amp; CEO of AskBiz
+      </p>
+    `, opts.unsubscribeUrl),
+  }
 }
 
 // ── Alert fired email ─────────────────────────────────────────────────────────

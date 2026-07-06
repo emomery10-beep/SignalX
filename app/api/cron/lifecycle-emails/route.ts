@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createHmac } from 'crypto'
-import { sendEmail, welcomeEmail, reEngagementEmail } from '@/lib/email'
+import { sendEmail, welcomeEmail, reEngagementEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -24,16 +23,6 @@ const INACTIVE_MIN_DAYS   = 14
 const INACTIVE_MAX_DAYS   = 60
 const MAX_SENDS_PER_TYPE  = 200 // per run — the daily cadence drains any backlog
 const LIST_USERS_MAX_PAGES = 10 // 1000/page via the admin API
-
-function unsubscribeUrl(userId: string): string {
-  const key = process.env.TOKEN_ENCRYPTION_KEY || process.env.CRON_SECRET || ''
-  const token = createHmac('sha256', key).update(userId).digest('hex')
-  return `https://askbiz.co/api/email/unsubscribe?uid=${userId}&t=${token}`
-}
-
-function firstNameOf(fullName?: string | null): string {
-  return (fullName || '').trim().split(/\s+/)[0] || ''
-}
 
 export async function GET(request: NextRequest) {
   const secret = new URL(request.url).searchParams.get('secret')

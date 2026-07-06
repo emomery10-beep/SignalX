@@ -1,9 +1,15 @@
+// Mirrors: pos-askbiz/app/api/webhooks/stripe-billing/route.ts — keep both in sync
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { provisionStaffDrafts } from '@/lib/pos-staff-provision'
+import { sendEmail, planUpgradeEmail, posSeatsWelcomeEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
+
+// Ranks strictly increase on genuine upgrades — used to gate the welcome email
+// so renewals/lateral moves never re-trigger it.
+const PLAN_RANK: Record<string, number> = { free: 0, growth: 1, business: 2, enterprise: 3 }
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -54,6 +60,38 @@ export async function POST(request: NextRequest) {
     ])
   }
 
+  // Claims a (user, email_type) row in lifecycle_emails before sending — the
+  // unique constraint means whichever webhook instance (this app or
+  // pos-askbiz's identical copy) processes a given event first wins the
+  // claim, so upgrades never double-email even though both apps share this DB.
+  const claimAndSend = async (
+    userId: string,
+    emailType: string,
+    buildEmail: (firstName: string) => { subject: string; html: string },
+  ) => {
+    const { error: claimError } = await supabase.from('lifecycle_emails').insert({ user_id: userId, email_type: emailType })
+    if (claimError) return // already claimed — nothing to do
+
+    const [{ data: authData }, { data: profile }] = await Promise.all([
+      supabase.auth.admin.getUserById(userId),
+      supabase.from('profiles').select('full_name').eq('id', userId).single(),
+    ])
+    const email = authData?.user?.email
+    if (!email) return
+
+    const { subject, html } = buildEmail(firstNameOf(profile?.full_name))
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+      replyTo: 'hello@askbiz.co',
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl(userId)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    })
+  }
+
   try {
     switch (event.type) {
 
@@ -65,6 +103,9 @@ export async function POST(request: NextRequest) {
         // POS seat purchase
         if (session.metadata?.type === 'pos_seats') {
           const seats = parseInt(session.metadata?.seats || '1', 10)
+          const { data: priorProfile } = await supabase.from('profiles').select('pos_enabled').eq('id', userId).single()
+          const wasEnabled = priorProfile?.pos_enabled ?? false
+
           await supabase.from('profiles').update({
             pos_enabled:                 true,
             pos_seat_count:              seats,
@@ -74,11 +115,19 @@ export async function POST(request: NextRequest) {
           await supabase.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'pos')
           // Reliable server-side provisioning of any staff drafts (browser-independent)
           await provisionStaffDrafts(userId).catch(() => {})
+
+          if (!wasEnabled) {
+            await claimAndSend(userId, 'pos_seats_welcome', (firstName) =>
+              posSeatsWelcomeEmail({ firstName, unsubscribeUrl: unsubscribeUrl(userId) }))
+          }
           break
         }
 
         // Main plan checkout
         const plan = session.metadata?.plan || 'growth'
+        const { data: priorSub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', userId).single()
+        const oldRank = PLAN_RANK[priorSub?.plan_id ?? 'free'] ?? 0
+
         await supabase.from('subscriptions').update({
           stripe_customer_id: session.customer as string,
         }).eq('user_id', userId)
@@ -90,6 +139,14 @@ export async function POST(request: NextRequest) {
         // Mark Growth trial as converted if applicable
         if (plan === 'growth' || plan === 'business') {
           await supabase.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'growth')
+        }
+
+        if ((PLAN_RANK[plan] ?? 0) > oldRank) {
+          const { data: planRow } = await supabase.from('plans').select('name, features').eq('id', plan).single()
+          if (planRow) {
+            await claimAndSend(userId, `plan_upgrade:${plan}`, (firstName) =>
+              planUpgradeEmail({ firstName, planName: planRow.name, features: planRow.features || [], unsubscribeUrl: unsubscribeUrl(userId) }))
+          }
         }
         break
       }
@@ -103,16 +160,26 @@ export async function POST(request: NextRequest) {
         if (sub.metadata?.type === 'pos_seats') {
           const seats  = sub.items.data[0]?.quantity || 1
           const active = sub.status === 'active' || sub.status === 'trialing'
+          const { data: priorProfile } = await supabase.from('profiles').select('pos_enabled').eq('id', userId).single()
+          const wasEnabled = priorProfile?.pos_enabled ?? false
+
           await supabase.from('profiles').update({
             pos_enabled:    active,
             pos_seat_count: active ? seats : 0,
           }).eq('id', userId)
           if (active) await provisionStaffDrafts(userId).catch(() => {})
+
+          if (active && !wasEnabled) {
+            await claimAndSend(userId, 'pos_seats_welcome', (firstName) =>
+              posSeatsWelcomeEmail({ firstName, unsubscribeUrl: unsubscribeUrl(userId) }))
+          }
           break
         }
 
         // Main plan update
         const plan = sub.metadata?.plan || 'growth'
+        const { data: priorSub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', userId).single()
+        const oldRank = PLAN_RANK[priorSub?.plan_id ?? 'free'] ?? 0
         const status = sub.status === 'active' ? 'active'
           : sub.status === 'past_due' ? 'past_due'
           : sub.status === 'trialing' ? 'trialing'
@@ -126,6 +193,14 @@ export async function POST(request: NextRequest) {
           current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
           cancel_at_period_end: sub.cancel_at_period_end,
         })
+
+        if ((PLAN_RANK[plan] ?? 0) > oldRank) {
+          const { data: planRow } = await supabase.from('plans').select('name, features').eq('id', plan).single()
+          if (planRow) {
+            await claimAndSend(userId, `plan_upgrade:${plan}`, (firstName) =>
+              planUpgradeEmail({ firstName, planName: planRow.name, features: planRow.features || [], unsubscribeUrl: unsubscribeUrl(userId) }))
+          }
+        }
         break
       }
 
