@@ -205,18 +205,6 @@ export const VALID_ROUTES: VoiceRoute[] = [
     },
   },
   {
-    path: '/admin',
-    label: 'Admin',
-    description: {
-      en: 'Open the admin panel',
-      fr: 'Ouvrir le panneau d’administration',
-      es: 'Abrir el panel de administración',
-      nl: 'Open het beheerpaneel',
-      de: 'Admin-Panel öffnen',
-      sw: 'Fungua paneli ya usimamizi',
-    },
-  },
-  {
     path: '/pos',
     label: 'Point of Sale',
     description: {

@@ -1,0 +1,51 @@
+name: askbiz
+description: >
+  AskBiz is an AI business intelligence platform for SME founders. Connects to
+  Shopify, Amazon, TikTok Shop, QuickBooks, or an uploaded CSV, and answers
+  plain-English questions about sales, margins, stock, and pricing using the
+  founder's real business data.
+version: "1.0.0"
+homepage: https://askbiz.co
+contact: hello@askbiz.co
+
+tools:
+  - name: askQuestion
+    description: >
+      Ask a plain-English business intelligence question and get an answer
+      grounded in the connected business's real sales, stock, and margin data.
+    inputSchema:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          description: The business question to ask, e.g. "Which product has the worst margin this month?"
+        context:
+          type: object
+          description: Optional business context (currency, region, revenue) when no account is connected.
+
+  - name: getBusinessPulse
+    description: >
+      Return a snapshot of the connected business's current health — revenue,
+      margin, top products, and any active alerts.
+    inputSchema:
+      type: object
+      properties: {}
+
+  - name: getInsights
+    description: >
+      Return the latest AI-generated insights and recommendations for the
+      connected business (pricing, stock, and expansion opportunities).
+    inputSchema:
+      type: object
+      properties: {}
+
+authentication:
+  type: apiKey
+  header: x-api-key
+  instructions: Get a free API key at https://askbiz.co/developers
+
+rateLimit:
+  free: "100 requests/month, 5/minute"
+  growth: "10,000 requests/month, 60/minute"
+  business: "unlimited/month, 120/minute"
