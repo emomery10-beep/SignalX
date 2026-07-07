@@ -1,6 +1,6 @@
 'use client'
 import Script from 'next/script'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const CONSENT_EVENT = 'askbiz:cookie-consent'
 
@@ -15,23 +15,16 @@ function hasAnalyticsConsent(): boolean {
 }
 
 export default function TikTokPixel({ pixelId }: { pixelId: string }) {
+  const [enabled, setEnabled] = useState(false)
+
   useEffect(() => {
-    const applyConsent = () => {
-      if (typeof window === 'undefined' || !(window as any).ttq) return
-      if (hasAnalyticsConsent()) {
-        ;(window as any).ttq.grantConsent()
-      } else {
-        ;(window as any).ttq.holdConsent()
-      }
-    }
+    // On mount, check stored consent.
+    setEnabled(hasAnalyticsConsent())
 
-    // Apply on mount (consent may already be stored)
-    applyConsent()
-
-    // Re-apply when the user interacts with the cookie banner
-    const handler = () => applyConsent()
+    // React to consent changes dispatched by CookieConsent.
+    const handler = () => setEnabled(hasAnalyticsConsent())
     const storageHandler = (e: StorageEvent) => {
-      if (e.key === 'askbiz_cookie_consent') applyConsent()
+      if (e.key === 'askbiz_cookie_consent') handler()
     }
     window.addEventListener(CONSENT_EVENT, handler)
     window.addEventListener('storage', storageHandler)
@@ -40,6 +33,9 @@ export default function TikTokPixel({ pixelId }: { pixelId: string }) {
       window.removeEventListener('storage', storageHandler)
     }
   }, [])
+
+  // No consent (or analytics declined) => don't even download the SDK.
+  if (!enabled) return null
 
   return (
     <Script id="tiktok-pixel" strategy="afterInteractive">
