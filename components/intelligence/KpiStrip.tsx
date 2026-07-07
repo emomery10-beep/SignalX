@@ -131,8 +131,8 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
           <button
             onClick={hero.onClick}
             style={{
-              padding: '20px 22px',
-              borderRadius: 16,
+              padding: '12px 16px',
+              borderRadius: 14,
               border: `1px solid ${g.border}`,
               background: g.bg,
               textAlign: 'left',
@@ -142,30 +142,30 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               outline: 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: 20,
+              gap: 14,
             }}
             onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
           >
             {/* Score ring */}
-            <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0 }}>
-              <svg width="72" height="72" viewBox="0 0 72 72">
-                <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(0,0,0,.06)" strokeWidth="5" />
+            <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
+              <svg width="48" height="48" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(0,0,0,.06)" strokeWidth="4" />
                 <circle
-                  cx="36" cy="36" r="30"
+                  cx="24" cy="24" r="20"
                   fill="none"
                   stroke={hero.accentColor || '#22C55E'}
-                  strokeWidth="5"
+                  strokeWidth="4"
                   strokeLinecap="round"
-                  strokeDasharray={`${(heroNum ?? 0) / 100 * 188.5} 188.5`}
-                  transform="rotate(-90 36 36)"
+                  strokeDasharray={`${(heroNum ?? 0) / 100 * 125.7} 125.7`}
+                  transform="rotate(-90 24 24)"
                   style={{ transition: 'stroke-dasharray 1s ease' }}
                 />
               </svg>
               <div style={{
                 position: 'absolute', inset: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, fontWeight: 800, color: hero.accentColor || 'var(--tx)',
+                fontSize: 15, fontWeight: 800, color: hero.accentColor || 'var(--tx)',
                 fontFamily: 'var(--font-sora, inherit)',
               }}>
                 {heroNum != null ? animated : hero.value}
@@ -174,7 +174,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
 
             {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>
                   {hero.label}
                 </span>
@@ -182,14 +182,14 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
                   <TrendBadge trend={hero.trend} label={hero.trendLabel} />
                 )}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>
                 {hero.sub}
               </div>
             </div>
 
             {/* Sparkline for hero */}
             {hero.sparkline && hero.sparkline.length > 1 && (
-              <Sparkline data={hero.sparkline} color={hero.accentColor || '#22C55E'} height={40} width={100} />
+              <Sparkline data={hero.sparkline} color={hero.accentColor || '#22C55E'} height={28} width={64} />
             )}
           </button>
         )
