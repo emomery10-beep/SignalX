@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
     // Get all profiles with usage
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, full_name, plan_id, business_type, registration_country, is_suspicious, created_at')
+      // NOTE: is_suspicious is not selected here — migration 006_ip_fraud.sql that adds it
+      // to profiles has not been applied to production, so selecting it fails the whole query.
+      .select('id, full_name, plan_id, business_type, country_code, created_at, pos_enabled, pos_seat_count')
       .order('created_at', { ascending: false })
 
     if (profilesError) console.error('Profiles query error:', profilesError)
@@ -73,10 +75,15 @@ export async function GET(request: NextRequest) {
     subs?.forEach((s: any) => { subsMap[s.user_id] = s.plan_id })
 
     // Get POS stats per user — transaction count and total revenue
+    // status is constrained to completed/refunded/partially_refunded/amended — 'paid'
+    // and 'complete' never occur, so the old .in() filter was matching a value ('completed')
+    // plus two values that don't exist. payment_status is unreliable as a revenue gate:
+    // many real completed sales (e.g. cash) are left at payment_status='pending' and never
+    // flipped, so gating on it would undercount revenue platform-wide.
     const { data: posStats } = await supabase
       .from('pos_transactions')
       .select('owner_id, total, status')
-      .in('status', ['paid', 'completed', 'complete'])
+      .eq('status', 'completed')
 
     const posMap: Record<string, { txCount: number; revenue: number }> = {}
     posStats?.forEach((tx: any) => {
@@ -94,12 +101,14 @@ export async function GET(request: NextRequest) {
         full_name: p.full_name,
         plan_id: subsMap[p.id] || p.plan_id || 'free',
         business_type: p.business_type,
-        registration_country: p.registration_country,
+        registration_country: p.country_code,
         questions_used: usageMap[p.id] || 0,
         pos_tx_count: posMap[p.id]?.txCount || 0,
         pos_revenue: posMap[p.id]?.revenue || 0,
+        pos_enabled: !!p.pos_enabled,
+        pos_seat_count: p.pos_seat_count || 0,
         created_at: p.created_at,
-        is_suspicious: p.is_suspicious,
+        is_suspicious: false,
       }))
     } else {
       users = (authData?.users || []).map((u: any) => ({
@@ -110,6 +119,10 @@ export async function GET(request: NextRequest) {
         business_type: null,
         registration_country: null,
         questions_used: usageMap[u.id] || 0,
+        pos_tx_count: posMap[u.id]?.txCount || 0,
+        pos_revenue: posMap[u.id]?.revenue || 0,
+        pos_enabled: false,
+        pos_seat_count: 0,
         created_at: u.created_at,
         is_suspicious: false,
       }))
