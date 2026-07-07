@@ -151,6 +151,16 @@ export default function CfoDashboard({ onAsk }: Props) {
   const [recTotals, setRecTotals] = useState<{ receivables: number; payables: number }>({ receivables: 0, payables: 0 })
   const [quickScanOpen, setQuickScanOpen] = useState(false)
 
+  // Restore sub-tab from URL (e.g. /intelligence?tab=cfo&sub=expenses) so voice-nav
+  // and other deep-links can land directly on a specific financial view, not just
+  // the CFO tab's default overview. Mirrors the tab-restoration effect one level up
+  // in app/(app)/intelligence/page.tsx.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const s = params.get('sub')
+    if (s && (SUB_TAB_IDS as readonly string[]).includes(s)) setSubTab(s as SubTab)
+  }, [])
+
   const fetchData = useCallback((p: string) => {
     setLoading(true)
     const cfg = loadCostConfig()

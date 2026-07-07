@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
   const route = typeof parsed.route === 'string' ? parsed.route : ''
   const language = typeof parsed.language === 'string' ? parsed.language : 'en'
   const confirmation = typeof parsed.confirmation === 'string' ? parsed.confirmation : ''
-  const confidence = parsed.confidence === 'low' ? 'low' : 'high'   // fail open to 'high' if the model omits it
+  const confidence = parsed.confidence === 'high' ? 'high' : 'low'   // fail closed to 'low' if the model omits or garbles it
 
   if (!VALID_ROUTE_PATHS.includes(route)) {
     return NextResponse.json({ error: 'Route not recognized' }, { status: 400 })

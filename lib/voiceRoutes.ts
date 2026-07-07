@@ -348,6 +348,143 @@ export const VALID_ROUTES: VoiceRoute[] = [
       sw: 'Tafuta ndani ya programu',
     },
   },
+  // ── CFO sub-tabs (the /intelligence page's "CFO" tab, itself a deep-link via
+  // ?tab=cfo; each financial sub-view is its own ?tab=cfo&sub=... deep-link).
+  // Distinct wording from the general /forecasts and /inventory routes above is
+  // deliberate — those are the sales/demand and stock-management pages, not these
+  // financial ones, and the classifier needs to be able to tell them apart. ──
+  {
+    path: '/intelligence?tab=cfo',
+    label: 'CFO Dashboard',
+    description: {
+      en: 'Open the CFO financial dashboard overview',
+      fr: 'Ouvrir le tableau de bord financier du CFO',
+      es: 'Abrir el panel financiero del CFO',
+      nl: 'Open het financiële CFO-dashboard',
+      de: 'Das CFO-Finanz-Dashboard öffnen',
+      sw: 'Fungua dashibodi ya fedha ya CFO',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=pnl',
+    label: 'Profit & Loss',
+    description: {
+      en: 'View the profit and loss statement, also called P&L',
+      fr: 'Voir le compte de résultat (profits et pertes)',
+      es: 'Ver el estado de resultados, pérdidas y ganancias',
+      nl: 'Bekijk de winst- en verliesrekening',
+      de: 'Gewinn- und Verlustrechnung ansehen',
+      sw: 'Angalia taarifa ya faida na hasara',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=cashflow',
+    label: 'Cash Flow',
+    description: {
+      en: 'View cash flow inside the CFO financial dashboard',
+      fr: 'Voir la trésorerie dans le tableau de bord financier',
+      es: 'Ver el flujo de caja en el panel financiero',
+      nl: 'Bekijk de kasstroom in het financiële dashboard',
+      de: 'Cashflow im Finanz-Dashboard ansehen',
+      sw: 'Angalia mtiririko wa fedha katika dashibodi ya fedha',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=margins',
+    label: 'Margins',
+    description: {
+      en: 'View profit margins by product and channel',
+      fr: 'Voir les marges bénéficiaires par produit et canal',
+      es: 'Ver los márgenes de beneficio por producto y canal',
+      nl: 'Bekijk winstmarges per product en kanaal',
+      de: 'Gewinnspannen nach Produkt und Kanal ansehen',
+      sw: 'Angalia faida kwa bidhaa na njia ya mauzo',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=inventory',
+    label: 'CFO Inventory Costs',
+    description: {
+      en: 'View the financial cost side of inventory inside the CFO dashboard, not the stock-management inventory page',
+      fr: 'Voir le coût financier des stocks dans le tableau de bord CFO',
+      es: 'Ver el costo financiero del inventario en el panel del CFO',
+      nl: 'Bekijk de financiële voorraadkosten in het CFO-dashboard',
+      de: 'Finanzielle Lagerkosten im CFO-Dashboard ansehen',
+      sw: 'Angalia gharama za fedha za hesabu ndani ya dashibodi ya CFO',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=receivables',
+    label: 'Receivables',
+    description: {
+      en: 'View accounts receivable and aging inside the CFO dashboard',
+      fr: 'Voir les comptes clients et leur ancienneté',
+      es: 'Ver las cuentas por cobrar y su antigüedad',
+      nl: 'Bekijk debiteuren en hun ouderdom',
+      de: 'Forderungen und deren Fälligkeit ansehen',
+      sw: 'Angalia madeni ya wateja ndani ya dashibodi ya CFO',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=expenses',
+    label: 'Expenses',
+    description: {
+      en: 'View and manage business expenses inside the CFO dashboard',
+      fr: 'Voir et gérer les dépenses professionnelles',
+      es: 'Ver y gestionar los gastos del negocio',
+      nl: 'Bekijk en beheer bedrijfsuitgaven',
+      de: 'Geschäftsausgaben ansehen und verwalten',
+      sw: 'Angalia na simamia matumizi ya biashara',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=budget',
+    label: 'Budget',
+    description: {
+      en: 'View the budget inside the CFO dashboard',
+      fr: 'Voir le budget dans le tableau de bord CFO',
+      es: 'Ver el presupuesto en el panel del CFO',
+      nl: 'Bekijk het budget in het CFO-dashboard',
+      de: 'Budget im CFO-Dashboard ansehen',
+      sw: 'Angalia bajeti ndani ya dashibodi ya CFO',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=forecasts',
+    label: 'Financial Forecasts',
+    description: {
+      en: 'View financial P&L forecasts inside the CFO dashboard, not the general sales/demand forecasts page',
+      fr: 'Voir les prévisions financières dans le tableau de bord CFO',
+      es: 'Ver los pronósticos financieros en el panel del CFO',
+      nl: 'Bekijk financiële prognoses in het CFO-dashboard',
+      de: 'Finanzprognosen im CFO-Dashboard ansehen',
+      sw: 'Angalia utabiri wa kifedha ndani ya dashibodi ya CFO',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=tax',
+    label: 'Tax',
+    description: {
+      en: 'View tax information inside the CFO dashboard',
+      fr: 'Voir les informations fiscales dans le tableau de bord CFO',
+      es: 'Ver la información fiscal en el panel del CFO',
+      nl: 'Bekijk belastinginformatie in het CFO-dashboard',
+      de: 'Steuerinformationen im CFO-Dashboard ansehen',
+      sw: 'Angalia taarifa za kodi ndani ya dashibodi ya CFO',
+    },
+  },
+  {
+    path: '/intelligence?tab=cfo&sub=reports',
+    label: 'CFO Reports',
+    description: {
+      en: 'View and export financial reports inside the CFO dashboard',
+      fr: 'Voir et exporter les rapports financiers',
+      es: 'Ver y exportar informes financieros',
+      nl: 'Bekijk en exporteer financiële rapporten',
+      de: 'Finanzberichte ansehen und exportieren',
+      sw: 'Angalia na hamisha ripoti za kifedha',
+    },
+  },
 ]
 
 export function findRouteByPath(path: string): VoiceRoute | undefined {

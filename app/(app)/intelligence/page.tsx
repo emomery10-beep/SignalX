@@ -16,6 +16,7 @@ import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
 import TopProducts from '@/components/intelligence/TopProducts'
 import PosPulse from '@/components/intelligence/PosPulse'
 import DailyActions from '@/components/intelligence/DailyActions'
+import ZakatCalculator from '@/components/intelligence/ZakatCalculator'
 import CrossSectorIntel from '@/components/intelligence/CrossSectorIntel'
 import HealthTimeMachine from '@/components/intelligence/HealthTimeMachine'
 import GettingStartedChecklist from '@/components/onboarding/GettingStartedChecklist'
@@ -89,7 +90,7 @@ export default function IntelligencePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    const validTabs = ['overview','team','logistics','market','cfo','actions']
+    const validTabs = ['overview','team','logistics','market','cfo','actions','zakat']
     // Legacy deep-links: shipments/courier now live inside the merged Logistics tab
     if (t === 'shipments') { setTab('logistics'); setLogisticsView('outgoing'); return }
     if (t === 'courier')   { setTab('logistics'); setLogisticsView('incoming'); return }
@@ -210,6 +211,7 @@ export default function IntelligencePage() {
     { id: 'logistics',    label: tc('intelligence.tab_logistics') },
     { id: 'market',       label: tc('intelligence.tab_market') },
     { id: 'actions',      label: tc('intelligence.tab_actions') },
+    { id: 'zakat',        label: tc('intelligence.tab_zakat') },
   ]
 
   // Sparkline data from score history
@@ -325,7 +327,7 @@ export default function IntelligencePage() {
 
         {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 760 }}>
 
             {/* ── Greeting (lightweight, not a card) ── */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
@@ -401,7 +403,7 @@ export default function IntelligencePage() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 14, fontFamily: 'var(--font-dm), sans-serif' }}>
                   {tc('intelligence.shipping_delivery')}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="rgrid-2" style={{ gap: 10 }}>
                   {/* Shipments card */}
                   {logisticsHealth && (() => {
                     const hColor = logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706'
@@ -611,7 +613,7 @@ export default function IntelligencePage() {
               </div>
 
               {/* Top row: primary actions (larger) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div className="rgrid-2" style={{ gap: 10, marginBottom: 10 }}>
                 {[
                   {
                     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
@@ -667,7 +669,7 @@ export default function IntelligencePage() {
               </div>
 
               {/* Bottom row: secondary actions (compact grid) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              <div className="rgrid-4" style={{ gap: 10 }}>
                 {[
                   { emoji: '📦', title: tc('intelligence.qa_ships_title'), sub: tc('intelligence.qa_ships_sub'), color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => openLogistics('outgoing') },
                   { emoji: '🚛', title: tc('intelligence.qa_courier_title'), sub: tc('intelligence.qa_courier_sub'), color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => openLogistics('incoming') },
@@ -1039,6 +1041,13 @@ export default function IntelligencePage() {
         {tab === 'actions' && (
           <div style={{ maxWidth: 720 }}>
             <DailyActions onAsk={askAskBiz}/>
+          </div>
+        )}
+
+        {/* ─── ZAKAT ─── */}
+        {tab === 'zakat' && (
+          <div style={{ maxWidth: 720 }}>
+            <ZakatCalculator/>
           </div>
         )}
 
