@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { COUNTRY_DIAL, toE164 } from '@/lib/phone'
 
 const ACC = '#d08a59'
 
@@ -44,6 +45,10 @@ function LoginPageContent() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
   const [checkingSession, setCheckingSession] = useState(true)
+  // Staff log in with phone (default, for low-literacy cashiers) or email.
+  const [method, setMethod]           = useState<'phone' | 'email'>('phone')
+  const [phoneCountry, setPhoneCountry] = useState('KE')
+  const [phoneLocal, setPhoneLocal]     = useState('')
 
   // A returning staff member with a valid cached session skips the login
   // form entirely — no network call, so this works on a cold offline boot.
@@ -61,18 +66,33 @@ function LoginPageContent() {
     setCheckingSession(false)
   }, [])
 
+  // Resolve the login identifier body based on the chosen tab.
+  // Returns null (with an error set) when the input is incomplete/invalid.
+  const loginIdentifier = (): { email: string } | { phone: string } | null => {
+    if (method === 'email') {
+      const trimmed = email.trim()
+      if (!trimmed) return null
+      return { email: trimmed }
+    }
+    const dial = COUNTRY_DIAL.find(c => c.code === phoneCountry)?.dial || '+254'
+    const e164 = toE164(dial, phoneLocal)
+    if (!e164) { setError(tc('pos_login.err_invalid_phone')); return null }
+    return { phone: e164 }
+  }
+
   const handleCheckEmail = async () => {
-    if (!email.trim()) return
+    const id = loginIdentifier()
+    if (!id) return
     setLoading(true); setError('')
     try {
       const res = await fetch(`${API}/api/pos/otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'check_staff', email: email.trim() }),
+        body: JSON.stringify({ action: 'check_staff', ...id }),
       })
       const data = await res.json()
       setLoading(false)
-      if (!res.ok) { setError(data.error || tc('pos_login.err_email_unrecognised')); return }
+      if (!res.ok) { setError(data.error || tc('pos_login.err_unrecognised')); return }
       setStaffName(data.name)
       setStep('pin')
     } catch { setLoading(false); setError(tc('pos_login.err_network')) }
@@ -80,12 +100,14 @@ function LoginPageContent() {
 
   const handleVerifyPin = async () => {
     if (!pin.trim()) return
+    const id = loginIdentifier()
+    if (!id) return
     setLoading(true); setError('')
     try {
       const res = await fetch(`${API}/api/pos/otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify_pin', email: email.trim(), pin }),
+        body: JSON.stringify({ action: 'verify_pin', ...id, pin }),
       })
       const data = await res.json()
       setLoading(false)
@@ -117,25 +139,58 @@ function LoginPageContent() {
 
         {step === 'email' ? (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, color: 'var(--pos-ink)' }}>{tc('pos_login.email_label')}</div>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>{tc('pos_login.email_hint')}</div>
-            <input
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' as const, outline: 'none' }}
-              autoComplete="email"
-              inputMode="email"
-              autoFocus
-            />
+            {/* Method tabs — phone first for low-literacy cashiers */}
+            <div style={{ position: 'relative', display: 'flex', background: 'var(--pos-bg)', borderRadius: 10, padding: 3, marginBottom: 16, border: '1px solid var(--pos-border)' }}>
+              <div aria-hidden style={{ position: 'absolute', top: 3, bottom: 3, left: 3, width: 'calc(50% - 3px)', borderRadius: 8, background: 'var(--pos-surface)', boxShadow: '0 1px 4px rgba(0,0,0,.08)', transform: method === 'email' ? 'translateX(100%)' : 'translateX(0)', transition: 'transform .25s ease' }}/>
+              {(['phone', 'email'] as const).map(m => (
+                <button key={m} onClick={() => { setMethod(m); setError('') }}
+                  style={{ position: 'relative', zIndex: 1, flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: 'transparent', color: method === m ? 'var(--pos-ink)' : 'var(--pos-muted)', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  {m === 'phone' ? tc('pos_login.method_phone') : tc('pos_login.method_email')}
+                </button>
+              ))}
+            </div>
+
+            {method === 'phone' ? (
+              <>
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>{tc('pos_login.phone_hint')}</div>
+                <div style={{ display: 'flex', gap: 6 }} dir="ltr">
+                  <select value={phoneCountry} onChange={e => { setPhoneCountry(e.target.value); setError('') }}
+                    aria-label={tc('pos_login.method_phone')}
+                    style={{ width: 92, flexShrink: 0, padding: '14px 8px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', cursor: 'pointer', appearance: 'none' }}>
+                    {COUNTRY_DIAL.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>)}
+                  </select>
+                  <input
+                    type="tel" inputMode="tel" autoComplete="tel" autoFocus dir="ltr"
+                    placeholder={tc('pos_login.phone_placeholder')}
+                    value={phoneLocal}
+                    onChange={e => { setPhoneLocal(e.target.value); setError('') }}
+                    onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
+                    style={{ flex: 1, minWidth: 0, padding: '14px 16px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' as const }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>{tc('pos_login.email_hint')}</div>
+                <input
+                  type="email"
+                  placeholder="you@email.com"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError('') }}
+                  onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' as const, outline: 'none' }}
+                  autoComplete="email"
+                  inputMode="email"
+                  autoFocus
+                />
+              </>
+            )}
             {error && <div className="pos-banner" role="alert" style={{ fontSize: 13, color: 'var(--pos-danger)', marginTop: 8 }}>{error}</div>}
             <button
               onClick={handleCheckEmail}
-              disabled={loading || !email.trim()}
+              disabled={loading || (method === 'email' ? !email.trim() : !phoneLocal.trim())}
               className="pos-btn-primary"
-              style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: 'var(--pos-surface)', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : !email.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !email.trim() ? 0.5 : 1 }}
+              style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: 'var(--pos-surface)', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: (method === 'email' ? !email.trim() : !phoneLocal.trim()) ? 0.5 : 1 }}
             >
               {loading ? tc('pos_login.checking') : tc('pos_login.continue')}
             </button>
