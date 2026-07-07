@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { readSubParam, type VoiceSubroute } from '@/lib/voiceDiscovery'
 import PeriodSelector from './PeriodSelector'
 import FinancialSnapshot from './FinancialSnapshot'
 import RevenueTrendChart from './RevenueTrendChart'
@@ -123,6 +124,40 @@ const SUB_TAB_IDS = [
 
 type SubTab = typeof SUB_TAB_IDS[number]
 
+// ── Voice-nav self-declaration (see lib/voiceDiscovery.ts for the convention) ──
+// One English label/description per sub-tab, consumed at BUILD TIME by
+// scripts/generate-voice-routes.mjs to fold these into lib/voiceRoutes.ts.
+// This is intentionally a fully LITERAL array (no .map()/function calls) so the
+// generator can statically extract it via regex + sandboxed eval without
+// executing this component or resolving SUB_TAB_IDS/tc() at build time.
+// User-facing tab labels still come from buildSubTabs()/tc() below — these
+// English strings are ONLY for the voice-nav manifest and its auto-translation.
+// All CFO sub-tabs sit behind the same 'business' plan gate as the parent
+// 'cfo' tab on the intelligence page, so each entry is marked locked: true
+// (informational only — see lib/voiceDiscovery.ts: locked does not affect
+// whether Groq may classify a command to this route).
+export const VOICE_SUBROUTES: VoiceSubroute[] = [
+  { path: '/intelligence?tab=cfo&sub=dashboard', label: 'CFO Dashboard', description: 'Open the CFO financial dashboard overview', locked: true },
+  { path: '/intelligence?tab=cfo&sub=pnl', label: 'P&L Statement', description: 'View the profit and loss statement', locked: true },
+  { path: '/intelligence?tab=cfo&sub=cashflow', label: 'Cash Flow', description: 'View cash flow and runway', locked: true },
+  { path: '/intelligence?tab=cfo&sub=margins', label: 'Margins', description: 'View profit margin analysis', locked: true },
+  { path: '/intelligence?tab=cfo&sub=inventory', label: 'Inventory Finance', description: 'View inventory value and finance details', locked: true },
+  { path: '/intelligence?tab=cfo&sub=receivables', label: 'Receivables', description: 'View receivables and payables tracker', locked: true },
+  { path: '/intelligence?tab=cfo&sub=expenses', label: 'Expenses', description: 'View and log business expenses', locked: true },
+  { path: '/intelligence?tab=cfo&sub=budget', label: 'Budget vs Actual', description: 'Compare budget against actual spend', locked: true },
+  { path: '/intelligence?tab=cfo&sub=forecasts', label: 'CFO Forecasts', description: 'View financial forecasts and hiring simulator', locked: true },
+  { path: '/intelligence?tab=cfo&sub=tax', label: 'Tax Estimator', description: 'Estimate tax and compliance obligations', locked: true },
+  { path: '/intelligence?tab=cfo&sub=reports', label: 'CFO Reports', description: 'Open CFO board pack and report exports', locked: true },
+]
+
+// Dev-time drift guard: VOICE_SUBROUTES is deliberately hand-written as a
+// separate literal array (not derived from SUB_TAB_IDS, see comment above), so
+// this just warns if someone adds/renames a tab in one place and forgets the
+// other — it never throws and has no effect in production.
+if (process.env.NODE_ENV !== 'production' && VOICE_SUBROUTES.length !== SUB_TAB_IDS.length) {
+  console.warn('CfoDashboard: VOICE_SUBROUTES and SUB_TAB_IDS have drifted out of sync')
+}
+
 const buildSubTabs = (tc: (k: string, vars?: Record<string, string | number>) => string): { id: SubTab; label: string }[] => [
   { id: 'dashboard', label: tc('cfo_dashboard.tab_dashboard') },
   { id: 'pnl', label: tc('cfo_dashboard.tab_pnl') },
@@ -151,16 +186,6 @@ export default function CfoDashboard({ onAsk }: Props) {
   const [recTotals, setRecTotals] = useState<{ receivables: number; payables: number }>({ receivables: 0, payables: 0 })
   const [quickScanOpen, setQuickScanOpen] = useState(false)
 
-  // Restore sub-tab from URL (e.g. /intelligence?tab=cfo&sub=expenses) so voice-nav
-  // and other deep-links can land directly on a specific financial view, not just
-  // the CFO tab's default overview. Mirrors the tab-restoration effect one level up
-  // in app/(app)/intelligence/page.tsx.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const s = params.get('sub')
-    if (s && (SUB_TAB_IDS as readonly string[]).includes(s)) setSubTab(s as SubTab)
-  }, [])
-
   const fetchData = useCallback((p: string) => {
     setLoading(true)
     const cfg = loadCostConfig()
@@ -177,8 +202,26 @@ export default function CfoDashboard({ onAsk }: Props) {
 
   useEffect(() => { fetchData(period) }, [period, fetchData])
 
+  // Restore sub-tab from ?sub= on mount — this is the read-side of the
+  // voice-nav convention documented in lib/voiceDiscovery.ts: voice-nav (or a
+  // deep link) navigates to e.g. /intelligence?tab=cfo&sub=expenses, and this
+  // reads that param back into local state using the same VOICE_SUBROUTES ids.
+  useEffect(() => {
+    setSubTab(readSubParam(window.location.search, SUB_TAB_IDS, 'dashboard'))
+  }, [])
+
   const changePeriod = (p: string) => {
     setPeriod(p)
+  }
+
+  // Sets the sub-tab AND keeps ?sub= in the URL in sync, so a manual tab click
+  // and a voice-nav landing both leave the URL in the same consistent,
+  // bookmarkable/shareable state.
+  const changeSubTab = (id: SubTab) => {
+    setSubTab(id)
+    const url = new URL(window.location.href)
+    url.searchParams.set('sub', id)
+    window.history.replaceState(null, '', url)
   }
 
   const sym = data?.currency_symbol || '$'
@@ -204,7 +247,7 @@ export default function CfoDashboard({ onAsk }: Props) {
           </div>
           {!loading && data?.totals && data.totals.revenue > 0 && (
             <button
-              onClick={() => setSubTab('reports')}
+              onClick={() => changeSubTab('reports')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 fontSize: 11, color: '#6366F1', background: 'rgba(99,102,241,.08)',
@@ -225,7 +268,7 @@ export default function CfoDashboard({ onAsk }: Props) {
           {subTabs.map(t => (
             <button
               key={t.id}
-              onClick={() => setSubTab(t.id)}
+              onClick={() => changeSubTab(t.id)}
               style={{
                 padding: '6px 12px', borderRadius: 7,
                 border: 'none',
@@ -253,7 +296,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             kpis={data?.kpis || []}
             currencySymbol={sym}
             loading={loading}
-            onNavigate={(tab) => setSubTab(tab as SubTab)}
+            onNavigate={(tab) => changeSubTab(tab as SubTab)}
           />
 
           {/* Revenue vs Costs Chart */}
@@ -270,7 +313,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.pnl_summary')}</span>
                 </div>
                 <button
-                  onClick={() => setSubTab('pnl')}
+                  onClick={() => changeSubTab('pnl')}
                   style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
                 >
                   {tc('cfo_dashboard.view_full_pnl')}
@@ -323,7 +366,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                       </span>
                     )}
                   </div>
-                  <button onClick={() => setSubTab('pnl')}
+                  <button onClick={() => changeSubTab('pnl')}
                     style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
                     {tc('cfo_dashboard.full_ebitda_analysis')}
                   </button>
@@ -653,7 +696,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                 try {
                   await fetch('/api/cfo/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(expense) })
                   setQuickScanOpen(false)
-                  setSubTab('expenses' as SubTab)
+                  changeSubTab('expenses' as SubTab)
                 } catch {}
               }}
               onCancel={() => setQuickScanOpen(false)}

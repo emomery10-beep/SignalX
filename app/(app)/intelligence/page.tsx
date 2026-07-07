@@ -20,6 +20,11 @@ import ZakatCalculator from '@/components/intelligence/ZakatCalculator'
 import CrossSectorIntel from '@/components/intelligence/CrossSectorIntel'
 import HealthTimeMachine from '@/components/intelligence/HealthTimeMachine'
 import GettingStartedChecklist from '@/components/onboarding/GettingStartedChecklist'
+// Voice-nav self-declaration for this page's top-level tabs lives in the
+// sibling ./voiceSubroutes.ts, NOT in this file — Next.js's App Router
+// restricts page.tsx to a fixed set of named exports (default, metadata,
+// etc.) and fails `tsc --noEmit` on anything else. See that file and
+// lib/voiceDiscovery.ts for the convention.
 
 export default function IntelligencePage() {
   const router = useRouter()
@@ -204,6 +209,10 @@ export default function IntelligencePage() {
   // Plan gates
   const canCfo       = !planLoading && planId === 'business'
 
+  // Keep in sync with the VOICE_SUBROUTES export in the sibling
+  // ./voiceSubroutes.ts — that's the voice-nav manifest declaration for these
+  // same tabs (English-only, module-level literal; see that file and
+  // lib/voiceDiscovery.ts for why it can't live inside this page.tsx).
   const tabs = [
     { id: 'overview',     label: tc('intelligence.tab_overview') },
     { id: 'cfo',          label: tc('intelligence.tab_cfo'),       locked: !canCfo },

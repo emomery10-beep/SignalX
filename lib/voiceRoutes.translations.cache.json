@@ -1,0 +1,365 @@
+{
+  "_comment": "Cache of voice-route description translations, keyed by sha256(english text). Committed to git so CI never needs network access unless text actually changed. Regenerate via scripts/generate-voice-routes.mjs.",
+  "entries": {
+    "0f33f6823d81e710b5567fd0c7edeab4e92dbfe827fbf1b607e5d311a7e6ece2": {
+      "en": "Go to the Alerts page",
+      "fr": "Allez à la page des alertes",
+      "es": "Vaya a la página de alertas",
+      "nl": "Ga naar de meldingenpagina",
+      "de": "Gehe zu der Warnungen-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Habari za Kuwahimiza"
+    },
+    "6004853e700c9ccb998c8488201e46c57ca5346d41f1b42702d4e711592e36cb": {
+      "en": "Go to the Ask page",
+      "fr": "Allez à la page Demande",
+      "es": "Vaya a la página Preguntas",
+      "nl": "Ga naar de Vraag pagina",
+      "de": "Gehe zu der Frage-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Swali"
+    },
+    "55e63bb240a49c6ae2989db0d1903abf4ffefaa208a65a7dc76c307834cd2490": {
+      "en": "Go to the Billing page",
+      "fr": "Allez à la page Facturation",
+      "es": "Vaya a la página de Facturación",
+      "nl": "Ga naar de Factuur pagina",
+      "de": "Gehe zu der Rechnung Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Malipo"
+    },
+    "a28a27335127bf18549aaa0934166c91502ef356504d3252a97fd7ac93abf305": {
+      "en": "Go to the Chat page",
+      "fr": "Allez à la page de discussion",
+      "es": "Vaya a la página de chat",
+      "nl": "Ga naar de chatpagina",
+      "de": "Gehe zu der Chatseite",
+      "sw": "Ikiwa kwenye ukurasa wa mazungumzo"
+    },
+    "1a130f8f5f5de7234c7f80396f69267835758f012b20d91687775ff3345ba18e": {
+      "en": "Go to the Dashboards page",
+      "fr": "Allez sur la page des Tableaux de bord",
+      "es": "Vaya a la página de Tableros",
+      "nl": "Ga naar de Dashboard-pagina",
+      "de": "Gehe zu der Dashboard-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Mabano"
+    },
+    "6c02b8672a4e639a1a92689820bb7d18827eff49499a16af58ad13a08c10c791": {
+      "en": "Go to the Expansion page",
+      "fr": "Allez à la page d'expansion",
+      "es": "Vaya a la página de expansión",
+      "nl": "Ga naar de uitbreidingspagina",
+      "de": "Gehe zu der Erweiterungsseite",
+      "sw": "Ikiwa kwenye ukurasa wa kuongezeka"
+    },
+    "6982f681039b51c3e261bf02600dec1ce2c22f981d927c80287e9fe5ee6f7145": {
+      "en": "Go to the Files page",
+      "fr": "Allez à la page des fichiers",
+      "es": "Vaya a la página de archivos",
+      "nl": "Ga naar de bestandenpagina",
+      "de": "Gehe zu der Dateien-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa files"
+    },
+    "c94cd065b0dc54bc0f20bb2e9cf7da6539a16b28dd6fac89893975272694a891": {
+      "en": "Go to the Forecasts page",
+      "fr": "Allez à la page des prévisions météorologiques",
+      "es": "Vaya a la página de pronósticos",
+      "nl": "Ga naar de weersvoorspellingen pagina",
+      "de": "Gehe zu der Wettervorhersage Seite",
+      "sw": "Ikiwa kwenye orodha ya mawazo ya hali ya hewa"
+    },
+    "fb8f1c5017794a98443e3d57ee96513a7bdd4eba5fb9d0251d4b40c3d1d0f872": {
+      "en": "Go to the Home page",
+      "fr": "Allez à la page d'accueil",
+      "es": "Vaya a la página de inicio",
+      "nl": "Ga naar de Home pagina",
+      "de": "Gehe zu der Startseite",
+      "sw": "Ikiwa kwenye ukurasa wa nyumbani"
+    },
+    "8d1c1b520d44ebff321c13bea563f91821dd156d5f68dd9f2983fc9ba0e53cc3": {
+      "en": "Go to the Intelligence page",
+      "fr": "Allez à la page Intelligence",
+      "es": "Vaya a la página de Inteligencia",
+      "nl": "Ga naar de Intelligence pagina",
+      "de": "Gehe zu der Intelligenz Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Ujuzi"
+    },
+    "a4f014bbad4bb43c7da6f9f6a5185f631fbc8531892ffa79a90bd4882e5a8796": {
+      "en": "Go to the My Business page",
+      "fr": "Allez à la page Mon entreprise",
+      "es": "Vaya a la página de Mi negocio",
+      "nl": "Ga naar de pagina Mijn bedrijf",
+      "de": "Gehe zu der Seite Meine Firma",
+      "sw": "Ikiwa kwa ukurasa wa Biashara yangu"
+    },
+    "14139fdcb6b74f2445ff964e9ba118f2ed3a898e9fe37cc2dcac843b3b51b0fc": {
+      "en": "Go to the POS page",
+      "fr": "Allez à la page POS",
+      "es": "Vaya a la página POS",
+      "nl": "Ga naar de POS-pagina",
+      "de": "Gehe zu der POS-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa POS"
+    },
+    "f4af5fbb79b56ee034ede7f4692178e97a4eff9cd34e132e95303460294594db": {
+      "en": "Go to the POS Setup page",
+      "fr": "Allez à la page de configuration du POS",
+      "es": "Vaya a la página de configuración de POS",
+      "nl": "Ga naar de POS-instellingen pagina",
+      "de": "Gehe zu der POS-Einstellungen-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa kuweka mipango ya POS"
+    },
+    "70201afc3f2afd82f24756b2f30f43d4bdc3e38c42b58dc946977ef8b312d331": {
+      "en": "Go to the Settings page",
+      "fr": "Allez à la page Paramètres",
+      "es": "Vaya a la página de Configuración",
+      "nl": "Ga naar de Instellingen pagina",
+      "de": "Gehe zu der Einstellungen Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Mawasiliano"
+    },
+    "a24c80eac2f2e5a666ad6b4f822efbcc7a3abcafbd7faa4f23c111ac6a890997": {
+      "en": "Go to the Shipments page",
+      "fr": "Allez à la page des expéditions",
+      "es": "Vaya a la página de envíos",
+      "nl": "Ga naar de verzendingspagina",
+      "de": "Gehe zu der Sendungen-Seite",
+      "sw": "Ikiwa kwenye orodha ya malipo"
+    },
+    "a92fb4b3c629cb79dd39325bceaa70be3285f69a63d75809411b2f8b933c49d9": {
+      "en": "Go to the Sources page",
+      "fr": "Allez à la page Sources",
+      "es": "Vaya a la página de Fuentes",
+      "nl": "Ga naar de bronnenpagina",
+      "de": "Gehe zu der Quellen-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Mawasiliano"
+    },
+    "5bfb90fe407b0ef33c7945e0bdd730326168b16ac957b9150532bf0ccb4fecf2": {
+      "en": "Go to the Templates page",
+      "fr": "Allez à la page Modèles",
+      "es": "Vaya a la página de Plantillas",
+      "nl": "Ga naar de sjablonenpagina",
+      "de": "Gehe zu der Vorlagen-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Mifano"
+    },
+    "7c45102fe386dfa30d24c680489c57027fc8dc0061f9c5cd82e90de4f763af38": {
+      "en": "Go to the Tools page",
+      "fr": "Allez sur la page Outils",
+      "es": "Vaya a la página Herramientas",
+      "nl": "Ga naar de Tools-pagina",
+      "de": "Gehe zu der Werkzeuge-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Vifaa"
+    },
+    "77aefbeb30951b494e76b0130ae82ead3199fde5c437c4888eb56ddca9824dd4": {
+      "en": "Calculate your break-even point in units and revenue. Enter fixed costs, selling price, and variable cost — see contribution margin, profit scenarios, and price sensitivity. Free, no sign-up.",
+      "fr": "Calculez votre point de rentabilité en unités et en revenus. Entrez les coûts fixes, le prix de vente et le coût variable — voir le marge de contribution, les scénarios de profit et la sensibilité au prix. Gratuit, sans inscription.",
+      "es": "Calcula tu punto de equilibrio en unidades y en ingresos. Ingresa los costos fijos, el precio de venta y el costo variable — ve la margen de contribución, los escenarios de beneficio y la sensibilidad al precio. Gratis, sin registro.",
+      "nl": "Bereken je breakevenpunt in eenheden en omzet. Voer vaste kosten, verkoopprijs en variabele kosten in — zie bijdrage marges, winstscenario's en prijsgevoeligheid. Gratis, geen registratie.",
+      "de": "Berechne dein Break-Even-Punkt in Einheiten und Umsatz. Eingeben Sie Fixkosten, Verkaufspreis und variable Kosten — sehen Sie die Beitragsspanne, Gewinn-Szenarien und Preisempfindlichkeit. Kostenlos, ohne Registrierung.",
+      "sw": "Tafuta pointi la kujitolea katika vitengo na mapato. Ondoa gharama zilizopitiliza, bei ya kuuza, na gharama zinazotofautiana — tazama faida ya kujitegemea, matokeo ya faida, na uwezo wa bei."
+    },
+    "349d2153ad66e032ea0fd1c01da2f0997e3949a4987e2e22279f21550a624646": {
+      "en": "Calculate your cost of goods sold per product and in total. Add materials, labour, shipping, and overhead. See COGS ratio, gross profit, and per-unit economics. Free, no sign-up required.",
+      "fr": "Calculez votre coût de revient par produit et au total. Ajoutez les matières premières, le travail, l'expédition et les surcoûts. Consultez le ratio COGS, le bénéfice brut et l'économie par unité. Gratuit, aucune inscription requise.",
+      "es": "Calcula tu costo de producción por producto y en total. Agrega materiales, mano de obra, envío y gastos generales. Verifica el ratio COGS, beneficio bruto y economía por unidad. Gratis, sin registro requerido.",
+      "nl": "Bereken uw kostprijs per product en in totaal. Voeg materialen, arbeid, verzending en overhead toe. Zie uw COGS-verhouding, brutowinst en per-eenheidseconomie. Gratis, geen registratie vereist.",
+      "de": "Berechnen Sie Ihren Wareneinsatz pro Produkt und insgesamt. Fügen Sie Materialien, Arbeitskosten, Versand und Überhead hinzu. Überprüfen Sie Ihren COGS-Verhältnis, Bruttoluftgewinn und Einheitseconomie. Kostenlos, keine Registrierung erforderlich.",
+      "sw": "Tafuta gharama ya bidhaa zako kwa kila bidhaa na kwa jumla. Ongeza vifaa, ajira, usafirishaji, na gharama za juu. Tafuta uwiano wa COGS, faida ya kuu, na uchumi wa kila bidhaa. Bila malipo, hakuna uajiri wa mtihani."
+    },
+    "437cf13ca0bf6be3523865fc32d912d069b9a60547a72afa128b00fda200fc42": {
+      "en": "Model how exchange rate movements affect your profit margins. See your break-even exchange rate and margin impact across mild, moderate, and severe depreciation scenarios. Free, no sign-up required.",
+      "fr": "Modélisez comment les mouvements des taux de change affectent vos marges bénéficiaires. Voir votre taux de break-even et l'impact sur vos marges dans des scénarios de dépréciation modérée, modérée et sévère. Gratuit, sans inscription.",
+      "es": "Modela cómo los movimientos de las tasas de cambio afectan tus márgenes de beneficio. Ver tu tasa de equilibrio y el impacto en tus márgenes en escenarios de depreciación suave, moderada y severa. Gratis, sin registro.",
+      "nl": "Zie hoe wisselkoersbewegingen uw winstmarges beïnvloeden. Zie uw breakevenwisselkoers en winstimpact in milde, matige en zware devaluatiescenario's. Gratis, geen registratie vereist.",
+      "de": "Modellieren Sie, wie Wechselkursbewegungen Ihre Gewinnmargen beeinflussen. Sehen Sie Ihren Ausgleichswechselkurs und Ihren Gewinnmargen-Einfluss in milden, moderaten und schweren Abwertungsszenarien. Kostenlos, ohne Registrierung.",
+      "sw": "Tumia mbinu hiyo kuonyesha jinsi harakati za kiwango cha kuuza kinaathiri faida yako. Onyesha kiwango cha kujitenga na athari ya faida yako katika hali za kupungua kwa kiwango cha kuuza kidogo, ya kati, na ya kubwa. Bila malipo, bila uajiri."
+    },
+    "cc2bed2418c069877f8b72f705e474f955526700f13e9bc182b105447d4d2f7c": {
+      "en": "Calculate the true landed cost of any imported product. Import duty rates for 25+ countries, UK/EU/US VAT, freight cost estimation, and full per-unit breakdown. Free, no sign-up required.",
+      "fr": "Calculez le coût réel de douane de tout produit importé. Tarifs de droits de douane pour 25+ pays, TVA UK/EU/US, estimation du coût de fret et détail complet par unité. Gratuit, sans inscription.",
+      "es": "Calcula el costo real de arribo de cualquier producto importado. Tasas de derechos de aduana para +25 países, IVA del Reino Unido/UE/EE.UU, estimación del costo de flete y desglose completo por unidad. Gratis, sin registro.",
+      "nl": "Bereken de werkelijke belastingkosten van elk ingevoerd product. Douanetarieven voor +25 landen, BTW VK/EE/VS, schatting van de vervoerskosten en volledige per-eenheid breakdown. Gratis, geen registratie vereist.",
+      "de": "Berechnen Sie die tatsächlichen Zollkosten für jedes importierte Produkt. Zolltarife für +25 Länder, Umsatzsteuer UK/EU/US, Frachtkosten-Schätzung und vollständige pro-Einheit-Brechen. Kostenlos, keine Registrierung erforderlich.",
+      "sw": "Tafuta gharama halisi ya kubeba kwa bidhaa yoyote iliyopewa. Kiasi cha kodi ya kubeba kwa +25 nchi, kodi ya kodi ya UK/EU/US, uwezekano wa gharama ya malipo na utambuzi wa kina kwa kila bidhaa. Bila gharama, hakuna uajiri."
+    },
+    "ab9e5f94962e1b3f2fed60cccc44c05b770c47198f05977f6db613b37e1ccb99": {
+      "en": "Free profit margin, break-even, landed cost, VAT, and FX risk calculators for small business owners. Works in KES, NGN, GBP and more. No sign-up required.",
+      "fr": "Calcul de marge bénéficiaire gratuite, point de rentabilité, coût de revient, TVA et risque de change pour les propriétaires d'entreprises petites. Fonctionne en KES, NGN, GBP et plus. Pas d'inscription requise.",
+      "es": "Calculadoras de margen de beneficio gratuito, punto de equilibrio, costo de entrega, IVA y riesgo de cambio para dueños de pequeñas empresas. Funciona en KES, NGN, GBP y más. No se requiere registro.",
+      "nl": "Gratis winstmargecalculator, breakevenpunt, belasting van toegevoegde waarde en valutaschommelingen voor kleine ondernemers. Werkt in KES, NGN, GBP en meer. Geen registratie vereist.",
+      "de": "Kostenlose Gewinnmargenrechner, Gleichgewichtspunkt, Einfuhrkosten, Umsatzsteuer und Wechselkursrisiko für kleine Unternehmer. Funktioniert in KES, NGN, GBP und mehr. Keine Registrierung erforderlich.",
+      "sw": "Mfumo wa kuhesabu faida ya kifedha bila gharama, hatua ya usawa, gharama ya kuingia, kodi ya kubeba na hatari ya mabadiliko wa kifedha kwa wafanyabiashara wadogo. Inafanya kazi katika KES, NGN, GBP na zaidi. Hakuna uajiri wa mtihani."
+    },
+    "e4996769abdf423b2ba51997915e4d3a86ae5fa9d5c0fb64d4c1e4cdf4e3dc11": {
+      "en": "Calculate profit margin, markup percentage, and true cost per product. Add multiple products, see ranked margins, and find hidden cost gaps. Free, no sign-up required.",
+      "fr": "Calculez le marge de profit, le pourcentage de marge et le coût réel par produit. Ajoutez plusieurs produits, voyez les marges classées et trouvez les écarts de coûts cachés. Gratuit, sans inscription.",
+      "es": "Calcula la margen de ganancia, el porcentaje de aumento y el costo real por producto. Agrega múltiples productos, vea las márgenes clasificadas y encuentre las brechas de costo ocultas. Gratis, sin registro.",
+      "nl": "Bereken de winstmarge, de verkoopverhoging en de werkelijke kosten per product. Voeg meerdere producten toe, zie de gerangschikte marges en vind de verborgen kostenkloof. Gratis, geen registratie vereist.",
+      "de": "Berechne den Gewinnmarge, den Umsatzsteigerung und die tatsächlichen Kosten pro Produkt. Fügen Sie mehrere Produkte hinzu, sehen Sie die sortierten Margen und finden Sie die verborgenen Kostenlücken. Kostenlos, ohne Registrierung.",
+      "sw": "Tafuta upatikanaji wa faida, asilimia ya kuzidisha na gharama halisi kwa bidhaa. Ongeza bidhaa nyingi, tazama upatikanaji uliorangiwa na utafute kikomo cha gharama kilichopitishwa. Bila malipo, hakuna uajiri."
+    },
+    "512f42f02b9d761cf028b6148e0af4aefb9580d8129754f302238ed3bf67c9fd": {
+      "en": "Calculate VAT, GST, or sales tax instantly for 30 countries. Add VAT to a net price or extract VAT from a gross price. Standard, reduced, and zero rates. Free, no sign-up.",
+      "fr": "Calculez la TVA, le GST ou la taxe sur les ventes instantanément pour 30 pays. Ajoutez la TVA au prix net ou extrayez la TVA du prix brut. Taux standard, réduit et zéro. Gratuit, sans inscription.",
+      "es": "Calcula la IVA, el GST o la taxa de ventas instantáneamente para 30 países. Agrega el IVA al precio neto o extrae el IVA del precio bruto. Tasas estándar, reducidas y cero. Gratuito, sin registro.",
+      "nl": "Bereken BTW, GST of omzetbelasting direct voor 30 landen. Voeg BTW toe aan een netto prijs of trek BTW af van een bruto prijs. Standaard, verlaagd en nul tarieven. Gratis, geen registratie.",
+      "de": "Berechne MwSt, GST oder Umsatzsteuer sofort für 30 Länder. Füge MwSt zu einem Nettopreis hinzu oder zie MwSt von einem Bruttobetrag ab. Standard, ermäßigte und Null-Steuersätze. Kostenlos, ohne Registrierung.",
+      "sw": "Tafuta KDV, GST au kodi ya kuuza haraka kwa nchi 30. Ongeza KDV kwenye bei ya chini au utaafute KDV kutoka kwa bei ya juu. Mipaka ya kawaida, kupunguzwa, na sifuri. Bila malipo, bila uajiri."
+    },
+    "b965d6259a37dbe21d829963bd1172a19f5e79505e01b0183a757f4b80d963eb": {
+      "en": "Go to the Onboarding page",
+      "fr": "Allez sur la page d'Onboarding",
+      "es": "Vaya a la página de Onboarding",
+      "nl": "Ga naar de Onboarding-pagina",
+      "de": "Gehe zu der Onboarding-Seite",
+      "sw": "Ikiwa kwenye ukurasa wa Onboarding"
+    },
+    "8c2d8658b9de1f5762bf3ab43f58a2ae50fd11cf8a8eae7d264da004b2374a45": {
+      "en": "Go to the Onboarding Staff Setup page",
+      "fr": "Allez à la page de configuration des personnels d'accueil",
+      "es": "Vaya a la página de configuración del personal de bienvenida",
+      "nl": "Ga naar de pagina Instellingen voor de inloopstaf",
+      "de": "Gehe zu der Einstellungen für die Onboarding-Team",
+      "sw": "Ikiwa kwa picha ya kuwasilisha kwa wafanyakazi wa kuwasiliana"
+    },
+    "5e7165a1a49a6984607daf5a0f9ffa1fc4a76f5bf7d878e87e7ebe7cdb1b54fb": {
+      "en": "Go to the Search page",
+      "fr": "Allez à la page Recherche",
+      "es": "Vaya a la página de Búsqueda",
+      "nl": "Ga naar de Zoekpagina",
+      "de": "Gehe zu der Suchseite",
+      "sw": "Ikiwa kwenye ukurasa wa Habari"
+    },
+    "6bfa0203800725c7d2bab7e665bfa9a82d399e37d42917b27a8470a1702bc16c": {
+      "en": "Go to the Inventory page",
+      "fr": "Allez à la page d'inventaire",
+      "es": "Vaya a la página de inventario",
+      "nl": "Ga naar de inventaris pagina",
+      "de": "Gehe zu der Inventar-Seite",
+      "sw": "Ikiwa kwenye orodha ya malipo"
+    },
+    "464f56e980cea2ef60a71a6df7a9eab7cdce08517e0b6db135eca5b8dca3dade": {
+      "en": "Open the CFO financial dashboard overview",
+      "fr": "Ouvrez l'aperçu du tableau de bord financier du CFO",
+      "es": "Abra el resumen del panel financiero del CFO",
+      "nl": "Open het overzicht van de CFO-financiële dashboard",
+      "de": "Öffnen Sie das CFO-Finanzüberblick-Dashboard",
+      "sw": "Tungane maoni ya kifedha ya CFO"
+    },
+    "75a0b4e93fb6e515f7ce8794b9e01ed766336d9f8aacbd90f3fb62b95256fc6e": {
+      "en": "View the profit and loss statement",
+      "fr": "Affichez le compte de résultat",
+      "es": "Muestra el estado de ganancias y pérdidas",
+      "nl": "Toon de winst-en-verliesrekening",
+      "de": "Zeige die Gewinn- und Verlustrechnung",
+      "sw": "Tafuta taarifa ya faida na hasara"
+    },
+    "717f49bb2631ded431a049e607195588544090ca74cd2f1e1c531e3b7b3b512c": {
+      "en": "View cash flow and runway",
+      "fr": "Afficher le flux de trésorerie et la marge de manœuvre",
+      "es": "Ver flujo de efectivo y margen de maniobra",
+      "nl": "Bekijk de cash flow en de actieruimte",
+      "de": "Ansicht des Cash-Flows und der Luftlinie",
+      "sw": "Onyesha mchango wa kifedha na mwelekeo"
+    },
+    "df848e8a4ab809a65f13701418c2475ee538c9ed9591c0dcd09a44b06eef8a4b": {
+      "en": "View profit margin analysis",
+      "fr": "Afficher l'analyse du marge de profit",
+      "es": "Ver el análisis de la ganancia",
+      "nl": "Toon de winstmarge analyse",
+      "de": "Zeige Gewinnmarge Analyse",
+      "sw": "Tafuta uchunguzi wa faida ya mapato"
+    },
+    "32c74dffcc6ac6cb8e5b594d3529c5cbab2ad31e970b89d7844ef31e891707f2": {
+      "en": "View inventory value and finance details",
+      "fr": "Afficher la valeur de l'inventaire et les détails financiers",
+      "es": "Ver el valor de inventario y detalles financieros",
+      "nl": "Zie inventariswaarde en financiële details",
+      "de": "Ansicht Inventarwert und Finanzdetails",
+      "sw": "Onyesha thamani ya malipo na taarifa za fedha"
+    },
+    "d0084fa5d7bb99494eb03245fe4b4492ecb138e2f1fbcb2a2397fd69e9afa0e7": {
+      "en": "View receivables and payables tracker",
+      "fr": "Voir le suivi des créances et des dettes",
+      "es": "Ver el seguimiento de cobros y pagos",
+      "nl": "Zie de volglijst van ontvangsten en uitgaven",
+      "de": "Ansicht des Zahlungsverlaufs",
+      "sw": "Onyesha matokeo ya mapato na malipo"
+    },
+    "cf4775365b3f104b90c8c618b2df89dad9920ec89393036424baf4a4eb14c2ff": {
+      "en": "View and log business expenses",
+      "fr": "Voir et enregistrer les dépenses professionnelles",
+      "es": "Ver y registrar gastos comerciales",
+      "nl": "Zie en log de zakelijke uitgaven",
+      "de": "Ansicht und Protokollierung von Geschäftsausgaben",
+      "sw": "Tazama na kuandika matumizi ya biashara"
+    },
+    "c4b3c97b690b2d73758efe842506b63d2c463c5c4fa4f1b16b7c9c42ceefdfc4": {
+      "en": "Compare budget against actual spend",
+      "fr": "Comparer le budget avec les dépenses réelles",
+      "es": "Comparar el presupuesto con el gasto real",
+      "nl": "Budget vergelijken met de werkelijke uitgaven",
+      "de": "Budget gegen die tatsächlichen Ausgaben vergleichen",
+      "sw": "Kupigia usawa kati ya bajeti na matumizi halisi"
+    },
+    "f1ebd6ba9cead34ad5197a021ced213b2c65eea781e2567f4fbfbdfa0ac0cbb0": {
+      "en": "View financial forecasts and hiring simulator",
+      "fr": "Affichez les prévisions financières et le simulateur d'embauche",
+      "es": "Muestra las previsiones financieras y el simulador de contratación",
+      "nl": "Toon financiële voorspellingen en een sollicitatiesimulator",
+      "de": "Zeige Finanzprognosen und einen Einstellungs Simulator",
+      "sw": "Tunza maadili ya kifedha na simulator ya ajira"
+    },
+    "53edfe2cfff512a4888352bfc5a222927d7bcb00b0013471c57dadeb56c5fa3e": {
+      "en": "Estimate tax and compliance obligations",
+      "fr": "Estimer les obligations fiscales et de conformité",
+      "es": "Estimar obligaciones fiscales y de cumplimiento",
+      "nl": "Bereken belasting- en conformiteitsverplichtingen",
+      "de": "Schätzen steuerliche und konformitätspflichten",
+      "sw": "Kokotoa wajibu wa kodi na ushirikiano"
+    },
+    "ed1350b8bca529e66b9db23c8a46783f126d14265705b647e07255f56c270dea": {
+      "en": "Open CFO board pack and report exports",
+      "fr": "Ouvrez le pack de la direction financière et les exportations de rapports",
+      "es": "Abra el paquete de la junta de CFO y exporte informes",
+      "nl": "Open het CFO bord pakket en rapporten exporteren",
+      "de": "Öffnen Sie das CFO-Bord-Paket und Berichtsexporte",
+      "sw": "Tungane kifungu cha CFO na kuweka kwenye sanduku taarifa za kuripoti"
+    },
+    "eed47326dedc8156d4ec95a9b5073f2974266ae816ee37d677f4b7c27e07b59e": {
+      "en": "Open the CFO financial intelligence dashboard",
+      "fr": "Ouvrez l'interface de gestion financière du CFO",
+      "es": "Abra la consola de inteligencia financiera del CFO",
+      "nl": "Open het CFO-financiële inzichtsdashboard",
+      "de": "Öffnen Sie das CFO-Finanzierungs-Intelligenz-Dashboard",
+      "sw": "Tungane kwenye sanduku la ufahamu wa kiuchumi cha CFO"
+    },
+    "1e6f11982d9138c98c29ae0cbc87c4df21d258f334355eff3ecdd45892093191": {
+      "en": "View team performance panel",
+      "fr": "Afficher le panneau de performance de l'équipe",
+      "es": "Ver el panel de rendimiento del equipo",
+      "nl": "Toon het prestatiepaneel van de team",
+      "de": "Zeige das Leistungspanel des Teams",
+      "sw": "Tunza paneli la ujuzi wa timu"
+    },
+    "87ce8c335b7b9383c9bb0bb8d5781b8b472fe4f2d7469f301538e1b0cf20ba3b": {
+      "en": "View shipments and courier logistics",
+      "fr": "Afficher les expéditions et la logistique des coursiers",
+      "es": "Ver envíos y logística de mensajeros",
+      "nl": "Zie verzendingen en logistiek van bezorgers",
+      "de": "Ansicht von Sendungen und Kurierlogistik",
+      "sw": "Tazama malipo na uhusiano wa malori"
+    },
+    "b87600d3d65d59563f4582901fb00a55997ad277236d6fb65b82d5d531989f67": {
+      "en": "View market and cross-sector intelligence",
+      "fr": "Afficher l'intelligence du marché et intersectorielle",
+      "es": "Ver inteligencia del mercado y transversal",
+      "nl": "Zie marktinformatie en cross-sector",
+      "de": "Ansicht Markteinblicke und Cross-Sector-Intelligenz",
+      "sw": "Tafuta taarifa za soko na kiwango cha sekta"
+    },
+    "08a2359e2aaec559b19175f86e4e5a5c418d79b88c747dc924689072d763859e": {
+      "en": "View recommended daily actions",
+      "fr": "Afficher les actions recommandées pour aujourd'hui",
+      "es": "Ver las acciones recomendadas para hoy",
+      "nl": "Toon aanbevolen acties voor vandaag",
+      "de": "Zeige empfohlene tägliche Aktionen",
+      "sw": "Tafuta matendo yaliyotajwa kwa siku ya leo"
+    }
+  }
+}
