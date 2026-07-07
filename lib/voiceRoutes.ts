@@ -25,18 +25,6 @@ export const VALID_ROUTES: VoiceRoute[] = [
     },
   },
   {
-    path: '/dashboards',
-    label: 'Dashboards',
-    description: {
-      en: 'Open business dashboards and reports',
-      fr: 'Ouvrir les tableaux de bord et rapports',
-      es: 'Abrir los paneles y reportes del negocio',
-      nl: 'Open bedrijfsdashboards en rapporten',
-      de: 'Unternehmens-Dashboards und Berichte öffnen',
-      sw: 'Fungua dashibodi na ripoti za biashara',
-    },
-  },
-  {
     path: '/forecasts',
     label: 'Forecasts',
     description: {

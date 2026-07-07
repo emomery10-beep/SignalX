@@ -183,7 +183,6 @@ function speakText(text: string, langCode: string): (() => void) | undefined {
 // Map app sections to relevant help topic slugs (must match HELP_TOPICS slugs)
 const SECTION_MAP: [string, string][] = [
   ['/intelligence', 'intelligence-alerts'],
-  ['/dashboards',   'data-analysis-reporting'],
   ['/ask',          'ask-askbiz'],
   ['/sources',      'connecting-data'],
   ['/settings',     'settings-preferences'],

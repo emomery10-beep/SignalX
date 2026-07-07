@@ -30,7 +30,7 @@ const PUBLIC_PATHS = [
   '/rss.xml',
 ]
 
-const PRIVATE_PATHS = ['/chat', '/files', '/dashboards', '/expansion', '/alerts', '/forecasts', '/templates', '/sources', '/billing', '/admin', '/settings', '/api/']
+const PRIVATE_PATHS = ['/chat', '/files', '/expansion', '/alerts', '/forecasts', '/templates', '/sources', '/billing', '/admin', '/settings', '/api/']
 
 // Named AI-crawler entries so discovery audits and the crawlers themselves see
 // explicit allow/disallow rules here, not just in the informal llms.txt file.

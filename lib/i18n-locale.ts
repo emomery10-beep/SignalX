@@ -22,7 +22,7 @@ export function isActiveLocale(x: unknown): x is Locale {
 // per-user and not SEO-indexed, so they need no locale prefix. Public/marketing
 // routes stay URL-driven (English unprefixed, others prefixed) for caching + SEO.
 export const APP_ROUTES = [
-  '/home', '/ask', '/chat', '/intelligence', '/files', '/dashboards', '/alerts',
+  '/home', '/ask', '/chat', '/intelligence', '/files', '/alerts',
   '/forecasts', '/templates', '/admin', '/sources', '/billing', '/onboarding',
   '/settings', '/expansion', '/invite', '/pos', '/tools', '/shipments',
 ]

@@ -108,7 +108,7 @@ export async function middleware(request: NextRequest) {
   // ── Protected routes ───────────────────────────────────────────────────────
   const protectedRoutes = [
     '/home', '/ask', '/chat', '/intelligence', '/files',
-    '/dashboards', '/alerts', '/forecasts', '/templates',
+    '/alerts', '/forecasts', '/templates',
     '/admin', '/sources', '/billing', '/onboarding',
     '/settings', '/expansion', '/invite',
   ]
