@@ -27,7 +27,7 @@
   "saved": "Enregistré",
   "saveError": "Impossible d'enregistrer votre calcul. Réessayez.",
   "charitiesHeading": "Versez votre zakat directement",
-  "donateLink": "Faire un don sur leur site",
+  "donateLink": "Faire un don sur leur site →",
   "noCharities": "Aucune association partenaire répertoriée pour votre pays pour l'instant",
   "loadError": "Impossible de charger votre calcul de zakat."
 }

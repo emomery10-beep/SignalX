@@ -27,7 +27,7 @@
   "saved": "Guardado",
   "saveError": "No se pudo guardar tu cálculo. Inténtalo de nuevo.",
   "charitiesHeading": "Paga tu zakat directamente",
-  "donateLink": "Donar en su sitio web",
+  "donateLink": "Donar en su sitio web →",
   "noCharities": "Aún no hay organizaciones benéficas listadas para tu país",
   "loadError": "No se pudo cargar tu cálculo de zakat."
 }

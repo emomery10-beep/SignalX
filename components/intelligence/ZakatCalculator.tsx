@@ -71,7 +71,7 @@ function EditableTile({ label, value, sym, tone, onCommit }: {
           style={{
             fontSize: 16, fontWeight: 600, fontFamily: 'inherit',
             color: tone === 'negative' ? '#EF4444' : 'var(--tx)',
-            background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left',
+            background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'start',
           }}
         >
           {tone === 'negative' && value > 0 ? '− ' : ''}{fmtMoney(value, sym)}
@@ -82,7 +82,7 @@ function EditableTile({ label, value, sym, tone, onCommit }: {
 }
 
 export default function ZakatCalculator() {
-  const { tc } = useLang()
+  const { tc, isRTL } = useLang()
   const [data, setData] = useState<ZakatResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -259,7 +259,7 @@ export default function ZakatCalculator() {
             )}
           </div>
           {data.hawl.active && (
-            <div style={{ height: 6, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: 6, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden', display: 'flex', justifyContent: isRTL ? 'flex-end' : 'flex-start' }}>
               <div style={{ height: '100%', width: `${hawlPct}%`, background: ACCENT, transition: 'width 300ms' }} />
             </div>
           )}
@@ -309,7 +309,7 @@ export default function ZakatCalculator() {
           </div>
         )}
         {saveError && (
-          <div style={{ fontSize: 11, color: '#EF4444', marginTop: 8, textAlign: 'right' }}>{saveError}</div>
+          <div style={{ fontSize: 11, color: '#EF4444', marginTop: 8, textAlign: 'end' }}>{saveError}</div>
         )}
       </div>
 
@@ -344,7 +344,7 @@ export default function ZakatCalculator() {
                     {c.cause_category && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.cause_category}</div>}
                   </div>
                 </div>
-                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>{tc('intel_zakat.donateLink')} →</span>
+                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>{tc('intel_zakat.donateLink')}</span>
               </a>
             ))}
           </div>

@@ -27,7 +27,7 @@
   "saved": "Saved",
   "saveError": "Couldn't save your calculation. Try again.",
   "charitiesHeading": "Pay your zakat directly",
-  "donateLink": "Donate on their site",
+  "donateLink": "Donate on their site →",
   "noCharities": "No partner charities listed for your country yet",
   "loadError": "Couldn't load your zakat calculation."
 }
