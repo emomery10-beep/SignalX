@@ -1,0 +1,67 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Hutaki barua pepe kama hii?",
+    "unsubscribe_link": "Jiondoe"
+  },
+  "fallback_name": "rafiki",
+  "plan_upgrade": {
+    "subject": "Karibu {planName}, {firstName}!",
+    "heading": "Habari {firstName}, karibu {planName}!",
+    "body": "Tumefurahi umeboresha mpango wako. Hivi ndivyo vimeshaanza kufanya kazi kwako:",
+    "cta": "Nenda kwenye dashibodi yako →",
+    "closing": "Kama kitu chochote kuhusu {planName} hakifanyi kazi jinsi unavyohitaji, jibu tu barua pepe hii — nitahakikisha binafsi kimetatuliwa.",
+    "signoff": "— Idarus<br/>Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Karibu AskBiz POS, {firstName}!",
+    "heading": "Habari {firstName}, karibu AskBiz POS!",
+    "body1": "Tumefurahi umeongeza AskBiz POS — karibu kwenye familia.",
+    "body2": "Till yako, mfuatiliaji wa hisa zako, na ripoti yako ya mwisho wa siku sasa vinafanya kazi, sambamba na akaunti yako yote ya AskBiz.",
+    "cta": "Fungua AskBiz POS →",
+    "closing": "Kama kitu chochote hakifanyi kazi jinsi unavyohitaji, jibu tu barua pepe hii — nitahakikisha binafsi kimetatuliwa.",
+    "signoff": "— Idarus<br/>Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
+  },
+  "plan_names": {
+    "free": "Bure",
+    "growth": "Kukua",
+    "business": "Biashara",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": [
+      "Maswali 10 ya AI kwa mwezi",
+      "Kupakia faili 1",
+      "Maswali na majibu ya msingi ya biashara",
+      "Muhtasari wa dashibodi",
+      "Msaada kwa barua pepe"
+    ],
+    "growth": [
+      "Maswali 500 ya AI kwa mwezi",
+      "Kupakia faili 10",
+      "Akili ya upanuzi",
+      "Tahadhari &amp; utabiri",
+      "Usawazishaji wa data ya wakati halisi (Shopify, Stripe, Sheets)",
+      "Violezo vya sekta",
+      "Msaada wa kipaumbele kwa barua pepe"
+    ],
+    "business": [
+      "Maswali 2,000 ya AI kwa mwezi",
+      "Kupakia faili bila kikomo",
+      "Wanachama 5 wa timu",
+      "Upatikanaji wa API",
+      "Vipengele vyote vya Kukua",
+      "Msaada maalum",
+      "Bei ya mtumiaji wa mapema — imehakikishwa milele"
+    ],
+    "enterprise": [
+      "Kila kitu bila kikomo",
+      "Wanachama wa timu bila kikomo",
+      "Miunganisho maalum",
+      "SSO &amp; usalama wa hali ya juu",
+      "Uhakikisho wa SLA",
+      "Meneja maalum wa akaunti",
+      "Uanzishaji maalum",
+      "Chaguo la alama nyeupe (white-label)"
+    ]
+  }
+}

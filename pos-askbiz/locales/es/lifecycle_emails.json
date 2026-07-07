@@ -1,0 +1,67 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "¿No quieres recibir correos como este?",
+    "unsubscribe_link": "Cancelar suscripción"
+  },
+  "fallback_name": "",
+  "plan_upgrade": {
+    "subject": "¡Bienvenido a {planName}, {firstName}!",
+    "heading": "Hola {firstName}, ¡bienvenido a {planName}!",
+    "body": "Nos encanta que hayas mejorado tu plan. Esto es lo que se acaba de activar para ti:",
+    "cta": "Ir a tu panel →",
+    "closing": "Si algo de {planName} no funciona como necesitas, solo responde a este correo — yo mismo me aseguro de resolverlo.",
+    "signoff": "— Idarus<br/>Fundador &amp; CEO de AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "¡Bienvenido a AskBiz POS, {firstName}!",
+    "heading": "Hola {firstName}, ¡bienvenido a AskBiz POS!",
+    "body1": "Nos encanta que hayas agregado AskBiz POS — bienvenido a la familia.",
+    "body2": "Tu caja registradora, tu control de stock y tu reporte de fin de día ya están activos, junto al resto de tu cuenta de AskBiz.",
+    "cta": "Abrir AskBiz POS →",
+    "closing": "Si algo no funciona como necesitas, solo responde a este correo — yo mismo me aseguro de resolverlo.",
+    "signoff": "— Idarus<br/>Fundador &amp; CEO de AskBiz"
+  },
+  "plan_names": {
+    "free": "Gratis",
+    "growth": "Crecimiento",
+    "business": "Negocios",
+    "enterprise": "Enterprise"
+  },
+  "plan_features": {
+    "free": [
+      "10 preguntas de IA al mes",
+      "1 carga de archivo",
+      "Preguntas y respuestas básicas de negocio",
+      "Resumen del panel",
+      "Soporte por correo"
+    ],
+    "growth": [
+      "500 preguntas de IA al mes",
+      "10 cargas de archivos",
+      "Inteligencia de expansión",
+      "Alertas &amp; pronósticos",
+      "Sincronización de datos en vivo (Shopify, Stripe, Sheets)",
+      "Plantillas por industria",
+      "Soporte prioritario por correo"
+    ],
+    "business": [
+      "2.000 preguntas de IA al mes",
+      "Cargas de archivos ilimitadas",
+      "5 miembros del equipo",
+      "Acceso a API",
+      "Todas las funciones de Crecimiento",
+      "Soporte dedicado",
+      "Precio de early adopter — garantizado para siempre"
+    ],
+    "enterprise": [
+      "Todo ilimitado",
+      "Miembros del equipo ilimitados",
+      "Integraciones personalizadas",
+      "SSO &amp; seguridad avanzada",
+      "Garantía de SLA",
+      "Gerente de cuenta dedicado",
+      "Incorporación personalizada",
+      "Opción de marca blanca"
+    ]
+  }
+}

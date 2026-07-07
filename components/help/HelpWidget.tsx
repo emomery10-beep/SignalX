@@ -806,10 +806,14 @@ export default function HelpWidget() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: voiceState === 'listening' ? '0 0 0 0 rgba(220,38,38,.55)' : '0 4px 16px rgba(208,138,89,.4)',
           fontSize: open ? 20 : 18, fontWeight: 700,
-          transition: 'background .2s, transform .15s',
+          transition: 'background .2s, transform .15s, opacity .15s',
           fontFamily: 'inherit',
           animation: voiceState === 'listening' ? 'voiceListenPulse 1.4s ease-out infinite' : 'none',
           touchAction: voiceNavActive ? 'none' : 'auto',
+          // Semi-transparent at rest so it reads as a lightweight floating aid rather
+          // than competing with page content; full opacity whenever it's actually in
+          // use (hover/focus, the help panel is open, or any non-idle voice state).
+          opacity: (showTooltip || open || voiceState !== 'idle') ? 1 : 0.6,
         }}
         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; setShowTooltip(true) }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; setShowTooltip(false) }}
