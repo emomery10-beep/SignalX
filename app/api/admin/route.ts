@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       // NOTE: is_suspicious is not selected here — migration 006_ip_fraud.sql that adds it
       // to profiles has not been applied to production, so selecting it fails the whole query.
-      .select('id, full_name, plan_id, business_type, country_code, created_at, pos_enabled, pos_seat_count')
+      .select('id, full_name, plan_id, business_type, country_code, created_at, pos_enabled, pos_seat_count, pos_stripe_subscription_id')
       .order('created_at', { ascending: false })
 
     if (profilesError) console.error('Profiles query error:', profilesError)
@@ -69,10 +69,34 @@ export async function GET(request: NextRequest) {
     // Get subscriptions
     const { data: subs } = await supabase
       .from('subscriptions')
-      .select('user_id, plan_id, status')
+      .select('user_id, plan_id, status, stripe_subscription_id, trial_ends_at')
 
     const subsMap: Record<string, string> = {}
-    subs?.forEach((s: any) => { subsMap[s.user_id] = s.plan_id })
+    const subsByUser: Record<string, any> = {}
+    subs?.forEach((s: any) => { subsMap[s.user_id] = s.plan_id; subsByUser[s.user_id] = s })
+
+    // Get trials — used to tell a paid plan/seats apart from an unpaid free trial
+    // or an admin-granted plan with no payment behind it (see change_plan below).
+    const { data: trials } = await supabase
+      .from('trials')
+      .select('user_id, trial_type, ends_at, converted')
+
+    const trialsByUser: Record<string, any[]> = {}
+    trials?.forEach((t: any) => {
+      if (!trialsByUser[t.user_id]) trialsByUser[t.user_id] = []
+      trialsByUser[t.user_id].push(t)
+    })
+
+    const now2 = Date.now()
+    function paymentStatus(p: any, sub: any, userTrials: any[], planPaid: boolean) {
+      if (planPaid) return 'paid'
+      const activeTrial = userTrials.find(t => !t.converted && new Date(t.ends_at).getTime() > now2)
+      if (activeTrial || sub?.status === 'trialing') return 'trial'
+      const expiredTrial = userTrials.find(t => !t.converted && new Date(t.ends_at).getTime() <= now2)
+      if (expiredTrial) return 'trial_expired'
+      if (p.plan_id !== 'free' || p.pos_enabled) return 'manual'
+      return 'free'
+    }
 
     // Get POS stats per user — transaction count and total revenue
     // status is constrained to completed/refunded/partially_refunded/amended — 'paid'
@@ -95,21 +119,28 @@ export async function GET(request: NextRequest) {
     // Build user rows — fallback to auth users if profiles table is empty/errored
     let users: any[]
     if (profiles && profiles.length > 0) {
-      users = profiles.map((p: any) => ({
-        id: p.id,
-        email: emailMap[p.id] || '',
-        full_name: p.full_name,
-        plan_id: subsMap[p.id] || p.plan_id || 'free',
-        business_type: p.business_type,
-        registration_country: p.country_code,
-        questions_used: usageMap[p.id] || 0,
-        pos_tx_count: posMap[p.id]?.txCount || 0,
-        pos_revenue: posMap[p.id]?.revenue || 0,
-        pos_enabled: !!p.pos_enabled,
-        pos_seat_count: p.pos_seat_count || 0,
-        created_at: p.created_at,
-        is_suspicious: false,
-      }))
+      users = profiles.map((p: any) => {
+        const sub = subsByUser[p.id]
+        const userTrials = trialsByUser[p.id] || []
+        const planId = subsMap[p.id] || p.plan_id || 'free'
+        return {
+          id: p.id,
+          email: emailMap[p.id] || '',
+          full_name: p.full_name,
+          plan_id: planId,
+          business_type: p.business_type,
+          registration_country: p.country_code,
+          questions_used: usageMap[p.id] || 0,
+          pos_tx_count: posMap[p.id]?.txCount || 0,
+          pos_revenue: posMap[p.id]?.revenue || 0,
+          pos_enabled: !!p.pos_enabled,
+          pos_seat_count: p.pos_seat_count || 0,
+          created_at: p.created_at,
+          is_suspicious: false,
+          plan_payment_status: planId === 'free' ? 'free' : paymentStatus(p, sub, userTrials.filter((t: any) => t.trial_type === 'growth'), !!sub?.stripe_subscription_id),
+          pos_payment_status: !p.pos_enabled ? 'free' : paymentStatus(p, sub, userTrials.filter((t: any) => t.trial_type === 'pos'), !!p.pos_stripe_subscription_id),
+        }
+      })
     } else {
       users = (authData?.users || []).map((u: any) => ({
         id: u.id,
@@ -125,6 +156,8 @@ export async function GET(request: NextRequest) {
         pos_seat_count: 0,
         created_at: u.created_at,
         is_suspicious: false,
+        plan_payment_status: 'free',
+        pos_payment_status: 'free',
       }))
     }
 

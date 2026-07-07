@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
           .from('profiles')
           .update({ pos_enabled: true, pos_seat_count: seatCount })
           .eq('id', payment.user_id)
+        // Mark PoS trial as converted
+        await supabase.from('trials').update({ converted: true }).eq('user_id', payment.user_id).eq('trial_type', 'pos')
         // Reliable server-side provisioning of any staff drafts
         await provisionStaffDrafts(payment.user_id as string).catch(() => {})
       } else {
@@ -66,6 +68,11 @@ export async function POST(request: NextRequest) {
           .from('profiles')
           .update({ plan_id: plan, plan: plan })
           .eq('id', payment.user_id)
+
+        // Mark Growth trial as converted if applicable
+        if (plan === 'growth' || plan === 'business') {
+          await supabase.from('trials').update({ converted: true }).eq('user_id', payment.user_id).eq('trial_type', 'growth')
+        }
       }
     } else {
       await supabase

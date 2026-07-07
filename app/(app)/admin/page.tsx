@@ -8,6 +8,14 @@ const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
   free: '#64748b', growth: '#b45309', business: '#7c3aed', enterprise: '#047857',
 }
+// Distinguishes an actually-paid plan/seats from a free trial or an admin-granted
+// plan with no Stripe/M-Pesa/PesaPal payment behind it — both look identical to
+// plan_id/pos_seat_count alone, so surface it explicitly next to each badge.
+const PAYMENT_BADGE: Record<string, React.ReactNode> = {
+  trial: <span title="Free trial, not yet paid" style={{marginLeft:5,padding:'1px 6px',borderRadius:9999,fontSize:9,fontWeight:700,background:'#2563eb20',color:'#2563eb'}}>TRIAL</span>,
+  trial_expired: <span title="Trial period ended, never converted to paid" style={{marginLeft:5,padding:'1px 6px',borderRadius:9999,fontSize:9,fontWeight:700,background:'#dc262620',color:'#dc2626'}}>EXPIRED</span>,
+  manual: <span title="Granted manually via admin panel, no payment on file" style={{marginLeft:5,padding:'1px 6px',borderRadius:9999,fontSize:9,fontWeight:700,background:'#d9770620',color:'#d97706'}}>MANUAL</span>,
+}
 const TABS = ['Overview','Revenue','Users','Activity','Costs','Growth'] as const
 type Tab = typeof TABS[number]
 const TAB_KEYS: Record<Tab, string> = {
@@ -657,13 +665,16 @@ export default function AdminPage() {
                       <tr key={u.id} style={{borderTop:'1px solid var(--b)',background:u.is_suspicious?'rgba(248,113,113,.04)':i%2===0?'var(--sf)':'var(--bg)'}}>
                         <td style={{padding:'9px 12px',fontWeight:500}}>{u.full_name||tc('admin.empty_dash')}{u.is_suspicious?' ⚠️':''}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.email}</td>
-                        <td style={{padding:'9px 12px'}}><span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:(PLAN_COLORS[u.plan_id]||'#64748b')+'20',color:PLAN_COLORS[u.plan_id]||'#64748b'}}>{u.plan_id}</span></td>
+                        <td style={{padding:'9px 12px'}}>
+                          <span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:(PLAN_COLORS[u.plan_id]||'#64748b')+'20',color:PLAN_COLORS[u.plan_id]||'#64748b'}}>{u.plan_id}</span>
+                          {PAYMENT_BADGE[u.plan_payment_status as string]}
+                        </td>
                         <td style={{padding:'9px 12px',color:'var(--tx2)',textTransform:'capitalize'}}>{u.business_type||tc('admin.empty_dash')}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.registration_country||tc('admin.empty_dash')}</td>
                         <td style={{padding:'9px 12px'}}>{u.questions_used||0}</td>
                         <td style={{padding:'9px 12px'}}>{u.pos_tx_count > 0 ? <span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:'#0891b220',color:'#0891b2'}}>{u.pos_tx_count}</span> : <span style={{color:'var(--tx3)'}}>—</span>}</td>
                         <td style={{padding:'9px 12px',fontWeight:u.pos_revenue>0?600:'normal',color:u.pos_revenue>0?'var(--tx)':'var(--tx3)'}}>{u.pos_revenue>0 ? (u.pos_revenue>=1000 ? (u.pos_revenue/1000).toFixed(1)+'K' : u.pos_revenue.toFixed(0)) : '—'}</td>
-                        <td style={{padding:'9px 12px'}}>{u.pos_enabled ? <span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:'#16a34a20',color:'#16a34a'}}>{u.pos_seat_count||0} seat{u.pos_seat_count===1?'':'s'}</span> : <span style={{color:'var(--tx3)'}}>—</span>}</td>
+                        <td style={{padding:'9px 12px'}}>{u.pos_enabled ? <><span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:'#16a34a20',color:'#16a34a'}}>{u.pos_seat_count||0} seat{u.pos_seat_count===1?'':'s'}</span>{PAYMENT_BADGE[u.pos_payment_status as string]}</> : <span style={{color:'var(--tx3)'}}>—</span>}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx3)'}}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
                         <td style={{padding:'9px 12px'}}>
                           <select onChange={e=>changePlan(u.id,e.target.value)} value={u.plan_id} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer'}}>
