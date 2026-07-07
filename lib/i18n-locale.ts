@@ -78,7 +78,14 @@ const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 // prefix, then adds the target's prefix (English stays unprefixed). Preserves any
 // ?query and #hash so the switcher doesn't drop pagination/filter/anchor state.
 // Used by the switcher to navigate and by hreflang generation.
-export function localePath(pathname: string, locale: Locale): string {
+//
+// Callers pass the user's current UI language straight from useLang(), which
+// ranges over all of Lang (10 languages) — wider than the launch-set Locale (7).
+// Coerce down to an active locale so e.g. pt/it/pl (translated in-app but not
+// launched as a routed locale) fall back to the default prefix instead of
+// producing a dead /pt/... link.
+export function localePath(pathname: string, locale: Locale | Lang): string {
+  const activeLocale = isActiveLocale(locale) ? locale : DEFAULT_LOCALE
   const hashAt = pathname.indexOf('#')
   const hash = hashAt >= 0 ? pathname.slice(hashAt) : ''
   const beforeHash = hashAt >= 0 ? pathname.slice(0, hashAt) : pathname
@@ -89,7 +96,7 @@ export function localePath(pathname: string, locale: Locale): string {
   const segs = path.split('/')
   if ((PREFIXED_LOCALES as string[]).includes(segs[1])) segs.splice(1, 1)
   const bare = segs.join('/') || '/'
-  const localized = locale === DEFAULT_LOCALE ? bare : `/${locale}${bare === '/' ? '' : bare}`
+  const localized = activeLocale === DEFAULT_LOCALE ? bare : `/${activeLocale}${bare === '/' ? '' : bare}`
   return localized + query + hash
 }
 
