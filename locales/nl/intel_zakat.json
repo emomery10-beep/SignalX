@@ -8,6 +8,7 @@
   "cashLabel": "Kassaldo",
   "receivablesLabel": "Vorderingen",
   "payablesLabel": "Schulden (afgetrokken)",
+  "editHint": "Tik op een bedrag om het aan te passen",
   "estimateLabel": "Zakat-basis × 2,5%",
   "amountDueLabel": "Verschuldigde zakat",
   "hawlProgress": "Hawl-voortgang — dag {elapsed} van {total}",
