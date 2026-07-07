@@ -8,6 +8,7 @@
   "cashLabel": "الرصيد النقدي",
   "receivablesLabel": "الذمم المدينة",
   "payablesLabel": "الذمم الدائنة (مخصومة)",
+  "editHint": "اضغط على أي رقم لتعديله",
   "estimateLabel": "وعاء الزكاة × 2.5%",
   "amountDueLabel": "الزكاة المستحقة",
   "hawlProgress": "تقدّم الحول — اليوم {elapsed} من {total}",

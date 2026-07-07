@@ -8,6 +8,7 @@
   "cashLabel": "Solde de trésorerie",
   "receivablesLabel": "Créances",
   "payablesLabel": "Dettes (déduites)",
+  "editHint": "Touchez un montant pour le modifier",
   "estimateLabel": "Base du zakat × 2,5 %",
   "amountDueLabel": "Zakat dû",
   "hawlProgress": "Progression du hawl — jour {elapsed} sur {total}",

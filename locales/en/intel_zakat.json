@@ -8,6 +8,7 @@
   "cashLabel": "Cash balance",
   "receivablesLabel": "Receivables",
   "payablesLabel": "Payables (deducted)",
+  "editHint": "Tap a figure to override it",
   "estimateLabel": "Zakat base × 2.5%",
   "amountDueLabel": "Zakat due",
   "hawlProgress": "Hawl progress — day {elapsed} of {total}",

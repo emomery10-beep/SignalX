@@ -8,6 +8,7 @@
   "cashLabel": "Kassenbestand",
   "receivablesLabel": "Forderungen",
   "payablesLabel": "Verbindlichkeiten (abgezogen)",
+  "editHint": "Tippen Sie auf einen Wert, um ihn zu ändern",
   "estimateLabel": "Zakat-Basis × 2,5 %",
   "amountDueLabel": "Fällige Zakat",
   "hawlProgress": "Hawl-Fortschritt — Tag {elapsed} von {total}",

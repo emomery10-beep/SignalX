@@ -8,6 +8,7 @@
   "cashLabel": "Salio la fedha taslimu",
   "receivablesLabel": "Madeni ya kupokea",
   "payablesLabel": "Madeni ya kulipa (yametolewa)",
+  "editHint": "Gusa nambari yoyote ili kuibadilisha",
   "estimateLabel": "Kiwango cha zaka × 2.5%",
   "amountDueLabel": "Zaka inayodaiwa",
   "hawlProgress": "Maendeleo ya hauli — siku {elapsed} kati ya {total}",

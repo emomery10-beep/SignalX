@@ -8,6 +8,7 @@
   "cashLabel": "Saldo en efectivo",
   "receivablesLabel": "Cuentas por cobrar",
   "payablesLabel": "Cuentas por pagar (deducidas)",
+  "editHint": "Toca una cifra para modificarla",
   "estimateLabel": "Base del zakat × 2.5%",
   "amountDueLabel": "Zakat a pagar",
   "hawlProgress": "Progreso del hawl — día {elapsed} de {total}",

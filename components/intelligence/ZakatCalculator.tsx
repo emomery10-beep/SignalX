@@ -32,15 +32,17 @@ const TILE_INPUT_STYLE = {
   fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' as const,
 }
 
-function EditableTile({ label, value, sym, tone, onCommit }: {
+function EditableTile({ label, value, sym, tone, editHint, onCommit }: {
   label: string
   value: number
   sym: string
   tone?: 'negative'
+  editHint: string
   onCommit: (v: number | undefined) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const [hover, setHover] = useState(false)
 
   const startEdit = () => { setDraft(String(value)); setEditing(true) }
   const commit = () => {
@@ -49,12 +51,12 @@ function EditableTile({ label, value, sym, tone, onCommit }: {
     setEditing(false)
   }
 
-  return (
-    <div style={{ background: 'var(--ev)', borderRadius: 10, padding: '10px 12px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
-        {label}
-      </div>
-      {editing ? (
+  if (editing) {
+    return (
+      <div style={{ background: 'var(--ev)', borderRadius: 10, padding: '10px 12px' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
+          {label}
+        </div>
         <input
           autoFocus
           type="text"
@@ -65,19 +67,38 @@ function EditableTile({ label, value, sym, tone, onCommit }: {
           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
           style={TILE_INPUT_STYLE}
         />
-      ) : (
-        <button
-          onClick={startEdit}
-          style={{
-            fontSize: 16, fontWeight: 600, fontFamily: 'inherit',
-            color: tone === 'negative' ? '#EF4444' : 'var(--tx)',
-            background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'start',
-          }}
-        >
-          {tone === 'negative' && value > 0 ? '− ' : ''}{fmtMoney(value, sym)}
-        </button>
-      )}
-    </div>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={startEdit}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      title={editHint}
+      aria-label={`${label}: ${fmtMoney(value, sym)}. ${editHint}`}
+      style={{
+        display: 'block', width: '100%', textAlign: 'start', fontFamily: 'inherit',
+        background: hover ? 'var(--b)' : 'var(--ev)', border: 'none', borderRadius: 10,
+        padding: '10px 12px', cursor: 'pointer', transition: 'background 120ms',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 4 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+          {label}
+        </span>
+        <span style={{ fontSize: 11, opacity: hover ? 1 : 0.5, transition: 'opacity 120ms', flexShrink: 0 }} aria-hidden="true">✏️</span>
+      </div>
+      <div style={{
+        fontSize: 16, fontWeight: 600,
+        color: tone === 'negative' ? '#EF4444' : 'var(--tx)',
+        borderBottom: `1px dashed ${tone === 'negative' ? 'rgba(239,68,68,.35)' : 'var(--b)'}`,
+        paddingBottom: 2, display: 'inline-block',
+      }}>
+        {tone === 'negative' && value > 0 ? '− ' : ''}{fmtMoney(value, sym)}
+      </div>
+    </button>
   )
 }
 
@@ -235,11 +256,12 @@ export default function ZakatCalculator() {
           </span>
         </div>
 
+        <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('intel_zakat.editHint')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
-          <EditableTile label={tc('intel_zakat.inventoryLabel')} value={effective.inventoryValue} sym={sym} onCommit={v => setOverride('inventoryValue', v)} />
-          <EditableTile label={tc('intel_zakat.cashLabel')} value={effective.cashValue} sym={sym} onCommit={v => setOverride('cashValue', v)} />
-          <EditableTile label={tc('intel_zakat.receivablesLabel')} value={effective.receivablesValue} sym={sym} onCommit={v => setOverride('receivablesValue', v)} />
-          <EditableTile label={tc('intel_zakat.payablesLabel')} value={effective.payablesValue} sym={sym} tone="negative" onCommit={v => setOverride('payablesValue', v)} />
+          <EditableTile label={tc('intel_zakat.inventoryLabel')} value={effective.inventoryValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('inventoryValue', v)} />
+          <EditableTile label={tc('intel_zakat.cashLabel')} value={effective.cashValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('cashValue', v)} />
+          <EditableTile label={tc('intel_zakat.receivablesLabel')} value={effective.receivablesValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('receivablesValue', v)} />
+          <EditableTile label={tc('intel_zakat.payablesLabel')} value={effective.payablesValue} sym={sym} tone="negative" editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('payablesValue', v)} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--b)', paddingTop: 12, marginBottom: 14 }}>
