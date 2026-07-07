@@ -346,5 +346,11 @@
   "poui_toast_sent": "Sent to supplier on WhatsApp",
   "poui_toast_need_qty": "Enter what arrived",
   "poui_toast_receive_err": "Could not receive stock",
-  "poui_toast_received": "Stock received — inventory updated"
+  "poui_toast_received": "Stock received — inventory updated",
+  "poui_mark_paid": "Mark as paid",
+  "poui_payment_unpaid": "Unpaid",
+  "poui_payment_partial": "Partially paid",
+  "poui_payment_paid": "Paid",
+  "poui_toast_paid": "Marked as paid",
+  "poui_toast_pay_err": "Could not update payment status"
 }

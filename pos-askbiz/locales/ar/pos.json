@@ -276,5 +276,11 @@
   "reason_defective": "منتج معيب",
   "reason_duplicate": "رسوم مكررة",
   "reason_other": "أخرى",
-  "full_refund": "استرداد كامل"
+  "full_refund": "استرداد كامل",
+  "poui_mark_paid": "وضع علامة مدفوع",
+  "poui_payment_unpaid": "غير مدفوع",
+  "poui_payment_partial": "مدفوع جزئيًا",
+  "poui_payment_paid": "مدفوع",
+  "poui_toast_paid": "تم وضع علامة مدفوع",
+  "poui_toast_pay_err": "تعذّر تحديث حالة الدفع"
 }

@@ -276,5 +276,11 @@
   "reason_defective": "Defektes Produkt",
   "reason_duplicate": "Doppelte Belastung",
   "reason_other": "Sonstiges",
-  "full_refund": "Vollständige Rückerstattung"
+  "full_refund": "Vollständige Rückerstattung",
+  "poui_mark_paid": "Als bezahlt markieren",
+  "poui_payment_unpaid": "Unbezahlt",
+  "poui_payment_partial": "Teilweise bezahlt",
+  "poui_payment_paid": "Bezahlt",
+  "poui_toast_paid": "Als bezahlt markiert",
+  "poui_toast_pay_err": "Zahlungsstatus konnte nicht aktualisiert werden"
 }

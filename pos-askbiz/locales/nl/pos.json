@@ -276,5 +276,11 @@
   "reason_defective": "Defect product",
   "reason_duplicate": "Dubbele afschrijving",
   "reason_other": "Overig",
-  "full_refund": "Volledige terugbetaling"
+  "full_refund": "Volledige terugbetaling",
+  "poui_mark_paid": "Markeren als betaald",
+  "poui_payment_unpaid": "Onbetaald",
+  "poui_payment_partial": "Gedeeltelijk betaald",
+  "poui_payment_paid": "Betaald",
+  "poui_toast_paid": "Gemarkeerd als betaald",
+  "poui_toast_pay_err": "Kon betaalstatus niet bijwerken"
 }

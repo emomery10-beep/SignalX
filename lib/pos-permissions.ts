@@ -46,6 +46,7 @@ export type PosPermission =
   | 'purchase_order.create' // create/edit POs & suppliers
   | 'purchase_order.send'   // send a PO to the supplier (WhatsApp)
   | 'purchase_order.receive'// receive stock against a PO
+  | 'purchase_order.pay'    // mark a received PO as paid to the supplier
 
 // ── Role → permissions map ───────────────────────────────────
 const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
@@ -60,7 +61,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
     'capture.approve',
     'reports.view', 'reports.financial',
-    'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive',
+    'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
   ],
   manager: [
     'sales.view', 'sales.view_all',
@@ -71,7 +72,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
     'capture.approve',
     'reports.view', 'reports.financial',
-    'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive',
+    'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
   ],
   supervisor: [
     'sales.view',
@@ -96,7 +97,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'inventory.view', 'inventory.manage',
     'sales.view',
     'camera.intake',
-    'purchase_order.view', 'purchase_order.create', 'purchase_order.receive',
+    'purchase_order.view', 'purchase_order.create', 'purchase_order.receive', 'purchase_order.pay',
   ],
   cashier: [
     'sales.create', 'sales.view',

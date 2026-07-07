@@ -346,5 +346,11 @@
   "poui_toast_sent": "Imetumwa kwa msambazaji kwenye WhatsApp",
   "poui_toast_need_qty": "Weka kiasi kilichofika",
   "poui_toast_receive_err": "Imeshindwa kupokea bidhaa",
-  "poui_toast_received": "Bidhaa zimepokelewa — hisa zimesasishwa"
+  "poui_toast_received": "Bidhaa zimepokelewa — hisa zimesasishwa",
+  "poui_mark_paid": "Weka alama ya kulipwa",
+  "poui_payment_unpaid": "Haijalipwa",
+  "poui_payment_partial": "Imelipwa kiasi",
+  "poui_payment_paid": "Imelipwa",
+  "poui_toast_paid": "Imewekwa alama ya kulipwa",
+  "poui_toast_pay_err": "Imeshindwa kusasisha hali ya malipo"
 }

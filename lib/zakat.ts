@@ -10,9 +10,11 @@ const HAWL_DAYS = 355
 
 export interface ZakatBreakdown {
   cashValue: number
+  cashSet: boolean            // false = never entered anywhere, cashValue is a placeholder 0, not a confirmed figure
   inventoryValue: number
   receivablesValue: number
   payablesValue: number
+  payablesFromPOs: number     // portion of payablesValue derived from unpaid/partially-paid received purchase orders
   zakatBase: number
   currency: string
 }
@@ -25,10 +27,17 @@ export interface HawlStatus {
   active: boolean
 }
 
-export interface NisabInfo {
-  metal: 'gold' | 'silver'
-  cachedValue: number | null
+export interface MetalNisabCache {
+  value: number | null
   checkedAt: string | null
+}
+
+export interface NisabInfo {
+  metal: 'gold' | 'silver'   // currently selected metal
+  cachedValue: number | null // convenience alias for nisab[metal].value
+  checkedAt: string | null   // convenience alias for nisab[metal].checkedAt
+  gold: MetalNisabCache
+  silver: MetalNisabCache
 }
 
 export interface ZakatResult {
@@ -62,8 +71,9 @@ export function validateOverrides(overrides: ZakatOverrides): string | null {
 /**
  * Computes the current zakat position for a business from the same source
  * tables the CFO dashboard reads (inventory at retail value, cfo_receivables,
- * cost_profile_overrides for cash) — no dependency on the CFO snapshot route
- * itself, since none of these three fields go through its revenue/COGS
+ * cost_profile_overrides for cash), plus purchase_orders for genuinely
+ * outstanding supplier payables — no dependency on the CFO snapshot route
+ * itself, since none of these fields go through its revenue/COGS
  * source-dedup logic (that guard only applies to unified_data vs
  * pos_transactions, which zakat doesn't use).
  *
@@ -77,10 +87,10 @@ export async function computeZakat(
   userId: string,
   overrides: ZakatOverrides = {}
 ): Promise<ZakatResult> {
-  const [{ data: profile }, { data: overridesRow }, { data: products }, { data: receivableRows }] = await Promise.all([
+  const [{ data: profile }, { data: overridesRow }, { data: products }, { data: receivableRows }, { data: unpaidPOs }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('currency_symbol, zakat_hawl_start_date, zakat_nisab_metal, zakat_nisab_cached_value, zakat_nisab_checked_at')
+      .select('currency_symbol, zakat_hawl_start_date, zakat_nisab_metal, zakat_nisab_gold_value, zakat_nisab_gold_checked_at, zakat_nisab_silver_value, zakat_nisab_silver_checked_at')
       .eq('id', userId)
       .single(),
     supabase
@@ -98,11 +108,27 @@ export async function computeZakat(
       .from('cfo_receivables')
       .select('type, amount')
       .eq('user_id', userId),
+    // Received orders where the supplier invoice isn't fully settled yet —
+    // a genuine short-term trade payable (deductible per fiqh: a loan/credit
+    // taken to acquire zakatable stock). Manually-logged cfo_receivables
+    // payables and PO-derived ones aren't deduplicated against each other —
+    // there's no shared reference key — so a business that logs the same
+    // liability both ways would double-count it. Worth a manual check.
+    supabase
+      .from('purchase_orders')
+      .select('total_cost, amount_paid')
+      .eq('owner_id', userId)
+      .eq('status', 'received')
+      .neq('payment_status', 'paid'),
   ])
 
   const currency = profile?.currency_symbol || '£'
   const cfoOverrides = (overridesRow?.overrides || {}) as Record<string, any>
-  const autoCash = cfoOverrides.cash_balance || cfoOverrides.cashBalance || 0
+  // Distinguish "never entered" from "entered as zero" — a bare `|| 0` can't tell
+  // the two apart, and the difference matters: a silent 0 looks like a confirmed
+  // figure, when really nobody has ever told the calculator what the cash position is.
+  const cashSet = overridesRow != null && (cfoOverrides.cash_balance !== undefined || cfoOverrides.cashBalance !== undefined)
+  const autoCash = cfoOverrides.cash_balance ?? cfoOverrides.cashBalance ?? 0
   const autoInventory = (products || []).reduce((s: number, p: any) => s + ((p.sale_price || 0) * (p.stock_qty || 0)), 0)
 
   const rows = receivableRows || []
@@ -111,7 +137,10 @@ export async function computeZakat(
   // no "doubtful debt" signal in this schema to exclude on. This mirrors exactly what the
   // CFO snapshot's own totals (receivables_summary) already include.
   const autoReceivables = rows.filter((r: any) => r.type === 'receivable').reduce((s: number, r: any) => s + (r.amount || 0), 0)
-  const autoPayables = rows.filter((r: any) => r.type === 'payable').reduce((s: number, r: any) => s + (r.amount || 0), 0)
+  const manualPayables = rows.filter((r: any) => r.type === 'payable').reduce((s: number, r: any) => s + (r.amount || 0), 0)
+
+  const payablesFromPOs = (unpaidPOs || []).reduce((s: number, po: any) => s + Math.max(0, (Number(po.total_cost) || 0) - (Number(po.amount_paid) || 0)), 0)
+  const autoPayables = manualPayables + payablesFromPOs
 
   const cashValue = overrides.cashValue ?? autoCash
   const inventoryValue = overrides.inventoryValue ?? autoInventory
@@ -123,10 +152,18 @@ export async function computeZakat(
   // PostgREST returns `numeric` columns as strings to avoid float precision
   // loss in transit — coerce explicitly so the NisabInfo contract (number)
   // is actually true at runtime, not just at the type level.
+  const toNum = (v: unknown): number | null => (v != null ? Number(v) : null)
+  const selectedMetal: 'gold' | 'silver' = profile?.zakat_nisab_metal === 'gold' ? 'gold' : 'silver'
+  const gold: MetalNisabCache = { value: toNum(profile?.zakat_nisab_gold_value), checkedAt: profile?.zakat_nisab_gold_checked_at ?? null }
+  const silver: MetalNisabCache = { value: toNum(profile?.zakat_nisab_silver_value), checkedAt: profile?.zakat_nisab_silver_checked_at ?? null }
+  const selected = selectedMetal === 'gold' ? gold : silver
+
   const nisab: NisabInfo = {
-    metal: (profile?.zakat_nisab_metal === 'gold' ? 'gold' : 'silver'),
-    cachedValue: profile?.zakat_nisab_cached_value != null ? Number(profile.zakat_nisab_cached_value) : null,
-    checkedAt: profile?.zakat_nisab_checked_at ?? null,
+    metal: selectedMetal,
+    cachedValue: selected.value,
+    checkedAt: selected.checkedAt,
+    gold,
+    silver,
   }
   const nisabKnown = nisab.cachedValue != null
   const aboveNisab = nisabKnown && zakatBase >= (nisab.cachedValue as number)
@@ -179,7 +216,7 @@ export async function computeZakat(
   const amountDue = due ? Math.round(zakatBase * 0.025 * 100) / 100 : 0
 
   return {
-    breakdown: { cashValue, inventoryValue, receivablesValue, payablesValue, zakatBase, currency },
+    breakdown: { cashValue, cashSet, inventoryValue, receivablesValue, payablesValue, payablesFromPOs, zakatBase, currency },
     hawl: { startDate: hawlStartDate, daysElapsed, daysRemaining, dueDate, active: !!hawlStartDate },
     nisab,
     nisabKnown,
@@ -187,4 +224,9 @@ export async function computeZakat(
     due,
     amountDue,
   }
+}
+
+/** Switches the user's selected nisab metal without a price check — the cached value for the newly-selected metal (if any) is used as-is. */
+export async function setNisabMetal(supabase: SupabaseClient, userId: string, metal: 'gold' | 'silver'): Promise<void> {
+  await supabase.from('profiles').update({ zakat_nisab_metal: metal }).eq('id', userId)
 }

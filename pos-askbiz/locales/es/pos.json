@@ -276,5 +276,11 @@
   "reason_defective": "Producto defectuoso",
   "reason_duplicate": "Cargo duplicado",
   "reason_other": "Otro",
-  "full_refund": "Reembolso total"
+  "full_refund": "Reembolso total",
+  "poui_mark_paid": "Marcar como pagado",
+  "poui_payment_unpaid": "Sin pagar",
+  "poui_payment_partial": "Pago parcial",
+  "poui_payment_paid": "Pagado",
+  "poui_toast_paid": "Marcado como pagado",
+  "poui_toast_pay_err": "No se pudo actualizar el estado del pago"
 }

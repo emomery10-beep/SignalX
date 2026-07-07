@@ -258,11 +258,13 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
   const [receiveMode, setReceiveMode] = useState(false)
   const [receiving, setReceiving] = useState(false)
   const [receiveQtys, setReceiveQtys] = useState<Record<string, string>>({})
+  const [paying, setPaying] = useState(false)
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
   const style = statusStyle(po.status)
   const supplierPhone = po.supplier?.phone
   const canSend = po.status !== 'received' && po.status !== 'cancelled'
   const canReceive = po.status !== 'received' && po.status !== 'cancelled'
+  const canPay = po.status === 'received' && po.payment_status !== 'paid'
   const receiveInput: CSSProperties = {
     width: '100%', minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)',
     borderRadius: 8, padding: '0 8px', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit', textAlign: 'center',
@@ -299,6 +301,21 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
       notify(t('poui_toast_receive_err'), false)
     } finally {
       setReceiving(false)
+    }
+  }
+
+  async function handlePay() {
+    setPaying(true)
+    try {
+      const res = await fetch(`/api/pos/purchase-orders/${po.id}/pay`, { method: 'POST' })
+      if (!res.ok) { notify(t('poui_toast_pay_err'), false); setPaying(false); return }
+      const data = await res.json()
+      onUpdated(data.purchase_order)
+      notify(t('poui_toast_paid'), true)
+    } catch {
+      notify(t('poui_toast_pay_err'), false)
+    } finally {
+      setPaying(false)
     }
   }
 
@@ -348,7 +365,18 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
           <div style={{ fontSize: 16, fontWeight: 700 }}>{po.supplier?.name || t('poui_no_supplier')}</div>
           <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
         </div>
-        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999, marginBottom: 14 }}>{statusLabel(t, po.status)}</span>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+          <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999 }}>{statusLabel(t, po.status)}</span>
+          {po.status === 'received' && (
+            <span style={{
+              display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 9999,
+              color: po.payment_status === 'paid' ? GREEN : po.payment_status === 'partial' ? AMBER : RED,
+              background: po.payment_status === 'paid' ? 'rgba(22,163,74,.12)' : po.payment_status === 'partial' ? 'rgba(202,138,4,.12)' : 'rgba(220,38,38,.10)',
+            }}>
+              {t(`poui_payment_${po.payment_status || 'unpaid'}`)}
+            </span>
+          )}
+        </div>
 
         <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
@@ -369,6 +397,16 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
           <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_total')}</span>
           <span style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(po.total_cost)}</span>
         </div>
+
+        {canPay && (
+          <button
+            onClick={handlePay}
+            disabled={paying}
+            style={{ width: '100%', minHeight: 44, background: paying ? 'var(--ev)' : GREEN, color: paying ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: paying ? 'default' : 'pointer', fontFamily: 'inherit', marginBottom: 10 }}
+          >
+            {paying ? t('poui_saving') : t('poui_mark_paid')}
+          </button>
+        )}
 
         {canReceive && !receiveMode && (
           <button

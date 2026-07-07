@@ -38,13 +38,16 @@ export async function POST(request: NextRequest) {
     return json({ error: 'Could not fetch a current price. Try again shortly.' }, 502)
   }
 
+  // Checking a metal's price also selects it — each metal's value/timestamp
+  // is cached independently, so switching back to the other metal later
+  // doesn't lose what was last checked for it.
   await supabase
     .from('profiles')
-    .update({
-      zakat_nisab_metal: metal,
-      zakat_nisab_cached_value: priceResult.nisabValue,
-      zakat_nisab_checked_at: priceResult.checkedAt,
-    })
+    .update(
+      metal === 'gold'
+        ? { zakat_nisab_metal: metal, zakat_nisab_gold_value: priceResult.nisabValue, zakat_nisab_gold_checked_at: priceResult.checkedAt }
+        : { zakat_nisab_metal: metal, zakat_nisab_silver_value: priceResult.nisabValue, zakat_nisab_silver_checked_at: priceResult.checkedAt }
+    )
     .eq('id', user.id)
 
   // Return the full recomputed zakat position (not just the price) so the

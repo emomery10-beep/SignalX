@@ -39,6 +39,7 @@ export type PosAuditEvent =
   | 'purchase_order.created'
   | 'purchase_order.sent'
   | 'purchase_order.received'
+  | 'purchase_order.paid'
   | 'purchase_order.cancelled'
 
 export interface PosAuditPayload {

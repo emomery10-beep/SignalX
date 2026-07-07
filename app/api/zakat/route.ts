@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { computeZakat, validateOverrides, ZakatOverrides } from '@/lib/zakat'
+import { computeZakat, validateOverrides, setNisabMetal, ZakatOverrides } from '@/lib/zakat'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +32,12 @@ export async function POST(request: NextRequest) {
 
   const validationError = validateOverrides(overrides)
   if (validationError) return json({ error: validationError }, 400)
+
+  // Switching which metal is selected doesn't need a fresh price check —
+  // each metal's last-checked value is already cached independently.
+  if (body?.metal === 'gold' || body?.metal === 'silver') {
+    await setNisabMetal(supabase, user.id, body.metal)
+  }
 
   const result = await computeZakat(supabase, user.id, overrides)
 

@@ -276,5 +276,11 @@
   "reason_defective": "Produit défectueux",
   "reason_duplicate": "Débit en double",
   "reason_other": "Autre",
-  "full_refund": "Remboursement intégral"
+  "full_refund": "Remboursement intégral",
+  "poui_mark_paid": "Marquer comme payé",
+  "poui_payment_unpaid": "Non payé",
+  "poui_payment_partial": "Paiement partiel",
+  "poui_payment_paid": "Payé",
+  "poui_toast_paid": "Marqué comme payé",
+  "poui_toast_pay_err": "Impossible de mettre à jour le statut de paiement"
 }

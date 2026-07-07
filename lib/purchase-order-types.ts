@@ -34,6 +34,8 @@ export interface PurchaseOrderItem {
   created_at: string;
 }
 
+export type PurchaseOrderPaymentStatus = "unpaid" | "partial" | "paid";
+
 export interface PurchaseOrder {
   id: string;
   owner_id: string;
@@ -46,6 +48,9 @@ export interface PurchaseOrder {
   received_at: string | null;
   created_by: string | null;
   client_tx_id: string | null;
+  payment_status: PurchaseOrderPaymentStatus;
+  paid_at: string | null;
+  amount_paid: number;
   created_at: string;
   updated_at: string;
 }

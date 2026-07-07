@@ -32,19 +32,21 @@ const TILE_INPUT_STYLE = {
   fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' as const,
 }
 
-function EditableTile({ label, value, sym, tone, editHint, onCommit }: {
+function EditableTile({ label, value, sym, tone, editHint, notSet, notSetLabel, onCommit }: {
   label: string
   value: number
   sym: string
   tone?: 'negative'
   editHint: string
+  notSet?: boolean
+  notSetLabel?: string
   onCommit: (v: number | undefined) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [hover, setHover] = useState(false)
 
-  const startEdit = () => { setDraft(String(value)); setEditing(true) }
+  const startEdit = () => { setDraft(notSet ? '' : String(value)); setEditing(true) }
   const commit = () => {
     const num = draft === '' ? undefined : Number(draft)
     onCommit(num !== undefined && !Number.isNaN(num) ? num : undefined)
@@ -77,27 +79,32 @@ function EditableTile({ label, value, sym, tone, editHint, onCommit }: {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       title={editHint}
-      aria-label={`${label}: ${fmtMoney(value, sym)}. ${editHint}`}
+      aria-label={`${label}: ${notSet ? notSetLabel : fmtMoney(value, sym)}. ${editHint}`}
       style={{
         display: 'block', width: '100%', textAlign: 'start', fontFamily: 'inherit',
-        background: hover ? 'var(--b)' : 'var(--ev)', border: 'none', borderRadius: 10,
-        padding: '10px 12px', cursor: 'pointer', transition: 'background 120ms',
+        background: notSet ? 'rgba(245,158,11,.08)' : hover ? 'var(--b)' : 'var(--ev)',
+        border: notSet ? '1px solid rgba(245,158,11,.3)' : 'none', borderRadius: 10,
+        padding: notSet ? '9px 11px' : '10px 12px', cursor: 'pointer', transition: 'background 120ms',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 4 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
           {label}
         </span>
-        <span style={{ fontSize: 11, opacity: hover ? 1 : 0.5, transition: 'opacity 120ms', flexShrink: 0 }} aria-hidden="true">✏️</span>
+        <span style={{ fontSize: 11, opacity: hover || notSet ? 1 : 0.5, transition: 'opacity 120ms', flexShrink: 0 }} aria-hidden="true">✏️</span>
       </div>
-      <div style={{
-        fontSize: 16, fontWeight: 600,
-        color: tone === 'negative' ? '#EF4444' : 'var(--tx)',
-        borderBottom: `1px dashed ${tone === 'negative' ? 'rgba(239,68,68,.35)' : 'var(--b)'}`,
-        paddingBottom: 2, display: 'inline-block',
-      }}>
-        {tone === 'negative' && value > 0 ? '− ' : ''}{fmtMoney(value, sym)}
-      </div>
+      {notSet ? (
+        <div style={{ fontSize: 14, fontWeight: 600, color: AMBER }}>{notSetLabel}</div>
+      ) : (
+        <div style={{
+          fontSize: 16, fontWeight: 600,
+          color: tone === 'negative' ? '#EF4444' : 'var(--tx)',
+          borderBottom: `1px dashed ${tone === 'negative' ? 'rgba(239,68,68,.35)' : 'var(--b)'}`,
+          paddingBottom: 2, display: 'inline-block',
+        }}>
+          {tone === 'negative' && value > 0 ? '− ' : ''}{fmtMoney(value, sym)}
+        </div>
+      )}
     </button>
   )
 }
@@ -172,6 +179,25 @@ export default function ZakatCalculator() {
       setSaveError(tc('intel_zakat.saveError'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  const [switchingMetal, setSwitchingMetal] = useState(false)
+
+  const handleSwitchMetal = async (metal: 'gold' | 'silver') => {
+    if (metal === data?.nisab.metal) return
+    setSwitchingMetal(true)
+    try {
+      const res = await fetch('/api/zakat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overrides: {}, metal }),
+      })
+      if (res.ok) setData(await res.json())
+    } catch {
+      // stays on the previous metal — user can retry the toggle
+    } finally {
+      setSwitchingMetal(false)
     }
   }
 
@@ -257,12 +283,21 @@ export default function ZakatCalculator() {
         </div>
 
         <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('intel_zakat.editHint')}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: breakdown.payablesFromPOs > 0 ? 6 : 14 }}>
           <EditableTile label={tc('intel_zakat.inventoryLabel')} value={effective.inventoryValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('inventoryValue', v)} />
-          <EditableTile label={tc('intel_zakat.cashLabel')} value={effective.cashValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('cashValue', v)} />
+          <EditableTile
+            label={tc('intel_zakat.cashLabel')} value={effective.cashValue} sym={sym} editHint={tc('intel_zakat.editHint')}
+            notSet={!breakdown.cashSet && overrides.cashValue === undefined} notSetLabel={tc('intel_zakat.cashNotSet')}
+            onCommit={v => setOverride('cashValue', v)}
+          />
           <EditableTile label={tc('intel_zakat.receivablesLabel')} value={effective.receivablesValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('receivablesValue', v)} />
           <EditableTile label={tc('intel_zakat.payablesLabel')} value={effective.payablesValue} sym={sym} tone="negative" editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('payablesValue', v)} />
         </div>
+        {breakdown.payablesFromPOs > 0 && overrides.payablesValue === undefined && (
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14 }}>
+            {tc('intel_zakat.payablesFromPOsNote', { amount: fmtMoney(breakdown.payablesFromPOs, sym) })}
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--b)', paddingTop: 12, marginBottom: 14 }}>
           <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_zakat.estimateLabel')}</span>
@@ -287,27 +322,47 @@ export default function ZakatCalculator() {
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--b)', paddingTop: 12, flexWrap: 'wrap', gap: 8 }}>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
-            {tc('intel_zakat.nisabLabel', { metal: metalLabel })}
-            {': '}
-            {data.nisab.cachedValue != null ? fmtMoney(data.nisab.cachedValue, sym) : '—'}
-            {' · '}
-            {data.nisab.checkedAt
-              ? (daysAgo(data.nisab.checkedAt) < 1 ? tc('intel_zakat.checkedJustNow') : tc('intel_zakat.checkedDaysAgo', { n: daysAgo(data.nisab.checkedAt) }))
-              : tc('intel_zakat.neverChecked')}
+        <div style={{ borderTop: '1px solid var(--b)', paddingTop: 12 }}>
+          <div style={{ display: 'inline-flex', background: 'var(--ev)', borderRadius: 8, padding: 2, marginBottom: 8 }}>
+            {(['silver', 'gold'] as const).map(m => (
+              <button
+                key={m}
+                onClick={() => handleSwitchMetal(m)}
+                disabled={switchingMetal}
+                style={{
+                  fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: 'none',
+                  background: data.nisab.metal === m ? 'var(--sf)' : 'transparent',
+                  color: data.nisab.metal === m ? 'var(--tx)' : 'var(--tx3)',
+                  cursor: switchingMetal ? 'default' : 'pointer', fontFamily: 'inherit',
+                  boxShadow: data.nisab.metal === m ? '0 1px 2px rgba(0,0,0,.08)' : 'none',
+                }}
+              >
+                {tc(m === 'gold' ? 'intel_zakat.metalGoldLabel' : 'intel_zakat.metalSilverLabel')}
+              </button>
+            ))}
           </div>
-          <button
-            onClick={handleCheckPrice}
-            disabled={checkingPrice}
-            style={{
-              fontSize: 12, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)',
-              background: 'transparent', color: 'var(--tx)', cursor: checkingPrice ? 'default' : 'pointer',
-              fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: checkingPrice ? 0.6 : 1,
-            }}
-          >
-            {checkingPrice ? tc('intel_zakat.checkingPrice') : tc('intel_zakat.checkPriceButton')}
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
+              {tc('intel_zakat.nisabLabel', { metal: metalLabel })}
+              {': '}
+              {data.nisab.cachedValue != null ? fmtMoney(data.nisab.cachedValue, sym) : '—'}
+              {' · '}
+              {data.nisab.checkedAt
+                ? (daysAgo(data.nisab.checkedAt) < 1 ? tc('intel_zakat.checkedJustNow') : tc('intel_zakat.checkedDaysAgo', { n: daysAgo(data.nisab.checkedAt) }))
+                : tc('intel_zakat.neverChecked')}
+            </div>
+            <button
+              onClick={handleCheckPrice}
+              disabled={checkingPrice}
+              style={{
+                fontSize: 12, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)',
+                background: 'transparent', color: 'var(--tx)', cursor: checkingPrice ? 'default' : 'pointer',
+                fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: checkingPrice ? 0.6 : 1,
+              }}
+            >
+              {checkingPrice ? tc('intel_zakat.checkingPrice') : tc('intel_zakat.checkPriceButton')}
+            </button>
+          </div>
         </div>
         {priceError && (
           <div style={{ fontSize: 11, color: '#EF4444', marginTop: 8 }}>{priceError}</div>
