@@ -92,7 +92,7 @@
   "s8_title": "8. Sicherheit",
   "s8_p1": "Wir schützen Daten durch verschlüsselte Verbindungen (TLS), bcrypt-gehashte Mitarbeiter-PINs, zeilenbasierte Sicherheit in unserer Datenbank und abgestufte Zugriffskontrollen. Sollte es zu einem Datenschutzverstoß kommen, der Ihre Rechte gefährdet, benachrichtigen wir die zuständige Behörde innerhalb von 72 Stunden und betroffene Nutzer unverzüglich. Sicherheitsbedenken melden Sie bitte an security@askbiz.co.",
   "s9_title": "9. Cookies & lokaler Speicher",
-  "s9_p1_text": "Das POS verwendet ausschließlich technisch notwendige Speichermechanismen – es werden keine Werbe- oder Drittanbieter-Analyse-Cookies eingesetzt. Weitere Details finden Sie in unserer ",
+  "s9_p1_text": "Das POS verwendet technisch notwendige Speichermechanismen sowie Google Analytics, sobald Sie im Cookie-Banner zustimmen – es werden keine Werbe-Cookies eingesetzt. Weitere Details finden Sie in unserer ",
   "s9_p1_link": "Cookie-Richtlinie",
   "s9_p1_end": ".",
   "s10_title": "10. Änderungen",

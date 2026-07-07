@@ -30,6 +30,7 @@ const buildTableRows = (tc: Tc) => [
   [tc('pos_cookies.row_consent_name'), tc('pos_cookies.row_consent_type'), tc('pos_cookies.row_consent_purpose'), tc('pos_cookies.row_consent_duration')],
   [tc('pos_cookies.row_auth_name'), tc('pos_cookies.row_auth_type'), tc('pos_cookies.row_auth_purpose'), tc('pos_cookies.row_auth_duration')],
   [tc('pos_cookies.row_offline_name'), tc('pos_cookies.row_offline_type'), tc('pos_cookies.row_offline_purpose'), tc('pos_cookies.row_offline_duration')],
+  [tc('pos_cookies.row_ga_name'), tc('pos_cookies.row_ga_type'), tc('pos_cookies.row_ga_purpose'), tc('pos_cookies.row_ga_duration')],
 ]
 
 export default function CookiesPage() {
@@ -72,9 +73,9 @@ export default function CookiesPage() {
           </div>
         </Section>
 
-        <Section title={tc('pos_cookies.no_analytics_title')}>
-          <P>{tc('pos_cookies.no_analytics_body_1')}</P>
-          <P>{tc('pos_cookies.no_analytics_body_2')}</P>
+        <Section title={tc('pos_cookies.analytics_title')}>
+          <P>{tc('pos_cookies.analytics_body_1')}</P>
+          <P>{tc('pos_cookies.analytics_body_2')}</P>
         </Section>
 
         <Section title={tc('pos_cookies.managing_storage_title')}>

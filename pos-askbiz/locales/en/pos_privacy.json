@@ -111,7 +111,7 @@
   "s8_p1": "We protect data using encrypted connections (TLS), bcrypt-hashed staff PINs, row-level security on our database, and scoped access controls. If a breach occurs that is likely to risk your rights, we notify the relevant authority within 72 hours and affected users without undue delay. Report security concerns to security@askbiz.co.",
 
   "s9_title": "9. Cookies & Local Storage",
-  "s9_p1_text": "The POS uses minimal essential storage only — it does not run advertising or third-party analytics cookies. See our ",
+  "s9_p1_text": "The POS uses minimal essential storage, plus Google Analytics once you consent to it in the cookie banner — it does not run advertising cookies. See our ",
   "s9_p1_link": "Cookie Policy",
   "s9_p1_end": " for full detail.",
 

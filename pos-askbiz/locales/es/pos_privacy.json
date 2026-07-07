@@ -102,7 +102,7 @@
   "s8_title": "8. Seguridad",
   "s8_p1": "Protegemos los datos mediante conexiones cifradas (TLS), PINs del personal protegidos con bcrypt, seguridad a nivel de fila en nuestra base de datos y controles de acceso delimitados. Si ocurre una brecha que pueda comprometer sus derechos, notificamos a la autoridad competente en un plazo de 72 horas y a los usuarios afectados sin demora indebida. Reporte cualquier problema de seguridad a security@askbiz.co.",
   "s9_title": "9. Cookies y almacenamiento local",
-  "s9_p1_text": "El POS utiliza únicamente almacenamiento esencial mínimo; no ejecuta cookies publicitarias ni de análisis de terceros. Consulte nuestra ",
+  "s9_p1_text": "El POS utiliza almacenamiento esencial mínimo, además de Google Analytics una vez que lo aceptas en el aviso de cookies; no ejecuta cookies publicitarias. Consulte nuestra ",
   "s9_p1_link": "Política de cookies",
   "s9_p1_end": " para más detalles.",
   "s10_title": "10. Cambios",

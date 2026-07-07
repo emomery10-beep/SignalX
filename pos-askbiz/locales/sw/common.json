@@ -19,8 +19,9 @@
   "yes": "Ndiyo",
   "no": "Hapana",
   "consent_aria": "Taarifa ya faragha",
-  "consent_notice": "AskBiz POS huhifadhi kipindi chako cha kuingia na taarifa za mauzo kwenye kifaa hiki ili programu iendelee kufanya kazi. Hatutumii matangazo wala uchunguzi wa data kutoka kwa wahusika wengine.",
+  "consent_notice": "AskBiz POS huhifadhi kipindi chako cha kuingia na taarifa za mauzo kwenye kifaa hiki ili programu iendelee kufanya kazi. Kwa idhini yako, pia tunatumia Google Analytics inayoheshimu faragha kuelewa matumizi ya programu — hakuna matangazo, hakuna kuuza data.",
+  "consent_reject": "Muhimu tu",
+  "consent_accept": "Kubali uchambuzi",
   "consent_privacy": "Sera ya faragha",
-  "consent_cookies": "Sera ya vidakuzi",
-  "consent_got_it": "Nimeelewa"
+  "consent_cookies": "Sera ya vidakuzi"
 }

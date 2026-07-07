@@ -3,7 +3,8 @@ import React from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
 
-const ACK_KEY = 'pos_consent_ack'
+const CONSENT_KEY = 'pos_cookie_consent'
+const CONSENT_EVENT = 'pos:cookie-consent'
 
 export default function PosConsentBanner() {
   const { tc } = useLang()
@@ -11,15 +12,17 @@ export default function PosConsentBanner() {
 
   React.useEffect(() => {
     try {
-      if (!localStorage.getItem(ACK_KEY)) setVisible(true)
+      if (!localStorage.getItem(CONSENT_KEY)) setVisible(true)
     } catch {
       /* localStorage unavailable — don't block the app */
     }
   }, [])
 
-  const acknowledge = () => {
+  const choose = (analytics: boolean) => {
     try {
-      localStorage.setItem(ACK_KEY, '1')
+      const consent = { necessary: true, analytics, timestamp: new Date().toISOString() }
+      localStorage.setItem(CONSENT_KEY, JSON.stringify(consent))
+      window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: consent }))
     } catch {
       /* ignore */
     }
@@ -78,23 +81,40 @@ export default function PosConsentBanner() {
             {tc('common.consent_cookies')}
           </Link>
         </p>
-        <button
-          onClick={acknowledge}
-          style={{
-            flex: '0 0 auto',
-            padding: '9px 22px',
-            borderRadius: 9999,
-            border: 'none',
-            background: 'var(--pos-accent)',
-            color: '#fff',
-            fontFamily: 'inherit',
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          {tc('common.consent_got_it')}
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
+          <button
+            onClick={() => choose(false)}
+            style={{
+              padding: '9px 16px',
+              borderRadius: 9999,
+              border: '1px solid var(--pos-border)',
+              background: 'transparent',
+              color: 'var(--pos-muted)',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {tc('common.consent_reject')}
+          </button>
+          <button
+            onClick={() => choose(true)}
+            style={{
+              padding: '9px 22px',
+              borderRadius: 9999,
+              border: 'none',
+              background: 'var(--pos-accent)',
+              color: '#fff',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {tc('common.consent_accept')}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -102,7 +102,7 @@
   "s8_title": "8. Beveiliging",
   "s8_p1": "We beschermen gegevens met versleutelde verbindingen (TLS), bcrypt-gehashte personeelspincodes, beveiliging op rijniveau in onze database en beperkte toegangscontroles. Als er een inbreuk plaatsvindt die waarschijnlijk uw rechten in gevaar brengt, stellen we de bevoegde autoriteit binnen 72 uur op de hoogte en informeren we de betrokkenen zonder onnodige vertraging. Meld beveiligingsproblemen via security@askbiz.co.",
   "s9_title": "9. Cookies & lokale opslag",
-  "s9_p1_text": "De POS gebruikt uitsluitend minimale, essentiële opslag — er worden geen advertentie- of analytische cookies van derden gebruikt. Zie ons ",
+  "s9_p1_text": "De POS gebruikt minimale, essentiële opslag, plus Google Analytics zodra je hiervoor toestemming geeft in de cookiebalk — er worden geen advertentiecookies gebruikt. Zie ons ",
   "s9_p1_link": "Cookiebeleid",
   "s9_p1_end": " voor meer informatie.",
   "s10_title": "10. Wijzigingen",

@@ -19,8 +19,9 @@
   "yes": "Ja",
   "no": "Nee",
   "consent_aria": "Privacyverklaring",
-  "consent_notice": "AskBiz POS bewaart je inlogsessie en verkoopgegevens lokaal op dit apparaat om de app te laten werken. Geen advertenties of analyse door derden.",
+  "consent_notice": "AskBiz POS bewaart je inlogsessie en verkoopgegevens lokaal op dit apparaat om de app te laten werken. Met jouw toestemming gebruiken we ook privacyvriendelijke Google Analytics om het gebruik van de app te begrijpen — geen advertenties, geen verkoop van gegevens.",
+  "consent_reject": "Alleen essentieel",
+  "consent_accept": "Analyses accepteren",
   "consent_privacy": "Privacybeleid",
-  "consent_cookies": "Cookiebeleid",
-  "consent_got_it": "Begrepen"
+  "consent_cookies": "Cookiebeleid"
 }

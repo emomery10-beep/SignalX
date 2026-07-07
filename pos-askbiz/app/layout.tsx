@@ -3,6 +3,7 @@ import { cookies, headers } from 'next/headers'
 import './globals.css'
 import PosConsentBanner from '@/components/PosConsentBanner'
 import PosOfflineBanner from '@/components/PosOfflineBanner'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import { resolveLocale, isRTL } from '@/lib/i18n-locale'
 import type { Lang } from '@/lib/i18n'
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body style={{ margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif', background: '#f9f8f6', color: '#1a1916', WebkitFontSmoothing: 'antialiased' }}>
+        <GoogleAnalytics measurementId="G-LS68YW554M" />
         <LanguageProvider initialLang={lang}>
           <PosOfflineBanner />
           {children}

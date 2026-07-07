@@ -19,8 +19,9 @@
   "yes": "Ja",
   "no": "Nein",
   "consent_aria": "Datenschutzhinweis",
-  "consent_notice": "AskBiz POS speichert Ihre Anmeldesitzung und Verkaufsdaten lokal auf diesem Gerät, damit die App funktioniert. Keine Werbung, keine Analyse durch Dritte.",
+  "consent_notice": "AskBiz POS speichert Ihre Anmeldesitzung und Verkaufsdaten lokal auf diesem Gerät, damit die App funktioniert. Mit Ihrer Zustimmung nutzen wir außerdem datenschutzfreundliches Google Analytics, um die App-Nutzung zu verstehen — keine Werbung, kein Verkauf von Daten.",
+  "consent_reject": "Nur notwendige",
+  "consent_accept": "Analyse akzeptieren",
   "consent_privacy": "Datenschutzrichtlinie",
-  "consent_cookies": "Cookie-Richtlinie",
-  "consent_got_it": "Verstanden"
+  "consent_cookies": "Cookie-Richtlinie"
 }

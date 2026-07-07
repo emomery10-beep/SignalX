@@ -102,7 +102,7 @@
   "s8_title": "8. Sécurité",
   "s8_p1": "Nous protégeons vos données grâce aux connexions chiffrées (TLS), aux codes PIN du personnel hachés avec bcrypt, à la sécurité au niveau des lignes dans notre base de données et à des contrôles d'accès délimités. En cas de violation susceptible de porter atteinte à vos droits, nous en informons l'autorité compétente dans les 72 heures et les utilisateurs concernés sans délai injustifié. Signalez tout problème de sécurité à security@askbiz.co.",
   "s9_title": "9. Cookies et stockage local",
-  "s9_p1_text": "Le POS utilise uniquement le stockage essentiel minimal — il n'exécute aucun cookie publicitaire ni analytique tiers. Consultez notre ",
+  "s9_p1_text": "Le POS utilise le stockage essentiel minimal, ainsi que Google Analytics une fois que vous l'acceptez dans le bandeau de cookies — il n'exécute aucun cookie publicitaire. Consultez notre ",
   "s9_p1_link": "Politique en matière de cookies",
   "s9_p1_end": " pour plus de détails.",
   "s10_title": "10. Modifications",
