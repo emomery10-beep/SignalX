@@ -40,6 +40,7 @@ interface PendingConfirm {
   language: string
   confirmation: string
   label: string
+  transcript: string // cargo only; never rendered, never logged, never gates any branch. Threaded through solely so confirmPendingNav can report a confirmed phrase→route pair to the learning endpoint.
 }
 
 const LANG_TO_BCP47: Record<string, string> = {
@@ -389,9 +390,9 @@ export default function HelpWidget() {
   // success handler, never from a pointer/keyboard long-press gesture, so — exactly
   // like enterErrorState — it must leave that flag alone. Only handlePointerDown's and
   // handleToggleKeyDown's long-press timers may ever set it true.
-  const enterConfirmState = useCallback((route: string, language: string, confirmation: string) => {
+  const enterConfirmState = useCallback((route: string, language: string, confirmation: string, transcript: string) => {
     const label = findRouteByPath(route)?.label ?? confirmation
-    setPendingConfirm({ route, language, confirmation, label })
+    setPendingConfirm({ route, language, confirmation, label, transcript })
     setVoiceState('confirm')
     voiceStateRef.current = 'confirm'   // mirror immediately; do not wait for the next render
     speakConfirmPrompt(language, label)
@@ -409,7 +410,7 @@ export default function HelpWidget() {
   const confirmPendingNav = useCallback(() => {
     if (voiceStateRef.current !== 'confirm' || !pendingConfirm) return
     clearConfirmTimer()
-    const { route, language, confirmation } = pendingConfirm
+    const { route, language, confirmation, transcript } = pendingConfirm
     setPendingConfirm(null)
     setVoiceState('success')
     voiceStateRef.current = 'success'
@@ -418,6 +419,20 @@ export default function HelpWidget() {
     recordRecentCommand(route)
     if (revertTimerRef.current) clearTimeout(revertTimerRef.current)
     revertTimerRef.current = setTimeout(() => setVoiceState('idle'), REVERT_MS)
+
+    // Fire-and-forget learning-cache write. NOT awaited, NOT gated on
+    // isMountedRef (nothing here calls setState or speechSynthesis, so there is
+    // no unmounted-component side effect to guard against), no loading/error
+    // state introduced. A slow or failed request here must never delay,
+    // block, or visibly alter the user's navigation, which has already
+    // happened by this point. Never logged -- consistent with this file's
+    // existing privacy posture around the transcript.
+    fetch('/api/voice-nav/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript, route, language }),
+      keepalive: true, // survive the fetch even if the tab is mid-navigation right after this click
+    }).catch(() => {})
   }, [pendingConfirm, clearConfirmTimer, router, speakConfirmation, recordRecentCommand])
 
   // "No" — explicit reject, clean return to idle, no navigation.
@@ -559,7 +574,7 @@ export default function HelpWidget() {
       .then(({ route, language, confirmation, confidence }) => {
         if (!isMountedRef.current) return   // unmounted mid-request: skip state + speech side effects
         if (confidence === 'low') {
-          enterConfirmState(route, language, confirmation)
+          enterConfirmState(route, language, confirmation, finalTranscript)
           return
         }
         setVoiceState('success')
