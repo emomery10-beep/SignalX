@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   if (!user) return json({ error: 'Unauthorized' }, 401)
 
   const body = await request.json().catch(() => ({}))
-  const { countryCode, currencySymbol } = await getUserLocale(supabase, user.id)
+  const { currency } = await getUserLocale(supabase, user.id)
 
   let metal: 'gold' | 'silver'
   if (body?.metal === 'gold' || body?.metal === 'silver') {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     metal = profile?.zakat_nisab_metal === 'gold' ? 'gold' : 'silver'
   }
 
-  const priceResult = await fetchNisabPrice(metal, countryCode, currencySymbol)
+  const priceResult = await fetchNisabPrice(metal, currency)
   if (!priceResult) {
     return json({ error: 'Could not fetch a current price. Try again shortly.' }, 502)
   }

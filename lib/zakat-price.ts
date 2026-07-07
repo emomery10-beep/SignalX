@@ -5,21 +5,6 @@ import { serperSearch, serperAnswer } from '@/lib/serper'
 // bar, letting more zakat flow to recipients.
 export const NISAB_GRAMS = { gold: 87.48, silver: 612.36 } as const
 
-// ISO 4217 currency code by ISO country code — makes the search query
-// unambiguous ("KES" resolves far more reliably than the symbol "KSh").
-// Not exhaustive: falls back to the profile's currency_symbol for any
-// country missing here, which still works, just less precisely.
-const CURRENCY_BY_COUNTRY: Record<string, string> = {
-  KE: 'KES', NG: 'NGN', GH: 'GHS', ZA: 'ZAR', TZ: 'TZS', UG: 'UGX',
-  ET: 'ETB', EG: 'EGP', MA: 'MAD', RW: 'RWF', ZM: 'ZMW', MW: 'MWK',
-  SN: 'XOF', CI: 'XOF', BF: 'XOF', ML: 'XOF', NE: 'XOF', BJ: 'XOF', TG: 'XOF',
-  CM: 'XAF', TD: 'XAF', GA: 'XAF', CG: 'XAF', GQ: 'XAF', CF: 'XAF',
-  SL: 'SLE', LR: 'LRD', MZ: 'MZN', MG: 'MGA', ZW: 'ZWG', AO: 'AOA',
-  CD: 'CDF', TN: 'TND', DZ: 'DZD', GN: 'GNF', SO: 'SOS', DJ: 'DJF',
-  ER: 'ERN', NA: 'NAD', BW: 'BWP', SZ: 'SZL', LS: 'LSL', KM: 'KMF',
-  MU: 'MUR', SC: 'SCR', SD: 'SDG', LY: 'LYD',
-}
-
 export interface NisabPriceResult {
   metal: 'gold' | 'silver'
   pricePerGram: number
@@ -32,13 +17,22 @@ export interface NisabPriceResult {
  * On-demand only — callers must gate this behind an explicit user action.
  * Never poll or schedule this; that's the whole point of checking live
  * metal prices via search instead of a paid market-data subscription.
+ *
+ * `isoCurrency` must be a real ISO 4217 code (e.g. "KES") — pass
+ * `profiles.currency` (via getUserLocale), not a display symbol. An
+ * earlier version of this derived the currency from `country_code` via a
+ * country→currency guess-map, but `country_code` is never actually
+ * populated by onboarding (confirmed by audit), so it always fell through
+ * to a raw symbol like "KSh" — ambiguous in search (could read as Kenyan
+ * or Somali shilling) and silently missing ~15 African countries the map
+ * didn't cover. profiles.currency is set directly during onboarding from
+ * phone/IP geo-detection and needs no guessing.
  */
 export async function fetchNisabPrice(
   metal: 'gold' | 'silver',
-  countryCode: string | null,
-  currencySymbol: string
+  isoCurrency: string
 ): Promise<NisabPriceResult | null> {
-  const currency = (countryCode && CURRENCY_BY_COUNTRY[countryCode.toUpperCase()]) || currencySymbol
+  const currency = isoCurrency
   const query = `price of 1 gram of ${metal} in ${currency}`
 
   const res = await serperSearch(query, { num: 3 })

@@ -114,6 +114,14 @@ export async function computeZakat(
     // payables and PO-derived ones aren't deduplicated against each other —
     // there's no shared reference key — so a business that logs the same
     // liability both ways would double-count it. Worth a manual check.
+    //
+    // Known gap: purchase_orders has no currency column at all, so
+    // total_cost/amount_paid are summed as if always in the business's
+    // profiles.currency. A business genuinely invoiced in a different
+    // currency (e.g. a USD import) would have that amount silently treated
+    // as local currency here — there's no data to detect the mismatch
+    // against without adding currency tracking to purchase_orders itself,
+    // which is a real, separate schema change, not fixed in this pass.
     supabase
       .from('purchase_orders')
       .select('total_cost, amount_paid')
