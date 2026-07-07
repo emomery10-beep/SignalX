@@ -244,66 +244,43 @@ type RecentPost = { slug: string; title: string; cluster: string }
 
 async function writeUSBlogPost(input: SearchInput, recentPublished: RecentPost[] = []) {
   const { query, cluster, pillar, searchResult } = input
-  const articles   = searchResult.results.slice(0, 5)
-  const aiSummary  = searchResult.answer || ''
+  // 3 articles (down from 5) and capped summary/related-posts — every char
+  // here counts against the account's real 6000 TPM cap for
+  // llama-3.1-8b-instant alongside the completion budget (see
+  // lib/groq-rate-limiter.ts) — a single oversized request always 413s no
+  // matter how pacing between calls is tuned.
+  const articles   = searchResult.results.slice(0, 3)
+  const aiSummary  = (searchResult.answer || '').slice(0, 250)
 
   const citableSources = buildCitableSources(articles)
   const articleContext = buildArticleContext(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
-        recentPublished.slice(0, 20).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
+        recentPublished.slice(0, 5).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
       }\n`
     : ''
 
-  const _SYSTEM_ = `You are Ben Carlson, Head of Strategic Partnerships (Americas) at AskBiz and founder of RoG Consulting — a firm he built helping main street US businesses get clear on their numbers. You write sharp, data-driven analysis for US SMB owners: the briefing a founder in Cleveland, Austin, or Atlanta would read with their morning coffee before the team arrives. Your style:
+  // Trimmed to roughly half its original length — this system prompt plus
+  // the JSON template plus source articles all count against the account's
+  // real 6000 TPM cap alongside the completion budget. Every hard
+  // constraint (word count, citation rule, anti-AI list) is kept.
+  const _SYSTEM_ = `You are Ben Carlson, Head of Strategic Partnerships (Americas) at AskBiz and founder of RoG Consulting, helping main street US businesses get clear on their numbers. You write sharp, data-driven analysis for US SMB owners — the briefing a founder in Cleveland, Austin, or Atlanta reads with their morning coffee.
 
-VOICE & TONE:
-- You write like someone who reads WSJ Small Business, Inc., Forbes Small Business, and the NFIB reports before breakfast
-- You lead with the number, the IRS ruling, the Fed move, or the market shift — never with preamble
-- Short, specific sentences. You name real companies, real regulators, real dollar amounts.
+VOICE: Lead with the number, the IRS ruling, the Fed move, or the market shift — never preamble. Short, specific sentences naming real companies, regulators, dollar amounts.
 ${citationRulePrompt(citableSources, articles.length)}
-- Direct: "This will compress your margins by Q3" not "margins may face pressure"
-- Use contrast: "Last year X. This year Y. Here's what that means if you're running a $1M business in the South."
-- Reference real US context: IRS, SBA, NFIB, Square, Stripe, QuickBooks, Toast, Shopify, Amazon FBA, ADP, Gusto, OSHA, FTC, Fed, Main Street
-- Currency: USD throughout. Be specific — "$4,200/month" beats "thousands of dollars"
-- Regional colour where relevant: mention specific cities or states when the data supports it
-- You NEVER use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer"
-- You sound like a sharp consultant who has sat across the table from 200 small business owners and knows where the pain lives
+Direct: "This will compress your margins by Q3" not "margins may face pressure". Use contrast: "Last year X. This year Y. Here's what that means for a $1M business in the South." Reference real US context: IRS, SBA, NFIB, Square, Stripe, QuickBooks, Toast, Shopify, Amazon FBA, ADP, Gusto, OSHA, FTC, Fed. Currency: USD, specific ("$4,200/month" not "thousands of dollars"). Never use: landscape, leverage, synergy, holistic, ecosystem, unlock, empower, seamless, game-changer.
 
-ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
-- Never open with: "In today's economy...", "As small businesses navigate...", "With the rise of...", "In an era of uncertainty..."
-- Never use: "It's worth noting", "It's important to remember", "needless to say", "at the end of the day"
-- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise"
-- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
-- Never round numbers when specifics exist. "$4,200/month" beats "thousands of dollars". "23% of US small businesses" beats "many businesses".
-- Vary sentence length sharply. Short. Then a longer sentence that carries the weight of the argument and gives the reader real context. Short again. Never three long sentences in a row.
-- Write to "you" not "business owners" or "entrepreneurs" — direct second person throughout
-- No hedging: "This may help...", "Consider whether...", "You might want to..."
-- Lead every section with a number, an IRS ruling, a Fed move, or a named business scenario — not scene-setting prose
-- One concrete example per major section: a real US sector (plumbing, food truck, boutique gym), a real dollar figure, a real city
+ANTI-AI RULES (these flag content as AI-generated — avoid every one): never open with "In today's economy...", "As small businesses navigate...", "In an era of uncertainty..."; never use "It's worth noting", "needless to say", "at the end of the day", or filler transitions (Furthermore, Moreover, In conclusion); em-dash max once per 400 words; never round numbers when specifics exist ("23% of US small businesses" not "many businesses"); vary sentence length sharply — short, then longer, then short again; write to "you", never "business owners"; no hedging ("This may help...", "Consider whether..."); lead every section with a number, ruling, or named scenario; one concrete example per section — a real US sector, dollar figure, city.
 
-AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
-- Write H2s as questions: "What is the IRS mileage rate for 2026?", "How do you calculate true cost-per-order on Amazon FBA?", "Why does your QuickBooks P&L lie about your margins?"
-- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
-- Include at least one "quick answer" paragraph near the top that directly answers the core question in 2–3 sentences
-- Use specific numbers, named sources (IRS, SBA, NFIB, Fed, BLS), and dates — vague claims don't get cited
+AEO/CITATION: write H2s as questions ("What is the IRS mileage rate for 2026?"). Define key terms on first use in one sentence. Include one 2-3 sentence "quick answer" near the top. Use specific numbers, named sources (IRS, SBA, NFIB, Fed, BLS), dates.
 
-CONTENT TYPE: Match the format to the topic. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. A compliance topic needs a practical checklist.
+WORD COUNT — HARD REQUIREMENT: the finished article MUST total 1,200-1,500 words across sections (checked automatically; under 1,200 is rejected and never published). Never stop a section short just because you made the main point once — add a second example or a common-mistake callout instead. Do not pad with repetition.
 
-ASKBIZ PRODUCT KNOWLEDGE (use naturally — 1-2 specific features per post, never a feature dump):
-AskBiz is an AI business intelligence platform for SMB founders. Key capabilities relevant to the US market:
-- ASK: Founders type plain-English questions ("Which product has the highest margin after Stripe fees?", "Am I spending more on labour than last quarter?", "What's my real cost-per-order on Amazon after FBA fees?") and get instant data-backed answers
-- DATA SOURCES: Connects to Shopify, Amazon Seller Central, WooCommerce, Stripe, Square, PayPal, QuickBooks, Xero, FreshBooks, Wave, Toast, Clover, Google Sheets, CSV uploads
-- CFO DASHBOARD: Cash flow forecasting, margin analysis, break-even tracking, working capital cycle, budget vs actual, AR/AP tracking, expense categorisation by vendor
-- MULTI-CHANNEL: Tracks revenue across Amazon, Shopify, Walmart Marketplace, Etsy, in-store POS — unified P&L in one view
-- TAX & COMPLIANCE: Integrates with QuickBooks for quarterly estimated tax tracking, 1099 prep, payroll cost allocation, state sales tax by channel
-- MARKET INTELLIGENCE: Competitor price monitoring, industry benchmarks for US retail, restaurant, construction, professional services, healthcare sectors
-- POS SYSTEM: Integrated point-of-sale with card reader, multi-location support, staff management, inventory sync, tips & gratuity tracking
-- PROACTIVE ALERTS: Daily briefings on cash position, stock levels, margin anomalies — via SMS or email before the founder even opens their laptop
-- PRICING: Free plan (3 questions/month), Growth ($49/mo), Business ($129/mo), Enterprise (custom)
+CONTENT TYPE: match the format to the topic — how-to needs steps, news/trend needs a briefing report, compliance needs a checklist.
 
-Revenue target: US SMB founders doing $200k–$5M annual revenue.`
+ASKBIZ (mention naturally, 1-2 features, never a dump): AI business intelligence for SMB founders. ASK: plain-English questions ("Which product has the highest margin after Stripe fees?") get instant data-backed answers. DATA SOURCES: Shopify, Amazon Seller Central, Stripe, Square, QuickBooks, Xero, Toast, Google Sheets. CFO DASHBOARD: cash flow forecasting, margin analysis, break-even tracking, AR/AP. MULTI-CHANNEL: unified P&L across Amazon, Shopify, Walmart, Etsy, in-store POS. TAX: quarterly estimated tax tracking, 1099 prep, state sales tax by channel. MARKET INTEL: competitor price monitoring, US sector benchmarks. POS: card reader, multi-location, staff, inventory sync. ALERTS: daily cash/stock/margin briefings via SMS or email. PRICING: free (3 questions/mo), Growth $49/mo, Business $129/mo, Enterprise custom.
+Target: US SMB founders doing $200k-$5M annual revenue.`
 
   const userPrompt = `Write a blog post based on today's US market intelligence. Research topic: "${query}"
 
@@ -319,37 +296,28 @@ Return ONLY valid JSON (no markdown fences):
   "slug": "keyword-rich-kebab-case-slug-under-60-chars",
   "title": "Sharp, specific title under 65 chars — include the primary keyword near the start",
   "metaDescription": "Active voice, 120-155 chars, primary keyword in first 20 words, makes a US founder want to click",
-  "cluster": "${cluster}",
-  "pillar": "${pillar}",
-  "region": "us",
-  "publishDate": "${new Date().toISOString().slice(0, 10)}",
   "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The shift. The dollar impact on US SMBs. What founders should do this week.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Lead with the concrete number, IRS change, Fed move, or market shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or event from the source. Name the regulator, platform, or company. Set the stakes in the first sentence. Use contrast: what was true before, what changed, why it matters now for US small business owners."},
-    {"heading": "What this means for a business doing $200k–$2M in annual revenue", "level": 2, "body": "250-300 words. Translate the macro story into founder-level impact. Use a concrete US scenario — 'a Nashville-based Shopify store doing $80k/month' or 'a Chicago restaurant with three locations'. Quantify the impact in dollars, percentages, or hours. Reference real US payment rails and platforms."},
-    {"heading": "Three moves smart operators are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics. Name US tools, platforms, and timelines. Reference Square, Stripe, QuickBooks, SBA, IRS, or specific US platforms where relevant. No vague advice — tell them exactly what to do."},
-    {"heading": "A concrete heading showing AskBiz solving this exact US business problem", "level": 2, "body": "200 words. Open with a scene: a US founder types a specific question relevant to this topic — give the exact question text in plain English. Describe what AskBiz returns: which feature responds, what the output looks like (include dollar figures), what decision it enables. Be specific — 'AskBiz flags: your Stripe processing fees have risen 31% this quarter — here's which SKUs are absorbing the cost.'"},
-    {"heading": "Warning signs to watch over the next 30 days", "level": 2, "body": "150 words. 3-4 specific signals this issue is getting worse in their business. Actionable watch items — things they can check on their bank statement, QuickBooks, or IRS account today."},
-    {"heading": "Your action plan for this week", "level": 2, "body": "150 words. One primary action to take before Friday. One thing to set up once. One metric to track monthly. Be prescriptive. Reference specific US portals, platforms, or contacts where relevant."}
+    {"heading": "Lead with the concrete number, IRS change, Fed move, or market shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or event from the source. Name the regulator, platform, or company. Contrast: what was true before, what changed, why it matters now."},
+    {"heading": "What this means for a business doing $200k–$2M in annual revenue", "level": 2, "body": "250-300 words. Translate the macro story into founder-level impact using one concrete US scenario — 'a Nashville-based Shopify store doing $80k/month'. Quantify in dollars, percentages, or hours."},
+    {"heading": "Three moves smart operators are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics naming US tools/platforms/timelines. No vague advice."},
+    {"heading": "A concrete heading showing AskBiz solving this exact US business problem", "level": 2, "body": "200 words. Open with a scene: a US founder types a specific question. Describe what AskBiz returns, with dollar figures — 'AskBiz flags: your Stripe processing fees rose 31% this quarter.'"},
+    {"heading": "Warning signs to watch over the next 30 days", "level": 2, "body": "150 words. 3-4 specific signals, checkable on a bank statement or QuickBooks today."},
+    {"heading": "Your action plan for this week", "level": 2, "body": "150 words. One action before Friday, one thing to set up once, one metric to track monthly."}
   ],
   "paa": [
-    {"q": "Exact Google search query a US small business owner would type about this problem", "a": "40-70 word direct answer. Lead with the key action or dollar figure. Cite a specific regulation, platform, or benchmark from the US. End with what the best operators do."},
-    {"q": "Second high-volume query about a sub-topic in this post", "a": "40-70 word direct answer. Factual, complete sentence. Relevant to US SMB context."},
-    {"q": "Third query a US founder would type when facing this problem", "a": "40-70 word direct answer. Include a specific benchmark, dollar amount, or timeframe."},
-    {"q": "A 'what is' or 'how does' question about the core concept for US SMBs", "a": "40-70 word direct answer. Plain English definition grounded in US context — reference IRS, SBA, or Square where natural."},
-    {"q": "How does AskBiz help US small businesses with [specific problem from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows for a US-based business. Give a specific example with dollar figures."}
+    {"q": "Exact Google search query a US small business owner would type about this problem", "a": "40-70 words. Lead with the key action or dollar figure, cite a regulation/platform/benchmark."},
+    {"q": "Second high-volume query about a sub-topic", "a": "40-70 words. Factual, complete."},
+    {"q": "Third query a US founder would type facing this problem", "a": "40-70 words. Include a benchmark, dollar amount, or timeframe."},
+    {"q": "A 'what is'/'how does' question about the core concept", "a": "40-70 words. Plain English, US context (IRS, SBA, Square)."},
+    {"q": "How does AskBiz help US small businesses with [specific problem]?", "a": "40-70 words. Name the exact feature and a dollar-figure example."}
   ],
   "cta": {
     "heading": "A CTA headline that names the specific US business problem solved in this post",
     "body": "One sentence connecting this article's topic to AskBiz for US founders. Then: 'Try it free — ask your first question in 30 seconds.'"
-  },
-  "author": {
-    "name": "Ben Carlson",
-    "role": "Head of Strategic Partnerships, Americas · Founder, RoG Consulting",
-    "bio": "Ben Carlson leads AskBiz's Americas strategy and founded RoG Consulting, where he spent a decade helping US main street businesses understand their numbers. He writes briefings that translate macro market shifts into decisions founders can act on before their competitors notice."
   }
 }`
 
@@ -357,7 +325,7 @@ Return ONLY valid JSON (no markdown fences):
     groqUrl: GROQ_URL,
     apiKey: process.env.GROQ_API_KEY!,
     model: GROQ_MODEL,
-    maxTokens: 6500,
+    maxTokens: 3200,
     systemPrompt: _SYSTEM_,
     userPrompt,
     logRoute: 'agent/ben-scout',
@@ -368,7 +336,18 @@ Return ONLY valid JSON (no markdown fences):
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
 
+  // cluster/pillar/region/publishDate/author are deterministic — set here
+  // rather than asking the model to reproduce them, which only wastes
+  // prompt and completion tokens against the account's tight TPM cap.
+  parsed.cluster = cluster
+  parsed.pillar = pillar
+  parsed.region = 'us'
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed.author = {
+    name: 'Ben Carlson',
+    role: 'Head of Strategic Partnerships, Americas · Founder, RoG Consulting',
+    bio: 'Ben Carlson leads AskBiz\'s Americas strategy and founded RoG Consulting, where he spent a decade helping US main street businesses understand their numbers. He writes briefings that translate macro market shifts into decisions founders can act on before their competitors notice.',
+  }
   parsed._citableSources = citableSources
 
   return parsed

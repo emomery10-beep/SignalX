@@ -27,12 +27,16 @@ export function buildCitableSources(articles: SourceArticle[]): string[] {
   }).filter(Boolean)
 }
 
+// 320 chars/article (down from 500) — every char here counts directly
+// against the 6000 TPM request cap alongside the system prompt and the
+// completion budget, and with 3 articles per post this still gives the
+// model enough grounding to cite specifics without blowing the budget.
 export function buildArticleContext(articles: SourceArticle[]): string {
   return articles
     .map((r, i) => {
       let source = 'unknown'
       try { source = new URL(r.url).hostname.replace(/^www\./, '') } catch { /* keep 'unknown' */ }
-      return `[${i + 1}] ${r.title}\nSource: ${source}\nURL: ${r.url}\n${r.content.slice(0, 500)}`
+      return `[${i + 1}] ${r.title}\nSource: ${source}\nURL: ${r.url}\n${r.content.slice(0, 320)}`
     })
     .join('\n\n')
 }
@@ -121,13 +125,18 @@ export async function generateWithLengthRetry(opts: {
   const { groqUrl, apiKey, model, maxTokens, systemPrompt, userPrompt, logRoute, logUsage } = opts
 
   // Each call here counts against Groq's real per-minute token cap for the
-  // whole account (12k TPM on the on-demand tier) — with 3-5 topics running
-  // concurrently, uncoordinated calls blow straight through it. waitForGroqBudget
-  // paces every call (initial + the one length-expand retry) against a shared
-  // rolling-window budget instead of firing blind.
+  // whole account (6000 TPM for llama-3.1-8b-instant on the on-demand tier,
+  // per the 413 body) — with 3-5 topics running concurrently, uncoordinated
+  // calls blow straight through it. waitForGroqBudget paces every call
+  // (initial + the one length-expand retry) against a shared rolling-window
+  // budget instead of firing blind. The estimate here must track the actual
+  // message size — a flat guess (the old code used a fixed +4300) drifts out
+  // of sync the moment prompt length changes and silently lets oversized
+  // requests through, which is how this broke last time.
   async function call(messages: Array<{ role: string; content: string }>) {
+    const promptTokens = Math.ceil(messages.reduce((sum, m) => sum + m.content.length, 0) / 4)
     for (let attempt = 1; attempt <= 2; attempt++) {
-      await waitForGroqBudget(maxTokens + 4300)
+      await waitForGroqBudget(promptTokens + maxTokens)
       const res = await fetch(groqUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -174,19 +183,20 @@ export async function generateWithLengthRetry(opts: {
     .map((s, i) => ({ i, heading: s.heading, words: s.body ? s.body.trim().split(/\s+/).filter(Boolean).length : 0 }))
     .filter(s => s.words < 150)
 
-  const retryPrompt = `The article you just wrote totals ${firstWordCount} words across its sections — the minimum is ${MIN_WORD_COUNT}. Rewrite the COMPLETE JSON again, keeping everything that's good, but expanding these sections which are too short:
-${thinSections.length > 0 ? thinSections.map(s => `- "${s.heading}" (currently ${s.words} words — add a second concrete example, walk through numbers a different way, or add a common-mistake callout)`).join('\n') : '- Expand every section proportionally — none of them individually is too short, but the total is under the minimum.'}
+  // Deliberately NOT echoing firstRaw back as assistant context here — that
+  // used to roughly double the prompt size (original prompt + the entire
+  // first draft), which alone was enough to blow the account's real 6000 TPM
+  // cap regardless of how small the initial call was kept. Re-sending the
+  // original prompt plus a stronger instruction costs about the same as the
+  // first call instead of nearly double, at the cost of the model no longer
+  // seeing its own first draft to build on.
+  const retryPrompt = `${userPrompt}
 
-Do not shorten any section that's already long enough. Do not pad with repetition — add genuine additional value. Return ONLY the complete valid JSON, no markdown fences, same structure as before.
-
-Here is what you wrote:
-${firstRaw}`
+Your previous attempt at this only totaled ${firstWordCount} words across its sections — the minimum is ${MIN_WORD_COUNT}. Write it again from scratch, going deeper on every section${thinSections.length > 0 ? `, especially: ${thinSections.map(s => `"${s.heading}"`).join(', ')}` : ''} — add a second concrete example, walk through numbers a different way, or add a common-mistake callout. Do not pad with repetition. Return ONLY the complete valid JSON, no markdown fences.`
 
   try {
     const retryRaw = await call([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-      { role: 'assistant', content: firstRaw },
       { role: 'user', content: retryPrompt },
     ])
     const retryParsed = JSON.parse(retryRaw)

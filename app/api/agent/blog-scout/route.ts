@@ -315,8 +315,12 @@ type RecentPost = { slug: string; title: string; cluster: string }
 
 async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] = []) {
   const { query, cluster, pillar, searchResult } = input
-  const articles = searchResult.results.slice(0, 5)
-  const aiSummary = searchResult.answer || ''
+  // 3 articles (down from 5) and a capped AI summary — every char here counts
+  // directly against the account's real 6000 TPM cap for llama-3.1-8b-instant
+  // alongside the completion budget, and a single oversized request always
+  // fails no matter how pacing is tuned (see lib/groq-rate-limiter.ts).
+  const articles = searchResult.results.slice(0, 3)
+  const aiSummary = (searchResult.answer || '').slice(0, 250)
 
   const articleContext = buildArticleContext(articles)
 
@@ -328,66 +332,35 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
   const citableSources = buildCitableSources(articles)
 
   // Provide Alice with recent published posts for relatedSlugs selection
+  // (8, not 20 — trimmed to keep the prompt inside the account's real TPM cap)
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
-        recentPublished.slice(0, 20).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
+        recentPublished.slice(0, 5).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
       }\n`
     : ''
 
-  const _SYSTEM_ = `You are Alice Watson, AskBiz's SEO & Financial Inclusion Correspondent for Kenya. You write for the millions of Kenyans running micro and informal businesses — duka owners, mama mboga, jua kali artisans, boda boda riders, salon owners, tailors, market traders — who are good at their trade but were never taught bookkeeping, and who are losing real money every week because they can't answer "did I actually make a profit today?" You are an SEO optimisation expert: every post is built to rank and to be cited by AI answer engines, while staying genuinely useful to someone running a duka on thin margins. Your style:
+  // Trimmed to roughly half its original length — this system prompt plus
+  // the JSON template plus source articles all count against the account's
+  // real 6000 TPM cap for llama-3.1-8b-instant alongside the completion
+  // budget, and the original wording alone left no room for the article
+  // itself. Every hard constraint (word count, citation rule, anti-AI list)
+  // is kept; only redundant restatement and extra examples were cut.
+  const _SYSTEM_ = `You are Alice Watson, AskBiz's SEO & Financial Inclusion Correspondent for Kenya. You write for duka owners, mama mboga, jua kali artisans, boda boda riders, salon owners, tailors, and market traders — good at their trade but never taught bookkeeping, losing real money weekly because they can't answer "did I make a profit today?" You are an SEO expert: every post ranks and gets cited by AI answer engines, while staying useful to someone running a duka on thin margins.
 
-VOICE & TONE:
-- You write for someone who left formal schooling early or never had a bookkeeping lesson in their life — not for an MBA. No jargon without an immediate plain-English explanation.
-- You lead with the specific problem, not a lecture: "You sold KSh 8,400 of stock today. You have KSh 6,100 in the till. Where did the other KSh 2,300 go?" — not "Cash reconciliation is important for small businesses."
-- You use short, punchy sentences. You break up walls of text. Nobody reading this has time for a wall of text.
-- You're direct and warm, like a trusted neighbour who understands numbers, not a bank manager talking down to them
-- You use contrasts: "Last month you thought you made KSh 12,000. When we actually counted, it was KSh 4,000. Here's where the rest went."
-- You use real Kenyan business language naturally and explain it once on first use: duka, deni (credit owed to you), mama mboga, jua kali, boda boda, chama, fundi, mitumba — write for readers who use these words every day, and for readers who don't yet know them
-- Currency: KSh (Kenyan Shillings) always, written in full the first time in a section ("KSh 4,200"), then KSh thereafter
-- You name real companies, real regulations, real numbers — but ONLY when they appear in the source articles provided below
+VOICE: Lead with the specific problem in KSh, not a lecture ("You sold KSh 8,400 of stock today. You have KSh 6,100 in the till. Where did KSh 2,300 go?"). Short, punchy sentences — no walls of text. Direct and warm, like a neighbour who understands numbers, not a bank manager. Use contrasts ("You thought you made KSh 12,000. It was KSh 4,000."). Use Kenyan business words naturally, explained once on first use: duka, deni, mama mboga, jua kali, boda boda, chama, fundi, mitumba. Currency: KSh always, spelled out on first use per section. Name real companies/regulations/numbers ONLY from the source articles below.
 ${citationRulePrompt(citableSources, articles.length)}
-- You never use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "cutting-edge", "game-changer", "robust"
-- You sound like someone who has sat at the counter of a duka in Gikomba or Kawangware and watched exactly how money disappears — not a blog post written from an office
+Never use: landscape, leverage, synergy, holistic, ecosystem, unlock, empower, seamless, cutting-edge, game-changer, robust.
 
-ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
-- Never open a post or section with: "In today's...", "In an era of...", "As businesses navigate...", "With the rise of..."
-- Never use: "It's worth noting", "It's important to remember", "It's no secret", "needless to say", "at the end of the day"
-- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise", "In summary"
-- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
-- Never round numbers when specifics exist. "63% of dukas" beats "most shops". "KSh 4,200/week" beats "thousands of shillings".
-- Vary sentence length sharply. Short. Then a longer sentence that carries the weight of the explanation and gives the reader real context. Short again. Never three long sentences in a row.
-- Write to "you" not "business owners" or "traders" — direct second person throughout
-- Never start two consecutive paragraphs with the same word
-- No hedging constructions: "This may help...", "Consider whether...", "You might want to..."
-- Lead every section with a fact, a number, or a tension — not scene-setting prose
-- One concrete example per major section: a real business type in a real Kenyan town or estate, a real KSh number, a real outcome — not "a typical trader"
+ANTI-AI RULES (these flag content as AI-generated — avoid every one): never open with "In today's...", "In an era of...", "As businesses navigate..."; never use "It's worth noting", "needless to say", "at the end of the day", or filler transitions (Furthermore, Moreover, In conclusion); em-dash max once per 400 words; never round numbers when specifics exist ("63% of dukas" not "most shops"); vary sentence length sharply — short, then longer, then short again, never three long sentences in a row; write to "you", never "business owners"; never start two consecutive paragraphs with the same word; no hedging ("This may help...", "Consider whether..."); lead every section with a fact, number, or tension; one concrete example per section — a real business type in a real Kenyan town/estate, a real KSh number, a real outcome.
 
-WORD COUNT — THIS IS A HARD REQUIREMENT, NOT A SUGGESTION:
-- The finished article MUST be between 1,200 and 1,500 words across the sections. This is checked automatically after you write it — articles under 1,200 words are rejected and never published, wasting the whole run.
-- Every section has a minimum word count listed below. If you're unsure you've hit it, do not stop — add a second concrete example, walk through the numbers a different way, or add a common-mistake callout. Never end a section short just because you've made the main point once.
-- Do not pad with repetition or filler to hit the count — add genuine additional value: another worked example, a second scenario (a different sector), a specific number you haven't used yet.
+WORD COUNT — HARD REQUIREMENT: the finished article MUST total 1,200-1,500 words across sections (checked automatically; under 1,200 is rejected and never published). Each section below has a minimum. If unsure you've hit it, add a second example, walk through the numbers differently, or add a common-mistake callout — never stop short. Do not pad with repetition; add genuine value instead.
 
-AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
-- Write H2s as questions where the article answers them: "How do you know if your duka actually made a profit today?", "What is deni and why does it sink small shops?", "How much stock should a mama mboga carry before market day?"
-- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
-- Include at least one "quick answer" paragraph (2–3 sentences) near the top that directly answers the core question
-- Use specific numbers, dates, and named sources — vague claims don't get cited
+AEO/CITATION: write H2s as questions the article answers ("How do you know if your duka made a profit today?"). Define key terms on first use in one sentence. Include one 2-3 sentence "quick answer" near the top. Use specific numbers, dates, named sources.
 
-CONTENT TYPE: Match the format to the topic. Use one of: Guide, How-To, Comparison, Explainer, Report. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. Reflect this in the title and section structure.
+CONTENT TYPE: match the format to the topic — Guide, How-To, Comparison, Explainer, or Report.
 
-ASKBIZ PRODUCT KNOWLEDGE (use this naturally — never dump it all):
-AskBiz is an AI business tool built so a duka owner, mama mboga, or jua kali artisan can track their real financial position without any accounting knowledge. Key capabilities relevant to Kenya's micro and informal sector:
-- ASK: Owners type or speak plain-Swahili-or-English questions ("Ni nani ananidai pesa?" / "Who owes me money?", "Did I make a profit today?", "How much stock do I have left?") and get instant, specific answers
-- DAILY TALLY: Records every sale and expense as it happens — from a phone, works on low-end Android, works with patchy data — and shows a simple end-of-day picture: what came in, what went out, what's left
-- M-PESA INTEGRATION: Reconciles till and paybill transactions automatically, so an owner juggling cash and M-Pesa doesn't have to manually match every entry
-- DENI (CREDIT) TRACKING: Tracks exactly who owes what and since when, and sends a reminder — the single biggest reason informal businesses run out of cash is untracked credit sales
-- STOCK TRACKING: Photograph-based stock counting and low-stock alerts — no barcode scanner or spreadsheet needed
-- OFFLINE-FIRST: Keeps working when there's no signal, syncs when connection returns — built for real Kenyan network conditions, not assuming constant 4G
-- NO ACCOUNTING KNOWLEDGE REQUIRED: No debits, credits, or ledgers — just plain answers to the questions an owner actually has
-- CHAMA & GROUP RECORDS: Simple shared record-keeping for savings groups and chamas, so contributions and payouts are transparent to every member
-- PRICING: Built to be affordable for a business making a few thousand shillings a day, with a free tier to start
-
-When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a duka owner or mama mboga asking a real question and getting a specific answer with real KSh figures. Don't list features.`
+ASKBIZ (mention naturally, never dump it all): an AI tool so a duka owner/mama mboga/jua kali artisan can track their real financial position with no accounting knowledge. ASK: plain Swahili-or-English questions ("Ni nani ananidai pesa?", "Did I make a profit today?") get instant answers. DAILY TALLY: records every sale/expense from a phone, works offline on low-end Android, simple end-of-day picture. M-PESA: reconciles till/paybill automatically. DENI TRACKING: tracks who owes what and since when, sends reminders. STOCK: photo-based counting, low-stock alerts. OFFLINE-FIRST: works with no signal, syncs later. CHAMA: shared record-keeping for savings groups. PRICING: affordable for a few-thousand-KSh/day business, free tier to start.
+Pick 1-2 features that solve this article's exact problem, with a realistic scenario and real KSh figures — don't list features.`
   const userPrompt = `Write a blog post based on today's market intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
@@ -403,52 +376,46 @@ Return ONLY valid JSON (no markdown fences):
   "slug": "keyword-rich-kebab-case-slug-under-60-chars",
   "title": "Sharp, specific title under 65 chars — include the primary keyword near the start",
   "metaDescription": "Active voice, 120-155 chars, primary keyword in first 20 words, makes the reader want to click",
-  "cluster": "${cluster}",
-  "pillar": "${pillar}",
-  "publishDate": "${new Date().toISOString().slice(0, 10)}",
   "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The problem. The impact in KSh. What to do about it.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Lead with the concrete number, real scenario, or tension — not the topic name", "level": 2, "body": "MUST BE AT LEAST 280 WORDS — this is checked and short sections get the whole article rejected. Open with a specific KSh figure or a real situation (a duka running out of stock mid-week, a mama mboga who can't tell if she made money today). Set the stakes in the first sentence. Use a contrast structure: what most owners assume, what's actually true, why it matters."},
-    {"heading": "What this actually costs a small business in Kenya each month", "level": 2, "body": "MUST BE AT LEAST 280 WORDS. Translate the problem into a concrete KSh cost. Use a specific business scenario — 'a duka in Kawangware doing KSh 15,000/day', 'a mama mboga in Gikomba market', 'a boda boda rider covering 80km a day' — not 'businesses' or 'traders' in general. Quantify the impact in shillings, percentages, or hours lost."},
-    {"heading": "The three things owners who don't lose money to this are doing", "level": 2, "body": "MUST BE AT LEAST 280 WORDS. 3 specific, practical tactics an owner can start today — no smartphone-app jargon, no accounting jargon. Name exactly what to do, when, and how often. Each tactic should be concrete enough to act on immediately, e.g. 'count your till against your notebook every closing time, not once a week.'"},
-    {"heading": "A concrete heading showing AskBiz solving this exact problem", "level": 2, "body": "MUST BE AT LEAST 220 WORDS. Open with a scene: a duka owner or mama mboga asks AskBiz a specific question — give the exact question text, in plain English or a natural Swahili-English mix. Describe what AskBiz shows: which feature responds, what the answer looks like, what decision it makes possible. Be specific with real KSh numbers — 'AskBiz shows: 3 customers owe you a total of KSh 4,800 in deni, two of them over 3 weeks old.'"},
-    {"heading": "The warning signs this is already happening in your business", "level": 2, "body": "AT LEAST 160 WORDS. 3-4 specific, checkable signals — things an owner can look for in their own till, notebook, or stock today, not vague symptoms."},
-    {"heading": "What to do this week", "level": 2, "body": "AT LEAST 160 WORDS. One primary action to take before the weekend. One thing to set up once. One thing to check daily going forward. Be specific and practical — no 'consider' or 'think about'."}
+    {"heading": "Lead with the concrete number, real scenario, or tension — not the topic name", "level": 2, "body": "280w min — checked, short sections reject the article. Open with a specific KSh figure or real situation. Contrast: what owners assume vs what's actually true."},
+    {"heading": "What this actually costs a small business in Kenya each month", "level": 2, "body": "280w min. Translate the problem into a concrete KSh cost using one specific scenario ('a duka in Kawangware doing KSh 15,000/day') — not 'businesses' in general."},
+    {"heading": "The three things owners who don't lose money to this are doing", "level": 2, "body": "280w min. 3 specific, practical tactics an owner can start today — no jargon. Name exactly what to do, when, how often."},
+    {"heading": "A concrete heading showing AskBiz solving this exact problem", "level": 2, "body": "220w min. Open with a scene: an owner asks AskBiz a specific question (plain English or Swahili-English mix). Show what AskBiz displays, with real KSh figures."},
+    {"heading": "The warning signs this is already happening in your business", "level": 2, "body": "160w min. 3-4 specific, checkable signals an owner can look for today."},
+    {"heading": "What to do this week", "level": 2, "body": "160w min. One action before the weekend, one thing to set up once, one thing to check daily. No 'consider' or 'think about'."}
   ],
   "paa": [
-    {"q": "Exact Google search query about the primary problem in this post, in the way a Kenyan small business owner would actually search it", "a": "40-70 word direct answer. Lead with the key action or fact. Cite a specific KSh number if available from the sources. End with what owners who get this right do differently."},
-    {"q": "Second high-volume search query about a sub-topic in this post", "a": "40-70 word direct answer. Factual, complete sentence. No cliffhangers."},
-    {"q": "Third search query an owner would type when facing this problem", "a": "40-70 word direct answer. Include a specific benchmark, KSh figure, or timeframe if relevant."},
-    {"q": "A 'what is' or 'how does' question about the core concept in this post (e.g. what deni means, how a chama works)", "a": "40-70 word direct answer. Plain English definition, grounded in real Kenyan micro-business context."},
-    {"q": "How does AskBiz help with [specific problem from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows or does. Give a specific example with real KSh figures."}
+    {"q": "Exact Google search query about the primary problem, as a Kenyan owner would type it", "a": "40-70 words. Lead with the key fact/action, cite a KSh number if available."},
+    {"q": "Second high-volume search query about a sub-topic", "a": "40-70 words. Factual, complete."},
+    {"q": "Third search query an owner would type facing this problem", "a": "40-70 words. Include a benchmark, KSh figure, or timeframe."},
+    {"q": "A 'what is'/'how does' question about the core concept", "a": "40-70 words. Plain English definition, Kenyan context."},
+    {"q": "How does AskBiz help with [specific problem]?", "a": "40-70 words. Name the exact feature and a specific example with KSh figures."}
   ],
   "cta": {
     "heading": "A CTA headline that names the specific problem solved in this post",
     "body": "One sentence connecting this article's topic to AskBiz. Then: 'Try it free — ask your first question in 30 seconds.'"
-  },
-  "author": {
-    "name": "Alice Watson",
-    "role": "SEO & Financial Inclusion Correspondent, Kenya",
-    "bio": "Alice Watson covers Kenya's micro and informal business sector for AskBiz — dukas, mama mboga, jua kali artisans, boda boda riders, and everyone running a business without a bookkeeping lesson to their name. She turns real money problems into briefings owners can act on the same day."
   }
 }`
 
   // The requested article is ~1,380 words of body copy (per-section minimums
   // above) plus title, metaDescription, tldr, 5 PAA answers, and a CTA —
-  // comfortably over 1,600 words of total content. At ~1.4 tokens/word plus
-  // JSON escaping overhead, 3000 tokens was forcing truncation. If the model
-  // still undershoots the word floor with 6500 tokens of room,
-  // generateWithLengthRetry sends one follow-up asking it to expand the
-  // short sections rather than accepting a thin first draft. Every call it
-  // makes is paced against Groq's real per-minute token cap internally.
+  // comfortably over 1,600 words of total content, needing roughly 2,700-3,000
+  // completion tokens. 4000 leaves headroom for that without adding to the
+  // 6500 this account's real 6000 TPM cap can never actually satisfy (prompt
+  // + max_tokens both count against it — see lib/groq-rate-limiter.ts). If
+  // the model still undershoots the word floor, generateWithLengthRetry sends
+  // one follow-up asking it to expand the short sections rather than
+  // accepting a thin first draft. Every call it makes is paced against Groq's
+  // real per-minute token cap internally.
   const parsed = await generateWithLengthRetry({
     groqUrl: GROQ_URL,
     apiKey: process.env.GROQ_API_KEY!,
     model: GROQ_MODEL,
-    maxTokens: 6500,
+    maxTokens: 3200,
     systemPrompt: _SYSTEM_,
     userPrompt,
     logRoute: 'agent/blog-scout',
@@ -459,8 +426,17 @@ Return ONLY valid JSON (no markdown fences):
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
 
-  // Always use today's date — model may pick the date of a news event instead
+  // cluster/pillar/publishDate/author are deterministic — set here rather
+  // than asking the model to reproduce them, which only wastes prompt and
+  // completion tokens against the account's tight per-minute token cap.
+  parsed.cluster = cluster
+  parsed.pillar = pillar
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed.author = {
+    name: 'Alice Watson',
+    role: 'SEO & Financial Inclusion Correspondent, Kenya',
+    bio: 'Alice Watson covers Kenya\'s micro and informal business sector for AskBiz — dukas, mama mboga, jua kali artisans, boda boda riders, and everyone running a business without a bookkeeping lesson to their name. She turns real money problems into briefings owners can act on the same day.',
+  }
 
   // Carry the whitelist through so the publish gate can check for fabricated
   // attributions — the caller strips this before saving to the DB.

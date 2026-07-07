@@ -13,8 +13,14 @@ const WINDOW_MS = 60_000
  * Blocks until issuing a call for `estimatedTokens` would keep the
  * trailing-60s total at or under `limit`, then records the usage.
  * Call this immediately before every Groq request (initial + retries).
+ *
+ * Default matches this account's actual TPM cap for llama-3.1-8b-instant
+ * on the on-demand tier (Groq reports "Limit 6000" in 413 bodies) minus a
+ * safety margin — the previous 11_000 default was a stale guess from a
+ * higher-tier account and let every call fire uncapped, since a single
+ * oversized request can't be fixed by pacing alone.
  */
-export async function waitForGroqBudget(estimatedTokens: number, limit = 11_000): Promise<void> {
+export async function waitForGroqBudget(estimatedTokens: number, limit = 5_500): Promise<void> {
   for (;;) {
     const now = Date.now()
     // Drop entries outside the rolling window

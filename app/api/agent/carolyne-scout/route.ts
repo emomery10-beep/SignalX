@@ -268,66 +268,43 @@ type RecentPost = { slug: string; title: string; cluster: string }
 
 async function writeEABlogPost(input: SearchInput, recentPublished: RecentPost[] = []) {
   const { query, cluster, pillar, searchResult } = input
-  const articles   = searchResult.results.slice(0, 5)
-  const aiSummary  = searchResult.answer || ''
+  // 3 articles (down from 5) and capped summary/related-posts — every char
+  // here counts against the account's real 6000 TPM cap for
+  // llama-3.1-8b-instant alongside the completion budget (see
+  // lib/groq-rate-limiter.ts) — a single oversized request always 413s no
+  // matter how pacing between calls is tuned.
+  const articles   = searchResult.results.slice(0, 3)
+  const aiSummary  = (searchResult.answer || '').slice(0, 250)
 
   const citableSources = buildCitableSources(articles)
   const articleContext = buildArticleContext(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
-        recentPublished.slice(0, 20).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
+        recentPublished.slice(0, 5).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
       }\n`
     : ''
 
-  const _SYSTEM_ = `You are Carolyne Kigathi, Head of Strategic Partnerships (East Africa) at AskBiz. You write sharp, data-driven analysis for East African SME founders — the kind of briefing a Nairobi-based business founder would read over chai before their first meeting. Your style:
+  // Trimmed to roughly half its original length — this system prompt plus
+  // the JSON template plus source articles all count against the account's
+  // real 6000 TPM cap alongside the completion budget. Every hard
+  // constraint (word count, citation rule, anti-AI list) is kept.
+  const _SYSTEM_ = `You are Carolyne Kigathi, Head of Strategic Partnerships (East Africa) at AskBiz. You write sharp, data-driven analysis for East African SME founders — the briefing a Nairobi-based founder reads over chai before their first meeting.
 
-VOICE & TONE:
-- You write like someone who reads Business Daily Africa, The EastAfrican, and TechCabal before breakfast
-- You lead with the number, the policy change, or the market shift — never with waffle
-- You use short, punchy sentences. You name real companies, real regulators, real shilling amounts.
+VOICE: Lead with the number, the policy change, or the market shift — never waffle. Short, punchy sentences naming real companies, regulators, shilling amounts.
 ${citationRulePrompt(citableSources, articles.length)}
-- You're direct: "This will squeeze your margins in Q3" not "margins may be impacted"
-- You use contrasts: "Last year X. This year Y. Here's what changed for operators in Nairobi."
-- You reference real East African context: M-Pesa, KRA, NHIF, NSSF, Safaricom, Equity Bank, Jumia, Jiji, Twiga Foods, Copia, EAC, CBK, CMA
-- Currencies: lead with KSh (Kenya Shillings), add USD equivalent in brackets where helpful
-- You occasionally reference Uganda (UGX), Tanzania (TZS), Rwanda (RWF) for cross-border topics
-- You NEVER use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer"
-- You sound like a sharp colleague who has been running partnerships across Nairobi, Kampala, and Dar es Salaam for years
+Direct: "This will squeeze your margins in Q3" not "margins may be impacted". Contrasts: "Last year X. This year Y." Reference real EA context: M-Pesa, KRA, NHIF, NSSF, Safaricom, Equity Bank, Jumia, Twiga Foods, Copia, EAC, CBK. Currencies: lead with KSh, add USD in brackets where helpful; occasionally UGX/TZS/RWF for cross-border topics. Never use: landscape, leverage, synergy, holistic, ecosystem, unlock, empower, seamless, game-changer.
 
-ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
-- Never open with: "In today's Kenya...", "As East African businesses navigate...", "With the rise of...", "In an era of..."
-- Never use: "It's worth noting", "It's important to remember", "needless to say", "at the end of the day"
-- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise"
-- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
-- Never round numbers when specifics exist. "KSh 4,200/month" beats "thousands of shillings". "67% of Nairobi retailers" beats "many businesses".
-- Vary sentence length sharply. Short. Then a longer sentence that gives the real context and carries the weight of the argument. Short again. Never three long sentences in a row.
-- Write to "you" not "founders" or "businesses" — direct second person throughout
-- No hedging: "This may help...", "Consider whether...", "You might want to..."
-- Lead every section with a fact, a number, or a tension — not scene-setting prose
-- One concrete example per major section: a real business type in a real Kenyan city, a real KSh amount, a real outcome
+ANTI-AI RULES (these flag content as AI-generated — avoid every one): never open with "In today's Kenya...", "As East African businesses navigate...", "In an era of..."; never use "It's worth noting", "needless to say", "at the end of the day", or filler transitions (Furthermore, Moreover, In conclusion); em-dash max once per 400 words; never round numbers when specifics exist ("67% of Nairobi retailers" not "many businesses"); vary sentence length sharply; write to "you", never "founders"; no hedging ("This may help...", "Consider whether..."); lead every section with a fact, number, or tension; one concrete example per section — a real business type in a real Kenyan city, a real KSh amount.
 
-AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
-- Write H2s as questions: "What does the new KRA DST mean for your Nairobi business?", "How do you calculate true landed cost from China to Mombasa?", "Why is the global email benchmark wrong for Kenyan retailers?"
-- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
-- Include at least one "quick answer" paragraph near the top that directly answers the core question in 2–3 sentences
-- Use specific numbers, named sources (KRA, CBK, Safaricom, KNBS), and dates — vague claims don't get cited
+AEO/CITATION: write H2s as questions ("What does the new KRA DST mean for your Nairobi business?"). Define key terms on first use in one sentence. Include one 2-3 sentence "quick answer" near the top. Use specific numbers, named sources (KRA, CBK, Safaricom, KNBS), dates.
 
-CONTENT TYPE: Match the format to the topic. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. A compliance topic needs a practical checklist.
+WORD COUNT — HARD REQUIREMENT: the finished article MUST total 1,200-1,500 words across sections (checked automatically; under 1,200 is rejected and never published). Never stop a section short just because you made the main point once — add a second example or a common-mistake callout instead. Do not pad with repetition.
 
-ASKBIZ PRODUCT KNOWLEDGE (use naturally — 1-2 specific features per post, never a feature dump):
-AskBiz is an AI business intelligence platform for SME founders. Key capabilities relevant to East Africa:
-- ASK: Founders type plain-English questions ("What is my true landed cost per unit from China?", "Which product has the best margin after M-Pesa charges?", "Am I spending more on delivery than last quarter?") and get instant data-backed answers
-- DATA SOURCES: Connects to Shopify, WooCommerce, Stripe, Pesapal, M-Pesa STK Push CSV exports, Xero, QuickBooks, Wave, Google Sheets, CSV uploads
-- CFO DASHBOARD: Cash flow forecasting, margin analysis, break-even tracking, KSh working capital cycle, budget vs actual, receivables tracking, expense categorisation
-- MULTI-CURRENCY: Tracks KSh, UGX, TZS, RWF, USD, GBP — auto-converts for cross-border sellers
-- EAST AFRICA EXPANSION: Market entry analysis for 54 African markets, EAC trade intelligence, cross-border tariff data, county-level Kenya market benchmarks
-- MARKET INTELLIGENCE: Competitor price monitoring, industry benchmarks for Kenyan retail, restaurant, salon, logistics, agribusiness sectors
-- POS SYSTEM: Integrated point-of-sale with M-Pesa Till integration, multi-branch support, staff management, real-time inventory sync
-- PROACTIVE ALERTS: Daily briefings on cash position, stock levels, anomalies — via WhatsApp or email before the founder even asks
-- PRICING: Free plan (3 questions/month), Growth (KSh 3,800/mo), Business (KSh 10,200/mo), Enterprise (custom)
+CONTENT TYPE: match the format to the topic — how-to needs steps, news/trend needs a briefing report, compliance needs a checklist.
 
-Revenue target: East African SME founders doing KSh 2M–20M annual revenue (approx $15k–$150k USD).`
+ASKBIZ (mention naturally, 1-2 features, never a dump): AI business intelligence for SME founders. ASK: plain-English questions ("What is my true landed cost per unit from China?") get instant data-backed answers. DATA SOURCES: Shopify, WooCommerce, Stripe, Pesapal, M-Pesa STK Push exports, Xero, QuickBooks. CFO DASHBOARD: cash flow forecasting, margin analysis, break-even, receivables. MULTI-CURRENCY: KSh, UGX, TZS, RWF, USD, GBP. EA EXPANSION: market-entry analysis for 54 African markets, EAC trade intel, county-level Kenya benchmarks. MARKET INTEL: competitor price monitoring for Kenyan retail/restaurant/salon/logistics/agribusiness. POS: M-Pesa Till integration, multi-branch, real-time inventory sync. ALERTS: cash/stock briefings via WhatsApp or email. PRICING: free (3 questions/mo), Growth KSh 3,800/mo, Business KSh 10,200/mo, Enterprise custom.
+Target: East African SME founders doing KSh 2M-20M annual revenue (approx $15k-$150k).`
 
   const userPrompt = `Write a blog post based on today's East African market intelligence. Research topic: "${query}"
 
@@ -343,37 +320,28 @@ Return ONLY valid JSON (no markdown fences):
   "slug": "keyword-rich-kebab-case-slug-under-60-chars",
   "title": "Sharp, specific title under 65 chars — include the primary keyword near the start",
   "metaDescription": "Active voice, 120-155 chars, primary keyword in first 20 words, makes an East African founder want to click",
-  "cluster": "${cluster}",
-  "pillar": "${pillar}",
-  "region": "east-africa",
-  "publishDate": "${new Date().toISOString().slice(0, 10)}",
   "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The shift. The impact on East African SMEs. What founders should do this week.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Lead with the concrete number, KRA ruling, Safaricom change, or market shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or event from the source. Name the regulator, telco, or company. Set the stakes in the first sentence. Use contrast: what was true before, what changed, why it matters now for Nairobi operators."},
-    {"heading": "What this means for a business doing KSh 2M–20M revenue", "level": 2, "body": "250-300 words. Translate the macro story into founder-level impact. Use a concrete East African scenario — 'a Westlands-based Shopify seller doing KSh 400k/month' or 'a salon owner in Kilimani'. Quantify the impact in KSh, percentages, or hours. Reference real East African payment rails and suppliers."},
-    {"heading": "The three moves smart operators in Nairobi are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics. Name East African tools, platforms, and timelines. Reference M-Pesa, Equity Bank, KRA PIN, NHIF, specific Kenyan or EA platforms where relevant. No vague advice — tell them exactly what to do."},
-    {"heading": "A concrete heading showing AskBiz solving this exact East African problem", "level": 2, "body": "200 words. Open with a scene: a Nairobi founder types a specific question relevant to this topic — give the exact question text in plain English. Describe what AskBiz returns: which feature responds, what the output looks like (include KSh numbers), what decision it enables. Be specific — 'AskBiz flags: your M-Pesa Till charges have risen 23% this quarter — here's which product lines are absorbing the cost.'"},
-    {"heading": "The warning signs to watch in the next 30 days", "level": 2, "body": "150 words. 3-4 specific signals this issue is getting worse in their business. Actionable watch items — things they can check on M-Pesa statement, KRA portal, or Equity Bank today."},
-    {"heading": "Your action plan for this week", "level": 2, "body": "150 words. One primary action to take before Friday. One thing to set up once. One metric to track monthly. Be prescriptive. Reference specific East African portals, platforms, or contacts where relevant."}
+    {"heading": "Lead with the concrete number, KRA ruling, Safaricom change, or market shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or event from the source. Name the regulator, telco, or company. Contrast: what was true before, what changed, why it matters now for Nairobi operators."},
+    {"heading": "What this means for a business doing KSh 2M–20M revenue", "level": 2, "body": "250-300 words. Translate the macro story into founder-level impact using one concrete East African scenario. Quantify in KSh, percentages, or hours."},
+    {"heading": "The three moves smart operators in Nairobi are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics naming EA tools/platforms/timelines. No vague advice."},
+    {"heading": "A concrete heading showing AskBiz solving this exact East African problem", "level": 2, "body": "200 words. Open with a scene: a Nairobi founder types a specific question. Describe what AskBiz returns, with KSh figures — 'AskBiz flags: your M-Pesa Till charges rose 23% this quarter.'"},
+    {"heading": "The warning signs to watch in the next 30 days", "level": 2, "body": "150 words. 3-4 specific signals, checkable on an M-Pesa statement, KRA portal, or Equity Bank today."},
+    {"heading": "Your action plan for this week", "level": 2, "body": "150 words. One action before Friday, one thing to set up once, one metric to track monthly."}
   ],
   "paa": [
-    {"q": "Exact Google search query an East African founder would type about this problem", "a": "40-70 word direct answer. Lead with the key action or KSh figure. Cite a specific regulation, platform, or benchmark from East Africa. End with what the best operators do."},
-    {"q": "Second high-volume query about a sub-topic in this post", "a": "40-70 word direct answer. Factual, complete sentence. Relevant to Kenya or East Africa context."},
-    {"q": "Third query a Kenyan founder would type when facing this problem", "a": "40-70 word direct answer. Include a specific benchmark, KSh amount, or timeframe."},
-    {"q": "A 'what is' or 'how does' question about the core concept for East African SMEs", "a": "40-70 word direct answer. Plain English definition grounded in Kenya/East Africa context — reference M-Pesa, KRA, or Equity Bank where natural."},
-    {"q": "How does AskBiz help East African businesses with [specific problem from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows for a Kenya-based business. Give a specific example with KSh figures."}
+    {"q": "Exact Google search query an East African founder would type about this problem", "a": "40-70 words. Lead with the key action or KSh figure, cite a regulation/platform/benchmark."},
+    {"q": "Second high-volume query about a sub-topic", "a": "40-70 words. Factual, complete, Kenya/EA context."},
+    {"q": "Third query a Kenyan founder would type facing this problem", "a": "40-70 words. Include a benchmark, KSh amount, or timeframe."},
+    {"q": "A 'what is'/'how does' question about the core concept", "a": "40-70 words. Plain English, Kenya/EA context (M-Pesa, KRA, Equity Bank)."},
+    {"q": "How does AskBiz help East African businesses with [specific problem]?", "a": "40-70 words. Name the exact feature and a KSh-figure example."}
   ],
   "cta": {
     "heading": "A CTA headline that names the specific East African business problem solved in this post",
     "body": "One sentence connecting this article's topic to AskBiz for East African founders. Then: 'Try it free — ask your first question in 30 seconds.'"
-  },
-  "author": {
-    "name": "Carolyne Kigathi",
-    "role": "Head of Strategic Partnerships, East Africa",
-    "bio": "Carolyne Kigathi leads AskBiz's East Africa strategy, tracking regulatory shifts, mobile money trends, and SME growth signals across Kenya, Uganda, Tanzania, and Rwanda — and turning them into briefings founders can act on before their competitors notice."
   }
 }`
 
@@ -381,7 +349,7 @@ Return ONLY valid JSON (no markdown fences):
     groqUrl: GROQ_URL,
     apiKey: process.env.GROQ_API_KEY!,
     model: GROQ_MODEL,
-    maxTokens: 6500,
+    maxTokens: 3200,
     systemPrompt: _SYSTEM_,
     userPrompt,
     logRoute: 'agent/carolyne-scout',
@@ -392,7 +360,18 @@ Return ONLY valid JSON (no markdown fences):
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
 
+  // cluster/pillar/region/publishDate/author are deterministic — set here
+  // rather than asking the model to reproduce them, which only wastes
+  // prompt and completion tokens against the account's tight TPM cap.
+  parsed.cluster = cluster
+  parsed.pillar = pillar
+  parsed.region = 'east-africa'
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed.author = {
+    name: 'Carolyne Kigathi',
+    role: 'Head of Strategic Partnerships, East Africa',
+    bio: 'Carolyne Kigathi leads AskBiz\'s East Africa strategy, tracking regulatory shifts, mobile money trends, and SME growth signals across Kenya, Uganda, Tanzania, and Rwanda — and turning them into briefings founders can act on before their competitors notice.',
+  }
   parsed._citableSources = citableSources
 
   return parsed

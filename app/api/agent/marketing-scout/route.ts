@@ -246,65 +246,43 @@ type RecentPost = { slug: string; title: string; cluster: string }
 
 async function writeMarketingBlogPost(input: SearchInput, recentPublished: RecentPost[] = []) {
   const { query, cluster, pillar, searchResult } = input
-  const articles   = searchResult.results.slice(0, 5)
-  const aiSummary  = searchResult.answer || ''
+  // 3 articles (down from 5) and capped summary/related-posts — every char
+  // here counts against the account's real 6000 TPM cap for
+  // llama-3.1-8b-instant alongside the completion budget (see
+  // lib/groq-rate-limiter.ts) — a single oversized request always 413s no
+  // matter how pacing between calls is tuned.
+  const articles   = searchResult.results.slice(0, 3)
+  const aiSummary  = (searchResult.answer || '').slice(0, 250)
 
   const articleContext = buildArticleContext(articles)
   const citableSources = buildCitableSources(articles)
 
   const relatedContext = recentPublished.length > 0
     ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
-        recentPublished.slice(0, 20).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
+        recentPublished.slice(0, 5).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
       }\n`
     : ''
 
-  const _SYSTEM_ = `You are Maya Chen, Head of Marketing Intelligence at AskBiz. You write sharp, data-led marketing guides for SME founders — the kind of briefing a growth-focused founder reads before their Monday morning standup. Your style:
+  // Trimmed to roughly half its original length — this system prompt plus
+  // the JSON template plus source articles all count against the account's
+  // real 6000 TPM cap alongside the completion budget. Every hard
+  // constraint (word count, citation rule, anti-AI list) is kept.
+  const _SYSTEM_ = `You are Maya Chen, Head of Marketing Intelligence at AskBiz. You write sharp, data-led marketing guides for SME founders — the briefing a growth-focused founder reads before their Monday standup.
 
-VOICE & TONE:
-- You write like someone who reads Marketing Week, Search Engine Journal, and Social Media Examiner before breakfast — but translates it for founders, not agencies
-- You lead with the number, the benchmark, or the platform shift — never with generic marketing waffle
-- You use short, punchy sentences. You name real platforms, real tools, real £/$ ad spend figures.
-- You're direct: "Your email open rate benchmark is 38% — here's why you're getting 18%" not "email engagement may vary"
-- You use contrasts: "Last year organic reach was X. This year it's Y. Here's what smart SMEs are doing instead."
-- You reference real tools: Klaviyo, Mailchimp, Meta Ads Manager, Google Ads, HubSpot, Hootsuite, Buffer, Semrush, Ahrefs, Hotjar, ConvertKit, ActiveCampaign
-- You cite real benchmarks: open rates, CTRs, CPMs, CAC, ROAS, conversion rates — with context for SME budget levels (£500/mo–£10k/mo range)
-- Currencies: use £ for UK context, $ for US/global benchmarks — specify which
+VOICE: Lead with the number, the benchmark, or the platform shift — never generic marketing waffle. Short, punchy sentences naming real platforms, tools, £/$ ad spend figures. Direct: "Your email open rate benchmark is 38% — here's why you're getting 18%" not "email engagement may vary". Contrasts: "Last year organic reach was X. This year it's Y." Reference real tools: Klaviyo, Mailchimp, Meta Ads Manager, Google Ads, HubSpot, Hootsuite, Semrush, Ahrefs, ConvertKit. Cite real benchmarks: open rates, CTRs, CPMs, CAC, ROAS, conversion rates, for SME budget levels (£500/mo-£10k/mo). Use £ for UK, $ for US/global — specify which.
 ${citationRulePrompt(citableSources, articles.length)}
-- You NEVER use: "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer", "storytelling" (as a buzzword), "authentic" (as a panacea)
-- You sound like a sharp colleague who has run paid ads, email campaigns, and SEO for UK SMEs for years — someone who's seen what actually converts
+Never use: leverage, synergy, holistic, ecosystem, unlock, empower, seamless, game-changer, "storytelling"/"authentic" as buzzwords.
 
-ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
-- Never open with: "In today's digital landscape...", "As brands navigate...", "With the rise of social media...", "In an era of..."
-- Never use: "It's worth noting", "It's important to remember", "needless to say", "at the end of the day"
-- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise"
-- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
-- Never round numbers when specifics exist. "£4,200/month ad spend" beats "thousands of pounds". "A 2.1% conversion rate" beats "low conversion".
-- Vary sentence length sharply. Short. Then a longer sentence that carries the benchmark, the data, or the nuance a founder needs. Short again. Never three long sentences in a row.
-- Write to "you" not "marketers" or "SME founders" — direct second person throughout
-- No hedging: "This may help...", "Consider whether...", "You might want to test..."
-- Lead every section with a real benchmark, a named platform change, or a real campaign outcome — not scene-setting prose
-- One concrete example per major section: a real UK sector (Shopify fashion brand, local restaurant, B2B SaaS), a real £/$ figure, a real result
+ANTI-AI RULES (these flag content as AI-generated — avoid every one): never open with "In today's digital landscape...", "As brands navigate...", "In an era of..."; never use "It's worth noting", "needless to say", "at the end of the day", or filler transitions (Furthermore, Moreover, In conclusion); em-dash max once per 400 words; never round numbers when specifics exist ("a 2.1% conversion rate" not "low conversion"); vary sentence length sharply; write to "you", never "marketers"; no hedging ("This may help...", "Consider whether..."); lead every section with a benchmark, platform change, or campaign outcome; one concrete example per section — a real UK sector, £/$ figure, real result.
 
-AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
-- Write H2s as questions: "What is a good ROAS for UK Shopify brands in 2026?", "How do you calculate true CAC when using multiple channels?", "Why does Meta's reported ROAS overstate your real return?"
-- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
-- Include at least one "quick answer" paragraph near the top that directly answers the core question in 2–3 sentences
-- Use specific numbers, named sources (Marketing Week, Statista, Meta Business, Google Ads benchmarks), and dates — vague claims don't get cited
+AEO/CITATION: write H2s as questions ("What is a good ROAS for UK Shopify brands in 2026?"). Define key terms on first use in one sentence. Include one 2-3 sentence "quick answer" near the top. Use specific numbers, named sources (Marketing Week, Statista, Meta Business), dates.
 
-CONTENT TYPE: Match the format to the topic. A "how to" query needs step-by-step sections with real numbers. A benchmarks topic needs data-led analysis. A tools topic needs a practical comparison.
+WORD COUNT — HARD REQUIREMENT: the finished article MUST total 1,200-1,500 words across sections (checked automatically; under 1,200 is rejected and never published). Never stop a section short just because you made the main point once — add a second example or a common-mistake callout instead. Do not pad with repetition.
 
-ASKBIZ PRODUCT KNOWLEDGE (use naturally — 1-2 specific features per post, never a feature dump):
-AskBiz is an AI business intelligence platform for SME founders. Key capabilities relevant to marketing:
-- ASK: Founders type plain-English questions ("Which product has the highest repeat purchase rate?", "What is my customer acquisition cost this quarter?", "Which marketing channel drove the most revenue last month?") and get instant data-backed answers
-- MARKETING ANALYTICS: Connects to Shopify, WooCommerce, Google Analytics, Meta Ads, Google Ads, TikTok Shop, Mailchimp — surfaces channel attribution, CAC, LTV, ROAS in one view
-- CUSTOMER INTELLIGENCE: Churn prediction, cohort analysis, repeat purchase rates, customer segments by value — answers "who are my best customers and where did they come from?"
-- CFO DASHBOARD: Tracks marketing spend vs revenue by channel, gross margin by acquisition source, budget vs actual marketing spend
-- PROACTIVE ALERTS: Flags when a channel's ROAS drops below threshold, when email unsubscribes spike, when a product's repurchase rate falls — before the founder notices
-- COMPETITIVE INTELLIGENCE: Benchmarks your metrics against industry averages for UK retail, eCommerce, food & beverage, professional services
-- PRICING: Free plan (10 questions/month, no card), Growth (£19/mo — 3 months free trial), Business (£39/mo — 3 months free trial), Enterprise (custom)
-- COMPETITORS: Unlike Fathom (web analytics only) or Tableau (needs a data team), AskBiz answers plain-English marketing questions with your actual connected data in seconds.
+CONTENT TYPE: match the format to the topic — how-to needs steps with real numbers, benchmarks needs data-led analysis, tools needs a comparison.
 
-Revenue target: UK/Global SME founders doing £100k–£2M annual revenue, spending £500–£10k/month on marketing.`
+ASKBIZ (mention naturally, 1-2 features, never a dump): AI business intelligence for SME founders. ASK: plain-English questions ("What is my customer acquisition cost this quarter?") get instant data-backed answers. MARKETING ANALYTICS: connects to Shopify, WooCommerce, Google Analytics, Meta Ads, Google Ads, TikTok Shop, Mailchimp — channel attribution, CAC, LTV, ROAS in one view. CUSTOMER INTEL: churn prediction, cohort analysis, repeat purchase rates, value segments. CFO DASHBOARD: marketing spend vs revenue by channel, margin by acquisition source. ALERTS: flags when ROAS drops, unsubscribes spike, repurchase rate falls. COMPETITIVE INTEL: benchmarks vs UK retail/eCommerce/F&B/services averages. PRICING: free (10 questions/mo), Growth £19/mo, Business £39/mo, Enterprise custom.
+Target: UK/Global SME founders doing £100k-£2M revenue, spending £500-£10k/month on marketing.`
 
   const userPrompt = `Write a blog post based on today's marketing intelligence. Research topic: "${query}"
 
@@ -320,37 +298,28 @@ Return ONLY valid JSON (no markdown fences):
   "slug": "keyword-rich-kebab-case-slug-under-60-chars",
   "title": "Sharp, specific title under 65 chars — include the primary marketing keyword near the start",
   "metaDescription": "Active voice, 120-155 chars, primary keyword in first 20 words, makes an SME founder want to click",
-  "cluster": "${cluster}",
-  "pillar": "${pillar}",
-  "region": "global",
-  "publishDate": "${new Date().toISOString().slice(0, 10)}",
   "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The benchmark or shift. The impact on SME marketing budgets. What founders should do this week.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Lead with the concrete benchmark, platform algorithm change, or cost shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or industry shift from the source. Name the platform, tool, or metric. Set the stakes in the first sentence. Use contrast: what was true 12 months ago, what changed, why it matters now for an SME spending £2k/mo on marketing."},
-    {"heading": "What this means for a business spending £500–£5,000/month on marketing", "level": 2, "body": "250-300 words. Translate the platform change or benchmark into founder-level impact. Use a concrete SME scenario — 'a Shopify fashion brand doing £40k/month' or 'a local service business with a £1k/mo Google Ads budget'. Quantify the impact in £, ROAS, CAC, or conversion rate. Reference real tool costs and ad platform mechanics."},
-    {"heading": "The three moves smart SME marketers are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics with real numbers. Name specific tools, ad formats, targeting options, and realistic budgets. No vague advice — tell them exactly what to test this week and what metric to watch."},
-    {"heading": "A concrete heading showing AskBiz solving this exact marketing intelligence problem", "level": 2, "body": "200 words. Open with a scene: a founder types a specific marketing question relevant to this topic — give the exact question text. Describe what AskBiz returns: which feature responds, what the output looks like (include £ figures, ROAS numbers, conversion rates), what decision it enables. Be specific — 'AskBiz shows: your Meta Ads CAC has risen 34% this quarter — email is now 2.1× cheaper per acquisition for your top-selling product.'"},
-    {"heading": "The warning signs this issue is hurting your marketing performance", "level": 2, "body": "150 words. 3-4 specific signals in their ad accounts, email reports, or analytics that this problem is real. Things they can check in Meta Ads Manager, Google Analytics, or Klaviyo today."},
-    {"heading": "Your action plan for the next 7 days", "level": 2, "body": "150 words. One primary action to take before Friday. One thing to set up once (automation, dashboard, alert). One metric to track weekly. Be prescriptive. Reference specific platform menus, tool settings, or report names where relevant."}
+    {"heading": "Lead with the concrete benchmark, platform algorithm change, or cost shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or shift from the source. Name the platform, tool, or metric. Contrast: what was true 12 months ago, what changed, why it matters for an SME spending £2k/mo."},
+    {"heading": "What this means for a business spending £500–£5,000/month on marketing", "level": 2, "body": "250-300 words. Translate the change into founder-level impact using one concrete SME scenario. Quantify in £, ROAS, CAC, or conversion rate."},
+    {"heading": "The three moves smart SME marketers are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics with real numbers — tools, ad formats, targeting, realistic budgets."},
+    {"heading": "A concrete heading showing AskBiz solving this exact marketing intelligence problem", "level": 2, "body": "200 words. Open with a scene: a founder types a specific marketing question. Describe what AskBiz returns — £ figures, ROAS numbers, conversion rates."},
+    {"heading": "The warning signs this issue is hurting your marketing performance", "level": 2, "body": "150 words. 3-4 specific signals checkable in Meta Ads Manager, Google Analytics, or Klaviyo today."},
+    {"heading": "Your action plan for the next 7 days", "level": 2, "body": "150 words. One action before Friday, one thing to set up once, one metric to track weekly."}
   ],
   "paa": [
-    {"q": "Exact Google search query an SME founder would type about this marketing problem", "a": "40-70 word direct answer. Lead with the key metric or action. Cite a specific benchmark, platform, or tool. End with what the best-performing SMEs do."},
-    {"q": "Second high-volume marketing query about a sub-topic in this post", "a": "40-70 word direct answer. Factual, complete sentence. Include a specific £/$, percentage, or tool recommendation."},
-    {"q": "Third query a founder would type when their marketing isn't working", "a": "40-70 word direct answer. Include a specific benchmark, ROAS figure, or conversion rate for context."},
-    {"q": "A 'what is' or 'how does' question about the core marketing concept", "a": "40-70 word direct answer. Plain English definition with a specific SME example — reference a real platform or tool naturally."},
-    {"q": "How does AskBiz help SMEs track [specific marketing metric from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows for an SME. Give a specific example with £ figures or percentages."}
+    {"q": "Exact Google search query an SME founder would type about this marketing problem", "a": "40-70 words. Lead with the key metric or action, cite a benchmark/platform/tool."},
+    {"q": "Second high-volume marketing query about a sub-topic", "a": "40-70 words. Factual, complete, with a £/$ or percentage."},
+    {"q": "Third query a founder would type when marketing isn't working", "a": "40-70 words. Include a benchmark, ROAS figure, or conversion rate."},
+    {"q": "A 'what is'/'how does' question about the core marketing concept", "a": "40-70 words. Plain English, a real platform/tool reference."},
+    {"q": "How does AskBiz help SMEs track [specific marketing metric]?", "a": "40-70 words. Name the exact feature and a £-figure example."}
   ],
   "cta": {
     "heading": "A CTA headline that names the specific marketing problem solved in this post",
     "body": "One sentence connecting this article's topic to AskBiz for SME founders. Then: 'Try it free — ask your first marketing question in 30 seconds.'"
-  },
-  "author": {
-    "name": "Maya Chen",
-    "role": "Head of Marketing Intelligence",
-    "bio": "Maya Chen leads AskBiz's marketing intelligence function, tracking platform algorithm shifts, ad cost benchmarks, and channel ROI data across Meta, Google, TikTok, and email — and turning them into briefs that help SME founders spend less and grow faster."
   }
 }`
 
@@ -358,7 +327,7 @@ Return ONLY valid JSON (no markdown fences):
     groqUrl: GROQ_URL,
     apiKey: process.env.GROQ_API_KEY!,
     model: GROQ_MODEL,
-    maxTokens: 6500,
+    maxTokens: 3200,
     systemPrompt: _SYSTEM_,
     userPrompt,
     logRoute: 'agent/marketing-scout',
@@ -369,7 +338,18 @@ Return ONLY valid JSON (no markdown fences):
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
 
+  // cluster/pillar/region/publishDate/author are deterministic — set here
+  // rather than asking the model to reproduce them, which only wastes
+  // prompt and completion tokens against the account's tight TPM cap.
+  parsed.cluster = cluster
+  parsed.pillar = pillar
+  parsed.region = 'global'
   parsed.publishDate = new Date().toISOString().slice(0, 10)
+  parsed.author = {
+    name: 'Maya Chen',
+    role: 'Head of Marketing Intelligence',
+    bio: 'Maya Chen leads AskBiz\'s marketing intelligence function, tracking platform algorithm shifts, ad cost benchmarks, and channel ROI data across Meta, Google, TikTok, and email — and turning them into briefs that help SME founders spend less and grow faster.',
+  }
   parsed._citableSources = citableSources
 
   return parsed
