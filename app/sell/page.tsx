@@ -3,9 +3,14 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
+import PosStaffLockScreen from '@/components/PosStaffLockScreen'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath } from '@/lib/i18n-locale'
 import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
+import {
+  savePosStaffSession, clearPosStaffSession, isPosStaffLocked,
+  markPosStaffUnlocked, getPosStaffIdentifier, type PosStaffIdentifier,
+} from '@/lib/pos-staff-lock'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -33,6 +38,7 @@ export default function SellPage() {
   const { lang, tc } = useLang()
   const [staff, setStaff]     = useState<StaffSession | null>(null)
   const [screen, setScreen]   = useState<Screen>('login')
+  const [locked, setLocked]   = useState(false)
   const [cart, setCart]       = useState<CartItem[]>([])
   const [todaySales, setTodaySales]   = useState(0)
   const [todayRevenue, setTodayRevenue] = useState(0)
@@ -80,6 +86,7 @@ export default function SellPage() {
         setStaff(s)
         setCurrencySymbol(s.currency_symbol || '£')
         setScreen('home')
+        setLocked(isPosStaffLocked())
         loadTodayStats(s.owner_id, s.id)
       } catch { /* invalid session, show login */ }
     }
@@ -144,7 +151,7 @@ export default function SellPage() {
       if (!res.ok) { setLoginError(data.error || 'Invalid PIN'); setLoginLoading(false); return }
       if (data.verified && data.staff) {
         const s = data.staff as StaffSession
-        localStorage.setItem('pos_staff', JSON.stringify(s))
+        savePosStaffSession(s, id as PosStaffIdentifier)
         if (s.role === 'inventory') { router.push(localePath('/inventory', lang)); return }
         setStaff(s)
         setCurrencySymbol(s.currency_symbol || '£')
@@ -351,6 +358,23 @@ export default function SellPage() {
     setLastTxId(''); setReceiptSent(false); setScreen('home')
   }
 
+  // ── LOCK SCREEN ───────────────────────────────────────────
+  // 24h since last unlock — re-confirm the PIN instead of a full sign-out,
+  // so an in-progress cart isn't lost.
+  if (locked && staff) return (
+    <PosStaffLockScreen
+      staffName={staff.name}
+      identifier={getPosStaffIdentifier()}
+      t={(key) => tc(`pos_sell.${key}`)}
+      onUnlock={() => { markPosStaffUnlocked(); setLocked(false) }}
+      onSignOut={() => {
+        clearPosStaffSession()
+        setStaff(null); setLocked(false); setScreen('login')
+        setLoginStep('email'); setLoginEmail(''); setLoginPin('')
+      }}
+    />
+  )
+
   // ── LOGIN SCREEN ──────────────────────────────────────────
   if (screen === 'login') return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f9f8f6', padding: 24 }}>
@@ -457,7 +481,7 @@ export default function SellPage() {
           <div style={{ fontWeight: 800, fontSize: 18, color: '#1a1916' }}>{tc('pos_sell.askbiz_pos')}</div>
           <div style={{ fontSize: 12, color: '#6b6760' }}>{staff?.name}</div>
         </div>
-        <button onClick={() => { localStorage.removeItem('pos_staff'); setStaff(null); setScreen('login'); setLoginStep('email'); setLoginEmail(''); setLoginPin('') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>{tc('pos_sell.sign_out')}</button>
+        <button onClick={() => { clearPosStaffSession(); setStaff(null); setScreen('login'); setLoginStep('email'); setLoginEmail(''); setLoginPin('') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>{tc('pos_sell.sign_out')}</button>
       </div>
 
       {/* Today's stats */}

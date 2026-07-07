@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import PosStaffLockScreen from '@/components/PosStaffLockScreen'
+import { clearPosStaffSession, isPosStaffLocked, markPosStaffUnlocked, getPosStaffIdentifier } from '@/lib/pos-staff-lock'
 
 const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e2dc', fontSize: 13, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916' }
 const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
@@ -61,6 +63,7 @@ function fileToThumb(file: File): Promise<string> {
 export default function InventoryPage() {
   const router = useRouter()
   const [staff, setStaff]         = useState<StaffSession | null>(null)
+  const [locked, setLocked]       = useState(false)
   const [items, setItems]         = useState<InventoryItem[]>([])
   const [loading, setLoading]     = useState(true)
   const [restocking, setRestocking] = useState<string | null>(null)
@@ -93,6 +96,7 @@ export default function InventoryPage() {
     const s = JSON.parse(session) as StaffSession
     if (s.role !== 'inventory') { router.push('/sell'); return }
     setStaff(s)
+    setLocked(isPosStaffLocked())
     loadInventory()
   }, [])
 
@@ -242,6 +246,16 @@ export default function InventoryPage() {
   const outCount  = items.filter(i => i.stock_qty === 0).length
   const lowCount  = items.filter(i => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold).length
 
+  // 24h since last unlock — re-confirm the PIN instead of a full sign-out.
+  if (locked && staff) return (
+    <PosStaffLockScreen
+      staffName={staff.name}
+      identifier={getPosStaffIdentifier()}
+      onUnlock={() => { markPosStaffUnlocked(); setLocked(false) }}
+      onSignOut={() => { clearPosStaffSession(); router.push('/sell') }}
+    />
+  )
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b6760', fontSize: 14 }}>
       Loading inventory...
@@ -264,7 +278,7 @@ export default function InventoryPage() {
           <button onClick={() => setShowScanModal(true)} disabled={scanning} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760', opacity: scanning ? 0.5 : 1 }}>
             {scanning ? 'Scanning...' : '📷 Scan'}
           </button>
-          <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
+          <button onClick={() => { clearPosStaffSession(); router.push('/') }}
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>
             Sign out
           </button>
