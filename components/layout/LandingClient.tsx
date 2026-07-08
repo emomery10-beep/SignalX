@@ -1027,244 +1027,6 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
   )
 }
 
-// ── TEMP hero big demo — two tabs: real Operations dashboard + dynamic Cashier ──
-type CashierSector = 'retail'|'restaurant'|'salon'|'repair'|'factory'
-const CASHIER_SECTORS: {id:CashierSector; icon:string; label:string}[] = [
-  { id:'retail', icon:'📦', label:'Retail' },
-  { id:'restaurant', icon:'🍴', label:'Restaurant' },
-  { id:'salon', icon:'💇', label:'Salon' },
-  { id:'repair', icon:'🔧', label:'Repair' },
-  { id:'factory', icon:'🏭', label:'Factory' },
-]
-const CASHIER_ITEMS: Record<CashierSector,{name:string;price:number;cost:number}[]> = {
-  retail: [
-    { name:'Sukuma wiki', price:20, cost:12 },
-    { name:'Tomatoes 1kg', price:90, cost:60 },
-    { name:'Cooking oil', price:210, cost:175 },
-    { name:'Bread', price:65, cost:50 },
-    { name:'Airtime', price:100, cost:95 },
-  ],
-  restaurant: [
-    { name:'Chapati wrap', price:180, cost:90 },
-    { name:'Meat pie', price:150, cost:70 },
-    { name:'Soda 500ml', price:80, cost:55 },
-    { name:'Chicken plate', price:450, cost:260 },
-  ],
-  salon: [
-    { name:'Haircut', price:300, cost:40 },
-    { name:'Braiding', price:1200, cost:200 },
-    { name:'Manicure', price:500, cost:80 },
-  ],
-  repair: [
-    { name:'Screen fix', price:2500, cost:1600 },
-    { name:'Battery swap', price:1500, cost:900 },
-    { name:'Diagnostics', price:300, cost:0 },
-  ],
-  factory: [
-    { name:'Unit batch — 50pc', price:8500, cost:5200 },
-    { name:'Raw material lot', price:4200, cost:3100 },
-  ],
-}
-
-function HeroCashierDemo() {
-  const [sector,setSector] = useState<CashierSector>('retail')
-  const [screen,setScreen] = useState<'home'|'add'|'capturing'|'cart'>('home')
-  const [receipt,setReceipt] = useState<{name:string;price:number}[]>([])
-  const [cart,setCart] = useState<{name:string;price:number;qty:number}[]>([])
-  const [baseTotal] = useState(449950.95)
-  const [baseSales] = useState(40)
-  const [showPracticeBanner,setShowPracticeBanner] = useState(true)
-  const idxRef = useRef(0)
-  const fmt = (n:number) => 'KSh ' + n.toLocaleString('en-KE', { minimumFractionDigits:2, maximumFractionDigits:2 })
-  const addedTotal = receipt.reduce((a,it)=>a+it.price,0)
-  const total = baseTotal + addedTotal
-  const sales = baseSales + receipt.length
-  const cartTotal = cart.reduce((a,it)=>a+it.price*it.qty,0)
-
-  const switchSector = (s:CashierSector) => {
-    setSector(s)
-    setScreen('home')
-  }
-
-  const capture = () => {
-    setScreen('capturing')
-    const items = CASHIER_ITEMS[sector]
-    const item = items[idxRef.current % items.length]
-    idxRef.current++
-    setTimeout(() => {
-      setCart(c => {
-        const existing = c.find(it => it.name === item.name)
-        if (existing) return c.map(it => it.name === item.name ? { ...it, qty: it.qty + 1 } : it)
-        return [...c, { name:item.name, price:item.price, qty:1 }]
-      })
-      setScreen('cart')
-    }, 500)
-  }
-
-  const setQty = (name:string, qty:number) => {
-    setCart(c => qty <= 0 ? c.filter(it => it.name !== name) : c.map(it => it.name === name ? { ...it, qty } : it))
-  }
-
-  const clearCart = () => { setCart([]); setScreen('home') }
-
-  const pay = () => {
-    setReceipt(r => [...r, ...cart.map(it => ({ name: it.qty>1 ? `${it.name} ×${it.qty}` : it.name, price: it.price*it.qty }))])
-    setCart([])
-    setScreen('home')
-  }
-
-  if (screen === 'cart') {
-    return (
-      <div style={{ minHeight:520, display:'flex', flexDirection:'column' }}>
-        <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid #F0F0F0' }}>
-          <button onClick={()=>setScreen('add')} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, padding:0, color:'#1A1410' }}>←</button>
-          <span style={{ fontSize:15, fontWeight:700, color:'#1A1410' }}>Cart</span>
-          <span style={{ marginLeft:'auto', fontSize:12, color:'#9ca3af' }}>{cart.reduce((a,it)=>a+it.qty,0)} item{cart.reduce((a,it)=>a+it.qty,0)===1?'':'s'}</span>
-        </div>
-        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:10 }}>
-          {cart.length === 0 && <div style={{ fontSize:13, color:'#9ca3af', textAlign:'center', padding:'40px 0' }}>Cart is empty</div>}
-          {cart.map(it => (
-            <div key={it.name} style={{ border:'1px solid #F0F0F0', borderRadius:12, padding:'14px 16px' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#1A1410' }}>{it.name}</div>
-                  <div style={{ fontSize:11.5, color:'#9ca3af' }}>{fmt(it.price)} each</div>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <button onClick={()=>setQty(it.name, it.qty-1)} style={{ width:26, height:26, borderRadius:7, border:'1px solid #E5E5E5', background:'#fff', cursor:'pointer', fontSize:14 }}>−</button>
-                  <span style={{ fontSize:13, fontWeight:700, minWidth:14, textAlign:'center' }}>{it.qty}</span>
-                  <button onClick={()=>setQty(it.name, it.qty+1)} style={{ width:26, height:26, borderRadius:7, border:'1px solid #E5E5E5', background:'#fff', cursor:'pointer', fontSize:14 }}>+</button>
-                  <span style={{ fontSize:13, fontWeight:700, minWidth:80, textAlign:'right', fontVariantNumeric:'tabular-nums' }}>{fmt(it.price*it.qty)}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ borderTop:'1px solid #F0F0F0', padding:'16px 20px' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:14 }}>
-            <span style={{ fontSize:13, color:'#9ca3af' }}>Total</span>
-            <span style={{ fontSize:20, fontWeight:800, color:'#1A1410', fontVariantNumeric:'tabular-nums' }}>{fmt(cartTotal)}</span>
-          </div>
-          <div style={{ display:'flex', gap:10, marginBottom:10 }}>
-            <button onClick={()=>setScreen('add')} style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #E5E5E5', background:'#fff', color:'#1A1410', fontSize:13, fontWeight:700, cursor:'pointer' }}>+ Add item</button>
-            <button onClick={pay} disabled={cart.length===0} style={{ flex:1, padding:'12px', borderRadius:12, border:'none', background:T.acc, color:'#fff', fontSize:13, fontWeight:700, cursor: cart.length===0?'default':'pointer', opacity: cart.length===0?0.5:1 }}>Pay →</button>
-          </div>
-          <button onClick={clearCart} style={{ width:'100%', background:'none', border:'none', color:'#ef4444', fontSize:12.5, cursor:'pointer', padding:'4px' }}>Clear cart</button>
-        </div>
-      </div>
-    )
-  }
-
-  if (screen === 'add' || screen === 'capturing') {
-    return (
-      <div style={{ minHeight:520, background:'#0d0d0d', color:'#fff', display:'flex', flexDirection:'column' }}>
-        <style>{`@keyframes pulse{0%,100%{border-color:#444}50%{border-color:${T.acc}}}`}</style>
-        <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid #262626' }}>
-          <button onClick={()=>setScreen(cart.length>0 ? 'cart' : 'home')} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer', fontSize:18, padding:0 }}>←</button>
-          <span style={{ fontSize:15, fontWeight:700 }}>Add item</span>
-        </div>
-        <div style={{ display:'flex', gap:24, padding:'14px 20px', borderBottom:'1px solid #262626' }}>
-          <span style={{ fontSize:13, fontWeight:700, color:T.acc, borderBottom:`2px solid ${T.acc}`, paddingBottom:10 }}>📷 Camera</span>
-          <span style={{ fontSize:13, color:'#777', paddingBottom:10 }}>🔍 Search</span>
-        </div>
-        <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:18 }}>
-          <button
-            onClick={capture}
-            disabled={screen==='capturing'}
-            style={{
-              width:180, height:180, borderRadius:20, border:'2px dashed #444', background:'none', cursor: screen==='capturing' ? 'default' : 'pointer',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              animation: screen==='capturing' ? 'pulse 0.6s ease infinite' : 'none',
-            }}
-          >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.5">
-              <path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
-              <circle cx="12" cy="13" r="3.5"/>
-            </svg>
-          </button>
-          <div style={{ fontSize:13, color:'#999' }}>{screen==='capturing' ? 'Capturing…' : 'Tap to photograph the item'}</div>
-          <button onClick={capture} disabled={screen==='capturing'} style={{ marginTop:4, padding:'10px 20px', borderRadius:9999, border:'1px solid #333', background:'#1a1a1a', color:'#ccc', fontSize:13, cursor:'pointer' }}>
-            Search instead
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ minHeight:520, padding:'20px 28px 28px' }}>
-      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:18 }}>
-        {CASHIER_SECTORS.map(s=>(
-          <button key={s.id} onClick={()=>switchSector(s.id)} style={{
-            fontSize:12, padding:'6px 13px', borderRadius:9999, cursor:'pointer', fontFamily:'inherit',
-            border:'1px solid transparent', background:sector===s.id ? 'rgba(201,122,68,.1)' : 'transparent',
-            boxShadow:sector===s.id ? 'inset 0 0 0 1px rgba(201,122,68,.35)' : 'none',
-            color:sector===s.id ? T.acc : '#888', fontWeight:sector===s.id?700:500,
-            transition:'background 180ms, box-shadow 180ms, color 180ms',
-          }}>
-            {s.icon} {s.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-        <div>
-          <div style={{ fontSize:15, fontWeight:800, color:'#111827' }}>AskBiz POS</div>
-          <div style={{ fontSize:12, color:'#9ca3af' }}>Preview Staff</div>
-        </div>
-        <div style={{ display:'flex', gap:6 }}>
-          <span style={{ fontSize:11, padding:'6px 12px', borderRadius:9999, border:`1px solid ${T.acc}`, color:T.acc, fontWeight:700 }}>○ Open shift</span>
-          <span style={{ width:30,height:30,borderRadius:'50%',border:'1px solid #E5E5E5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13 }}>📍</span>
-          <span style={{ fontSize:11, padding:'6px 12px', borderRadius:9999, border:'1px solid #E5E5E5', color:'#666' }}>Exit</span>
-        </div>
-      </div>
-
-      <div style={{ fontSize:30, fontWeight:800, color:'#111827', fontVariantNumeric:'tabular-nums' }}>{fmt(total)}</div>
-      <div style={{ fontSize:12, color:'#9ca3af', marginBottom:16 }}>today · {sales} sales</div>
-
-      {showPracticeBanner && (
-        <div style={{ background:'#0f2a52', color:'#fff', borderRadius:12, padding:'14px 16px', marginBottom:12, display:'flex', justifyContent:'space-between', gap:12 }}>
-          <div>
-            <div style={{ fontSize:13, fontWeight:700, marginBottom:2 }}>🎓 New here? Try a practice sale</div>
-            <div style={{ fontSize:11.5, color:'#c7d2e0', marginBottom:8 }}>Learn the till in a minute. It's practice only — nothing is saved or sent.</div>
-            <button style={{ background:'#fff', color:'#0f2a52', border:'none', borderRadius:8, padding:'6px 12px', fontSize:11.5, fontWeight:700, cursor:'pointer' }}>Start practice</button>
-          </div>
-          <button onClick={()=>setShowPracticeBanner(false)} style={{ background:'none', border:'none', color:'#c7d2e0', cursor:'pointer', fontSize:14, alignSelf:'flex-start' }}>×</button>
-        </div>
-      )}
-
-      <div style={{ background:'#fff7ed', border:'1px solid #fed7aa', borderRadius:10, padding:'12px 14px', marginBottom:20 }}>
-        <div style={{ fontSize:12, fontWeight:700, color:'#111827', marginBottom:2 }}>Before you sell</div>
-        <div style={{ fontSize:11.5, color:'#92610f' }}>⏱ Open your shift so today's sales count on your till — tap here</div>
-      </div>
-
-      {receipt.length > 0 && (
-        <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:16 }}>
-          {receipt.slice(-3).map((it,i) => (
-            <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:12.5, color:'#374151', padding:'5px 0', borderBottom:'1px dashed #e5e7eb' }}>
-              <span>{it.name}</span><span style={{ fontVariantNumeric:'tabular-nums' }}>{fmt(it.price)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div style={{ display:'flex', justifyContent:'center' }}>
-        <button onClick={()=>setScreen('add')} style={{
-          width:'100%', maxWidth:360, height:130, borderRadius:20, border:'none', cursor:'pointer',
-          background: T.acc, color:'#2a1a0d', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8,
-          fontFamily:'inherit',
-        }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
-            <circle cx="12" cy="13" r="3.5"/>
-          </svg>
-          <span style={{ fontSize:14, fontWeight:700 }}>New sale</span>
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const HERO_TABS = [
     {id:'ops' as const, label:'Operations'},
@@ -1303,7 +1065,11 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {heroTab==='ops' ? (
         <PosShowcase tc={tc} demo={demo} />
       ) : (
-        <HeroCashierDemo />
+        <iframe
+          src="https://pos.askbiz.co/preview/cashier"
+          title="AskBiz cashier — live demo"
+          style={{ width:'100%', height:640, border:'none', display:'block' }}
+        />
       )}
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
@@ -1811,30 +1577,58 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
-      {/* ── POINT OF SALE ─────────────────────────────────────────────── */}
+      {/* ── POINT OF SALE — Eleven-pattern example section ─────────────── */}
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
-          <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
-            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,54px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
-              {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
-            </h2>
-            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:480,margin:'0 auto' }}>
-              {tc('landing.pos_subtitle')}
+          <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'end', marginBottom:40 }} data-reveal>
+            <div>
+              <div style={{ fontSize:12, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:T.acc, marginBottom:14 }}>Point of sale</div>
+              <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,50px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
+                {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
+              </h2>
+              <div style={{ display:'flex',gap:12,flexWrap:'wrap' }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+                  {tc('landing.pos_cta')}
+                </Link>
+                <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
+                  {tc('landing.pos_demo_cta')}
+                </Link>
+              </div>
+            </div>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,margin:0 }}>
+              {tc('landing.pos_subtitle')} <span style={{ color:T.tx3 }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
             </p>
           </div>
-          <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
-            {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(
-              <span key={f} style={{ padding:'6px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:12,color:T.tx2,fontWeight:500 }}>{f}</span>
+
+          {/* Proof visual — real product, bordered panel with Eleven-style corner marks */}
+          <div style={{ position:'relative', border:`1px solid ${T.bd}`, borderRadius:16, padding:'clamp(16px,3vw,28px)', background:T.card, marginBottom:40 }}>
+            {[[0,0],[1,0],[0,1],[1,1]].map(([x,y])=>(
+              <span key={`${x}${y}`} style={{ position:'absolute', width:4, height:4, borderRadius:'50%', background:T.bd, left: x?'calc(100% - 2px)':-2, top: y?'calc(100% - 2px)':-2 }}/>
             ))}
+            <div style={{ pointerEvents:'none', transform:'scale(0.94)', transformOrigin:'top center' }}>
+              <PosShowcase tc={tc} demo={demo} />
+            </div>
           </div>
-          <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
-            <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
-              {tc('landing.pos_cta')}
-            </Link>
-            <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
-              {tc('landing.pos_demo_cta')}
-            </Link>
-            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center',width:'100%' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
+
+          {/* Bento feature grid — custom line icons, single accent, no emoji */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }} className="rep-4col">
+            {[
+              { icon:'camera', title:'Camera scan', desc:'No barcode gun — point and sell.' },
+              { icon:'wallet', title:'M-Pesa built in', desc:'Mobile money and cash, no setup.' },
+              { icon:'branch', title:'Multi-branch', desc:'One view across every location.' },
+              { icon:'cloud-off', title:'Works offline', desc:'Cash sales keep going, no signal.' },
+            ].map(f=>(
+              <div key={f.title} style={{ border:`1px solid ${T.bd}`, borderRadius:14, padding:'20px 18px', background:T.card }}>
+                <div style={{ marginBottom:14 }}>
+                  {f.icon==='camera' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="1.4"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>}
+                  {f.icon==='wallet' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="1.4"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16" cy="14" r="1.3"/></svg>}
+                  {f.icon==='branch' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="1.4"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M6 8.4V13a4 4 0 0 0 4 4M18 8.4V13a4 4 0 0 1-4 4"/></svg>}
+                  {f.icon==='cloud-off' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="1.4"><path d="M17 18H7a4 4 0 0 1-1-7.87A5.5 5.5 0 0 1 16.9 8.1 4 4 0 0 1 17 18z"/><path d="M3 3l18 18" strokeLinecap="round"/></svg>}
+                </div>
+                <div style={{ fontSize:14, fontWeight:700, color:T.tx, marginBottom:5 }}>{f.title}</div>
+                <div style={{ fontSize:12.5, color:T.tx3, lineHeight:1.5 }}>{f.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
