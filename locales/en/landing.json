@@ -19,7 +19,7 @@
   "faq_8_a": "Cash sales keep going with no connection at all — your stock and till still update. The app queues the sale and syncs it automatically the moment you're back online. Card and mobile money payments need a live connection to confirm with the provider, so those pause until signal returns — everything else keeps working.",
   "nav_how_it_works": "How it works",
   "nav_help": "Help",
-  "nav_get_started": "Get started",
+  "nav_get_started": "Sign up",
   "nav_free_tools": "Free Tools",
   "nav_point_of_sale": "Point of Sale",
   "nav_integrations": "Connect your tools",

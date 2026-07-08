@@ -8,6 +8,7 @@ import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { localePath } from '@/lib/i18n-locale'
 import type { Locale } from '@/lib/i18n-locale'
+import { createClient } from '@/lib/supabase/client'
 
 const SkullCanvas = dynamic(() => import('@/components/three/SkullCanvas'), {
   ssr: false,
@@ -1026,6 +1027,94 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
   )
 }
 
+// ── TEMP hero big demo — two tabs: real Operations dashboard + dynamic Cashier ──
+const CASHIER_DEMO_ITEMS = [
+  { name:'Sukuma wiki', price:20, cost:12 },
+  { name:'Tomatoes 1kg', price:90, cost:60 },
+  { name:'Cooking oil', price:210, cost:175 },
+  { name:'Bread', price:65, cost:50 },
+  { name:'Airtime', price:100, cost:95 },
+]
+
+function HeroCashierDemo() {
+  const [scanning,setScanning] = useState(false)
+  const [receipt,setReceipt] = useState<typeof CASHIER_DEMO_ITEMS>([])
+  const idxRef = useRef(0)
+  const fmt = (n:number) => 'KSh ' + n.toLocaleString('en-KE')
+  const total = receipt.reduce((a,it)=>a+it.price,0)
+
+  const scan = () => {
+    if (scanning) return
+    setScanning(true)
+    const item = CASHIER_DEMO_ITEMS[idxRef.current % CASHIER_DEMO_ITEMS.length]
+    idxRef.current++
+    setTimeout(() => {
+      setReceipt(r => [...r, item])
+      setScanning(false)
+    }, 450)
+  }
+
+  return (
+    <div style={{ padding:'32px 40px', display:'flex', flexDirection:'column', alignItems:'center', minHeight:520 }}>
+      <div style={{ width:'100%', maxWidth:360 }}>
+        <div style={{ fontSize:12, color:'#9ca3af', marginBottom:2 }}>Preview Staff</div>
+        <div style={{ fontSize:34, fontWeight:800, color:'#111827', fontVariantNumeric:'tabular-nums' }}>{fmt(total)}</div>
+        <div style={{ fontSize:12, color:'#9ca3af', marginBottom:24 }}>today · {receipt.length} sales</div>
+
+        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:24, minHeight:120 }}>
+          {receipt.length === 0 && <div style={{ fontSize:13, color:'#9ca3af', textAlign:'center', padding:'30px 0' }}>Tap the camera to ring up a sale</div>}
+          {receipt.slice(-4).map((it,i) => (
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#374151', padding:'6px 0', borderBottom:'1px dashed #e5e7eb' }}>
+              <span>{it.name}</span><span style={{ fontVariantNumeric:'tabular-nums' }}>{fmt(it.price)}</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={scan} disabled={scanning} style={{
+          width:'100%', height:120, borderRadius:20, border:'none', cursor: scanning ? 'default' : 'pointer',
+          background: T.acc, color:'#2a1a0d', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8,
+          opacity: scanning ? 0.75 : 1, transition:'opacity 150ms', fontFamily:'inherit',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/>
+            <circle cx="12" cy="13" r="3.5"/>
+          </svg>
+          <span style={{ fontSize:14, fontWeight:700 }}>{scanning ? 'Scanning…' : 'Scan item'}</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
+  const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
+  return (
+    <div style={{ borderRadius:22, border:`1px solid ${T.bd}`, background:'#fff', boxShadow:'0 24px 70px rgba(0,0,0,.09)', overflow:'hidden', minHeight:640 }}>
+      <div style={{ display:'flex', borderBottom:'1px solid #E5E5E5', background:'#FAFAFA' }}>
+        {([
+          {id:'ops' as const, label:'Operations'},
+          {id:'cashier' as const, label:'Cashier'},
+        ]).map(t=>(
+          <button key={t.id} onClick={()=>setHeroTab(t.id)} style={{
+            padding:'14px 24px', fontSize:13, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
+            background:'none', border:'none', borderBottom: heroTab===t.id ? `2px solid ${T.acc}` : '2px solid transparent',
+            color: heroTab===t.id ? '#1A1410' : '#999',
+          }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {heroTab==='ops' ? (
+        <div style={{ padding:16 }}>
+          <PosShowcase tc={tc} demo={demo} />
+        </div>
+      ) : (
+        <HeroCashierDemo />
+      )}
+    </div>
+  )
+}
+
 // ── Calculator ────────────────────────────────────────────────────────────────
 function MiniCalcWidget({tc,lang,initialCurrency}:{tc:(k:string)=>string;lang:Locale;initialCurrency?:string}) {
   const BIZ_TYPES = buildBizTypes(tc)
@@ -1232,6 +1321,25 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   // Three.js globe is decoration — don't make phones on metered/slow
   // connections pay ~200KB+ for it. Static gradient background remains.
   const [showGlobe, setShowGlobe] = useState(false)
+  const [authUser, setAuthUser] = useState<{ initials: string } | null>(null)
+  useEffect(() => {
+    const supabase = createClient()
+    let alive = true
+    const deriveInitials = (u: { user_metadata?: { full_name?: string; name?: string }; email?: string }) => {
+      const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email || ''
+      const letters = name.split(/\s+/).filter(Boolean).map(p => p[0]).join('').toUpperCase().slice(0, 2)
+      // Phone/PIN accounts carry a synthetic numeric email — no letters to initial, fall back to a glyph.
+      return /[A-Z]/.test(letters) ? letters : ''
+    }
+    supabase.auth.getUser().then(({ data }) => {
+      if (alive && data.user) setAuthUser({ initials: deriveInitials(data.user) })
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!alive) return
+      setAuthUser(session?.user ? { initials: deriveInitials(session.user) } : null)
+    })
+    return () => { alive = false; sub.subscription.unsubscribe() }
+  }, [])
   useEffect(() => {
     const conn = (navigator as { connection?: { saveData?: boolean; effectiveType?: string } }).connection
     if (conn?.saveData || /2g/.test(conn?.effectiveType || '')) return
@@ -1303,6 +1411,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .cta-btn:active{transform:scale(0.97)}
         .nav-link:hover{color:${T.tx}!important}
         .nav-drop-item:hover{background:${T.alt}!important}
+        .nav-auth-link,.nav-auth-cta{transition:transform 150ms cubic-bezier(0.22,1,0.36,1),box-shadow 150ms}
+        .nav-auth-link:hover{transform:translateY(-2px);color:${T.tx}!important}
+        .nav-auth-cta:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(208,138,89,.4)!important}
         @media(max-width:768px){
           .nav-links{display:none!important}.nav-mobile-btn{display:flex!important}
           .nav-signin-link{display:none!important}
@@ -1343,12 +1454,27 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
           <LanguageToggle />
-          <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
-            {tc('landing.nav_sign_in')}
-          </Link>
-          <Link href={localePath('/signin?mode=signup', lang as Locale)} style={{ fontSize:13,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
-            {tc('landing.nav_get_started')}
-          </Link>
+          {authUser ? (
+            <Link href={localePath('/home', lang as Locale)} className="nav-auth-link" aria-label="Go to your account" style={{
+              width:32,height:32,borderRadius:'50%',background:T.acc,color:'#fff',fontSize:12,fontWeight:700,
+              display:'inline-flex',alignItems:'center',justifyContent:'center',textDecoration:'none',flexShrink:0,
+            }}>
+              {authUser.initials || (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              )}
+            </Link>
+          ) : (
+            <>
+              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap',display:'inline-block' }}>
+                {tc('landing.nav_sign_in')}
+              </Link>
+              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:13,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)',display:'inline-block' }}>
+                {tc('landing.nav_get_started')}
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -1376,27 +1502,39 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <a key={href} href={href.startsWith('#') ? href : localePath(href, lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 12px',fontSize:15,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
           ))}
           <div style={{ marginTop:20,display:'flex',flexDirection:'column',gap:10 }}>
-            <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.nav_get_started')}</Link>
-            <Link href={localePath('/signin', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
+            {authUser ? (
+              <Link href={localePath('/home', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>
+                <span style={{ width:26,height:26,borderRadius:'50%',background:'rgba(255,255,255,.25)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:12 }}>
+                  {authUser.initials || (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  )}
+                </span>
+                Go to your account
+              </Link>
+            ) : (
+              <>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.nav_get_started')}</Link>
+                <Link href={localePath('/signin', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
+              </>
+            )}
           </div>
         </div>
       )}
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section id="calc" style={{ position:'relative',minHeight:'100svh',display:'flex',alignItems:'center' }}>
-        <div style={{ position:'absolute',inset:0,zIndex:0,pointerEvents:'none' }}>
-          {showGlobe && <SkullCanvas scroll={scrollY} mouse={mouse} />}
-        </div>
         <div style={{ position:'absolute',top:'20%',left:'5%',width:'50%',height:'60%',background:'radial-gradient(ellipse,rgba(201,122,68,.05) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }}/>
         <div style={{ maxWidth:1280,margin:'0 auto',width:'100%',padding:'clamp(80px,10vw,100px) clamp(20px,5vw,80px)',position:'relative',zIndex:2 }}>
-          <div className="hero-grid" style={{ gap:'clamp(32px,4vw,64px)' }}>
+          <div className="hero-grid" style={{ gap:'clamp(32px,4vw,64px)', gridTemplateColumns:'1fr', maxWidth:700 }}>
             {/* Left — headline */}
             <div>
-              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(38px,5vw,72px)',fontWeight:400,lineHeight:.98,letterSpacing:'-.025em',marginBottom:28,color:T.tx }}>
+              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(30px,3.6vw,52px)',fontWeight:400,lineHeight:1.02,letterSpacing:'-.02em',marginBottom:18,color:T.tx }}>
                 {tc('landing.hero_title_line1')}<br/>
                 <em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.hero_title_line2')}</em>
               </h1>
-              <p style={{ fontSize:'clamp(15px,1.4vw,18px)',color:T.tx2,lineHeight:1.7,marginBottom:36,maxWidth:420 }}>
+              <p style={{ fontSize:'clamp(13px,1.1vw,15px)',color:T.tx2,lineHeight:1.6,marginBottom:24,maxWidth:420 }}>
                 {tc('landing.hero_subtitle')}
               </p>
               <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
@@ -1421,10 +1559,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </div>
               {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{tc('landing.hero_local_currency',{flag,country})}</p>}
             </div>
-            {/* Right — calculator */}
-            <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-              <MiniCalcWidget tc={tc} lang={lang as Locale} initialCurrency={liveGeo?.currency} />
-            </div>
+          </div>
+          <div style={{ marginTop:'clamp(32px,4vw,48px)' }}>
+            <HeroBigDemo tc={tc} demo={demo} />
           </div>
         </div>
         <div style={{ position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,zIndex:2,opacity:Math.max(0,1-scrollY/250),pointerEvents:'none' }}>
@@ -1499,9 +1636,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:480,margin:'0 auto' }}>
               {tc('landing.pos_subtitle')}
             </p>
-          </div>
-          <div data-reveal data-reveal-delay="1">
-            <PosShowcase tc={tc} demo={demo} />
           </div>
           <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
             {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(
