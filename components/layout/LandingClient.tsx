@@ -1641,22 +1641,25 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       )}
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section id="calc" style={{ position:'relative',minHeight:'100svh',display:'flex',alignItems:'center' }}>
+      <section id="calc" style={{ position:'relative',display:'flex',alignItems:'center' }}>
         <div style={{ position:'absolute',top:'20%',left:'5%',width:'50%',height:'60%',background:'radial-gradient(ellipse,rgba(201,122,68,.05) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }}/>
-        <div style={{ maxWidth:1280,margin:'0 auto',width:'100%',padding:'clamp(80px,10vw,100px) clamp(20px,5vw,80px)',position:'relative',zIndex:2 }}>
-          <div className="hero-grid" style={{ gap:'clamp(32px,4vw,64px)', gridTemplateColumns:'1fr', maxWidth:700 }}>
+        <div style={{ maxWidth:1280,margin:'0 auto',width:'100%',padding:'clamp(32px,5vw,48px) clamp(20px,5vw,80px) clamp(40px,6vw,64px)',position:'relative',zIndex:2 }}>
+          <div className="hero-grid" style={{ gap:'clamp(24px,4vw,48px)', gridTemplateColumns:'1.1fr 1fr', alignItems:'end' }}>
             {/* Left — headline */}
             <div>
-              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(30px,3.6vw,52px)',fontWeight:400,lineHeight:1.02,letterSpacing:'-.02em',marginBottom:18,color:T.tx }}>
+              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(30px,3.6vw,52px)',fontWeight:400,lineHeight:1.02,letterSpacing:'-.02em',color:T.tx }}>
                 {tc('landing.hero_title_line1')}<br/>
                 <em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.hero_title_line2')}</em>
               </h1>
-              <p style={{ fontSize:'clamp(13px,1.1vw,15px)',color:T.tx2,lineHeight:1.6,marginBottom:24,maxWidth:420 }}>
+            </div>
+            {/* Right — subtitle, aligned beside the bottom of the headline */}
+            <div>
+              <p style={{ fontSize:'clamp(13px,1.1vw,15px)',color:T.tx2,lineHeight:1.6 }}>
                 {tc('landing.hero_subtitle')}
               </p>
             </div>
           </div>
-          <div style={{ marginTop:'clamp(32px,4vw,48px)' }}>
+          <div style={{ marginTop:'clamp(24px,3vw,36px)' }}>
             <HeroBigDemo tc={tc} demo={demo} />
           </div>
         </div>
