@@ -1654,27 +1654,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <p style={{ fontSize:'clamp(13px,1.1vw,15px)',color:T.tx2,lineHeight:1.6,marginBottom:24,maxWidth:420 }}>
                 {tc('landing.hero_subtitle')}
               </p>
-              <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
-                  {tc('landing.hero_cta_primary')}
-                </Link>
-                <Link href="/demo" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
-                  {tc('landing.hero_cta_secondary')}
-                </Link>
-              </div>
-              <div style={{ display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:T.tx3 }}>
-                <span>{tc('landing.hero_trust_free')}</span>
-                <span>{tc('landing.hero_trust_gdpr')}</span>
-                <span>{tc('landing.hero_trust_ready')}</span>
-              </div>
-              <div style={{ marginTop:12,display:'inline-flex',alignItems:'center',gap:8,background:'rgba(22,163,74,.07)',border:'1px solid rgba(22,163,74,.18)',borderRadius:9999,padding:'6px 14px' }}>
-                <span style={{ fontSize:11,fontWeight:700,color:'#16a34a' }}>{tc('landing.hero_badge_free')}</span>
-                <span style={{ fontSize:11,color:T.tx3 }}>·</span>
-                <span style={{ fontSize:11,color:T.tx2,fontWeight:600 }}>{tc('landing.hero_badge_pricing',{growth:growthPrice,business:businessPrice})}</span>
-                <span style={{ fontSize:11,color:T.tx3 }}>·</span>
-                <span style={{ fontSize:11,color:T.tx3 }}>{tc('landing.hero_badge_pos',{pos:posPrice})}</span>
-              </div>
-              {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{tc('landing.hero_local_currency',{flag,country})}</p>}
             </div>
           </div>
           <div style={{ marginTop:'clamp(32px,4vw,48px)' }}>
