@@ -1068,8 +1068,9 @@ const CASHIER_ITEMS: Record<CashierSector,{name:string;price:number;cost:number}
 
 function HeroCashierDemo() {
   const [sector,setSector] = useState<CashierSector>('retail')
-  const [screen,setScreen] = useState<'home'|'add'|'capturing'>('home')
+  const [screen,setScreen] = useState<'home'|'add'|'capturing'|'cart'>('home')
   const [receipt,setReceipt] = useState<{name:string;price:number}[]>([])
+  const [cart,setCart] = useState<{name:string;price:number;qty:number}[]>([])
   const [baseTotal] = useState(449950.95)
   const [baseSales] = useState(40)
   const [showPracticeBanner,setShowPracticeBanner] = useState(true)
@@ -1078,6 +1079,7 @@ function HeroCashierDemo() {
   const addedTotal = receipt.reduce((a,it)=>a+it.price,0)
   const total = baseTotal + addedTotal
   const sales = baseSales + receipt.length
+  const cartTotal = cart.reduce((a,it)=>a+it.price*it.qty,0)
 
   const switchSector = (s:CashierSector) => {
     setSector(s)
@@ -1090,9 +1092,67 @@ function HeroCashierDemo() {
     const item = items[idxRef.current % items.length]
     idxRef.current++
     setTimeout(() => {
-      setReceipt(r => [...r, item])
-      setScreen('home')
+      setCart(c => {
+        const existing = c.find(it => it.name === item.name)
+        if (existing) return c.map(it => it.name === item.name ? { ...it, qty: it.qty + 1 } : it)
+        return [...c, { name:item.name, price:item.price, qty:1 }]
+      })
+      setScreen('cart')
     }, 500)
+  }
+
+  const setQty = (name:string, qty:number) => {
+    setCart(c => qty <= 0 ? c.filter(it => it.name !== name) : c.map(it => it.name === name ? { ...it, qty } : it))
+  }
+
+  const clearCart = () => { setCart([]); setScreen('home') }
+
+  const pay = () => {
+    setReceipt(r => [...r, ...cart.map(it => ({ name: it.qty>1 ? `${it.name} ×${it.qty}` : it.name, price: it.price*it.qty }))])
+    setCart([])
+    setScreen('home')
+  }
+
+  if (screen === 'cart') {
+    return (
+      <div style={{ minHeight:520, display:'flex', flexDirection:'column' }}>
+        <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid #F0F0F0' }}>
+          <button onClick={()=>setScreen('add')} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, padding:0, color:'#1A1410' }}>←</button>
+          <span style={{ fontSize:15, fontWeight:700, color:'#1A1410' }}>Cart</span>
+          <span style={{ marginLeft:'auto', fontSize:12, color:'#9ca3af' }}>{cart.reduce((a,it)=>a+it.qty,0)} item{cart.reduce((a,it)=>a+it.qty,0)===1?'':'s'}</span>
+        </div>
+        <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:10 }}>
+          {cart.length === 0 && <div style={{ fontSize:13, color:'#9ca3af', textAlign:'center', padding:'40px 0' }}>Cart is empty</div>}
+          {cart.map(it => (
+            <div key={it.name} style={{ border:'1px solid #F0F0F0', borderRadius:12, padding:'14px 16px' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#1A1410' }}>{it.name}</div>
+                  <div style={{ fontSize:11.5, color:'#9ca3af' }}>{fmt(it.price)} each</div>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <button onClick={()=>setQty(it.name, it.qty-1)} style={{ width:26, height:26, borderRadius:7, border:'1px solid #E5E5E5', background:'#fff', cursor:'pointer', fontSize:14 }}>−</button>
+                  <span style={{ fontSize:13, fontWeight:700, minWidth:14, textAlign:'center' }}>{it.qty}</span>
+                  <button onClick={()=>setQty(it.name, it.qty+1)} style={{ width:26, height:26, borderRadius:7, border:'1px solid #E5E5E5', background:'#fff', cursor:'pointer', fontSize:14 }}>+</button>
+                  <span style={{ fontSize:13, fontWeight:700, minWidth:80, textAlign:'right', fontVariantNumeric:'tabular-nums' }}>{fmt(it.price*it.qty)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop:'1px solid #F0F0F0', padding:'16px 20px' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:14 }}>
+            <span style={{ fontSize:13, color:'#9ca3af' }}>Total</span>
+            <span style={{ fontSize:20, fontWeight:800, color:'#1A1410', fontVariantNumeric:'tabular-nums' }}>{fmt(cartTotal)}</span>
+          </div>
+          <div style={{ display:'flex', gap:10, marginBottom:10 }}>
+            <button onClick={()=>setScreen('add')} style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #E5E5E5', background:'#fff', color:'#1A1410', fontSize:13, fontWeight:700, cursor:'pointer' }}>+ Add item</button>
+            <button onClick={pay} disabled={cart.length===0} style={{ flex:1, padding:'12px', borderRadius:12, border:'none', background:T.acc, color:'#fff', fontSize:13, fontWeight:700, cursor: cart.length===0?'default':'pointer', opacity: cart.length===0?0.5:1 }}>Pay →</button>
+          </div>
+          <button onClick={clearCart} style={{ width:'100%', background:'none', border:'none', color:'#ef4444', fontSize:12.5, cursor:'pointer', padding:'4px' }}>Clear cart</button>
+        </div>
+      </div>
+    )
   }
 
   if (screen === 'add' || screen === 'capturing') {
@@ -1100,7 +1160,7 @@ function HeroCashierDemo() {
       <div style={{ minHeight:520, background:'#0d0d0d', color:'#fff', display:'flex', flexDirection:'column' }}>
         <style>{`@keyframes pulse{0%,100%{border-color:#444}50%{border-color:${T.acc}}}`}</style>
         <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid #262626' }}>
-          <button onClick={()=>setScreen('home')} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer', fontSize:18, padding:0 }}>←</button>
+          <button onClick={()=>setScreen(cart.length>0 ? 'cart' : 'home')} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer', fontSize:18, padding:0 }}>←</button>
           <span style={{ fontSize:15, fontWeight:700 }}>Add item</span>
         </div>
         <div style={{ display:'flex', gap:24, padding:'14px 20px', borderBottom:'1px solid #262626' }}>
@@ -1552,7 +1612,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       ` }}/>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
-      <nav aria-label="Primary navigation" style={{ position:'sticky',top:0,zIndex:50,background:T.nav,backdropFilter:'blur(20px)',borderBottom:`1px solid ${T.bd}`,padding:'0 clamp(16px,3vw,32px)',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,opacity:Math.max(0,1-scrollY/140),transform:`translateY(${Math.min(scrollY/7,14)}px)`,pointerEvents:scrollY>130?'none':'auto',transition:'opacity 120ms linear' }}>
+      <nav aria-label="Primary navigation" style={{ position:'sticky',top:0,zIndex:50,background:T.nav,backdropFilter:'blur(20px)',padding:'0 clamp(16px,3vw,32px)',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,opacity:Math.max(0,1-scrollY/140),transform:`translateY(${Math.min(scrollY/7,14)}px)`,pointerEvents:scrollY>130?'none':'auto',transition:'opacity 120ms linear' }}>
         <Link href={localePath('/', lang as Locale)} style={{ display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:T.tx,flexShrink:0 }}>
           <div style={{ width:28,height:28,borderRadius:8,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={13}/></div>
           <span style={{ fontFamily:'var(--font-instrument)',fontSize:18,fontWeight:400,letterSpacing:'-.01em' }}>AskBiz</span>
