@@ -143,26 +143,26 @@ function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-// ── Loading skeleton rows ─────────────────────────────────────────────────────
-function SkeletonRow() {
+// ── Loading skeleton cells ────────────────────────────────────────────────────
+function SkeletonCell() {
   return (
     <div style={{
-      padding: '14px 16px',
-      borderRadius: 10,
+      padding: '8px 10px',
+      borderRadius: 8,
       border: '1px solid var(--b)',
       background: 'var(--sf)',
-      borderLeft: '3px solid var(--b)',
+      borderLeft: '2.5px solid var(--b)',
       display: 'flex',
-      gap: 12,
-      alignItems: 'flex-start',
+      gap: 8,
+      alignItems: 'center',
+      minHeight: 48,
     }}>
-      <div style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', flexShrink: 0 }} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ width: '55%', height: 12, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out' }} />
-        <div style={{ width: '80%', height: 10, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', opacity: 0.6 }} />
-        <div style={{ width: '35%', height: 10, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', opacity: 0.4 }} />
+      <div style={{ width: 16, height: 16, borderRadius: 4, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', flexShrink: 0 }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div style={{ width: '45%', height: 8, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out' }} />
+        <div style={{ width: '70%', height: 10, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', opacity: 0.7 }} />
+        <div style={{ width: '55%', height: 8, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', opacity: 0.4 }} />
       </div>
-      <div style={{ width: 60, height: 10, borderRadius: 6, background: 'var(--b)', animation: 'pulse 1.5s infinite ease-in-out', flexShrink: 0 }} />
     </div>
   )
 }
@@ -480,10 +480,8 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
 
       {/* ── Event timeline ── */}
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
+          {Array.from({ length: 9 }).map((_, i) => <SkeletonCell key={i} />)}
         </div>
       ) : visibleEvents.length === 0 ? (
         <div style={{
@@ -503,205 +501,167 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8 }}>
           {visibleEvents.map(event => {
             const sev  = SEV[event.severity]
             const expanded = expandedId === event.id
             const metaEntries = Object.entries(event.metadata ?? {}).filter(([, v]) => v !== null && v !== undefined && v !== '')
             const sc = sectorColor(event.sector)
+            const dotColor = event.severity === 'high' ? RED : event.severity === 'medium' ? AMBER : 'var(--tx3)'
+            const border = sev.border !== 'var(--b)' ? sev.border : 'var(--b)'
+            const bg = sev.bg !== 'transparent' ? sev.bg : 'var(--sf)'
+            const hasExtra = !!(event.actor || event.entity_ref || event.from_value || event.to_value || metaEntries.length > 0)
 
             return (
               <div
                 key={event.id}
                 onClick={() => setExpandedId(expanded ? null : event.id)}
                 style={{
-                  borderRadius: 10,
-                  border: `1px solid ${sev.border || 'var(--b)'}`,
-                  background: sev.bg || 'var(--sf)',
+                  gridColumn: expanded ? '1 / -1' : undefined,
+                  borderRadius: 8,
+                  border: `1px solid ${border}`,
+                  borderLeft: `2.5px solid ${border}`,
+                  background: bg,
                   cursor: 'pointer',
-                  transition: 'border-color .15s, background .15s',
+                  transition: 'background .12s, border-color .12s',
                   overflow: 'hidden',
                 }}
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLDivElement
-                  el.style.background = expanded ? (sev.bg || 'var(--ev)') : 'var(--ev)'
+                  el.style.background = 'var(--ev)'
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLDivElement
-                  el.style.background = sev.bg || 'var(--sf)'
+                  el.style.background = bg
                 }}
               >
-                {/* Main row */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px' }}>
+                {/* Compact row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', minHeight: 48 }}>
 
                   {/* Sector icon */}
-                  <span style={{ fontSize: 16, lineHeight: 1, marginTop: 1, flexShrink: 0 }}>
+                  <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
                     {sectorIcon(event.sector)}
                   </span>
 
                   {/* Main content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
 
-                    {/* Top row: event badge + title */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 3 }}>
-                      {/* Event type badge */}
+                    {/* Event type + severity dot */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 1 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
                       <span style={{
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: 700,
                         color: sc,
-                        background: `${sc}18`,
-                        padding: '2px 8px',
-                        borderRadius: 9999,
-                        whiteSpace: 'nowrap',
-                        fontFamily: 'var(--font-sora)',
+                        textTransform: 'uppercase',
                         letterSpacing: '.3px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        fontFamily: 'var(--font-sora)',
                       }}>
-                        {event.event.replace(/_/g, ' ').toUpperCase()}
-                      </span>
-
-                      {/* Severity badge — only for non-low/info */}
-                      {(event.severity === 'high' || event.severity === 'medium') && (
-                        <span style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: sev.text,
-                          background: sev.bg,
-                          padding: '2px 8px',
-                          borderRadius: 9999,
-                          whiteSpace: 'nowrap',
-                          fontFamily: 'var(--font-sora)',
-                          textTransform: 'uppercase',
-                        }}>
-                          {event.severity}
-                        </span>
-                      )}
-
-                      {/* Title */}
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>
-                        {event.title}
+                        {event.event.replace(/_/g, ' ')}
                       </span>
                     </div>
 
-                    {/* Detail */}
+                    {/* Title */}
+                    <div style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: 'var(--tx)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {event.title}
+                    </div>
+
+                    {/* Detail (truncated to one line) */}
                     {event.detail && (
                       <div style={{
-                        fontSize: 12,
+                        fontSize: 10.5,
                         color: 'var(--tx3)',
-                        marginBottom: 5,
-                        lineHeight: 1.5,
+                        whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        display: expanded ? 'block' : '-webkit-box',
-                        WebkitLineClamp: expanded ? 'unset' : 2,
-                        WebkitBoxOrient: 'vertical',
-                      } as React.CSSProperties}>
+                      }}>
                         {event.detail}
                       </div>
                     )}
-
-                    {/* Bottom chips row */}
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-
-                      {/* Actor chip */}
-                      {event.actor && (
-                        <span style={{
-                          fontSize: 11,
-                          color: 'var(--tx2)',
-                          background: 'var(--ev)',
-                          padding: '2px 8px',
-                          borderRadius: 9999,
-                        }}>
-                          {event.actor_role
-                            ? tc('pos_audit.actorWithRole', { actor: event.actor, role: event.actor_role })
-                            : tc('pos_audit.actorPrefix', { actor: event.actor })}
-                        </span>
-                      )}
-
-                      {/* Entity ref chip */}
-                      {event.entity_ref && (
-                        <span style={{
-                          fontSize: 11,
-                          color: sc,
-                          background: `${sc}12`,
-                          padding: '2px 8px',
-                          borderRadius: 9999,
-                          fontWeight: 600,
-                          fontFamily: 'var(--font-sora)',
-                        }}>
-                          #{event.entity_ref}
-                        </span>
-                      )}
-
-                      {/* From → To value */}
-                      {(event.from_value || event.to_value) && (
-                        <span style={{
-                          fontSize: 11,
-                          color: 'var(--tx3)',
-                          background: 'var(--ev)',
-                          padding: '2px 8px',
-                          borderRadius: 9999,
-                        }}>
-                          {event.from_value && <span style={{ textDecoration: 'line-through', marginRight: 4 }}>{event.from_value}</span>}
-                          {event.to_value && <span style={{ color: 'var(--tx2)' }}>{event.to_value}</span>}
-                        </span>
-                      )}
-
-                      {/* Expand hint */}
-                      {metaEntries.length > 0 && (
-                        <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 2 }}>
-                          {expanded ? tc('pos_audit.expandLess') : tc('pos_audit.expandDetails')}
-                        </span>
-                      )}
-                    </div>
                   </div>
 
                   {/* Timestamp */}
-                  <div style={{
-                    fontSize: 11,
+                  <span style={{
+                    fontSize: 10,
                     color: 'var(--tx3)',
                     flexShrink: 0,
-                    textAlign: 'right',
-                    paddingTop: 2,
                     whiteSpace: 'nowrap',
                   }}>
                     {relativeTime(event.created_at, tc)}
-                  </div>
+                  </span>
                 </div>
 
-                {/* ── Expanded metadata ── */}
-                {expanded && metaEntries.length > 0 && (
+                {/* ── Expanded detail ── */}
+                {expanded && hasExtra && (
                   <div style={{
                     borderTop: '1px solid var(--b)',
                     padding: '10px 14px 12px',
                     background: 'rgba(0,0,0,.015)',
                   }}>
-                    <div style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: 'var(--tx3)',
-                      marginBottom: 8,
-                      fontFamily: 'var(--font-sora)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '.4px',
-                    }}>
-                      {tc('pos_audit.metadataHeading')}
+                    {/* Chips row */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: metaEntries.length > 0 ? 10 : 0 }}>
+                      {event.actor && (
+                        <span style={{ fontSize: 11, color: 'var(--tx2)', background: 'var(--ev)', padding: '2px 8px', borderRadius: 9999 }}>
+                          {event.actor_role
+                            ? tc('pos_audit.actorWithRole', { actor: event.actor, role: event.actor_role })
+                            : tc('pos_audit.actorPrefix', { actor: event.actor })}
+                        </span>
+                      )}
+                      {event.entity_ref && (
+                        <span style={{ fontSize: 11, color: sc, background: `${sc}12`, padding: '2px 8px', borderRadius: 9999, fontWeight: 600, fontFamily: 'var(--font-sora)' }}>
+                          #{event.entity_ref}
+                        </span>
+                      )}
+                      {(event.from_value || event.to_value) && (
+                        <span style={{ fontSize: 11, color: 'var(--tx3)', background: 'var(--ev)', padding: '2px 8px', borderRadius: 9999 }}>
+                          {event.from_value && <span style={{ textDecoration: 'line-through', marginRight: 4 }}>{event.from_value}</span>}
+                          {event.to_value && <span style={{ color: 'var(--tx2)' }}>{event.to_value}</span>}
+                        </span>
+                      )}
                     </div>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                      gap: '6px 16px',
-                    }}>
-                      {metaEntries.map(([key, value]) => (
-                        <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'capitalize' }}>
-                            {key.replace(/_/g, ' ')}
-                          </span>
-                          <span style={{ fontSize: 12, color: 'var(--tx)', wordBreak: 'break-word' }}>
-                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                          </span>
+
+                    {/* Metadata grid */}
+                    {metaEntries.length > 0 && (
+                      <>
+                        <div style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: 'var(--tx3)',
+                          marginBottom: 8,
+                          fontFamily: 'var(--font-sora)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '.4px',
+                        }}>
+                          {tc('pos_audit.metadataHeading')}
                         </div>
-                      ))}
-                    </div>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                          gap: '6px 16px',
+                        }}>
+                          {metaEntries.map(([key, value]) => (
+                            <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'capitalize' }}>
+                                {key.replace(/_/g, ' ')}
+                              </span>
+                              <span style={{ fontSize: 12, color: 'var(--tx)', wordBreak: 'break-word' }}>
+                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
