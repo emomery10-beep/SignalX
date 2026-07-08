@@ -52,6 +52,28 @@ function DeveloperSignInForm() {
   const getCallbackUrl = () =>
     `${process.env.NEXT_PUBLIC_APP_URL || 'https://developer.askbiz.co'}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
+  // Same experimental Supabase passkey API the main app's signin page uses
+  // (supabase.auth.signInWithPasskey) — deferred from the initial build as
+  // a scope cut, added back now. No enrollment flow here (add-a-passkey
+  // nudge) — that's a further scope cut; this only covers signing in with
+  // a passkey already registered via the main app.
+  const handlePasskeySignIn = async () => {
+    setError(''); setLoading(true)
+    try {
+      const { data, error } = await (supabase.auth as any).signInWithPasskey()
+      if (error) throw error
+      if (data?.session) router.push(nextPath)
+    } catch (e: any) {
+      const msg = e?.message || e?.error_description || 'Passkey sign-in failed'
+      const fullText = `${msg} ${e?.name || ''}`
+      // Ignore user-cancelled/timed-out WebAuthn prompts, same as the main
+      // app's handling — these aren't real errors worth surfacing.
+      if (!fullText.match(/cancell?ed|AbortError|NotAllowedError|timed out|not allowed/i)) {
+        setError(msg)
+      }
+    } finally { setLoading(false) }
+  }
+
   const handleOAuth = async (provider: 'google' | 'azure') => {
     setError(''); setLoading(true)
     try {
@@ -158,8 +180,12 @@ function DeveloperSignInForm() {
           Continue with Google
         </button>
         <button onClick={() => handleOAuth('azure')} disabled={loading}
-          className={`${oauthBtnCls} mb-4`}>
+          className={oauthBtnCls}>
           Continue with Microsoft
+        </button>
+        <button onClick={handlePasskeySignIn} disabled={loading}
+          className={`${oauthBtnCls} mb-4`}>
+          Sign in with Passkey
         </button>
 
         <div className="flex items-center gap-2 mb-4 text-ink-300 text-xs">
