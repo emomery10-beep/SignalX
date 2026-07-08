@@ -74,30 +74,19 @@ export async function middleware(request: NextRequest) {
   let { data: { user } } = await supabase.auth.getUser()
 
   // ── 24-hour session cap ────────────────────────────────────────────────────
-  // Supabase refresh tokens keep a session alive indefinitely by default. This
-  // cookie marks when we first saw the session in this middleware and forces a
-  // real sign-out (not just an access-token refresh) once it's 24h old.
+  // Supabase refresh tokens keep a session alive indefinitely by default. Force
+  // a real sign-out (not just an access-token refresh) once 24h have passed
+  // since the user's last sign-in. Uses Supabase's own last_sign_in_at instead
+  // of a separately-tracked cookie — a cookie left over from a session older
+  // than 24h would otherwise immediately kill every fresh login, regardless of
+  // sign-in method (this broke Google/Microsoft/passkey/phone sign-in on 2026-07-08).
   const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000
-  const sessionStartedAt = request.cookies.get('askbiz_session_started')?.value
-
   if (user) {
-    if (sessionStartedAt && Date.now() - Number(sessionStartedAt) > SESSION_MAX_AGE_MS) {
+    const lastSignInAt = user.last_sign_in_at ? new Date(user.last_sign_in_at).getTime() : null
+    if (lastSignInAt && Date.now() - lastSignInAt > SESSION_MAX_AGE_MS) {
       await supabase.auth.signOut()
-      response.cookies.delete('askbiz_session_started')
       user = null
-    } else if (!sessionStartedAt) {
-      response.cookies.set('askbiz_session_started', String(Date.now()), {
-        path: '/',
-        // Outlives the 24h enforcement window on purpose — the timestamp value,
-        // not the cookie's own expiry, is what caps the session. If the cookie
-        // itself expired first we'd never see it and would wrongly restart the clock.
-        maxAge: (SESSION_MAX_AGE_MS / 1000) + 60 * 60,
-        sameSite: 'lax',
-        ...(process.env.NEXT_PUBLIC_COOKIE_DOMAIN ? { domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN } : {}),
-      })
     }
-  } else if (sessionStartedAt) {
-    response.cookies.delete('askbiz_session_started')
   }
 
   // ── POS domain: redirect root to /sell ─────────────────────────────────────
