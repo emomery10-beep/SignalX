@@ -48,6 +48,7 @@ const HREFLANG_LANGUAGES = {
   'de': 'https://askbiz.co/de',
   'nl': 'https://askbiz.co/nl',
   'ar': 'https://askbiz.co/ar',
+  'sw': 'https://askbiz.co/sw',
 }
 
 export async function generateMetadata(): Promise<Metadata> {
