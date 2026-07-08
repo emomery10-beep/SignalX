@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import { COUNTRY_DIAL, toE164 } from '@/lib/phone'
+import { markPosSessionStarted } from '@/lib/pos-session'
 
 const ACC = '#d08a59'
 
@@ -115,6 +116,7 @@ function LoginPageContent() {
       setLoading(false)
       if (!res.ok) { setError(data.error || tc('pos_login.err_pin_incorrect')); return }
       localStorage.setItem('pos_staff', JSON.stringify(data.staff))
+      markPosSessionStarted()
       router.push(getLoginDest(data.staff.role))
     } catch { setLoading(false); setError(tc('pos_login.err_network')) }
   }
