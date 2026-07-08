@@ -1273,7 +1273,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
   return (
-    <div style={{ borderRadius:22, background:'#fff', boxShadow:'0 1px 2px rgba(0,0,0,.03), 0 8px 24px rgba(0,0,0,.04), 0 40px 100px rgba(0,0,0,.09), 0 90px 160px -40px rgba(0,0,0,.12)', overflow:'hidden', minHeight:640 }}>
+    <div style={{ position:'relative', borderRadius:22, background:'#fff', boxShadow:'0 1px 2px rgba(0,0,0,.03), 0 8px 24px rgba(0,0,0,.04), 0 40px 100px rgba(0,0,0,.09), 0 90px 160px -40px rgba(0,0,0,.12)', overflow:'hidden', minHeight:640 }}>
       <div style={{ padding:16, background:'#fff' }}>
         <div style={{
           position:'relative', display:'flex', background:'#F0F0F0', borderRadius:12, padding:4,
@@ -1301,12 +1301,19 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         </div>
       </div>
       {heroTab==='ops' ? (
-        <div style={{ padding:'0 16px 16px' }}>
-          <PosShowcase tc={tc} demo={demo} />
-        </div>
+        <PosShowcase tc={tc} demo={demo} />
       ) : (
         <HeroCashierDemo />
       )}
+      <div style={{
+        position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
+        background:`
+          radial-gradient(circle 64px at 0 0, ${T.bg} 0%, transparent 100%),
+          radial-gradient(circle 64px at 100% 0, ${T.bg} 0%, transparent 100%),
+          radial-gradient(circle 64px at 0 100%, ${T.bg} 0%, transparent 100%),
+          radial-gradient(circle 64px at 100% 100%, ${T.bg} 0%, transparent 100%)
+        `,
+      }}/>
     </div>
   )
 }
@@ -1529,7 +1536,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     }
     supabase.auth.getUser().then(({ data }) => {
       if (alive && data.user) setAuthUser({ initials: deriveInitials(data.user) })
-    })
+    }).catch(() => { /* no/expired session on a marketing page visit — stay signed-out */ })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!alive) return
       setAuthUser(session?.user ? { initials: deriveInitials(session.user) } : null)
