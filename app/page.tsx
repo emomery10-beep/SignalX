@@ -12,7 +12,11 @@ import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
 const META_BY_LOCALE: Record<string, { title: string; description: string }> = {
   en: {
     title: 'AskBiz — Phone POS with M-Pesa for Kenya, Nigeria & Uganda',
-    description: 'Phone POS and daily sales tracker for market stalls and small shops. Take M-Pesa, MTN, Airtel Money, cash or card. Free to start — see your profit tonight.',
+    description: 'Phone POS and daily sales tracker for market stalls and small shops. Take M-Pesa, MTN, Airtel Money, cash or card. Free to start — see your profit tonight. Also known as Utauza in East & Central Africa.',
+  },
+  sw: {
+    title: 'Utauza (AskBiz) — Uza kwa Simu Yako, Chukua M-Pesa',
+    description: 'Utauza ni POS ya simu na kifuatiliaji cha mauzo ya kila siku kwa bustani za soko, kiosk, na maduka madogo. Chukua M-Pesa, MTN, Airtel Money, taslimu au kadi. Bure kuanza — ona faida yako leo.',
   },
   es: {
     title: 'AskBiz — Vende con tu teléfono. TPV y ventas del día',
@@ -54,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: meta.title,
     description: meta.description,
-    keywords: 'phone POS, mobile POS Africa, M-Pesa POS, market stall app, small shop POS, daily sales tracker, mobile money POS, Kenya POS app, Nigeria POS app, camera barcode scanner POS',
+    keywords: 'phone POS, mobile POS Africa, M-Pesa POS, market stall app, small shop POS, daily sales tracker, mobile money POS, Kenya POS app, Nigeria POS app, camera barcode scanner POS, Utauza, Utauza app, uza kwa simu, biashara app East Africa, sell with your phone Africa, camera POS Africa, phone till Africa, scan and sell app, phone POS app Africa, no barcode scanner needed, digital till app Africa, shop till app, multi-branch POS Africa, small shop POS Africa, M-Pesa POS app, MTN Mobile Money POS, Airtel Money app, mobile money business app, Paga POS Nigeria, OPay business app, Chipper Cash business tool, cash and mobile money till, camera barcode scanner Africa, phone camera checkout, inventory app for small shops Africa, stock tracker phone app, market stall inventory app, shop stock management Africa, daily sales tracker Africa, see your profit tonight, daily takings app, business profit tracker Africa, track sales without spreadsheet, app for market stall sellers, app for street vendors, informal business app Africa, unregistered business app, app for hawkers, app for kiosk owners, small business app Africa, notebook replacement app, digital sales book app, barbershop POS app, salon POS app, food stand sales app, courier business app, restaurant till app Africa, spaza shop app, duka app, offline POS app Africa, sales app without internet, works without network, staff shift tracking app, multi-staff POS Africa, VAT app Kenya, tax compliance small business Africa, KRA compliant app, FIRS compliant app, SARS compliant app, free POS app Africa, start free no card needed, free business tracker app, POS app Nigeria, POS app Kenya, POS app Uganda, POS app Tanzania, POS app Ghana, POS app Rwanda, POS app South Africa, business app DRC, business app Lagos, business app Nairobi, business app Accra, business app Kampala, business app Dar es Salaam, business app Kigali, business app Johannesburg, phone POS East Africa, phone POS West Africa, phone POS Central Africa, mobile business app pan-Africa, Africa business app, mobile POS for African markets, camera-first business app Africa, programu ya Utauza, Utauza biashara, Utauza — utauza leo, kuuza kwa simu, piga picha uza, kamera yako ni rejista, rejista ya mauzo kwa simu, mfumo wa mauzo kwa simu, POS ya simu, programu ya POS Afrika Mashariki, simu badala ya mashine ya POS, dukani bila kompyuta, risiti za kidijitali, matawi mengi ya duka, mauzo ya M-Pesa, kupokea M-Pesa dukani, malipo ya simu dukani, pesa za simu na biashara, MTN Mobile Money app, Airtel Money POS, taslimu na kadi mauzo, skani bidhaa kwa kamera, bila mashine ya bar kodi, mauzo ya bidhaa kwa kamera, hesabu ya bidhaa dukani, usimamizi wa stock kwa simu, programu ya kuhesabu bidhaa, mfumo wa hisa dukani, programu ya bei ya bidhaa, ripoti ya mauzo ya siku, taarifa ya faida ya leo, ulichopata leo, faida ya biashara kila siku, faida na hasara dukani, kufuatilia mauzo kila siku, kujua faida ya duka, rekodi za mauzo kwa simu, programu ya biashara ndogo, programu ya duka dogo, muuzaji wa soko, mfanyabiashara mdogo, biashara isiyosajiliwa, duka la mtaani, gengeni mauzo, mama ntilie mauzo, mauzo bila karatasi, acha daftari la mauzo, programu ya wafanyabiashara wadogo, muuzaji wa nguo sokoni, muuzaji wa chakula barabarani, kiosk ya rejareja, saluni na mauzo, kinyozi na malipo, rejista ya simu bila mtandao, mauzo bila intaneti, kazi bila mtandao dukani, usajili wa wafanyakazi dukani, zamu za wafanyakazi, kodi ya biashara Kenya, VAT na biashara ndogo, programu ya kodi, anza bure programu ya biashara, jaribu bure Utauza, programu ya bei nafuu ya biashara, programu ya mauzo Kenya, programu ya mauzo Tanzania, programu ya mauzo Uganda, programu ya mauzo Rwanda, programu ya biashara DRC, mauzo Nairobi, mauzo Dar es Salaam, mauzo Kampala, mauzo Kigali, mauzo Bukavu, programu ya biashara Afrika Mashariki, programu ya biashara Afrika ya Kati, programu ya mauzo bila karatasi',
     authors: [{ name: 'AskBiz' }],
     creator: 'AskBiz',
     publisher: 'AskBiz',
@@ -155,8 +159,8 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       '@type': 'SoftwareApplication',
       '@id': 'https://askbiz.co/#software',
       name: 'AskBiz',
-      alternateName: ['AskBiz POS', 'AskBiz Phone Till', 'AskBiz Africa POS', 'AskBiz M-Pesa POS', 'AskBiz Mobile Money Till'],
-      description: 'Phone-based POS and daily business tracker for market stalls, street vendors, and informal sellers. Sell with your camera. Take M-Pesa, cash, or card. Know what you made today — on any phone, free to start.',
+      alternateName: ['AskBiz POS', 'AskBiz Phone Till', 'AskBiz Africa POS', 'AskBiz M-Pesa POS', 'AskBiz Mobile Money Till', 'Utauza', 'Utauza App'],
+      description: 'Phone-based POS and daily business tracker for market stalls, street vendors, and informal sellers across East and Central Africa. Sell with your camera. Take M-Pesa, cash, or card. Know what you made today — on any phone, free to start. Also known as Utauza — Swahili for "you will sell."',
       url: 'https://askbiz.co',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web, iOS, Android',
@@ -367,6 +371,11 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
           '@type': 'Question',
           name: 'What happens if my network drops mid-sale?',
           acceptedAnswer: { '@type': 'Answer', text: 'Cash sales keep going with no connection at all — your stock and till still update. The app queues the sale and syncs it automatically the moment you are back online. Card and mobile money payments need a live connection to confirm with the provider, so those pause until signal returns — everything else keeps working.' },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is Utauza? Is it the same as AskBiz?',
+          acceptedAnswer: { '@type': 'Answer', text: '"Utauza" is Swahili for "you will sell" — it is AskBiz\'s name for the East and Central Africa market. Utauza and AskBiz are the same app, same features: scan it with your camera, sell it, and see what you made — on any phone, in Kenya, Tanzania, Uganda, Rwanda, and the DRC.' },
         },
       ],
     },

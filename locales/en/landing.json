@@ -17,6 +17,8 @@
   "faq_7_a": "A notebook or sales book tells you what happened. AskBiz tells you what to do next. Instead of adding up your daily takings at the end of the day and guessing at stock, you see which items are making you money, which are sitting unsold, and whether today was better or worse than yesterday — in 4 minutes, not 2 hours.",
   "faq_8_q": "What happens if my network drops mid-sale?",
   "faq_8_a": "Cash sales keep going with no connection at all — your stock and till still update. The app queues the sale and syncs it automatically the moment you're back online. Card and mobile money payments need a live connection to confirm with the provider, so those pause until signal returns — everything else keeps working.",
+  "faq_9_q": "What is Utauza? Is it the same as AskBiz?",
+  "faq_9_a": "\"Utauza\" is Swahili for \"you will sell\" — it's AskBiz's name for the East and Central Africa market. Utauza and AskBiz are the same app, same features: scan it with your camera, sell it, and see what you made — on any phone, in Kenya, Tanzania, Uganda, Rwanda, and the DRC.",
   "nav_how_it_works": "How it works",
   "nav_help": "Help",
   "nav_get_started": "Sign up",
