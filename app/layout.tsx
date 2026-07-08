@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Sora, Instrument_Sans, JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google'
+import { Sora, Instrument_Sans, JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans, Patrick_Hand } from 'next/font/google'
 import { cookies, headers } from 'next/headers'
 import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
@@ -39,6 +39,13 @@ const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-jakarta',
   weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+})
+// TEMP — hero font test, remove if not adopted
+const patrickHand = Patrick_Hand({
+  subsets: ['latin'],
+  variable: '--font-patrick',
+  weight: ['400'],
   display: 'swap',
 })
 
@@ -91,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang={lang} dir={isRTL(lang) ? 'rtl' : 'ltr'} suppressHydrationWarning>
-      <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable}`}>
+      <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${patrickHand.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
         <TikTokPixel pixelId="D8UAH7JC77UER4V7P7PG" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
