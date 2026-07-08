@@ -137,6 +137,21 @@ export async function POST(request: NextRequest) {
           break
         }
 
+        // Dashboard wallet top-up — mirrors the root app's identical branch,
+        // see that copy for the idempotency reasoning.
+        if (session.metadata?.type === 'wallet_topup') {
+          const keyId = session.metadata?.key_id
+          const amountCents = parseInt(session.metadata?.amount_cents || '0', 10)
+          if (!keyId || !amountCents) break
+          await supabase.rpc('topup_api_credits', {
+            p_key_id: keyId,
+            p_amount_cents: amountCents,
+            p_provider: 'stripe',
+            p_provider_ref: session.id,
+          })
+          break
+        }
+
         // POS seat purchase
         if (session.metadata?.type === 'pos_seats') {
           const seats = parseInt(session.metadata?.seats || '1', 10)
