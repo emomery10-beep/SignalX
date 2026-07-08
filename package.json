@@ -16,7 +16,10 @@
     "db:types": "supabase gen types typescript --local > lib/supabase/types.ts",
     "setup:factory-users": "node scripts/setup-factory-test-users.js",
     "setup:restaurant-users": "node scripts/setup-restaurant-test-users.js",
-    "setup:staff": "node scripts/setup-actual-staff.js"
+    "setup:staff": "node scripts/setup-actual-staff.js",
+    "deploy:main": "vercel --cwd . --prod --archive=tgz",
+    "deploy:pos": "vercel --cwd pos-askbiz --prod",
+    "deploy:dev-portal": "vercel --cwd developers-askbiz --prod"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
