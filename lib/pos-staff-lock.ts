@@ -6,7 +6,7 @@
 
 export const POS_STAFF_LOCK_MS = 24 * 60 * 60 * 1000
 
-export type PosStaffIdentifier = { email: string } | { phone: string }
+export type PosStaffIdentifier = { email: string } | { phone: string; dial: string }
 
 const SESSION_KEY = 'pos_staff'
 const IDENTIFIER_KEY = 'pos_staff_identifier'

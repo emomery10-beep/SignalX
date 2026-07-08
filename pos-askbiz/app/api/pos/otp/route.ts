@@ -33,16 +33,39 @@ function clearPinRateLimit(key: string) {
   pinAttempts.delete(key)
 }
 
+// Owners add/edit staff phone numbers through a plain text field with no
+// country code or E.164 normalisation — numbers end up stored however they
+// were typed (e.g. "0797446343"). The login form, on the other hand, builds
+// a proper E.164 value from the selected country + local digits. Matching
+// strictly on one format silently rejects real staff, so we generate every
+// plausible stored variant from (dial, local digits) and match against all
+// of them.
+function phoneCandidates(dial: string, raw: string): string[] {
+  const digits = String(raw).replace(/\D/g, '').replace(/^0+/, '')
+  if (!digits) return []
+  return Array.from(new Set([
+    `${dial}${digits}`,   // E.164, e.g. +254797446343
+    `0${digits}`,         // local with leading zero, e.g. 0797446343
+    digits,                // bare local digits, e.g. 797446343
+  ]))
+}
+
 // Resolve the login identifier: staff log in with EITHER email or phone.
 // Email takes precedence if both are somehow sent. Email is normalised to
-// lowercase (matches how it's stored); phone is matched exactly (E.164, as
-// the owner set it and the login form builds it).
-function resolveIdentifier(body: Record<string, unknown>): { column: 'email' | 'phone'; value: string; key: string } | null {
+// lowercase (matches how it's stored); phone may arrive as a raw local
+// number + dial code (preferred, generates all candidate formats) or as a
+// single pre-built value (fallback, matched as-is).
+function resolveIdentifier(body: Record<string, unknown>): { column: 'email' | 'phone'; values: string[]; key: string } | null {
   const email = body.email ? String(body.email).trim().toLowerCase() : ''
-  if (email) return { column: 'email', value: email, key: `email:${email}` }
-  const phone = body.phone ? String(body.phone).trim() : ''
-  if (phone) return { column: 'phone', value: phone, key: `phone:${phone}` }
-  return null
+  if (email) return { column: 'email', values: [email], key: `email:${email}` }
+
+  const dial = body.dial ? String(body.dial).trim() : ''
+  const rawPhone = body.phone ? String(body.phone).trim() : ''
+  if (!rawPhone) return null
+
+  const values = dial ? phoneCandidates(dial, rawPhone) : [rawPhone]
+  if (!values.length) return null
+  return { column: 'phone', values, key: `phone:${values[0]}` }
 }
 
 export async function POST(req: NextRequest) {
@@ -60,7 +83,7 @@ export async function POST(req: NextRequest) {
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, pin_hash')
-      .eq(id.column, id.value)
+      .in(id.column, id.values)
       .eq('active', true)
       .maybeSingle()
 
@@ -81,7 +104,7 @@ export async function POST(req: NextRequest) {
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active, pin_hash, location_id')
-      .eq(id.column, id.value)
+      .in(id.column, id.values)
       .eq('active', true)
       .maybeSingle()
 

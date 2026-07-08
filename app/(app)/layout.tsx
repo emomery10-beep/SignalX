@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AppShellClient from '@/components/layout/AppShellClient'
+import './app-shell.css'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()

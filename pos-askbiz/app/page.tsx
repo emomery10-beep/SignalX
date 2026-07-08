@@ -68,16 +68,18 @@ function LoginPageContent() {
 
   // Resolve the login identifier body based on the chosen tab.
   // Returns null (with an error set) when the input is incomplete/invalid.
-  const loginIdentifier = (): { email: string } | { phone: string } | null => {
+  const loginIdentifier = (): { email: string } | { phone: string; dial: string } | null => {
     if (method === 'email') {
       const trimmed = email.trim()
       if (!trimmed) return null
       return { email: trimmed }
     }
     const dial = COUNTRY_DIAL.find(c => c.code === phoneCountry)?.dial || '+254'
-    const e164 = toE164(dial, phoneLocal)
-    if (!e164) { setError(tc('pos_login.err_invalid_phone')); return null }
-    return { phone: e164 }
+    // Client-side validity check only — the raw local digits + dial are sent
+    // as-is so the server can match every plausible stored format (owners
+    // enter staff phone numbers with no E.164 normalisation).
+    if (!toE164(dial, phoneLocal)) { setError(tc('pos_login.err_invalid_phone')); return null }
+    return { phone: phoneLocal, dial }
   }
 
   const handleCheckEmail = async () => {

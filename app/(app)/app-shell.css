@@ -1,0 +1,28 @@
+/* Scoped to the authenticated app shell only (imported from this route
+   group's layout) so marketing/public pages don't ship this CSS — moved
+   out of globals.css, which used to bundle it into every page's payload. */
+
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--sf);
+  border-top: 1px solid var(--b);
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.help-widget-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 990;
+}
+
+@media (max-width: 768px) {
+  /* Clear the mobile bottom nav (60px + safe-area) so the "?" button
+     doesn't sit on top of the rightmost nav tab. */
+  .help-widget-fab {
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+}

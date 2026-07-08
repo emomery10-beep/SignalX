@@ -106,16 +106,18 @@ export default function SellPage() {
   // ── Staff Login ───────────────────────────────────────────
   // Resolve the identifier body for the OTP route based on the chosen tab.
   // Returns null (with an error set) when the input is incomplete/invalid.
-  const loginIdentifier = (): { email: string } | { phone: string } | null => {
+  const loginIdentifier = (): { email: string } | { phone: string; dial: string } | null => {
     if (loginMethod === 'email') {
       const email = loginEmail.trim()
       if (!email) return null
       return { email }
     }
     const dial = COUNTRY_DIAL.find(c => c.code === loginPhoneCountry)?.dial || '+254'
-    const e164 = toE164(dial, loginPhoneLocal)
-    if (!e164) { setLoginError(tc('pos_sell.invalid_phone')); return null }
-    return { phone: e164 }
+    // Client-side validity check only — the raw local digits + dial are sent
+    // as-is so the server can match every plausible stored format (owners
+    // enter staff phone numbers with no E.164 normalisation).
+    if (!toE164(dial, loginPhoneLocal)) { setLoginError(tc('pos_sell.invalid_phone')); return null }
+    return { phone: loginPhoneLocal, dial }
   }
 
   const handleCheckEmail = async () => {
