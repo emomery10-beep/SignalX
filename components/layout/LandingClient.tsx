@@ -1271,21 +1271,27 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
   return (
-    <div style={{ borderRadius:22, border:`1px solid ${T.bd}`, background:'#fff', boxShadow:'0 24px 70px rgba(0,0,0,.09)', overflow:'hidden', minHeight:640 }}>
+    <div style={{ borderRadius:22, background:'#fff', boxShadow:'0 2px 6px rgba(0,0,0,.04), 0 32px 80px rgba(0,0,0,.10)', overflow:'hidden', minHeight:640 }}>
       <div style={{ padding:16, background:'#fff' }}>
-        <div style={{ position:'relative', display:'flex', background:'#F0F0F0', borderRadius:12, padding:4 }}>
+        <div style={{
+          position:'relative', display:'flex', background:'#F0F0F0', borderRadius:12, padding:4,
+          WebkitMaskImage:'linear-gradient(to right, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%)',
+          maskImage:'linear-gradient(to right, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%)',
+        }}>
           <div style={{
             position:'absolute', top:4, bottom:4, left:4,
             width:`calc(${100/HERO_TABS.length}% - 4px)`,
             transform:`translateX(${activeIdx*100}%)`,
-            background:'#fff', borderRadius:9, boxShadow:'0 2px 8px rgba(0,0,0,.08)',
-            transition:'transform 240ms cubic-bezier(0.22,1,0.36,1)',
+            background:'#fff', borderRadius:9,
+            boxShadow:'0 1px 2px rgba(0,0,0,.06), 0 6px 10px rgba(0,0,0,.05), 0 0 20px 6px rgba(201,122,68,.14)',
+            transition:'transform 480ms cubic-bezier(0.65,0,0.35,1)',
           }}/>
           {HERO_TABS.map(t=>(
             <button key={t.id} onClick={()=>setHeroTab(t.id)} style={{
               position:'relative', flex:1, padding:'11px 24px', fontSize:13, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center',
               background:'none', border:'none', borderRadius:9, zIndex:1,
-              color: heroTab===t.id ? '#1A1410' : '#888', transition:'color 200ms',
+              color: heroTab===t.id ? '#1A1410' : '#888', transition:'color 300ms',
             }}>
               {t.label}
             </button>
