@@ -1029,8 +1029,8 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
 
 function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const HERO_TABS = [
-    {id:'ops' as const, label:'Operations'},
-    {id:'cashier' as const, label:'Cashier'},
+    {id:'ops' as const, label:'Business Intelligence'},
+    {id:'cashier' as const, label:'PoS'},
   ]
   const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
@@ -1598,16 +1598,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,margin:0 }}>
               {tc('landing.pos_subtitle')} <span style={{ color:T.tx3 }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
             </p>
-          </div>
-
-          {/* Proof visual — real product, bordered panel with Eleven-style corner marks */}
-          <div style={{ position:'relative', border:`1px solid ${T.bd}`, borderRadius:16, padding:'clamp(16px,3vw,28px)', background:T.card, marginBottom:40 }}>
-            {[[0,0],[1,0],[0,1],[1,1]].map(([x,y])=>(
-              <span key={`${x}${y}`} style={{ position:'absolute', width:4, height:4, borderRadius:'50%', background:T.bd, left: x?'calc(100% - 2px)':-2, top: y?'calc(100% - 2px)':-2 }}/>
-            ))}
-            <div style={{ pointerEvents:'none', transform:'scale(0.94)', transformOrigin:'top center' }}>
-              <PosShowcase tc={tc} demo={demo} />
-            </div>
           </div>
 
           {/* Bento feature grid — custom line icons, single accent, no emoji */}
