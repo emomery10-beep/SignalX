@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Server-to-server proxy to the main app's /api/v1/* routes. A direct
-// client-side fetch from developers.askbiz.co to askbiz.co would be
+// client-side fetch from developer.askbiz.co to askbiz.co would be
 // cross-origin and blocked by CORS (shared cookie *domain* doesn't grant
 // cross-origin fetch access — that's a separate browser policy). Forwarding
 // the Cookie header here works because the session cookie's Domain is

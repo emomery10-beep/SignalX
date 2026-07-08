@@ -2710,7 +2710,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Overview of the AskBiz API",
-        body: "The AskBiz API gives developers programmatic access to your business data, AI insights, and dashboard functionality. It is a REST API that returns JSON responses and uses API key authentication.\n\nBase URL: `https://api.askbiz.co/v1/`\n\nFull documentation is available at `developers.askbiz.co`. API access requires a Growth or Business plan.",
+        body: "The AskBiz API gives developers programmatic access to your business data, AI insights, and dashboard functionality. It is a REST API that returns JSON responses and uses API key authentication.\n\nBase URL: `https://api.askbiz.co/v1/`\n\nFull documentation is available at `developer.askbiz.co`. API access requires a Growth or Business plan.",
       },
       {
         heading: "Use case 1: Embedding metrics in your own app",
@@ -2757,7 +2757,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Webhook payload structure",
-        body: "All webhook payloads share a common envelope:\n\n```json\n{\n  \"id\": \"evt_01HXYZ...\",\n  \"type\": \"alert.triggered\",\n  \"created_at\": \"2025-04-15T09:32:00Z\",\n  \"account_id\": \"acc_01HABC...\",\n  \"data\": {\n    // Event-specific payload\n  }\n}\n```\n\nThe `data` object contains event-specific fields. For example, an `alert.triggered` event includes:\n```json\n\"data\": {\n  \"alert_id\": \"alrt_01H...\",\n  \"alert_name\": \"Gross margin below 30%\",\n  \"metric\": \"gross_margin_pct\",\n  \"current_value\": 27.4,\n  \"threshold\": 30.0,\n  \"direction\": \"below\"\n}\n```\n\nFull payload schemas for all events are documented at `developers.askbiz.co/webhooks`.",
+        body: "All webhook payloads share a common envelope:\n\n```json\n{\n  \"id\": \"evt_01HXYZ...\",\n  \"type\": \"alert.triggered\",\n  \"created_at\": \"2025-04-15T09:32:00Z\",\n  \"account_id\": \"acc_01HABC...\",\n  \"data\": {\n    // Event-specific payload\n  }\n}\n```\n\nThe `data` object contains event-specific fields. For example, an `alert.triggered` event includes:\n```json\n\"data\": {\n  \"alert_id\": \"alrt_01H...\",\n  \"alert_name\": \"Gross margin below 30%\",\n  \"metric\": \"gross_margin_pct\",\n  \"current_value\": 27.4,\n  \"threshold\": 30.0,\n  \"direction\": \"below\"\n}\n```\n\nFull payload schemas for all events are documented at `developer.askbiz.co/webhooks`.",
       },
       {
         heading: "Verifying webhook signatures",

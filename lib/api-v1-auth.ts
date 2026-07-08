@@ -55,7 +55,7 @@ export async function authenticateApiKey(request: Request): Promise<AuthResult> 
 
   if (!apiKey) {
     return { ok: false, response: NextResponse.json(
-      { error: 'Missing x-api-key header', docs: 'https://developers.askbiz.co' },
+      { error: 'Missing x-api-key header', docs: 'https://developer.askbiz.co' },
       { status: 401, headers: CORS }
     ) }
   }
@@ -68,7 +68,7 @@ export async function authenticateApiKey(request: Request): Promise<AuthResult> 
 
   if (error || !key) {
     return { ok: false, response: NextResponse.json(
-      { error: 'Invalid API key', docs: 'https://developers.askbiz.co' },
+      { error: 'Invalid API key', docs: 'https://developer.askbiz.co' },
       { status: 401, headers: CORS }
     ) }
   }
@@ -140,7 +140,7 @@ export function insufficientCreditsResponse(requiredCents: number) {
     {
       error: 'Insufficient API credits',
       required_cents: requiredCents,
-      topup: 'https://developers.askbiz.co/dashboard',
+      topup: 'https://developer.askbiz.co/dashboard',
     },
     { status: 402, headers: CORS }
   )

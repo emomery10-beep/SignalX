@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   if (key.mode !== 'account') {
     return NextResponse.json(
-      { error: 'WhatsApp send requires an "account" mode key, tied to a real AskBiz business — see https://developers.askbiz.co' },
+      { error: 'WhatsApp send requires an "account" mode key, tied to a real AskBiz business — see https://developer.askbiz.co' },
       { status: 403, headers: CORS }
     )
   }

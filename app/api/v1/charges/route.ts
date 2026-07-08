@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 // against a specific AskBiz merchant (identified by email — see the scope
 // note in 20260708000005_developer_charges.sql for why this is a one-off
 // authorization, not a persistent app-install grant). The merchant approves
-// via a hosted confirmation page on developers.askbiz.co, which redirects to
+// via a hosted confirmation page on developer.askbiz.co, which redirects to
 // a real Stripe Checkout session — money collection only; see that
 // migration's header for why automatic developer payout isn't built yet.
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     charge,
-    confirmation_url: `https://developers.askbiz.co/charges/${confirmationToken}`,
+    confirmation_url: `https://developer.askbiz.co/charges/${confirmationToken}`,
   }, { headers: CORS })
 }
 

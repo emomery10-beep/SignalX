@@ -50,7 +50,7 @@ function DeveloperSignInForm() {
   })()
 
   const getCallbackUrl = () =>
-    `${process.env.NEXT_PUBLIC_APP_URL || 'https://developers.askbiz.co'}/auth/callback?next=${encodeURIComponent(nextPath)}`
+    `${process.env.NEXT_PUBLIC_APP_URL || 'https://developer.askbiz.co'}/auth/callback?next=${encodeURIComponent(nextPath)}`
 
   const handleOAuth = async (provider: 'google' | 'azure') => {
     setError(''); setLoading(true)

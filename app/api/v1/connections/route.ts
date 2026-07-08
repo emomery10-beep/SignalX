@@ -5,7 +5,7 @@ import { authenticateApiKey, recordRequest, CORS } from '@/lib/api-v1-auth'
 export const runtime = 'nodejs'
 
 // Phase 4 (scoped-down) — a developer requests access to a specific
-// merchant (by email); the merchant approves via developers.askbiz.co, and
+// merchant (by email); the merchant approves via developer.askbiz.co, and
 // the resulting connection is what app/api/v1/scan's optional merchant_id
 // param checks before scoping data to that merchant. See the migration
 // (20260708000007_developer_connections.sql) for why this is deliberately
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     connection,
-    confirmation_url: `https://developers.askbiz.co/connect/${confirmationToken}`,
+    confirmation_url: `https://developer.askbiz.co/connect/${confirmationToken}`,
   }, { headers: CORS })
 }
 

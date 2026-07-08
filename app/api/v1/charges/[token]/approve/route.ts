@@ -48,8 +48,8 @@ export async function POST(request: NextRequest, { params }: { params: { token: 
       },
       quantity: 1,
     }],
-    success_url: `https://developers.askbiz.co/charges/${params.token}?result=success`,
-    cancel_url: `https://developers.askbiz.co/charges/${params.token}?result=cancelled`,
+    success_url: `https://developer.askbiz.co/charges/${params.token}?result=success`,
+    cancel_url: `https://developer.askbiz.co/charges/${params.token}?result=cancelled`,
     metadata: {
       type: 'developer_charge',
       developer_charge_id: charge.id,
