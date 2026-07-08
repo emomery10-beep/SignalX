@@ -101,6 +101,42 @@ export async function POST(request: NextRequest) {
         const userId = session.metadata?.supabase_user_id
         if (!userId) break
 
+        // Developer platform Phase 3 — billing-on-behalf-of. Mirrors the
+        // root app's identical branch (app/api/webhooks/stripe-billing/
+        // route.ts) — keep both in sync, same reasoning as everything else
+        // in this file. See that copy's comment, and the scope note in
+        // supabase/migrations/20260708000005_developer_charges.sql, for why
+        // this only records what's owed to the developer rather than
+        // automating payout.
+        if (session.metadata?.type === 'developer_charge') {
+          const chargeId = session.metadata?.developer_charge_id
+          if (!chargeId) break
+
+          // Atomic conditional update, not select-then-update — see the
+          // root app's identical branch for why: this endpoint and the root
+          // app's can both receive the same Stripe event concurrently, and
+          // a separate SELECT would let both read status='pending' and both
+          // credit the ledger. UPDATE...WHERE status='pending' is atomic at
+          // the row level, so only one racing invocation can ever flip it.
+          const { data: updated } = await supabase
+            .from('developer_charges')
+            .update({ status: 'approved', merchant_user_id: userId, approved_at: new Date().toISOString() })
+            .eq('id', chargeId)
+            .eq('status', 'pending')
+            .select('id, key_id, amount_cents, platform_fee_percent')
+            .single()
+
+          if (updated) {
+            const developerShareCents = Math.round(updated.amount_cents * (1 - updated.platform_fee_percent / 100))
+            await supabase.from('developer_payouts_ledger').insert({
+              key_id: updated.key_id,
+              charge_id: updated.id,
+              developer_share_cents: developerShareCents,
+            })
+          }
+          break
+        }
+
         // POS seat purchase
         if (session.metadata?.type === 'pos_seats') {
           const seats = parseInt(session.metadata?.seats || '1', 10)

@@ -102,6 +102,44 @@ export async function POST(request: NextRequest) {
         const userId = session.metadata?.supabase_user_id
         if (!userId) break
 
+        // Developer platform Phase 3 — billing-on-behalf-of. Payment
+        // confirmed: mark the charge approved and record what's owed to the
+        // developer in the payouts ledger (bookkeeping only — see the scope
+        // note in 20260708000005_developer_charges.sql on why actual payout
+        // isn't automated).
+        if (session.metadata?.type === 'developer_charge') {
+          const chargeId = session.metadata?.developer_charge_id
+          if (!chargeId) break
+
+          // Atomic conditional update, not select-then-update: this app and
+          // its pos-askbiz mirror can both receive the same Stripe event
+          // concurrently (see the file header — Stripe may call both
+          // endpoints), and the outer billing_events dedup above is
+          // check-then-act, not atomic, so both invocations can pass it
+          // before either records the event. A separate SELECT here would
+          // let both read status='pending' and both proceed to credit the
+          // ledger. The UPDATE...WHERE status='pending' is atomic at the
+          // row level — only one of the two racing invocations can ever
+          // flip the row, so `updated` (0 or 1 row) is the real guard.
+          const { data: updated } = await supabase
+            .from('developer_charges')
+            .update({ status: 'approved', merchant_user_id: userId, approved_at: new Date().toISOString() })
+            .eq('id', chargeId)
+            .eq('status', 'pending')
+            .select('id, key_id, amount_cents, platform_fee_percent')
+            .single()
+
+          if (updated) {
+            const developerShareCents = Math.round(updated.amount_cents * (1 - updated.platform_fee_percent / 100))
+            await supabase.from('developer_payouts_ledger').insert({
+              key_id: updated.key_id,
+              charge_id: updated.id,
+              developer_share_cents: developerShareCents,
+            })
+          }
+          break
+        }
+
         // POS seat purchase
         if (session.metadata?.type === 'pos_seats') {
           const seats = parseInt(session.metadata?.seats || '1', 10)

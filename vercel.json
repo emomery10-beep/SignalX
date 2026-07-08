@@ -14,6 +14,7 @@
     { "path": "/api/cron/stock-replenishment",       "schedule": "0 6 * * *" },
     { "path": "/api/cron/ai-discovery-audit",        "schedule": "0 8 * * 1" },
     { "path": "/api/cron/gdpr-retention",             "schedule": "0 3 * * *" },
-    { "path": "/api/cron/lifecycle-emails",           "schedule": "0 10 * * *" }
+    { "path": "/api/cron/lifecycle-emails",           "schedule": "0 10 * * *" },
+    { "path": "/api/cron/webhook-delivery",           "schedule": "*/5 * * * *" }
   ]
 }

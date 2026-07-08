@@ -24,7 +24,7 @@ export async function GET() {
 
   const { data: keys, error } = await supabase
     .from('api_keys')
-    .select('id, name, key, mode, plan, is_active, requests_month, request_limit_month, last_used_at, created_at')
+    .select('id, name, key, mode, plan, is_active, requests_month, request_limit_month, credit_balance_cents, last_used_at, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
