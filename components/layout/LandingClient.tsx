@@ -1196,9 +1196,11 @@ function HeroCashierDemo() {
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:18 }}>
         {CASHIER_SECTORS.map(s=>(
           <button key={s.id} onClick={()=>switchSector(s.id)} style={{
-            fontSize:12, padding:'6px 12px', borderRadius:7, cursor:'pointer', fontFamily:'inherit',
-            border:`1px solid ${sector===s.id ? T.acc : '#E5E5E5'}`, background:sector===s.id ? 'rgba(201,122,68,.08)' : '#fff',
-            color:sector===s.id ? T.acc : '#666', fontWeight:sector===s.id?700:400,
+            fontSize:12, padding:'6px 13px', borderRadius:9999, cursor:'pointer', fontFamily:'inherit',
+            border:'1px solid transparent', background:sector===s.id ? 'rgba(201,122,68,.1)' : 'transparent',
+            boxShadow:sector===s.id ? 'inset 0 0 0 1px rgba(201,122,68,.35)' : 'none',
+            color:sector===s.id ? T.acc : '#888', fontWeight:sector===s.id?700:500,
+            transition:'background 180ms, box-shadow 180ms, color 180ms',
           }}>
             {s.icon} {s.label}
           </button>
@@ -1271,7 +1273,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
   return (
-    <div style={{ borderRadius:22, background:'#fff', boxShadow:'0 2px 6px rgba(0,0,0,.04), 0 32px 80px rgba(0,0,0,.10)', overflow:'hidden', minHeight:640 }}>
+    <div style={{ borderRadius:22, background:'#fff', boxShadow:'0 1px 2px rgba(0,0,0,.03), 0 8px 24px rgba(0,0,0,.04), 0 40px 100px rgba(0,0,0,.09), 0 90px 160px -40px rgba(0,0,0,.12)', overflow:'hidden', minHeight:640 }}>
       <div style={{ padding:16, background:'#fff' }}>
         <div style={{
           position:'relative', display:'flex', background:'#F0F0F0', borderRadius:12, padding:4,

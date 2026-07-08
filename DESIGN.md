@@ -26,12 +26,12 @@ typography:
     lineHeight: 1.25
     letterSpacing: "-0.02em"
   body:
-    fontFamily: "DM Sans, Barlow, system-ui, sans-serif"
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.65
   label:
-    fontFamily: "DM Sans, system-ui, sans-serif"
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
     fontSize: "13px"
     fontWeight: 500
     lineHeight: 1.4
@@ -128,9 +128,9 @@ One accent. Everything else is tonal neutrals that stay out of its way.
 ## 3. Typography
 
 **Display Font:** Sora (variable, system-ui fallback)
-**Body Font:** DM Sans (variable, Barlow, system-ui fallbacks)
+**Body Font:** Instrument Sans (variable, system-ui fallback) — same foundry as the Instrument Serif used on the wordmark and hero italics, so the whole system reads as one deliberate family instead of a serif accent bolted onto an unrelated body face.
 
-**Character:** Sora is geometric and tight — every letter lands with purpose. DM Sans is humanist, approachable, and highly legible at small sizes. The pairing works because they diverge on the warmth axis: Sora reads technical and precise; DM Sans reads friendly and clear.
+**Character:** Sora is geometric and tight — every letter lands with purpose. Instrument Sans is humanist, approachable, and highly legible at small sizes. The pairing works because they diverge on the warmth axis: Sora reads technical and precise; Instrument Sans reads friendly and clear.
 
 ### Hierarchy
 - **Display** (Sora 700, `clamp(1.5rem, 3vw, 2.25rem)`, line-height 1.15, tracking `-0.03em`): Hero titles, empty-state headlines. Use rarely.

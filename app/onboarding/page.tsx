@@ -116,6 +116,8 @@ const buildExportMarkets = (tc: TC) => [
 
 type Geo = { countryCode: string; country: string; currency: string; currencySymbol: string; region: string; flag: string }
 
+const COUNTRY_LIST = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }))
+
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 13px', fontSize: 14,
   background: EV, border: `1.5px solid ${B2}`, borderRadius: 10,
@@ -140,6 +142,8 @@ export default function OnboardingPage() {
   const [bizType,      setBizType]      = useState('')
   const [currency,     setCurrency]     = useState('GBP')
   const [region,       setRegion]       = useState('')
+  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false)
+  const [countryActiveIdx, setCountryActiveIdx] = useState(0)
   const [sectors,      setSectors]      = useState<string[]>([])
   const [exportMkts,   setExportMkts]   = useState<string[]>([])
   const [wantsExport,  setWantsExport]  = useState<boolean | null>(null)
@@ -457,9 +461,57 @@ export default function OnboardingPage() {
                       ← {tc('onboarding.location_use_detected')}
                     </button>
                   )}
-                  <div style={{ marginBottom: 16 }}>
+                  <div style={{ marginBottom: 16, position: 'relative' }}>
                     <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
-                    <input style={inp} value={region} onChange={e => setRegion(e.target.value)} placeholder={tc('onboarding.location_region_placeholder')}/>
+                    {(() => {
+                      const q = region.trim().toLowerCase()
+                      const matches = q ? COUNTRY_LIST.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8) : []
+                      const selectCountry = (c: { code: string; name: string }) => {
+                        setRegion(c.name)
+                        if (COUNTRY_CURRENCY[c.code]) setCurrency(COUNTRY_CURRENCY[c.code]!)
+                        setShowCountrySuggestions(false)
+                      }
+                      return (
+                        <>
+                          <input
+                            style={inp}
+                            value={region}
+                            onChange={e => { setRegion(e.target.value); setShowCountrySuggestions(true); setCountryActiveIdx(0) }}
+                            onFocus={() => setShowCountrySuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowCountrySuggestions(false), 150)}
+                            onKeyDown={e => {
+                              if (!showCountrySuggestions || !matches.length) return
+                              if (e.key === 'ArrowDown') { e.preventDefault(); setCountryActiveIdx(i => (i + 1) % matches.length) }
+                              else if (e.key === 'ArrowUp') { e.preventDefault(); setCountryActiveIdx(i => (i - 1 + matches.length) % matches.length) }
+                              else if (e.key === 'Enter') { e.preventDefault(); selectCountry(matches[countryActiveIdx]) }
+                              else if (e.key === 'Escape') { setShowCountrySuggestions(false) }
+                            }}
+                            placeholder={tc('onboarding.location_region_placeholder')}
+                            autoComplete="off"
+                            role="combobox"
+                            aria-expanded={showCountrySuggestions && matches.length > 0}
+                            aria-autocomplete="list"
+                          />
+                          {showCountrySuggestions && matches.length > 0 && (
+                            <div role="listbox" style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: SF, border: `1.5px solid ${B2}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.1)', zIndex: 10, maxHeight: 220, overflowY: 'auto' }}>
+                              {matches.map((c, i) => (
+                                <button
+                                  key={c.code}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={i === countryActiveIdx}
+                                  onMouseEnter={() => setCountryActiveIdx(i)}
+                                  onMouseDown={() => selectCountry(c)}
+                                  style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '9px 13px', background: i === countryActiveIdx ? EV : 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: TX }}
+                                >
+                                  {c.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )
+                    })()}
                   </div>
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>{tc('onboarding.location_currency_label')}</label>
@@ -468,9 +520,9 @@ export default function OnboardingPage() {
                         <button
                           key={c.code}
                           onClick={() => setCurrency(c.code)}
-                          style={currency === c.code ? chipActive : chipBase}
+                          style={{ ...(currency === c.code ? chipActive : chipBase), alignItems: 'flex-start' }}
                         >
-                          <span style={{ fontWeight: 600 }}>{c.symbol}</span> {c.code} — {c.label}
+                          <span><span style={{ fontWeight: 600 }}>{c.symbol}</span> {c.code} — {c.label}</span>
                         </button>
                       ))}
                     </div>
