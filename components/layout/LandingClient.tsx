@@ -1425,11 +1425,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <LanguageToggle />
           {authUser ? (
             <Link href={localePath('/home', lang as Locale)} className="nav-auth-link" aria-label="Go to your account" style={{
-              width:32,height:32,borderRadius:'50%',background:T.acc,color:'#fff',fontSize:12,fontWeight:700,
+              width:30,height:30,borderRadius:'50%',background:'transparent',border:`1px solid ${T.bd}`,color:T.tx2,fontSize:12,fontWeight:600,
               display:'inline-flex',alignItems:'center',justifyContent:'center',textDecoration:'none',flexShrink:0,
             }}>
               {authUser.initials || (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
               )}
