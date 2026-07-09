@@ -1366,6 +1366,65 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
   const isRTL = lang === 'ar'
 
+  // Footer link columns — small, curated lists (not the full 50-country/6-sector
+  // content sets) to stay scannable; deep pages are one click away via "see all".
+  const footerColumns: { title: string; links: { href: string; label: string }[]; seeAll?: { href: string; label: string } }[] = [
+    {
+      title: tc('landing.footer_col_product'),
+      links: [
+        { href: '/point-of-sale', label: tc('landing.nav_point_of_sale') },
+        { href: '/pricing', label: tc('landing.nav_pricing') },
+        { href: '/compare', label: tc('landing.footer_compare') },
+        { href: '/integrations', label: tc('landing.footer_integrations') },
+      ],
+    },
+    {
+      title: tc('landing.footer_col_solutions'),
+      links: [
+        { href: '/point-of-sale/retail', label: tc('landing.pos_sector_retail') },
+        { href: '/point-of-sale/restaurant', label: tc('landing.pos_sector_restaurant') },
+        { href: '/point-of-sale/salon', label: tc('landing.pos_sector_salon') },
+        { href: '/point-of-sale/repair', label: tc('landing.pos_sector_repair') },
+        { href: '/point-of-sale/factory', label: tc('landing.pos_sector_factory') },
+        { href: '/point-of-sale/logistics', label: tc('landing.pos_sector_logistics') },
+      ],
+    },
+    {
+      title: tc('landing.footer_col_countries'),
+      links: [
+        { href: '/business-intelligence/kenya', label: tc('landing.footer_country_kenya') },
+        { href: '/business-intelligence/tanzania', label: tc('landing.footer_country_tanzania') },
+        { href: '/business-intelligence/uganda', label: tc('landing.footer_country_uganda') },
+        { href: '/business-intelligence/rwanda', label: tc('landing.footer_country_rwanda') },
+        { href: '/business-intelligence/democratic-republic-of-congo', label: tc('landing.footer_country_drc') },
+        { href: '/business-intelligence/nigeria', label: tc('landing.footer_country_nigeria') },
+        { href: '/business-intelligence/ghana', label: tc('landing.footer_country_ghana') },
+        { href: '/business-intelligence/south-africa', label: tc('landing.footer_country_southafrica') },
+      ],
+      seeAll: { href: '/business-intelligence', label: tc('landing.footer_see_all_countries') },
+    },
+    {
+      title: tc('landing.footer_col_learn'),
+      links: [
+        { href: '/blog', label: tc('landing.footer_blog') },
+        { href: '/academy', label: tc('landing.footer_academy') },
+        { href: '/help', label: tc('landing.footer_help') },
+        { href: '/glossary', label: tc('landing.nav_glossary_label') },
+        { href: '/benchmarks', label: tc('landing.nav_benchmarks_label') },
+        { href: '/free-tools', label: tc('landing.footer_free_tools') },
+      ],
+    },
+    {
+      title: tc('landing.footer_col_company'),
+      links: [
+        { href: '/privacy', label: tc('landing.footer_privacy') },
+        { href: '/terms', label: tc('landing.footer_terms') },
+        { href: '/dpa', label: tc('landing.footer_dpa') },
+        { href: 'mailto:hello@askbiz.co', label: tc('landing.footer_contact') },
+      ],
+    },
+  ]
+
   return (
     <div style={{ background:T.bg, color:T.tx, fontFamily:'var(--font-jakarta, Plus Jakarta Sans, system-ui)', overflowX:'hidden', direction:isRTL?'rtl':'ltr' }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -1389,6 +1448,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           .hero-ctas{flex-direction:column!important}
           .hero-ctas a{width:100%!important;text-align:center!important;justify-content:center!important}
         }
+        .footer-grid{grid-template-columns:repeat(5,1fr)}
+        @media(max-width:900px){.footer-grid{grid-template-columns:repeat(3,1fr)!important}}
+        @media(max-width:560px){.footer-grid{grid-template-columns:repeat(2,1fr)!important}}
+        @media(max-width:380px){.footer-grid{grid-template-columns:1fr!important}}
         input::placeholder{color:${T.tx3}}
         /* FAQ <details> — hide browser default triangle, rotate chevron when open */
         .faq-item summary::-webkit-details-marker{display:none}
@@ -1941,21 +2004,40 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'clamp(16px,2.5vw,24px) clamp(16px,4vw,40px)' }}>
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
-          <div style={{ display:'flex',alignItems:'center',gap:7 }}>
-            <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
-            <span style={{ fontFamily:'var(--font-instrument)',fontSize:14,color:T.tx }}>AskBiz</span>
-            <span style={{ fontSize:12,color:T.tx3 }}>· {tc('landing.footer_utauza')}</span>
-            <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
-          </div>
-          <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
-            {[['/', tc('landing.footer_home')],['/blog',tc('landing.footer_blog')],['/academy',tc('landing.footer_academy')],['/free-tools',tc('landing.footer_free_tools')],['/integrations',tc('landing.footer_integrations')],['/help',tc('landing.footer_help')],['/privacy',tc('landing.footer_privacy')],['/terms',tc('landing.footer_terms')],['/dpa',tc('landing.footer_dpa')],['mailto:hello@askbiz.co',tc('landing.footer_contact')]].map(([href,label])=>(
-              <a key={href} href={href.startsWith('mailto:') ? href : localePath(href, lang as Locale)} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
+      <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'48px clamp(16px,4vw,40px) 24px' }}>
+        <div style={{ maxWidth:1180,margin:'0 auto' }}>
+          <p style={{ fontSize:13,color:T.tx2,lineHeight:1.7,maxWidth:720,marginBottom:36 }}>{tc('landing.footer_intro')}</p>
+
+          <nav aria-label="Footer navigation" className="footer-grid" style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'28px 24px',paddingBottom:32,borderBottom:`1px solid ${T.bd}` }}>
+            {footerColumns.map(col => (
+              <div key={col.title}>
+                <div style={{ fontSize:11,fontWeight:700,color:T.tx,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:14 }}>{col.title}</div>
+                <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:11 }}>
+                  {col.links.map(l => (
+                    <li key={l.href}>
+                      <a href={l.href.startsWith('mailto:') ? l.href : localePath(l.href, lang as Locale)} className="nav-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',transition:'color 150ms',display:'inline-block',padding:'2px 0' }}>{l.label}</a>
+                    </li>
+                  ))}
+                  {col.seeAll && (
+                    <li>
+                      <a href={localePath(col.seeAll.href, lang as Locale)} className="nav-link" style={{ fontSize:13,color:T.acc,fontWeight:600,textDecoration:'none',display:'inline-block',padding:'2px 0' }}>{col.seeAll.label}</a>
+                    </li>
+                  )}
+                </ul>
+              </div>
             ))}
           </nav>
+
+          <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,paddingTop:20 }}>
+            <div style={{ display:'flex',alignItems:'center',gap:7 }}>
+              <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
+              <span style={{ fontFamily:'var(--font-instrument)',fontSize:14,color:T.tx }}>AskBiz</span>
+              <span style={{ fontSize:12,color:T.tx3 }}>· {tc('landing.footer_utauza')}</span>
+              <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
+            </div>
+            <p style={{ fontSize:11,color:T.tx3,opacity:0.8,margin:0 }}>{tc('landing.footer_tagline')} · {tc('landing.footer_countries')}</p>
+          </div>
         </div>
-        <p style={{ fontSize:11,color:T.tx3,marginTop:10,opacity:0.8 }}>{tc('landing.footer_tagline')} · {tc('landing.footer_countries')}</p>
       </footer>
     </div>
   )
