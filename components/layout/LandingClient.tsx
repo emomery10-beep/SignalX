@@ -1065,16 +1065,11 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {heroTab==='ops' ? (
         <PosShowcase tc={tc} demo={demo} />
       ) : (
-        <div style={{ position:'relative', width:'100%', height:550, overflow:'hidden' }}>
-          <iframe
-            src="https://pos.askbiz.co/preview/cashier"
-            title="AskBiz cashier — live demo"
-            style={{
-              width:`${(100 / (550/1100)).toFixed(3)}%`, height:1100, border:'none', display:'block',
-              transform:`scale(${(550/1100).toFixed(4)})`, transformOrigin:'top left',
-            }}
-          />
-        </div>
+        <iframe
+          src="https://pos.askbiz.co/preview/cashier"
+          title="AskBiz cashier — live demo"
+          style={{ width:'100%', height:1100, border:'none', display:'block' }}
+        />
       )}
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
