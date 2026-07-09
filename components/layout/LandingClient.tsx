@@ -1065,11 +1065,16 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {heroTab==='ops' ? (
         <PosShowcase tc={tc} demo={demo} />
       ) : (
-        <iframe
-          src="https://pos.askbiz.co/preview/cashier"
-          title="AskBiz cashier — live demo"
-          style={{ width:'100%', height:1100, border:'none', display:'block' }}
-        />
+        <div style={{ position:'relative', width:'100%', height:550, overflow:'hidden' }}>
+          <iframe
+            src="https://pos.askbiz.co/preview/cashier"
+            title="AskBiz cashier — live demo"
+            style={{
+              width:`${(100 / (550/1100)).toFixed(3)}%`, height:1100, border:'none', display:'block',
+              transform:`scale(${(550/1100).toFixed(4)})`, transformOrigin:'top left',
+            }}
+          />
+        </div>
       )}
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
@@ -1417,7 +1422,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ['#pricing',tc('landing.nav_pricing')],
             ['/help',tc('landing.nav_help')],
           ].map(([href,label])=>(
-            <a key={href} href={href} className="nav-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 14px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</a>
+            <a key={href} href={href} className="nav-link" style={{ fontSize:15,color:T.tx2,textDecoration:'none',padding:'0 14px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</a>
           ))}
         </div>
 
