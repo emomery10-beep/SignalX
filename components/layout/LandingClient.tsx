@@ -1052,7 +1052,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           }}/>
           {HERO_TABS.map(t=>(
             <button key={t.id} onClick={()=>setHeroTab(t.id)} style={{
-              position:'relative', flex:1, padding:'11px 24px', fontSize:13, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
+              position:'relative', flex:1, padding:'11px 24px', fontSize:17, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
               display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center',
               background:'none', border:'none', borderRadius:9, zIndex:1,
               color: heroTab===t.id ? '#1A1410' : '#888', transition:'color 300ms',
@@ -1068,7 +1068,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         <iframe
           src="https://pos.askbiz.co/preview/cashier"
           title="AskBiz cashier — live demo"
-          style={{ width:'100%', height:640, border:'none', display:'block' }}
+          style={{ width:'100%', height:1100, border:'none', display:'block' }}
         />
       )}
       <div style={{
@@ -1941,17 +1941,21 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'clamp(16px,2.5vw,24px) clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
-        <div style={{ display:'flex',alignItems:'center',gap:7 }}>
-          <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
-          <span style={{ fontFamily:'var(--font-instrument)',fontSize:14,color:T.tx }}>AskBiz</span>
-          <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
+      <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'clamp(16px,2.5vw,24px) clamp(16px,4vw,40px)' }}>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:7 }}>
+            <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
+            <span style={{ fontFamily:'var(--font-instrument)',fontSize:14,color:T.tx }}>AskBiz</span>
+            <span style={{ fontSize:12,color:T.tx3 }}>· {tc('landing.footer_utauza')}</span>
+            <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
+          </div>
+          <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
+            {[['/', tc('landing.footer_home')],['/blog',tc('landing.footer_blog')],['/academy',tc('landing.footer_academy')],['/free-tools',tc('landing.footer_free_tools')],['/integrations',tc('landing.footer_integrations')],['/help',tc('landing.footer_help')],['/privacy',tc('landing.footer_privacy')],['/terms',tc('landing.footer_terms')],['/dpa',tc('landing.footer_dpa')],['mailto:hello@askbiz.co',tc('landing.footer_contact')]].map(([href,label])=>(
+              <a key={href} href={href.startsWith('mailto:') ? href : localePath(href, lang as Locale)} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
+            ))}
+          </nav>
         </div>
-        <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
-          {[['/', tc('landing.footer_home')],['/blog',tc('landing.footer_blog')],['/academy',tc('landing.footer_academy')],['/free-tools',tc('landing.footer_free_tools')],['/integrations',tc('landing.footer_integrations')],['/help',tc('landing.footer_help')],['/privacy',tc('landing.footer_privacy')],['/terms',tc('landing.footer_terms')],['/dpa',tc('landing.footer_dpa')],['mailto:hello@askbiz.co',tc('landing.footer_contact')]].map(([href,label])=>(
-            <a key={href} href={href.startsWith('mailto:') ? href : localePath(href, lang as Locale)} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
-          ))}
-        </nav>
+        <p style={{ fontSize:11,color:T.tx3,marginTop:10,opacity:0.8 }}>{tc('landing.footer_tagline')} · {tc('landing.footer_countries')}</p>
       </footer>
     </div>
   )
