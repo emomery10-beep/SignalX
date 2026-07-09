@@ -1499,10 +1499,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </Link>
           ) : (
             <>
-              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:18,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
+              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:14,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
                 {tc('landing.nav_sign_in')}
               </Link>
-              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:18,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
+              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:14,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
                 {tc('landing.nav_get_started')}
               </Link>
             </>
@@ -1609,7 +1609,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3vw,38px)',fontWeight:400,lineHeight:1.15,letterSpacing:'-.02em',color:T.tx,marginBottom:14 }}>
             {tc('landing.where_title')}
           </h2>
-          <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:620,marginLeft:'auto',marginRight:'auto' }}>
+          <p style={{ fontSize:16,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:620,marginLeft:'auto',marginRight:'auto' }}>
             {tc('landing.where_body')}
           </p>
           <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:10 }}>
@@ -1658,7 +1658,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 </Link>
               </div>
             </div>
-            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,margin:0 }}>
+            <p style={{ fontSize:16,color:T.tx2,lineHeight:1.7,margin:0 }}>
               {tc('landing.pos_subtitle')} <span style={{ color:T.tx3 }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
             </p>
           </div>
@@ -1694,7 +1694,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
                 {tc('landing.monitor_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.monitor_title_line2')}</em>
               </h2>
-              <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:22,maxWidth:320 }}>
+              <p style={{ fontSize:16,color:T.tx2,lineHeight:1.7,marginBottom:22,maxWidth:320 }}>
                 {tc('landing.monitor_subtitle')}
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:9 }}>
@@ -1728,7 +1728,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
                 {tc('landing.sources_title_line1')} {tc('landing.sources_title_line2')}
               </h2>
-              <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
+              <p style={{ fontSize:16,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
                 {tc('landing.sources_subtitle')}
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
@@ -1754,7 +1754,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
                 {tc('landing.demo_title_line1')} {tc('landing.demo_title_line2')}
               </h2>
-              <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
+              <p style={{ fontSize:16,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
                 {tc('landing.demo_subtitle')}
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
@@ -1791,7 +1791,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <div style={{ fontSize:12,color:T.tx3 }}>{tc('landing.proof_note_title_role')}</div>
             </div>
           </div>
-          <p style={{ fontSize:14,color:T.tx2,marginBottom:18 }}>{tc('landing.proof_note_join')}</p>
+          <p style={{ fontSize:16,color:T.tx2,marginBottom:18 }}>{tc('landing.proof_note_join')}</p>
           <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,padding:'12px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none' }}>
             {tc('landing.proof_note_cta')}
           </Link>
@@ -1805,7 +1805,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
               {tc('landing.compare_title_line1')} {tc('landing.compare_title_line2')}
             </h2>
-            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:440,margin:'0 auto' }}>
+            <p style={{ fontSize:16,color:T.tx2,lineHeight:1.7,maxWidth:440,margin:'0 auto' }}>
               {tc('landing.compare_subtitle')}
             </p>
           </div>
@@ -1995,7 +1995,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:400,lineHeight:1.1,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
             {tc('landing.closing_title')}
           </h2>
-          <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:24 }}>{tc('landing.closing_sub')}</p>
+          <p style={{ fontSize:16,color:T.tx2,lineHeight:1.7,marginBottom:24 }}>{tc('landing.closing_sub')}</p>
           <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:8,padding:'14px 32px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',boxShadow:'0 4px 24px rgba(201,122,68,.3)' }}>
             {tc('landing.closing_cta')}
           </Link>
