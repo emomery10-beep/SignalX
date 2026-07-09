@@ -1480,7 +1480,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ['#pricing',tc('landing.nav_pricing')],
             ['/help',tc('landing.nav_help')],
           ].map(([href,label])=>(
-            <a key={href} href={href} className="nav-link" style={{ fontSize:15,color:T.tx2,textDecoration:'none',padding:'0 14px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</a>
+            <a key={href} href={href} className="nav-link" style={{ fontSize:18,color:T.tx2,textDecoration:'none',padding:'0 14px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</a>
           ))}
         </div>
 
@@ -1499,10 +1499,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </Link>
           ) : (
             <>
-              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
+              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:18,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
                 {tc('landing.nav_sign_in')}
               </Link>
-              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:13,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
+              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:18,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
                 {tc('landing.nav_get_started')}
               </Link>
             </>
@@ -1569,7 +1569,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
             {/* Right — subtitle, aligned beside the bottom of the headline */}
             <div>
-              <p style={{ fontSize:'clamp(13px,1.1vw,15px)',color:T.tx2,lineHeight:1.6 }}>
+              <p style={{ fontSize:'clamp(15px,1.3vw,17px)',color:T.tx2,lineHeight:1.6 }}>
                 {tc('landing.hero_subtitle')}
               </p>
             </div>
