@@ -1068,7 +1068,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         <iframe
           src="https://pos.askbiz.co/preview/cashier"
           title="AskBiz cashier — live demo"
-          style={{ width:'100%', height:1100, border:'none', display:'block' }}
+          style={{ width:'100%', height:640, border:'none', display:'block' }}
         />
       )}
       <div style={{
