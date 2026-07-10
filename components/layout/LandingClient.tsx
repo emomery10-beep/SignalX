@@ -1275,19 +1275,18 @@ function MiniCalcWidget({tc,lang,initialCurrency}:{tc:(k:string)=>string;lang:Lo
 // ── Nav Dropdown ─────────────────────────────────────────────────────────────
 interface DropGroup { group: string; links: { href: string; label: string; desc: string }[] }
 interface DropFeatured { href: string; title: string; desc: string; icon?: 'globe'|'phone' }
-function NavDropdown({ label, items, lang, featured }: { label: string; items: DropGroup[]; lang: Locale; featured?: DropFeatured }) {
-  const [open, setOpen] = useState(false)
+function NavDropdown({ label, items, lang, featured, open, onToggle, onClose }: { label: string; items: DropGroup[]; lang: Locale; featured?: DropFeatured; open: boolean; onToggle: () => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
-    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose() }
     document.addEventListener('mousedown', close)
     return () => document.removeEventListener('mousedown', close)
-  }, [open])
+  }, [open, onClose])
   return (
     <div ref={ref} style={{ position:'relative' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={onToggle}
         aria-expanded={open}
         style={{ fontSize:18,color:T.tx2,background:'none',border:'none',cursor:'pointer',padding:'0 14px',height:56,display:'flex',alignItems:'center',gap:5,fontFamily:'inherit',transition:'color 150ms',whiteSpace:'nowrap' }}
         className="nav-link"
@@ -1302,7 +1301,7 @@ function NavDropdown({ label, items, lang, featured }: { label: string; items: D
               <div key={gi} style={{ flex:1,padding:'0 8px' }}>
                 <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase',padding:'4px 8px 8px' }}>{grp.group}</div>
                 {grp.links.map(lnk => (
-                  <Link key={lnk.href} href={localePath(lnk.href, lang)} onClick={() => setOpen(false)}
+                  <Link key={lnk.href} href={localePath(lnk.href, lang)} onClick={onClose}
                     style={{ display:'block',padding:'7px 8px',borderRadius:8,textDecoration:'none' }}
                     className="nav-drop-item"
                   >
@@ -1314,7 +1313,7 @@ function NavDropdown({ label, items, lang, featured }: { label: string; items: D
             ))}
           </div>
           {featured && (
-            <Link href={localePath(featured.href, lang)} onClick={() => setOpen(false)}
+            <Link href={localePath(featured.href, lang)} onClick={onClose}
               style={{ display:'flex',alignItems:'center',gap:10,marginTop:10,paddingTop:12,borderTop:`1px solid ${T.bd}`,textDecoration:'none' }}
               className="nav-drop-item"
             >
@@ -1358,6 +1357,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const [scrollY, setScrollY] = useState(0)
   const [mouse, setMouse] = useState({ x: 0, y: 0 })
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openNavMenu, setOpenNavMenu] = useState<'product'|'solutions'|null>(null)
   const [annual, setAnnual] = useState(false)
   // FAQ state removed — using native <details> for SEO
   const [liveGeo, setLiveGeo] = useState<Geo | null>(geo)
@@ -1523,7 +1523,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     {
       group: tc('landing.nav_product_group_sell'),
       links: [
-        { href: '/point-of-sale', label: tc('landing.nav_product_pos_title'), desc: tc('landing.nav_product_pos_desc') },
+        { href: '/point-of-sale', label: tc('landing.nav_point_of_sale'), desc: tc('landing.nav_product_pos_desc') },
         { href: '/point-of-sale/feature/payments', label: tc('landing.nav_product_payments_title'), desc: tc('landing.nav_product_payments_desc') },
         { href: '/point-of-sale/feature/multi-branch', label: tc('landing.nav_product_branch_title'), desc: tc('landing.nav_product_branch_desc') },
         { href: '/point-of-sale/feature/staff-shifts', label: tc('landing.nav_product_staff_title'), desc: tc('landing.nav_product_staff_desc') },
@@ -1533,8 +1533,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       group: tc('landing.nav_product_group_know'),
       links: [
         { href: '/business-intelligence', label: tc('landing.nav_product_bi_title'), desc: tc('landing.nav_product_bi_desc') },
-        { href: '/free-tools', label: tc('landing.nav_product_tools_title'), desc: tc('landing.nav_product_tools_desc') },
-        { href: '/academy', label: tc('landing.nav_product_academy_title'), desc: tc('landing.nav_product_academy_desc') },
+        { href: '/free-tools', label: tc('landing.nav_free_tools'), desc: tc('landing.nav_product_tools_desc') },
+        { href: '/academy', label: tc('landing.nav_academy_label'), desc: tc('landing.nav_product_academy_desc') },
         { href: '/compare', label: tc('landing.nav_product_compare_title'), desc: tc('landing.nav_product_compare_desc') },
       ],
     },
@@ -1619,12 +1619,18 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             items={PRODUCT_MENU}
             lang={lang as Locale}
             featured={{ href:'/point-of-sale/feature/works-everywhere', title:tc('landing.nav_product_featured_title'), desc:tc('landing.nav_product_featured_desc'), icon:'phone' }}
+            open={openNavMenu==='product'}
+            onToggle={()=>setOpenNavMenu(m=>m==='product'?null:'product')}
+            onClose={()=>setOpenNavMenu(null)}
           />
           <NavDropdown
             label={tc('landing.nav_menu_solutions')}
             items={SOLUTIONS_MENU}
             lang={lang as Locale}
             featured={{ href:'/business-intelligence', title:tc('landing.nav_solutions_featured_title'), desc:tc('landing.nav_solutions_featured_desc'), icon:'globe' }}
+            open={openNavMenu==='solutions'}
+            onToggle={()=>setOpenNavMenu(m=>m==='solutions'?null:'solutions')}
+            onClose={()=>setOpenNavMenu(null)}
           />
           {[
             ['#pricing',tc('landing.nav_pricing')],
