@@ -46,7 +46,7 @@ function fmt(symbol: string, amount: number, decimals = 2): string {
 function Toast({ msg, ok, onDone }: { msg: string; ok: boolean; onDone: () => void }) {
   useEffect(() => { const t = setTimeout(onDone, 3200); return () => clearTimeout(t) }, [onDone])
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, padding: '12px 20px', borderRadius: 12, background: ok ? 'rgba(22,163,74,.95)' : 'rgba(220,38,38,.95)', color: '#fff', fontSize: 13, fontWeight: 600, boxShadow: '0 8px 30px rgba(0,0,0,.18)', animation: 'fadeIn .2s ease', maxWidth: 360 }}>
+    <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, padding: '12px 20px', borderRadius: 12, background: ok ? 'rgba(22,163,74,.95)' : 'rgba(220,38,38,.95)', color: '#fff', fontSize: 17, fontWeight: 600, boxShadow: '0 8px 30px rgba(0,0,0,.18)', animation: 'fadeIn .2s ease', maxWidth: 360 }}>
       {msg}
     </div>
   )
@@ -74,7 +74,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
       {data.map((d, i) => (
         <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
           <div style={{ width: '100%', maxWidth: 32, height: Math.max(2, (d.value / max) * (height - 18)), background: color, borderRadius: '4px 4px 0 0', transition: 'height .3s ease', opacity: d.value === 0 ? 0.2 : 1 }} title={`${d.label}: ${d.value}`} />
-          <span style={{ fontSize: 9, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{d.label}</span>
+          <span style={{ fontSize: 13, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{d.label}</span>
         </div>
       ))}
     </div>
@@ -874,11 +874,11 @@ export default function POSPage() {
   }
 
   // ── Styles ─────────────────────────────────────────────
-  const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }
-  const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
-  const btnSecondary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }
+  const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b2)', fontSize: 17, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }
+  const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: ACC, color: '#fff', fontSize: 17, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
+  const btnSecondary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }
   const cardStyle: React.CSSProperties = { padding: 16, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }
-  const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 12 }
+  const sectionLabel: React.CSSProperties = { fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 12 }
   const modalOverlay: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 100 }
   const modalBox: React.CSSProperties = { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, background: 'var(--sf)', borderRadius: 14, padding: 28, width: '90%', maxWidth: 520, boxShadow: '0 8px 32px rgba(0,0,0,.14)', maxHeight: '85vh', overflowY: 'auto' }
 
@@ -889,7 +889,7 @@ export default function POSPage() {
     const up = pct >= 0
     const good = inverse ? !up : up
     return (
-      <span style={{ fontSize: 11, fontWeight: 600, color: good ? GREEN : RED, display: 'inline-flex', alignItems: 'center', gap: 2, marginTop: 4 }}>
+      <span style={{ fontSize: 15, fontWeight: 600, color: good ? GREEN : RED, display: 'inline-flex', alignItems: 'center', gap: 2, marginTop: 4 }}>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={{ transform: up ? 'none' : 'rotate(180deg)' }}><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         {Math.abs(pct).toFixed(0)}% {tc('pos_app.vs_prev')}
       </span>
@@ -1009,10 +1009,10 @@ export default function POSPage() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_app.resume_setup_title')}</div>
-            <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 2 }}>{tc('pos_app.resume_setup_desc')}</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_app.resume_setup_title')}</div>
+            <div style={{ fontSize: 17, color: 'var(--tx2)', marginTop: 2 }}>{tc('pos_app.resume_setup_desc')}</div>
           </div>
-          <span style={{ flexShrink: 0, fontSize: 14, fontWeight: 700, color: ACC }}>{tc('pos_app.resume_setup_cta')}</span>
+          <span style={{ flexShrink: 0, fontSize: 18, fontWeight: 700, color: ACC }}>{tc('pos_app.resume_setup_cta')}</span>
         </a>
       )}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
@@ -1020,24 +1020,24 @@ export default function POSPage() {
           <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
-          <p style={{ fontSize: 14, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 28, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
+          <p style={{ fontSize: 18, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
             {tc('pos_app.disabled_desc')}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 28 }}>
             {[tc('pos_app.disabled_feature_1'), tc('pos_app.disabled_feature_2'), tc('pos_app.disabled_feature_3'), tc('pos_app.disabled_feature_4'), tc('pos_app.disabled_feature_5'), tc('pos_app.disabled_feature_6')].map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--tx2)' }}>
+              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, color: 'var(--tx2)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
                 {f}
               </div>
             ))}
           </div>
           <div style={{ marginBottom: 8 }}>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 28, fontWeight: 800 }}>£5</span>
-            <span style={{ fontSize: 14, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos_app.disabled_per_seat')}</span>
+            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 800 }}>£5</span>
+            <span style={{ fontSize: 18, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos_app.disabled_per_seat')}</span>
           </div>
-          <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.disabled_owner_note')}</p>
-          <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
+          <p style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.disabled_owner_note')}</p>
+          <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 18, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
             {tc('pos_app.disabled_add_seats')}
           </a>
         </div>
@@ -1057,7 +1057,7 @@ export default function POSPage() {
             <button key={t} onClick={() => handleSetTab(t)} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
-              fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 17, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
               flexShrink: 0,
             }}>
@@ -1069,14 +1069,14 @@ export default function POSPage() {
                 const s = sectorOverride || d
                 return s === 'restaurant' ? '🍴 ' + tc('pos_app.tab_services_restaurant') : s === 'repair' ? '🔧 ' + tc('pos_app.tab_services_repair') : s === 'salon' ? '💇 ' + tc('pos_app.tab_services_salon') : '📦 ' + tc('pos_app.tab_services_operations')
               })() : tc('pos_app.tab_' + t)}
-              {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
+              {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
             </button>
           ))}
           {(selectedSector === 'all' || selectedSector === 'logistics') && (
             <button onClick={() => handleSetTab('logistics')} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
-              fontSize: 13, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 17, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === 'logistics' ? '2px solid #0891b2' : '2px solid transparent',
               flexShrink: 0,
             }}>🚛 {tc('pos_app.tab_logistics')}</button>
@@ -1091,7 +1091,7 @@ export default function POSPage() {
             <button key={s.id} onClick={() => handleSetTab(s.id)} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === s.id ? 'var(--sf)' : 'transparent', color: tab === s.id ? s.color : 'var(--tx3)',
-              fontSize: 13, fontWeight: tab === s.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 17, fontWeight: tab === s.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === s.id ? `2px solid ${s.color}` : '2px solid transparent',
               flexShrink: 0,
             }}>{s.label}</button>
@@ -1118,11 +1118,11 @@ export default function POSPage() {
         {/* ── Branch + Sector filters ── */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 500 }}>{tc('pos_app.filter_branch')}</span>
+            <span style={{ fontSize: 16, color: 'var(--tx3)', fontWeight: 500 }}>{tc('pos_app.filter_branch')}</span>
             <select
               value={selectedLocation}
               onChange={e => setSelectedLocation(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <option value="all">{tc('pos_app.filter_all_branches')}</option>
               {locations.map(loc => (
@@ -1131,11 +1131,11 @@ export default function POSPage() {
             </select>
           </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 500 }}>{tc('pos_app.filter_sector')}</span>
+            <span style={{ fontSize: 16, color: 'var(--tx3)', fontWeight: 500 }}>{tc('pos_app.filter_sector')}</span>
             <select
               value={selectedSector}
               onChange={e => setSelectedSector(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <option value="all">{tc('pos_app.filter_all_sectors')}</option>
               <option value="restaurant">🍴 {tc('pos_app.sector_restaurant')}</option>
@@ -1153,14 +1153,14 @@ export default function POSPage() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
             {(['today', 'yesterday', 'last7', 'last30'] as DateRange[]).map(range => (
               <button key={range} onClick={() => { setDateRange(range); setCustomStart(''); setCustomEnd('') }}
-                style={{ padding: '6px 12px', borderRadius: 8, border: dateRange === range ? `1.5px solid ${ACC}` : '1px solid var(--b)', background: dateRange === range ? ACC_BG : 'var(--sf)', color: dateRange === range ? ACC : 'var(--tx2)', fontSize: 12, fontWeight: dateRange === range ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease' }}>
+                style={{ padding: '6px 12px', borderRadius: 8, border: dateRange === range ? `1.5px solid ${ACC}` : '1px solid var(--b)', background: dateRange === range ? ACC_BG : 'var(--sf)', color: dateRange === range ? ACC : 'var(--tx2)', fontSize: 16, fontWeight: dateRange === range ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease' }}>
                 {tc('pos_app.range_' + range)}
               </button>
             ))}
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setDateRange('custom') }} style={{ ...inputStyle, padding: '6px 10px', fontSize: 12 }} />
-              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_app.to')}</span>
-              <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setDateRange('custom') }} style={{ ...inputStyle, padding: '6px 10px', fontSize: 12 }} />
+              <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setDateRange('custom') }} style={{ ...inputStyle, padding: '6px 10px', fontSize: 16 }} />
+              <span style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('pos_app.to')}</span>
+              <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setDateRange('custom') }} style={{ ...inputStyle, padding: '6px 10px', fontSize: 16 }} />
             </div>
           </div>
         )}
@@ -1180,8 +1180,8 @@ export default function POSPage() {
                   style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
                   onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
                   onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{kpi.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: kpi.color, letterSpacing: '-.02em' }}>{kpi.value}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{kpi.label}</div>
+                  <div style={{ fontSize: 30, fontWeight: 800, color: kpi.color, letterSpacing: '-.02em' }}>{kpi.value}</div>
                   {kpi.type !== 'low_stock' && <CompBadge curr={kpi.curr} prev={kpi.prev} inverse={kpi.inverse} />}
                 </div>
               ))}
@@ -1193,22 +1193,22 @@ export default function POSPage() {
                 style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
                 onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
                 onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_gross_profit')}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_gross_profit')}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div>
               </div>
               <div onClick={() => setFilterModal({ type: 'margin', title: tc('pos_app.modal_margin') })}
                 style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
                 onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
                 onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_margin')}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: margin >= 20 ? GREEN : margin >= 10 ? AMBER : RED }}>{margin.toFixed(1)}%</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_margin')}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: margin >= 20 ? GREEN : margin >= 10 ? AMBER : RED }}>{margin.toFixed(1)}%</div>
               </div>
               <div onClick={() => setFilterModal({ type: 'avg_sale', title: tc('pos_app.modal_avg_sale') })}
                 style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
                 onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
                 onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_avg_sale')}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_avg_sale')}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
               </div>
             </div>
 
@@ -1221,7 +1221,7 @@ export default function POSPage() {
                 { label: '📦 ' + tc('pos_app.ask_stock_alerts'), query: 'Which products are running low on stock or have expiry warnings? Show items I need to reorder.' },
               ].map(btn => (
                 <button key={btn.label} onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: btn.query })), 400) }}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}
+                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 16, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = ACC; e.currentTarget.style.color = ACC; e.currentTarget.style.background = ACC_BG }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)'; e.currentTarget.style.background = 'var(--sf)' }}
                 >
@@ -1252,10 +1252,10 @@ export default function POSPage() {
                   {paymentBreakdown.map(p => (
                     <div key={p.method} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)', textTransform: 'capitalize' }}>{p.method}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{p.count === 1 ? tc('pos_app.sale_count_one', { n: p.count }) : tc('pos_app.sale_count_other', { n: p.count })}</div>
+                        <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)', textTransform: 'capitalize' }}>{p.method}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{p.count === 1 ? tc('pos_app.sale_count_one', { n: p.count }) : tc('pos_app.sale_count_other', { n: p.count })}</div>
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, p.total)}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, p.total)}</div>
                     </div>
                   ))}
                 </div>
@@ -1266,10 +1266,10 @@ export default function POSPage() {
                   {topProducts.slice(0, 5).map((p, i) => (
                     <div key={p.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{i + 1}. {p.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.units_sold', { n: p.qty })}</div>
+                        <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)' }}>{i + 1}. {p.name}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.units_sold', { n: p.qty })}</div>
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, p.revenue)}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, p.revenue)}</div>
                     </div>
                   ))}
                 </div>
@@ -1279,7 +1279,7 @@ export default function POSPage() {
             {/* Staff performance */}
             {cashierStats.length > 0 && (
               <div style={{ marginBottom: 24 }}>
-                <div onClick={() => setFilterModal({ type: 'staff_overview', title: tc('pos_app.modal_staff_overview') })} style={{ ...sectionLabel, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>{tc('pos_app.staff_performance')} <span style={{ fontSize: 10, color: ACC, fontWeight: 600 }}>{tc('pos_app.view_all')}</span></div>
+                <div onClick={() => setFilterModal({ type: 'staff_overview', title: tc('pos_app.modal_staff_overview') })} style={{ ...sectionLabel, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>{tc('pos_app.staff_performance')} <span style={{ fontSize: 14, color: ACC, fontWeight: 600 }}>{tc('pos_app.view_all')}</span></div>
                 {/* Mini bar chart for staff */}
                 <div style={{ ...cardStyle, marginBottom: 12 }}>
                   <MiniBarChart data={cashierStats.map(c => ({ label: c.name.split(' ')[0], value: c.revenue }))} color={ACC} height={70} />
@@ -1290,13 +1290,13 @@ export default function POSPage() {
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < cashierStats.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer', transition: 'background 200ms' }}
                       onMouseEnter={e => { (e.currentTarget.style as any).background = 'rgba(208,138,89,.04)' }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'var(--sf)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: ACC }}>{c.name.charAt(0).toUpperCase()}</div>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ACC }}>{c.name.charAt(0).toUpperCase()}</div>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.sales_avg', { n: c.sales, avg: fmt(currencySymbol, c.avgSale) })}</div>
+                          <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.sales_avg', { n: c.sales, avg: fmt(currencySymbol, c.avgSale) })}</div>
                         </div>
                       </div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.revenue)}</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.revenue)}</div>
                     </div>
                   ))}
                 </div>
@@ -1312,9 +1312,9 @@ export default function POSPage() {
                     <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', cursor: 'pointer', transition: 'all 150ms', opacity: archivingStockId === item.id ? 0.4 : 1 }}
                       onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.4)' }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.2)' }}>
-                      <span onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })} style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{item.name}</span>
+                      <span onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })} style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>{tc('pos_app.out_of_stock')}</span>
+                        <span style={{ fontSize: 16, fontWeight: 600, color: RED }}>{tc('pos_app.out_of_stock')}</span>
                         <button
                           title={tc('pos_app.archive_title')}
                           disabled={archivingStockId === item.id}
@@ -1336,7 +1336,7 @@ export default function POSPage() {
                             } catch { setToast({ msg: tc('pos_app.toast_archive_failed'), ok: false }) }
                             setArchivingStockId(null)
                           }}
-                          style={{ fontSize: 11, color: 'var(--tx3)', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit', fontWeight: 500, transition: 'all 150ms' }}
+                          style={{ fontSize: 15, color: 'var(--tx3)', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit', fontWeight: 500, transition: 'all 150ms' }}
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,.15)'; e.currentTarget.style.color = RED }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,38,38,.08)'; e.currentTarget.style.color = 'var(--tx3)' }}
                         >{tc('pos_app.archive')}</button>
@@ -1348,9 +1348,9 @@ export default function POSPage() {
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)', cursor: 'pointer', transition: 'all 150ms' }}
                       onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,.5)' }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,.25)' }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
+                      <span style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{tc('pos_app.stock_left', { n: item.stock_qty })}</span>
+                        <span style={{ fontSize: 16, fontWeight: 600, color: AMBER }}>{tc('pos_app.stock_left', { n: item.stock_qty })}</span>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                       </div>
                     </div>
@@ -1364,7 +1364,7 @@ export default function POSPage() {
               <div style={{ marginBottom: 24 }}>
                 <div style={sectionLabel}>
                   <span>🤖 {tc('pos_app.reorder_suggestions')}</span>
-                  <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--tx3)', marginLeft: 8 }}>{tc('pos_app.ai_powered')}</span>
+                  <span style={{ fontSize: 15, fontWeight: 400, color: 'var(--tx3)', marginLeft: 8 }}>{tc('pos_app.ai_powered')}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {sectorFilteredReorderSuggestions.slice(0, 10).map((s: any) => {
@@ -1375,22 +1375,22 @@ export default function POSPage() {
                       <div key={s.id} style={{ padding: '12px 14px', borderRadius: 10, background: uc.bg, border: `1px solid ${uc.border}`, position: 'relative' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</span>
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: uc.text, color: '#fff', letterSpacing: '.5px' }}>{uc.label}</span>
-                            {s.sales_trend === 'rising' && <span style={{ fontSize: 10, color: '#16a34a' }}>↑ {tc('pos_app.trend_rising')}</span>}
-                            {s.sales_trend === 'falling' && <span style={{ fontSize: 10, color: '#94a3b8' }}>↓ {tc('pos_app.trend_slowing')}</span>}
+                            <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: uc.text, color: '#fff', letterSpacing: '.5px' }}>{uc.label}</span>
+                            {s.sales_trend === 'rising' && <span style={{ fontSize: 14, color: '#16a34a' }}>↑ {tc('pos_app.trend_rising')}</span>}
+                            {s.sales_trend === 'falling' && <span style={{ fontSize: 14, color: '#94a3b8' }}>↓ {tc('pos_app.trend_slowing')}</span>}
                           </div>
                           <button onClick={async () => { setDismissingId(s.id); await fetch('/api/pos/reorder-suggestions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'dismiss', id: s.id }) }); setReorderSuggestions(prev => prev.filter(x => x.id !== s.id)); setDismissingId(null) }}
                             disabled={dismissingId === s.id}
-                            style={{ fontSize: 10, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', fontFamily: 'inherit', opacity: dismissingId === s.id ? 0.4 : 1 }}>✕</button>
+                            style={{ fontSize: 14, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', fontFamily: 'inherit', opacity: dismissingId === s.id ? 0.4 : 1 }}>✕</button>
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 8 }}>{s.reason}</div>
+                        <div style={{ fontSize: 16, color: 'var(--tx2)', marginBottom: 8 }}>{s.reason}</div>
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                          <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.current_stock')}</span><div style={{ fontSize: 13, fontWeight: 600, color: s.current_stock === 0 ? '#dc2626' : 'var(--tx)' }}>{s.current_stock} {s.unit}s</div></div>
-                          <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.sells')}</span><div style={{ fontSize: 13, fontWeight: 600 }}>{s.avg_daily_sales}{tc('pos_app.per_day')}</div></div>
-                          <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.order')}</span><div style={{ fontSize: 13, fontWeight: 700, color: uc.text }}>{s.suggested_qty} {s.unit}s</div></div>
-                          {s.estimated_cost > 0 && <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.est_cost')}</span><div style={{ fontSize: 13, fontWeight: 600 }}>{currencySymbol}{s.estimated_cost.toLocaleString()}</div></div>}
-                          {s.supplier && <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.supplier')}</span><div style={{ fontSize: 13, fontWeight: 500 }}>{s.supplier}</div></div>}
+                          <div><span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.current_stock')}</span><div style={{ fontSize: 17, fontWeight: 600, color: s.current_stock === 0 ? '#dc2626' : 'var(--tx)' }}>{s.current_stock} {s.unit}s</div></div>
+                          <div><span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.sells')}</span><div style={{ fontSize: 17, fontWeight: 600 }}>{s.avg_daily_sales}{tc('pos_app.per_day')}</div></div>
+                          <div><span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.order')}</span><div style={{ fontSize: 17, fontWeight: 700, color: uc.text }}>{s.suggested_qty} {s.unit}s</div></div>
+                          {s.estimated_cost > 0 && <div><span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.est_cost')}</span><div style={{ fontSize: 17, fontWeight: 600 }}>{currencySymbol}{s.estimated_cost.toLocaleString()}</div></div>}
+                          {s.supplier && <div><span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.supplier')}</span><div style={{ fontSize: 17, fontWeight: 500 }}>{s.supplier}</div></div>}
                         </div>
                         {/* Restock action row */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${uc.border}` }}>
@@ -1399,7 +1399,7 @@ export default function POSPage() {
                               <input type="number" placeholder={String(s.suggested_qty)} value={reorderRestockQty}
                                 onChange={e => setReorderRestockQty(e.target.value)}
                                 autoFocus
-                                style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }} />
+                                style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b2)', fontSize: 17, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }} />
                               <button disabled={reorderRestocking} onClick={async () => {
                                 const qty = parseInt(reorderRestockQty) || s.suggested_qty
                                 setReorderRestocking(true)
@@ -1416,15 +1416,15 @@ export default function POSPage() {
                                 } catch { notify(tc('pos_app.toast_restock_failed'), false) }
                                 setReorderRestocking(false); setReorderRestockId(null); setReorderRestockQty('')
                               }}
-                                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, cursor: reorderRestocking ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: reorderRestocking ? 0.6 : 1 }}>
+                                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 16, fontWeight: 600, cursor: reorderRestocking ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: reorderRestocking ? 0.6 : 1 }}>
                                 {reorderRestocking ? tc('pos_app.restocking') : tc('pos_app.restock_plus', { qty: reorderRestockQty || s.suggested_qty })}
                               </button>
                               <button onClick={() => { setReorderRestockId(null); setReorderRestockQty('') }}
-                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.cancel')}</button>
+                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx3)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.cancel')}</button>
                             </>
                           ) : (
                             <button onClick={() => { setReorderRestockId(s.inventory_id); setReorderRestockQty(String(s.suggested_qty)) }}
-                              style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                               {tc('pos_app.restock')}
                             </button>
@@ -1444,22 +1444,22 @@ export default function POSPage() {
                   <div style={sectionLabel}>{tc('pos_app.profit_loss')}</div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {(['daily', 'weekly', 'monthly'] as const).map(v => (
-                      <button key={v} onClick={() => setPlView(v)} style={{ padding: '4px 10px', borderRadius: 6, border: plView === v ? `1px solid ${ACC}` : '1px solid var(--b)', background: plView === v ? ACC_BG : 'transparent', color: plView === v ? ACC : 'var(--tx3)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button key={v} onClick={() => setPlView(v)} style={{ padding: '4px 10px', borderRadius: 6, border: plView === v ? `1px solid ${ACC}` : '1px solid var(--b)', background: plView === v ? ACC_BG : 'transparent', color: plView === v ? ACC : 'var(--tx3)', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {tc('pos_app.pl_' + v)}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', padding: '10px 16px', background: 'var(--ev)', fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
                     <span>{tc('pos_app.col_period')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_revenue')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_cost')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_profit')}</span>
                   </div>
                   {plData.map((row, i) => (
                     <div key={row.period} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', alignItems: 'center' }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{row.period} <span style={{ fontSize: 11, color: 'var(--tx3)' }}>({row.count})</span></div>
-                      <div style={{ fontSize: 13, fontWeight: 600, textAlign: 'right', color: 'var(--tx)' }}>{fmt(currencySymbol, row.revenue)}</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, row.cost)}</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, textAlign: 'right', color: row.profit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, row.profit)}</div>
+                      <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)' }}>{row.period} <span style={{ fontSize: 15, color: 'var(--tx3)' }}>({row.count})</span></div>
+                      <div style={{ fontSize: 17, fontWeight: 600, textAlign: 'right', color: 'var(--tx)' }}>{fmt(currencySymbol, row.revenue)}</div>
+                      <div style={{ fontSize: 17, fontWeight: 600, textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, row.cost)}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, textAlign: 'right', color: row.profit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, row.profit)}</div>
                     </div>
                   ))}
                 </div>
@@ -1483,44 +1483,44 @@ export default function POSPage() {
                   <div style={{ ...sectionLabel, marginBottom: 12 }}>{tc('pos_app.inventory_intelligence')}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
                     <div style={{ ...cardStyle, padding: 16 }}>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.stock_value_cost')}</div>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, stockValue)}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.stock_value_cost')}</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, stockValue)}</div>
                     </div>
                     <div style={{ ...cardStyle, padding: 16 }}>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.retail_value')}</div>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{fmt(currencySymbol, retailValue)}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.retail_value')}</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color: ACC }}>{fmt(currencySymbol, retailValue)}</div>
                     </div>
                     {expiredItems.length > 0 && (
                       <div style={{ ...cardStyle, padding: 16, border: `1px solid ${RED}` }}>
-                        <div style={{ fontSize: 11, color: RED, fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.expired')}</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: RED }}>{expiredItems.length}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{expiredItems.length === 1 ? tc('pos_app.items_need_removing_one') : tc('pos_app.items_need_removing_other')}</div>
+                        <div style={{ fontSize: 15, color: RED, fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.expired')}</div>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: RED }}>{expiredItems.length}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{expiredItems.length === 1 ? tc('pos_app.items_need_removing_one') : tc('pos_app.items_need_removing_other')}</div>
                       </div>
                     )}
                     {expiringSoon.length > 0 && (
                       <div style={{ ...cardStyle, padding: 16, border: `1px solid ${AMBER}` }}>
-                        <div style={{ fontSize: 11, color: AMBER, fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.expiring_soon')}</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: AMBER }}>{expiringSoon.length}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.within_30_days')}</div>
+                        <div style={{ fontSize: 15, color: AMBER, fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.expiring_soon')}</div>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: AMBER }}>{expiringSoon.length}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.within_30_days')}</div>
                       </div>
                     )}
                     {deadStock.length > 0 && (
                       <div style={{ ...cardStyle, padding: 16 }}>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.slow_dead_stock')}</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{deadStock.length}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.not_sold_90')}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>{tc('pos_app.slow_dead_stock')}</div>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--tx)' }}>{deadStock.length}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.not_sold_90')}</div>
                       </div>
                     )}
                   </div>
                   {expiredItems.length > 0 && (
                     <div style={{ background: 'rgba(220,38,38,.06)', border: `1px solid ${RED}`, borderRadius: 10, padding: '12px 16px', marginBottom: 10 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: RED, marginBottom: 6 }}>⚠ {tc('pos_app.expired_action_required')}</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: RED, marginBottom: 6 }}>⚠ {tc('pos_app.expired_action_required')}</div>
                       {expiredItems.slice(0, 5).map(i => (
-                        <div key={i.id} style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 2 }}>
+                        <div key={i.id} style={{ fontSize: 16, color: 'var(--tx2)', marginBottom: 2 }}>
                           {tc('pos_app.expired_item_line', { name: i.name, date: new Date(i.expiry_date!).toLocaleDateString('en-GB'), qty: i.stock_qty, unit: i.unit || tc('pos_app.units') })}
                         </div>
                       ))}
-                      {expiredItems.length > 5 && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.more_check_inventory', { n: expiredItems.length - 5 })}</div>}
+                      {expiredItems.length > 5 && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.more_check_inventory', { n: expiredItems.length - 5 })}</div>}
                     </div>
                   )}
                 </div>
@@ -1535,8 +1535,8 @@ export default function POSPage() {
                   <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos_app.no_sales_yet')}</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.no_sales_hint_pre')}<strong>pos.askbiz.co</strong>{tc('pos_app.no_sales_hint_post')}</div>
+                  <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos_app.no_sales_yet')}</div>
+                  <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.no_sales_hint_pre')}<strong>pos.askbiz.co</strong>{tc('pos_app.no_sales_hint_post')}</div>
                 </div>
               ) : (
                 <>
@@ -1546,7 +1546,7 @@ export default function POSPage() {
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer', transition: 'background 150ms' }}
                         onMouseEnter={e => { (e.currentTarget.style as any).background = 'rgba(208,138,89,.03)' }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'var(--sf)' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
+                          <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)' }}>
                             {(tx.pos_items || []).length > 0
                               ? <>
                                   {tx.pos_items.slice(0, 2).map(i => i.name).filter(Boolean).join(', ') || tc('pos_app.sale')}
@@ -1554,15 +1554,15 @@ export default function POSPage() {
                                 </>
                               : tc('pos_app.sale')}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>
                             {tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           {tx.status !== 'completed' && (
-                            <span style={{ fontSize: 11, fontWeight: 600, color: RED, background: 'rgba(220,38,38,.08)', padding: '2px 7px', borderRadius: 9999 }}>{tx.status.replace('_', ' ')}</span>
+                            <span style={{ fontSize: 15, fontWeight: 600, color: RED, background: 'rgba(220,38,38,.08)', padding: '2px 7px', borderRadius: 9999 }}>{tx.status.replace('_', ' ')}</span>
                           )}
-                          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, tx.total)}</div>
+                          <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, tx.total)}</div>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                         </div>
                       </div>
@@ -1571,9 +1571,9 @@ export default function POSPage() {
                   {/* Pagination */}
                   {sectorTransactions.length > TX_PER_PAGE && (
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
-                      <button onClick={() => setTxPage(p => Math.max(0, p - 1))} disabled={txPage === 0} style={{ ...btnSecondary, opacity: txPage === 0 ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>{tc('pos_app.previous')}</button>
-                      <span style={{ fontSize: 12, color: 'var(--tx3)', alignSelf: 'center' }}>{tc('pos_app.page_of', { current: txPage + 1, total: Math.ceil(sectorTransactions.length / TX_PER_PAGE) })}</span>
-                      <button onClick={() => setTxPage(p => Math.min(Math.ceil(sectorTransactions.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= sectorTransactions.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= sectorTransactions.length ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>{tc('pos_app.next')}</button>
+                      <button onClick={() => setTxPage(p => Math.max(0, p - 1))} disabled={txPage === 0} style={{ ...btnSecondary, opacity: txPage === 0 ? 0.4 : 1, padding: '6px 12px', fontSize: 16 }}>{tc('pos_app.previous')}</button>
+                      <span style={{ fontSize: 16, color: 'var(--tx3)', alignSelf: 'center' }}>{tc('pos_app.page_of', { current: txPage + 1, total: Math.ceil(sectorTransactions.length / TX_PER_PAGE) })}</span>
+                      <button onClick={() => setTxPage(p => Math.min(Math.ceil(sectorTransactions.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= sectorTransactions.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= sectorTransactions.length ? 0.4 : 1, padding: '6px 12px', fontSize: 16 }}>{tc('pos_app.next')}</button>
                     </div>
                   )}
                 </>
@@ -1614,11 +1614,11 @@ export default function POSPage() {
           const renderTile = (tile: { icon: string; label: string; desc: string; badge?: number | null; tab?: Tab; href?: string; comingSoon?: boolean }, idx: number) => {
             const inner = (
               <>
-                {tile.badge ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span> : null}
-                {tile.comingSoon ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', borderRadius: 9999, padding: '2px 7px' }}>{tc('pos_app.soon')}</span> : null}
-                <div style={{ fontSize: 22, marginBottom: 8, lineHeight: 1, opacity: tile.comingSoon ? 0.5 : 1 }}>{tile.icon}</div>
-                <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 13, lineHeight: 1.3, opacity: tile.comingSoon ? 0.6 : 1 }}>{tile.label}</div>
-                <div style={{ color: 'var(--tx3)', fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>{tile.desc}</div>
+                {tile.badge ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 14, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span> : null}
+                {tile.comingSoon ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 13, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', borderRadius: 9999, padding: '2px 7px' }}>{tc('pos_app.soon')}</span> : null}
+                <div style={{ fontSize: 26, marginBottom: 8, lineHeight: 1, opacity: tile.comingSoon ? 0.5 : 1 }}>{tile.icon}</div>
+                <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 17, lineHeight: 1.3, opacity: tile.comingSoon ? 0.6 : 1 }}>{tile.label}</div>
+                <div style={{ color: 'var(--tx3)', fontSize: 15, marginTop: 4, lineHeight: 1.4 }}>{tile.desc}</div>
               </>
             )
             if (tile.href) return (
@@ -1644,7 +1644,7 @@ export default function POSPage() {
                 <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
                   style={{ padding: '5px 14px', borderRadius: 8, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
                     background: sector === s.id ? ACC : 'var(--sf)', color: sector === s.id ? '#fff' : 'var(--tx3)',
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                   {s.label}
                 </button>
               ))}
@@ -1655,8 +1655,8 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🍴 {tc('pos_app.restaurant_ops')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.restaurant_ops_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🍴 {tc('pos_app.restaurant_ops')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.restaurant_ops_desc')}</div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
                 {[
@@ -1676,9 +1676,9 @@ export default function POSPage() {
                     style={{ display: 'block', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', textDecoration: 'none', transition: 'border-color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
-                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
-                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                    <div style={{ fontSize: 24, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 18 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 16, marginTop: 2 }}>{tile.desc}</div>
                   </a>
                 ))}
               </div>
@@ -1689,8 +1689,8 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🔧 {tc('pos_app.repair_ops')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.repair_ops_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🔧 {tc('pos_app.repair_ops')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.repair_ops_desc')}</div>
               </div>
               {tileGrid([
                 { icon: '🔧', label: tc('pos_app.tile_service_jobs'),  tab: 'services' as Tab,  desc: tc('pos_app.tile_service_jobs_desc') },
@@ -1714,8 +1714,8 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🏭 {tc('pos_app.factory_ops')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.factory_ops_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🏭 {tc('pos_app.factory_ops')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.factory_ops_desc')}</div>
               </div>
               {tileGrid([
                 { icon: '📷', label: tc('pos_app.tile_captures'),     tab: 'captures' as Tab,     desc: tc('pos_app.tile_captures_desc') },
@@ -1732,8 +1732,8 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 {tc('pos_app.salon_ops')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.salon_ops_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>💇 {tc('pos_app.salon_ops')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.salon_ops_desc')}</div>
               </div>
               {tileGrid([
                 { icon: '🛒', label: tc('pos_app.tile_sales'),      tab: 'overview' as Tab,   desc: tc('pos_app.tile_sales_desc') },
@@ -1750,8 +1750,8 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🚛 {tc('pos_app.logistics_ops')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.logistics_ops_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🚛 {tc('pos_app.logistics_ops')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.logistics_ops_desc')}</div>
               </div>
               {tileGrid([
                 { icon: '📦', label: tc('pos_app.tile_parcels'),   tab: 'logistics' as Tab, desc: tc('pos_app.tile_parcels_desc') },
@@ -1768,8 +1768,8 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>📦 {tc('pos_app.retail_ops')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.retail_ops_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>📦 {tc('pos_app.retail_ops')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.retail_ops_desc')}</div>
               </div>
               {tileGrid([
                 { icon: '📦', label: tc('pos_app.tile_inventory'),       tab: 'inventory' as Tab,       desc: tc('pos_app.tile_retail_inventory_desc'),       badge: sectorAlertCount > 0 ? sectorAlertCount : null },
@@ -1799,7 +1799,7 @@ export default function POSPage() {
               const atLimit = activeStaff >= seatCount
               return (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+                  <div style={{ fontSize: 17, color: 'var(--tx3)' }}>
                     {tc('pos_app.seats_used', { used: activeStaff, total: seatCount })}
                     {atLimit && <span style={{ marginLeft: 8, color: RED, fontWeight: 600 }}>· <a href="/billing" style={{ color: RED }}>{tc('pos_app.add_seats_link')}</a></span>}
                   </div>
@@ -1813,11 +1813,11 @@ export default function POSPage() {
             {/* Add staff form */}
             {showAddStaff && (
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_staff_member')}</div>
+                <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_staff_member')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
                   <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
                     <optgroup label={'🏭 ' + tc('pos_app.role_group_factory')}>
@@ -1875,14 +1875,14 @@ export default function POSPage() {
                     <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
                     <button onClick={() => setShowAddStaff(false)} style={btnSecondary}>{tc('pos_app.cancel')}</button>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.staff_login_hint_pre')}<strong>pos.askbiz.co</strong>{tc('pos_app.staff_login_hint_post')}</div>
+                  <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.staff_login_hint_pre')}<strong>pos.askbiz.co</strong>{tc('pos_app.staff_login_hint_post')}</div>
                 </div>
               </div>
             )}
 
             {/* Staff list */}
             {selectedSector !== 'all' && (
-              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>
+              <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 10 }}>
                 {tc('pos_app.staff_filtered', { shown: filteredStaff.length, total: staff.length, sector: selectedSector })}
               </div>
             )}
@@ -1891,25 +1891,25 @@ export default function POSPage() {
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{staff.length === 0 ? tc('pos_app.no_staff_yet') : tc('pos_app.no_sector_staff', { sector: selectedSector })}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{staff.length === 0 ? tc('pos_app.no_staff_hint') : tc('pos_app.no_sector_staff_hint', { sector: selectedSector })}</div>
+                <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{staff.length === 0 ? tc('pos_app.no_staff_yet') : tc('pos_app.no_sector_staff', { sector: selectedSector })}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{staff.length === 0 ? tc('pos_app.no_staff_hint') : tc('pos_app.no_sector_staff_hint', { sector: selectedSector })}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                 {filteredStaff.map((s, i) => (
                   <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < filteredStaff.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', opacity: s.active ? 1 : 0.5, flexWrap: 'wrap', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: s.active ? ACC_BG : 'var(--ev)', border: `1px solid ${s.active ? ACC_BORDER : 'var(--b)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: s.active ? ACC : 'var(--tx3)', flexShrink: 0 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: s.active ? ACC_BG : 'var(--ev)', border: `1px solid ${s.active ? ACC_BORDER : 'var(--b)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, color: s.active ? ACC : 'var(--tx3)', flexShrink: 0 }}>
                         {s.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
                           {s.name}
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: `${SECTOR_BADGE_COLOR[s.sector||'retail']}20`, color: SECTOR_BADGE_COLOR[s.sector||'retail'] }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: `${SECTOR_BADGE_COLOR[s.sector||'retail']}20`, color: SECTOR_BADGE_COLOR[s.sector||'retail'] }}>
                             {tc('pos_app.sector_' + (s.sector || 'retail'))}
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span>{s.role}</span>
                           {s.location?.name && <span style={{ color: ACC, fontWeight: 600 }}>· {s.location.name}</span>}
                           {s.phone && <span>· {s.phone}</span>}
@@ -1919,8 +1919,8 @@ export default function POSPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => handleOpenEditStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
-                      <button onClick={() => handleToggleStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: 'none', background: s.active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)', color: s.active ? RED : GREEN }}>
+                      <button onClick={() => handleOpenEditStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
+                      <button onClick={() => handleToggleStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: 'none', background: s.active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)', color: s.active ? RED : GREEN }}>
                         {s.active ? tc('pos_app.deactivate') : tc('pos_app.reactivate')}
                       </button>
                     </div>
@@ -1932,11 +1932,11 @@ export default function POSPage() {
             {/* Edit staff inline */}
             {editingStaff && (
               <div style={{ ...cardStyle, marginTop: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.edit_name', { name: editingStaff.name })}</div>
+                <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.edit_name', { name: editingStaff.name })}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
                   <input placeholder={tc('pos_app.ph_full_name')} value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_phone')} value={editPhone} onChange={e => setEditPhone(e.target.value)} style={inputStyle} />
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
                   <input placeholder={tc('pos_app.ph_email')} value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_new_pin') + (editingStaff.has_pin ? tc('pos_app.ph_new_pin_keep') : '')} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <select value={editRole} onChange={e => setEditRole(e.target.value)} style={inputStyle}>
@@ -1992,7 +1992,7 @@ export default function POSPage() {
                   )}
                   {/* Sector assignment with 2-edit limit */}
                   <div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>
                       {tc('pos_app.sector_access_label')}
                       {(editingStaff.sector_edit_count ?? 0) >= 2
                         ? <span style={{ marginLeft: 6, color: '#ef4444', fontWeight: 600 }}>· {tc('pos_app.sector_edit_limit')}</span>
@@ -2041,10 +2041,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 900 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>📦 {tc('pos_app.inventory')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length === 1 ? tc('pos_app.product_count_one', { n: filteredInventory.length }) : tc('pos_app.product_count_other', { n: filteredInventory.length })}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>📦 {tc('pos_app.inventory')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{filteredInventory.length === 1 ? tc('pos_app.product_count_one', { n: filteredInventory.length }) : tc('pos_app.product_count_other', { n: filteredInventory.length })}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
               {/* Hidden file inputs for dual-photo scan */}
@@ -2052,11 +2052,11 @@ export default function POSPage() {
               <input ref={scanBackRef}  type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFileSelected(e.target.files[0], 'back')  }} />
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }} style={{ ...btnPrimary, fontSize: 12, background: '#7c3aed' }}>
+                <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }} style={{ ...btnPrimary, fontSize: 16, background: '#7c3aed' }}>
                   📷 {tc('pos_app.scan_to_add')}
                 </button>
-                <button onClick={() => setShowBulkImport(true)} style={{ ...btnSecondary, fontSize: 12 }}>{tc('pos_app.csv_import')}</button>
-                <button onClick={() => setShowAddProduct(true)} style={{ ...btnSecondary, fontSize: 12 }}>{tc('pos_app.manual_add')}</button>
+                <button onClick={() => setShowBulkImport(true)} style={{ ...btnSecondary, fontSize: 16 }}>{tc('pos_app.csv_import')}</button>
+                <button onClick={() => setShowAddProduct(true)} style={{ ...btnSecondary, fontSize: 16 }}>{tc('pos_app.manual_add')}</button>
               </div>
             </div>
 
@@ -2087,7 +2087,7 @@ export default function POSPage() {
                 const colors: Record<string, string> = { all: ACC, low: AMBER, out: RED, expiring: '#f97316' }
                 const isActive = invStockFilter === f
                 return (
-                  <button key={f} onClick={() => setInvStockFilter(f)} style={{ padding: '5px 12px', borderRadius: 8, border: isActive ? `1.5px solid ${colors[f]}` : '1.5px solid var(--b)', background: isActive ? `${colors[f]}18` : 'transparent', color: isActive ? colors[f] : 'var(--tx3)', fontSize: 12, fontWeight: isActive ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                  <button key={f} onClick={() => setInvStockFilter(f)} style={{ padding: '5px 12px', borderRadius: 8, border: isActive ? `1.5px solid ${colors[f]}` : '1.5px solid var(--b)', background: isActive ? `${colors[f]}18` : 'transparent', color: isActive ? colors[f] : 'var(--tx3)', fontSize: 16, fontWeight: isActive ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
                     {labels[f]}
                   </button>
                 )
@@ -2108,11 +2108,11 @@ export default function POSPage() {
               ]
               return (
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 17, color: 'var(--tx3)', flex: 1, minWidth: 200 }}>
                     <strong style={{ color: 'var(--tx)' }}>{untagged.length === 1 ? tc('pos_app.untagged_count_one', { n: untagged.length }) : tc('pos_app.untagged_count_other', { n: untagged.length })}</strong> {tc('pos_app.untagged_explain')}
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_app.tag_all_as')}</span>
+                    <span style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('pos_app.tag_all_as')}</span>
                     {SECTORS.map(s => (
                       <button key={s.value} disabled={bulkTagging} onClick={async () => {
                         setBulkTagging(true)
@@ -2124,7 +2124,7 @@ export default function POSPage() {
                           notify(tc('pos_app.toast_items_tagged', { n: untagged.length, label: s.label }))
                         } catch { notify(tc('pos_app.toast_bulk_tag_failed'), false) }
                         setBulkTagging(false)
-                      }} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: bulkTagging ? 'not-allowed' : 'pointer', fontFamily: 'inherit', color: 'var(--tx)', opacity: bulkTagging ? 0.5 : 1 }}>
+                      }} style={{ fontSize: 16, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: bulkTagging ? 'not-allowed' : 'pointer', fontFamily: 'inherit', color: 'var(--tx)', opacity: bulkTagging ? 0.5 : 1 }}>
                         {s.label}
                       </button>
                     ))}
@@ -2139,10 +2139,10 @@ export default function POSPage() {
                 <div style={{ background: 'var(--sf)', borderRadius: 14, padding: 28, maxWidth: 480, width: '100%', maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>📷 {tc('pos_app.scan_product')}</div>
-                    <button onClick={() => setShowScanModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--tx3)', padding: 4 }}>×</button>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>📷 {tc('pos_app.scan_product')}</div>
+                    <button onClick={() => setShowScanModal(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--tx3)', padding: 4 }}>×</button>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 24 }}>
+                  <div style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 24 }}>
                     {tc('pos_app.scan_product_desc')}
                   </div>
 
@@ -2150,20 +2150,20 @@ export default function POSPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
                     {/* Front slot */}
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('pos_app.front')} <span style={{ color: '#ef4444' }}>*</span></div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('pos_app.front')} <span style={{ color: '#ef4444' }}>*</span></div>
                       {scanFrontThumb ? (
                         <div style={{ position: 'relative' }}>
                           <img src={scanFrontThumb} alt="front" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, display: 'block', border: '2px solid #7c3aed' }} />
-                          <button onClick={() => { setScanFront(null); setScanFrontThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                          <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: '#7c3aed', padding: '2px 8px', borderRadius: 999 }}>✓ {tc('pos_app.front_upper')}</div>
+                          <button onClick={() => { setScanFront(null); setScanFrontThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                          <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 14, fontWeight: 700, color: '#fff', background: '#7c3aed', padding: '2px 8px', borderRadius: 999 }}>✓ {tc('pos_app.front_upper')}</div>
                         </div>
                       ) : (
                         <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed var(--b)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--ev)', cursor: 'pointer' }}>
-                          <div style={{ fontSize: 28 }}>📦</div>
-                          <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.front_hint')}</div>
+                          <div style={{ fontSize: 32 }}>📦</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.front_hint')}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '80%' }}>
-                            <button onClick={() => openScanCamera('front')} style={{ padding: '7px 0', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>📷 {tc('pos_app.camera')}</button>
-                            <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '7px 0', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>{tc('pos_app.upload')}</button>
+                            <button onClick={() => openScanCamera('front')} style={{ padding: '7px 0', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 600, fontFamily: 'inherit' }}>📷 {tc('pos_app.camera')}</button>
+                            <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '7px 0', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', fontSize: 16, fontFamily: 'inherit' }}>{tc('pos_app.upload')}</button>
                           </div>
                         </div>
                       )}
@@ -2171,20 +2171,20 @@ export default function POSPage() {
 
                     {/* Back slot */}
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('pos_app.back_label')} <span style={{ color: 'var(--tx3)', fontWeight: 400 }}>{tc('pos_app.optional')}</span></div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('pos_app.back_label')} <span style={{ color: 'var(--tx3)', fontWeight: 400 }}>{tc('pos_app.optional')}</span></div>
                       {scanBackThumb ? (
                         <div style={{ position: 'relative' }}>
                           <img src={scanBackThumb} alt="back" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, display: 'block', border: '2px solid #0891b2' }} />
-                          <button onClick={() => { setScanBack(null); setScanBackThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                          <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: '#0891b2', padding: '2px 8px', borderRadius: 999 }}>✓ {tc('pos_app.back_upper')}</div>
+                          <button onClick={() => { setScanBack(null); setScanBackThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                          <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 14, fontWeight: 700, color: '#fff', background: '#0891b2', padding: '2px 8px', borderRadius: 999 }}>✓ {tc('pos_app.back_upper')}</div>
                         </div>
                       ) : (
                         <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed var(--b)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--ev)', cursor: 'pointer' }}>
-                          <div style={{ fontSize: 28 }}>🏷️</div>
-                          <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.back_hint')}</div>
+                          <div style={{ fontSize: 32 }}>🏷️</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.back_hint')}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '80%' }}>
-                            <button onClick={() => openScanCamera('back')} style={{ padding: '7px 0', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>📷 {tc('pos_app.camera')}</button>
-                            <button onClick={() => scanBackRef.current?.click()} style={{ padding: '7px 0', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>{tc('pos_app.upload')}</button>
+                            <button onClick={() => openScanCamera('back')} style={{ padding: '7px 0', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 600, fontFamily: 'inherit' }}>📷 {tc('pos_app.camera')}</button>
+                            <button onClick={() => scanBackRef.current?.click()} style={{ padding: '7px 0', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', fontSize: 16, fontFamily: 'inherit' }}>{tc('pos_app.upload')}</button>
                           </div>
                         </div>
                       )}
@@ -2194,16 +2194,16 @@ export default function POSPage() {
                   {/* What Claude will extract */}
                   {!scanFront && (
                     <div style={{ background: 'var(--ev)', borderRadius: 12, padding: '12px 16px', marginBottom: 20 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.claude_autofill')}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.claude_autofill')}</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {[tc('pos_app.field_name'), tc('pos_app.field_brand'), tc('pos_app.field_category'), tc('pos_app.field_sku_barcode'), tc('pos_app.field_price')].map(f => (
-                          <span key={f} style={{ fontSize: 11, color: ACC, background: ACC_BG, padding: '2px 8px', borderRadius: 999 }}>{f}</span>
+                          <span key={f} style={{ fontSize: 15, color: ACC, background: ACC_BG, padding: '2px 8px', borderRadius: 999 }}>{f}</span>
                         ))}
-                        <span style={{ fontSize: 11, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>{tc('pos_app.field_expiry_date')}</span>
-                        <span style={{ fontSize: 11, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>{tc('pos_app.field_batch_no')}</span>
-                        <span style={{ fontSize: 11, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>{tc('pos_app.field_supplier')}</span>
+                        <span style={{ fontSize: 15, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>{tc('pos_app.field_expiry_date')}</span>
+                        <span style={{ fontSize: 15, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>{tc('pos_app.field_batch_no')}</span>
+                        <span style={{ fontSize: 15, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>{tc('pos_app.field_supplier')}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 8 }}>{tc('pos_app.blue_fields_note')}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 8 }}>{tc('pos_app.blue_fields_note')}</div>
                     </div>
                   )}
 
@@ -2211,12 +2211,12 @@ export default function POSPage() {
                   <button
                     onClick={runFullScan}
                     disabled={!scanFront || scanning}
-                    style={{ width: '100%', padding: '14px', borderRadius: 12, background: scanFront ? '#7c3aed' : 'var(--b)', color: scanFront ? '#fff' : 'var(--tx3)', border: 'none', fontSize: 15, fontWeight: 700, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'all .2s' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, background: scanFront ? '#7c3aed' : 'var(--b)', color: scanFront ? '#fff' : 'var(--tx3)', border: 'none', fontSize: 19, fontWeight: 700, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'all .2s' }}
                   >
                     {scanning ? '⏳ ' + tc('pos_app.reading_product') : scanFront ? '✨ ' + (scanBack ? tc('pos_app.scan_fill_both') : tc('pos_app.scan_fill_front')) : tc('pos_app.take_front_first')}
                   </button>
                   {scanFront && !scanBack && (
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
                       {tc('pos_app.add_back_hint')}
                     </div>
                   )}
@@ -2227,16 +2227,16 @@ export default function POSPage() {
             {/* ── In-app camera for scan modal ── */}
             {scanCameraOpen && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.95)', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                <div style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 12, opacity: 0.8 }}>
+                <div style={{ color: '#fff', fontSize: 18, fontWeight: 600, marginBottom: 12, opacity: 0.8 }}>
                   {scanStep === 'front' ? '📦 ' + tc('pos_app.point_front') : '🏷️ ' + tc('pos_app.point_back')}
                 </div>
                 <video ref={scanVideoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 500, borderRadius: 14, marginBottom: 16, border: `3px solid ${scanStep === 'front' ? '#7c3aed' : '#0891b2'}` }} />
                 <canvas ref={scanCanvasRef} style={{ display: 'none' }} />
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={captureScanPhoto} style={{ padding: '14px 32px', borderRadius: 12, background: scanStep === 'front' ? '#7c3aed' : '#0891b2', color: '#fff', border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={captureScanPhoto} style={{ padding: '14px 32px', borderRadius: 12, background: scanStep === 'front' ? '#7c3aed' : '#0891b2', color: '#fff', border: 'none', fontSize: 19, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                     📸 {tc('pos_app.capture')}
                   </button>
-                  <button onClick={closeScanCamera} style={{ padding: '14px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={closeScanCamera} style={{ padding: '14px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 19, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {tc('pos_app.cancel')}
                   </button>
                 </div>
@@ -2249,8 +2249,8 @@ export default function POSPage() {
                 <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 600, borderRadius: 12, marginBottom: 16 }} />
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 14, fontWeight: 700 }}>{recognizing ? tc('pos_app.processing') : tc('pos_app.capture_photo')}</button>
-                  <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.cancel')}</button>
+                  <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 18, fontWeight: 700 }}>{recognizing ? tc('pos_app.processing') : tc('pos_app.capture_photo')}</button>
+                  <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 18, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.cancel')}</button>
                 </div>
               </div>
             )}
@@ -2262,11 +2262,11 @@ export default function POSPage() {
                   {recognizedProducts[0]?.matched ? (
                     // ── Matched: Existing product in inventory ──
                     <>
-                      <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>✓ {tc('pos_app.product_found')}</h3>
+                      <h3 style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>✓ {tc('pos_app.product_found')}</h3>
                       <div style={{ background: 'var(--ev)', padding: 16, borderRadius: 10, marginBottom: 16 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 8 }}>{recognizedProducts[0].name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_app.sale_price_label')}: {fmt(currencySymbol, recognizedProducts[0].sale_price || 0)}</div>
-                        <div style={{ fontSize: 12, color: recognizedProducts[0].stock_qty > 0 ? GREEN : RED, fontWeight: 600 }}>
+                        <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginBottom: 8 }}>{recognizedProducts[0].name}</div>
+                        <div style={{ fontSize: 16, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_app.sale_price_label')}: {fmt(currencySymbol, recognizedProducts[0].sale_price || 0)}</div>
+                        <div style={{ fontSize: 16, color: recognizedProducts[0].stock_qty > 0 ? GREEN : RED, fontWeight: 600 }}>
                           {tc('pos_app.stock_label')}: {recognizedProducts[0].stock_qty} {recognizedProducts[0].unit || tc('pos_app.items')}
                         </div>
                       </div>
@@ -2275,36 +2275,36 @@ export default function POSPage() {
                   ) : (
                     // ── Unmatched: New product to add ──
                     <>
-                      <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>{tc('pos_app.add_new_product')}</h3>
+                      <h3 style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>{tc('pos_app.add_new_product')}</h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {/* Product name (from recognition) */}
                         <div>
-                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_product_name')}</label>
+                          <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_product_name')}</label>
                           <input type="text" value={recognizedProducts[0]?.name || ''} disabled style={{ ...inputStyle, width: '100%', background: 'var(--ev)', opacity: 0.6 }} />
-                          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.auto_recognized')}</div>
+                          <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.auto_recognized')}</div>
                         </div>
 
                         {/* Sale price */}
                         <div>
-                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_sale_price')}</label>
+                          <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_sale_price')}</label>
                           <input type="number" placeholder="0.00" value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
                         </div>
 
                         {/* Cost price */}
                         <div>
-                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_cost_price_opt')}</label>
+                          <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_cost_price_opt')}</label>
                           <input type="number" placeholder="0.00" value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
                         </div>
 
                         {/* Stock qty */}
                         <div>
-                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_starting_stock')}</label>
+                          <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_app.label_starting_stock')}</label>
                           <input type="number" value={editingRecognizedData.stock_qty || '1'} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, width: '100%' }} min="1" />
                         </div>
 
                         {/* Margin preview */}
                         {editingRecognizedData.cost_price && editingRecognizedData.sale_price && (
-                          <div style={{ background: 'var(--ev)', padding: 10, borderRadius: 8, fontSize: 11 }}>
+                          <div style={{ background: 'var(--ev)', padding: 10, borderRadius: 8, fontSize: 15 }}>
                             <div style={{ color: 'var(--tx2)', marginBottom: 2 }}>{tc('pos_app.margin_label')}: <strong style={{ color: 'var(--acc)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
                             <div style={{ color: 'var(--tx3)' }}>{tc('pos_app.profit_label')}: {(parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2)}</div>
                           </div>
@@ -2354,10 +2354,10 @@ export default function POSPage() {
             {/* Bulk CSV import */}
             {showBulkImport && (
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{tc('pos_app.bulk_import_csv')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>{tc('pos_app.csv_format_pre')}<code>name, price, stock_qty, unit</code>{tc('pos_app.csv_format_post')}</div>
+                <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{tc('pos_app.bulk_import_csv')}</div>
+                <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 10 }}>{tc('pos_app.csv_format_pre')}<code>name, price, stock_qty, unit</code>{tc('pos_app.csv_format_post')}</div>
                 <input ref={csvInputRef} type="file" accept=".csv,.txt" onChange={handleCsvFile} style={{ display: 'none' }} />
-                <button onClick={() => csvInputRef.current?.click()} style={{ ...btnSecondary, marginBottom: 8, fontSize: 12 }}>{tc('pos_app.choose_csv')}</button>
+                <button onClick={() => csvInputRef.current?.click()} style={{ ...btnSecondary, marginBottom: 8, fontSize: 16 }}>{tc('pos_app.choose_csv')}</button>
                 <textarea value={bulkCsv} onChange={e => setBulkCsv(e.target.value)} placeholder={"Hair Gel, 250, 100, item\nShampoo, 500, 50, bottle"} rows={5} style={{ ...inputStyle, width: '100%', resize: 'vertical', marginBottom: 10 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={handleBulkImport} disabled={importingBulk || !bulkCsv.trim()} style={{ ...btnPrimary, opacity: !bulkCsv.trim() ? 0.5 : 1 }}>{importingBulk ? tc('pos_app.importing') : tc('pos_app.import_products')}</button>
@@ -2369,7 +2369,7 @@ export default function POSPage() {
             {/* Add product form */}
             {showAddProduct && (
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_product')}</div>
+                <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_product')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <input placeholder={tc('pos_app.ph_product_name')} value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
                   <input placeholder={tc('pos_app.ph_sale_price')} type="number" value={newProduct.sale_price} onChange={e => setNewProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
@@ -2396,12 +2396,12 @@ export default function POSPage() {
                   <input placeholder={tc('pos_app.ph_supplier')} value={newProduct.supplier} onChange={e => setNewProduct(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_batch')} value={newProduct.batch_number} onChange={e => setNewProduct(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
                   <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_app.label_expiry_opt')}</label>
+                    <label style={{ fontSize: 15, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_app.label_expiry_opt')}</label>
                     <input type="date" value={newProduct.expiry_date} onChange={e => setNewProduct(p => ({ ...p, expiry_date: e.target.value }))} style={inputStyle} />
                   </div>
                   {selectedSector !== 'all' ? (
-                    <div style={{ gridColumn: '1/-1', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', fontSize: 12, color: 'var(--tx2)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#d08a59', background: 'rgba(208,138,89,.12)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase' }}>
+                    <div style={{ gridColumn: '1/-1', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', fontSize: 16, color: 'var(--tx2)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#d08a59', background: 'rgba(208,138,89,.12)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase' }}>
                         {tc('pos_app.sector_' + selectedSector)}
                       </span>
                       <span>{tc('pos_app.tag_sector_only_pre')}<strong>{tc('pos_app.sector_' + selectedSector)}</strong>{tc('pos_app.tag_sector_only_post')}</span>
@@ -2428,7 +2428,7 @@ export default function POSPage() {
             {/* Edit product modal */}
             {editingProduct && (
               <div style={{ ...cardStyle, marginBottom: 16, border: `1px solid ${ACC}` }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.edit_name', { name: editingProduct.name })}</div>
+                <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.edit_name', { name: editingProduct.name })}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <input placeholder={tc('pos_app.ph_name')} value={editProduct.name} onChange={e => setEditProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
                   <input placeholder={tc('pos_app.ph_sale_price')} type="number" value={editProduct.sale_price} onChange={e => setEditProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
@@ -2454,7 +2454,7 @@ export default function POSPage() {
                   <input placeholder={tc('pos_app.ph_supplier')} value={editProduct.supplier} onChange={e => setEditProduct(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_batch')} value={editProduct.batch_number} onChange={e => setEditProduct(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
                   <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_app.label_expiry')}</label>
+                    <label style={{ fontSize: 15, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_app.label_expiry')}</label>
                     <input type="date" value={editProduct.expiry_date} onChange={e => setEditProduct(p => ({ ...p, expiry_date: e.target.value }))} style={inputStyle} />
                   </div>
                   <select value={editProduct.sector} onChange={e => setEditProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
@@ -2480,12 +2480,12 @@ export default function POSPage() {
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{invSearch || invCategory !== 'all' ? tc('pos_app.no_matching_products') : tc('pos_app.no_products_yet')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{invSearch || invCategory !== 'all' ? tc('pos_app.no_matching_hint') : tc('pos_app.no_products_hint')}</div>
+                <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{invSearch || invCategory !== 'all' ? tc('pos_app.no_matching_products') : tc('pos_app.no_products_yet')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{invSearch || invCategory !== 'all' ? tc('pos_app.no_matching_hint') : tc('pos_app.no_products_hint')}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px 70px 110px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px 70px 110px', padding: '10px 16px', background: 'var(--ev)', fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
                   <span>{tc('pos_app.col_product')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_price')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_cost')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_stock')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_actions')}</span>
                 </div>
                 {filteredInventory.map((item, i) => {
@@ -2500,40 +2500,40 @@ export default function POSPage() {
                   return (
                     <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px 70px 110px', padding: '12px 16px', borderTop: i === 0 ? 'none' : '1px solid var(--b)', background: isExpired ? 'rgba(220,38,38,.03)' : 'var(--sf)', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
+                        <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)' }}>
                           {item.name}
-                          {isOut && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_out')}</span>}
-                          {isLow && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.08)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_low')}</span>}
-                          {isExpired && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.1)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_expired')}</span>}
-                          {isExpiringSoon && !isExpired && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.1)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_exp')} {daysToExpiry === 0 ? tc('pos_app.today_upper') : `${daysToExpiry}d`}</span>}
+                          {isOut && <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_out')}</span>}
+                          {isLow && <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.08)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_low')}</span>}
+                          {isExpired && <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.1)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_expired')}</span>}
+                          {isExpiringSoon && !isExpired && <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.1)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos_app.badge_exp')} {daysToExpiry === 0 ? tc('pos_app.today_upper') : `${daysToExpiry}d`}</span>}
                         </div>
-                        {item.location?.name && selectedLocation === 'all' && locations.length > 1 && <div style={{ fontSize: 10, color: ACC, fontWeight: 600 }}>{item.location.name}</div>}
-                        {item.sku && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.sku_label')}: {item.sku}</div>}
-                        {(item.brand || item.supplier) && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
-                        {item.sector && <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', background: 'var(--b)', padding: '1px 6px', borderRadius: 9999, display: 'inline-block', marginTop: 2, textTransform: 'capitalize' }}>{tc('pos_app.sector_' + item.sector)}</div>}
-                        {expiryDate && !isExpired && !isExpiringSoon && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.exp_short')} {expiryDate.toLocaleDateString('en-GB')}</div>}
-                        {item.last_sold_at && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.last_sold', { date: new Date(item.last_sold_at).toLocaleDateString('en-GB') })}</div>}
+                        {item.location?.name && selectedLocation === 'all' && locations.length > 1 && <div style={{ fontSize: 14, color: ACC, fontWeight: 600 }}>{item.location.name}</div>}
+                        {item.sku && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.sku_label')}: {item.sku}</div>}
+                        {(item.brand || item.supplier) && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
+                        {item.sector && <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx3)', background: 'var(--b)', padding: '1px 6px', borderRadius: 9999, display: 'inline-block', marginTop: 2, textTransform: 'capitalize' }}>{tc('pos_app.sector_' + item.sector)}</div>}
+                        {expiryDate && !isExpired && !isExpiringSoon && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.exp_short')} {expiryDate.toLocaleDateString('en-GB')}</div>}
+                        {item.last_sold_at && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.last_sold', { date: new Date(item.last_sold_at).toLocaleDateString('en-GB') })}</div>}
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{fmt(currencySymbol, item.sale_price)}</div>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{fmt(currencySymbol, item.sale_price)}</div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div>
-                        {profitPer > 0 && <div style={{ fontSize: 10, color: GREEN }}>+{fmt(currencySymbol, profitPer)}</div>}
+                        <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div>
+                        {profitPer > 0 && <div style={{ fontSize: 14, color: GREEN }}>+{fmt(currencySymbol, profitPer)}</div>}
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         {restockId === item.id ? (
                           <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                            <input value={restockQty} onChange={e => setRestockQty(e.target.value.replace(/\D/g, ''))} placeholder={tc('pos_app.ph_qty')} style={{ ...inputStyle, width: 50, padding: '4px 6px', fontSize: 12, textAlign: 'center' }} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleRestock(item.id); if (e.key === 'Escape') setRestockId(null) }} />
-                            <button onClick={() => handleRestock(item.id)} style={{ padding: '4px 6px', borderRadius: 4, background: GREEN, color: '#fff', border: 'none', fontSize: 10, cursor: 'pointer' }}>+</button>
+                            <input value={restockQty} onChange={e => setRestockQty(e.target.value.replace(/\D/g, ''))} placeholder={tc('pos_app.ph_qty')} style={{ ...inputStyle, width: 50, padding: '4px 6px', fontSize: 16, textAlign: 'center' }} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleRestock(item.id); if (e.key === 'Escape') setRestockId(null) }} />
+                            <button onClick={() => handleRestock(item.id)} style={{ padding: '4px 6px', borderRadius: 4, background: GREEN, color: '#fff', border: 'none', fontSize: 14, cursor: 'pointer' }}>+</button>
                           </div>
                         ) : (
-                          <div onClick={() => { setRestockId(item.id); setRestockQty('') }} style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer' }} title={tc('pos_app.click_restock')}>
+                          <div onClick={() => { setRestockId(item.id); setRestockQty('') }} style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer' }} title={tc('pos_app.click_restock')}>
                             {item.stock_qty}
                           </div>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '', expiry_date: item.expiry_date || '', batch_number: item.batch_number || '', supplier: item.supplier || '', brand: item.brand || '', unit: item.unit || 'pcs' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
-                        <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>{tc('pos_app.remove')}</button>
+                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '', expiry_date: item.expiry_date || '', batch_number: item.batch_number || '', supplier: item.supplier || '', brand: item.brand || '', unit: item.unit || 'pcs' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
+                        <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>{tc('pos_app.remove')}</button>
                       </div>
                     </div>
                   )
@@ -2547,7 +2547,7 @@ export default function POSPage() {
         {tab === 'branches' && (
           <div style={{ maxWidth: 700 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{locations.length === 1 ? tc('pos_app.branch_count_one', { n: locations.length }) : tc('pos_app.branch_count_other', { n: locations.length })}</div>
+              <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{locations.length === 1 ? tc('pos_app.branch_count_one', { n: locations.length }) : tc('pos_app.branch_count_other', { n: locations.length })}</div>
               <button onClick={() => {
                 const name = prompt(tc('pos_app.prompt_branch_name'))
                 if (!name?.trim()) return
@@ -2557,21 +2557,21 @@ export default function POSPage() {
             </div>
             {locations.length === 0 ? (
               <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos_app.no_branches_yet')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.no_branches_hint')}</div>
+                <div style={{ fontSize: 19, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos_app.no_branches_yet')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.no_branches_hint')}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                 {locations.map((loc, i) => (
                   <div key={loc.id} style={{ padding: '14px 16px', borderBottom: i < locations.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         {loc.name}
-                        {!loc.is_active && <span style={{ fontSize: 10, color: RED, fontWeight: 700 }}>{tc('pos_app.inactive')}</span>}
+                        {!loc.is_active && <span style={{ fontSize: 14, color: RED, fontWeight: 700 }}>{tc('pos_app.inactive')}</span>}
                       </div>
-                      {loc.address && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{loc.address}</div>}
-                      {loc.phone && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{loc.phone}</div>}
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
+                      {loc.address && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{loc.address}</div>}
+                      {loc.phone && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{loc.phone}</div>}
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2 }}>
                         {selectedSector === 'all'
                           ? tc('pos_app.branch_stats_all', { staff: staff.filter(s => s.location_id === loc.id).length, products: inventory.filter(p => p.location_id === loc.id).length })
                           : tc('pos_app.branch_stats_sector', { staff: staff.filter(s => s.location_id === loc.id && (s.sector || 'retail') === selectedSector).length, sector: selectedSector, sales: completedTx.filter(t => t.cashier?.id && staff.find(s => s.id === t.cashier!.id && s.location_id === loc.id)).length })
@@ -2584,7 +2584,7 @@ export default function POSPage() {
                         if (!newName?.trim() || newName.trim() === loc.name) return
                         fetch('/api/pos/locations', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: loc.id, name: newName.trim() }) })
                           .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => prev.map(l => l.id === loc.id ? d.location : l)); notify(tc('pos_app.toast_branch_renamed')) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
-                      }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
+                      }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
                       <button onClick={() => {
                         const staffCount = staff.filter(s => s.location_id === loc.id).length
                         const productCount = inventory.filter(p => p.location_id === loc.id).length
@@ -2594,7 +2594,7 @@ export default function POSPage() {
                         if (!confirm(msg)) return
                         fetch(`/api/pos/locations?id=${loc.id}`, { method: 'DELETE' })
                           .then(r => r.json()).then(d => { if (d.ok) { setLocations(prev => prev.filter(l => l.id !== loc.id)); notify(tc('pos_app.toast_branch_deleted')) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
-                      }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${RED}55`, background: 'transparent', color: RED }}>{tc('pos_app.delete')}</button>
+                      }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${RED}55`, background: 'transparent', color: RED }}>{tc('pos_app.delete')}</button>
                     </div>
                   </div>
                 ))}
@@ -2668,7 +2668,7 @@ export default function POSPage() {
         {tab === 'map' && (
           <div>
             <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 17, color: 'var(--tx3)' }}>
                 {geoPoints.length > 0
                   ? (geoPoints.length === 1 ? tc('pos_app.geo_sales_one', { n: geoPoints.length }) : tc('pos_app.geo_sales_other', { n: geoPoints.length }))
                   : tc('pos_app.no_geo_sales')}
@@ -2678,10 +2678,10 @@ export default function POSPage() {
               <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
               {geoPoints.length === 0 && (
                 <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 999, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 2px 12px rgba(0,0,0,0.12)', whiteSpace: 'nowrap' }}>
-                  <span style={{ fontSize: 20 }}>📍</span>
+                  <span style={{ fontSize: 24 }}>📍</span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{tc('pos_app.no_pins_yet')}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.no_pins_hint')}</div>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{tc('pos_app.no_pins_yet')}</div>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.no_pins_hint')}</div>
                   </div>
                 </div>
               )}
@@ -2694,18 +2694,18 @@ export default function POSPage() {
           <div style={{ maxWidth: 900 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>📷 {tc('pos_app.production_captures')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.production_captures_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>📷 {tc('pos_app.production_captures')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.production_captures_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>{tc('pos_app.back')}</button>
             </div>
             {factoryLoading
-              ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>{tc('pos_app.loading_captures')}</div>
+              ? <div style={{ color: 'var(--tx3)', fontSize: 17, padding: 24, textAlign: 'center' }}>{tc('pos_app.loading_captures')}</div>
               : factoryCaptures.length === 0
-                ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>{tc('pos_app.no_captures')}</div>
+                ? <div style={{ color: 'var(--tx3)', fontSize: 17, padding: 24, textAlign: 'center' }}>{tc('pos_app.no_captures')}</div>
                 : (
                   <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 17 }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--b)' }}>
                           {[tc('pos_app.col_date'), tc('pos_app.col_type'), tc('pos_app.col_product'), tc('pos_app.col_batch'), tc('pos_app.col_qty'), tc('pos_app.col_captured_by'), tc('pos_app.col_status'), tc('pos_app.col_approved_by')].map(h => (
@@ -2720,12 +2720,12 @@ export default function POSPage() {
                           return (
                             <tr key={c.id} style={{ borderBottom: '1px solid var(--b)' }}>
                               <td style={{ padding: '8px 10px', color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
-                              <td style={{ padding: '8px 10px' }}><span style={{ fontSize: 11, fontWeight: 700, color: typeColor[c.type] || 'var(--tx)', background: `${typeColor[c.type] || '#666'}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.type}</span></td>
+                              <td style={{ padding: '8px 10px' }}><span style={{ fontSize: 15, fontWeight: 700, color: typeColor[c.type] || 'var(--tx)', background: `${typeColor[c.type] || '#666'}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.type}</span></td>
                               <td style={{ padding: '8px 10px' }}>{c.product_name || '—'}</td>
                               <td style={{ padding: '8px 10px', color: 'var(--tx3)' }}>{c.batch_ref || '—'}</td>
                               <td style={{ padding: '8px 10px' }}>{c.quantity ?? '—'}</td>
                               <td style={{ padding: '8px 10px' }}>{c.captured_by_staff?.name || '—'}</td>
-                              <td style={{ padding: '8px 10px' }}><span style={{ fontSize: 11, fontWeight: 700, color: statusColor[c.status], background: `${statusColor[c.status]}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.status}</span></td>
+                              <td style={{ padding: '8px 10px' }}><span style={{ fontSize: 15, fontWeight: 700, color: statusColor[c.status], background: `${statusColor[c.status]}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.status}</span></td>
                               <td style={{ padding: '8px 10px', color: 'var(--tx3)' }}>{c.approved_by_staff?.name || '—'}</td>
                             </tr>
                           )
@@ -2742,17 +2742,17 @@ export default function POSPage() {
           <div style={{ maxWidth: 900 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>✅ {tc('pos_app.pending_approvals')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.pending_approvals_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>✅ {tc('pos_app.pending_approvals')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.pending_approvals_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>{tc('pos_app.back')}</button>
             </div>
             {factoryLoading
-              ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>{tc('pos_app.loading')}</div>
+              ? <div style={{ color: 'var(--tx3)', fontSize: 17, padding: 24, textAlign: 'center' }}>{tc('pos_app.loading')}</div>
               : (() => {
                   const pending = factoryCaptures.filter((c: any) => c.status === 'pending')
                   if (pending.length === 0) return (
-                    <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>{tc('pos_app.no_pending_approvals')}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 17, padding: 24, textAlign: 'center' }}>{tc('pos_app.no_pending_approvals')}</div>
                   )
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -2763,13 +2763,13 @@ export default function POSPage() {
                             {c.photo_url && <img src={c.photo_url} alt="capture" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--b)' }} />}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: typeColor[c.type] || 'var(--tx)', background: `${typeColor[c.type] || '#666'}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.type}</span>
-                                {c.batch_ref && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.batch_label')}: {c.batch_ref}</span>}
-                                {c.quantity != null && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.qty_label')}: {c.quantity}</span>}
+                                <span style={{ fontSize: 15, fontWeight: 700, color: typeColor[c.type] || 'var(--tx)', background: `${typeColor[c.type] || '#666'}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.type}</span>
+                                {c.batch_ref && <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.batch_label')}: {c.batch_ref}</span>}
+                                {c.quantity != null && <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.qty_label')}: {c.quantity}</span>}
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 600 }}>{c.product_name || tc('pos_app.unlabelled_capture')}</div>
-                              {c.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{c.notes}</div>}
-                              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>
+                              <div style={{ fontSize: 17, fontWeight: 600 }}>{c.product_name || tc('pos_app.unlabelled_capture')}</div>
+                              {c.notes && <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 2 }}>{c.notes}</div>}
+                              <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 4 }}>
                                 {tc('pos_app.submitted_by', { name: c.captured_by_staff?.name || tc('pos_app.staff_fallback'), date: new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}
                               </div>
                             </div>
@@ -2780,7 +2780,7 @@ export default function POSPage() {
                                   setFactoryCaptures(prev => prev.map(x => x.id === c.id ? { ...x, status: 'approved' } : x))
                                   notify(tc('pos_app.toast_capture_approved'))
                                 }}
-                                style={{ fontSize: 12, fontWeight: 600, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
+                                style={{ fontSize: 16, fontWeight: 600, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
                                 {tc('pos_app.approve')}
                               </button>
                               <button
@@ -2790,7 +2790,7 @@ export default function POSPage() {
                                   setFactoryCaptures(prev => prev.map(x => x.id === c.id ? { ...x, status: 'rejected' } : x))
                                   notify(tc('pos_app.toast_capture_rejected'), false)
                                 }}
-                                style={{ fontSize: 12, fontWeight: 600, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
+                                style={{ fontSize: 16, fontWeight: 600, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
                                 {tc('pos_app.reject')}
                               </button>
                             </div>
@@ -2888,10 +2888,10 @@ export default function POSPage() {
             <div style={{ maxWidth: 900 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700 }}>🚛 {tc('pos_app.logistics_network')}</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.logistics_network_desc')}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>🚛 {tc('pos_app.logistics_network')}</div>
+                  <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.logistics_network_desc')}</div>
                 </div>
-                <button onClick={() => { setLogLoading(true); Promise.all([fetch('/api/pos/parcels?limit=200').then(r=>r.json()),fetch('/api/pos/trucks').then(r=>r.json()),fetch('/api/pos/routes').then(r=>r.json())]).then(([p,t,r])=>{setLogParcels(p.parcels||[]);setLogTrucks(t.trucks||[]);setLogRoutes(r.routes||[])}).finally(()=>setLogLoading(false)) }} style={{ fontSize: 12, color: TEAL, background: `${TEAL}10`, border: `1px solid ${TEAL}30`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontWeight: 600 }}>↻ {tc('pos_app.refresh')}</button>
+                <button onClick={() => { setLogLoading(true); Promise.all([fetch('/api/pos/parcels?limit=200').then(r=>r.json()),fetch('/api/pos/trucks').then(r=>r.json()),fetch('/api/pos/routes').then(r=>r.json())]).then(([p,t,r])=>{setLogParcels(p.parcels||[]);setLogTrucks(t.trucks||[]);setLogRoutes(r.routes||[])}).finally(()=>setLogLoading(false)) }} style={{ fontSize: 16, color: TEAL, background: `${TEAL}10`, border: `1px solid ${TEAL}30`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontWeight: 600 }}>↻ {tc('pos_app.refresh')}</button>
               </div>
 
               {logLoading ? (
@@ -2901,7 +2901,7 @@ export default function POSPage() {
                   {/* Sub-tabs */}
                   <div className="tab-strip" style={{ gap: 4, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
                     {(['overview', 'parcels', 'fleet', 'routes', 'revenue', 'drivers'] as const).map(st => (
-                      <button key={st} onClick={() => setLogTab(st)} style={{ padding: '6px 14px', border: 'none', borderBottom: logTab === st ? `2px solid ${TEAL}` : '2px solid transparent', background: 'transparent', color: logTab === st ? TEAL : 'var(--tx3)', fontSize: 12, fontWeight: logTab === st ? 700 : 400, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>{tc('pos_app.logtab_' + st)}</button>
+                      <button key={st} onClick={() => setLogTab(st)} style={{ padding: '6px 14px', border: 'none', borderBottom: logTab === st ? `2px solid ${TEAL}` : '2px solid transparent', background: 'transparent', color: logTab === st ? TEAL : 'var(--tx3)', fontSize: 16, fontWeight: logTab === st ? 700 : 400, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>{tc('pos_app.logtab_' + st)}</button>
                     ))}
                   </div>
 
@@ -2914,9 +2914,9 @@ export default function POSPage() {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
                         {[{ l: tc('pos_app.log_today'), v: todayP.length, c: TEAL, s: tc('pos_app.log_parcels_received') }, { l: tc('pos_app.log_in_transit'), v: inTransit.length, c: '#6366f1', s: tc('pos_app.log_on_road') }, { l: tc('pos_app.log_at_branch'), v: atBranch.length, c: AMBER, s: tc('pos_app.log_pending_dispatch') }, { l: tc('pos_app.log_delivered'), v: delivered.length, c: GREEN, s: tc('pos_app.log_completed') }].map(k => (
                           <div key={k.l} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '12px 14px' }}>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{k.l}</div>
-                            <div style={{ fontSize: 22, fontWeight: 800, color: k.c, lineHeight: 1 }}>{k.v}</div>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{k.s}</div>
+                            <div style={{ fontSize: 14, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{k.l}</div>
+                            <div style={{ fontSize: 26, fontWeight: 800, color: k.c, lineHeight: 1 }}>{k.v}</div>
+                            <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 3 }}>{k.s}</div>
                           </div>
                         ))}
                       </div>
@@ -2929,31 +2929,31 @@ export default function POSPage() {
                           { l: tc('pos_app.log_avg_parcel'), v: avgRevPerParcel > 0 ? `${currencySymbol}${avgRevPerParcel.toLocaleString()}` : '—', c: 'var(--tx)', s: tc('pos_app.log_avg_revenue') },
                         ].map(k => (
                           <div key={k.l} style={{ background: 'var(--bg)', border: '1px dashed var(--b)', borderRadius: 10, padding: '10px 14px' }}>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{k.l}</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: k.c, lineHeight: 1 }}>{k.v}</div>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{k.s}</div>
+                            <div style={{ fontSize: 14, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{k.l}</div>
+                            <div style={{ fontSize: 22, fontWeight: 700, color: k.c, lineHeight: 1 }}>{k.v}</div>
+                            <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 3 }}>{k.s}</div>
                           </div>
                         ))}
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>💰 {tc('pos_app.log_revenue')}</div>
+                          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>💰 {tc('pos_app.log_revenue')}</div>
                           {[{ l: tc('pos_app.log_today'), v: todayRev, c: GREEN }, { l: tc('pos_app.log_total'), v: totalRev, c: 'var(--tx)' }, { l: tc('pos_app.log_unpaid'), v: unpaid, c: unpaid > 0 ? RED : 'var(--tx3)' }].map(r => (
                             <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{r.l}</span>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: r.c }}>{currencySymbol} {r.v.toLocaleString()}</span>
+                              <span style={{ fontSize: 16, color: 'var(--tx3)' }}>{r.l}</span>
+                              <span style={{ fontSize: 17, fontWeight: 700, color: r.c }}>{currencySymbol} {r.v.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
                         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🚛 {tc('pos_app.log_fleet')}</div>
+                          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>🚛 {tc('pos_app.log_fleet')}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {[{ l: tc('pos_app.log_available'), v: trucksAvail, c: GREEN }, { l: tc('pos_app.log_in_transit'), v: trucksTransit, c: '#6366f1' }, { l: tc('pos_app.log_maintenance'), v: trucksMaint, c: RED }].map(f => (
                               <div key={f.l} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: 4, background: f.c }} />
-                                <span style={{ fontSize: 12, color: 'var(--tx3)', flex: 1 }}>{f.l}</span>
-                                <span style={{ fontSize: 14, fontWeight: 800, color: f.c }}>{f.v}</span>
+                                <span style={{ fontSize: 16, color: 'var(--tx3)', flex: 1 }}>{f.l}</span>
+                                <span style={{ fontSize: 18, fontWeight: 800, color: f.c }}>{f.v}</span>
                               </div>
                             ))}
                           </div>
@@ -2962,12 +2962,12 @@ export default function POSPage() {
 
                       {statusBreak.length > 0 && (
                         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 16 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>📊 {tc('pos_app.status_breakdown')}</div>
+                          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>📊 {tc('pos_app.status_breakdown')}</div>
                           {statusBreak.map(([st, count]: any) => (
                             <div key={st} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                               <div style={{ width: 8, height: 8, borderRadius: 4, background: SC[st] || '#888', flexShrink: 0 }} />
-                              <span style={{ flex: 1, fontSize: 12, color: 'var(--tx3)' }}>{SL[st] || st}</span>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{count}</span>
+                              <span style={{ flex: 1, fontSize: 16, color: 'var(--tx3)' }}>{SL[st] || st}</span>
+                              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{count}</span>
                               <div style={{ width: 80, height: 6, background: 'var(--b)', borderRadius: 3, overflow: 'hidden' }}>
                                 <div style={{ width: `${Math.min((count / LP.length) * 100, 100)}%`, height: '100%', background: SC[st] || '#888', borderRadius: 3 }} />
                               </div>
@@ -2978,17 +2978,17 @@ export default function POSPage() {
 
                       {/* Recent parcels */}
                       <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🕒 {tc('pos_app.recent_parcels')}</div>
+                        <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>🕒 {tc('pos_app.recent_parcels')}</div>
                         {LP.slice(0, 10).map((p: any) => (
                           <div key={p.id} onClick={() => openParcel(p)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', borderBottom: '1px solid var(--b)', cursor: 'pointer', borderRadius: 6, transition: 'background 120ms' }}
                             onMouseEnter={e => { (e.currentTarget.style as any).background = `${TEAL}08` }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'transparent' }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700 }}>{p.tracking_number}</span>
-                            <span style={{ flex: 1, fontSize: 11, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.receiver_name || p.destination_city || '—'}</span>
-                            <span style={{ background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: 15, fontWeight: 700 }}>{p.tracking_number}</span>
+                            <span style={{ flex: 1, fontSize: 15, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.receiver_name || p.destination_city || '—'}</span>
+                            <span style={{ background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 13, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                           </div>
                         ))}
-                        {LP.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>{tc('pos_app.no_parcels_yet')}</div>}
+                        {LP.length === 0 && <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>{tc('pos_app.no_parcels_yet')}</div>}
                       </div>
                     </>
                   )
@@ -2997,23 +2997,23 @@ export default function POSPage() {
                   {logTab === 'parcels' && (
                     <div>
                       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                        <input value={logSearch} onChange={e => setLogSearch(e.target.value)} placeholder={tc('pos_app.ph_search_parcels')} style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--b)', borderRadius: 8, fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
-                        <select value={logStatusFilter} onChange={e => setLogStatusFilter(e.target.value)} style={{ padding: '8px 10px', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }}>
+                        <input value={logSearch} onChange={e => setLogSearch(e.target.value)} placeholder={tc('pos_app.ph_search_parcels')} style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--b)', borderRadius: 8, fontSize: 17, outline: 'none', fontFamily: 'inherit' }} />
+                        <select value={logStatusFilter} onChange={e => setLogStatusFilter(e.target.value)} style={{ padding: '8px 10px', border: '1px solid var(--b)', borderRadius: 8, fontSize: 16, fontFamily: 'inherit' }}>
                           <option value="">{tc('pos_app.all_statuses')}</option>
                           {Object.entries(SL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                         </select>
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.parcels_count', { n: filteredParcels.length })}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.parcels_count', { n: filteredParcels.length })}</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 500, overflowY: 'auto' }}>
                         {filteredParcels.map((p: any) => (
                           <div key={p.id} onClick={() => openParcel(p)} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 10, cursor: 'pointer', transition: 'border-color 150ms' }}
                             onMouseEnter={e => { (e.currentTarget.style as any).borderColor = TEAL }} onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700 }}>{p.tracking_number}</span>
-                              <span style={{ marginLeft: 'auto', background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
+                              <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 700 }}>{p.tracking_number}</span>
+                              <span style={{ marginLeft: 'auto', background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 13, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                             </div>
-                            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
+                            <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>
                               <div>{p.sender_name || '—'} → {p.receiver_name || '—'}</div>
                               <div>📍 {p.destination_city || '—'} {p.weight_kg ? `· ${p.weight_kg}kg` : ''}</div>
                               {p.fee_charged ? <div>💰 {currencySymbol} {p.fee_charged.toLocaleString()} · {p.payment_status || '—'}</div> : null}
@@ -3027,33 +3027,33 @@ export default function POSPage() {
 
                   {logTab === 'fleet' && (
                     <div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.trucks_count', { n: logTrucks.length })}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.trucks_count', { n: logTrucks.length })}</div>
                       {logTrucks.map((t: any) => {
                         const st = t.status === 'available' ? { bg: `${GREEN}18`, color: GREEN, label: tc('pos_app.log_available') } : t.status === 'in_transit' ? { bg: '#6366f118', color: '#6366f1', label: tc('pos_app.log_in_transit') } : { bg: `${RED}18`, color: RED, label: t.status === 'maintenance' ? tc('pos_app.log_maintenance') : t.status }
                         const tp = LP.filter((p: any) => p.truck?.id === t.id && ['assigned', 'loaded', 'in_transit'].includes(p.status))
                         return (
                           <div key={t.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 12, marginBottom: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                              <span style={{ fontSize: 14, fontWeight: 800 }}>{t.plate_number}</span>
-                              {t.make_model && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{t.make_model}</span>}
-                              {t.branch && <span style={{ fontSize: 10, color: 'var(--tx3)' }}>📍 {t.branch.name}</span>}
-                              <span style={{ marginLeft: 'auto', background: st.bg, color: st.color, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{st.label}</span>
+                              <span style={{ fontSize: 18, fontWeight: 800 }}>{t.plate_number}</span>
+                              {t.make_model && <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{t.make_model}</span>}
+                              {t.branch && <span style={{ fontSize: 14, color: 'var(--tx3)' }}>📍 {t.branch.name}</span>}
+                              <span style={{ marginLeft: 'auto', background: st.bg, color: st.color, padding: '2px 8px', borderRadius: 6, fontSize: 14, fontWeight: 700 }}>{st.label}</span>
                             </div>
-                            {tp.length > 0 && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>📦 {tp.length === 1 ? tc('pos_app.active_parcels_one', { n: tp.length }) : tc('pos_app.active_parcels_other', { n: tp.length })}</div>}
+                            {tp.length > 0 && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>📦 {tp.length === 1 ? tc('pos_app.active_parcels_one', { n: tp.length }) : tc('pos_app.active_parcels_other', { n: tp.length })}</div>}
                           </div>
                         )
                       })}
-                      {logTrucks.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_trucks')}</div>}
+                      {logTrucks.length === 0 && <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_trucks')}</div>}
                     </div>
                   )}
 
                   {logTab === 'routes' && (
                     <div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.routes_count', { n: logRoutes.length })}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.routes_count', { n: logRoutes.length })}</div>
                       {logRoutes.map((r: any) => (
                         <div key={r.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 12, marginBottom: 8 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{r.name || `${r.origin?.name || '—'} → ${r.destination?.name || '—'}`}</div>
-                          <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--tx3)' }}>
+                          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{r.name || `${r.origin?.name || '—'} → ${r.destination?.name || '—'}`}</div>
+                          <div style={{ display: 'flex', gap: 16, fontSize: 15, color: 'var(--tx3)' }}>
                             {r.distance_km && <span>📏 {r.distance_km} km</span>}
                             {r.estimated_hours && <span>⏱️ {r.estimated_hours}h</span>}
                             {r.price_per_kg > 0 && <span>💰 {currencySymbol} {r.price_per_kg}/kg</span>}
@@ -3061,7 +3061,7 @@ export default function POSPage() {
                           </div>
                         </div>
                       ))}
-                      {logRoutes.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_routes')}</div>}
+                      {logRoutes.length === 0 && <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_routes')}</div>}
                     </div>
                   )}
 
@@ -3069,38 +3069,38 @@ export default function POSPage() {
                     <div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>📈 {tc('pos_app.by_period')}</div>
+                          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>📈 {tc('pos_app.by_period')}</div>
                           {[{ l: tc('pos_app.log_today'), p: todayP }, { l: tc('pos_app.log_last_7d'), p: LP.filter((p: any) => new Date(p.created_at) >= new Date(Date.now() - 7*86400000)) }, { l: tc('pos_app.log_this_month'), p: LP.filter((p: any) => { const d = new Date(p.created_at); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear() }) }, { l: tc('pos_app.log_all_time'), p: LP }].map(r => (
                             <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{r.l} <span style={{ fontSize: 10 }}>({r.p.length})</span></span>
-                              <span style={{ fontSize: 12, fontWeight: 700 }}>{currencySymbol} {r.p.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0).toLocaleString()}</span>
+                              <span style={{ fontSize: 16, color: 'var(--tx3)' }}>{r.l} <span style={{ fontSize: 14 }}>({r.p.length})</span></span>
+                              <span style={{ fontSize: 16, fontWeight: 700 }}>{currencySymbol} {r.p.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0).toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
                         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>💳 {tc('pos_app.payment_status')}</div>
+                          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>💳 {tc('pos_app.payment_status')}</div>
                           {[{ l: tc('pos_app.paid'), f: 'paid', c: GREEN }, { l: tc('pos_app.unpaid'), f: 'unpaid', c: RED }, { l: tc('pos_app.partial'), f: 'partial', c: AMBER }].map(ps => {
                             const filtered = LP.filter((p: any) => p.payment_status === ps.f)
                             return (
                               <div key={ps.l} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: 4, background: ps.c }} />
-                                <span style={{ flex: 1, fontSize: 12, color: 'var(--tx3)' }}>{ps.l} ({filtered.length})</span>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: ps.c }}>{currencySymbol} {filtered.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0).toLocaleString()}</span>
+                                <span style={{ flex: 1, fontSize: 16, color: 'var(--tx3)' }}>{ps.l} ({filtered.length})</span>
+                                <span style={{ fontSize: 16, fontWeight: 700, color: ps.c }}>{currencySymbol} {filtered.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0).toLocaleString()}</span>
                               </div>
                             )
                           })}
                         </div>
                       </div>
                       <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🗺️ {tc('pos_app.revenue_by_destination')}</div>
+                        <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>🗺️ {tc('pos_app.revenue_by_destination')}</div>
                         {byCity.map(([city, data]: any) => (
                           <div key={city} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <span style={{ flex: 1, fontSize: 12, color: 'var(--tx3)' }}>{city}</span>
-                            <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.pkgs', { n: data.count })}</span>
-                            <span style={{ fontSize: 12, fontWeight: 700 }}>{currencySymbol} {data.revenue.toLocaleString()}</span>
+                            <span style={{ flex: 1, fontSize: 16, color: 'var(--tx3)' }}>{city}</span>
+                            <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.pkgs', { n: data.count })}</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{currencySymbol} {data.revenue.toLocaleString()}</span>
                           </div>
                         ))}
-                        {byCity.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>{tc('pos_app.no_data_yet')}</div>}
+                        {byCity.length === 0 && <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>{tc('pos_app.no_data_yet')}</div>}
                       </div>
                     </div>
                   )}
@@ -3120,11 +3120,11 @@ export default function POSPage() {
                     const drivers = Object.entries(driverMap).sort((a, b) => b[1].revenue - a[1].revenue)
                     return (
                       <div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 12 }}>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 12 }}>
                           {drivers.length === 1 ? tc('pos_app.drivers_ranked_one', { n: drivers.length }) : tc('pos_app.drivers_ranked_other', { n: drivers.length })}
                         </div>
                         {drivers.length === 0 && (
-                          <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 32 }}>{tc('pos_app.no_driver_data')}</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx3)', textAlign: 'center', padding: 32 }}>{tc('pos_app.no_driver_data')}</div>
                         )}
                         {drivers.map(([dId, d]) => {
                           const completedAll = d.delivered + d.failed
@@ -3133,14 +3133,14 @@ export default function POSPage() {
                           return (
                             <div key={dId} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 10 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 16, background: `${TEAL}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: TEAL }}>{d.name.charAt(0).toUpperCase()}</div>
+                                <div style={{ width: 32, height: 32, borderRadius: 16, background: `${TEAL}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, color: TEAL }}>{d.name.charAt(0).toUpperCase()}</div>
                                 <div style={{ flex: 1 }}>
-                                  <div style={{ fontSize: 13, fontWeight: 700 }}>{d.name}</div>
-                                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{d.total === 1 ? tc('pos_app.parcels_assigned_one', { n: d.total }) : tc('pos_app.parcels_assigned_other', { n: d.total })}</div>
+                                  <div style={{ fontSize: 17, fontWeight: 700 }}>{d.name}</div>
+                                  <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{d.total === 1 ? tc('pos_app.parcels_assigned_one', { n: d.total }) : tc('pos_app.parcels_assigned_other', { n: d.total })}</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                  <div style={{ fontSize: 14, fontWeight: 800, color: GREEN }}>{currencySymbol} {d.revenue.toLocaleString()}</div>
-                                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.revenue_lower')}</div>
+                                  <div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{currencySymbol} {d.revenue.toLocaleString()}</div>
+                                  <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.revenue_lower')}</div>
                                 </div>
                               </div>
                               <div style={{ display: 'flex', gap: 0, borderTop: '1px solid var(--b)', marginTop: 2 }}>
@@ -3151,8 +3151,8 @@ export default function POSPage() {
                                   { l: tc('pos_app.log_fadr'), v: fadr !== null ? `${fadr}%` : '—', c: fadrColor },
                                 ].map((m, i, arr) => (
                                   <div key={m.l} style={{ flex: 1, padding: '8px 0 4px', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid var(--b)' : 'none' }}>
-                                    <div style={{ fontSize: 15, fontWeight: 800, color: m.c }}>{m.v}</div>
-                                    <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{m.l}</div>
+                                    <div style={{ fontSize: 19, fontWeight: 800, color: m.c }}>{m.v}</div>
+                                    <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 2 }}>{m.l}</div>
                                   </div>
                                 ))}
                               </div>
@@ -3161,7 +3161,7 @@ export default function POSPage() {
                                   <div style={{ height: 3, background: 'var(--b)', borderRadius: 2, overflow: 'hidden' }}>
                                     <div style={{ width: `${fadr}%`, height: '100%', background: fadrColor, borderRadius: 2, transition: 'width 700ms cubic-bezier(0.4,0,0.2,1)' }} />
                                   </div>
-                                  <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 3 }}>{fadr >= 85 ? tc('pos_app.fadr_excellent') : fadr >= 70 ? tc('pos_app.fadr_needs_improvement') : tc('pos_app.fadr_critical')}</div>
+                                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 3 }}>{fadr >= 85 ? tc('pos_app.fadr_excellent') : fadr >= 70 ? tc('pos_app.fadr_needs_improvement') : tc('pos_app.fadr_critical')}</div>
                                 </div>
                               )}
                             </div>
@@ -3186,10 +3186,10 @@ export default function POSPage() {
                       {/* Header */}
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--tx)', letterSpacing: '0.02em' }}>{logSelectedParcel.tracking_number}</div>
-                          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{logSelectedParcel.sender_name || '—'} → {logSelectedParcel.receiver_name || '—'}{logSelectedParcel.destination_city ? ` · ${logSelectedParcel.destination_city}` : ''}</div>
+                          <div style={{ fontFamily: 'monospace', fontSize: 17, fontWeight: 700, color: 'var(--tx)', letterSpacing: '0.02em' }}>{logSelectedParcel.tracking_number}</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 2 }}>{logSelectedParcel.sender_name || '—'} → {logSelectedParcel.receiver_name || '—'}{logSelectedParcel.destination_city ? ` · ${logSelectedParcel.destination_city}` : ''}</div>
                         </div>
-                        <span style={{ background: `${SC[logSelectedParcel.status] || '#888'}18`, color: SC[logSelectedParcel.status] || '#888', padding: '3px 9px', borderRadius: 6, fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{SL[logSelectedParcel.status] || logSelectedParcel.status}</span>
+                        <span style={{ background: `${SC[logSelectedParcel.status] || '#888'}18`, color: SC[logSelectedParcel.status] || '#888', padding: '3px 9px', borderRadius: 6, fontSize: 14, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{SL[logSelectedParcel.status] || logSelectedParcel.status}</span>
                         <button onClick={() => setLogSelectedParcel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
@@ -3206,21 +3206,21 @@ export default function POSPage() {
                           logSelectedParcel.fail_reason && { l: tc('pos_app.meta_fail_reason'), v: logSelectedParcel.fail_reason },
                         ].filter(Boolean).map((r: any) => (
                           <div key={r.l}>
-                            <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500 }}>{r.l.toUpperCase()}</div>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{r.v}</div>
+                            <div style={{ fontSize: 13, color: 'var(--tx3)', fontWeight: 500 }}>{r.l.toUpperCase()}</div>
+                            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)' }}>{r.v}</div>
                           </div>
                         ))}
                       </div>
 
                       {/* Evidence timeline */}
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_app.evidence_chain')}</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_app.evidence_chain')}</div>
                       {logParcelPhotosLoading ? (
-                        <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_app.loading')}</div>
+                        <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--tx3)', fontSize: 17 }}>{tc('pos_app.loading')}</div>
                       ) : logParcelPhotos.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '28px 16px', background: 'var(--sf)', borderRadius: 10, border: '1px solid var(--b)' }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>📷</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{tc('pos_app.no_photos_yet')}</div>
-                          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_app.no_photos_hint')}</div>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{tc('pos_app.no_photos_yet')}</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('pos_app.no_photos_hint')}</div>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -3238,9 +3238,9 @@ export default function POSPage() {
                                 </div>
                                 <div style={{ flex: 1, paddingBottom: isLast ? 0 : 16 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                                    <span style={{ fontSize: 12, fontWeight: 700, color }}>{label}</span>
-                                    <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{ts.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ts.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
-                                    {photo.captured_staff?.name && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>· {photo.captured_staff.name}</span>}
+                                    <span style={{ fontSize: 16, fontWeight: 700, color }}>{label}</span>
+                                    <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{ts.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ts.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {photo.captured_staff?.name && <span style={{ fontSize: 15, color: 'var(--tx3)' }}>· {photo.captured_staff.name}</span>}
                                   </div>
                                   {photo.photo_url && (
                                     photo.photo_type === 'delivery_video' || photo.photo_url.startsWith('data:video/') ? (
@@ -3258,9 +3258,9 @@ export default function POSPage() {
                                       />
                                     )
                                   )}
-                                  {photo.notes && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>{photo.notes}</div>}
+                                  {photo.notes && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>{photo.notes}</div>}
                                   {photo.lat && photo.lng && (
-                                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                       {Number(photo.lat).toFixed(4)}, {Number(photo.lng).toFixed(4)}
                                     </div>
@@ -3284,16 +3284,16 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>🧠 {tc('pos_app.production_intelligence')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.production_intelligence_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>🧠 {tc('pos_app.production_intelligence')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.production_intelligence_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>{tc('pos_app.back')}</button>
             </div>
             {!factoryIntelligence && !factoryIntelLoading && (
               <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 28, textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🏭</div>
-                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.run_production_analysis')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 20, maxWidth: 420, margin: '0 auto 20px' }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>🏭</div>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.run_production_analysis')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 20, maxWidth: 420, margin: '0 auto 20px' }}>
                   {tc('pos_app.run_analysis_desc')}
                 </div>
                 <button
@@ -3312,14 +3312,14 @@ export default function POSPage() {
                     }
                     setFactoryIntelLoading(false)
                   }}
-                  style={{ background: 'var(--acc, #4f46e5)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ background: 'var(--acc, #4f46e5)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 18, fontWeight: 600, cursor: 'pointer' }}>
                   {tc('pos_app.analyse_30_days')}
                 </button>
               </div>
             )}
             {factoryIntelLoading && (
-              <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 40, textAlign: 'center' }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>🔍</div>
+              <div style={{ color: 'var(--tx3)', fontSize: 17, padding: 40, textAlign: 'center' }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
                 {tc('pos_app.analysing_data')}
               </div>
             )}
@@ -3328,33 +3328,33 @@ export default function POSPage() {
               const riskColor: Record<string, string> = { High: '#dc2626', Medium: '#d97706', Low: '#16a34a' }
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--tx3)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, color: 'var(--tx3)' }}>
                     {tc('pos_app.analysed_period')}: {period_analyzed}
-                    <button onClick={() => setFactoryIntelligence(null)} style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--tx3)', background: 'none', border: '1px solid var(--b)', borderRadius: 6, padding: '2px 10px', cursor: 'pointer' }}>{tc('pos_app.rerun')}</button>
+                    <button onClick={() => setFactoryIntelligence(null)} style={{ marginLeft: 'auto', fontSize: 16, color: 'var(--tx3)', background: 'none', border: '1px solid var(--b)', borderRadius: 6, padding: '2px 10px', cursor: 'pointer' }}>{tc('pos_app.rerun')}</button>
                   </div>
                   {recommendations.length > 0 && (
                     <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 16 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{tc('pos_app.recommendations')}</div>
-                      {recommendations.map((r: string, i: number) => <div key={i} style={{ fontSize: 13, color: 'var(--tx)', marginBottom: 6 }}>{r}</div>)}
+                      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{tc('pos_app.recommendations')}</div>
+                      {recommendations.map((r: string, i: number) => <div key={i} style={{ fontSize: 17, color: 'var(--tx)', marginBottom: 6 }}>{r}</div>)}
                     </div>
                   )}
                   {anomalies.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{tc('pos_app.detected_anomalies')}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700 }}>{tc('pos_app.detected_anomalies')}</div>
                       {anomalies.map((a: any, i: number) => (
                         <div key={i} style={{ background: 'var(--sf)', border: `1px solid ${riskColor[a.risk_level] || 'var(--b)'}40`, borderRadius: 12, padding: '14px 16px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: riskColor[a.risk_level] || 'var(--tx3)', background: `${riskColor[a.risk_level] || '#888'}18`, padding: '2px 8px', borderRadius: 9999 }}>{tc('pos_app.risk_' + a.risk_level)}</span>
-                            <div style={{ fontSize: 13, fontWeight: 600 }}>{a.issue}</div>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: riskColor[a.risk_level] || 'var(--tx3)', background: `${riskColor[a.risk_level] || '#888'}18`, padding: '2px 8px', borderRadius: 9999 }}>{tc('pos_app.risk_' + a.risk_level)}</span>
+                            <div style={{ fontSize: 17, fontWeight: 600 }}>{a.issue}</div>
                           </div>
-                          <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 4 }}>💡 {a.hypothesis}</div>
-                          <div style={{ fontSize: 12, color: 'var(--tx)' }}>→ {a.action}</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 4 }}>💡 {a.hypothesis}</div>
+                          <div style={{ fontSize: 16, color: 'var(--tx)' }}>→ {a.action}</div>
                         </div>
                       ))}
                     </div>
                   )}
                   {anomalies.length === 0 && (
-                    <div style={{ fontSize: 13, color: '#16a34a', background: '#16a34a10', border: '1px solid #16a34a30', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                    <div style={{ fontSize: 17, color: '#16a34a', background: '#16a34a10', border: '1px solid #16a34a30', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                       ✅ {tc('pos_app.no_anomalies')}
                     </div>
                   )}
@@ -3369,10 +3369,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>👤 {tc('pos_app.customers')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.customers_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>👤 {tc('pos_app.customers')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.customers_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             {(() => {
               const customerMap = new Map<string, { phone: string; name?: string; orders: number; total: number; lastVisit: string }>()
@@ -3392,28 +3392,28 @@ export default function POSPage() {
               const customers = Array.from(customerMap.values()).sort((a, b) => b.total - a.total)
               if (customers.length === 0) return (
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>👤</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_customers_yet')}</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.no_customers_hint')}</div>
+                  <div style={{ fontSize: 36, marginBottom: 12 }}>👤</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_customers_yet')}</div>
+                  <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.no_customers_hint')}</div>
                 </div>
               )
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_customers')}</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{customers.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.repeat_customers')}</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{customers.filter(c => c.orders > 1).length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.avg_ltv')}</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, customers.reduce((s, c) => s + c.total, 0) / customers.length)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_customers')}</div><div style={{ fontSize: 26, fontWeight: 800, color: ACC }}>{customers.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.repeat_customers')}</div><div style={{ fontSize: 26, fontWeight: 800, color: GREEN }}>{customers.filter(c => c.orders > 1).length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.avg_ltv')}</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, customers.reduce((s, c) => s + c.total, 0) / customers.length)}</div></div>
                   </div>
                   <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 100px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 100px', padding: '10px 16px', background: 'var(--ev)', fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
                       <span>{tc('pos_app.col_customer')}</span><span style={{ textAlign: 'center' }}>{tc('pos_app.col_orders')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_spent')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_last_visit')}</span>
                     </div>
                     {customers.slice(0, 30).map((c, i) => (
-                      <div key={c.phone} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 100px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, alignItems: 'center' }}>
-                        <div><div style={{ fontWeight: 600, color: 'var(--tx)' }}>{c.name || c.phone}</div>{c.name && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone}</div>}</div>
+                      <div key={c.phone} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 100px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', fontSize: 17, alignItems: 'center' }}>
+                        <div><div style={{ fontWeight: 600, color: 'var(--tx)' }}>{c.name || c.phone}</div>{c.name && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{c.phone}</div>}</div>
                         <div style={{ textAlign: 'center', color: 'var(--tx3)' }}>{c.orders}</div>
                         <div style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, c.total)}</div>
-                        <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(c.lastVisit).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                        <div style={{ textAlign: 'right', fontSize: 15, color: 'var(--tx3)' }}>{new Date(c.lastVisit).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                       </div>
                     ))}
                   </div>
@@ -3428,10 +3428,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>🏷️ {tc('pos_app.promotions_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.promotions_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>🏷️ {tc('pos_app.promotions_title')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.promotions_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             {(() => {
               const discountedTx = transactions.filter(t => t.subtotal && t.total < t.subtotal)
@@ -3440,27 +3440,27 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.discounted_sales')}</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{discountedTx.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_discounts')}</div><div style={{ fontSize: 22, fontWeight: 800, color: RED }}>{fmt(currencySymbol, totalDiscount)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.avg_discount')}</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgDiscount)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.discounted_sales')}</div><div style={{ fontSize: 26, fontWeight: 800, color: ACC }}>{discountedTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_discounts')}</div><div style={{ fontSize: 26, fontWeight: 800, color: RED }}>{fmt(currencySymbol, totalDiscount)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.avg_discount')}</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgDiscount)}</div></div>
                   </div>
                   {discountedTx.length === 0 ? (
                     <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>🏷️</div>
-                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_discounts')}</div>
-                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.no_discounts_hint')}</div>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>🏷️</div>
+                      <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_discounts')}</div>
+                      <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.no_discounts_hint')}</div>
                     </div>
                   ) : (
                     <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                         <span>{tc('pos_app.col_items')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_subtotal')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_discount')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_date')}</span>
                       </div>
                       {discountedTx.slice(0, 20).map(tx => (
-                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 13, alignItems: 'center' }}>
+                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 17, alignItems: 'center' }}>
                           <div style={{ fontWeight: 500, color: 'var(--tx)' }}>{(tx.pos_items || []).map(i => i.name).filter(Boolean).join(', ') || tc('pos_app.sale')}</div>
                           <div style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, tx.subtotal || tx.total)}</div>
                           <div style={{ textAlign: 'right', fontWeight: 600, color: RED }}>-{fmt(currencySymbol, (tx.subtotal || tx.total) - tx.total)}</div>
-                          <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                          <div style={{ textAlign: 'right', fontSize: 15, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                         </div>
                       ))}
                     </div>
@@ -3476,10 +3476,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>⭐ {tc('pos_app.loyalty_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.loyalty_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>⭐ {tc('pos_app.loyalty_title')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.loyalty_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             {(() => {
               const customerMap = new Map<string, { phone: string; name?: string; orders: number; total: number; firstVisit: string; lastVisit: string }>()
@@ -3505,33 +3505,33 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_customers')}</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{allCustomers.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.repeat_customers')}</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{repeatCustomers.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.repeat_rate')}</div><div style={{ fontSize: 22, fontWeight: 800, color: repeatRate >= 20 ? GREEN : 'var(--tx)' }}>{repeatRate.toFixed(0)}%</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.avg_ltv')}</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgLTV)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_customers')}</div><div style={{ fontSize: 26, fontWeight: 800, color: ACC }}>{allCustomers.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.repeat_customers')}</div><div style={{ fontSize: 26, fontWeight: 800, color: GREEN }}>{repeatCustomers.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.repeat_rate')}</div><div style={{ fontSize: 26, fontWeight: 800, color: repeatRate >= 20 ? GREEN : 'var(--tx)' }}>{repeatRate.toFixed(0)}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.avg_ltv')}</div><div style={{ fontSize: 26, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgLTV)}</div></div>
                   </div>
                   {allCustomers.length === 0 ? (
                     <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
-                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_customer_data')}</div>
-                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.no_customer_data_hint')}</div>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>⭐</div>
+                      <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_customer_data')}</div>
+                      <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.no_customer_data_hint')}</div>
                     </div>
                   ) : (
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--tx)' }}>{tc('pos_app.top_customers_spend')}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: 'var(--tx)' }}>{tc('pos_app.top_customers_spend')}</div>
                       <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px', padding: '10px 16px', background: 'var(--ev)', fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                           <span>{tc('pos_app.col_customer')}</span><span style={{ textAlign: 'center' }}>{tc('pos_app.col_visits')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_total_spent')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_last_visit')}</span>
                         </div>
                         {topSpenders.map((c, i) => (
-                          <div key={c.phone} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, alignItems: 'center' }}>
+                          <div key={c.phone} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', fontSize: 17, alignItems: 'center' }}>
                             <div>
                               <div style={{ fontWeight: 600, color: 'var(--tx)' }}>{c.name || c.phone}</div>
-                              {c.name && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone}</div>}
+                              {c.name && <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{c.phone}</div>}
                             </div>
-                            <div style={{ textAlign: 'center' }}><span style={{ background: c.orders > 1 ? 'rgba(22,163,74,.1)' : 'var(--ev)', color: c.orders > 1 ? GREEN : 'var(--tx3)', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999 }}>{c.orders}x</span></div>
+                            <div style={{ textAlign: 'center' }}><span style={{ background: c.orders > 1 ? 'rgba(22,163,74,.1)' : 'var(--ev)', color: c.orders > 1 ? GREEN : 'var(--tx3)', fontSize: 15, fontWeight: 700, padding: '2px 8px', borderRadius: 9999 }}>{c.orders}x</span></div>
                             <div style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, c.total)}</div>
-                            <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(c.lastVisit).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                            <div style={{ textAlign: 'right', fontSize: 15, color: 'var(--tx3)' }}>{new Date(c.lastVisit).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                           </div>
                         ))}
                       </div>
@@ -3548,10 +3548,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>↩️ {tc('pos_app.returns_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.returns_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>↩️ {tc('pos_app.returns_title')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.returns_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             {(() => {
               const returnTx = transactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded')
@@ -3560,27 +3560,27 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_returns')}</div><div style={{ fontSize: 22, fontWeight: 800, color: returnTx.length > 0 ? RED : GREEN }}>{returnTx.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.amount_refunded')}</div><div style={{ fontSize: 22, fontWeight: 800, color: totalRefunded > 0 ? RED : 'var(--tx)' }}>{fmt(currencySymbol, totalRefunded)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.return_rate')}</div><div style={{ fontSize: 22, fontWeight: 800, color: returnRate > 5 ? RED : 'var(--tx)' }}>{returnRate.toFixed(1)}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.total_returns')}</div><div style={{ fontSize: 26, fontWeight: 800, color: returnTx.length > 0 ? RED : GREEN }}>{returnTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.amount_refunded')}</div><div style={{ fontSize: 26, fontWeight: 800, color: totalRefunded > 0 ? RED : 'var(--tx)' }}>{fmt(currencySymbol, totalRefunded)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.return_rate')}</div><div style={{ fontSize: 26, fontWeight: 800, color: returnRate > 5 ? RED : 'var(--tx)' }}>{returnRate.toFixed(1)}%</div></div>
                   </div>
                   {returnTx.length === 0 ? (
                     <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
-                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_returns')}</div>
-                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.no_returns_hint')}</div>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+                      <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.no_returns')}</div>
+                      <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.no_returns_hint')}</div>
                     </div>
                   ) : (
                     <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
                         <span>{tc('pos_app.col_items')}</span><span style={{ textAlign: 'center' }}>{tc('pos_app.col_status')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_amount')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_date')}</span>
                       </div>
                       {returnTx.slice(0, 20).map(tx => (
-                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 13, alignItems: 'center' }}>
+                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 17, alignItems: 'center' }}>
                           <div style={{ fontWeight: 500, color: 'var(--tx)' }}>{(tx.pos_items || []).map(i => i.name).filter(Boolean).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ textAlign: 'center' }}><span style={{ fontSize: 10, fontWeight: 700, color: tx.status === 'refunded' ? RED : AMBER, background: tx.status === 'refunded' ? 'rgba(220,38,38,.08)' : 'rgba(202,138,4,.08)', padding: '2px 8px', borderRadius: 9999 }}>{tx.status === 'refunded' ? tc('pos_app.full_refund_label') : tc('pos_app.partial')}</span></div>
+                          <div style={{ textAlign: 'center' }}><span style={{ fontSize: 14, fontWeight: 700, color: tx.status === 'refunded' ? RED : AMBER, background: tx.status === 'refunded' ? 'rgba(220,38,38,.08)' : 'rgba(202,138,4,.08)', padding: '2px 8px', borderRadius: 9999 }}>{tx.status === 'refunded' ? tc('pos_app.full_refund_label') : tc('pos_app.partial')}</span></div>
                           <div style={{ textAlign: 'right', fontWeight: 600, color: RED }}>{fmt(currencySymbol, tx.total)}</div>
-                          <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                          <div style={{ textAlign: 'right', fontSize: 15, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                         </div>
                       ))}
                     </div>
@@ -3596,10 +3596,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>📊 {tc('pos_app.reports_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.reports_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>📊 {tc('pos_app.reports_title')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.reports_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             {(() => {
               const totalRevenue = transactions.filter(t => t.status === 'completed').reduce((s, t) => s + t.total, 0)
@@ -3609,10 +3609,10 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>{fmt(currencySymbol, totalRevenue)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_gross_profit')}</div><div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalProfit)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_margin')}</div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{totalRevenue > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) : '0'}%</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.stock_value')}</div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, inventoryValue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{fmt(currencySymbol, totalRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_gross_profit')}</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalProfit)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_margin')}</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{totalRevenue > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) : '0'}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.stock_value')}</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, inventoryValue)}</div></div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                     {[
@@ -3627,10 +3627,10 @@ export default function POSPage() {
                     ].map((r, i) => (
                       <button key={i} onClick={r.action} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 18px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
                         onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                        <div style={{ fontSize: 24, flexShrink: 0 }}>{r.icon}</div>
+                        <div style={{ fontSize: 28, flexShrink: 0 }}>{r.icon}</div>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{r.title}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.4 }}>{r.desc}</div>
+                          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{r.title}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.4 }}>{r.desc}</div>
                         </div>
                       </button>
                     ))}
@@ -3644,7 +3644,7 @@ export default function POSPage() {
         {/* ══════════════ PURCHASE ORDERS TAB ══════════════ */}
         {tab === 'purchase_orders' && (
           <div style={{ maxWidth: 860 }}>
-            <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12 }}>{tc('pos_app.back')}</button>
+            <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12 }}>{tc('pos_app.back')}</button>
             <PurchaseOrdersTab currencySymbol={currencySymbol} selectedLocation={selectedLocation} notify={notify} t={(k, v) => tc('pos_app.' + k, v)} />
           </div>
         )}
@@ -3654,16 +3654,16 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>🎁 {tc('pos_app.gift_cards_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.gift_cards_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>🎁 {tc('pos_app.gift_cards_title')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.gift_cards_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🎁</div>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.gift_cards_credit')}</div>
-              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>{tc('pos_app.coming_soon')}</span>
-              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>{tc('pos_app.gift_cards_long_desc')}</div>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🎁</div>
+              <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.gift_cards_credit')}</div>
+              <span style={{ display: 'inline-block', fontSize: 14, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>{tc('pos_app.coming_soon')}</span>
+              <div style={{ fontSize: 17, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>{tc('pos_app.gift_cards_long_desc')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
                 {[
                   { icon: '💳', title: tc('pos_app.gc_issue'), desc: tc('pos_app.gc_issue_desc') },
@@ -3674,9 +3674,9 @@ export default function POSPage() {
                   { icon: '🎨', title: tc('pos_app.gc_custom'), desc: tc('pos_app.gc_custom_desc') },
                 ].map((f, i) => (
                   <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+                    <div style={{ fontSize: 24, marginBottom: 6 }}>{f.icon}</div>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
                   </div>
                 ))}
               </div>
@@ -3689,10 +3689,10 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>🔗 {tc('pos_app.integrations_title')}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.integrations_desc')}</div>
+                <div style={{ fontSize: 20, fontWeight: 700 }}>🔗 {tc('pos_app.integrations_title')}</div>
+                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('pos_app.integrations_desc')}</div>
               </div>
-              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 16, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back')}</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
               {[
@@ -3704,13 +3704,13 @@ export default function POSPage() {
                 { icon: '🛒', title: tc('pos_app.int_ecommerce_title'), desc: tc('pos_app.int_ecommerce_desc'), status: 'available', action: () => window.location.href = '/sources' },
               ].map((int, i) => (
                 <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, position: 'relative' }}>
-                  {int.status === 'coming_soon' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 600, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '2px 8px', borderRadius: 9999 }}>{tc('pos_app.coming_soon')}</span>}
-                  {int.status === 'available' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 600, color: GREEN, background: 'rgba(22,163,74,.1)', padding: '2px 8px', borderRadius: 9999 }}>{tc('pos_app.available')}</span>}
-                  <div style={{ fontSize: 28, marginBottom: 10 }}>{int.icon}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{int.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.4, marginBottom: 12 }}>{int.desc}</div>
+                  {int.status === 'coming_soon' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 14, fontWeight: 600, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '2px 8px', borderRadius: 9999 }}>{tc('pos_app.coming_soon')}</span>}
+                  {int.status === 'available' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 14, fontWeight: 600, color: GREEN, background: 'rgba(22,163,74,.1)', padding: '2px 8px', borderRadius: 9999 }}>{tc('pos_app.available')}</span>}
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>{int.icon}</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{int.title}</div>
+                  <div style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.4, marginBottom: 12 }}>{int.desc}</div>
                   {int.status === 'available' && int.action && (
-                    <button onClick={int.action} style={{ fontSize: 12, fontWeight: 600, color: ACC, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.connect')}</button>
+                    <button onClick={int.action} style={{ fontSize: 16, fontWeight: 600, color: ACC, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.connect')}</button>
                   )}
                 </div>
               ))}
@@ -3747,33 +3747,33 @@ export default function POSPage() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{tc('pos_app.transaction_details')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700 }}>{tc('pos_app.transaction_details')}</div>
+                <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 2 }}>
                   #{txDetail.id.slice(0, 8)} · {createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · <span style={{ color: 'var(--tx2)' }}>{agoText}</span>
                 </div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, background: statusColor + '14', padding: '4px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{statusLabel === 'completed' ? '✓ ' + tc('pos_app.completed') : statusLabel}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: statusColor, background: statusColor + '14', padding: '4px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{statusLabel === 'completed' ? '✓ ' + tc('pos_app.completed') : statusLabel}</span>
             </div>
 
             {/* Info grid — clickable for drill-downs */}
             <div style={{ display: 'grid', gridTemplateColumns: locName ? '1fr 1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'cashier_detail', title: tc('pos_app.modal_cashier_transactions', { name: txDetail.cashier?.name || tc('pos_app.owner') }), cashier_id: txDetail.cashier?.name || 'Owner' }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>{tc('pos_app.label_cashier')}<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || tc('pos_app.owner')}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>{tc('pos_app.view_performance')}</div></div>
-              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'payment_breakdown', title: tc('pos_app.modal_payment_type', { type: txDetail.payment_type }), payment_type: txDetail.payment_type }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>{tc('pos_app.label_payment')}<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>{tc('pos_app.view_all_payment', { type: txDetail.payment_type })}</div></div>
-              {locName && <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'branch_detail', title: tc('pos_app.modal_branch', { name: locName }), branch_id: txDetail.pos_location_id ?? undefined }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>{tc('pos_app.label_branch')}<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>{tc('pos_app.view_branch')}</div></div>}
+              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'cashier_detail', title: tc('pos_app.modal_cashier_transactions', { name: txDetail.cashier?.name || tc('pos_app.owner') }), cashier_id: txDetail.cashier?.name || 'Owner' }) }} style={{ fontSize: 16, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>{tc('pos_app.label_cashier')}<div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || tc('pos_app.owner')}{txDetail.cashier?.role ? <span style={{ fontSize: 14, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div><div style={{ fontSize: 13, color: ACC, fontWeight: 600, marginTop: 3 }}>{tc('pos_app.view_performance')}</div></div>
+              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'payment_breakdown', title: tc('pos_app.modal_payment_type', { type: txDetail.payment_type }), payment_type: txDetail.payment_type }) }} style={{ fontSize: 16, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>{tc('pos_app.label_payment')}<div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div><div style={{ fontSize: 13, color: ACC, fontWeight: 600, marginTop: 3 }}>{tc('pos_app.view_all_payment', { type: txDetail.payment_type })}</div></div>
+              {locName && <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'branch_detail', title: tc('pos_app.modal_branch', { name: locName }), branch_id: txDetail.pos_location_id ?? undefined }) }} style={{ fontSize: 16, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>{tc('pos_app.label_branch')}<div style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 13, color: ACC, fontWeight: 600, marginTop: 3 }}>{tc('pos_app.view_branch')}</div></div>}
             </div>
 
             {/* Customer — clickable */}
             {txDetail.pos_customers?.phone && (
-              <div onClick={() => { const c = txDetail.pos_customers!; setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'customer_history', title: tc('pos_app.modal_customer_history', { name: c.name || c.phone }), customer_phone: c.phone }) }} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
+              <div onClick={() => { const c = txDetail.pos_customers!; setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'customer_history', title: tc('pos_app.modal_customer_history', { name: c.name || c.phone }), customer_phone: c.phone }) }} style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
                 👤 {tc('pos_app.customer_label')}: <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{txDetail.pos_customers.name || txDetail.pos_customers.phone}</span>
-                {txDetail.pos_customers.name && txDetail.pos_customers.phone && <span style={{ marginLeft: 8, fontSize: 11 }}>({txDetail.pos_customers.phone})</span>}
-                <span style={{ fontSize: 9, color: ACC, fontWeight: 600, marginLeft: 8 }}>{tc('pos_app.view_history')}</span>
+                {txDetail.pos_customers.name && txDetail.pos_customers.phone && <span style={{ marginLeft: 8, fontSize: 15 }}>({txDetail.pos_customers.phone})</span>}
+                <span style={{ fontSize: 13, color: ACC, fontWeight: 600, marginLeft: 8 }}>{tc('pos_app.view_history')}</span>
               </div>
             )}
 
             {/* Line items */}
             <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '8px 14px', background: 'var(--ev)', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '8px 14px', background: 'var(--ev)', fontSize: 14, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
                 <span>{tc('pos_app.col_item')}</span><span style={{ textAlign: 'center' }}>{tc('pos_app.col_qty')}</span><span style={{ textAlign: 'right' }}>{tc('pos_app.col_unit')}</span>{hasCostData && <span style={{ textAlign: 'right' }}>{tc('pos_app.col_profit')}</span>}<span style={{ textAlign: 'right' }}>{tc('pos_app.col_total')}</span>
               </div>
               {txItems.map((item, i) => {
@@ -3781,11 +3781,11 @@ export default function POSPage() {
                 const lineProfit = item.cost_price ? lineTotal - item.qty * item.cost_price : null
                 const matchedInv = inventory.find(inv => inv.name === item.name)
                 return (
-                  <div key={i} onClick={() => { if (matchedInv) { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'product_history', title: item.name, product_name: item.name, item_id: matchedInv.id }) } }} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13, cursor: matchedInv ? 'pointer' : 'default', transition: 'background .15s' }} onMouseEnter={e => { if (matchedInv) (e.currentTarget as HTMLElement).style.background = 'var(--ev)' }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                  <div key={i} onClick={() => { if (matchedInv) { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'product_history', title: item.name, product_name: item.name, item_id: matchedInv.id }) } }} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 17, cursor: matchedInv ? 'pointer' : 'default', transition: 'background .15s' }} onMouseEnter={e => { if (matchedInv) (e.currentTarget as HTMLElement).style.background = 'var(--ev)' }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                     <span style={{ color: matchedInv ? ACC : 'var(--tx)', fontWeight: 500, textDecoration: matchedInv ? 'underline' : 'none', textDecorationColor: matchedInv ? ACC + '40' : undefined, textUnderlineOffset: '2px' }}>{item.name}</span>
                     <span style={{ textAlign: 'center', color: 'var(--tx3)' }}>{item.qty}</span>
                     <span style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, item.unit_price)}</span>
-                    {hasCostData && <span style={{ textAlign: 'right', fontSize: 12, color: lineProfit !== null ? (lineProfit >= 0 ? GREEN : RED) : 'var(--tx3)' }}>{lineProfit !== null ? fmt(currencySymbol, lineProfit) : '—'}</span>}
+                    {hasCostData && <span style={{ textAlign: 'right', fontSize: 16, color: lineProfit !== null ? (lineProfit >= 0 ? GREEN : RED) : 'var(--tx3)' }}>{lineProfit !== null ? fmt(currencySymbol, lineProfit) : '—'}</span>}
                     <span style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, lineTotal)}</span>
                   </div>
                 )
@@ -3795,25 +3795,25 @@ export default function POSPage() {
             {/* Totals breakdown */}
             <div style={{ background: 'var(--ev)', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
               {(discount > 0 || (subtotal !== txDetail.total)) && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--tx3)', marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, color: 'var(--tx3)', marginBottom: 6 }}>
                   <span>{tc('pos_app.subtotal')}</span><span>{fmt(currencySymbol, subtotal)}</span>
                 </div>
               )}
               {discount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: RED, marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, color: RED, marginBottom: 6 }}>
                   <span>{tc('pos_app.discount')}</span><span>−{fmt(currencySymbol, discount)}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, color: 'var(--tx)', borderTop: (discount > 0 || subtotal !== txDetail.total) ? '2px solid var(--b)' : 'none', paddingTop: (discount > 0 || subtotal !== txDetail.total) ? 8 : 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 20, fontWeight: 800, color: 'var(--tx)', borderTop: (discount > 0 || subtotal !== txDetail.total) ? '2px solid var(--b)' : 'none', paddingTop: (discount > 0 || subtotal !== txDetail.total) ? 8 : 0 }}>
                 <span>{tc('pos_app.total')}</span><span>{fmt(currencySymbol, txDetail.total)}</span>
               </div>
               {tendered !== null && tendered !== undefined && tendered > 0 && (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--tx3)', marginTop: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, color: 'var(--tx3)', marginTop: 6 }}>
                     <span>{tc('pos_app.tendered')}</span><span>{fmt(currencySymbol, tendered)}</span>
                   </div>
                   {change !== null && change > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--tx3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, color: 'var(--tx3)' }}>
                       <span>{tc('pos_app.change')}</span><span>{fmt(currencySymbol, change)}</span>
                     </div>
                   )}
@@ -3825,19 +3825,19 @@ export default function POSPage() {
             {hasCostData && (
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
                 <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'gross_profit', title: tc('pos_app.modal_gross_profit') }) }} style={{ flex: 1, background: totalProfit >= 0 ? 'rgba(34,197,94,.06)' : 'rgba(220,38,38,.06)', border: `1px solid ${totalProfit >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(220,38,38,.2)'}`, borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>{tc('pos_app.profit')}</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: totalProfit >= 0 ? GREEN : RED, marginTop: 2 }}>{fmt(currencySymbol, totalProfit)}</div>
-                  <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>{tc('pos_app.analyse_arrow')}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>{tc('pos_app.profit')}</div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: totalProfit >= 0 ? GREEN : RED, marginTop: 2 }}>{fmt(currencySymbol, totalProfit)}</div>
+                  <div style={{ fontSize: 12, color: ACC, fontWeight: 600, marginTop: 2 }}>{tc('pos_app.analyse_arrow')}</div>
                 </div>
                 <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'margin', title: tc('pos_app.modal_margin') }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>{tc('pos_app.margin')}</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: marginPct >= 30 ? GREEN : marginPct >= 15 ? '#f59e0b' : RED, marginTop: 2 }}>{marginPct.toFixed(1)}%</div>
-                  <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>{tc('pos_app.breakdown_arrow')}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>{tc('pos_app.margin')}</div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: marginPct >= 30 ? GREEN : marginPct >= 15 ? '#f59e0b' : RED, marginTop: 2 }}>{marginPct.toFixed(1)}%</div>
+                  <div style={{ fontSize: 12, color: ACC, fontWeight: 600, marginTop: 2 }}>{tc('pos_app.breakdown_arrow')}</div>
                 </div>
                 <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'gross_profit', title: tc('pos_app.modal_cost_analysis') }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>{tc('pos_app.cost')}</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)', marginTop: 2 }}>{fmt(currencySymbol, totalCost)}</div>
-                  <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>{tc('pos_app.analyse_arrow')}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>{tc('pos_app.cost')}</div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: 'var(--tx)', marginTop: 2 }}>{fmt(currencySymbol, totalCost)}</div>
+                  <div style={{ fontSize: 12, color: ACC, fontWeight: 600, marginTop: 2 }}>{tc('pos_app.analyse_arrow')}</div>
                 </div>
               </div>
             )}
@@ -3849,16 +3849,16 @@ export default function POSPage() {
               return (
                 <>
                   {geoMatch && (
-                    <div onClick={() => window.open(`https://www.google.com/maps?q=${geoMatch[1]},${geoMatch[2]}`, '_blank')} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 8, padding: '8px 12px', background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.15)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>📍</span>
+                    <div onClick={() => window.open(`https://www.google.com/maps?q=${geoMatch[1]},${geoMatch[2]}`, '_blank')} style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 8, padding: '8px 12px', background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.15)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 20 }}>📍</span>
                       <div>
-                        <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 500 }}>{tc('pos_app.sale_location')}: {geoMatch[1]}, {geoMatch[2]}</div>
-                        <div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 1 }}>{tc('pos_app.open_google_maps')}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx2)', fontWeight: 500 }}>{tc('pos_app.sale_location')}: {geoMatch[1]}, {geoMatch[2]}</div>
+                        <div style={{ fontSize: 13, color: ACC, fontWeight: 600, marginTop: 1 }}>{tc('pos_app.open_google_maps')}</div>
                       </div>
                     </div>
                   )}
                   {cleanNotes && (
-                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, padding: '8px 12px', background: 'rgba(251,191,36,.06)', border: '1px solid rgba(251,191,36,.15)', borderRadius: 8 }}>
+                    <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 12, padding: '8px 12px', background: 'rgba(251,191,36,.06)', border: '1px solid rgba(251,191,36,.15)', borderRadius: 8 }}>
                       📝 {cleanNotes}
                     </div>
                   )}
@@ -3869,10 +3869,10 @@ export default function POSPage() {
             {/* Actions */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {txDetail.status === 'completed' && (
-                <button onClick={() => { setRefundTx(txDetail); setTxDetail(null); setRefundReason('') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(220,38,38,.25)', background: 'rgba(220,38,38,.06)', color: RED, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.process_refund')}</button>
+                <button onClick={() => { setRefundTx(txDetail); setTxDetail(null); setRefundReason('') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(220,38,38,.25)', background: 'rgba(220,38,38,.06)', color: RED, fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.process_refund')}</button>
               )}
-              <button onClick={() => { const items = txDetail.pos_items || []; const lines = items.map(it => `${it.name} x${it.qty} = ${fmt(currencySymbol, it.qty * it.unit_price)}`).join('\n'); const msg = `${tc('pos_app.receipt_label')} #${txDetail.id.slice(0, 8)}\n${createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n\n${lines}\n\n${tc('pos_app.total')}: ${fmt(currencySymbol, txDetail.total)}${discount > 0 ? `\n${tc('pos_app.discount')}: ${fmt(currencySymbol, discount)}` : ''}${txDetail.notes ? `\n${tc('pos_app.note_label')}: ${txDetail.notes}` : ''}\n\n${tc('pos_app.thank_you')}`; navigator.clipboard.writeText(msg); notify(tc('pos_app.toast_receipt_copied')) }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>📋 {tc('pos_app.copy_receipt')}</button>
-              <button onClick={() => { const items = txDetail.pos_items || []; const lines = items.map(it => `${it.name} x${it.qty} = ${fmt(currencySymbol, it.qty * it.unit_price)}`).join('%0a'); const msg = `*${tc('pos_app.receipt_label')} %23${txDetail.id.slice(0, 8)}*%0a${createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}%0a%0a${lines}%0a%0a*${tc('pos_app.total')}: ${fmt(currencySymbol, txDetail.total)}*${discount > 0 ? `%0a${tc('pos_app.discount')}: ${fmt(currencySymbol, discount)}` : ''}%0a%0a${tc('pos_app.thank_you')}`; window.open(`https://wa.me/?text=${msg}`, '_blank') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(37,211,102,.25)', background: 'rgba(37,211,102,.06)', color: '#25d366', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>💬 {tc('pos_app.whatsapp')}</button>
+              <button onClick={() => { const items = txDetail.pos_items || []; const lines = items.map(it => `${it.name} x${it.qty} = ${fmt(currencySymbol, it.qty * it.unit_price)}`).join('\n'); const msg = `${tc('pos_app.receipt_label')} #${txDetail.id.slice(0, 8)}\n${createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n\n${lines}\n\n${tc('pos_app.total')}: ${fmt(currencySymbol, txDetail.total)}${discount > 0 ? `\n${tc('pos_app.discount')}: ${fmt(currencySymbol, discount)}` : ''}${txDetail.notes ? `\n${tc('pos_app.note_label')}: ${txDetail.notes}` : ''}\n\n${tc('pos_app.thank_you')}`; navigator.clipboard.writeText(msg); notify(tc('pos_app.toast_receipt_copied')) }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>📋 {tc('pos_app.copy_receipt')}</button>
+              <button onClick={() => { const items = txDetail.pos_items || []; const lines = items.map(it => `${it.name} x${it.qty} = ${fmt(currencySymbol, it.qty * it.unit_price)}`).join('%0a'); const msg = `*${tc('pos_app.receipt_label')} %23${txDetail.id.slice(0, 8)}*%0a${createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}%0a%0a${lines}%0a%0a*${tc('pos_app.total')}: ${fmt(currencySymbol, txDetail.total)}*${discount > 0 ? `%0a${tc('pos_app.discount')}: ${fmt(currencySymbol, discount)}` : ''}%0a%0a${tc('pos_app.thank_you')}`; window.open(`https://wa.me/?text=${msg}`, '_blank') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(37,211,102,.25)', background: 'rgba(37,211,102,.06)', color: '#25d366', fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>💬 {tc('pos_app.whatsapp')}</button>
               <button onClick={() => setTxDetail(null)} style={btnSecondary}>{tc('pos_app.close')}</button>
             </div>
           </div>
@@ -3885,18 +3885,18 @@ export default function POSPage() {
         <>
           <div onClick={() => setFilterModal(null)} style={modalOverlay} />
           <div style={modalBox}>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{filterModal.title}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, marginBottom: 16 }}>{filterModal.title}</div>
             {filterModal.type === 'sales' && (
               <div>
-                {completedTx.length === 0 ? <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_completed_sales')}</div> : (
+                {completedTx.length === 0 ? <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_completed_sales')}</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                     {completedTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
                   </div>
@@ -3905,15 +3905,15 @@ export default function POSPage() {
             )}
             {filterModal.type === 'refunds' && (
               <div>
-                {refundedTx.length === 0 ? <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_refunds')}</div> : (
+                {refundedTx.length === 0 ? <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_refunds')}</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                     {refundedTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderColor: 'rgba(220,38,38,.2)' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.refund_fallback')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.refund_fallback')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: RED }}>-{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700, color: RED }}>-{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
                   </div>
@@ -3924,9 +3924,9 @@ export default function POSPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                 {outOfStock.map(item => (
                   <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', opacity: archivingStockId === item.id ? 0.4 : 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</span>
+                    <span style={{ fontSize: 17, fontWeight: 500 }}>{item.name}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>{tc('pos_app.out_of_stock')}</span>
+                      <span style={{ fontSize: 16, fontWeight: 600, color: RED }}>{tc('pos_app.out_of_stock')}</span>
                       <button
                         disabled={archivingStockId === item.id}
                         onClick={async () => {
@@ -3946,18 +3946,18 @@ export default function POSPage() {
                           } catch { setToast({ msg: tc('pos_app.toast_archive_failed'), ok: false }) }
                           setArchivingStockId(null)
                         }}
-                        style={{ fontSize: 11, color: 'var(--tx3)', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit', fontWeight: 500 }}
+                        style={{ fontSize: 15, color: 'var(--tx3)', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit', fontWeight: 500 }}
                       >{tc('pos_app.archive')}</button>
                     </div>
                   </div>
                 ))}
                 {lowStock.map(item => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)' }}>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{tc('pos_app.stock_left', { n: item.stock_qty })}</span>
+                    <span style={{ fontSize: 17, fontWeight: 500 }}>{item.name}</span>
+                    <span style={{ fontSize: 16, fontWeight: 600, color: AMBER }}>{tc('pos_app.stock_left', { n: item.stock_qty })}</span>
                   </div>
                 ))}
-                {alertCount === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.all_stock_healthy')}</div>}
+                {alertCount === 0 && <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.all_stock_healthy')}</div>}
               </div>
             )}
             {filterModal.type === 'cashier_detail' && (() => {
@@ -3970,13 +3970,13 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.kpi_sales')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{cashierTx.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, cashierRevenue)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.card_avg_sale')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgSale)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.kpi_sales')}</div><div style={{ fontSize: 24, fontWeight: 800, color: ACC }}>{cashierTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 24, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, cashierRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.card_avg_sale')}</div><div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgSale)}</div></div>
                   </div>
                   {activeHours.length > 0 && (
                     <div style={{ ...cardStyle, marginBottom: 16 }}>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.sales_by_hour')}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.sales_by_hour')}</div>
                       <MiniBarChart data={activeHours} color={ACC} height={60} />
                     </div>
                   )}
@@ -3984,10 +3984,10 @@ export default function POSPage() {
                     {cashierTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
                   </div>
@@ -4014,33 +4014,33 @@ export default function POSPage() {
                 <div>
                   {/* Summary cards */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, todayRevenue)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.cost')}</div><div style={{ fontSize: 18, fontWeight: 800, color: RED }}>{fmt(currencySymbol, totalCost)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.profit')}</div><div style={{ fontSize: 18, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, todayRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.cost')}</div><div style={{ fontSize: 22, fontWeight: 800, color: RED }}>{fmt(currencySymbol, totalCost)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.profit')}</div><div style={{ fontSize: 22, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div></div>
                   </div>
                   {/* Visual bar */}
                   <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--ev)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.revenue_vs_cost')}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.revenue_vs_cost')}</div>
                     <div style={{ display: 'flex', height: 24, borderRadius: 6, overflow: 'hidden', background: 'var(--b)' }}>
-                      {todayRevenue > 0 && <div style={{ width: `${(totalCost / todayRevenue) * 100}%`, background: RED, transition: 'width .3s', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#fff', fontWeight: 700 }}>{tc('pos_app.cost')}</div>}
-                      {todayRevenue > 0 && <div style={{ flex: 1, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#fff', fontWeight: 700 }}>{tc('pos_app.profit')} {margin.toFixed(0)}%</div>}
+                      {todayRevenue > 0 && <div style={{ width: `${(totalCost / todayRevenue) * 100}%`, background: RED, transition: 'width .3s', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#fff', fontWeight: 700 }}>{tc('pos_app.cost')}</div>}
+                      {todayRevenue > 0 && <div style={{ flex: 1, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#fff', fontWeight: 700 }}>{tc('pos_app.profit')} {margin.toFixed(0)}%</div>}
                     </div>
                   </div>
                   {/* Product breakdown */}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.profit_by_product')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.profit_by_product')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto', marginBottom: lossMakers.length > 0 ? 14 : 0 }}>
                     {sorted.slice(0, 15).map(([name, d]) => (
                       <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: d.profit >= 0 ? 'rgba(22,163,74,.04)' : 'rgba(220,38,38,.04)', border: `1px solid ${d.profit >= 0 ? 'rgba(22,163,74,.15)' : 'rgba(220,38,38,.15)'}` }}>
-                        <div><div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{name}</div><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.sold_rev', { qty: d.qty, rev: fmt(currencySymbol, d.revenue) })}</div></div>
-                        <div style={{ textAlign: 'right' }}><div style={{ fontSize: 13, fontWeight: 700, color: d.profit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, d.profit)}</div><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.pct_margin', { pct: d.revenue > 0 ? (d.profit / d.revenue * 100).toFixed(0) : 0 })}</div></div>
+                        <div><div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)' }}>{name}</div><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.sold_rev', { qty: d.qty, rev: fmt(currencySymbol, d.revenue) })}</div></div>
+                        <div style={{ textAlign: 'right' }}><div style={{ fontSize: 17, fontWeight: 700, color: d.profit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, d.profit)}</div><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.pct_margin', { pct: d.revenue > 0 ? (d.profit / d.revenue * 100).toFixed(0) : 0 })}</div></div>
                       </div>
                     ))}
                   </div>
                   {/* Loss maker alert */}
                   {lossMakers.length > 0 && (
                     <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: RED, marginBottom: 4 }}>⚠️ {lossMakers.length > 1 ? tc('pos_app.loss_makers_other', { n: lossMakers.length }) : tc('pos_app.loss_makers_one', { n: lossMakers.length })}</div>
-                      <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.loss_makers_hint')}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: RED, marginBottom: 4 }}>⚠️ {lossMakers.length > 1 ? tc('pos_app.loss_makers_other', { n: lossMakers.length }) : tc('pos_app.loss_makers_one', { n: lossMakers.length })}</div>
+                      <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.loss_makers_hint')}</div>
                     </div>
                   )}
                 </div>
@@ -4067,30 +4067,30 @@ export default function POSPage() {
                   {/* Overall margin gauge */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '14px 16px', borderRadius: 12, background: `${healthColor}08`, border: `1px solid ${healthColor}20` }}>
                     <div style={{ width: 60, height: 60, borderRadius: '50%', border: `4px solid ${healthColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: healthColor }}>{margin.toFixed(0)}%</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: healthColor }}>{margin.toFixed(0)}%</span>
                     </div>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: healthColor }}>{tc('pos_app.health_margin', { label: healthLabel })}</div>
-                      <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: healthColor }}>{tc('pos_app.health_margin', { label: healthLabel })}</div>
+                      <div style={{ fontSize: 16, color: 'var(--tx2)', lineHeight: 1.5 }}>
                         {margin >= 40 ? tc('pos_app.margin_advice_strong') : margin >= 20 ? tc('pos_app.margin_advice_moderate') : tc('pos_app.margin_advice_thin')}
                       </div>
                     </div>
                   </div>
                   {/* Margin distribution */}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.product_margins_sorted')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.product_margins_sorted')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
                     {sorted.map(p => {
                       const mc = p.margin >= 40 ? GREEN : p.margin >= 20 ? AMBER : RED
                       return (
                         <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.rev_cost', { rev: fmt(currencySymbol, p.revenue), cost: fmt(currencySymbol, p.cost) })}</div>
+                            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                            <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.rev_cost', { rev: fmt(currencySymbol, p.revenue), cost: fmt(currencySymbol, p.cost) })}</div>
                           </div>
                           <div style={{ width: 60, height: 6, borderRadius: 3, background: 'var(--ev)', overflow: 'hidden', flexShrink: 0 }}>
                             <div style={{ height: '100%', width: `${Math.min(Math.max(p.margin, 0), 100)}%`, background: mc, borderRadius: 3 }} />
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: mc, minWidth: 40, textAlign: 'right' }}>{p.margin.toFixed(0)}%</span>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: mc, minWidth: 40, textAlign: 'right' }}>{p.margin.toFixed(0)}%</span>
                         </div>
                       )
                     })}
@@ -4120,24 +4120,24 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.average')}</div><div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{fmt(currencySymbol, avgSale)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.median')}</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, median)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.smallest')}</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx3)' }}>{fmt(currencySymbol, smallest)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.largest')}</div><div style={{ fontSize: 16, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, largest)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.average')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{fmt(currencySymbol, avgSale)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.median')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, median)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.smallest')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx3)' }}>{fmt(currencySymbol, smallest)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.largest')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, largest)}</div></div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.avg_items_sale')}</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{avgItems.toFixed(1)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.total_sales')}</div><div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{todaySales}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.avg_items_sale')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{avgItems.toFixed(1)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.total_sales')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{todaySales}</div></div>
                   </div>
                   {/* Distribution chart */}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.sale_size_distribution')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.sale_size_distribution')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
                     {buckets.map((b, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 11, color: 'var(--tx3)', minWidth: 110, textAlign: 'right' }}>{b.label}</span>
+                        <span style={{ fontSize: 15, color: 'var(--tx3)', minWidth: 110, textAlign: 'right' }}>{b.label}</span>
                         <div style={{ flex: 1, height: 20, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${(b.count / maxBucket) * 100}%`, background: ACC, borderRadius: 4, transition: 'width .3s', display: 'flex', alignItems: 'center', paddingLeft: 6 }}>
-                            {b.count > 0 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 700 }}>{b.count}</span>}
+                            {b.count > 0 && <span style={{ fontSize: 14, color: '#fff', fontWeight: 700 }}>{b.count}</span>}
                           </div>
                         </div>
                       </div>
@@ -4145,8 +4145,8 @@ export default function POSPage() {
                   </div>
                   {/* Tips */}
                   <div style={{ padding: '10px 14px', borderRadius: 10, background: ACC_BG, border: `1px solid ${ACC_BORDER}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: ACC, marginBottom: 4 }}>{tc('pos_app.basket_tips_title')}</div>
-                    <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: ACC, marginBottom: 4 }}>{tc('pos_app.basket_tips_title')}</div>
+                    <div style={{ fontSize: 16, color: 'var(--tx2)', lineHeight: 1.6 }}>
                       {avgItems < 2 ? tc('pos_app.basket_tip_low') : tc('pos_app.basket_tip_good')}
                     </div>
                   </div>
@@ -4162,17 +4162,17 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.total_staff')}</div><div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>{cashierStats.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.total_revenue')}</div><div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalStaffRev)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.avg_per_staff')}</div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, cashierStats.length > 0 ? totalStaffRev / cashierStats.length : 0)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.total_staff')}</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{cashierStats.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.total_revenue')}</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalStaffRev)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.avg_per_staff')}</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, cashierStats.length > 0 ? totalStaffRev / cashierStats.length : 0)}</div></div>
                   </div>
                   {/* Chart */}
                   <div style={{ ...cardStyle, marginBottom: 16 }}>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.revenue_by_staff')}</div>
+                    <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.revenue_by_staff')}</div>
                     <MiniBarChart data={cashierStats.map(c => ({ label: c.name.split(' ')[0], value: c.revenue }))} color={ACC} height={80} />
                   </div>
                   {/* Leaderboard */}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.leaderboard')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.leaderboard')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
                     {cashierStats.map((c, i) => {
                       const pct = totalStaffRev > 0 ? (c.revenue / totalStaffRev * 100) : 0
@@ -4181,12 +4181,12 @@ export default function POSPage() {
                           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: i === 0 ? `1px solid ${ACC_BORDER}` : '1px solid var(--b)', background: i === 0 ? ACC_BG : 'var(--sf)', cursor: 'pointer', transition: 'all 150ms' }}
                           onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC }}
                           onMouseLeave={e => { (e.currentTarget.style as any).borderColor = i === 0 ? ACC_BORDER : 'var(--b)' }}>
-                          <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
+                          <span style={{ fontSize: 18, width: 22, textAlign: 'center' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.sales_avg_pct', { n: c.sales, avg: fmt(currencySymbol, c.avgSale), pct: pct.toFixed(0) })}</div>
+                            <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
+                            <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.sales_avg_pct', { n: c.sales, avg: fmt(currencySymbol, c.avgSale), pct: pct.toFixed(0) })}</div>
                           </div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.revenue)}</div>
+                          <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.revenue)}</div>
                         </div>
                       )
                     })}
@@ -4198,7 +4198,7 @@ export default function POSPage() {
             {/* Stock item deep-dive */}
             {filterModal.type === 'stock_item' && (() => {
               const item = inventory.find(i => i.id === filterModal.item_id)
-              if (!item) return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20, textAlign: 'center' }}>{tc('pos_app.item_not_found')}</div>
+              if (!item) return <div style={{ fontSize: 17, color: 'var(--tx3)', padding: 20, textAlign: 'center' }}>{tc('pos_app.item_not_found')}</div>
               const isOut = item.stock_qty === 0
               const statusColor = isOut ? RED : AMBER
               const profitPerUnit = item.sale_price - (item.cost_price || 0)
@@ -4217,27 +4217,27 @@ export default function POSPage() {
                   <div style={{ padding: '12px 14px', borderRadius: 10, background: `${statusColor}08`, border: `1px solid ${statusColor}20`, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: statusColor }}>{isOut ? tc('pos_app.out_of_stock_label') : tc('pos_app.low_stock_remaining', { n: item.stock_qty })}</div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_app.threshold_units', { n: item.low_stock_threshold })}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: statusColor }}>{isOut ? tc('pos_app.out_of_stock_label') : tc('pos_app.low_stock_remaining', { n: item.stock_qty })}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.threshold_units', { n: item.low_stock_threshold })}</div>
                     </div>
                   </div>
                   {/* Detail grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.card_sale_price')}</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, item.sale_price)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.card_cost_price')}</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.profit_per_unit')}</div><div style={{ fontSize: 16, fontWeight: 800, color: profitPerUnit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, profitPerUnit)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.margin')}</div><div style={{ fontSize: 16, fontWeight: 800, color: itemMargin >= 20 ? GREEN : itemMargin >= 10 ? AMBER : RED }}>{itemMargin.toFixed(0)}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.card_sale_price')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, item.sale_price)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.card_cost_price')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.profit_per_unit')}</div><div style={{ fontSize: 20, fontWeight: 800, color: profitPerUnit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, profitPerUnit)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.margin')}</div><div style={{ fontSize: 20, fontWeight: 800, color: itemMargin >= 20 ? GREEN : itemMargin >= 10 ? AMBER : RED }}>{itemMargin.toFixed(0)}%</div></div>
                   </div>
                   {/* Stock & sales info */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.stock_value')}</div><div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, stockValue)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.retail_value_label')}</div><div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, retailValue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.stock_value')}</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, stockValue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.retail_value_label')}</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, retailValue)}</div></div>
                   </div>
                   {/* Sales activity this period */}
                   {totalQtySold > 0 && (
                     <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', marginBottom: 14 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('pos_app.sales_this_period')}</div>
-                      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--tx2)' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('pos_app.sales_this_period')}</div>
+                      <div style={{ display: 'flex', gap: 16, fontSize: 16, color: 'var(--tx2)' }}>
                         <span><strong>{totalQtySold}</strong> {tc('pos_app.units_sold_word')}</span>
                         <span><strong>{fmt(currencySymbol, itemRevenue)}</strong> {tc('pos_app.revenue_word')}</span>
                         <span>{tc('pos_app.in_word')} <strong>{itemSales.length}</strong> {tc('pos_app.transactions_word')}</span>
@@ -4246,22 +4246,22 @@ export default function POSPage() {
                   )}
                   {/* Extra info */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {item.sku && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.sku_label')}: <strong>{item.sku}</strong></div>}
-                    {item.category && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.category_label')}: <strong>{item.category}</strong></div>}
-                    {item.supplier && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.supplier_label')}: <strong>{item.supplier}</strong></div>}
-                    {item.brand && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.brand_label')}: <strong>{item.brand}</strong></div>}
+                    {item.sku && <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.sku_label')}: <strong>{item.sku}</strong></div>}
+                    {item.category && <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.category_label')}: <strong>{item.category}</strong></div>}
+                    {item.supplier && <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.supplier_label')}: <strong>{item.supplier}</strong></div>}
+                    {item.brand && <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.brand_label')}: <strong>{item.brand}</strong></div>}
                     {item.expiry_date && (
-                      <div style={{ fontSize: 12, color: isExpiring ? RED : 'var(--tx2)' }}>
+                      <div style={{ fontSize: 16, color: isExpiring ? RED : 'var(--tx2)' }}>
                         {isExpiring ? '⚠️ ' : ''}{tc('pos_app.expires_label')}: <strong>{new Date(item.expiry_date).toLocaleDateString()}</strong>
                       </div>
                     )}
-                    {item.batch_number && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.batch_label')}: <strong>{item.batch_number}</strong></div>}
-                    {item.last_sold_at && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{tc('pos_app.last_sold_label')}: <strong>{new Date(item.last_sold_at).toLocaleDateString()}</strong></div>}
+                    {item.batch_number && <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.batch_label')}: <strong>{item.batch_number}</strong></div>}
+                    {item.last_sold_at && <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{tc('pos_app.last_sold_label')}: <strong>{new Date(item.last_sold_at).toLocaleDateString()}</strong></div>}
                   </div>
                   {/* Action suggestion */}
                   <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: `${statusColor}06`, border: `1px dashed ${statusColor}30` }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: statusColor, marginBottom: 4 }}>{tc('pos_app.recommended_action')}</div>
-                    <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: statusColor, marginBottom: 4 }}>{tc('pos_app.recommended_action')}</div>
+                    <div style={{ fontSize: 16, color: 'var(--tx2)', lineHeight: 1.5 }}>
                       {isOut ? (totalQtySold > 0 ? tc('pos_app.action_out_sold', { n: totalQtySold }) : tc('pos_app.action_out_nodemand')) :
                        (totalQtySold > 0 ? tc('pos_app.action_low_sold', { n: item.stock_qty, threshold: item.low_stock_threshold }) : tc('pos_app.action_low_monitor', { n: item.stock_qty, threshold: item.low_stock_threshold }))}
                     </div>
@@ -4285,26 +4285,26 @@ export default function POSPage() {
                   <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
                     {payData.map(p => (
                       <div key={p.type} style={{ flex: 1, ...cardStyle, border: p.type === highlighted ? `2px solid ${ACC}` : '1px solid var(--b)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 20 }}>{p.icon}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'capitalize', color: 'var(--tx)', marginTop: 4 }}>{p.type}</div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{p.count}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{fmt(currencySymbol, p.revenue)}</div>
-                        <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.pct_of_revenue', { pct: totalRev > 0 ? (p.revenue / totalRev * 100).toFixed(0) : 0 })}</div>
+                        <div style={{ fontSize: 24 }}>{p.icon}</div>
+                        <div style={{ fontSize: 17, fontWeight: 700, textTransform: 'capitalize', color: 'var(--tx)', marginTop: 4 }}>{p.type}</div>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{p.count}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{fmt(currencySymbol, p.revenue)}</div>
+                        <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.pct_of_revenue', { pct: totalRev > 0 ? (p.revenue / totalRev * 100).toFixed(0) : 0 })}</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.payment_tx_today', { type: highlighted })}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.payment_tx_today', { type: highlighted })}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
                     {highlightedTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
-                    {highlightedTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_payment_tx', { type: highlighted })}</div>}
+                    {highlightedTx.length === 0 && <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_payment_tx', { type: highlighted })}</div>}
                   </div>
                 </div>
               )
@@ -4323,34 +4323,34 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.kpi_sales')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{branchTx.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, branchRevenue)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.card_avg_sale')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, branchAvg)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.kpi_sales')}</div><div style={{ fontSize: 24, fontWeight: 800, color: ACC }}>{branchTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 24, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, branchRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.card_avg_sale')}</div><div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, branchAvg)}</div></div>
                   </div>
                   {branchProfit > 0 && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.profit')}</div><div style={{ fontSize: 16, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, branchProfit)}</div></div>
-                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.payment_mix')}</div><div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginTop: 4 }}>{payBreakdown.map(p => `${p.type === 'cash' ? '💵' : p.type === 'card' ? '💳' : '📱'} ${p.count}`).join('  ')}</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.profit')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, branchProfit)}</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.payment_mix')}</div><div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', marginTop: 4 }}>{payBreakdown.map(p => `${p.type === 'cash' ? '💵' : p.type === 'card' ? '💳' : '📱'} ${p.count}`).join('  ')}</div></div>
                     </div>
                   )}
                   {activeHours.length > 0 && (
                     <div style={{ ...cardStyle, marginBottom: 16 }}>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.revenue_by_hour')}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.revenue_by_hour')}</div>
                       <MiniBarChart data={activeHours} color={ACC} height={60} />
                     </div>
                   )}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.transactions_label')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.transactions_label')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
                     {branchTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
-                    {branchTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_branch_sales')}</div>}
+                    {branchTx.length === 0 && <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_branch_sales')}</div>}
                   </div>
                 </div>
               )
@@ -4369,32 +4369,32 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.visits_today')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{custTx.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.total_spent')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, custRevenue)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.avg_order')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, custAvg)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.visits_today')}</div><div style={{ fontSize: 24, fontWeight: 800, color: ACC }}>{custTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.total_spent')}</div><div style={{ fontSize: 24, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, custRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.avg_order')}</div><div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, custAvg)}</div></div>
                   </div>
                   {topItems.length > 0 && (
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.favourite_items')}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.favourite_items')}</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {topItems.map(([name, count]) => (
-                          <span key={name} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 9999, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, color: ACC, fontWeight: 600 }}>{name} ×{count}</span>
+                          <span key={name} style={{ fontSize: 15, padding: '4px 10px', borderRadius: 9999, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, color: ACC, fontWeight: 600 }}>{name} ×{count}</span>
                         ))}
                       </div>
                     </div>
                   )}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.orders_label')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.orders_label')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
                     {custTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
-                    {custTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_customer_tx')}</div>}
+                    {custTx.length === 0 && <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_customer_tx')}</div>}
                   </div>
                 </div>
               )
@@ -4416,44 +4416,44 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.units_sold_label')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{totalQty}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalRev)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.transactions_label')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{prodTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.units_sold_label')}</div><div style={{ fontSize: 24, fontWeight: 800, color: ACC }}>{totalQty}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.kpi_revenue')}</div><div style={{ fontSize: 24, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalRev)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.transactions_label')}</div><div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{prodTx.length}</div></div>
                   </div>
                   {totalCostP > 0 && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.profit')}</div><div style={{ fontSize: 16, fontWeight: 800, color: prodProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, prodProfit)}</div></div>
-                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.margin')}</div><div style={{ fontSize: 16, fontWeight: 800, color: prodMargin >= 30 ? GREEN : prodMargin >= 15 ? AMBER : RED }}>{prodMargin.toFixed(0)}%</div></div>
-                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_app.stock_left_label')}</div><div style={{ fontSize: 16, fontWeight: 800, color: item && item.stock_qty <= (item.low_stock_threshold || 5) ? RED : 'var(--tx)' }}>{item?.stock_qty ?? '—'}</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.profit')}</div><div style={{ fontSize: 20, fontWeight: 800, color: prodProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, prodProfit)}</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.margin')}</div><div style={{ fontSize: 20, fontWeight: 800, color: prodMargin >= 30 ? GREEN : prodMargin >= 15 ? AMBER : RED }}>{prodMargin.toFixed(0)}%</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('pos_app.stock_left_label')}</div><div style={{ fontSize: 20, fontWeight: 800, color: item && item.stock_qty <= (item.low_stock_threshold || 5) ? RED : 'var(--tx)' }}>{item?.stock_qty ?? '—'}</div></div>
                     </div>
                   )}
                   {item && (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-                      <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{tc('pos_app.price_label')}: {fmt(currencySymbol, item.sale_price)}</span>
-                      {item.cost_price ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{tc('pos_app.cost_label')}: {fmt(currencySymbol, item.cost_price)}</span> : null}
-                      {item.category ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.category}</span> : null}
-                      {item.brand ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.brand}</span> : null}
-                      {item.supplier ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.supplier}</span> : null}
+                      <span style={{ fontSize: 15, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{tc('pos_app.price_label')}: {fmt(currencySymbol, item.sale_price)}</span>
+                      {item.cost_price ? <span style={{ fontSize: 15, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{tc('pos_app.cost_label')}: {fmt(currencySymbol, item.cost_price)}</span> : null}
+                      {item.category ? <span style={{ fontSize: 15, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.category}</span> : null}
+                      {item.brand ? <span style={{ fontSize: 15, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.brand}</span> : null}
+                      {item.supplier ? <span style={{ fontSize: 15, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.supplier}</span> : null}
                     </div>
                   )}
                   {activeHours.length > 0 && (
                     <div style={{ ...cardStyle, marginBottom: 16 }}>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.units_sold_by_hour')}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos_app.units_sold_by_hour')}</div>
                       <MiniBarChart data={activeHours} color={ACC} height={60} />
                     </div>
                   )}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.transactions_with_product')}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('pos_app.transactions_with_product')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
                     {prodTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 17, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos_app.sale')}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                        <div style={{ fontSize: 19, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
                       </div>
                     ))}
-                    {prodTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_product_sales')}</div>}
+                    {prodTx.length === 0 && <div style={{ fontSize: 17, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_product_sales')}</div>}
                   </div>
                 </div>
               )
@@ -4461,7 +4461,7 @@ export default function POSPage() {
 
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               {lastTxDetail && (
-                <button onClick={() => { setFilterModal(null); setTxDetail(lastTxDetail); setLastTxDetail(null) }} style={{ padding: '10px 16px', borderRadius: 8, border: `1px solid ${ACC}30`, background: `${ACC}08`, color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back_to_transaction')}</button>
+                <button onClick={() => { setFilterModal(null); setTxDetail(lastTxDetail); setLastTxDetail(null) }} style={{ padding: '10px 16px', borderRadius: 8, border: `1px solid ${ACC}30`, background: `${ACC}08`, color: ACC, fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos_app.back_to_transaction')}</button>
               )}
               <button onClick={() => { setFilterModal(null); setLastTxDetail(null) }} style={btnSecondary}>{tc('pos_app.close')}</button>
             </div>
@@ -4475,18 +4475,18 @@ export default function POSPage() {
         <>
           <div onClick={() => setRefundTx(null)} style={modalOverlay} />
           <div style={modalBox}>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{tc('pos_app.process_refund')}</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.sale_hash')}{refundTx.id.slice(0, 8)} · {fmt(currencySymbol, refundTx.total)} · {refundTx.cashier?.name || tc('pos_app.owner')}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{tc('pos_app.process_refund')}</div>
+            <div style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.sale_hash')}{refundTx.id.slice(0, 8)} · {fmt(currencySymbol, refundTx.total)} · {refundTx.cashier?.name || tc('pos_app.owner')}</div>
             <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
               {(refundTx.pos_items || []).map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: i < refundTx.pos_items.length - 1 ? '1px solid var(--b)' : 'none', fontSize: 13 }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: i < refundTx.pos_items.length - 1 ? '1px solid var(--b)' : 'none', fontSize: 17 }}>
                   <span style={{ color: 'var(--tx)' }}>{item.name} x{item.qty}</span>
                   <span style={{ fontWeight: 600 }}>{fmt(currencySymbol, item.unit_price)}</span>
                 </div>
               ))}
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.reason_required')}</div>
+              <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>{tc('pos_app.reason_required')}</div>
               <select value={refundReason} onChange={e => setRefundReason(e.target.value)} style={{ ...inputStyle, width: '100%' }}>
                 <option value="">{tc('pos_app.select_reason')}</option>
                 <option value="Customer changed mind">{tc('pos_app.reason_changed_mind')}</option>
@@ -4497,10 +4497,10 @@ export default function POSPage() {
               </select>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => handleRefund(true)} disabled={!refundReason || refunding} style={{ flex: 1, padding: 12, borderRadius: 10, background: RED, color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: !refundReason || refunding ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !refundReason ? 0.5 : 1 }}>
+              <button onClick={() => handleRefund(true)} disabled={!refundReason || refunding} style={{ flex: 1, padding: 12, borderRadius: 10, background: RED, color: '#fff', fontSize: 18, fontWeight: 700, border: 'none', cursor: !refundReason || refunding ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !refundReason ? 0.5 : 1 }}>
                 {refunding ? tc('pos_app.processing') : tc('pos_app.full_refund')}
               </button>
-              <button onClick={() => setRefundTx(null)} style={{ flex: 1, ...btnSecondary, padding: 12, fontSize: 14 }}>{tc('pos_app.cancel')}</button>
+              <button onClick={() => setRefundTx(null)} style={{ flex: 1, ...btnSecondary, padding: 12, fontSize: 18 }}>{tc('pos_app.cancel')}</button>
             </div>
           </div>
         </>
