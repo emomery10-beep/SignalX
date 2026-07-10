@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     status: 'published',
   }
 
-  if (content && item.type === 'blog') {
+  if (content && (item.type === 'blog' || item.type === 'community_post')) {
     updates.content = content
   }
 
