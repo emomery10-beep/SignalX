@@ -1,7 +1,6 @@
 'use client'
-import { useState, useEffect, useRef, type CSSProperties } from 'react'
+import { useState, useEffect, useRef, type CSSProperties, type FormEvent } from 'react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import type { Lang } from '@/lib/i18n'
@@ -9,11 +8,6 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { localePath } from '@/lib/i18n-locale'
 import type { Locale } from '@/lib/i18n-locale'
 import { createClient } from '@/lib/supabase/client'
-
-const SkullCanvas = dynamic(() => import('@/components/three/SkullCanvas'), {
-  ssr: false,
-  loading: () => null,
-})
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -544,16 +538,26 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
   )
 }
 
-// ── Live staff-demo UI replica ── real, clickable links out to the deployed
-// staff app (pos.askbiz.co), unlike the other UI replicas on this page which
-// are illustrative-only mockups.
-function DemoUIReplica({tc}:{tc:(k:string)=>string}) {
-  const DEMO_BASE = 'https://pos.askbiz.co/preview'
-  const items = [
-    {icon:'card',    name:tc('landing.demo_cashier_name'),   desc:tc('landing.demo_cashier_desc'),   path:'/cashier'},
-    {icon:'package', name:tc('landing.demo_inventory_name'), desc:tc('landing.demo_inventory_desc'), path:'/inventory'},
-    {icon:'chart',   name:tc('landing.demo_manager_name'),   desc:tc('landing.demo_manager_desc'),   path:'/manager'},
-    {icon:'truck',   name:tc('landing.demo_logistics_name'), desc:tc('landing.demo_logistics_desc'), path:'/logistics'},
+// ── Live staff-demo UI replica ── dynamic, tab-driven preview of the real
+// staff screens (cashier/inventory/manager/courier), reusing the same sample
+// "Wireless Earbuds Pro / USB Hub" shop narrative and tc() keys as the other
+// replicas on this page instead of inventing new copy. Each tab swaps the
+// panel in place — the "Try it full-screen" link below is for people who
+// want the real, fully-functional app at pos.askbiz.co.
+function DemoUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
+  type DTab = 'cashier'|'inventory'|'manager'|'courier'
+  const [tab, setTab] = useState<DTab>('cashier')
+  const [visible, setVisible] = useState(true)
+  const change = (t:DTab) => {
+    if (t === tab) return
+    setVisible(false)
+    setTimeout(() => { setTab(t); setVisible(true) }, 90)
+  }
+  const TABS: {id:DTab;icon:string;label:string}[] = [
+    {id:'cashier',   icon:'card',    label:tc('landing.demo_cashier_name')},
+    {id:'inventory', icon:'package', label:tc('landing.demo_inventory_name')},
+    {id:'manager',   icon:'chart',   label:tc('landing.demo_manager_name')},
+    {id:'courier',   icon:'truck',   label:tc('landing.demo_logistics_name')},
   ]
   return (
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
@@ -567,22 +571,77 @@ function DemoUIReplica({tc}:{tc:(k:string)=>string}) {
           <span style={{fontSize:9,color:'#16a34a',fontWeight:700}}>{tc('landing.demo_live_badge')}</span>
         </div>
       </div>
-      <div style={{padding:'7px 18px 3px',fontSize:8,fontWeight:700,color:'#BBB',letterSpacing:'.1em',background:'#FAFAFA'}}>{tc('landing.demo_cat')}</div>
-      <div>
-        {items.map((item,i)=>(
-          <a key={i} href={DEMO_BASE+item.path} target="_blank" rel="noopener noreferrer"
-             style={{display:'flex',alignItems:'center',gap:10,padding:'9px 18px',borderTop:'1px solid #F5F5F5',background:'#fff',textDecoration:'none'}}>
-            <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n={item.icon} size={13}/></div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>{item.name}</div>
-              <div style={{fontSize:8,color:'#AAA',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.desc}</div>
-            </div>
-            <span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:5,background:'rgba(201,122,68,.1)',color:'#C97A44',border:'1px solid rgba(201,122,68,.2)',whiteSpace:'nowrap',flexShrink:0}}>
-              {tc('landing.demo_try_it')} →
-            </span>
-          </a>
+
+      <div style={{display:'flex',padding:'8px 10px 0',gap:2,background:'#fff',borderBottom:'1px solid #F5F5F5'}}>
+        {TABS.map(t=>(
+          <button key={t.id} className="demo-tab" onClick={()=>change(t.id)}
+            style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,padding:'7px 4px 9px',border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent'}}>
+            <Ic n={t.icon} size={14} color={tab===t.id?'#C97A44':'#AAA'}/>
+            <span style={{fontSize:9,fontWeight:tab===t.id?700:500,color:tab===t.id?'#C97A44':'#AAA'}}>{t.label}</span>
+          </button>
         ))}
       </div>
+
+      <div className="demo-panel" style={{padding:'16px 18px',minHeight:184,background:'#fff',opacity:visible?1:0}}>
+        {tab==='cashier' && (
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>{tc('landing.posui_current_sale')}</div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#1A1410',padding:'6px 0',borderBottom:'1px solid #F5F5F5'}}><span>Wireless Earbuds Pro</span><span>{demo.compact(24)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#1A1410',padding:'6px 0',borderBottom:'1px solid #F5F5F5'}}><span>USB Hub</span><span>{demo.compact(9)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',padding:'8px 0 2px'}}><span>{tc('landing.posui_subtotal')}</span><span>{demo.compact(33)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',padding:'2px 0 10px'}}><span>{tc('landing.posui_vat')}</span><span>{demo.compact(6.6)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:700,color:'#1A1410',padding:'10px 0 12px',borderTop:'1px solid #F0F0F0'}}><span>{tc('landing.posui_total')}</span><span>{demo.compact(39.6)}</span></div>
+            <div style={{display:'flex',gap:8}}>
+              <span style={{flex:1,textAlign:'center',padding:'9px',borderRadius:9999,background:'#C97A44',color:'#fff',fontSize:10,fontWeight:700}}>{tc('landing.posui_pay_mobile')}</span>
+              <span style={{flex:1,textAlign:'center',padding:'9px',borderRadius:9999,border:'1px solid #E5E5E5',color:'#6b6560',fontSize:10,fontWeight:700}}>{tc('landing.posui_pay_cash')}</span>
+            </div>
+          </div>
+        )}
+        {tab==='inventory' && (
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>{tc('landing.pos_mod_inventory')}</div>
+            {[
+              {name:'Wireless Earbuds Pro', low:false, qty:31},
+              {name:'USB Hub',              low:true,  qty:5},
+              {name:'Ginger Powder',        low:true,  qty:2.2},
+            ].map((p,i)=>(
+              <div key={p.name} style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:'#1A1410',padding:'8px 0',borderBottom:i<2?'1px solid #F5F5F5':'none'}}>
+                <span>{p.name}</span>
+                <span style={{fontWeight:700,color:p.low?'#e08a1e':'#6b6560'}}>{p.qty} {tc('landing.pos_kpi_products')}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {tab==='manager' && (
+          <div>
+            <div style={{fontSize:9,color:'#AAA',marginBottom:10}}>{tc('landing.pos_date_today')}</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
+              <div style={{background:'#fff',border:'1px solid #F0F0F0',borderRadius:9,padding:'10px 10px'}}><div style={{fontSize:9,color:'#AAA',marginBottom:4}}>{tc('landing.pos_kpi_revenue')}</div><div style={{fontSize:15,fontWeight:800,color:'#16a34a'}}>{demo.pnl.rev}</div></div>
+              <div style={{background:'#fff',border:'1px solid #F0F0F0',borderRadius:9,padding:'10px 10px'}}><div style={{fontSize:9,color:'#AAA',marginBottom:4}}>{tc('landing.pos_kpi_sales')}</div><div style={{fontSize:15,fontWeight:800,color:'#1A1410'}}>143</div></div>
+              <div style={{background:'#fff',border:'1px solid #F0F0F0',borderRadius:9,padding:'10px 10px'}}><div style={{fontSize:9,color:'#AAA',marginBottom:4}}>{tc('landing.pos_kpi_margin')}</div><div style={{fontSize:15,fontWeight:800,color:'#C97A44'}}>34.2%</div></div>
+            </div>
+            <div style={{fontSize:10,color:'#6b6560',lineHeight:1.5}}>{tc('landing.posui_nudge')}</div>
+          </div>
+        )}
+        {tab==='courier' && (
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>{tc('landing.mon_ships_header')}</div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:'#1A1410',padding:'8px 0',borderBottom:'1px solid #F5F5F5',gap:8}}>
+              <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{demo.ref(4421)} · Wireless Earbuds Pro ×10</span>
+              <span style={{fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:6,background:'rgba(99,102,241,.08)',color:'#6366f1',flexShrink:0,whiteSpace:'nowrap'}}>{tc('landing.mon_ships_status_in_transit')}</span>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:'#1A1410',padding:'8px 0',gap:8}}>
+              <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{demo.ref(4420)} · USB Hub ×50</span>
+              <span style={{fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:6,background:'rgba(22,163,74,.08)',color:'#16a34a',flexShrink:0,whiteSpace:'nowrap'}}>{tc('landing.mon_ships_status_delivered')}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <a href={`https://pos.askbiz.co/preview/${tab==='courier'?'logistics':tab}`} target="_blank" rel="noopener noreferrer"
+         style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:11,fontSize:11,fontWeight:700,color:'#C97A44',textDecoration:'none',background:'#FAFAFA',borderTop:'1px solid #F0F0F0'}}>
+        {tc('landing.demo_cta')} →
+      </a>
     </div>
   )
 }
@@ -1029,8 +1088,8 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
 
 function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const HERO_TABS = [
-    {id:'ops' as const, label:'Business Intelligence'},
-    {id:'cashier' as const, label:'PoS'},
+    {id:'ops' as const, label:'Business Intelligence', icon:'chart'},
+    {id:'cashier' as const, label:'PoS', icon:'camera'},
   ]
   const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
@@ -1051,12 +1110,14 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             transition:'transform 480ms cubic-bezier(0.65,0,0.35,1)',
           }}/>
           {HERO_TABS.map(t=>(
-            <button key={t.id} onClick={()=>setHeroTab(t.id)} style={{
+            <button key={t.id} className="hero-tab-btn" onClick={()=>setHeroTab(t.id)} style={{
               position:'relative', flex:1, padding:'11px 24px', fontSize:17, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
-              display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center',
+              display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', gap:8,
               background:'none', border:'none', borderRadius:9, zIndex:1,
-              color: heroTab===t.id ? '#1A1410' : '#888', transition:'color 300ms',
+              color: heroTab===t.id ? '#1A1410' : '#8A8A8A', transition:'color 200ms',
             }}>
+              {t.icon==='chart' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 20V10M12 20V4M20 20v-6"/></svg>}
+              {t.icon==='camera' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>}
               {t.label}
             </button>
           ))}
@@ -1291,6 +1352,23 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   // connections pay ~200KB+ for it. Static gradient background remains.
   const [showGlobe, setShowGlobe] = useState(false)
   const [authUser, setAuthUser] = useState<{ initials: string } | null>(null)
+  const [leadEmail, setLeadEmail] = useState('')
+  const [leadStatus, setLeadStatus] = useState<'idle'|'sending'|'sent'|'error'>('idle')
+  async function submitLead(e: FormEvent) {
+    e.preventDefault()
+    if (leadStatus === 'sending' || leadStatus === 'sent') return
+    setLeadStatus('sending')
+    try {
+      const res = await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: leadEmail, source: 'landing_closing_cta', country: geo?.country, locale: lang }),
+      })
+      setLeadStatus(res.ok ? 'sent' : 'error')
+    } catch {
+      setLeadStatus('error')
+    }
+  }
   useEffect(() => {
     const supabase = createClient()
     let alive = true
@@ -1463,7 +1541,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .pos-tabs{scrollbar-width:none;-ms-overflow-style:none}
         .pos-tabs-wrap{position:relative}
         .pos-tabs-wrap::after{content:'';position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to left,#fff,transparent);pointer-events:none;z-index:1}
-        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}}
+        /* DemoUIReplica tab switcher — focus ring + crossfade, both reduced-motion safe */
+        .demo-tab:focus-visible{outline:2px solid ${T.acc};outline-offset:-2px;border-radius:6px}
+        .demo-panel{transition:opacity 200ms cubic-bezier(0.22,1,0.36,1)}
+        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}.demo-panel{transition:none!important}}
       ` }}/>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
@@ -1562,7 +1643,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div className="hero-grid" style={{ gap:'clamp(24px,4vw,48px)', gridTemplateColumns:'1.1fr 1fr', alignItems:'end' }}>
             {/* Left — headline */}
             <div>
-              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(30px,3.6vw,52px)',fontWeight:400,lineHeight:1.02,letterSpacing:'-.02em',color:T.tx }}>
+              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(30px,4vw,68px)',fontWeight:400,lineHeight:1.02,letterSpacing:'-.02em',color:T.tx }}>
                 {tc('landing.hero_title_line1')}<br/>
                 <em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.hero_title_line2')}</em>
               </h1>
@@ -1743,16 +1824,17 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
-      {/* ── LIVE STAFF DEMO ───────────────────────────────────────────── */}
-      <section style={{ background:T.bg,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
+      {/* ── LIVE STAFF DEMO ── dynamic tab-driven widget (DemoUIReplica) on the
+           left, matched by height against the text column on the right ── */}
+      <section style={{ background:T.card,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div className="two-col" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
-              <DemoUIReplica tc={tc} />
+              <DemoUIReplica tc={tc} demo={demo} />
             </div>
             <div data-reveal data-reveal-delay="1">
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
-                {tc('landing.demo_title_line1')} {tc('landing.demo_title_line2')}
+                {tc('landing.demo_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.demo_title_line2')}</em>
               </h2>
               <p style={{ fontSize:16,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
                 {tc('landing.demo_subtitle')}
@@ -2000,6 +2082,36 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             {tc('landing.closing_cta')}
           </Link>
           <p style={{ fontSize:12,color:T.tx3,marginTop:14 }}>{tc('landing.hero_trust_free')}</p>
+          <p style={{ fontSize:12,color:T.tx3,marginTop:4 }}>{tc('landing.hero_trust_secure')}</p>
+
+          {/* ── Lightweight lead capture — for visitors not ready to sign up yet ── */}
+          <div style={{ marginTop:36,paddingTop:28,borderTop:`1px solid ${T.bd}` }}>
+            <p style={{ fontSize:13,color:T.tx2,marginBottom:12 }}>{tc('landing.lead_capture_title')}</p>
+            {leadStatus === 'sent' ? (
+              <p style={{ fontSize:13,color:T.acc,fontWeight:600 }}>{tc('landing.lead_capture_success')}</p>
+            ) : (
+              <form onSubmit={submitLead} style={{ display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap' }}>
+                <input
+                  type="email"
+                  required
+                  value={leadEmail}
+                  onChange={e=>setLeadEmail(e.target.value)}
+                  placeholder={tc('landing.lead_capture_placeholder')}
+                  style={{ padding:'11px 16px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,color:T.tx,fontSize:13,minWidth:220,flex:'1 1 220px',maxWidth:280 }}
+                />
+                <button
+                  type="submit"
+                  disabled={leadStatus==='sending'}
+                  style={{ padding:'11px 22px',borderRadius:9999,border:'none',background:T.tx,color:'#fff',fontSize:13,fontWeight:700,cursor:leadStatus==='sending'?'default':'pointer',opacity:leadStatus==='sending'?0.6:1 }}
+                >
+                  {tc('landing.lead_capture_cta')}
+                </button>
+              </form>
+            )}
+            {leadStatus === 'error' && (
+              <p style={{ fontSize:12,color:'#b45309',marginTop:8 }}>{tc('landing.lead_capture_error')}</p>
+            )}
+          </div>
         </div>
       </section>
 

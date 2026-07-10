@@ -346,6 +346,8 @@ input:focus, textarea:focus, select:focus {
 }
 .nav-link:hover::after { width: 100%; }
 
+.hero-tab-btn:hover { color: #4A4038 !important; }
+
 /* Toggle switches */
 .toggle {
   transition: background .2s var(--ease);
