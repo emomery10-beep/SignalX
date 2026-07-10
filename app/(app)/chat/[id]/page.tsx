@@ -175,17 +175,17 @@ export default function ChatConversationPage() {
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden' }}>
       {/* Topbar */}
       <div style={{ height:50, padding:'0 18px', borderBottom:'1px solid var(--b)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, background:'var(--sf)', gap:10 }}>
-        <div style={{ fontSize:13, fontWeight:500, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+        <div style={{ fontSize:17, fontWeight:500, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
           {isEmpty ? tc('page_chat_id.newConversation') : convTitle}
         </div>
         {uploadedFile && (
-          <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:9999, background:'rgba(30,212,202,.08)', border:'1px solid rgba(30,212,202,.18)', fontSize:11, color:'#47e2da', flexShrink:0, maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:9999, background:'rgba(30,212,202,.08)', border:'1px solid rgba(30,212,202,.18)', fontSize:15, color:'#47e2da', flexShrink:0, maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             {uploadedFile.name}
           </div>
         )}
         <div style={{ display:'flex', gap:7, flexShrink:0 }}>
-          <label style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 13px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx)', fontSize:12, cursor:'pointer', whiteSpace:'nowrap' }}>
+          <label style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 13px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx)', fontSize:16, cursor:'pointer', whiteSpace:'nowrap' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             {uploading ? tc('page_chat_id.uploadingLabel') : tc('page_chat_id.uploadLabel')}
             <input type="file" accept=".csv,.xlsx,.xls" style={{ display:'none' }} onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}/>
@@ -198,8 +198,8 @@ export default function ChatConversationPage() {
         <div style={{ maxWidth: 'min(680px, 100%)', margin:'0 auto', padding:'0 18px', display:'flex', flexDirection:'column', gap:2 }}>
           {isEmpty && (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, textAlign:'center', padding:28 }}>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:19, fontWeight:600, marginBottom:7 }}>{tc('page_chat_id.emptyHeading')}</div>
-              <div style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.65, maxWidth:360, marginBottom:20 }}>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:23, fontWeight:600, marginBottom:7 }}>{tc('page_chat_id.emptyHeading')}</div>
+              <div style={{ fontSize:17, color:'var(--tx2)', lineHeight:1.65, maxWidth:360, marginBottom:20 }}>
                 {geo ? tc('page_chat_id.emptySubGeo').replace('{symbol}', geo.currencySymbol).replace('{country}', geo.country) : tc('page_chat_id.emptySubDefault')}
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:2, width:'100%', maxWidth:420, textAlign:'left' }}>
@@ -209,7 +209,7 @@ export default function ChatConversationPage() {
                     onMouseEnter={e => { e.currentTarget.style.background='var(--ev)' }}
                     onMouseLeave={e => { e.currentTarget.style.background='transparent' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0 }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    <span style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.4 }}>{q}</span>
+                    <span style={{ fontSize:17, color:'var(--tx2)', lineHeight:1.4 }}>{q}</span>
                   </button>
                 ))}
               </div>
@@ -218,17 +218,17 @@ export default function ChatConversationPage() {
 
           {messages.map(msg => (
             <div key={msg.id} style={{ display:'flex', gap:9, padding:'2px 0', flexDirection:msg.role==='user'?'row-reverse':'row', animation:'msgIn .26s cubic-bezier(.16,1,.3,1) both' }}>
-              <div style={{ width:26, height:26, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:600, marginTop:3, background:msg.role==='assistant'?'linear-gradient(135deg,#d08a59,#8c6fe0)':'var(--ov)', color:msg.role==='assistant'?'#04080f':'var(--tx2)' }}>
+              <div style={{ width:26, height:26, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:600, marginTop:3, background:msg.role==='assistant'?'linear-gradient(135deg,#d08a59,#8c6fe0)':'var(--ov)', color:msg.role==='assistant'?'#04080f':'var(--tx2)' }}>
                 {msg.role==='assistant'
                   ? <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   : (user?.initials || 'U')}
               </div>
               <div style={{ flex:1, maxWidth:'88%', display:'flex', flexDirection:'column', alignItems:msg.role==='user'?'flex-end':'flex-start' }}>
                 {msg.role==='user' ? (
-                  <div style={{ padding:'10px 14px', borderRadius:13, borderBottomRightRadius:3, background:'var(--ov)', border:'1px solid var(--b)', fontSize:13, lineHeight:1.6, maxWidth:440 }}>{msg.content}</div>
+                  <div style={{ padding:'10px 14px', borderRadius:13, borderBottomRightRadius:3, background:'var(--ov)', border:'1px solid var(--b)', fontSize:17, lineHeight:1.6, maxWidth:440 }}>{msg.content}</div>
                 ) : (
                   msg.result ? <ResultBlock result={msg.result} onFollowUp={sendMessage} geo={geo}/> : (
-                    <div style={{ padding:'10px 14px', borderRadius:13, borderBottomLeftRadius:3, background:'var(--ev)', border:'1px solid var(--b)', fontSize:13, lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#47e2da;font-weight:500">$1</strong>').replace(/\n/g,'<br/>') }}/>
+                    <div style={{ padding:'10px 14px', borderRadius:13, borderBottomLeftRadius:3, background:'var(--ev)', border:'1px solid var(--b)', fontSize:17, lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#47e2da;font-weight:500">$1</strong>').replace(/\n/g,'<br/>') }}/>
                   )
                 )}
               </div>
@@ -254,7 +254,7 @@ export default function ChatConversationPage() {
           <div style={{ display:'flex', gap:7, alignItems:'flex-end', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:16, padding:'8px 8px 8px 13px', transition:'border-color 180ms' }}>
             <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKeyDown}
               placeholder={tc('page_chat_id.inputPlaceholder')} rows={1}
-              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'var(--tx)', fontFamily:'var(--font-dm,DM Sans,sans-serif)', fontSize:13, lineHeight:1.5, resize:'none', minHeight:20, maxHeight:120, overflowY:'auto' }}/>
+              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'var(--tx)', fontFamily:'var(--font-dm,DM Sans,sans-serif)', fontSize:17, lineHeight:1.5, resize:'none', minHeight:20, maxHeight:120, overflowY:'auto' }}/>
             <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
               <label style={{ width:28, height:28, borderRadius:6, border:'1px solid var(--b)', background:'transparent', color:'var(--tx3)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>

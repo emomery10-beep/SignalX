@@ -130,12 +130,12 @@ export default function PosActivatePage() {
 
   const bigBtn: React.CSSProperties = {
     width: '100%', padding: '16px', borderRadius: 14, border: 'none',
-    background: ACC, color: '#fff', fontSize: 17, fontWeight: 700,
+    background: ACC, color: '#fff', fontSize: 21, fontWeight: 700,
     cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)',
   }
   const ghostBtn: React.CSSProperties = {
     width: '100%', padding: '15px', borderRadius: 14, border: `1.5px solid ${B2}`,
-    background: 'transparent', color: TX2, fontSize: 16, fontWeight: 600,
+    background: 'transparent', color: TX2, fontSize: 20, fontWeight: 600,
     cursor: 'pointer', fontFamily: 'inherit',
   }
   const spinner = (
@@ -162,31 +162,31 @@ export default function PosActivatePage() {
             <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(24px,5vw,30px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 8 }}>
               {tc('pos_setup.activate_title')}
             </h1>
-            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 8 }}>
+            <p style={{ fontSize: 19, color: TX2, lineHeight: 1.6, marginBottom: 8 }}>
               {tc('pos_setup.activate_subtitle')}
             </p>
-            <p style={{ fontSize: 13, color: TX3, marginBottom: 28 }}>
+            <p style={{ fontSize: 17, color: TX3, marginBottom: 28 }}>
               {tc('pos_setup.activate_items_saved')}
             </p>
 
             <div style={{ padding: '28px 20px', borderRadius: 18, background: SF, border: `1.5px solid ${B2}`, marginBottom: 24 }}>
-              <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 44, fontWeight: 700, color: TX, letterSpacing: '-.02em', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 48, fontWeight: 700, color: TX, letterSpacing: '-.02em', lineHeight: 1 }}>
                 {price}
               </div>
-              <div style={{ fontSize: 13, color: TX2, marginTop: 10 }}>
+              <div style={{ fontSize: 17, color: TX2, marginTop: 10 }}>
                 {tc('pos_setup.activate_price_note', { price })}
               </div>
               {seats > 1 && (
-                <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>
+                <div style={{ fontSize: 16, color: TX3, marginTop: 6 }}>
                   {tc('pos_setup.activate_seats', { seats })}
                 </div>
               )}
             </div>
 
-            {error && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+            {error && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 17, marginBottom: 16 }}>{error}</div>}
 
             {phase === 'redirecting' ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 16, color: TX2, fontSize: 15 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 16, color: TX2, fontSize: 19 }}>
                 {spinner} {tc('pos_setup.activate_redirecting')}
               </div>
             ) : (
@@ -199,7 +199,7 @@ export default function PosActivatePage() {
                 ) : (
                   <button style={{ ...bigBtn, marginBottom: 10 }} onClick={payCard}>{tc('pos_setup.activate_pay_card')}</button>
                 )}
-                <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 14, cursor: 'pointer', padding: '10px 0', fontFamily: 'inherit' }} onClick={() => router.push('/pos/setup')}>
+                <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 18, cursor: 'pointer', padding: '10px 0', fontFamily: 'inherit' }} onClick={() => router.push('/pos/setup')}>
                   {tc('pos_setup.activate_back_items')}
                 </button>
               </>
@@ -211,14 +211,14 @@ export default function PosActivatePage() {
         {phase === 'checking' && (
           <div style={{ textAlign: 'center', paddingTop: 60 }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>{spinner}</div>
-            <p style={{ fontSize: 16, fontWeight: 600, color: TX }}>{tc('pos_setup.activate_checking')}</p>
+            <p style={{ fontSize: 20, fontWeight: 600, color: TX }}>{tc('pos_setup.activate_checking')}</p>
           </div>
         )}
 
         {/* ── PENDING: webhook slow / payment incomplete — never a dead end ── */}
         {phase === 'pending' && (
           <div style={{ textAlign: 'center', paddingTop: 40 }}>
-            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.7, marginBottom: 24 }}>{tc('pos_setup.activate_still_pending')}</p>
+            <p style={{ fontSize: 19, color: TX2, lineHeight: 1.7, marginBottom: 24 }}>{tc('pos_setup.activate_still_pending')}</p>
             <button style={{ ...bigBtn, marginBottom: 10 }} onClick={startPolling}>{tc('pos_setup.activate_check_again')}</button>
             <button style={ghostBtn} onClick={() => router.push('/pos/setup')}>{tc('pos_setup.activate_back_items')}</button>
           </div>
@@ -233,7 +233,7 @@ export default function PosActivatePage() {
             <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(24px,5vw,30px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 10 }}>
               {tc('pos_setup.activate_success_title')}
             </h1>
-            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.6, marginBottom: 28 }}>
+            <p style={{ fontSize: 19, color: TX2, lineHeight: 1.6, marginBottom: 28 }}>
               {tc('pos_setup.activate_success_subtitle')}
             </p>
             <button style={bigBtn} onClick={() => router.push('/pos')}>{tc('pos_setup.activate_success_cta')}</button>
@@ -246,7 +246,7 @@ export default function PosActivatePage() {
             <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,27px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 10 }}>
               {tc('pos_setup.activate_cancelled_title')}
             </h1>
-            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.7, marginBottom: 28 }}>
+            <p style={{ fontSize: 19, color: TX2, lineHeight: 1.7, marginBottom: 28 }}>
               {tc('pos_setup.activate_cancelled_subtitle')}
             </p>
             <button style={{ ...bigBtn, marginBottom: 10 }} onClick={() => setPhase('pay')}>{tc('pos_setup.activate_retry')}</button>

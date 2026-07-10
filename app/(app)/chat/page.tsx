@@ -375,23 +375,23 @@ export default function ChatPage() {
 
         {/* Topbar */}
         <div style={{ height: 50, padding: isMobile ? '0 12px' : '0 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'var(--sf)', gap: 10, overflow: 'hidden' }}>
-          <div style={{ fontSize: 13, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 17, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {isEmpty ? tc('chat.new_conversation') : messages[0]?.content.slice(0, 48) + (messages[0]?.content.length > 48 ? '…' : '')}
           </div>
           {voice.isRecording && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15))', border: '1px solid rgba(99,102,241,.3)', fontSize: 11, fontWeight: 600, color: '#818cf8', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15))', border: '1px solid rgba(99,102,241,.3)', fontSize: 15, fontWeight: 600, color: '#818cf8', flexShrink: 0 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', animation: 'pulse 1s infinite' }}/>
               {tc('chat.badge_live')}
             </div>
           )}
           {isSpeaking && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.25)', fontSize: 11, fontWeight: 600, color: 'var(--acc)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.25)', fontSize: 15, fontWeight: 600, color: 'var(--acc)', flexShrink: 0 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
               {tc('chat.badge_speaking')}
             </div>
           )}
           {uploadedFile && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 9999, background: 'rgba(30,212,202,.08)', border: '1px solid rgba(30,212,202,.18)', fontSize: 11, color: '#47e2da', flexShrink: 0, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 9999, background: 'rgba(30,212,202,.08)', border: '1px solid rgba(30,212,202,.18)', fontSize: 15, color: '#47e2da', flexShrink: 0, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               {uploadedFile.name}
             </div>
@@ -399,15 +399,15 @@ export default function ChatPage() {
           <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
             <button onClick={() => setSimulateMode(!session.simulateMode)}
               title={tc('chat.scenario_tooltip')}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 9999, border: `1px solid ${session.simulateMode ? '#6366F1' : 'var(--b2)'}`, background: session.simulateMode ? 'rgba(99,102,241,.1)' : 'transparent', color: session.simulateMode ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: session.simulateMode ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 9999, border: `1px solid ${session.simulateMode ? '#6366F1' : 'var(--b2)'}`, background: session.simulateMode ? 'rgba(99,102,241,.1)' : 'transparent', color: session.simulateMode ? '#6366F1' : 'var(--tx3)', fontSize: 16, fontWeight: session.simulateMode ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
               ⚡ {session.simulateMode ? tc('chat.scenario_on') : tc('chat.scenario_run')}
             </button>
             <button onClick={toggleCfoMode}
               title={tc('chat.cfo_tooltip')}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 9999, border: `1px solid ${settings.cfoMode ? '#6366F1' : 'var(--b2)'}`, background: settings.cfoMode ? 'rgba(99,102,241,.1)' : 'transparent', color: settings.cfoMode ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: settings.cfoMode ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 9999, border: `1px solid ${settings.cfoMode ? '#6366F1' : 'var(--b2)'}`, background: settings.cfoMode ? 'rgba(99,102,241,.1)' : 'transparent', color: settings.cfoMode ? '#6366F1' : 'var(--tx3)', fontSize: 16, fontWeight: settings.cfoMode ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
               📊 {settings.cfoMode ? tc('chat.cfo_view_on') : tc('chat.cfo_view')}
             </button>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx)', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx)', fontSize: 16, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               {uploading ? tc('chat.uploading') : tc('chat.upload')}
               <input type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}/>
@@ -416,7 +416,7 @@ export default function ChatPage() {
               <button
                 onClick={saveToDashboard}
                 disabled={saveStatus === 'saving'}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px', borderRadius: 9999, border: '1px solid var(--b2)', background: saveStatus === 'saved' ? 'rgba(34,197,94,.08)' : 'transparent', color: saveStatus === 'saved' ? '#16a34a' : saveStatus === 'error' ? '#ef4444' : 'var(--tx)', fontFamily: 'inherit', fontSize: 12, cursor: saveStatus === 'saving' ? 'default' : 'pointer', transition: 'all 150ms' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px', borderRadius: 9999, border: '1px solid var(--b2)', background: saveStatus === 'saved' ? 'rgba(34,197,94,.08)' : 'transparent', color: saveStatus === 'saved' ? '#16a34a' : saveStatus === 'error' ? '#ef4444' : 'var(--tx)', fontFamily: 'inherit', fontSize: 16, cursor: saveStatus === 'saving' ? 'default' : 'pointer', transition: 'all 150ms' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                 {saveStatus === 'saving' ? tc('chat.saving') : saveStatus === 'saved' ? tc('chat.saved') : saveStatus === 'error' ? tc('chat.save_error') : tc('chat.save')}
               </button>
@@ -430,10 +430,10 @@ export default function ChatPage() {
 
             {isEmpty && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0 16px', textAlign: 'center' }} className="animate-scale-up">
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 7, letterSpacing: '-.02em' }} className="animate-fade-up stagger-1">
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 23, fontWeight: 600, marginBottom: 7, letterSpacing: '-.02em' }} className="animate-fade-up stagger-1">
                   {uploadedFile ? tc('chat.empty_greeting_named', { name: user?.initials || tc('chat.empty_default_name') }) : tc('chat.empty_greeting')}
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.65, maxWidth: 360, marginBottom: 20 }} className="animate-fade-up stagger-2">
+                <div style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.65, maxWidth: 360, marginBottom: 20 }} className="animate-fade-up stagger-2">
                   {geo ? tc('chat.empty_geo_subtitle', { symbol: geo.currencySymbol, country: geo.country }) : tc('chat.empty_subtitle')}
                 </div>
 
@@ -450,7 +450,7 @@ export default function ChatPage() {
                           onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                          <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.4 }}>{card.query}</span>
+                          <span style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.4 }}>{card.query}</span>
                         </button>
                       ))}
                     </div>
@@ -458,12 +458,12 @@ export default function ChatPage() {
                     {/* Connect data CTA — only when no sources connected */}
                     {!hasConnectedData && <div style={{ width: '100%', maxWidth: 460, padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--b2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }} className="animate-fade-up stagger-4">
                       <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{tc('chat.connect_cta_title')}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('chat.connect_cta_desc')}</div>
+                        <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{tc('chat.connect_cta_title')}</div>
+                        <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('chat.connect_cta_desc')}</div>
                       </div>
                       <Link
                         href="/sources"
-                        style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 9999, background: '#6366F1', color: '#fff', fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 9999, background: '#6366F1', color: '#fff', fontSize: 16, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}
                       >
                         {tc('chat.connect_cta_button')}
                       </Link>
@@ -475,32 +475,32 @@ export default function ChatPage() {
 
             {messages.map(msg => (
               <div key={msg.id} className="msg-in" style={{ display: 'flex', gap: 9, padding: '2px 0' }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, background: msg.role === 'assistant' ? '#6366F1' : 'var(--ev)', color: msg.role === 'assistant' ? '#fff' : 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, background: msg.role === 'assistant' ? '#6366F1' : 'var(--ev)', color: msg.role === 'assistant' ? '#fff' : 'var(--tx3)', marginTop: 2 }}>
                   {msg.role === 'assistant'
                     ? <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     : (user?.initials || 'U')}
                 </div>
                 <div style={{ flex: 1, maxWidth: '88%', display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   {msg.role === 'user' ? (
-                    <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomRightRadius: 3, background: 'var(--acc)', color: '#1a1410', fontSize: 13, lineHeight: 1.5 }}>
+                    <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomRightRadius: 3, background: 'var(--acc)', color: '#1a1410', fontSize: 17, lineHeight: 1.5 }}>
                       {msg.content}
                     </div>
                   ) : (
                     msg.content.startsWith('__LIMIT_REACHED__') ? (
                       <div style={{ padding: '18px 20px', borderRadius: 16, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-                        <div style={{ fontSize: 20, marginBottom: 8 }}>🚀</div>
-                        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{tc('chat.limit_emoji_heading')}</div>
-                        <p style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 14 }}>
+                        <div style={{ fontSize: 24, marginBottom: 8 }}>🚀</div>
+                        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 6 }}>{tc('chat.limit_emoji_heading')}</div>
+                        <p style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 14 }}>
                           {tc('chat.limit_body')}
                         </p>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{tc('chat.limit_upgrade')}</button>
-                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>{tc('chat.limit_see_plans')}</button>
+                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 600, cursor: 'pointer' }}>{tc('chat.limit_upgrade')}</button>
+                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 17, cursor: 'pointer' }}>{tc('chat.limit_see_plans')}</button>
                         </div>
-                        <p style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10 }}>{tc('chat.limit_reset_note')}</p>
+                        <p style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 10 }}>{tc('chat.limit_reset_note')}</p>
                       </div>
                     ) : msg.content === '__CONNECTION_ERROR__' ? (
-                      <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 13, color: '#ef4444' }}>
+                      <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 17, color: '#ef4444' }}>
                         {tc('chat.connection_error')}
                       </div>
                     ) : msg.result ? (
@@ -511,7 +511,7 @@ export default function ChatPage() {
                         cfoMode={settings.cfoMode}
                       />
                     ) : (
-                      <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 13, lineHeight: 1.6, color: 'var(--tx)' }}>
+                      <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 17, lineHeight: 1.6, color: 'var(--tx)' }}>
                         {msg.content}
                       </div>
                     )
@@ -566,12 +566,12 @@ export default function ChatPage() {
               />
             </div>
             {voice.error && (
-              <div style={{ marginTop: 6, fontSize: 12, color: '#f48080', textAlign: 'center' }}>
+              <div style={{ marginTop: 6, fontSize: 16, color: '#f48080', textAlign: 'center' }}>
                 {voice.error}
               </div>
             )}
           </div>
-          <div style={{ textAlign: 'center', padding: '8px 0 12px', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <div style={{ textAlign: 'center', padding: '8px 0 12px', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             {uploadedFile ? (
               <span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
