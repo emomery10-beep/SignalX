@@ -242,6 +242,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       sameAs: [
         'https://twitter.com/askbizco',
         'https://www.linkedin.com/company/askbiz',
+        'https://www.facebook.com/share/g/17wFxNYZRH/',
       ],
       contactPoint: {
         '@type': 'ContactPoint',

@@ -60,10 +60,11 @@ const orgSchema = {
   url: "https://askbiz.co",
   logo: "https://askbiz.co/logo.svg",
   description:
-    "AI-powered business intelligence platform for small and medium-sized businesses.",
+    "AskBiz is a camera-first phone POS and daily business tracker for African market stalls, street vendors, and small shops — scan to sell, take mobile money, and see your profit every night.",
   sameAs: [
     "https://twitter.com/askbizco",
     "https://www.linkedin.com/company/askbiz",
+    "https://www.facebook.com/share/g/17wFxNYZRH/",
   ],
   contactPoint: {
     "@type": "ContactPoint",
@@ -79,7 +80,7 @@ const websiteSchema = {
   name: "AskBiz Help Centre",
   url: "https://askbiz.co/help",
   description:
-    "Official help documentation for AskBiz — AI-powered business intelligence for SMEs.",
+    "Official help documentation for AskBiz — the camera-first phone POS and daily business tracker for African market stalls, street vendors, and small shops.",
   publisher: {
     "@type": "Organization",
     name: "AskBiz",

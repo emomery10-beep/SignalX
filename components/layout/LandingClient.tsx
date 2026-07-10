@@ -1512,6 +1512,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         { href: '/terms', label: tc('landing.footer_terms') },
         { href: '/dpa', label: tc('landing.footer_dpa') },
         { href: 'mailto:hello@askbiz.co', label: tc('landing.footer_contact') },
+        { href: 'https://www.facebook.com/share/g/17wFxNYZRH/', label: tc('landing.footer_community_link') },
       ],
     },
   ]
@@ -2200,11 +2201,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <div key={col.title}>
                 <div style={{ fontSize:11,fontWeight:700,color:T.tx,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:14 }}>{col.title}</div>
                 <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:11 }}>
-                  {col.links.map(l => (
-                    <li key={l.href}>
-                      <a href={l.href.startsWith('mailto:') ? l.href : localePath(l.href, lang as Locale)} className="nav-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',transition:'color 150ms',display:'inline-block',padding:'2px 0' }}>{l.label}</a>
-                    </li>
-                  ))}
+                  {col.links.map(l => {
+                    const isExternal = l.href.startsWith('mailto:') || l.href.startsWith('http')
+                    return (
+                      <li key={l.href}>
+                        <a
+                          href={isExternal ? l.href : localePath(l.href, lang as Locale)}
+                          className="nav-link"
+                          style={{ fontSize:13,color:T.tx2,textDecoration:'none',transition:'color 150ms',display:'inline-block',padding:'2px 0' }}
+                          {...(l.href.startsWith('http') ? { target:'_blank', rel:'noopener noreferrer' } : {})}
+                        >{l.label}</a>
+                      </li>
+                    )
+                  })}
                   {col.seeAll && (
                     <li>
                       <a href={localePath(col.seeAll.href, lang as Locale)} className="nav-link" style={{ fontSize:13,color:T.acc,fontWeight:600,textDecoration:'none',display:'inline-block',padding:'2px 0' }}>{col.seeAll.label}</a>
