@@ -208,7 +208,7 @@ export default function FeaturePageClient() {
           <span style={{ fontWeight: 700, fontSize: 13, color: C.tx }}>AskBiz</span>
         </div>
         <p style={{ fontSize: 11, color: C.tx3, margin: 0 }}>
-          AI-powered business intelligence + Point of Sale · <Link href="/" style={{ color: C.tx3 }}>askbiz.co</Link>
+          Camera-first Point of Sale + daily business tracker · <Link href="/" style={{ color: C.tx3 }}>askbiz.co</Link>
         </p>
       </footer>
     </div>

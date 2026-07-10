@@ -135,7 +135,7 @@ export function teamInviteEmail(opts: {
               </table>
 
               <p style="margin:0 0 24px;font-size:14px;color:#6b6760;line-height:1.6;">
-                AskBiz is an AI-powered business intelligence tool. As ${opts.role === 'accountant' ? 'an accountant' : 'a'} <strong>${opts.role}</strong>, you will have access to the data and reports relevant to your role.
+                AskBiz is a phone POS and business tracker with built-in AI reporting. As ${opts.role === 'accountant' ? 'an accountant' : 'a'} <strong>${opts.role}</strong>, you will have access to the data and reports relevant to your role.
               </p>
 
               <!-- CTA Button -->

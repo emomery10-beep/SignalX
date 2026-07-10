@@ -257,7 +257,7 @@ export default function SectorPageClient() {
           <span style={{ fontWeight: 700, fontSize: 14, color: C.tx }}>AskBiz</span>
         </div>
         <p style={{ fontSize: 12, color: C.tx3, margin: 0 }}>
-          AI-powered business intelligence + Point of Sale for SME founders · <Link href="/" style={{ color: C.tx3 }}>askbiz.co</Link>
+          Camera-first Point of Sale + daily business tracker for African market stalls and small shops · <Link href="/" style={{ color: C.tx3 }}>askbiz.co</Link>
         </p>
       </footer>
     </div>

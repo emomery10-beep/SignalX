@@ -790,7 +790,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${B}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz. AI-powered business intelligence for SMEs.</span>
+        <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz. Scan it, sell it, see what you made.</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {[
             ['/blog', 'Blog'],

@@ -979,7 +979,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "What AskBiz does",
-        body: "AskBiz is an AI-powered business intelligence platform designed for small and medium-sized businesses. It connects to your existing business tools — Shopify, Amazon, Xero, QuickBooks, Stripe, and more — and uses artificial intelligence to turn that data into plain-English insights.\n\nInstead of building complex spreadsheets or hiring a data analyst, you ask AskBiz questions in plain English and get answers based on your real business data:\n- 'What was my best-performing product last quarter?'\n- 'Which of my customers haven't bought in 90 days?'\n- 'Is my gross margin getting better or worse?'\n- 'How does my revenue this month compare to the same month last year?'\n\nAskBiz handles the data pulling, calculation, and analysis — you get the insight.",
+        body: "AskBiz is a camera-first phone POS and daily business tracker for market stalls, street vendors, and small shops — and it connects to your existing business tools too, like Shopify, Amazon, Xero, QuickBooks, and Stripe, using artificial intelligence to turn that data into plain-English insights.\n\nInstead of building complex spreadsheets or hiring a data analyst, you ask AskBiz questions in plain English and get answers based on your real business data:\n- 'What was my best-performing product last quarter?'\n- 'Which of my customers haven't bought in 90 days?'\n- 'Is my gross margin getting better or worse?'\n- 'How does my revenue this month compare to the same month last year?'\n\nAskBiz handles the data pulling, calculation, and analysis — you get the insight.",
       },
       {
         heading: "Who AskBiz is built for",

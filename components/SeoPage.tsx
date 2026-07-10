@@ -190,7 +190,7 @@ export default function SeoPage({
         "@type": "SoftwareApplication",
         "name": "AskBiz",
         "applicationCategory": "BusinessApplication",
-        "description": "AI-powered business intelligence tool for small business owners. Upload your sales data and ask questions in plain English.",
+        "description": "Camera-first phone POS and daily business tracker for African market stalls, street vendors, and small shops. Scan to sell, take mobile money, and see your profit every night.",
         "url": "https://askbiz.co",
         "offers": {
           "@type": "Offer",
