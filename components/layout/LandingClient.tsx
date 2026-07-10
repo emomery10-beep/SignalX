@@ -547,12 +547,6 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
 function DemoUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   type DTab = 'cashier'|'inventory'|'manager'|'courier'
   const [tab, setTab] = useState<DTab>('cashier')
-  const [visible, setVisible] = useState(true)
-  const change = (t:DTab) => {
-    if (t === tab) return
-    setVisible(false)
-    setTimeout(() => { setTab(t); setVisible(true) }, 90)
-  }
   const TABS: {id:DTab;icon:string;label:string}[] = [
     {id:'cashier',   icon:'card',    label:tc('landing.demo_cashier_name')},
     {id:'inventory', icon:'package', label:tc('landing.demo_inventory_name')},
@@ -574,7 +568,7 @@ function DemoUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
 
       <div style={{display:'flex',padding:'8px 10px 0',gap:2,background:'#fff',borderBottom:'1px solid #F5F5F5'}}>
         {TABS.map(t=>(
-          <button key={t.id} className="demo-tab" onClick={()=>change(t.id)}
+          <button key={t.id} className="demo-tab" onClick={()=>setTab(t.id)}
             style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,padding:'7px 4px 9px',border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent'}}>
             <Ic n={t.icon} size={14} color={tab===t.id?'#C97A44':'#AAA'}/>
             <span style={{fontSize:9,fontWeight:tab===t.id?700:500,color:tab===t.id?'#C97A44':'#AAA'}}>{t.label}</span>
@@ -582,7 +576,7 @@ function DemoUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         ))}
       </div>
 
-      <div className="demo-panel" style={{padding:'16px 18px',minHeight:184,background:'#fff',opacity:visible?1:0}}>
+      <div key={tab} className="demo-panel" style={{padding:'16px 18px',minHeight:184,background:'#fff'}}>
         {tab==='cashier' && (
           <div>
             <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>{tc('landing.posui_current_sale')}</div>
@@ -1280,7 +1274,8 @@ function MiniCalcWidget({tc,lang,initialCurrency}:{tc:(k:string)=>string;lang:Lo
 // ── Main page ─────────────────────────────────────────────────────────────────
 // ── Nav Dropdown ─────────────────────────────────────────────────────────────
 interface DropGroup { group: string; links: { href: string; label: string; desc: string }[] }
-function NavDropdown({ label, items, lang }: { label: string; items: DropGroup[]; lang: Locale }) {
+interface DropFeatured { href: string; title: string; desc: string; icon?: 'globe'|'phone' }
+function NavDropdown({ label, items, lang, featured }: { label: string; items: DropGroup[]; lang: Locale; featured?: DropFeatured }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -1293,28 +1288,46 @@ function NavDropdown({ label, items, lang }: { label: string; items: DropGroup[]
     <div ref={ref} style={{ position:'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ fontSize:12,color:T.tx2,background:'none',border:'none',cursor:'pointer',padding:'0 9px',height:56,display:'flex',alignItems:'center',gap:4,fontFamily:'inherit',transition:'color 150ms',whiteSpace:'nowrap' }}
+        aria-expanded={open}
+        style={{ fontSize:18,color:T.tx2,background:'none',border:'none',cursor:'pointer',padding:'0 14px',height:56,display:'flex',alignItems:'center',gap:5,fontFamily:'inherit',transition:'color 150ms',whiteSpace:'nowrap' }}
         className="nav-link"
       >
         {label}
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transform:open?'rotate(180deg)':'none',transition:'transform 180ms' }}><path d="M6 9l6 6 6-6"/></svg>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transform:open?'rotate(180deg)':'none',transition:'transform 180ms' }}><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div style={{ position:'absolute',top:'calc(100% + 4px)',left:'50%',transform:'translateX(-50%)',background:T.card,borderRadius:14,boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:`1px solid ${T.bd}`,zIndex:100,padding:'12px 8px',display:'flex',gap:0,minWidth:520 }}>
-          {items.map((grp, gi) => (
-            <div key={gi} style={{ flex:1,padding:'0 8px' }}>
-              <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase',padding:'4px 8px 8px' }}>{grp.group}</div>
-              {grp.links.map(lnk => (
-                <Link key={lnk.href} href={localePath(lnk.href, lang)} onClick={() => setOpen(false)}
-                  style={{ display:'block',padding:'7px 8px',borderRadius:8,textDecoration:'none' }}
-                  className="nav-drop-item"
-                >
-                  <div style={{ fontSize:12,fontWeight:600,color:T.tx,marginBottom:1 }}>{lnk.label}</div>
-                  <div style={{ fontSize:10,color:T.tx3,lineHeight:1.3 }}>{lnk.desc}</div>
-                </Link>
-              ))}
-            </div>
-          ))}
+        <div style={{ position:'absolute',top:'calc(100% + 4px)',left:'50%',transform:'translateX(-50%)',background:T.card,borderRadius:14,boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:`1px solid ${T.bd}`,zIndex:100,padding:'14px 10px',minWidth:520 }}>
+          <div style={{ display:'flex',gap:0 }}>
+            {items.map((grp, gi) => (
+              <div key={gi} style={{ flex:1,padding:'0 8px' }}>
+                <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase',padding:'4px 8px 8px' }}>{grp.group}</div>
+                {grp.links.map(lnk => (
+                  <Link key={lnk.href} href={localePath(lnk.href, lang)} onClick={() => setOpen(false)}
+                    style={{ display:'block',padding:'7px 8px',borderRadius:8,textDecoration:'none' }}
+                    className="nav-drop-item"
+                  >
+                    <div style={{ fontSize:12,fontWeight:600,color:T.tx,marginBottom:lnk.desc?1:0 }}>{lnk.label}</div>
+                    {lnk.desc && <div style={{ fontSize:10,color:T.tx3,lineHeight:1.3 }}>{lnk.desc}</div>}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+          {featured && (
+            <Link href={localePath(featured.href, lang)} onClick={() => setOpen(false)}
+              style={{ display:'flex',alignItems:'center',gap:10,marginTop:10,paddingTop:12,borderTop:`1px solid ${T.bd}`,textDecoration:'none' }}
+              className="nav-drop-item"
+            >
+              <div style={{ width:32,height:32,borderRadius:8,background:T.accBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:T.acc }}>
+                {featured.icon==='globe' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>}
+                {featured.icon==='phone' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>}
+              </div>
+              <div>
+                <div style={{ fontSize:12,fontWeight:600,color:T.tx }}>{featured.title}</div>
+                <div style={{ fontSize:10,color:T.tx3 }}>{featured.desc}</div>
+              </div>
+            </Link>
+          )}
         </div>
       )}
     </div>
@@ -1503,11 +1516,55 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     },
   ]
 
+  // Desktop mega-menus — grouped, descriptive nav (mirrors the pattern used by
+  // ElevenLabs and other premium SaaS sites) instead of a flat link list.
+  // Each link points at a real, indexed page so this doubles as internal linking.
+  const PRODUCT_MENU: DropGroup[] = [
+    {
+      group: tc('landing.nav_product_group_sell'),
+      links: [
+        { href: '/point-of-sale', label: tc('landing.nav_product_pos_title'), desc: tc('landing.nav_product_pos_desc') },
+        { href: '/point-of-sale/feature/payments', label: tc('landing.nav_product_payments_title'), desc: tc('landing.nav_product_payments_desc') },
+        { href: '/point-of-sale/feature/multi-branch', label: tc('landing.nav_product_branch_title'), desc: tc('landing.nav_product_branch_desc') },
+        { href: '/point-of-sale/feature/staff-shifts', label: tc('landing.nav_product_staff_title'), desc: tc('landing.nav_product_staff_desc') },
+      ],
+    },
+    {
+      group: tc('landing.nav_product_group_know'),
+      links: [
+        { href: '/business-intelligence', label: tc('landing.nav_product_bi_title'), desc: tc('landing.nav_product_bi_desc') },
+        { href: '/free-tools', label: tc('landing.nav_product_tools_title'), desc: tc('landing.nav_product_tools_desc') },
+        { href: '/academy', label: tc('landing.nav_product_academy_title'), desc: tc('landing.nav_product_academy_desc') },
+        { href: '/compare', label: tc('landing.nav_product_compare_title'), desc: tc('landing.nav_product_compare_desc') },
+      ],
+    },
+  ]
+  const SOLUTIONS_MENU: DropGroup[] = [
+    {
+      group: tc('landing.nav_solutions_group_type'),
+      links: [
+        { href: '/for/salon-owners', label: tc('landing.where_seg_0'), desc: '' },
+        { href: '/for/hardware-store-owners', label: tc('landing.where_seg_1'), desc: '' },
+        { href: '/for/mini-supermarket-owners', label: tc('landing.where_seg_2'), desc: '' },
+      ],
+    },
+    {
+      group: tc('landing.nav_solutions_group_country'),
+      links: [
+        { href: '/business-intelligence/kenya', label: tc('landing.where_country_0'), desc: tc('landing.nav_solutions_country_ke_desc') },
+        { href: '/business-intelligence/nigeria', label: tc('landing.where_country_1'), desc: tc('landing.nav_solutions_country_ng_desc') },
+        { href: '/business-intelligence/uganda', label: tc('landing.where_country_2'), desc: tc('landing.nav_solutions_country_ug_desc') },
+        { href: '/business-intelligence/ghana', label: tc('landing.where_country_3'), desc: tc('landing.nav_solutions_country_gh_desc') },
+      ],
+    },
+  ]
+
   return (
     <div style={{ background:T.bg, color:T.tx, fontFamily:'var(--font-jakarta, Plus Jakarta Sans, system-ui)', overflowX:'hidden', direction:isRTL?'rtl':'ltr' }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
         @keyframes tdot{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+        @keyframes demoFadeIn{from{opacity:.4}to{opacity:1}}
         [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
         [data-reveal].revealed{opacity:1;transform:translateY(0)}
         [data-reveal-delay="1"].revealed{transition-delay:80ms}
@@ -1541,10 +1598,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .pos-tabs{scrollbar-width:none;-ms-overflow-style:none}
         .pos-tabs-wrap{position:relative}
         .pos-tabs-wrap::after{content:'';position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to left,#fff,transparent);pointer-events:none;z-index:1}
-        /* DemoUIReplica tab switcher — focus ring + crossfade, both reduced-motion safe */
+        /* DemoUIReplica tab switcher — focus ring + fade-in on remount (CSS
+           animation, not a JS timer, so content never lags behind a click) */
         .demo-tab:focus-visible{outline:2px solid ${T.acc};outline-offset:-2px;border-radius:6px}
-        .demo-panel{transition:opacity 200ms cubic-bezier(0.22,1,0.36,1)}
-        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}.demo-panel{transition:none!important}}
+        .demo-panel{animation:demoFadeIn 200ms cubic-bezier(0.22,1,0.36,1)}
+        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}}
       ` }}/>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
@@ -1556,8 +1614,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         {/* Desktop nav */}
         <div className="nav-links" style={{ display:'flex',alignItems:'center',gap:0,flex:1,justifyContent:'center' }}>
+          <NavDropdown
+            label={tc('landing.nav_menu_product')}
+            items={PRODUCT_MENU}
+            lang={lang as Locale}
+            featured={{ href:'/point-of-sale/feature/works-everywhere', title:tc('landing.nav_product_featured_title'), desc:tc('landing.nav_product_featured_desc'), icon:'phone' }}
+          />
+          <NavDropdown
+            label={tc('landing.nav_menu_solutions')}
+            items={SOLUTIONS_MENU}
+            lang={lang as Locale}
+            featured={{ href:'/business-intelligence', title:tc('landing.nav_solutions_featured_title'), desc:tc('landing.nav_solutions_featured_desc'), icon:'globe' }}
+          />
           {[
-            ['#pos',tc('landing.nav_how_it_works')],
             ['#pricing',tc('landing.nav_pricing')],
             ['/help',tc('landing.nav_help')],
           ].map(([href,label])=>(
