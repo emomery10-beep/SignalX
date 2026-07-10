@@ -4,7 +4,7 @@
 // ============================================================
 import { createServiceClient } from '@/lib/supabase/server'
 import {
-  normaliseShopify, normaliseStripe, normaliseSquare,
+  normaliseShopify, normaliseStripe, normaliseSquare, normaliseAskBizPOS,
   normaliseQuickBooks, normaliseQuickBooksBill, normaliseGoogleSheets,
   type UnifiedRecord, type QBExpenseRow
 } from './normaliser'
@@ -415,6 +415,69 @@ async function syncSquare(
     return { records }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'Square sync failed' }
+  }
+}
+
+// ── AskBiz POS sync ────────────────────────────────────────────
+// Same Supabase project as pos.askbiz.co — no external API call, just a
+// direct read of this user's own pos_transactions/pos_items/inventory rows.
+async function syncAskBizPOS(
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  try {
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+
+    const { data: transactions, error: txErr } = await supabase
+      .from('pos_transactions')
+      .select('*')
+      .eq('owner_id', userId)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    if (txErr) throw new Error(txErr.message)
+    if (!transactions?.length) return { records: [] }
+
+    const txRows = transactions as Record<string, unknown>[]
+    const txIds = txRows.map((t) => t.id as string)
+    const { data: items } = await supabase
+      .from('pos_items')
+      .select('*')
+      .in('transaction_id', txIds)
+
+    const { data: inventory } = await supabase
+      .from('inventory')
+      .select('id, sku, stock_qty, low_stock_threshold')
+      .eq('owner_id', userId)
+
+    const inventoryById = new Map<string, { stock_qty: number; low_stock_threshold: number; sku: string }>(
+      ((inventory || []) as Record<string, unknown>[]).map((inv) => [
+        inv.id as string,
+        { stock_qty: inv.stock_qty as number, low_stock_threshold: inv.low_stock_threshold as number, sku: (inv.sku as string) || '' },
+      ])
+    )
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('currency')
+      .eq('id', userId)
+      .single()
+    const currency = (profile as Record<string, unknown> | null)?.currency as string || 'USD'
+
+    const itemsByTx = new Map<string, Record<string, unknown>[]>()
+    for (const item of (items || []) as Record<string, unknown>[]) {
+      const key = item.transaction_id as string
+      const list = itemsByTx.get(key) || []
+      list.push(item)
+      itemsByTx.set(key, list)
+    }
+
+    const records = txRows.flatMap((tx) =>
+      normaliseAskBizPOS(tx, itemsByTx.get(tx.id as string) || [], inventoryById, currency)
+    )
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'AskBiz POS sync failed' }
   }
 }
 
@@ -1356,6 +1419,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         records = r.records; syncError = r.error
       } else if (source.source_type === 'walmart') {
         const r = await syncWalmart(decryptedSource)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'askbiz_pos') {
+        const r = await syncAskBizPOS(supabase, source.user_id)
         records = r.records; syncError = r.error
       }
     } catch (e: unknown) {

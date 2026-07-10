@@ -59,6 +59,7 @@ const SOURCES: SourceDef[] = [
   { id: 'royal_mail',  label: 'Royal Mail',  category: 'Inventory & Logistics', desc: 'Parcel tracking, costs, Click & Drop orders',           icon: '📮', accent: '#e2001a', color: 'rgba(226,0,26,.1)',    oauthFlow: false, hint: 'Paste your Click & Drop API key from Click & Drop › Settings › API', fields: [{ key: 'api_key', label: 'API Key', placeholder: 'xxxxxxxxxxxxxxxxxxxx', type: 'password', required: true }] },
 
   // ── Point of Sale ─────────────────────────────────────────────────────────
+  { id: 'askbiz_pos', label: 'AskBiz POS', category: 'Point of Sale', desc: 'Sales, stock and margins from your own register', icon: '🧾', accent: '#16a34a', color: 'rgba(22,163,74,.1)', oauthFlow: false, hint: '', fields: [] },
   { id: 'square', label: 'Square', category: 'Point of Sale', desc: 'Orders, inventory, payments, locations',                                  icon: '⬛', accent: '#3d3d3d', color: 'rgba(100,100,100,.08)', oauthFlow: false, hint: 'Paste your access token from the Square Developer Dashboard', fields: [{ key: 'access_token', label: 'Access token', placeholder: 'EAAAl...', type: 'password', required: true }, { key: 'location_id', label: 'Location ID (optional)', placeholder: 'L...', type: 'text', required: false }] },
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -175,7 +176,30 @@ export default function SourcesPage() {
       setShopifyError(''); setShopifyTab('oauth'); setShopifyModal(true)
       return
     }
+    if (srcId === 'askbiz_pos') {
+      connectAskBizPOS()
+      return
+    }
     setModalFields({}); setModal(srcId)
+  }
+
+  // AskBiz POS lives in the same Supabase project as this app, so there's
+  // no OAuth/API key round trip — connecting just links the user's own
+  // pos_transactions to their unified_data via the sync engine.
+  const connectAskBizPOS = async () => {
+    setConnecting('askbiz_pos')
+    try {
+      const res = await fetch('/api/sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_type: 'askbiz_pos', name: 'AskBiz POS', credentials: {}, config: {} }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      showToast(tc('sources.toast_connected', { name: 'AskBiz POS' }), true)
+      await loadSources()
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : tc('sources.toast_generic_connection_failed'), false)
+    } finally { setConnecting(null) }
   }
 
   const handleShopifyManual = async () => {
@@ -420,7 +444,7 @@ export default function SourcesPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {src.label}
-                            {!src.oauthFlow && (
+                            {!src.oauthFlow && src.id !== 'askbiz_pos' && (
                               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.05em', textTransform: 'uppercase' }}>
                                 {tc('sources.badge_api_token')}
                               </span>
@@ -442,9 +466,10 @@ export default function SourcesPage() {
                         ) : (
                           <button
                             onClick={() => openModal(src.id)}
-                            style={{ padding: '6px 14px', borderRadius: 9999, border: 'none', background: src.accent, color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}
+                            disabled={connecting === src.id}
+                            style={{ padding: '6px 14px', borderRadius: 9999, border: 'none', background: src.accent, color: '#fff', fontSize: 16, fontWeight: 600, cursor: connecting === src.id ? 'default' : 'pointer', opacity: connecting === src.id ? 0.6 : 1, fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}
                           >
-                            {tc('sources.btn_connect')}
+                            {connecting === src.id ? tc('sources.btn_connecting') : tc('sources.btn_connect')}
                           </button>
                         )}
                       </div>

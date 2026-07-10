@@ -258,6 +258,74 @@ export function normaliseSquare(order: Record<string, unknown>): UnifiedRecord[]
   return records
 }
 
+// ── ASKBIZ POS ────────────────────────────────────────────────
+// Maps AskBiz POS transactions (pos.askbiz.co) → unified sales records.
+// Same Supabase project as the main app, so this has no external API
+// shape to normalise from — just our own pos_transactions/pos_items rows.
+export function normaliseAskBizPOS(
+  tx: Record<string, unknown>,
+  items: Record<string, unknown>[],
+  inventoryById: Map<string, { stock_qty: number; low_stock_threshold: number; sku: string }>,
+  currency: string
+): UnifiedRecord[] {
+  const records: UnifiedRecord[] = []
+  const paymentStatus = safeStr(tx.status)
+  const isRefund = paymentStatus === 'refunded' || paymentStatus === 'partially_refunded'
+  const itemCount = items.length || 1
+  const taxShare = safeNum(tx.tax_amount) / itemCount
+  const discountShare = safeNum(tx.discount_amount) / itemCount
+
+  for (const item of items) {
+    if (item.refunded) continue
+    const qty = safeNum(item.qty) || 1
+    const price = safeNum(item.unit_price)
+    const costPrice = safeNum(item.cost_price) * qty
+    const grossRev = qty * price
+    const netRev = safeNum(item.line_total) || grossRev
+    const inv = inventoryById.get(safeStr(item.inventory_id))
+
+    records.push({
+      record_date: safeDate(tx.created_at),
+      sku: inv?.sku || '',
+      product_name: safeStr(item.name),
+      category: '',
+      variant: '',
+      supplier: '',
+      units_sold: qty,
+      selling_price: price,
+      discount: discountShare,
+      gross_revenue: grossRev,
+      net_revenue: netRev,
+      cost_price: costPrice,
+      shipping_cost: 0,
+      packaging_cost: 0,
+      marketplace_fee: 0,
+      tax: taxShare,
+      total_cost: costPrice + taxShare,
+      gross_margin: calcMargin(netRev, costPrice),
+      net_margin: calcMargin(netRev, costPrice + taxShare),
+      stock_level: inv?.stock_qty ?? 0,
+      stock_movement: -qty,
+      low_stock_flag: inv ? inv.stock_qty <= inv.low_stock_threshold : false,
+      damaged_stock: 0,
+      channel: 'pos',
+      customer_region: '',
+      currency,
+      ad_spend: 0,
+      campaign: '',
+      coupon_code: '',
+      coupon_discount: discountShare,
+      payment_status: paymentStatus,
+      refund_amount: isRefund ? netRev : 0,
+      payout_amount: netRev,
+      source_record_id: `pos_transaction_${tx.id}_item_${item.id}`,
+      source_type: 'askbiz_pos',
+      raw_data: { transaction_id: tx.id, ...item },
+    })
+  }
+  return records
+}
+
 // ── QUICKBOOKS ───────────────────────────────────────────────
 // Maps QuickBooks invoices → unified sales records
 export function normaliseQuickBooks(invoice: Record<string, unknown>): UnifiedRecord[] {
