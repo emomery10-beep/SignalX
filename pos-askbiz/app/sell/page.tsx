@@ -95,6 +95,7 @@ export default function SellPage() {
   const [todayRevenue, setTodayRevenue] = useState(0)
   const [sym, setSym]       = useState('£')
   const [biz, setBiz]       = useState(() => bizLabel('retail', tc))
+  const [businessName, setBusinessName] = useState('')
 
   // Add-item mode
   const [addMode, setAddMode]           = useState<AddMode>('camera')
@@ -214,6 +215,7 @@ export default function SellPage() {
     }).then(r => r.json()).then(cfg => {
       if (cfg.currency_symbol) setSym(cfg.currency_symbol)
       if (cfg.business_type)   setBiz(bizLabel(cfg.business_type, tc))
+      if (cfg.business_name)   setBusinessName(cfg.business_name)
     }).catch(() => {})
 
     // Fetch payment config to know if Stripe is verified (for Apple Pay sub-option)
@@ -734,7 +736,7 @@ export default function SellPage() {
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--pos-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{tc('sell.app_name')}</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{businessName || tc('sell.app_name')}</div>
             <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{staff?.name}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

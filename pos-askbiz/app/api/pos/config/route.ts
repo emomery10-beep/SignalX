@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient()
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('currency_symbol, business_type')
+    .select('currency_symbol, business_type, business_name')
     .eq('id', ownerId)
     .single()
 
@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     currency_symbol: profile?.currency_symbol || null,
     business_type:   profile?.business_type   || 'retail',
+    business_name:   profile?.business_name   || null,
     staff_sector:    staffSector,
   })
 }
