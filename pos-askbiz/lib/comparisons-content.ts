@@ -188,7 +188,7 @@ export const COMPARISONS: Comparison[] = [
     competitor: 'Geckoboard',
     tagline: 'AskBiz vs Geckoboard',
     description: 'Geckoboard is designed for displaying KPIs on office TV screens. AskBiz is designed for founders making decisions — delivering insight wherever you are, not just on the wall.',
-    metaDescription: 'AskBiz vs Geckoboard for business analytics. Geckoboard is a TV dashboard tool — AskBiz delivers AI-powered business intelligence directly to founders on any device.',
+    metaDescription: 'AskBiz vs Geckoboard for business analytics. Geckoboard is a TV dashboard tool — AskBiz delivers AI-powered daily insight directly to founders on any device.',
     heroHeading: 'AskBiz vs Geckoboard',
     heroSubtitle: 'Geckoboard puts your KPIs on a TV screen. AskBiz puts the answers in your pocket — with AI analysis, daily briefings, and alerts wherever you are.',
     theirColor: '#00bc5b',
