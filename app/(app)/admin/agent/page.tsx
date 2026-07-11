@@ -33,7 +33,7 @@ const VERDICT_STYLE = {
 }
 
 export default function AgentAdminPage() {
-  const { tc } = useLang()
+  const { tc, fmtDate } = useLang()
   const PRESETS = buildPresets(tc)
   const router = useRouter()
   const supabase = createClient()
@@ -2014,7 +2014,7 @@ export default function AgentAdminPage() {
                       <span style={{fontSize:15,padding:'2px 8px',borderRadius:6,background:'rgba(13,148,136,.08)',color:'#0d9488',fontWeight:500}}>{blog.pillar || blog.cluster || '—'}</span>
                       <span style={{fontSize:17,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || 'Untitled'}</span>
                       <span style={{fontSize:15,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
-                      <span style={{fontSize:15,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
+                      <span style={{fontSize:15,color:'var(--tx3)'}}>{fmtDate(item.created_at)}</span>
                       {item.status === 'pending' && (
                         <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
                           <button onClick={() => handleShiillahAction(item.id, 'approve')} disabled={shiillahActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:15,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
@@ -2039,7 +2039,7 @@ export default function AgentAdminPage() {
                       <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg, #0d9488, #2dd4bf)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:'#fff'}}>SM</div>
                       <div>
                         <div style={{fontSize:17,fontWeight:600,color:'var(--tx)'}}>Shiillah Mwadosho</div>
-                        <div style={{fontSize:15,color:'var(--tx3)'}}>{shiillahPreview.content?.pillar || shiillahPreview.content?.cluster} · {new Date(shiillahPreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+                        <div style={{fontSize:15,color:'var(--tx3)'}}>{shiillahPreview.content?.pillar || shiillahPreview.content?.cluster} · {fmtDate(shiillahPreview.created_at, {day:'numeric',month:'long',year:'numeric'})}</div>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
