@@ -56,6 +56,11 @@ CITATION RULE — READ CAREFULLY, THIS IS A HARD CONSTRAINT:
 
 const ATTRIBUTION_RE = /(?:According to|As reported by|As seen in|As noted by|Per|Reports? from|Data from|Research from)\s+([A-Z][A-Za-z0-9&'.\s-]{2,45}?)(?=[,.]|\s+(?:is|are|shows?|reveals?|reported|found|notes?|says?|found that))/g
 
+// Swahili equivalent — additive, doesn't change matching behaviour for the
+// English-writing agents. Added for Shiillah Mwadosho, AskBiz's first
+// Swahili-language content agent.
+const ATTRIBUTION_RE_SW = /(?:Kwa mujibu wa|Kulingana na|Kama ilivyoripotiwa na|Ripoti ya)\s+([A-Z][A-Za-z0-9&'.\s-]{2,45}?)(?=[,.]|\s+(?:in(?:aeleza|abainisha|aripoti|asema)?|il(?:ieleza|isema|ionyesha)))/g
+
 // Defense-in-depth for when the model ignores the prompt rule anyway. Checks
 // every "According to X" / "As reported by X" style attribution in the body
 // text against the actual source domains — anything ungrounded gets
@@ -73,17 +78,19 @@ export function findFabricatedCitations(
   const allowedNameSet = new Set(allowedNames.map(n => n.toLowerCase()))
 
   const flagged: string[] = []
-  let match: RegExpExecArray | null
-  const re = new RegExp(ATTRIBUTION_RE)
-  while ((match = re.exec(text)) !== null) {
-    const name = match[1].trim()
-    if (allowedNameSet.has(name.toLowerCase())) continue
-    const nameWords = name.toLowerCase().split(/\s+/).filter(w => w.length > 2 && w !== 'the')
-    const nameCompact = nameWords.join('')
-    const grounded = domainRoots.some(root =>
-      root.includes(nameCompact) || nameWords.some(w => root.includes(w))
-    )
-    if (!grounded) flagged.push(name)
+  for (const pattern of [ATTRIBUTION_RE, ATTRIBUTION_RE_SW]) {
+    let match: RegExpExecArray | null
+    const re = new RegExp(pattern)
+    while ((match = re.exec(text)) !== null) {
+      const name = match[1].trim()
+      if (allowedNameSet.has(name.toLowerCase())) continue
+      const nameWords = name.toLowerCase().split(/\s+/).filter(w => w.length > 2 && w !== 'the')
+      const nameCompact = nameWords.join('')
+      const grounded = domainRoots.some(root =>
+        root.includes(nameCompact) || nameWords.some(w => root.includes(w))
+      )
+      if (!grounded) flagged.push(name)
+    }
   }
   return [...new Set(flagged)]
 }

@@ -132,6 +132,17 @@ export default function AgentAdminPage() {
   const [janeEditWhatsapp, setJaneEditWhatsapp] = useState('')
   const [janeEditFacebook, setJaneEditFacebook] = useState('')
 
+  // Shiillah Mwadosho — Swahili Correspondent (Kenya micro-business blog, in Swahili) state
+  const [shiillahItems, setShiillahItems]           = useState<any[]>([])
+  const [shiillahCounts, setShiillahCounts]         = useState<{pending:number;published:number;rejected:number;total:number}>({pending:0,published:0,rejected:0,total:0})
+  const [shiillahFilter, setShiillahFilter]         = useState<'pending'|'published'|'rejected'|'all'>('pending')
+  const [shiillahRunning, setShiillahRunning]       = useState(false)
+  const [shiillahRunLog, setShiillahRunLog]         = useState<string[]>([])
+  const [shiillahPreview, setShiillahPreview]       = useState<any>(null)
+  const [shiillahActing, setShiillahActing]         = useState<string|null>(null)
+  const [shiillahEditTitle, setShiillahEditTitle]   = useState('')
+  const [shiillahEditSections, setShiillahEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
+
   // Loading states — prevent misleading 0s on initial render
   const [aliceLoading, setAliceLoading]       = useState(true)
   const [victorLoading, setVictorLoading]     = useState(true)
@@ -139,6 +150,7 @@ export default function AgentAdminPage() {
   const [benLoading, setBenLoading]           = useState(true)
   const [mayaLoading, setMayaLoading]         = useState(true)
   const [janeLoading, setJaneLoading]         = useState(true)
+  const [shiillahLoading, setShiillahLoading] = useState(true)
 
   // Automation state
   const [autoJobs, setAutoJobs] = useState<Record<string, {running:boolean;result:any;lastRun:string|null}>>({
@@ -376,6 +388,78 @@ export default function AgentAdminPage() {
       loadJaneCounts()
     }
   }, [authorized, mainTab, agentTab, loadJaneItems, loadJaneCounts])
+
+  // ── Shiillah Mwadosho load functions ──
+  const loadShiillahCounts = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/shiillah-scout/list?counts=1&t=${Date.now()}`, { cache: 'no-store' })
+      const d   = await res.json()
+      setShiillahCounts({ pending: d.pending || 0, published: d.published || 0, rejected: d.rejected || 0, total: d.total || 0 })
+    } catch {}
+  }, [])
+
+  const loadShiillahItems = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/shiillah-scout/list?status=${shiillahFilter}&t=${Date.now()}`, { cache: 'no-store' })
+      const d   = await res.json()
+      setShiillahItems(d.items || [])
+    } catch { setShiillahItems([]) }
+    finally { setShiillahLoading(false) }
+  }, [shiillahFilter])
+
+  useEffect(() => {
+    if (authorized && mainTab === 'marketing-specialist' && agentTab === 'shiillah') {
+      loadShiillahItems()
+      loadShiillahCounts()
+    }
+  }, [authorized, mainTab, agentTab, loadShiillahItems, loadShiillahCounts])
+
+  const runShiillahScout = async () => {
+    setShiillahRunning(true); setShiillahRunLog(['Shiillah is scanning Kenya micro-business signals...'])
+    try {
+      const res  = await fetch('/api/agent/shiillah-scout?secret=dev-test')
+      const data = await res.json()
+      setShiillahRunLog(data.log || [String(data.error || 'Unknown error')])
+      if (data.skipped) { showToast('Already ran today — no duplicates', true) }
+      else if (data.success) { showToast(`Shiillah drafted ${data.blogsGenerated} Swahili blog post(s)`); setShiillahLoading(true); setShiillahFilter('pending'); loadShiillahItems(); loadShiillahCounts() }
+      else showToast('Scout run failed — check the log', false)
+    } catch (e) { setShiillahRunLog([`Error: ${String(e)}`]); showToast('Scout run failed', false) }
+    finally { setShiillahRunning(false) }
+  }
+
+  const openShiillahPreview = (item: any) => {
+    setShiillahPreview(item)
+    setShiillahEditTitle(item.content?.title || '')
+    setShiillahEditSections(item.content?.sections ? JSON.parse(JSON.stringify(item.content.sections)) : [])
+  }
+
+  const handleShiillahAction = async (id: string, action: 'approve'|'reject') => {
+    setShiillahActing(id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const body: any = { id, action }
+      if (action === 'approve' && shiillahPreview) {
+        body.content = { ...shiillahPreview.content, title: shiillahEditTitle, sections: shiillahEditSections }
+      }
+      const res = await fetch('/api/agent/approve', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body:    JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) { showToast(data.error || `Failed (${res.status})`, false); return }
+      showToast(action === 'approve' ? (data.slug ? `Published to blog: ${data.slug}` : 'Authorised and published') : 'Rejected')
+      setShiillahPreview(null)
+      setShiillahItems(prev => prev.filter(item => item.id !== id))
+      setShiillahCounts(prev => ({
+        ...prev,
+        pending:   prev.pending - 1,
+        published: action === 'approve' ? prev.published + 1 : prev.published,
+        rejected:  action === 'reject'  ? prev.rejected  + 1 : prev.rejected,
+      }))
+    } catch (e) { showToast(String(e), false) }
+    finally { setShiillahActing(null) }
+  }
 
   const runAliceScout = async () => {
     setAliceRunning(true); setAliceRunLog(['Alice is scanning for today\'s stories...'])
@@ -868,7 +952,7 @@ export default function AgentAdminPage() {
         {/* Agent sub-tabs (shown only inside Marketing Specialist) */}
         {mainTab === 'marketing-specialist' && (
           <div style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto',background:'var(--sf)',paddingLeft:8}}>
-            {([['alice',tc('page_admin_agent.tabAlice'),'#6366F1'],['victor',tc('page_admin_agent.tabVictor'),'#ea580c'],['carolyne',tc('page_admin_agent.tabCarolyne'),'#16a34a'],['ben',tc('page_admin_agent.tabBen'),'#1d4ed8'],['maya',tc('page_admin_agent.tabMaya'),'#e11d48'],['jane','Jane Wanjiru','#7c3aed']] as [string,string,string][]).map(([t,label,color]) => {
+            {([['alice',tc('page_admin_agent.tabAlice'),'#6366F1'],['victor',tc('page_admin_agent.tabVictor'),'#ea580c'],['carolyne',tc('page_admin_agent.tabCarolyne'),'#16a34a'],['ben',tc('page_admin_agent.tabBen'),'#1d4ed8'],['maya',tc('page_admin_agent.tabMaya'),'#e11d48'],['jane','Jane Wanjiru','#7c3aed'],['shiillah','Shiillah Mwadosho','#0d9488']] as [string,string,string][]).map(([t,label,color]) => {
               const active = agentTab === t
               return (
                 <button key={t} onClick={()=>setAgentTab(t as any)} style={{padding:'8px 16px',border:'none',background:'transparent',fontSize:16,fontWeight:active?600:400,color:active?color:'var(--tx3)',borderBottom:active?`2px solid ${color}`:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',transition:'color 150ms'}}>
@@ -1856,6 +1940,176 @@ export default function AgentAdminPage() {
                       <textarea value={janeEditFacebook} onChange={e => setJaneEditFacebook(e.target.value)} rows={6} style={{fontSize:16,lineHeight:1.6,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:8,padding:'10px 12px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                       <div style={{fontSize:14,color:'var(--tx3)',marginTop:4}}>{janeEditFacebook.length} characters</div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── SHIILLAH MWADOSHO — SWAHILI CORRESPONDENT (KENYA) ── */}
+        {mainTab === 'marketing-specialist' && agentTab === 'shiillah' && (
+          <>
+            {/* Shiillah profile card */}
+            <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
+              <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:22,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>SM</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Shiillah Mwadosho</div>
+                <div style={{fontSize:16,color:'#0d9488',fontWeight:600,marginBottom:4}}>Swahili Correspondent, Kenya</div>
+                <div style={{fontSize:16,color:'var(--tx3)',lineHeight:1.5}}>Writes 1,500-word Swahili blog posts for duka owners, mama mboga, jua kali artisans, and boda boda riders — same Kenya micro-business topics Alice covers in English, in Tuko-style Swahili voice. Every draft holds for review before it can publish.</div>
+              </div>
+              <button onClick={runShiillahScout} disabled={shiillahRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:shiillahRunning?'var(--b)':'#0d9488',color:shiillahRunning?'var(--tx3)':'#fff',fontSize:17,fontWeight:600,cursor:shiillahRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms'}}>
+                {shiillahRunning ? 'Writing...' : 'Run Shiillah Now'}
+              </button>
+            </div>
+
+            {/* Run log */}
+            {shiillahRunLog.length > 0 && (
+              <div style={{marginBottom:20,padding:'14px 16px',borderRadius:12,background:'var(--ev)',border:'1px solid var(--b)',fontSize:16,fontFamily:'monospace',color:'var(--tx2)',maxHeight:200,overflowY:'auto'}}>
+                {shiillahRunLog.map((l,i) => <div key={i}>{l}</div>)}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:20}}>
+              {shiillahLoading ? [0,1,2,3].map(i => (
+                <div key={i} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)',minHeight:66}}>
+                  <div style={{height:9,borderRadius:5,background:'var(--ev)',marginBottom:10,width:'65%'}}/>
+                  <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
+                </div>
+              )) : [
+                {label:tc('page_admin_agent.statPendingReview'),value:shiillahCounts.pending,color:'#f59e0b'},
+                {label:tc('page_admin_agent.statPublished'),value:shiillahCounts.published,color:'#10b981'},
+                {label:tc('page_admin_agent.statRejected'),value:shiillahCounts.rejected,color:'#94a3b8'},
+                {label:tc('page_admin_agent.statTotalDrafts'),value:shiillahCounts.total,color:'var(--tx)'},
+              ].map(({label,value,color}) => (
+                <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
+                  <div style={{fontSize:26,fontWeight:700,fontFamily:'var(--font-sora)',color}}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter */}
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {(['pending','published','rejected','all'] as const).map(f => (
+                <button key={f} onClick={() => { setShiillahLoading(true); setShiillahFilter(f) }} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${shiillahFilter===f?'#0d9488':'var(--b)'}`,background:shiillahFilter===f?'rgba(13,148,136,.08)':'transparent',color:shiillahFilter===f?'#0d9488':'var(--tx3)',fontSize:16,fontWeight:shiillahFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize',transition:'background 150ms, color 150ms, border-color 150ms'}}>{f}</button>
+              ))}
+            </div>
+
+            {/* Blog list */}
+            {shiillahItems.length === 0 ? (
+              <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
+                <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#0d9488,#2dd4bf)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>SM</div>
+                <div style={{fontSize:18,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>{tc('page_admin_agent.noDraftsYet')}</div>
+                <div style={{fontSize:16,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>Run Shiillah to have her scan Kenya micro-business topics and draft Swahili blog posts ready for review.</div>
+              </div>
+            ) : (
+              <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
+                {shiillahItems.map(item => {
+                  const blog = item.content || {}
+                  return (
+                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer',transition:'background 120ms'}} onClick={() => openShiillahPreview(item)} onMouseEnter={e=>e.currentTarget.style.background='var(--ev)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <span style={{fontSize:15,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.status==='pending'?'rgba(245,158,11,.1)':item.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:item.status==='pending'?'#f59e0b':item.status==='published'?'#10b981':'#94a3b8'}}>{item.status}</span>
+                      <span style={{fontSize:15,padding:'2px 8px',borderRadius:6,background:'rgba(13,148,136,.08)',color:'#0d9488',fontWeight:500}}>{blog.pillar || blog.cluster || '—'}</span>
+                      <span style={{fontSize:17,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || 'Untitled'}</span>
+                      <span style={{fontSize:15,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
+                      <span style={{fontSize:15,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
+                      {item.status === 'pending' && (
+                        <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => handleShiillahAction(item.id, 'approve')} disabled={shiillahActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:15,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
+                          <button onClick={() => handleShiillahAction(item.id, 'reject')} disabled={shiillahActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:15,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
+                        </div>
+                      )}
+                      {item.status === 'published' && blog.slug && (
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(16,185,129,.3)',background:'rgba(16,185,129,.08)',color:'#10b981',fontSize:15,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>{tc('page_admin_agent.viewOnBlog')}</a>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Preview modal */}
+            {shiillahPreview && (
+              <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShiillahPreview(null)}>
+                <div style={{background:'var(--sf)',borderRadius:16,maxWidth:800,width:'100%',maxHeight:'90vh',overflow:'auto',padding:0}} onClick={e => e.stopPropagation()}>
+                  <div style={{padding:'16px 24px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'var(--sf)',zIndex:1,borderRadius:'16px 16px 0 0'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg, #0d9488, #2dd4bf)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:'#fff'}}>SM</div>
+                      <div>
+                        <div style={{fontSize:17,fontWeight:600,color:'var(--tx)'}}>Shiillah Mwadosho</div>
+                        <div style={{fontSize:15,color:'var(--tx3)'}}>{shiillahPreview.content?.pillar || shiillahPreview.content?.cluster} · {new Date(shiillahPreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      {shiillahPreview.status === 'pending' && <>
+                        <button onClick={() => handleShiillahAction(shiillahPreview.id, 'approve')} disabled={shiillahActing===shiillahPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:16,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authoriseAndPublish')}</button>
+                        <button onClick={() => handleShiillahAction(shiillahPreview.id, 'reject')} disabled={shiillahActing===shiillahPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:16,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
+                      </>}
+                      <button onClick={() => setShiillahPreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:18,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
+                    </div>
+                  </div>
+
+                  <div style={{padding:24}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:16,color:'var(--tx3)'}}>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Shiillah Mwadosho</span>
+                      <span>·</span>
+                      <span>{shiillahPreview.content?.publishDate}</span>
+                      <span>·</span>
+                      <span>{tc('page_admin_agent.minRead', { n: shiillahPreview.content?.readTime })}</span>
+                      {shiillahPreview.source_url && <>
+                        <span>·</span>
+                        <a href={shiillahPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#0d9488',textDecoration:'none'}}>{tc('page_admin_agent.source')}</a>
+                      </>}
+                    </div>
+
+                    {shiillahPreview.status === 'pending' ? (
+                      <input value={shiillahEditTitle} onChange={e => setShiillahEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:26,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                    ) : (
+                      <h1 style={{fontSize:26,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{shiillahPreview.content?.title}</h1>
+                    )}
+
+                    {shiillahPreview.content?.tldr && (
+                      <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(13,148,136,.05)',border:'1px solid rgba(13,148,136,.15)',marginBottom:24,fontSize:17,color:'var(--tx2)',lineHeight:1.6,whiteSpace:'pre-line'}}>
+                        <strong style={{color:'#0d9488',fontSize:15,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('page_admin_agent.tldr')}</strong><br/>{shiillahPreview.content.tldr}
+                      </div>
+                    )}
+
+                    {(shiillahPreview.status === 'pending' ? shiillahEditSections : shiillahPreview.content?.sections || []).map((sec: any, i: number) => (
+                      <div key={i} style={{marginBottom:24}}>
+                        {shiillahPreview.status === 'pending' ? (
+                          <>
+                            <input value={sec.heading} onChange={e => { const s = [...shiillahEditSections]; s[i] = {...s[i], heading: e.target.value}; setShiillahEditSections(s) }} placeholder="Section heading" style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...shiillahEditSections]; s[i] = {...s[i], body: e.target.value}; setShiillahEditSections(s) }} rows={5} placeholder="Write the section..." style={{fontSize:17,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                          </>
+                        ) : (
+                          <>
+                            <h2 style={{fontSize:20,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:8,marginTop:0}}>{sec.heading}</h2>
+                            <p style={{fontSize:17,lineHeight:1.7,color:'var(--tx2)',margin:0}}>{sec.body}</p>
+                          </>
+                        )}
+                      </div>
+                    ))}
+
+                    {shiillahPreview.content?.paa?.length > 0 && (
+                      <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
+                        <h3 style={{fontSize:17,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>{tc('page_admin_agent.peopleAlsoAsk')}</h3>
+                        {shiillahPreview.content.paa.map((qa: any, i: number) => (
+                          <div key={i} style={{marginBottom:12}}>
+                            <div style={{fontSize:17,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
+                            <div style={{fontSize:16,color:'var(--tx2)',lineHeight:1.6}}>{qa.a}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {shiillahPreview.content?.cta && (
+                      <div style={{marginTop:24,padding:16,borderRadius:10,background:'rgba(13,148,136,.06)',border:'1px solid rgba(13,148,136,.15)'}}>
+                        <div style={{fontSize:18,fontWeight:600,color:'#0d9488',marginBottom:4}}>{shiillahPreview.content.cta.heading}</div>
+                        <div style={{fontSize:16,color:'var(--tx2)'}}>{shiillahPreview.content.cta.body}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
