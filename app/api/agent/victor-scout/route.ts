@@ -91,8 +91,12 @@ async function runVictorScout() {
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     const [{ data: recentPosts }, { data: publishedPosts }] = await Promise.all([
-      supabase.from('agent_content').select('source_query, content').eq('type', 'blog_mktg_africa').gte('created_at', thirtyDaysAgo).limit(60),
-      supabase.from('agent_content').select('content').eq('type', 'blog_mktg_africa').eq('status', 'published').order('created_at', { ascending: false }).limit(30),
+      // Was filtering on type='blog_mktg_africa', which never matches — inserts
+      // below use type='blog' (so posts render at /blog/[slug]), isolated by the
+      // run_id prefix instead. The mismatch silently zeroed topic-freshness
+      // scoring, this agent's own slug-collision dedup, and relatedSlugs context.
+      supabase.from('agent_content').select('source_query, content').eq('type', 'blog').like('run_id', 'blog_mktg_africa_%').gte('created_at', thirtyDaysAgo).limit(60),
+      supabase.from('agent_content').select('content').eq('type', 'blog').like('run_id', 'blog_mktg_africa_%').eq('status', 'published').order('created_at', { ascending: false }).limit(30),
     ])
 
     const recentQueryWords = new Set<string>()
