@@ -13,21 +13,25 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // If requesting counts, return separate count queries for accuracy
+  // If requesting counts, return separate count queries for accuracy.
+  // Deliberately not using { count: 'exact', head: true } here — that mode
+  // reproducibly returned 0 for this table/type combo in production even
+  // though the rows exist (same issue worked around below for .limit()).
+  // Fetching ids and counting client-side sidesteps it.
   if (searchParams.has('counts')) {
     const [pending, published, rejected] = await Promise.all([
-      supabase.from('agent_content').select('id', { count: 'exact', head: true })
-        .eq('type', 'community_post').eq('status', 'pending'),
-      supabase.from('agent_content').select('id', { count: 'exact', head: true })
-        .eq('type', 'community_post').eq('status', 'published'),
-      supabase.from('agent_content').select('id', { count: 'exact', head: true })
-        .eq('type', 'community_post').eq('status', 'rejected'),
+      supabase.from('agent_content').select('id').eq('type', 'community_post').eq('status', 'pending'),
+      supabase.from('agent_content').select('id').eq('type', 'community_post').eq('status', 'published'),
+      supabase.from('agent_content').select('id').eq('type', 'community_post').eq('status', 'rejected'),
     ])
+    const pendingCount = pending.data?.length || 0
+    const publishedCount = published.data?.length || 0
+    const rejectedCount = rejected.data?.length || 0
     return NextResponse.json({
-      pending: pending.count || 0,
-      published: published.count || 0,
-      rejected: rejected.count || 0,
-      total: (pending.count || 0) + (published.count || 0) + (rejected.count || 0),
+      pending: pendingCount,
+      published: publishedCount,
+      rejected: rejectedCount,
+      total: pendingCount + publishedCount + rejectedCount,
     })
   }
 
@@ -36,11 +40,14 @@ export async function GET(request: NextRequest) {
     .select('*')
     .eq('type', 'community_post')
 
+  // .limit(100) reproducibly returns zero rows for this query shape on this
+  // table (confirmed against production — .range(0, 99), which is the same
+  // effective window, returns correctly). Using .range() here sidesteps it.
   let query
   if (status === 'all') {
-    query = janeBase.order('created_at', { ascending: false }).limit(100)
+    query = janeBase.order('created_at', { ascending: false }).range(0, 99)
   } else {
-    query = janeBase.eq('status', status).order('created_at', { ascending: false }).limit(100)
+    query = janeBase.eq('status', status).order('created_at', { ascending: false }).range(0, 99)
   }
 
   const { data, error } = await query
