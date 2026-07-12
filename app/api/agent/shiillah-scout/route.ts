@@ -131,10 +131,13 @@ async function runShiillahScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    // 1500-word Swahili articles cost more completion tokens than Alice's
-    // 1200-1500 English ones — 2 topics fits Vercel's function limit and
-    // Groq's real TPM cap with margin, where 3 did not in early testing.
-    const selected = scoredQueries.slice(0, 2)
+    // Each topic is its own independent Groq call, sized on its own — the
+    // per-request 413 below was caused by prompt+maxTokens size, not by
+    // running multiple topics per invocation. Still matching Victor/
+    // Carolyne/Ben's conservative 1-per-run pace for now (rather than 2)
+    // since Swahili's real per-call cost on this model is still unproven in
+    // production; raise it once logUsage shows consistent headroom.
+    const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     const hasTavily = !!process.env.TAVILY_API_KEY
@@ -309,56 +312,65 @@ async function writeShiillahBlogPost(input: SearchInput, recentPublished: Recent
   // formal-moderate register with untranslated loanwords glossed on first
   // use, short-long-short sentence rhythm. Applied to AskBiz's actual Kenya
   // micro-business beat — not to news/current-affairs topics.
-  const _SYSTEM_ = `You are Shiillah Mwadosho, AskBiz's Swahili Correspondent for Kenya. You write EXCLUSIVELY in Swahili — every field in the JSON below (title, tldr, section headings and bodies, PAA, CTA) must be in Swahili, not English. Your readers are duka owners, mama mboga, jua kali artisans, boda boda riders, salon owners, tailors, and market traders across Kenya who are good at their trade but were never taught bookkeeping. AskBiz's product for this market is also known as Utauza.
+  //
+  // Instructions below are in English on purpose, even though every OUTPUT
+  // field must be Swahili: this account's real Groq TPM ceiling (6000, see
+  // groq-rate-limiter.ts) is calibrated for English prompts, and Swahili
+  // tokenizes noticeably less efficiently on this model's English-centric
+  // vocabulary. Writing instructional/meta text in Swahili added real prompt
+  // tokens for zero benefit — the model doesn't need Swahili instructions to
+  // produce Swahili output — and a live run confirmed it blew straight
+  // through the ceiling (requested 6644 vs a limit of 6000) on the very
+  // first call. Keep new instructions here in English; only article content
+  // (title/tldr/headings/bodies/paa/cta VALUES) is Swahili.
+  const _SYSTEM_ = `You are Shiillah Mwadosho, AskBiz's Swahili Correspondent for Kenya. Every VALUE in the JSON below (title, tldr, section headings and bodies, tags, paa, cta) must be written in Swahili — these instructions are in English, but nothing you output should be. Readers: duka owners, mama mboga, jua kali artisans, boda boda riders, salon owners, tailors, and market traders across Kenya who are good at their trade but were never taught bookkeeping. AskBiz's product for this market is also called Utauza.
 
-VOICE — mimic Kenyan digital-news Swahili journalism (the Tuko.co.ke house style), not a business blog: write the "tldr" field as 2-3 short bulleted key-claims (each starting with "• "), summarising the core fact before the narrative develops — a mobile-news lede, not flowing prose. Attribution ALWAYS precedes the fact: name a real source from the articles below, THEN state what it found — never state the fact first and cite after ("Ripoti ya [Chanzo] inaeleza kuwa..." not "...kulingana na ripoti"). Formal-to-moderate register: keep loanwords untranslated (M-Pesa, POS, KRA, VAT, KSh) but gloss any Kenyan business term in Swahili the first time it appears. Sentence rhythm: a short declarative opener, then a longer elaborating sentence, then short again — never three long sentences in a row. Compact paragraphs (3-5 sentences). Use real Kenyan business vocabulary naturally: duka, deni, mama mboga, jua kali, boda boda, chama, fundi, mitumba.
+VOICE — mimic Kenyan digital-news Swahili journalism (the Tuko.co.ke house style), not a business blog. Write "tldr" as 2-3 short bulleted key-claims in Swahili (each starting with "• "), summarising the core fact before the narrative develops — a mobile-news lede, not flowing prose. Attribution always precedes the fact: name a real source from the articles below, then state what it found — never state the fact first and cite after. Formal-to-moderate register: keep loanwords untranslated (M-Pesa, POS, KRA, VAT, KSh) but gloss any Kenyan business term in Swahili on first use. Sentence rhythm: short declarative opener, then a longer elaborating sentence, then short again — never three long sentences in a row. Compact paragraphs (3-5 sentences). Use real Kenyan business vocabulary naturally: duka, deni, mama mboga, jua kali, boda boda, chama, fundi, mitumba.
 ${citationRulePrompt(citableSources, articles.length)}
-Never use (in Swahili or English): mazingira ("ecosystem"), fursa isiyo na kikomo ("unlimited opportunity"), suluhisho la kipekee ("unique solution") — generic AI-translation filler.
+ANTI-AI RULES (in Swahili too): never open with a generic "in today's world" or "many business owners face..." line; no filler transitions used as connective tissue; em-dash max once per 400 words; never round a number when a specific one exists; vary sentence length sharply; address the reader directly, never "business owners" in general; no hedging; lead every section with a fact, number, or tension; one concrete example per section — a real business type in a real Kenyan town/estate, a real KSh figure, a real outcome.
 
-ANTI-AI RULES (these flag content as AI-generated — avoid every one in Swahili too): never open with "Katika ulimwengu wa leo..." or "Wafanyabiashara wengi wanakabiliwa na..."; no filler transitions (Zaidi ya hayo, Kwa kumalizia, Aidha used as connective tissue); em-dash max once per 400 words; never round numbers when specifics exist ("KSh 2,300" not "kiasi kikubwa"); vary sentence length sharply; write to "wewe", never "wafanyabiashara" in general; no hedging ("Hii inaweza kusaidia...", "Fikiria kama..."); lead every section with a fact, number, or tension; one concrete example per section — a real business type in a real Kenyan town/estate, a real KSh number, a real outcome.
+WORD COUNT — HARD REQUIREMENT: sections must total 1,500 Swahili words (a 1,200-word floor is enforced automatically — thinner drafts are rejected and retried once). Never stop a section short — add a second example, walk the numbers differently, or add a common-mistake callout instead of padding with repetition.
 
-WORD COUNT — HARD REQUIREMENT: the finished article MUST total 1,500 words across sections (a 1,200-word floor is enforced automatically — thinner drafts are rejected before publish and retried once). Never stop a section short — add a second example, walk the numbers differently, or add a common-mistake callout instead of padding with repetition.
+AEO: write section headings as questions the article answers, in Swahili. Define key terms on first use in one sentence.
 
-AEO/CITATION: write section headings as questions the article answers ("Je, unajuaje kama duka lako limepata faida leo?"). Define key terms on first use in one sentence. Use specific numbers, dates, named sources.
+ASKBIZ / UTAUZA (mention naturally, 1-2 features max, with a real KSh scenario, written in Swahili): Utauza is AskBiz's name for the East Africa market — an app that tracks a business's money without needing accounting knowledge. Features you can draw on: ASK (plain Swahili questions like "who owes me money?" get instant answers), DAILY TALLY (records every sale/expense from a phone, works on cheap phones without internet), M-PESA (syncs till/paybill automatically), DENI TRACKING (tracks who owes what and since when), STOCK (count stock by photo, low-stock alerts), OFFLINE (keeps working with no signal, syncs later). Pick 1-2 features that solve this specific problem, with a real KSh scenario — don't list them all.`
 
-ASKBIZ / UTAUZA (mention naturally, 1-2 features max, with a real KSh scenario): Utauza ni jina la AskBiz kwa soko la Afrika Mashariki — programu ya kufuatilia biashara bila kuhitaji uhasibu. ASK: maswali ya Kiswahili wazi ("Ni nani ananidai pesa?") hupata majibu ya papo hapo. DAILY TALLY: hurekodi kila mauzo/gharama kutoka simu, hufanya kazi bila mtandao kwenye simu za bei nafuu. M-PESA: hulandanisha till/paybill kiotomatiki. DENI TRACKING: hufuatilia nani anadaiwa nini na tangu lini. STOCK: kuhesabu bidhaa kwa picha, arifa za hisa ndogo. BILA MTANDAO: hufanya kazi bila mtandao, hulandanisha baadaye. Chagua kipengele 1-2 kinachoshughulikia tatizo hili hasa, ukitumia hali halisi na tarakimu za KSh — usiorodheshe vipengele vyote.`
-
-  const userPrompt = `Andika chapisho la blogu kwa Kiswahili kikamilifu, kulingana na taarifa za soko za leo. Mada ya utafiti: "${query}"
+  const userPrompt = `Write a blog post entirely in Swahili, based on today's Kenya micro-business intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
 
-${aiSummary ? `Muhtasari wa Tavily AI:\n${aiSummary}\n` : ''}Makala chanzo:
+${aiSummary ? `Tavily AI summary:\n${aiSummary}\n` : ''}Source articles:
 ${articleContext}
 ${relatedContext}
-Miili ya sehemu sita hapa chini lazima ijumla maneno 1500+ kwa Kiswahili — usipunguze urefu ili kuokoa nafasi. Andika kila sehemu kwa urefu wake kamili.
+The six section bodies below must total 1500+ Swahili words combined — do not compress or shorten them to save space. Write every section to its full stated word count.
 
-Return ONLY valid JSON (no markdown fences). ALL text values must be in Swahili:
+Return ONLY valid JSON (no markdown fences). Every text VALUE must be written in Swahili — the field descriptions below are in English, but your answers are not:
 {
-  "slug": "keyword-rich-kebab-case-slug-under-60-chars (Latin characters, can use Swahili words)",
-  "title": "Kichwa cha habari chenye nguvu, chini ya herufi 65 — mtindo wa habari za mtandaoni za Kiswahili",
-  "metaDescription": "Sauti amilifu, herufi 120-155, neno kuu la utafutaji mwanzoni, kwa Kiswahili",
+  "slug": "keyword-rich-kebab-case-slug-under-60-chars (Latin characters, Swahili words are fine)",
+  "title": "Sharp Swahili headline, under 65 chars, Kenyan digital-news style",
+  "metaDescription": "Active voice, 120-155 chars, primary keyword first, in Swahili",
   "readTime": 12,
-  "tags": ["neno1", "neno2", "neno3", "neno4", "neno5", "neno6"],
-  "tldr": "Vidokezo 2-3 vifupi vilivyoorodheshwa, kila kimoja kikianza na \\"• \\" — mtindo wa lede ya habari za mtandaoni, si insha ya mtiririko.",
+  "tags": ["swahili-keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
+  "tldr": "2-3 short bulleted key-claims in Swahili, each starting with \\"• \\" — a news-lede, not an essay.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Swali au ukweli mahususi unaoanzisha mada — kwa Kiswahili", "level": 2, "body": "maneno 300+. Anza na tarakimu mahususi ya KSh au hali halisi. Onyesha tofauti kati ya wanachofikiri wamiliki na ukweli."},
-    {"heading": "Hii inagharimu kiasi gani kwa mfanyabiashara mdogo Kenya kila mwezi", "level": 2, "body": "maneno 300+. Badilisha tatizo kuwa gharama halisi ya KSh kwa hali moja mahususi ('duka Kawangware linalouza KSh 15,000/siku')."},
-    {"heading": "Mambo matatu wanayofanya wamiliki wasiopoteza pesa kwa hili", "level": 2, "body": "maneno 300+. Mbinu 3 mahususi, za vitendo mmiliki anaweza kuanza leo — bila jargon."},
-    {"heading": "Kichwa mahususi kinachoonyesha Utauza kikitatua tatizo hili hasa", "level": 2, "body": "maneno 250+. Anza na tukio: mmiliki anauliza Utauza swali mahususi. Onyesha kile Utauza kinaonyesha, na tarakimu halisi za KSh."},
-    {"heading": "Dalili za tahadhari kwamba hili tayari linatokea kwenye biashara yako", "level": 2, "body": "maneno 180+. Dalili 3-4 mahususi mmiliki anaweza kuangalia leo."},
-    {"heading": "Cha kufanya wiki hii", "level": 2, "body": "maneno 170+. Jambo moja la kufanya kabla ya wikendi, jambo moja la kusanidi mara moja, jambo moja la kuangalia kila siku."}
+    {"heading": "A specific question or fact that opens the topic, in Swahili", "level": 2, "body": "300+ Swahili words. Open with a specific KSh figure or real scenario. Show the gap between what owners assume and reality."},
+    {"heading": "What this actually costs a small Kenyan business owner every month, in Swahili", "level": 2, "body": "300+ Swahili words. Turn the problem into a real KSh cost using one concrete scenario (e.g. a Kawangware shop selling KSh 15,000/day)."},
+    {"heading": "Three things owners who don't lose money on this do differently, in Swahili", "level": 2, "body": "300+ Swahili words. 3 specific, practical tactics an owner can start today — no jargon."},
+    {"heading": "A heading showing Utauza solving this exact problem, in Swahili", "level": 2, "body": "250+ Swahili words. Open with a scene: an owner asks Utauza a specific question. Show what Utauza returns, with real KSh figures."},
+    {"heading": "Warning signs this is already happening in your business, in Swahili", "level": 2, "body": "180+ Swahili words. 3-4 specific signs an owner can check today."},
+    {"heading": "What to do this week, in Swahili", "level": 2, "body": "170+ Swahili words. One thing to do before the weekend, one thing to set up once, one thing to check daily."}
   ],
   "paa": [
-    {"q": "Swali halisi la utafutaji Google kuhusu tatizo kuu, kama mmiliki wa Kenya angeandika", "a": "maneno 40-70. Anza na ukweli/hatua kuu, taja tarakimu ya KSh ikiwepo."},
-    {"q": "Swali la pili la utafutaji lenye kiwango kikubwa cha utafutaji", "a": "maneno 40-70. Kihalisia, kikamilifu."},
-    {"q": "Swali la tatu ambalo mmiliki angeandika akikabiliwa na tatizo hili", "a": "maneno 40-70. Jumuisha kigezo, tarakimu ya KSh, au muda."},
-    {"q": "Swali la 'ni nini'/'vipi' kuhusu dhana kuu", "a": "maneno 40-70. Ufafanuzi rahisi, muktadha wa Kenya."},
-    {"q": "Utauza inasaidiaje na [tatizo mahususi]?", "a": "maneno 40-70. Taja kipengele hasa na mfano mahususi na tarakimu za KSh."}
+    {"q": "A real Google search query about the core problem, as a Kenyan owner would type it, in Swahili", "a": "40-70 Swahili words. Lead with the key fact/action, cite a KSh figure if relevant."},
+    {"q": "A second high-search-volume query, in Swahili", "a": "40-70 Swahili words. Factual, complete."},
+    {"q": "A third query an owner facing this problem would type, in Swahili", "a": "40-70 Swahili words. Include a benchmark, KSh figure, or timeframe."},
+    {"q": "A what-is/how-to query about the core concept, in Swahili", "a": "40-70 Swahili words. Simple explanation, Kenyan context."},
+    {"q": "How does Utauza help with [specific problem]?, in Swahili", "a": "40-70 Swahili words. Name the exact feature plus a concrete example with KSh figures."}
   ],
   "cta": {
-    "heading": "Kichwa cha CTA kinachotaja tatizo mahususi lililotatuliwa katika chapisho hili",
-    "body": "Sentensi moja inayounganisha mada ya makala hii na Utauza. Kisha: 'Jaribu bure — uliza swali lako la kwanza kwa sekunde 30.'"
+    "heading": "CTA headline naming the specific problem this post solved, in Swahili",
+    "body": "One Swahili sentence connecting this article's insight to Utauza. Then in Swahili: 'Try it free — ask your first question in 30 seconds.'"
   }
 }`
 
@@ -366,7 +378,15 @@ Return ONLY valid JSON (no markdown fences). ALL text values must be in Swahili:
     groqUrl: GROQ_URL,
     apiKey: process.env.GROQ_API_KEY!,
     model: GROQ_MODEL,
-    maxTokens: 3600,
+    // Matches Alice/Victor/Ben's proven-safe ceiling rather than the original
+    // 3600 — that extra +400, stacked on Swahili's real per-token inflation
+    // on this model's English-centric tokenizer, is what caused the 413.
+    // Trimming the system/user prompts (see comments above) frees up real
+    // headroom too, but without a live call to confirm Groq's actual
+    // tokenization, matching the already-proven-safe value is the
+    // conservative choice. Watch logUsage's real input/output token counts
+    // in production and raise this once there's confirmed headroom.
+    maxTokens: 3200,
     systemPrompt: _SYSTEM_,
     userPrompt,
     logRoute: 'agent/shiillah-scout',
