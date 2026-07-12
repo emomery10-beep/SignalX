@@ -38,12 +38,6 @@ function Avatar({ src, name, size }: { src: string; name: string; size: number }
   );
 }
 
-const PdfIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
-  </svg>
-);
-
 export default function ResearchClient() {
   const { lang } = useLang();
   const navLink = { fontSize: 13, color: C.tx2, textDecoration: "none" } as const;
@@ -111,9 +105,10 @@ export default function ResearchClient() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {RESEARCH_PAPERS.map((p) => (
-            <article
+            <Link
               key={p.slug}
-              style={{ background: C.sf, border: `1px solid ${C.b}`, borderRadius: 16, padding: "clamp(20px,3vw,30px)", transition: "box-shadow .2s ease, border-color .2s ease" }}
+              href={localePath(`/research/${p.slug}`, lang)}
+              style={{ display: "block", background: C.sf, border: `1px solid ${C.b}`, borderRadius: 16, padding: "clamp(20px,3vw,30px)", textDecoration: "none", color: C.tx, transition: "box-shadow .2s ease, border-color .2s ease" }}
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,.09)"; e.currentTarget.style.borderColor = C.accBdr; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = C.b; }}
             >
@@ -131,23 +126,16 @@ export default function ResearchClient() {
                 {p.summary}
               </p>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 22 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 20 }}>
                 {p.tags.map((t) => (
                   <span key={t} style={{ fontSize: 12, color: C.tx3, background: C.el, borderRadius: 9999, padding: "4px 11px" }}>{t}</span>
                 ))}
               </div>
 
-              <a
-                href={p.file}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 14, fontWeight: 600, textDecoration: "none", transition: "background .15s ease" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#b06a37"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = C.acc; }}
-              >
-                <PdfIcon /> Read the paper (PDF)
-              </a>
-            </article>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, color: C.acc }}>
+                Read paper <span aria-hidden="true">→</span>
+              </span>
+            </Link>
           ))}
         </div>
       </section>

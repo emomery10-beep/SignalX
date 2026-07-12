@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ResearchClient from "./ResearchClient";
-import { RESEARCH_PAPERS } from "@/lib/research-papers";
+import { RESEARCH_PAPERS, AUTHOR } from "@/lib/research-papers";
 
 const SITE = "https://askbiz.co";
 
@@ -62,6 +62,7 @@ function jsonLd() {
       { "@type": "EducationalOccupationalCredential", credentialCategory: "degree", name: "BSc Computer Science" },
       { "@type": "EducationalOccupationalCredential", credentialCategory: "degree", name: "MA Applied Linguistics" },
     ],
+    ...(AUTHOR.sameAs.length ? { sameAs: AUTHOR.sameAs } : {}),
   };
 
   const articles = RESEARCH_PAPERS.map((p) => ({

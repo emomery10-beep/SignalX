@@ -14,6 +14,7 @@ import { getAllArticles as getTransparencyArticles } from "@/lib/transparency-co
 import { academyArticles, academyCategories } from "@/lib/academy-content";
 import { getAllHowTo, getAllTranslate } from "@/lib/seo-content";
 import { COUNTRY_HUBS } from "@/lib/country-hub-content";
+import { RESEARCH_PAPERS } from "@/lib/research-papers";
 import { DEMO_MARKETS } from "@/lib/demo-markets";
 import { SECTORS } from "@/lib/pos-sectors";
 import { POS_FEATURES } from "@/lib/pos-features";
@@ -94,6 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/search`,                                     lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/benchmarks`,                                 lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/research`,                                   lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    ...RESEARCH_PAPERS.map(p => ({ url: `${base}/research/${p.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
     // SEO landing pages
     { url: `${base}/bloomberg-alternative`,                      lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/ai-business-analytics`,                      lastModified: now, changeFrequency: "monthly", priority: 0.8 },
