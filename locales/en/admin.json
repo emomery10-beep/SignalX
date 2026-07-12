@@ -10,7 +10,7 @@
   "tab_activity": "Activity",
   "tab_costs": "Costs",
   "tab_growth": "Growth",
-  "tab_readiness": "Readiness",
+  "tab_readiness": "Restaurant Readiness",
   "kv_readiness_onboarding": "Vendors onboarding",
   "kv_readiness_onboarding_sub": "Started the delivery-app listing flow",
   "kv_readiness_listed": "Fully ready",
