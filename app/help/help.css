@@ -19,8 +19,11 @@
   --hc-hover: #f7f7f7;
   --hc-radius: 12px;
   --hc-radius-sm: 8px;
-  --hc-font: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --hc-font-head: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  /* Static fallback stack. The real, brand-voice values are set on .hc-root
+     below so they can reference the site-wide --font-* vars (which live on
+     <body>, not :root) and follow any global font override. */
+  --hc-font: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --hc-font-head: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --hc-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
   --hc-max-w: 1080px;
   --hc-header-h: 53px;
@@ -28,6 +31,11 @@
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
 .hc-root {
+  /* Match the rest of the site: inherit --font-dm/--font-sora from <body> so
+     help pages follow the same fonts (and any global override) as everywhere
+     else, instead of pinning their own face. */
+  --hc-font: var(--font-dm), 'Instrument Sans', system-ui, sans-serif;
+  --hc-font-head: var(--font-sora), 'Sora', system-ui, sans-serif;
   min-height: 100vh;
   background: var(--hc-bg);
   font-family: var(--hc-font);

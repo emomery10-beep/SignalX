@@ -376,7 +376,7 @@ function BlogContent() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
             <span style={{ fontSize: 11, fontWeight: 500, color: c.text }}>{post.cluster}</span>
           </div>
-          <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
+          <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
             {post.title}
           </div>
           <p style={{ fontSize: 12, color: TX2, lineHeight: 1.55, margin: 0 }}>
@@ -397,7 +397,7 @@ function BlogContent() {
   }
 
   return (
-    <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
+    <div style={{ fontFamily: 'var(--font-dm), system-ui', background: BG, minHeight: '100vh' }}>
       <style>{`
         .post-row { transition: background 120ms; }
         .post-row:hover { background: ${SF} !important; }
@@ -444,7 +444,7 @@ function BlogContent() {
                 <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
         <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
@@ -517,7 +517,7 @@ function BlogContent() {
           <div style={{ marginBottom: isHome ? 36 : 28 }}>
             {isHome && (
               <div style={{ marginBottom: 22 }}>
-                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
+                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
                   {tc('blog_index.home_heading')}
                 </h1>
                 <p style={{ fontSize: 14, color: TX2, margin: 0, lineHeight: 1.6 }}>
@@ -542,7 +542,7 @@ function BlogContent() {
           {isHome && (
             <>
               <section style={{ marginBottom: 52 }}>
-                <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('blog_index.popular_topics')}</h2>
+                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('blog_index.popular_topics')}</h2>
                 {/* Featured top 3 — data-driven from actual post counts */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18 }}>
                   {topClusters.slice(0, 3).map(topic => {
@@ -560,7 +560,7 @@ function BlogContent() {
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: c.bg, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, color: c.text, flexShrink: 0 }}>
                           {topic.icon}
                         </div>
-                        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
+                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
                         <p style={{ fontSize: 12, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
                         <span style={{ fontSize: 11, color: c.text, fontWeight: 600 }}>{tc('blog_index.topic_articles_count', { count: topic.count })}</span>
                       </button>
@@ -585,7 +585,7 @@ function BlogContent() {
               {popularThisMonth.length > 0 && (
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
+                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
                     {popularThisMonth[0]?.cluster && (
                       <span style={{ fontSize: 11, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
                         {popularThisMonth[0].cluster}
@@ -603,7 +603,7 @@ function BlogContent() {
               {newThisMonth.length > 0 && (
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
+                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
                     <span style={{ fontSize: 10, fontWeight: 700, color: SF, background: ACC, borderRadius: 9999, padding: '2px 8px' }}>{tc('blog_index.new_count', { count: newThisMonth.length })}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -616,7 +616,7 @@ function BlogContent() {
 
               <section>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.recent_articles')}</h2>
+                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.recent_articles')}</h2>
                   <span style={{ fontSize: 12, color: TX3 }}>{tc('blog_index.total_count', { count: posts.length })}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -653,7 +653,7 @@ function BlogContent() {
 
               {/* Header */}
               <div style={{ marginBottom: 24 }}>
-                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
+                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
                   {search ? tc('blog_index.results_for', { query: search }) : activePillar || active}
                 </h1>
                 <p style={{ fontSize: 13, color: TX2, margin: 0 }}>
@@ -759,7 +759,7 @@ export default function BlogIndexClient() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BLOG_JSON_LD) }} />
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, system-ui' }}>
+      <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm), system-ui' }}>
         <div style={{ fontSize: 14, color: '#a39e97' }}>{tc('blog_index.loading')}</div>
       </div>
     }>

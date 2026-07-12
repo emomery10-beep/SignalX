@@ -53,7 +53,7 @@ function ArticleRow({ article, index, total }: { article: AcademyArticle; index:
         <span style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.04em' }}>
           {article.category}
         </span>
-        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
+        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
           {article.title}
         </div>
         <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
@@ -143,17 +143,17 @@ export default function AcademyClient() {
   }, [])
 
   return (
-    <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
+    <div style={{ fontFamily: 'var(--font-dm), system-ui', background: BG, minHeight: '100vh' }}>
       <style>{`
         .ac-row        { transition: background 120ms; }
         .ac-row:hover  { background: ${SF} !important; }
-        .ac-sb-btn       { cursor: pointer; border: none; background: transparent; transition: background 120ms; font-family: DM Sans, system-ui; }
+        .ac-sb-btn       { cursor: pointer; border: none; background: transparent; transition: background 120ms; font-family: var(--font-dm), system-ui; }
         .ac-sb-btn:hover { background: rgba(0,0,0,0.045) !important; }
         .ac-card       { cursor: pointer; transition: transform 140ms, box-shadow 140ms; }
         .ac-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.09) !important; }
         .ac-art-link   { display: block; padding: 5px 8px; border-radius: 6px; font-size: 12px; color: ${TX2}; text-decoration: none; line-height: 1.45; transition: background 100ms, color 100ms; }
         .ac-art-link:hover { background: rgba(0,0,0,0.04); color: ${TX}; }
-        .ac-crumb      { background: none; border: none; cursor: pointer; padding: 0; font-family: DM Sans, system-ui; }
+        .ac-crumb      { background: none; border: none; cursor: pointer; padding: 0; font-family: var(--font-dm), system-ui; }
         .ac-crumb:hover { text-decoration: underline; }
         .ac-more       { cursor: pointer; transition: background 120ms; }
         .ac-more:hover { background: rgba(208,138,89,.12) !important; }
@@ -193,7 +193,7 @@ export default function AcademyClient() {
                 <rect x="19" y="9"  width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
         <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
@@ -322,7 +322,7 @@ export default function AcademyClient() {
           <div style={{ marginBottom: isHome ? 36 : 28 }}>
             {isHome && (
               <div style={{ marginBottom: 18 }}>
-                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 6 }}>
+                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 6 }}>
                   {tc('academy.page_title')}
                 </h1>
                 <p style={{ fontSize: 14, color: TX2, margin: 0 }}>
@@ -359,14 +359,14 @@ export default function AcademyClient() {
                 <Link href={localePath('/academy/learning-paths', lang)} style={{ textDecoration: 'none', background: '#fff8f3', border: `1px solid ${ACC}30`, borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
                   <span style={{ fontSize: 28, flexShrink: 0 }}>🗺️</span>
                   <div>
-                    <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_learning_paths_title')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_learning_paths_title')}</div>
                     <div style={{ fontSize: 12, color: TX2 }}>{tc('academy.promo_learning_paths_desc')}</div>
                   </div>
                 </Link>
                 <Link href={localePath('/academy/checklists', lang)} style={{ textDecoration: 'none', background: '#f3faf6', border: '1px solid #a3e4b830', borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
                   <span style={{ fontSize: 28, flexShrink: 0 }}>✅</span>
                   <div>
-                    <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_checklists_title')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_checklists_title')}</div>
                     <div style={{ fontSize: 12, color: TX2 }}>{tc('academy.promo_checklists_desc')}</div>
                   </div>
                 </Link>
@@ -374,7 +374,7 @@ export default function AcademyClient() {
 
               {/* Category cards — top 5 featured, rest compact */}
               <section style={{ marginBottom: 52 }}>
-                <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('academy.browse_categories_heading')}</h2>
+                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('academy.browse_categories_heading')}</h2>
                 {/* Featured top 5 */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 16 }}>
                   {academyCategories.slice(0, 5).map(cat => {
@@ -387,7 +387,7 @@ export default function AcademyClient() {
                         onClick={() => selectCategory(cat.slug)}
                         style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
                       >
-                        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{cat.title}</div>
+                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{cat.title}</div>
                         <p style={{ fontSize: 12, color: TX2, margin: '0 0 10px', lineHeight: 1.55 }}>
                           {cat.description.slice(0, 72)}{cat.description.length > 72 ? '…' : ''}
                         </p>
@@ -419,7 +419,7 @@ export default function AcademyClient() {
               {/* Featured beginner articles */}
               <section>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('academy.start_here')}</h2>
+                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('academy.start_here')}</h2>
                   <span style={{ fontSize: 12, color: TX3 }}>{academyArticles.length} {tc('academy.total_suffix')}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -456,7 +456,7 @@ export default function AcademyClient() {
 
               {/* Header */}
               <div style={{ marginBottom: 24 }}>
-                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
+                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
                   {isSearch ? tc('academy.results_for_prefix') + ' “' + search + '”' : currentCategory?.title}
                 </h1>
                 <p style={{ fontSize: 13, color: TX2, margin: 0 }}>
