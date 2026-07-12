@@ -5,6 +5,10 @@ const nextConfig = {
   // TODO: remove once pre-existing TS errors are fixed across the codebase
   typescript: { ignoreBuildErrors: true },
 
+  // Lets a verification build run alongside an active `next dev` without both
+  // processes fighting over the same .next/ output (which corrupts it).
+  ...(process.env.CLAUDE_VERIFY_DIST_DIR ? { distDir: process.env.CLAUDE_VERIFY_DIST_DIR } : {}),
+
   async rewrites() {
     return [
       // /og-image.png is referenced by OG/Twitter/schema metadata across the

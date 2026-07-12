@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, type CSSProperties, type FormEvent } from 'react'
 import Link from 'next/link'
-import { LanguageProvider, useLang } from '@/components/LanguageProvider'
+import { LanguageProvider, useLang, type Catalogs } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
@@ -2403,9 +2403,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   )
 }
 
-export default function LandingClient({ geo, lang = 'en' }: { geo: Geo | null; lang?: string }) {
+export default function LandingClient({ geo, lang = 'en', initialCatalogs }: { geo: Geo | null; lang?: string; initialCatalogs?: Catalogs }) {
   return (
-    <LanguageProvider initialLang={lang as Lang}>
+    <LanguageProvider initialLang={lang as Lang} initialCatalogs={initialCatalogs}>
       <LandingInner geo={geo} />
     </LanguageProvider>
   )

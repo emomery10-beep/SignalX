@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
 import LandingClient from '@/components/layout/LandingClient'
 import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
+import { getInitialCatalogs } from '@/lib/i18n-catalog'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
 // Locale-aware: middleware rewrites /es, /fr, … to this page with x-locale set.
@@ -388,7 +389,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       {schemas.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}/>
       ))}
-      <LandingClient geo={geo} lang={lang}/>
+      <LandingClient geo={geo} lang={lang} initialCatalogs={getInitialCatalogs(lang)}/>
     </>
   )
 }

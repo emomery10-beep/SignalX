@@ -30,6 +30,13 @@
       "autoPort": false
     },
     {
+      "name": "next-prod-verify",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["CLAUDE_VERIFY_DIST_DIR=.next-verify", "npx", "next", "start", "-p", "3060"],
+      "port": 3060,
+      "autoPort": true
+    },
+    {
       "name": "developers-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "developers-askbiz", "run", "dev"],

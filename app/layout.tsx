@@ -8,6 +8,7 @@ import GoogleAnalytics from '@/components/GoogleAnalytics'
 import TikTokPixel from '@/components/TikTokPixel'
 import type { Lang } from '@/lib/i18n'
 import { resolveLocale, isRTL } from '@/lib/i18n-locale'
+import { getInitialCatalogs } from '@/lib/i18n-catalog'
 import { ThemeProvider } from 'next-themes'
 
 const sora = Sora({
@@ -108,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
         <TikTokPixel pixelId="D8UAH7JC77UER4V7P7PG" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <LanguageProvider initialLang={lang}>
+          <LanguageProvider initialLang={lang} initialCatalogs={getInitialCatalogs(lang)}>
             {children}
             <CookieConsent />
           </LanguageProvider>

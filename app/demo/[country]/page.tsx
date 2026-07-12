@@ -5,6 +5,7 @@ import { DEMO_MARKETS, getDemoMarket } from '@/lib/demo-markets'
 import { CURRENCIES } from '@/lib/geo'
 import PosLiveDemo from '@/components/pos/PosLiveDemo'
 import { ScopedLangProvider } from '@/components/LanguageProvider'
+import { getInitialCatalogs } from '@/lib/i18n-catalog'
 
 interface Props {
   params: { country: string }
@@ -69,7 +70,7 @@ export default function CountryDemoPage({ params }: Props) {
       <section className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-6xl mx-auto py-6 px-2 sm:px-6">
           <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-white" dir={market.lang === 'ar' ? 'rtl' : 'ltr'}>
-            <ScopedLangProvider lang={market.lang}>
+            <ScopedLangProvider lang={market.lang} initialCatalogs={getInitialCatalogs(market.lang)}>
               <PosLiveDemo initialCountry={market.code} showBanner={false} />
             </ScopedLangProvider>
           </div>

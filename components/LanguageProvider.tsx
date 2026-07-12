@@ -1,13 +1,15 @@
 'use client'
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import type { Lang, TranslationKey } from '@/lib/i18n'
 import { TRANSLATIONS, LANG_NAMES, LANG_FLAGS, RTL_LANGS, t as tFn } from '@/lib/i18n'
-import { t as catalogT } from '@/lib/i18n-catalog'
+import { loadLocaleCatalog, tFromCatalogs, type LocaleCatalog } from '@/lib/i18n-catalog-loader'
 import { formatCurrency, formatNumber, formatDate, formatDateTime, formatPercent } from '@/lib/i18n-format'
 
 // Non-default locale prefixes that appear in the URL
 const URL_PREFIXED_LOCALES = ['es', 'fr', 'de', 'nl', 'ar'] as const
+
+export type Catalogs = Partial<Record<string, LocaleCatalog>>
 
 interface LangContextType {
   lang: Lang
@@ -31,7 +33,7 @@ const LangContext = createContext<LangContextType>({
   lang: 'en',
   setLang: () => {},
   t: (key) => TRANSLATIONS['en'][key] ?? key,
-  tc: (key) => catalogT('en', key),
+  tc: (key) => key,
   fmtCurrency: (n, c) => formatCurrency('en', n, c),
   fmtNumber: (n) => formatNumber('en', n),
   fmtPercent: (f) => formatPercent('en', f),
@@ -42,8 +44,35 @@ const LangContext = createContext<LangContextType>({
   langFlags: LANG_FLAGS,
 })
 
-export function LanguageProvider({ children, initialLang = 'en' }: { children: React.ReactNode; initialLang?: Lang | string }) {
+// Loads the catalog(s) needed to render `lang` (English fallback + the active
+// locale) that aren't already present, and merges them into state once ready.
+// Shared by LanguageProvider and ScopedLangProvider so both lazy-load the same way.
+function useCatalogs(lang: Lang, initialCatalogs?: Catalogs) {
+  const [catalogs, setCatalogs] = useState<Catalogs>(initialCatalogs ?? {})
+  const catalogsRef = useRef(catalogs)
+  catalogsRef.current = catalogs
+
+  useEffect(() => {
+    let cancelled = false
+    const need = (lang === 'en' ? ['en'] : ['en', lang]).filter(l => !catalogsRef.current[l])
+    if (need.length === 0) return
+    Promise.all(need.map(loadLocaleCatalog)).then(loaded => {
+      if (cancelled) return
+      setCatalogs(prev => {
+        const next = { ...prev }
+        need.forEach((l, i) => { next[l] = loaded[i] })
+        return next
+      })
+    })
+    return () => { cancelled = true }
+  }, [lang])
+
+  return catalogs
+}
+
+export function LanguageProvider({ children, initialLang = 'en', initialCatalogs }: { children: React.ReactNode; initialLang?: Lang | string; initialCatalogs?: Catalogs }) {
   const [lang, setLangState] = useState<Lang>((initialLang as Lang) || 'en')
+  const catalogs = useCatalogs(lang, initialCatalogs)
   const pathname = usePathname()
 
   // Sync lang from URL prefix on every client-side navigation.
@@ -77,7 +106,7 @@ export function LanguageProvider({ children, initialLang = 'en' }: { children: R
   }, [lang])
 
   const t = useCallback((key: TranslationKey, vars?: Record<string, string>) => tFn(lang, key, vars), [lang])
-  const tc = useCallback((key: string, vars?: Record<string, string | number>) => catalogT(lang, key, vars), [lang])
+  const tc = useCallback((key: string, vars?: Record<string, string | number>) => tFromCatalogs(catalogs, lang, key, vars), [lang, catalogs])
   const fmtCurrency = useCallback((n: number, currency?: string, opts?: Intl.NumberFormatOptions) => formatCurrency(lang, n, currency, opts), [lang])
   const fmtNumber = useCallback((n: number, opts?: Intl.NumberFormatOptions) => formatNumber(lang, n, opts), [lang])
   const fmtPercent = useCallback((f: number, opts?: Intl.NumberFormatOptions) => formatPercent(lang, f, opts), [lang])
@@ -101,12 +130,13 @@ export function useLang() { return useContext(LangContext) }
  *  live demo) that must render in a fixed language WITHOUT touching the
  *  visitor's askbiz_lang cookie, document.lang, or direction. It only overrides
  *  the LangContext for its subtree, so the surrounding page keeps its own lang. */
-export function ScopedLangProvider({ lang, children }: { lang: Lang; children: React.ReactNode }) {
+export function ScopedLangProvider({ lang, children, initialCatalogs }: { lang: Lang; children: React.ReactNode; initialCatalogs?: Catalogs }) {
+  const catalogs = useCatalogs(lang, initialCatalogs)
   const value = useMemo<LangContextType>(() => ({
     lang,
     setLang: () => {},
     t: (key, vars) => tFn(lang, key, vars),
-    tc: (key, vars) => catalogT(lang, key, vars),
+    tc: (key, vars) => tFromCatalogs(catalogs, lang, key, vars),
     fmtCurrency: (n, currency, opts) => formatCurrency(lang, n, currency, opts),
     fmtNumber: (n, opts) => formatNumber(lang, n, opts),
     fmtPercent: (f, opts) => formatPercent(lang, f, opts),
@@ -115,6 +145,6 @@ export function ScopedLangProvider({ lang, children }: { lang: Lang; children: R
     isRTL: RTL_LANGS.includes(lang),
     langNames: LANG_NAMES,
     langFlags: LANG_FLAGS,
-  }), [lang])
+  }), [lang, catalogs])
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>
 }
