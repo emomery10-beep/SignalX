@@ -1700,10 +1700,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .pos-poster-mark{animation:markPulse 1.8s ease-in-out infinite}
         @keyframes markPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.82}}
         @media(prefers-reduced-motion:reduce){.sk{animation:none;background:#E5E6EA}.pos-poster-mark{animation:none}}
-        /* Mama mboga intro: fade in, hold, fade out — once, on load */
-        .mama-intro{animation:mamaIntro 3400ms ease forwards}
-        @keyframes mamaIntro{0%{opacity:0}16%{opacity:1}60%{opacity:1}100%{opacity:0}}
-        @media(prefers-reduced-motion:reduce){.mama-intro{display:none}}
         [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
         [data-reveal].revealed{opacity:1;transform:translateY(0)}
         [data-reveal-delay="1"].revealed{transition-delay:80ms}
