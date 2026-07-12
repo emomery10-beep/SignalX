@@ -1875,6 +1875,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
+      {/* ── A DAY IN THE LIFE — narrative fold-card deck ───────────────── */}
+      <DayInTheLife tc={tc} />
+
       {/* ── PROOF STRIP ───────────────────────────────────────────────── */}
       <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'14px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(20px,3vw,48px)',flexWrap:'wrap' }}>
         {[
@@ -1930,9 +1933,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </div>
         </div>
       </section>
-
-      {/* ── A DAY IN THE LIFE — narrative fold-card deck ───────────────── */}
-      <DayInTheLife tc={tc} />
 
       {/* ── POINT OF SALE — Eleven-pattern example section ─────────────── */}
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
