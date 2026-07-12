@@ -1899,37 +1899,58 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── WHERE IT WORKS ── keyword-bearing H2 + quotable definition for
            search and answer engines; links into country hubs and use-case pages ── */}
       <section style={{ background:T.bg,padding:'clamp(44px,5vw,64px) clamp(16px,4vw,40px)' }}>
-        <div style={{ maxWidth:760,margin:'0 auto',textAlign:'center' }} data-reveal>
-          <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3vw,38px)',fontWeight:400,lineHeight:1.15,letterSpacing:'-.02em',color:T.tx,marginBottom:14 }}>
-            {tc('landing.where_title')}
-          </h2>
-          <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:620,marginLeft:'auto',marginRight:'auto' }}>
-            {tc('landing.where_body')}
-          </p>
-          <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:10 }}>
-            {[
-              ['/business-intelligence/kenya',tc('landing.where_country_0')],
-              ['/business-intelligence/nigeria',tc('landing.where_country_1')],
-              ['/business-intelligence/uganda',tc('landing.where_country_2')],
-              ['/business-intelligence/ghana',tc('landing.where_country_3')],
-              ['/business-intelligence/tanzania',tc('landing.where_country_4')],
-              ['/business-intelligence/south-africa',tc('landing.where_country_5')],
-            ].map(([href,label])=>(
-              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'7px 15px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:10,color:T.tx2,fontWeight:600,textDecoration:'none' }}>
-                {label}
-              </Link>
-            ))}
+        <div className="two-col" style={{ maxWidth:1000,margin:'0 auto' }}>
+          {/* Left — keyword H2 + trimmed definition + use-case links */}
+          <div data-reveal>
+            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3vw,38px)',fontWeight:400,lineHeight:1.15,letterSpacing:'-.02em',color:T.tx,marginBottom:16 }}>
+              {tc('landing.where_title')}
+            </h2>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:20,maxWidth:440 }}>
+              {tc('landing.where_body')}
+            </p>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:8 }}>
+              {[
+                ['/for/salon-owners',tc('landing.where_seg_0')],
+                ['/for/hardware-store-owners',tc('landing.where_seg_1')],
+                ['/for/mini-supermarket-owners',tc('landing.where_seg_2')],
+              ].map(([href,label])=>(
+                <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'6px 13px',borderRadius:9999,border:`1px solid ${T.accBdr}`,background:T.accBg,fontSize:10,color:T.acc,fontWeight:600,textDecoration:'none' }}>
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
-          <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
-            {[
-              ['/for/salon-owners',tc('landing.where_seg_0')],
-              ['/for/hardware-store-owners',tc('landing.where_seg_1')],
-              ['/for/mini-supermarket-owners',tc('landing.where_seg_2')],
-            ].map(([href,label])=>(
-              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'6px 13px',borderRadius:9999,border:`1px solid ${T.accBdr}`,background:T.accBg,fontSize:10,color:T.acc,fontWeight:600,textDecoration:'none' }}>
-                {label}
-              </Link>
-            ))}
+
+          {/* Right — Africa map with the six markets pinned, + country links */}
+          <div data-reveal style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:18 }}>
+            <div style={{ width:'100%',maxWidth:300 }}>
+              <svg viewBox="0 0 300 340" width="100%" style={{ display:'block',overflow:'visible' }} role="img" aria-label="AskBiz works across Africa: Kenya, Nigeria, Uganda, Ghana, Tanzania and South Africa">
+                <path d="M58 44L120 34L205 30L230 44L238 78L262 120L296 150L268 165L250 200L246 250L222 300L188 328L168 322L150 280L132 220L128 196L100 188L78 196L56 176L30 165L26 138L44 120L52 92L48 66Z" fill="rgba(201,122,68,.07)" stroke={T.accBdr} strokeWidth="1.4" strokeLinejoin="round"/>
+                {[[95,178],[74,185],[203,199],[228,190],[218,219],[181,299]].map(([x,y],idx)=>(
+                  <g key={idx}>
+                    <circle cx={x} cy={y} r="5" fill="rgba(201,122,68,.22)">
+                      <animate attributeName="r" values="5;11;5" dur="2.6s" begin={`${idx*0.35}s`} repeatCount="indefinite"/>
+                      <animate attributeName="opacity" values=".55;0;.55" dur="2.6s" begin={`${idx*0.35}s`} repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx={x} cy={y} r="4" fill={T.acc}/>
+                  </g>
+                ))}
+              </svg>
+            </div>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
+              {[
+                ['/business-intelligence/kenya',tc('landing.where_country_0')],
+                ['/business-intelligence/nigeria',tc('landing.where_country_1')],
+                ['/business-intelligence/uganda',tc('landing.where_country_2')],
+                ['/business-intelligence/ghana',tc('landing.where_country_3')],
+                ['/business-intelligence/tanzania',tc('landing.where_country_4')],
+                ['/business-intelligence/south-africa',tc('landing.where_country_5')],
+              ].map(([href,label])=>(
+                <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'7px 15px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:10,color:T.tx2,fontWeight:600,textDecoration:'none' }}>
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
