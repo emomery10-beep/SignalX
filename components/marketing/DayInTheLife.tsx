@@ -239,7 +239,6 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
         .mama-day{opacity:0}
         .mama-day.mama-day-play{animation:mamaDay 6500ms ease forwards}
         @keyframes mamaDay{0%{opacity:0}9%{opacity:1}64%{opacity:1}100%{opacity:0}}
-        @media(prefers-reduced-motion:reduce){.mama-day{display:none}}
       `}</style>
     </section>
   )
