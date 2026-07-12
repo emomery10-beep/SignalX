@@ -126,7 +126,7 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
   }
 
   return (
-    <section style={{ padding: 'clamp(8px,1.5vw,20px) clamp(16px,4vw,40px) clamp(56px,7vw,88px)', background: C.bg }}>
+    <section style={{ padding: 'clamp(44px,5.5vw,72px) clamp(16px,4vw,40px) clamp(56px,7vw,88px)', background: C.bg }}>
       <div ref={rootRef} style={{ maxWidth: 720, margin: '0 auto' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }} data-reveal>
