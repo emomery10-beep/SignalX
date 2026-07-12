@@ -148,7 +148,7 @@ function StatusBadge({ status }: { status: CaptureStatus }) {
   const s = STATUS_STYLE[status] || STATUS_STYLE.pending
   const label = tc('pos_factory.status' + (status === 'pending' ? 'Pending' : status === 'approved' ? 'Approved' : 'Rejected'))
   return (
-    <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+    <span style={{ fontSize: 9, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
       {label}
     </span>
   )
@@ -158,7 +158,7 @@ function TypeBadge({ type }: { type: CaptureType }) {
   const s = TYPE_STYLE[type] || TYPE_STYLE.intake
   const label = tc('pos_factory.type' + (type === 'intake' ? 'Intake' : type === 'output' ? 'Output' : type === 'wastage' ? 'Wastage' : 'Dispatch'))
   return (
-    <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+    <span style={{ fontSize: 9, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
       {label}
     </span>
   )
@@ -180,9 +180,9 @@ function KpiCard({ label, value, sub, accent, onClick, active }: {
       onMouseEnter={e => { if (onClick) e.currentTarget.style.borderColor = accent || ACC }}
       onMouseLeave={e => { if (onClick && !active) e.currentTarget.style.borderColor = 'var(--b)' }}
     >
-      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: accent || 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: accent || 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{value}</div>
+      {sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
     </div>
   )
 }
@@ -192,7 +192,7 @@ function Section({ title, children, right }: { title: string; children: React.Re
   return (
     <div style={{ padding: 16, borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, flex: 1 }}>{title}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, flex: 1 }}>{title}</div>
         {right}
       </div>
       {children}
@@ -204,9 +204,9 @@ function Section({ title, children, right }: { title: string; children: React.Re
 function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
   return (
     <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)' }}>
-      <div style={{ fontSize: 40, marginBottom: 10 }}>{icon}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{title}</div>
-      {hint && <div style={{ fontSize: 13, marginTop: 8, maxWidth: 320, margin: '8px auto 0' }}>{hint}</div>}
+      <div style={{ fontSize: 38, marginBottom: 10 }}>{icon}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{title}</div>
+      {hint && <div style={{ fontSize: 11, marginTop: 8, maxWidth: 320, margin: '8px auto 0' }}>{hint}</div>}
     </div>
   )
 }
@@ -254,7 +254,7 @@ function OutputBarChart({ days, currencySymbol }: { days: { key: string; output:
           return <circle key={`c${d.key}`} cx={x} cy={y} r={2.2} fill={RED} />
         })}
       </svg>
-      <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>
+      <div style={{ display: 'flex', gap: 16, fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, borderRadius: 2, marginRight: 4 }} />{tc('pos_factory.unitsProduced')}</span>
         <span><span style={{ display: 'inline-block', width: 10, height: 2, background: RED, marginRight: 4, verticalAlign: 'middle' }} />{tc('pos_factory.wastageUnits')}</span>
       </div>
@@ -268,16 +268,16 @@ function HBarChart({ data, color, currencySymbol, valueIsMoney }: {
 }) {
   const { tc } = useLang()
   const max = Math.max(1, ...data.map(d => d.value))
-  if (data.length === 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noData')}</div>
+  if (data.length === 0) return <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noData')}</div>
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {data.map(d => (
         <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 130, fontSize: 12, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
+          <div style={{ width: 130, fontSize: 10, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
           <div style={{ flex: 1, height: 18, background: 'var(--ev)', borderRadius: 4, position: 'relative' }}>
             <div style={{ width: `${(d.value / max) * 100}%`, height: '100%', background: color, borderRadius: 4, minWidth: 2 }} />
           </div>
-          <div style={{ width: 80, textAlign: 'right', fontSize: 12, fontWeight: 600 }}>
+          <div style={{ width: 80, textAlign: 'right', fontSize: 10, fontWeight: 600 }}>
             {valueIsMoney ? fmt(currencySymbol, d.value) : fmtInt(d.value)}
           </div>
         </div>
@@ -294,7 +294,7 @@ function LineChart({ points, color, yLabel, formatY }: {
   const W = 760, H = 200, padL = 40, padR = 16, padT = 16, padB = 28
   const innerW = W - padL - padR, innerH = H - padT - padB
   const max = Math.max(1, ...points.map(p => p.value))
-  if (points.length === 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noData')}</div>
+  if (points.length === 0) return <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noData')}</div>
   const step = innerW / Math.max(1, points.length - 1)
   const poly = points.map((p, i) => {
     const x = padL + i * step
@@ -328,7 +328,7 @@ function LineChart({ points, color, yLabel, formatY }: {
           )
         })}
       </svg>
-      {yLabel && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{yLabel}</div>}
+      {yLabel && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{yLabel}</div>}
     </div>
   )
 }
@@ -337,7 +337,7 @@ function LineChart({ points, color, yLabel, formatY }: {
 function PieChart({ slices, currencySymbol }: { slices: { label: string; value: number; color: string }[]; currencySymbol: string }) {
   const { tc } = useLang()
   const total = slices.reduce((s, x) => s + x.value, 0)
-  if (total <= 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noCostData')}</div>
+  if (total <= 0) return <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noCostData')}</div>
   const R = 80, C = 100
   let acc = 0
   const arcs = slices.map(s => {
@@ -357,7 +357,7 @@ function PieChart({ slices, currencySymbol }: { slices: { label: string; value: 
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {arcs.map(a => (
-          <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+          <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10 }}>
             <span style={{ width: 12, height: 12, background: a.color, borderRadius: 3, display: 'inline-block' }} />
             <span style={{ color: 'var(--tx2)', minWidth: 120 }}>{a.label}</span>
             <span style={{ fontWeight: 700 }}>{fmt(currencySymbol, a.value)}</span>
@@ -378,7 +378,7 @@ function Th({ label, col, sortCol, sortDir, onSort, align }: {
     <th
       onClick={() => sortable && onSort!(col!)}
       style={{
-        textAlign: align || 'left', padding: '8px 10px', fontSize: 11, fontWeight: 700, color: 'var(--tx3)',
+        textAlign: align || 'left', padding: '8px 10px', fontSize: 9, fontWeight: 700, color: 'var(--tx3)',
         textTransform: 'uppercase', borderBottom: '1px solid var(--b)', cursor: sortable ? 'pointer' : 'default',
         whiteSpace: 'nowrap', userSelect: 'none',
       }}
@@ -388,7 +388,7 @@ function Th({ label, col, sortCol, sortDir, onSort, align }: {
   )
 }
 
-const tdStyle: React.CSSProperties = { padding: '8px 10px', fontSize: 13, borderBottom: '1px solid var(--b)', verticalAlign: 'top' }
+const tdStyle: React.CSSProperties = { padding: '8px 10px', fontSize: 11, borderBottom: '1px solid var(--b)', verticalAlign: 'top' }
 
 // ═════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -518,10 +518,10 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
     <div>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, flex: 1 }}>
           <span style={{ marginRight: 8 }}>🏭</span>{tc('pos_factory.factoryAnalytics')}
         </div>
-        <button onClick={fetchCaptures} style={{ padding: '8px 16px', borderRadius: 10, background: 'transparent', color: 'var(--tx)', fontSize: 13, fontWeight: 600, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={fetchCaptures} style={{ padding: '8px 16px', borderRadius: 10, background: 'transparent', color: 'var(--tx)', fontSize: 11, fontWeight: 600, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit' }}>
           {tc('pos_factory.refresh')}
         </button>
       </div>
@@ -534,7 +534,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
             border: subTab === t.id ? `1.5px solid ${ACC}` : '1px solid var(--b)',
             background: subTab === t.id ? ACC_BG : 'var(--sf)',
             color: subTab === t.id ? ACC : 'var(--tx2)',
-            fontSize: 13, fontWeight: subTab === t.id ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 11, fontWeight: subTab === t.id ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit',
           }}>
             {t.label}
           </button>
@@ -542,7 +542,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{tc('pos_factory.loadingFactoryData')}</div>
+        <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 20 }}>{tc('pos_factory.loadingFactoryData')}</div>
       ) : (
         <>
           {subTab === 'overview' && (
@@ -611,7 +611,7 @@ function OverviewView(props: {
       </div>
 
       {/* Daily output + wastage chart */}
-      <Section title={tc('pos_factory.dailyOutputTitle')} right={<span style={{ fontSize: 12, color: 'var(--tx3)' }}>{fmtInt(periodOutput)} units total</span>}>
+      <Section title={tc('pos_factory.dailyOutputTitle')} right={<span style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmtInt(periodOutput)} units total</span>}>
         {periodOutput === 0 ? (
           <EmptyState icon="📊" title={tc('pos_factory.noProductionTitle')} hint={tc('pos_factory.noProductionHint')} />
         ) : (
@@ -630,11 +630,11 @@ function OverviewView(props: {
           </div>
           <div style={{ minWidth: 200 }}>
             {periodOutput >= periodDispatch ? (
-              <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
+              <div style={{ fontSize: 11, color: 'var(--tx2)' }}>
                 {tc('pos_factory.producingMore', { n: fmtInt(periodOutput - periodDispatch) })}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
+              <div style={{ fontSize: 11, color: 'var(--tx2)' }}>
                 {tc('pos_factory.shippingMore', { n: fmtInt(periodDispatch - periodOutput) })}
               </div>
             )}
@@ -645,14 +645,14 @@ function OverviewView(props: {
       {/* Work status breakdown */}
       <Section title={tc('pos_factory.workStatusBreakdown')}>
         {totalStatus === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noCapturesRecorded')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noCapturesRecorded')}</div>
         ) : (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {(['approved', 'pending', 'rejected'] as CaptureStatus[]).map(s => (
               <div key={s} style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)' }}>
                 <div style={{ marginBottom: 6 }}><StatusBadge status={s} /></div>
-                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-sora)' }}>{statusBreakdown[s]}</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{pct((statusBreakdown[s] / totalStatus) * 100)} {tc('pos_factory.ofAll')}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-sora)' }}>{statusBreakdown[s]}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{pct((statusBreakdown[s] / totalStatus) * 100)} {tc('pos_factory.ofAll')}</div>
               </div>
             ))}
           </div>
@@ -758,9 +758,9 @@ function ProductionView({ captures, staffName, currencySymbol }: {
   const filterBtn = (active: boolean): React.CSSProperties => ({
     padding: '5px 12px', borderRadius: 8, border: active ? `1.5px solid ${ACC}` : '1px solid var(--b)',
     background: active ? ACC_BG : 'var(--sf)', color: active ? ACC : 'var(--tx3)',
-    fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+    fontSize: 10, fontWeight: active ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
   })
-  const inputStyle: React.CSSProperties = { padding: '7px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit' }
+  const inputStyle: React.CSSProperties = { padding: '7px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 11, fontFamily: 'inherit' }
 
   return (
     <div>
@@ -831,15 +831,15 @@ function ProductionView({ captures, staffName, currencySymbol }: {
                           <td colSpan={8} style={{ padding: 14, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_factory.detailsLabel')}</div>
-                                <div style={{ fontSize: 13 }}>{tc('pos_factory.capturedLabel')} {fullDateTime(c.created_at)}</div>
-                                <div style={{ fontSize: 13 }}>{tc('pos_factory.typeLabel')} {tc('pos_factory.type' + (c.type === 'intake' ? 'Intake' : c.type === 'output' ? 'Output' : c.type === 'wastage' ? 'Wastage' : 'Dispatch'))} · {tc('pos_factory.statusLabel')} {tc('pos_factory.status' + (c.status === 'pending' ? 'Pending' : c.status === 'approved' ? 'Approved' : 'Rejected'))}</div>
-                                <div style={{ fontSize: 13 }}>{tc('pos_factory.quantityLabel')} {fmtInt(Number(c.quantity) || 0)} {c.unit || ''}</div>
-                                {c.notes && <div style={{ fontSize: 13, marginTop: 6, color: 'var(--tx2)' }}>{c.notes}</div>}
+                                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_factory.detailsLabel')}</div>
+                                <div style={{ fontSize: 11 }}>{tc('pos_factory.capturedLabel')} {fullDateTime(c.created_at)}</div>
+                                <div style={{ fontSize: 11 }}>{tc('pos_factory.typeLabel')} {tc('pos_factory.type' + (c.type === 'intake' ? 'Intake' : c.type === 'output' ? 'Output' : c.type === 'wastage' ? 'Wastage' : 'Dispatch'))} · {tc('pos_factory.statusLabel')} {tc('pos_factory.status' + (c.status === 'pending' ? 'Pending' : c.status === 'approved' ? 'Approved' : 'Rejected'))}</div>
+                                <div style={{ fontSize: 11 }}>{tc('pos_factory.quantityLabel')} {fmtInt(Number(c.quantity) || 0)} {c.unit || ''}</div>
+                                {c.notes && <div style={{ fontSize: 11, marginTop: 6, color: 'var(--tx2)' }}>{c.notes}</div>}
                               </div>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_factory.approvalLabel')}</div>
-                                <div style={{ fontSize: 13 }}>{c.approved_by ? tc('pos_factory.approvedBy', { name: staffName(c.approved_by) || c.approved_by }) : tc('pos_factory.notYetApproved')}</div>
+                                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_factory.approvalLabel')}</div>
+                                <div style={{ fontSize: 11 }}>{c.approved_by ? tc('pos_factory.approvedBy', { name: staffName(c.approved_by) || c.approved_by }) : tc('pos_factory.notYetApproved')}</div>
                                 {c.photos && c.photos.length > 0 && (
                                   <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                                     {c.photos.map((p, i) => (
@@ -864,7 +864,7 @@ function ProductionView({ captures, staffName, currencySymbol }: {
       {/* Yield per product */}
       <Section title={tc('pos_factory.yieldByProduct')}>
         {yields.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noYieldData')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noYieldData')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
@@ -889,7 +889,7 @@ function ProductionView({ captures, staffName, currencySymbol }: {
       {/* Batch tracking */}
       <Section title={tc('pos_factory.batchTrackingTitle')}>
         {batches.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noBatches')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noBatches')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
@@ -978,7 +978,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
 
       <Section title={tc('pos_factory.wastageByReason')}>
         {wasteByReason.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noWastageRecorded')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noWastageRecorded')}</div>
         ) : (
           <HBarChart data={wasteByReason} color={AMBER} currencySymbol={currencySymbol} />
         )}
@@ -986,7 +986,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
 
       <Section title={tc('pos_factory.rejectionRateTrend')}>
         {rejectionTrend.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.notEnoughTrendData')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.notEnoughTrendData')}</div>
         ) : (
           <LineChart points={rejectionTrend} color={RED} yLabel={tc('pos_factory.pctRejectedPerWeek')} formatY={(n) => pct(n)} />
         )}
@@ -1089,9 +1089,9 @@ function InventoryView({ inv, intakes, currencySymbol }: {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {lowStock.map(r => (
               <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(220,38,38,.06)', border: `1px solid ${RED}33` }}>
-                <span style={{ fontSize: 16 }}>⚠️</span>
-                <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_factory.reorderHint', { qty: fmtInt(r.qty), unit: r.unit, reorder: fmtInt(r.reorder) })}</div>
+                <span style={{ fontSize: 14 }}>⚠️</span>
+                <div style={{ flex: 1, fontSize: 11, fontWeight: 600 }}>{r.name}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_factory.reorderHint', { qty: fmtInt(r.qty), unit: r.unit, reorder: fmtInt(r.reorder) })}</div>
               </div>
             ))}
           </div>
@@ -1191,14 +1191,14 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 
       <Section title={tc('pos_factory.dispatchVolumeWeekly')}>
         {weekly.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noDispatchesRecorded')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noDispatchesRecorded')}</div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 160, padding: '0 4px' }}>
             {weekly.map(w => (
               <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{fmtInt(w.value)}</div>
+                <div style={{ fontSize: 9, fontWeight: 600, marginBottom: 4 }}>{fmtInt(w.value)}</div>
                 <div style={{ width: '70%', maxWidth: 48, background: '#a855f7', borderRadius: '4px 4px 0 0', height: `${(w.value / weeklyMax) * 110}px`, minHeight: 2 }} />
-                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>{w.label}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{w.label}</div>
               </div>
             ))}
           </div>
@@ -1210,9 +1210,9 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pending.map(d => (
               <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: ACC_BG, border: `1px solid ${ACC_BORDER}` }}>
-                <span style={{ fontSize: 14 }}>⏳</span>
-                <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.product || 'Unknown'} — {fmtInt(Number(d.quantity) || 0)} {d.unit || ''}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{d.destination || d.notes || tc('pos_factory.noDestination')}</div>
+                <span style={{ fontSize: 12 }}>⏳</span>
+                <div style={{ flex: 1, fontSize: 11, fontWeight: 600 }}>{d.product || 'Unknown'} — {fmtInt(Number(d.quantity) || 0)} {d.unit || ''}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{d.destination || d.notes || tc('pos_factory.noDestination')}</div>
               </div>
             ))}
           </div>
@@ -1345,23 +1345,23 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     }).filter(r => r.fullCost > 0).sort((a, b) => b.margin - a.margin)
   }, [intakes, outputs, costForCapture, sellByProduct, laborPerUnit, overheadPct])
 
-  const inputStyle: React.CSSProperties = { width: 90, padding: '6px 8px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit' }
+  const inputStyle: React.CSSProperties = { width: 90, padding: '6px 8px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 11, fontFamily: 'inherit' }
 
   return (
     <div>
       {/* Assumptions */}
       <div style={{ padding: 14, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: ACC }}>{tc('pos_factory.costingAssumptions')}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>{tc('pos_factory.costingAssumptions')}</div>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-          <label style={{ fontSize: 12, color: 'var(--tx2)' }}>
+          <label style={{ fontSize: 10, color: 'var(--tx2)' }}>
             {tc('pos_factory.laborPerUnit', { symbol: currencySymbol })}
             <input type="number" step="0.01" value={laborPerUnit} onChange={e => setLaborPerUnit(Number(e.target.value) || 0)} style={{ ...inputStyle, marginLeft: 8 }} />
           </label>
-          <label style={{ fontSize: 12, color: 'var(--tx2)' }}>
+          <label style={{ fontSize: 10, color: 'var(--tx2)' }}>
             {tc('pos_factory.overheadPct')}
             <input type="number" step="1" value={overheadPct} onChange={e => setOverheadPct(Number(e.target.value) || 0)} style={{ ...inputStyle, marginLeft: 8 }} />
           </label>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.adjustToRecompute')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('pos_factory.adjustToRecompute')}</span>
         </div>
       </div>
 
@@ -1381,7 +1381,7 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
       {/* Cost per unit trend */}
       <Section title={tc('pos_factory.costPerUnitTrend')}>
         {costTrend.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noTrendData')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noTrendData')}</div>
         ) : (
           <LineChart points={costTrend} color={ACC} yLabel={tc('pos_factory.costPerUnitLabel', { symbol: currencySymbol })} formatY={(n) => fmt(currencySymbol, n)} />
         )}
@@ -1390,7 +1390,7 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
       {/* Standard vs Actual */}
       <Section title={tc('pos_factory.stdVsActualTitle')}>
         {stdVsActual.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noMaterialCostData')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noMaterialCostData')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
@@ -1417,7 +1417,7 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
       {/* Margin analysis */}
       <Section title={tc('pos_factory.marginAnalysisTitle')}>
         {margins.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noMarginData')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noMarginData')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
@@ -1443,8 +1443,8 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
 
       {/* Overhead allocation placeholder */}
       <div style={{ padding: 16, borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)', textAlign: 'center' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_factory.overheadComingSoonTitle')}</div>
-        <div style={{ fontSize: 12, color: 'var(--tx3)', maxWidth: 460, margin: '0 auto' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_factory.overheadComingSoonTitle')}</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 460, margin: '0 auto' }}>
           {tc('pos_factory.overheadComingSoonDesc', { pct: overheadPct })}
         </div>
       </div>

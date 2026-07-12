@@ -71,7 +71,7 @@ function PlanBadge({ plan, tc }: { plan: string; tc: (key: string) => string }) 
   }
   const s = styles[plan] || styles.free
   return (
-    <span style={{ fontSize: 14, fontWeight: 700, color: s.text, background: s.bg, borderRadius: 9999, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+    <span style={{ fontSize: 12, fontWeight: 700, color: s.text, background: s.bg, borderRadius: 9999, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '.04em' }}>
       {tc('shipments.' + s.labelKey)}
     </span>
   )
@@ -83,10 +83,10 @@ function LockedFeature({ feature, requiredPlan, onUpgrade, tc }: { feature: stri
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={IND} strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
       </svg>
-      <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{feature}</span>
+      <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{feature}</span>
       <button
         onClick={e => { e.stopPropagation(); onUpgrade() }}
-        style={{ fontSize: 15, color: IND, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, padding: '6px 6px', margin: '-6px -6px', minHeight: 32, display: 'inline-flex', alignItems: 'center' }}
+        style={{ fontSize: 13, color: IND, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, padding: '6px 6px', margin: '-6px -6px', minHeight: 32, display: 'inline-flex', alignItems: 'center' }}
       >
         {tc('shipments.locked_upgrade_arrow').replace('{plan}', requiredPlan)}
       </button>
@@ -229,7 +229,7 @@ export default function ShipmentsPage() {
         <div
           role={toast.ok ? 'status' : 'alert'}
           aria-live={toast.ok ? 'polite' : 'assertive'}
-          style={{ position: 'fixed', top: 16, right: 16, zIndex: 999, padding: '10px 16px', borderRadius: 10, background: toast.ok ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`, color: toast.ok ? '#16a34a' : '#dc2626', fontSize: 17, fontWeight: 500 }}
+          style={{ position: 'fixed', top: 16, right: 16, zIndex: 999, padding: '10px 16px', borderRadius: 10, background: toast.ok ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`, color: toast.ok ? '#16a34a' : '#dc2626', fontSize: 15, fontWeight: 500 }}
         >
           {toast.msg}
         </div>
@@ -243,13 +243,13 @@ export default function ShipmentsPage() {
             <div style={{ marginBottom: 20, padding: '16px 20px', borderRadius: 14, background: IND_T06, border: `1px solid ${IND_T20}` }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('shipments.free_banner_title')}</div>
-                  <div style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('shipments.free_banner_title')}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx3)', lineHeight: 1.6 }}>
                     <div>{tc('shipments.free_banner_growth')}</div>
                     <div>{tc('shipments.free_banner_business')}</div>
                   </div>
                 </div>
-                <button onClick={() => router.push('/billing')} style={{ padding: '9px 18px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 44 }}>
+                <button onClick={() => router.push('/billing')} style={{ padding: '9px 18px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 44 }}>
                   {tc('shipments.see_plans')}
                 </button>
               </div>
@@ -259,10 +259,10 @@ export default function ShipmentsPage() {
           {/* Growth upgrade nudge */}
           {isGrowth && (
             <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 12, background: 'rgba(124,58,237,.06)', border: '1px solid rgba(124,58,237,.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 16, color: 'var(--tx2)' }}>
+              <div style={{ fontSize: 14, color: 'var(--tx2)' }}>
                 {tc('shipments.growth_nudge')}
               </div>
-              <button onClick={() => router.push('/billing')} style={{ padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(124,58,237,.3)', background: 'transparent', color: '#7c3aed', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 44 }}>
+              <button onClick={() => router.push('/billing')} style={{ padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(124,58,237,.3)', background: 'transparent', color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 44 }}>
                 {tc('shipments.upgrade_to_business')}
               </button>
             </div>
@@ -280,8 +280,8 @@ export default function ShipmentsPage() {
                 { label: tc('shipments.stat_daily_finance'), value: `£${(health.daily_financing_cost || 0).toFixed(0)}/d`, color: 'var(--tx3)', show: isBusiness },
               ].filter(s => s.show).map((stat, i) => (
                 <div key={i} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
-                  <div style={{ fontSize: 21, fontWeight: 700, color: stat.color, fontFamily: 'var(--font-sora)', marginBottom: 3 }}>{stat.value}</div>
-                  <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{stat.label}</div>
+                  <div style={{ fontSize: 19, fontWeight: 700, color: stat.color, fontFamily: 'var(--font-sora)', marginBottom: 3 }}>{stat.value}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -302,11 +302,11 @@ export default function ShipmentsPage() {
                     </svg>
                   )}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 17, fontWeight: 600, color: alert.level === 'critical' ? '#dc2626' : '#d97706', marginBottom: 3 }}>{alert.title}</div>
-                    <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{alert.message}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: alert.level === 'critical' ? '#dc2626' : '#d97706', marginBottom: 3 }}>{alert.title}</div>
+                    <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{alert.message}</div>
                   </div>
                   {alert.financial_impact > 0 && (
-                    <div style={{ fontSize: 16, fontWeight: 700, color: alert.level === 'critical' ? '#dc2626' : '#d97706', whiteSpace: 'nowrap' }}>£{alert.financial_impact.toFixed(0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: alert.level === 'critical' ? '#dc2626' : '#d97706', whiteSpace: 'nowrap' }}>£{alert.financial_impact.toFixed(0)}</div>
                   )}
                 </div>
               ))}
@@ -326,7 +326,7 @@ export default function ShipmentsPage() {
                 role="tab"
                 aria-selected={filter === f}
                 onClick={() => setFilter(f)}
-                style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 16, fontWeight: filter === f ? 600 : 400, color: filter === f ? IND : 'var(--tx3)', borderBottom: filter === f ? `2px solid ${IND}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 44 }}
+                style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 14, fontWeight: filter === f ? 600 : 400, color: filter === f ? IND : 'var(--tx3)', borderBottom: filter === f ? `2px solid ${IND}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 44 }}
               >
                 {tc('shipments.filter_' + f)}
               </button>
@@ -338,10 +338,10 @@ export default function ShipmentsPage() {
             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--tx3)' }}>{tc('shipments.loading')}</div>
           ) : shipments.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>📦</div>
-              <div style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{tc('shipments.empty_title')}</div>
-              <div style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 20 }}>{tc('shipments.empty_body')}</div>
-              <button onClick={() => setShowAdd(true)} style={{ padding: '10px 20px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+              <div style={{ fontSize: 34, marginBottom: 12 }}>📦</div>
+              <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{tc('shipments.empty_title')}</div>
+              <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 20 }}>{tc('shipments.empty_body')}</div>
+              <button onClick={() => setShowAdd(true)} style={{ padding: '10px 20px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
                 {tc('shipments.empty_cta')}
               </button>
             </div>
@@ -365,39 +365,39 @@ export default function ShipmentsPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                        <code style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-mono)' }}>{s.tracking_number}</code>
-                        {s.sku && <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{s.sku}{s.quantity ? ' ' + tc('shipments.qty_suffix').replace('{qty}', String(s.quantity)) : ''}</span>}
-                        {s.customs_hold && <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', borderRadius: 9999, padding: '1px 6px' }}>{tc('shipments.badge_customs_hold')}</span>}
+                        <code style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-mono)' }}>{s.tracking_number}</code>
+                        {s.sku && <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{s.sku}{s.quantity ? ' ' + tc('shipments.qty_suffix').replace('{qty}', String(s.quantity)) : ''}</span>}
+                        {s.customs_hold && <span style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', borderRadius: 9999, padding: '1px 6px' }}>{tc('shipments.badge_customs_hold')}</span>}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 9999, background: ss.bg }}>
                           <div style={{ width: 6, height: 6, borderRadius: '50%', background: ss.dot }} aria-hidden="true"/>
-                          <span style={{ fontSize: 15, fontWeight: 600, color: ss.text }}>{statusLabel(s.track_status, tc)}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: ss.text }}>{statusLabel(s.track_status, tc)}</span>
                         </div>
-                        {s.supplier_name && <span style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('shipments.from_supplier').replace('{supplier}', s.supplier_name)}</span>}
-                        {s.last_location && <span style={{ fontSize: 16, color: 'var(--tx3)' }}>· {s.last_location}</span>}
+                        {s.supplier_name && <span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('shipments.from_supplier').replace('{supplier}', s.supplier_name)}</span>}
+                        {s.last_location && <span style={{ fontSize: 14, color: 'var(--tx3)' }}>· {s.last_location}</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
                       {s.total_value !== null ? (
-                        <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)' }}>£{s.total_value.toLocaleString()}</span>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>£{s.total_value.toLocaleString()}</span>
                       ) : isGrowth || isFree ? (
                         <LockedFeature feature={tc('shipments.feature_total_value')} requiredPlan={tc('shipments.plan_growth')} onUpgrade={() => router.push('/billing')} tc={tc} />
                       ) : null}
                       {s.financial_impact !== null ? (
-                        s.financial_impact > 0 && <span style={{ fontSize: 15, color: '#d97706' }}>{tc('shipments.financial_impact_suffix').replace('{amount}', s.financial_impact.toFixed(0))}</span>
+                        s.financial_impact > 0 && <span style={{ fontSize: 13, color: '#d97706' }}>{tc('shipments.financial_impact_suffix').replace('{amount}', s.financial_impact.toFixed(0))}</span>
                       ) : (isGrowth || isFree) && (
                         <LockedFeature feature={tc('shipments.feature_financial_impact')} requiredPlan={tc('shipments.plan_business')} onUpgrade={() => router.push('/billing')} tc={tc} />
                       )}
                       {s.delay_days !== null && s.delay_days > 0 && (
-                        <span style={{ fontSize: 15, color: '#dc2626', fontWeight: 600 }}>{tc('shipments.days_delayed').replace('{days}', String(s.delay_days))}</span>
+                        <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>{tc('shipments.days_delayed').replace('{days}', String(s.delay_days))}</span>
                       )}
                       {s.expected_arrival && (
-                        <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('shipments.eta').replace('{date}', new Date(s.expected_arrival).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span>
+                        <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('shipments.eta').replace('{date}', new Date(s.expected_arrival).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span>
                       )}
                     </div>
                   </div>
-                  {s.last_event && <div style={{ fontSize: 16, color: 'var(--tx3)', fontStyle: 'italic' }}>"{s.last_event}"</div>}
+                  {s.last_event && <div style={{ fontSize: 14, color: 'var(--tx3)', fontStyle: 'italic' }}>"{s.last_event}"</div>}
                 </div>
 
                 {/* Expanded */}
@@ -405,11 +405,11 @@ export default function ShipmentsPage() {
                   <div style={{ borderTop: '1px solid var(--b)', paddingTop: 12, marginTop: 10 }}>
                     {s.intelligence_locked && (
                       <div style={{ padding: '12px 14px', borderRadius: 10, background: IND_T04, border: `1px solid ${IND_T15}`, marginBottom: 12 }}>
-                        <div style={{ fontSize: 16, fontWeight: 600, color: IND, marginBottom: 6 }}>{tc('shipments.intelligence_locked_title')}</div>
-                        <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 10, lineHeight: 1.6 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: IND, marginBottom: 6 }}>{tc('shipments.intelligence_locked_title')}</div>
+                        <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 10, lineHeight: 1.6 }}>
                           {tc('shipments.intelligence_locked_body')}
                         </div>
-                        <button onClick={() => router.push('/billing')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        <button onClick={() => router.push('/billing')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                           {tc('shipments.upgrade_to_business')}
                         </button>
                       </div>
@@ -423,15 +423,15 @@ export default function ShipmentsPage() {
                           { label: tc('shipments.detail_financial_impact'), value: tc('shipments.detail_financial_impact_value').replace('{amount}', (s.financial_impact || 0).toFixed(0)) },
                         ].map((item, i) => (
                           <div key={i} style={{ padding: '8px 10px', borderRadius: 9, background: 'var(--ev)', border: '1px solid var(--b)' }}>
-                            <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 2 }}>{item.label}</div>
-                            <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{item.value}</div>
+                            <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 2 }}>{item.label}</div>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)' }}>{item.value}</div>
                           </div>
                         ))}
                       </div>
                     )}
 
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button onClick={() => askAbout(s)} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button onClick={() => askAbout(s)} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {tc('shipments.ask_askbiz')}
                       </button>
                       <a
@@ -439,7 +439,7 @@ export default function ShipmentsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${tc('shipments.view_on_17track')} (opens in new tab)`}
-                        style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 16, textDecoration: 'none' }}
+                        style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 14, textDecoration: 'none' }}
                       >
                         {tc('shipments.view_on_17track')}
                       </a>
@@ -464,15 +464,15 @@ export default function ShipmentsPage() {
             aria-labelledby="add-shipment-title"
             style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 520, background: 'var(--sf)', borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTop: '1px solid var(--b)', zIndex: 200, padding: '20px 20px 32px', maxHeight: '90vh', overflowY: 'auto' }}
           >
-            <div id="add-shipment-title" style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{tc('shipments.modal_title')}</div>
-            <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 16 }}>
+            <div id="add-shipment-title" style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{tc('shipments.modal_title')}</div>
+            <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 16 }}>
               {isFree ? tc('shipments.modal_slots_free') : isGrowth ? tc('shipments.modal_slots_growth').replace('{count}', String(activeCount)) : ''}
               {isFree ? tc('shipments.modal_sub_free') : isGrowth ? tc('shipments.modal_sub_growth') : tc('shipments.modal_sub_business')}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label htmlFor="field-tracking-number" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                <label htmlFor="field-tracking-number" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
                   {tc('shipments.label_tracking_number')} <span aria-hidden="true" style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
@@ -482,19 +482,19 @@ export default function ShipmentsPage() {
                   required
                   aria-required="true"
                   placeholder={tc('shipments.placeholder_tracking_number')}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_shipment_type')}</label>
+                <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_shipment_type')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {['inbound', 'outbound', 'container'].map(t => (
                     <button
                       key={t}
                       onClick={() => setForm(f => ({ ...f, shipment_type: t }))}
                       aria-pressed={form.shipment_type === t}
-                      style={{ padding: '6px 12px', borderRadius: 9999, border: `1px solid ${form.shipment_type === t ? IND : 'var(--b)'}`, background: form.shipment_type === t ? IND_T10 : 'transparent', color: form.shipment_type === t ? IND : 'var(--tx3)', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 36 }}
+                      style={{ padding: '6px 12px', borderRadius: 9999, border: `1px solid ${form.shipment_type === t ? IND : 'var(--b)'}`, background: form.shipment_type === t ? IND_T10 : 'transparent', color: form.shipment_type === t ? IND : 'var(--tx3)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 36 }}
                     >
                       {tc('shipments.type_' + t)}
                     </button>
@@ -504,23 +504,23 @@ export default function ShipmentsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label htmlFor="field-supplier-name" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_supplier')}</label>
+                  <label htmlFor="field-supplier-name" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_supplier')}</label>
                   <input
                     id="field-supplier-name"
                     value={form.supplier_name}
                     onChange={e => setForm(f => ({ ...f, supplier_name: e.target.value }))}
                     placeholder={tc('shipments.placeholder_supplier')}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label htmlFor="field-sku" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_sku')}</label>
+                  <label htmlFor="field-sku" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_sku')}</label>
                   <input
                     id="field-sku"
                     value={form.sku}
                     onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
                     placeholder={tc('shipments.placeholder_sku')}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -529,20 +529,20 @@ export default function ShipmentsPage() {
               {!isFree && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div>
-                    <label htmlFor="field-quantity" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_quantity')}</label>
+                    <label htmlFor="field-quantity" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_quantity')}</label>
                     <input
                       id="field-quantity"
                       value={form.quantity}
                       onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
                       type="number"
                       placeholder={tc('shipments.placeholder_quantity')}
-                      style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                     />
                   </div>
                   <div>
-                    <label htmlFor="field-unit-cost" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                    <label htmlFor="field-unit-cost" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
                       {tc('shipments.label_unit_cost')}
-                      {!isBusiness && <span style={{ fontSize: 14, color: IND, marginLeft: 4 }}>{tc('shipments.unit_cost_growth_tag')}</span>}
+                      {!isBusiness && <span style={{ fontSize: 12, color: IND, marginLeft: 4 }}>{tc('shipments.unit_cost_growth_tag')}</span>}
                     </label>
                     <input
                       id="field-unit-cost"
@@ -551,7 +551,7 @@ export default function ShipmentsPage() {
                       type="number"
                       step="0.01"
                       placeholder={tc('shipments.placeholder_unit_cost')}
-                      style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                     />
                   </div>
                 </div>
@@ -559,24 +559,24 @@ export default function ShipmentsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label htmlFor="field-expected-arrival" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_expected_arrival')}</label>
+                  <label htmlFor="field-expected-arrival" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_expected_arrival')}</label>
                   <input
                     id="field-expected-arrival"
                     value={form.expected_arrival}
                     onChange={e => setForm(f => ({ ...f, expected_arrival: e.target.value }))}
                     type="date"
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
                 {!isFree && (
                   <div>
-                    <label htmlFor="field-po-reference" style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_po_reference')}</label>
+                    <label htmlFor="field-po-reference" style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_po_reference')}</label>
                     <input
                       id="field-po-reference"
                       value={form.purchase_order_ref}
                       onChange={e => setForm(f => ({ ...f, purchase_order_ref: e.target.value }))}
                       placeholder={tc('shipments.placeholder_po_reference')}
-                      style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                     />
                   </div>
                 )}
@@ -584,17 +584,17 @@ export default function ShipmentsPage() {
 
               {/* Value preview — Growth and above */}
               {!isFree && form.quantity && form.unit_cost && (
-                <div style={{ padding: '10px 12px', borderRadius: 9, background: IND_T06, border: `1px solid ${IND_T15}`, fontSize: 16, color: IND }}>
+                <div style={{ padding: '10px 12px', borderRadius: 9, background: IND_T06, border: `1px solid ${IND_T15}`, fontSize: 14, color: IND }}>
                   {tc('shipments.value_preview')}<strong>£{(parseFloat(form.quantity) * parseFloat(form.unit_cost)).toLocaleString()}</strong>
                   {isBusiness && <span>{tc('shipments.value_preview_financing')}<strong>£{((parseFloat(form.quantity) * parseFloat(form.unit_cost) * 0.085) / 365).toFixed(2)}/day</strong></span>}
                 </div>
               )}
 
               <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-                <button onClick={addShipment} disabled={adding} style={{ flex: 1, padding: '13px', borderRadius: 9999, border: 'none', background: adding ? 'var(--b)' : IND, color: adding ? 'var(--tx3)' : '#fff', fontSize: 18, fontWeight: 600, cursor: adding ? 'not-allowed' : 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                <button onClick={addShipment} disabled={adding} style={{ flex: 1, padding: '13px', borderRadius: 9999, border: 'none', background: adding ? 'var(--b)' : IND, color: adding ? 'var(--tx3)' : '#fff', fontSize: 16, fontWeight: 600, cursor: adding ? 'not-allowed' : 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
                   {adding ? tc('shipments.btn_registering') : tc('shipments.btn_add_track')}
                 </button>
-                <button onClick={() => setShowAdd(false)} style={{ padding: '13px 20px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                <button onClick={() => setShowAdd(false)} style={{ padding: '13px 20px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
                   {tc('shipments.btn_cancel')}
                 </button>
               </div>

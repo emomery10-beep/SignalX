@@ -464,7 +464,7 @@ export default function ForecastsPage() {
                     )}
                   </select>
                   {targetColumn && !numericColumns.includes(targetColumn) && <div style={warningBox}>{tc('forecasts.text_column_warning')}</div>}
-                  {statsError && <div style={{ marginTop: 5, fontSize: 15, color: 'var(--tx3)' }}>{tc('forecasts.stats_failed')}</div>}
+                  {statsError && <div style={{ marginTop: 5, fontSize: 13, color: 'var(--tx3)' }}>{tc('forecasts.stats_failed')}</div>}
                 </div>
               )}
 
@@ -495,10 +495,10 @@ export default function ForecastsPage() {
               <div style={formGroup}>
                 <label style={labelStyle}>{tc('forecasts.confidence', { pct: confidence === 1 ? '68%' : confidence === 1.5 ? '87%' : confidence === 2 ? '95%' : `${Math.round(confidence * 50)}%` })}</label>
                 <input type="range" min="0.5" max="2.5" step="0.5" value={confidence} onChange={e => setConfidence(Number(e.target.value))} style={{ width: '100%', accentColor: '#8c6fe0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--tx3)', marginTop: -2 }}><span>{tc('forecasts.narrow')}</span><span>{tc('forecasts.wide')}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx3)', marginTop: -2 }}><span>{tc('forecasts.narrow')}</span><span>{tc('forecasts.wide')}</span></div>
               </div>
 
-              {error && <div style={{ color: '#f48080', fontSize: 16, marginBottom: 10, padding: '8px 10px', background: 'rgba(232,64,64,.08)', borderRadius: 8 }}>{error}</div>}
+              {error && <div style={{ color: '#f48080', fontSize: 14, marginBottom: 10, padding: '8px 10px', background: 'rgba(232,64,64,.08)', borderRadius: 8 }}>{error}</div>}
 
               <button onClick={runForecast} disabled={loading || (!selectedUpload && !selectedSource) || !targetColumn} style={primaryBtn((!!selectedUpload || !!selectedSource) && !!targetColumn && !loading)}>
                 {loading ? <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}><Spinner /> {tc('forecasts.running')}</span> : tc('forecasts.run_forecast')}
@@ -516,17 +516,17 @@ export default function ForecastsPage() {
               <div style={card}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={sectionLabel}>{tc('forecasts.data_quality')}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-sora)', color: qualityColor(result.dataQuality.score) }}>{result.dataQuality.score}%</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-sora)', color: qualityColor(result.dataQuality.score) }}>{result.dataQuality.score}%</div>
                 </div>
                 <div style={{ height: 4, background: 'var(--b)', borderRadius: 2, marginBottom: 12, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${result.dataQuality.score / 100})`, background: qualityColor(result.dataQuality.score), borderRadius: 2, transition: 'transform .5s ease' }} />
                 </div>
                 {result.dataQuality.issues.map((issue, i) => (
-                  <div key={i} style={{ fontSize: 15, color: 'var(--tx2)', display: 'flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.5, marginBottom: 4 }}>
+                  <div key={i} style={{ fontSize: 13, color: 'var(--tx2)', display: 'flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.5, marginBottom: 4 }}>
                     <span style={{ flexShrink: 0, marginTop: 2 }}>{issue.includes('good') ? '✓' : '●'}</span>{issue}
                   </div>
                 ))}
-                <div style={{ marginTop: 8, fontSize: 15, color: 'var(--tx3)' }}>{tc('forecasts.points_outliers', { rows: result.dataQuality.rowCount, outliers: result.dataQuality.outliers, plural: result.dataQuality.outliers !== 1 ? 's' : '' })}</div>
+                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--tx3)' }}>{tc('forecasts.points_outliers', { rows: result.dataQuality.rowCount, outliers: result.dataQuality.outliers, plural: result.dataQuality.outliers !== 1 ? 's' : '' })}</div>
               </div>
             )}
 
@@ -535,15 +535,15 @@ export default function ForecastsPage() {
               <div style={{ ...card, borderColor: 'rgba(244,128,128,.3)' }}>
                 <div style={{ ...sectionLabel, color: '#f48080' }}>{tc('forecasts.anomalies_detected')}</div>
                 {result.anomalies.slice(0, 5).map((a, i) => (
-                  <div key={i} style={{ padding: '6px 0', borderBottom: i < Math.min(4, result.anomalies!.length - 1) ? '1px solid var(--b)' : 'none', fontSize: 16 }}>
+                  <div key={i} style={{ padding: '6px 0', borderBottom: i < Math.min(4, result.anomalies!.length - 1) ? '1px solid var(--b)' : 'none', fontSize: 14 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: 500 }}>{tc('forecasts.period_n', { n: a.index + 1 })}</span>
-                      <span style={{ fontSize: 14, padding: '2px 6px', borderRadius: 4, background: a.severity === 'high' ? 'rgba(244,128,128,.1)' : 'rgba(245,158,11,.1)', color: a.severity === 'high' ? '#f48080' : '#f59e0b', fontWeight: 600 }}>{a.severity}</span>
+                      <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, background: a.severity === 'high' ? 'rgba(244,128,128,.1)' : 'rgba(245,158,11,.1)', color: a.severity === 'high' ? '#f48080' : '#f59e0b', fontWeight: 600 }}>{a.severity}</span>
                     </div>
-                    <div style={{ color: 'var(--tx3)', fontSize: 15, marginTop: 2 }}>{tc('forecasts.anomaly_detail', { actual: fmt(a.value), expected: fmt(a.expected), gap: fmt(Math.abs(a.value - a.expected)) })}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 13, marginTop: 2 }}>{tc('forecasts.anomaly_detail', { actual: fmt(a.value), expected: fmt(a.expected), gap: fmt(Math.abs(a.value - a.expected)) })}</div>
                   </div>
                 ))}
-                {result.anomalies.length > 5 && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 6 }}>{tc('forecasts.more_count', { count: result.anomalies.length - 5 })}</div>}
+                {result.anomalies.length > 5 && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 6 }}>{tc('forecasts.more_count', { count: result.anomalies.length - 5 })}</div>}
               </div>
             )}
 
@@ -558,8 +558,8 @@ export default function ForecastsPage() {
                     { l: tc('forecasts.stat_std_dev'), v: fmt(stats.stdDev) }, { l: tc('forecasts.stat_growth'), v: `${stats.growth > 0 ? '+' : ''}${stats.growth.toFixed(1)}%` },
                   ].map((s, i) => (
                     <div key={i} style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                      <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{s.l}</div>
-                      <div style={{ fontSize: 17, fontWeight: 600, fontFamily: 'var(--font-sora)', marginTop: 2 }}>{s.v}</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{s.l}</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-sora)', marginTop: 2 }}>{s.v}</div>
                     </div>
                   ))}
                 </div>
@@ -571,21 +571,21 @@ export default function ForecastsPage() {
               <div style={card}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                   <div style={sectionLabel}>{tc('forecasts.saved_forecasts')}</div>
-                  {canUsePro && result && <span style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('forecasts.toggle_to_overlay')}</span>}
+                  {canUsePro && result && <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('forecasts.toggle_to_overlay')}</span>}
                 </div>
                 {savedForecasts.map(f => {
                   const isOverlaid = overlayForecasts.find(o => o.id === f.id)
                   return (
-                    <div key={f.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--b)', fontSize: 16 }}>
+                    <div key={f.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--b)', fontSize: 14 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                         <span style={{ fontWeight: 500, cursor: 'pointer' }} onClick={() => loadSavedForecast(f)}>{f.name || f.target_column}</span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           {canUsePro && result && f.result && (
-                            <button onClick={() => toggleOverlay(f)} style={{ fontSize: 14, padding: '2px 8px', borderRadius: 4, border: isOverlaid ? '1.5px solid #d08a59' : '1px solid var(--b2)', background: isOverlaid ? 'rgba(208,138,89,.08)' : 'transparent', color: isOverlaid ? '#d08a59' : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                            <button onClick={() => toggleOverlay(f)} style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, border: isOverlaid ? '1.5px solid #d08a59' : '1px solid var(--b2)', background: isOverlaid ? 'rgba(208,138,89,.08)' : 'transparent', color: isOverlaid ? '#d08a59' : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
                               {isOverlaid ? tc('forecasts.overlaid') : tc('forecasts.overlay')}
                             </button>
                           )}
-                          {f.result && <span style={{ fontSize: 14, color: '#8c6fe0', background: 'rgba(140,111,224,.08)', padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }} onClick={() => loadSavedForecast(f)}>{tc('forecasts.load')}</span>}
+                          {f.result && <span style={{ fontSize: 12, color: '#8c6fe0', background: 'rgba(140,111,224,.08)', padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }} onClick={() => loadSavedForecast(f)}>{tc('forecasts.load')}</span>}
                         </div>
                       </div>
                       <div style={{ color: 'var(--tx3)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -608,7 +608,7 @@ export default function ForecastsPage() {
                   { m: tc('forecasts.guide_seasonal_name'), d: tc('forecasts.guide_seasonal_desc'), icon: 'seasonal' as const },
                   { m: tc('forecasts.guide_exponential_name'), d: tc('forecasts.guide_exponential_desc'), icon: 'exponential' as const },
                 ].map((g, i) => (
-                  <div key={i} style={{ padding: '7px 0', borderBottom: i < 4 ? '1px solid var(--b)' : 'none', fontSize: 16 }}>
+                  <div key={i} style={{ padding: '7px 0', borderBottom: i < 4 ? '1px solid var(--b)' : 'none', fontSize: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500, marginBottom: 2 }}><MethodIcon type={g.icon} /> {g.m}</div>
                     <div style={{ color: 'var(--tx3)', lineHeight: 1.5 }}>{g.d}</div>
                   </div>
@@ -622,13 +622,13 @@ export default function ForecastsPage() {
             {!result ? (
               <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 14, padding: 48, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, minHeight: 440 }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.2" strokeLinecap="round" opacity=".4"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                <div style={{ fontSize: 20, fontWeight: 600, fontFamily: 'var(--font-sora)' }}>{tc('forecasts.empty_title')}</div>
-                <div style={{ fontSize: 17, color: 'var(--tx3)', maxWidth: 400, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 18, fontWeight: 600, fontFamily: 'var(--font-sora)' }}>{tc('forecasts.empty_title')}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', maxWidth: 400, lineHeight: 1.6 }}>
                   {tc('forecasts.empty_body')}
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {[tc('forecasts.feature_auto_method'), tc('forecasts.feature_anomaly_detection'), tc('forecasts.feature_scenario_analysis'), tc('forecasts.feature_whatif_simulator'), tc('forecasts.feature_forecast_overlay'), tc('forecasts.feature_pdf_reports')].map(f => (
-                    <span key={f} style={{ fontSize: 14, padding: '4px 10px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{f}</span>
+                    <span key={f} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{f}</span>
                   ))}
                 </div>
               </div>
@@ -650,13 +650,13 @@ export default function ForecastsPage() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 10 }}>
                       {kpis.map((k, i) => (
                         <div key={i} title={k.help} style={{ padding: '10px 12px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'transform .15s', opacity: k.flag ? 0.82 : 1 }}>
-                          <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
                             {k.label}
-                            {k.help && <span aria-hidden="true" style={{ fontSize: 13, color: 'var(--tx3)', border: '1px solid var(--b2)', borderRadius: '50%', width: 12, height: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, cursor: 'help', textTransform: 'none' }}>?</span>}
+                            {k.help && <span aria-hidden="true" style={{ fontSize: 11, color: 'var(--tx3)', border: '1px solid var(--b2)', borderRadius: '50%', width: 12, height: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, cursor: 'help', textTransform: 'none' }}>?</span>}
                           </div>
-                          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 600, color: k.color }}>{k.value}</div>
-                          <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 3 }}>{k.sub}</div>
-                          {k.flag && <div style={{ fontSize: 13, color: '#f59e0b', marginTop: 4, fontWeight: 600 }}>{k.flag}</div>}
+                          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 600, color: k.color }}>{k.value}</div>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 3 }}>{k.sub}</div>
+                          {k.flag && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 4, fontWeight: 600 }}>{k.flag}</div>}
                         </div>
                       ))}
                     </div>
@@ -668,7 +668,7 @@ export default function ForecastsPage() {
                   {tabs.map(t => (
                     <button key={t.key}
                       onClick={() => { if (!t.pro || canUsePro) setActiveTab(t.key) }}
-                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: 'none', background: activeTab === t.key ? 'var(--sf)' : 'transparent', color: activeTab === t.key ? 'var(--tx)' : (t.pro && !canUsePro) ? 'var(--b2)' : 'var(--tx3)', fontSize: 16, fontWeight: activeTab === t.key ? 600 : 400, cursor: (t.pro && !canUsePro) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: activeTab === t.key ? '0 1px 3px rgba(0,0,0,.06)' : 'none', transition: 'all .15s', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center', opacity: (t.pro && !canUsePro) ? 0.5 : 1 }}>
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: 'none', background: activeTab === t.key ? 'var(--sf)' : 'transparent', color: activeTab === t.key ? 'var(--tx)' : (t.pro && !canUsePro) ? 'var(--b2)' : 'var(--tx3)', fontSize: 14, fontWeight: activeTab === t.key ? 600 : 400, cursor: (t.pro && !canUsePro) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: activeTab === t.key ? '0 1px 3px rgba(0,0,0,.06)' : 'none', transition: 'all .15s', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center', opacity: (t.pro && !canUsePro) ? 0.5 : 1 }}>
                       {t.label}
                       {t.pro && !canUsePro && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
                     </button>
@@ -679,12 +679,12 @@ export default function ForecastsPage() {
                 {activeTab === 'overview' && (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, background: 'var(--sf)', border: '1px solid var(--b)', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 16, color: 'var(--tx2)', fontWeight: 500 }}>{tc('forecasts.scenario_label')}</span>
+                      <span style={{ fontSize: 14, color: 'var(--tx2)', fontWeight: 500 }}>{tc('forecasts.scenario_label')}</span>
                       {(['base', 'optimistic', 'pessimistic'] as const).map(s => (
                         <button key={s} onClick={() => setScenario(s)} style={scenarioBtn(s, scenario)}>{s === 'base' ? tc('forecasts.scenario_base') : s === 'optimistic' ? tc('forecasts.scenario_optimistic') : tc('forecasts.scenario_pessimistic')}</button>
                       ))}
                       {overlayForecasts.length > 0 && (
-                        <span style={{ fontSize: 15, color: '#f59e0b', marginLeft: 'auto' }}>{tc('forecasts.overlays_active', { count: overlayForecasts.length, plural: overlayForecasts.length > 1 ? 's' : '' })}</span>
+                        <span style={{ fontSize: 13, color: '#f59e0b', marginLeft: 'auto' }}>{tc('forecasts.overlays_active', { count: overlayForecasts.length, plural: overlayForecasts.length > 1 ? 's' : '' })}</span>
                       )}
                     </div>
                     <div style={{ ...card, padding: 14 }}>
@@ -697,7 +697,7 @@ export default function ForecastsPage() {
                     </div>
                     <div style={{ ...card, padding: '12px 16px' }}>
                       <div style={{ ...chartTitle, marginBottom: 6 }}>{tc('forecasts.ai_summary')}</div>
-                      <div style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.6 }}>{result.summary}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx2)', lineHeight: 1.6 }}>{result.summary}</div>
                     </div>
                   </>
                 )}
@@ -706,7 +706,7 @@ export default function ForecastsPage() {
                 {activeTab === 'decomposition' && (
                   <div style={{ ...card, padding: 18 }}>
                     <div style={chartTitle}>{tc('forecasts.decomposition_title')}</div>
-                    <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 14, marginTop: 4, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 14, marginTop: 4, lineHeight: 1.5 }}>
                       {tc('forecasts.decomposition_desc')}
                     </div>
                     {result.decomposition ? <div style={{ height: 280, position: 'relative' }}><canvas ref={decompRef} /></div> : <EmptyState text={tc('forecasts.decomposition_unavailable')} />}
@@ -719,18 +719,18 @@ export default function ForecastsPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                       <div>
                         <div style={chartTitle}>{tc('forecasts.method_comparison')}</div>
-                        <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 4 }}>{tc('forecasts.method_comparison_desc')}</div>
+                        <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 4 }}>{tc('forecasts.method_comparison_desc')}</div>
                       </div>
                       {!comparison && <button onClick={runComparison} disabled={comparingMethods} style={secondaryBtnStyle}>{comparingMethods ? tc('forecasts.comparing') : tc('forecasts.run_comparison')}</button>}
                     </div>
                     {comparison ? (
                       <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 17 }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 15 }}>
                           <thead><tr>{[tc('forecasts.col_rank'), tc('forecasts.col_method'), tc('forecasts.col_accuracy'), tc('forecasts.col_mae'), tc('forecasts.col_rmse'), tc('forecasts.col_trend')].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr></thead>
                           <tbody>
                             {comparison.map((c, i) => (
                               <tr key={c.method} style={{ background: i === 0 ? 'rgba(34,197,94,.04)' : 'transparent' }}>
-                                <td style={tdStyle}>{i === 0 ? <span style={{ background: '#22c55e', color: '#fff', padding: '2px 7px', borderRadius: 4, fontSize: 15, fontWeight: 700 }}>{tc('forecasts.best_badge')}</span> : `#${i + 1}`}</td>
+                                <td style={tdStyle}>{i === 0 ? <span style={{ background: '#22c55e', color: '#fff', padding: '2px 7px', borderRadius: 4, fontSize: 13, fontWeight: 700 }}>{tc('forecasts.best_badge')}</span> : `#${i + 1}`}</td>
                                 <td style={{ ...tdStyle, fontWeight: 500 }}>{c.method}</td>
                                 <td style={tdStyle}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -759,7 +759,7 @@ export default function ForecastsPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={card}>
                       <div style={chartTitle}>{tc('forecasts.whatif_simulator')}</div>
-                      <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 4, marginBottom: 16, lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 4, marginBottom: 16, lineHeight: 1.5 }}>
                         {tc('forecasts.whatif_desc')}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
@@ -778,7 +778,7 @@ export default function ForecastsPage() {
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                         {[{ l: tc('forecasts.whatif_preset_drop'), v: -20 }, { l: tc('forecasts.whatif_preset_spike'), v: 30 }, { l: tc('forecasts.whatif_preset_flat'), v: -5 }, { l: tc('forecasts.whatif_preset_double'), v: 100 }].map(p => (
-                          <button key={p.l} onClick={() => setWhatIfChange(p.v)} style={{ padding: '5px 10px', borderRadius: 6, border: whatIfChange === p.v ? '1.5px solid #d08a59' : '1px solid var(--b2)', background: whatIfChange === p.v ? 'rgba(208,138,89,.06)' : 'transparent', color: whatIfChange === p.v ? '#d08a59' : 'var(--tx3)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' }}>{p.l}</button>
+                          <button key={p.l} onClick={() => setWhatIfChange(p.v)} style={{ padding: '5px 10px', borderRadius: 6, border: whatIfChange === p.v ? '1.5px solid #d08a59' : '1px solid var(--b2)', background: whatIfChange === p.v ? 'rgba(208,138,89,.06)' : 'transparent', color: whatIfChange === p.v ? '#d08a59' : 'var(--tx3)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{p.l}</button>
                         ))}
                       </div>
                       <button onClick={runWhatIf} disabled={whatIfLoading} style={primaryBtn(!whatIfLoading)}>
@@ -789,14 +789,14 @@ export default function ForecastsPage() {
                       <>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                           <div style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-                            <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{tc('forecasts.forecast_impact')}</div>
-                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, color: whatIfResult.impactPct > 0 ? '#22c55e' : whatIfResult.impactPct < 0 ? '#f48080' : 'var(--tx2)' }}>
+                            <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{tc('forecasts.forecast_impact')}</div>
+                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, color: whatIfResult.impactPct > 0 ? '#22c55e' : whatIfResult.impactPct < 0 ? '#f48080' : 'var(--tx2)' }}>
                               {whatIfResult.impactPct > 0 ? '+' : ''}{whatIfResult.impactPct.toFixed(1)}%
                             </div>
                           </div>
                           <div style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-                            <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{tc('forecasts.modified_accuracy')}</div>
-                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, color: whatIfResult.modified.accuracy > 80 ? '#22c55e' : '#f59e0b' }}>
+                            <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{tc('forecasts.modified_accuracy')}</div>
+                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, color: whatIfResult.modified.accuracy > 80 ? '#22c55e' : '#f59e0b' }}>
                               {whatIfResult.modified.accuracy.toFixed(0)}%
                             </div>
                           </div>
@@ -808,7 +808,7 @@ export default function ForecastsPage() {
                           </div>
                         </div>
                         <div style={{ ...card, padding: '14px 16px' }}>
-                          <div style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.65 }}>{whatIfResult.impactSummary}</div>
+                          <div style={{ fontSize: 15, color: 'var(--tx2)', lineHeight: 1.65 }}>{whatIfResult.impactSummary}</div>
                         </div>
                       </>
                     )}
@@ -826,7 +826,7 @@ export default function ForecastsPage() {
                       </div>
                     </div>
                     <div style={{ overflowX: 'auto', maxHeight: 450, overflowY: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 16 }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                         <thead style={{ position: 'sticky', top: 0, background: 'var(--sf)' }}>
                           <tr>{[tc('forecasts.col_date'), tc('forecasts.col_actual'), tc('forecasts.col_predicted'), tc('forecasts.col_upper'), tc('forecasts.col_lower'), tc('forecasts.col_type')].map(h => <th key={h} style={thStyle}>{h}</th>)}</tr>
                         </thead>
@@ -842,9 +842,9 @@ export default function ForecastsPage() {
                                 <td style={tdStyle}>{fmt(result.lowerBound[i])}</td>
                                 <td style={tdStyle}>
                                   {isAnomaly ? (
-                                    <span style={{ fontSize: 14, padding: '2px 6px', borderRadius: 4, background: 'rgba(244,128,128,.1)', color: '#f48080', fontWeight: 600 }}>{tc('forecasts.type_anomaly')}</span>
+                                    <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, background: 'rgba(244,128,128,.1)', color: '#f48080', fontWeight: 600 }}>{tc('forecasts.type_anomaly')}</span>
                                   ) : (
-                                    <span style={{ fontSize: 14, padding: '2px 6px', borderRadius: 4, background: result.actual[i] !== null ? 'rgba(208,138,89,.08)' : 'rgba(140,111,224,.08)', color: result.actual[i] !== null ? '#d08a59' : '#8c6fe0' }}>
+                                    <span style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, background: result.actual[i] !== null ? 'rgba(208,138,89,.08)' : 'rgba(140,111,224,.08)', color: result.actual[i] !== null ? '#d08a59' : '#8c6fe0' }}>
                                       {result.actual[i] !== null ? tc('forecasts.type_historical') : tc('forecasts.type_forecast')}
                                     </span>
                                   )}
@@ -868,8 +868,8 @@ export default function ForecastsPage() {
     {showShareModal && (
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setShowShareModal(false)}>
         <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 420, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,.2)' }} onClick={e => e.stopPropagation()}>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>{tc('forecasts.share_forecast')}</div>
-          <div style={{ fontSize: 17, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.5 }}>{tc('forecasts.share_desc')}</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{tc('forecasts.share_forecast')}</div>
+          <div style={{ fontSize: 15, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.5 }}>{tc('forecasts.share_desc')}</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input readOnly value={shareUrl} style={{ ...inputStyle, flex: 1 }} onClick={e => (e.target as HTMLInputElement).select()} />
             <button onClick={() => { navigator.clipboard.writeText(shareUrl).catch(() => {}); setShowShareModal(false) }} style={{ ...primaryBtn(true), width: 'auto', padding: '9px 18px', marginTop: 0 }}>{tc('forecasts.copied')}</button>
@@ -895,7 +895,7 @@ function Spinner() {
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div style={{ padding: 32, textAlign: 'center', color: 'var(--tx3)', fontSize: 17 }}>{text}</div>
+  return <div style={{ padding: 32, textAlign: 'center', color: 'var(--tx3)', fontSize: 15 }}>{text}</div>
 }
 
 const METHOD_ICON_PATHS: Record<string, React.ReactNode> = {
@@ -921,38 +921,38 @@ function scenarioBtn(s: string, active: string): React.CSSProperties {
   return {
     padding: '5px 12px', borderRadius: 6, border: isActive ? `1.5px solid ${c}` : '1px solid var(--b)',
     background: isActive ? `${c}0F` : 'transparent', color: isActive ? c : 'var(--tx3)',
-    fontSize: 15, fontWeight: isActive ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
+    fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
   }
 }
 
 // ── Style constants ─────────────────────────────────────────
 const card: React.CSSProperties = { background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '10px 12px' }
-const sectionLabel: React.CSSProperties = { fontSize: 15, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0, lineHeight: 1 }
+const sectionLabel: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0, lineHeight: 1 }
 const formGroup: React.CSSProperties = { marginTop: 6, marginBottom: 0 }
-const labelStyle: React.CSSProperties = { display: 'block', minHeight: 0, fontSize: 17, fontWeight: 500, color: 'var(--tx2)', margin: 0, padding: 0, lineHeight: 1 }
-const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 17, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', marginTop: 1 }
-const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 17, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 1 }
-const warningBox: React.CSSProperties = { marginTop: 5, fontSize: 15, color: '#f59e0b', lineHeight: 1.5, padding: '6px 8px', background: 'rgba(245,158,11,.06)', borderRadius: 6 }
-const chartTitle: React.CSSProperties = { fontSize: 15, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 500 }
+const labelStyle: React.CSSProperties = { display: 'block', minHeight: 0, fontSize: 15, fontWeight: 500, color: 'var(--tx2)', margin: 0, padding: 0, lineHeight: 1 }
+const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 15, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', marginTop: 1 }
+const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 15, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 1 }
+const warningBox: React.CSSProperties = { marginTop: 5, fontSize: 13, color: '#f59e0b', lineHeight: 1.5, padding: '6px 8px', background: 'rgba(245,158,11,.06)', borderRadius: 6 }
+const chartTitle: React.CSSProperties = { fontSize: 13, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 500 }
 const tdStyle: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--b)' }
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid var(--b)', fontSize: 14, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 500 }
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid var(--b)', fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 500 }
 
 const primaryBtn = (enabled: boolean): React.CSSProperties => ({
   width: '100%', padding: '6px', borderRadius: 9999, border: 'none',
   background: 'var(--acc)', color: '#fff', opacity: enabled ? 1 : 0.5,
-  fontFamily: 'inherit', fontSize: 16, fontWeight: 600,
+  fontFamily: 'inherit', fontSize: 14, fontWeight: 600,
   cursor: enabled ? 'pointer' : 'not-allowed', marginTop: 1, transition: 'all .15s ease',
 })
 
 const secondaryBtnStyle: React.CSSProperties = {
   padding: '9px 14px', borderRadius: 9999, border: '1px solid var(--b2)',
   background: 'transparent', color: 'var(--tx2)',
-  fontFamily: 'inherit', fontSize: 16, fontWeight: 500,
+  fontFamily: 'inherit', fontSize: 14, fontWeight: 500,
   cursor: 'pointer', marginTop: 4, transition: 'all .15s',
 }
 
 const actionBtn: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8,
   border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx2)',
-  fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+  fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
 }

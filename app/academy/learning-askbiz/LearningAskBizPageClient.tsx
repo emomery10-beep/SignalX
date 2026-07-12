@@ -74,14 +74,14 @@ export default function LearningAskBizPageClient() {
                 <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
       </nav>
 
       {/* Breadcrumbs */}
-      <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '10px clamp(16px,4vw,48px)', fontSize: 13, color: TX3 }}>
+      <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '10px clamp(16px,4vw,48px)', fontSize: 11, color: TX3 }}>
         <Link href={localePath('/', lang)} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_home')}</Link>
         {' / '}
         <Link href={localePath('/academy', lang)} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_academy')}</Link>
@@ -91,14 +91,14 @@ export default function LearningAskBizPageClient() {
 
       {/* Hero */}
       <div style={{ background: `linear-gradient(135deg, ${TX} 0%, #2c2a26 100%)`, padding: 'clamp(40px,6vw,72px) clamp(24px,4vw,48px)', textAlign: 'center' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🎓</div>
+        <div style={{ fontSize: 38, marginBottom: 12 }}>🎓</div>
         <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700, letterSpacing: '-.025em', color: SF, marginBottom: 12 }}>
           {tc('academy.lab_hero_title')}
         </h1>
         <p style={{ fontSize: 'clamp(14px,1.6vw,17px)', color: TX3, maxWidth: 600, margin: '0 auto 20px', lineHeight: 1.6 }}>
           {ARTICLES.length} {tc('academy.lab_hero_subtitle_suffix')}
         </p>
-        <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', fontSize: 13, color: '#a39e97' }}>
+        <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', fontSize: 11, color: '#a39e97' }}>
           <span>📚 {ARTICLES.length} {tc('academy.lab_hero_stat_articles')}</span>
           <span>⏱ {ARTICLES.reduce((s, a) => s + a.readTime, 0)} {tc('academy.lab_hero_stat_min')}</span>
           <span>🆓 {tc('academy.lab_hero_stat_free')}</span>
@@ -110,10 +110,10 @@ export default function LearningAskBizPageClient() {
 
         {/* Intro */}
         <div style={{ background: SF, border: `1.5px solid ${BD}`, borderRadius: 14, padding: 'clamp(20px,3vw,32px)', marginBottom: 32 }}>
-          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 8, letterSpacing: '-.02em' }}>
+          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 8, letterSpacing: '-.02em' }}>
             {tc('academy.lab_how_to_title')}
           </h2>
-          <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, margin: 0 }}>
             {tc('academy.lab_how_to_body')}
           </p>
         </div>
@@ -130,8 +130,8 @@ export default function LearningAskBizPageClient() {
         ] as { label: string; sublabel: string; articles: typeof ARTICLES; offset: number }[]).map(({ label, sublabel, articles, offset }) => (
           <div key={label} style={{ marginBottom: 40 }}>
             <div style={{ marginBottom: 16 }}>
-              <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: TX, letterSpacing: '-.02em', margin: '0 0 2px' }}>{label}</h2>
-              <p style={{ fontSize: 13, color: TX3, margin: 0 }}>{sublabel}</p>
+              <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, letterSpacing: '-.02em', margin: '0 0 2px' }}>{label}</h2>
+              <p style={{ fontSize: 11, color: TX3, margin: 0 }}>{sublabel}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {articles.map((article, i) => (
@@ -146,7 +146,7 @@ export default function LearningAskBizPageClient() {
                     <div style={{
                       width: 40, height: 40, borderRadius: 10, background: `${ACC}14`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 16, fontWeight: 700, color: ACC, flexShrink: 0
+                      fontSize: 14, fontWeight: 700, color: ACC, flexShrink: 0
                     }}>
                       {offset + i + 1}
                     </div>
@@ -155,19 +155,19 @@ export default function LearningAskBizPageClient() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
                         <span style={{
-                          fontSize: 11, fontWeight: 600, color: DIFF_COLOR[article.difficulty] ?? TX2,
+                          fontSize: 9, fontWeight: 600, color: DIFF_COLOR[article.difficulty] ?? TX2,
                           background: `${DIFF_COLOR[article.difficulty] ?? TX2}14`,
                           padding: '2px 8px', borderRadius: 6
                         }}>
                           {article.difficulty}
                         </span>
-                        <span style={{ fontSize: 12, color: TX3 }}>{article.readTime} {tc('academy.lab_min_read')}</span>
+                        <span style={{ fontSize: 10, color: TX3 }}>{article.readTime} {tc('academy.lab_min_read')}</span>
                       </div>
 
                       <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(15px,1.4vw,17px)', fontWeight: 600, color: TX, letterSpacing: '-.02em', marginBottom: 4, lineHeight: 1.35 }}>
                         {article.title}
                       </h3>
-                      <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.5 }}>
+                      <p style={{ fontSize: 11, color: TX2, margin: 0, lineHeight: 1.5 }}>
                         {article.description}
                       </p>
                     </div>
@@ -191,11 +191,11 @@ export default function LearningAskBizPageClient() {
           <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(18px,2.5vw,24px)', fontWeight: 700, color: SF, marginBottom: 8, letterSpacing: '-.025em' }}>
             {tc('academy.lab_cta_title')}
           </h2>
-          <p style={{ fontSize: 14, color: TX3, marginBottom: 20, maxWidth: 460, margin: '0 auto 20px' }}>
+          <p style={{ fontSize: 12, color: TX3, marginBottom: 20, maxWidth: 460, margin: '0 auto 20px' }}>
             {tc('academy.lab_cta_body')}
           </p>
           <Link href={localePath('/signin', lang)} style={{
-            display: 'inline-block', fontSize: 14, fontWeight: 600, color: TX,
+            display: 'inline-block', fontSize: 12, fontWeight: 600, color: TX,
             background: ACC, borderRadius: 9999, padding: '12px 28px', textDecoration: 'none'
           }}>
             {tc('academy.lab_cta_button')}
@@ -211,7 +211,7 @@ export default function LearningAskBizPageClient() {
             [tc('academy.lab_footer_free_tools'), '/free-tools'],
             [tc('academy.lab_footer_pricing'), '/pricing'],
           ] as [string, string][]).map(([label, href]) => (
-            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </main>

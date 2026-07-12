@@ -143,34 +143,34 @@ export default function BenchmarksClient() {
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
           </div>
-          <span style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700 }}>AskBiz</span>
+          <span style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700 }}>AskBiz</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href={localePath("/blog", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Blog</Link>
-          <Link href={localePath("/case-studies", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Case Studies</Link>
-          <Link href={localePath("/pricing", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Pricing</Link>
-          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Try free →</Link>
+          <Link href={localePath("/blog", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>Blog</Link>
+          <Link href={localePath("/case-studies", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>Case Studies</Link>
+          <Link href={localePath("/pricing", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>Pricing</Link>
+          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Try free →</Link>
         </div>
       </nav>
 
       {/* Hero */}
       <section style={{ background: "linear-gradient(150deg, #1a1916 0%, #2d2a26 55%, #1a2030 100%)", padding: "clamp(52px,7vw,80px) clamp(16px,4vw,40px)", textAlign: "center" }}>
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          <div style={{ display: "inline-block", background: "rgba(208,138,89,.18)", border: "1px solid rgba(208,138,89,.3)", color: "#e8a87a", fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase" as const, padding: "5px 14px", borderRadius: 100, marginBottom: 20 }}>
+          <div style={{ display: "inline-block", background: "rgba(208,138,89,.18)", border: "1px solid rgba(208,138,89,.3)", color: "#e8a87a", fontSize: 10, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase" as const, padding: "5px 14px", borderRadius: 100, marginBottom: 20 }}>
             Updated Q2 2026
           </div>
           <h1 style={{ fontFamily: "var(--font-sora)", fontSize: "clamp(28px,4.5vw,44px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", letterSpacing: "-.025em", lineHeight: 1.15 }}>
             SME Industry Benchmarks
           </h1>
-          <p style={{ color: "rgba(255,255,255,.5)", fontSize: 17, margin: "0 0 28px", lineHeight: 1.6 }}>
+          <p style={{ color: "rgba(255,255,255,.5)", fontSize: 15, margin: "0 0 28px", lineHeight: 1.6 }}>
             How does your business compare? Anonymized data from 4,700+ SME businesses across 8 sectors.
             Median, top 25%, and bottom 25% — so you know where you stand.
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 28, flexWrap: "wrap" }}>
             {[["4,700+", "Businesses"], ["8", "Sectors"], ["48+", "KPIs"], ["Quarterly", "Updates"]].map(([val, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "var(--font-sora)", fontSize: 24, fontWeight: 800, color: "#fff" }}>{val}</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>{label}</div>
+                <div style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 800, color: "#fff" }}>{val}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,.4)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>{label}</div>
               </div>
             ))}
           </div>
@@ -186,7 +186,7 @@ export default function BenchmarksClient() {
               key={s.id}
               onClick={() => setActiveSector(s.id)}
               style={{
-                fontFamily: "'DM Sans', system-ui", fontSize: 13, fontWeight: 600,
+                fontFamily: "'DM Sans', system-ui", fontSize: 11, fontWeight: 600,
                 padding: "9px 16px", borderRadius: 9999, border: "1.5px solid",
                 borderColor: activeSector === s.id ? C.acc : C.b,
                 background: activeSector === s.id ? C.accBg : C.sf,
@@ -202,28 +202,28 @@ export default function BenchmarksClient() {
         {/* Sector header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 24, fontWeight: 700, margin: "0 0 4px" }}>
+            <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 700, margin: "0 0 4px" }}>
               {sector.icon} {sector.name}
             </h2>
-            <div style={{ fontSize: 13, color: C.tx3 }}>Based on {sector.sampleSize} · Q2 2026</div>
+            <div style={{ fontSize: 11, color: C.tx3 }}>Based on {sector.sampleSize} · Q2 2026</div>
           </div>
         </div>
 
         {/* Insight */}
         <div style={{ background: C.accBg, border: `1px solid ${C.accBdr}`, borderRadius: 12, padding: "16px 20px", marginBottom: 28 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.acc, textTransform: "uppercase" as const, letterSpacing: ".06em", marginBottom: 6 }}>Key Insight</div>
-          <p style={{ fontSize: 14, color: C.tx, lineHeight: 1.6, margin: 0 }}>{sector.insight}</p>
+          <div style={{ fontSize: 9, fontWeight: 700, color: C.acc, textTransform: "uppercase" as const, letterSpacing: ".06em", marginBottom: 6 }}>Key Insight</div>
+          <p style={{ fontSize: 12, color: C.tx, lineHeight: 1.6, margin: 0 }}>{sector.insight}</p>
         </div>
 
         {/* Metrics table */}
         <div style={{ overflowX: "auto", borderRadius: 14, border: `1.5px solid ${C.b}`, background: C.sf }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr>
-                <th style={{ textAlign: "left", padding: "14px 20px", fontSize: 11, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Metric</th>
-                <th style={{ textAlign: "center", padding: "14px 20px", fontSize: 11, fontWeight: 700, color: "#dc2626", textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Bottom 25%</th>
-                <th style={{ textAlign: "center", padding: "14px 20px", fontSize: 11, fontWeight: 700, color: C.tx, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Median</th>
-                <th style={{ textAlign: "center", padding: "14px 20px", fontSize: 11, fontWeight: 700, color: "#16a34a", textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Top 25%</th>
+                <th style={{ textAlign: "left", padding: "14px 20px", fontSize: 9, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Metric</th>
+                <th style={{ textAlign: "center", padding: "14px 20px", fontSize: 9, fontWeight: 700, color: "#dc2626", textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Bottom 25%</th>
+                <th style={{ textAlign: "center", padding: "14px 20px", fontSize: 9, fontWeight: 700, color: C.tx, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Median</th>
+                <th style={{ textAlign: "center", padding: "14px 20px", fontSize: 9, fontWeight: 700, color: "#16a34a", textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Top 25%</th>
               </tr>
             </thead>
             <tbody>
@@ -231,7 +231,7 @@ export default function BenchmarksClient() {
                 <tr key={m.label} style={{ background: i % 2 === 0 ? C.sf : C.el }}>
                   <td style={{ padding: "13px 20px", fontWeight: 600, color: C.tx, borderBottom: `1px solid ${C.b}` }}>{m.label}</td>
                   <td style={{ padding: "13px 20px", textAlign: "center", color: "#dc2626", fontFamily: "var(--font-sora)", fontWeight: 700, borderBottom: `1px solid ${C.b}` }}>{m.bottom25}</td>
-                  <td style={{ padding: "13px 20px", textAlign: "center", color: C.tx, fontFamily: "var(--font-sora)", fontWeight: 700, fontSize: 16, borderBottom: `1px solid ${C.b}` }}>{m.median}</td>
+                  <td style={{ padding: "13px 20px", textAlign: "center", color: C.tx, fontFamily: "var(--font-sora)", fontWeight: 700, fontSize: 14, borderBottom: `1px solid ${C.b}` }}>{m.median}</td>
                   <td style={{ padding: "13px 20px", textAlign: "center", color: "#16a34a", fontFamily: "var(--font-sora)", fontWeight: 700, borderBottom: `1px solid ${C.b}` }}>{m.top25}</td>
                 </tr>
               ))}
@@ -239,7 +239,7 @@ export default function BenchmarksClient() {
           </table>
         </div>
 
-        <p style={{ fontSize: 12, color: C.tx3, marginTop: 12, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 10, color: C.tx3, marginTop: 12, lineHeight: 1.6 }}>
           Data is anonymized and aggregated from AskBiz users who opt in to benchmark sharing. Individual business data is never disclosed.
           Benchmarks are updated quarterly. Last update: Q2 2026.
         </p>
@@ -248,17 +248,17 @@ export default function BenchmarksClient() {
       {/* Cross-sector comparison */}
       <section style={{ background: C.el, padding: "clamp(40px,6vw,64px) clamp(16px,4vw,40px)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 700, color: C.tx, margin: "0 0 24px" }}>
+          <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 20, fontWeight: 700, color: C.tx, margin: "0 0 24px" }}>
             Cross-Sector Comparison — Median Values
           </h2>
           <div style={{ overflowX: "auto", borderRadius: 14, border: `1.5px solid ${C.b}`, background: C.sf }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", padding: "12px 16px", fontSize: 11, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Sector</th>
-                  <th style={{ textAlign: "center", padding: "12px 16px", fontSize: 11, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Gross Margin</th>
-                  <th style={{ textAlign: "center", padding: "12px 16px", fontSize: 11, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Net Margin</th>
-                  <th style={{ textAlign: "center", padding: "12px 16px", fontSize: 11, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>YoY Growth</th>
+                  <th style={{ textAlign: "left", padding: "12px 16px", fontSize: 9, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Sector</th>
+                  <th style={{ textAlign: "center", padding: "12px 16px", fontSize: 9, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Gross Margin</th>
+                  <th style={{ textAlign: "center", padding: "12px 16px", fontSize: 9, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>Net Margin</th>
+                  <th style={{ textAlign: "center", padding: "12px 16px", fontSize: 9, fontWeight: 700, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".05em", borderBottom: `1.5px solid ${C.b}`, background: C.el }}>YoY Growth</th>
                 </tr>
               </thead>
               <tbody>
@@ -284,13 +284,13 @@ export default function BenchmarksClient() {
       {/* CTA */}
       <section style={{ background: "linear-gradient(135deg, #1a1916 0%, #2d2a26 100%)", padding: "clamp(40px,5vw,64px) clamp(16px,4vw,40px)", textAlign: "center" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 24, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>
+          <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>
             See How You Compare — With Your Real Data
           </h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", margin: "0 0 24px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,.5)", margin: "0 0 24px", lineHeight: 1.6 }}>
             AskBiz shows you exactly where you sit vs. these benchmarks — using your actual sales, margins, and costs. Connect your data in 2 minutes.
           </p>
-          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
+          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
             Try AskBiz Free →
           </Link>
         </div>
@@ -298,10 +298,10 @@ export default function BenchmarksClient() {
 
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${C.b}`, background: C.sf, padding: "clamp(20px,3vw,28px) clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <span style={{ fontSize: 12, color: C.tx3 }}>© 2026 AskBiz Ltd</span>
+        <span style={{ fontSize: 10, color: C.tx3 }}>© 2026 AskBiz Ltd</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {[["/", "Home"], ["/blog", "Blog"], ["/case-studies", "Case Studies"], ["/free-tools", "Free Tools"], ["/pricing", "Pricing"], ["/help", "Help"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([path, label]) => (
-            <a key={path} href={localePath(path, lang)} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
+            <a key={path} href={localePath(path, lang)} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

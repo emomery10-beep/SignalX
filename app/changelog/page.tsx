@@ -270,7 +270,7 @@ function TypeBadge({ type, t }: { type: ChangeType; t: (key: string) => string }
   const s = TYPE_STYLE[type]
   return (
     <span style={{
-      fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
+      fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
       padding: '3px 10px', borderRadius: 6,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
       flexShrink: 0, lineHeight: 1, display: 'inline-block', whiteSpace: 'nowrap',
@@ -296,29 +296,29 @@ export default function ChangelogPage() {
               <rect x="19" y="9"  width="5" height="20" rx="1.5" fill="white"/>
             </svg>
           </div>
-          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <Link href={localePath('/help', locale)} style={{ fontSize: 13, color: TX2, textDecoration: 'none', fontWeight: 500 }}>{t('changelog.nav_help')}</Link>
-          <Link href={localePath('/signin', locale)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{t('changelog.nav_try_free')} →</Link>
+          <Link href={localePath('/help', locale)} style={{ fontSize: 11, color: TX2, textDecoration: 'none', fontWeight: 500 }}>{t('changelog.nav_help')}</Link>
+          <Link href={localePath('/signin', locale)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{t('changelog.nav_try_free')} →</Link>
         </div>
       </nav>
 
       {/* Hero */}
       <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: 'clamp(40px,6vw,72px) clamp(16px,6vw,80px)' }}>
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', margin: '0 0 12px' }}>{t('changelog.hero_eyebrow')}</p>
+          <p style={{ fontSize: 10, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', margin: '0 0 12px' }}>{t('changelog.hero_eyebrow')}</p>
           <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(28px,4.5vw,42px)', fontWeight: 700, color: TX, margin: '0 0 14px', letterSpacing: '-.03em', lineHeight: 1.1 }}>
             {t('changelog.hero_title')}
           </h1>
-          <p style={{ fontSize: 16, color: TX2, margin: '0 0 24px', lineHeight: 1.7, maxWidth: 520 }}>
+          <p style={{ fontSize: 14, color: TX2, margin: '0 0 24px', lineHeight: 1.7, maxWidth: 520 }}>
             {t('changelog.hero_subtitle')}
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <a href="mailto:hello@askbiz.co?subject=Changelog feedback" style={{ fontSize: 13, color: TX2, textDecoration: 'none', border: `1px solid ${BD}`, borderRadius: 8, padding: '8px 18px', fontWeight: 500, transition: 'border-color .15s' }}>
+            <a href="mailto:hello@askbiz.co?subject=Changelog feedback" style={{ fontSize: 11, color: TX2, textDecoration: 'none', border: `1px solid ${BD}`, borderRadius: 8, padding: '8px 18px', fontWeight: 500, transition: 'border-color .15s' }}>
               {t('changelog.hero_feedback')} →
             </a>
-            <Link href={localePath('/help', locale)} style={{ fontSize: 13, color: ACC, textDecoration: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 18px', fontWeight: 600 }}>
+            <Link href={localePath('/help', locale)} style={{ fontSize: 11, color: ACC, textDecoration: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 18px', fontWeight: 600 }}>
               {t('changelog.hero_help')} →
             </Link>
           </div>
@@ -340,17 +340,17 @@ export default function ChangelogPage() {
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
                 <span style={{
-                  fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, letterSpacing: '-.01em',
+                  fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX, letterSpacing: '-.01em',
                 }}>
                   v{rel.version}
                 </span>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: TX3, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: TX3, fontWeight: 500 }}>
+                <span style={{ fontSize: 11, color: TX3, fontWeight: 500 }}>
                   {new Date(rel.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
                 {i === 0 && (
                   <span style={{
-                    fontSize: 10, fontWeight: 700, color: SF, background: ACC,
+                    fontSize: 9, fontWeight: 700, color: SF, background: ACC,
                     padding: '3px 10px', borderRadius: 9999, letterSpacing: '.06em', textTransform: 'uppercase',
                     marginLeft: 'auto',
                   }}>
@@ -360,7 +360,7 @@ export default function ChangelogPage() {
               </div>
 
               {/* Summary */}
-              <p style={{ fontSize: 14, color: TX2, margin: '0 0 18px', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: TX2, margin: '0 0 18px', lineHeight: 1.6 }}>
                 {rel.summary}
               </p>
 
@@ -376,7 +376,7 @@ export default function ChangelogPage() {
                     <div style={{ paddingTop: 2, flexShrink: 0 }}>
                       <TypeBadge type={c.type} t={t} />
                     </div>
-                    <span style={{ fontSize: 13, color: TX, lineHeight: 1.55, flex: 1 }}>{c.text}</span>
+                    <span style={{ fontSize: 11, color: TX, lineHeight: 1.55, flex: 1 }}>{c.text}</span>
                   </div>
                 ))}
               </div>
@@ -386,10 +386,10 @@ export default function ChangelogPage() {
 
         {/* Footer */}
         <div style={{ marginTop: 48, paddingTop: 28, borderTop: `1px solid ${BD}`, textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: TX3, margin: '0 0 12px' }}>
+          <p style={{ fontSize: 11, color: TX3, margin: '0 0 12px' }}>
             {t('changelog.footer_older')} <a href="mailto:hello@askbiz.co" style={{ color: ACC, textDecoration: 'none', fontWeight: 600 }}>{t('changelog.footer_contact')}</a>.
           </p>
-          <Link href={localePath('/help', locale)} style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>{t('changelog.footer_back')}</Link>
+          <Link href={localePath('/help', locale)} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{t('changelog.footer_back')}</Link>
         </div>
       </div>
     </div>

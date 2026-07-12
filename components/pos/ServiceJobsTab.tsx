@@ -385,15 +385,15 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
   // ── Styles ─────────────────────────────────────────────────
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`,
-    background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit',
+    background: 'var(--sf)', color: 'var(--tx)', fontSize: 11, fontFamily: 'inherit',
   }
   const btnPrimary: React.CSSProperties = {
     padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff',
-    fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+    fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
   }
   const btnSecondary: React.CSSProperties = {
     padding: '10px 20px', borderRadius: 10, background: 'transparent', color: 'var(--tx)',
-    fontSize: 13, fontWeight: 600, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit',
+    fontSize: 11, fontWeight: 600, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit',
   }
 
   // ═══════════════════ RENDER ════════════════════════════════
@@ -403,12 +403,12 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={() => { setView('queue'); stopCamera() }} style={{ ...btnSecondary, padding: '6px 14px' }}>{tc('pos_servicejobs.backBtn')}</button>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{tc('pos_servicejobs.newJobTitle')}</div>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>{tc('pos_servicejobs.newJobTitle')}</div>
       </div>
 
       {/* Camera / Scan section */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{tc('pos_servicejobs.scanDeviceLabel')}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>{tc('pos_servicejobs.scanDeviceLabel')}</div>
         {!scanning ? (
           <button onClick={startCamera} style={btnPrimary}>{tc('pos_servicejobs.openCamera')}</button>
         ) : (
@@ -424,20 +424,20 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
         {scanResult && (
           <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, marginBottom: 6 }}>{tc('pos_servicejobs.deviceIdentified').replace('{confidence}', String(scanResult.confidence))}</div>
-            <div style={{ fontSize: 13 }}>{scanResult.model || 'Unknown'}{scanResult.storage ? ` · ${scanResult.storage}` : ''}{scanResult.color ? ` · ${scanResult.color}` : ''}</div>
-            {scanResult.serial && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('pos_servicejobs.serialLabel').replace('{serial}', scanResult.serial)}</div>}
+            <div style={{ fontSize: 10, fontWeight: 700, color: GREEN, marginBottom: 6 }}>{tc('pos_servicejobs.deviceIdentified').replace('{confidence}', String(scanResult.confidence))}</div>
+            <div style={{ fontSize: 11 }}>{scanResult.model || 'Unknown'}{scanResult.storage ? ` · ${scanResult.storage}` : ''}{scanResult.color ? ` · ${scanResult.color}` : ''}</div>
+            {scanResult.serial && <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('pos_servicejobs.serialLabel').replace('{serial}', scanResult.serial)}</div>}
           </div>
         )}
 
         {warrantyInfo && (
           <div style={{ marginTop: 10, padding: 12, borderRadius: 8, background: warrantyInfo.is_under_warranty ? 'rgba(22,163,74,.08)' : 'rgba(220,38,38,.08)', border: `1px solid ${warrantyInfo.is_under_warranty ? GREEN : RED}40` }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: warrantyInfo.is_under_warranty ? GREEN : RED }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: warrantyInfo.is_under_warranty ? GREEN : RED }}>
               {warrantyInfo.is_under_warranty
                 ? tc('pos_servicejobs.underWarranty').replace('{days}', String(warrantyInfo.days_remaining))
                 : tc('pos_servicejobs.warrantyExpired')}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
               {tc('pos_servicejobs.previousRepair').replace('{ticket}', warrantyInfo.previous_ticket).replace('{repair}', warrantyInfo.previous_repair)}
             </div>
           </div>
@@ -447,39 +447,39 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       {/* Form fields */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.customerPhoneLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.customerPhoneLabel')}</label>
           <input value={formData.customer_phone} onChange={e => setFormData(p => ({ ...p, customer_phone: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.customerPhonePlaceholder')} />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.customerNameLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.customerNameLabel')}</label>
           <input value={formData.customer_name} onChange={e => setFormData(p => ({ ...p, customer_name: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.customerNamePlaceholder')} />
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.deviceModelLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.deviceModelLabel')}</label>
           <input value={formData.device_model} onChange={e => setFormData(p => ({ ...p, device_model: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.deviceModelPlaceholder')} />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.serialImeiLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.serialImeiLabel')}</label>
           <input value={formData.device_serial} onChange={e => setFormData(p => ({ ...p, device_serial: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.serialPlaceholder')} />
         </div>
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.deviceDescriptionLabel')}</label>
+        <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.deviceDescriptionLabel')}</label>
         <input value={formData.device_description} onChange={e => setFormData(p => ({ ...p, device_description: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.deviceDescriptionPlaceholder')} />
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.faultDescriptionLabel')}</label>
+        <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.faultDescriptionLabel')}</label>
         <textarea value={formData.fault_description} onChange={e => setFormData(p => ({ ...p, fault_description: e.target.value }))} style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder={tc('pos_servicejobs.faultDescriptionPlaceholder')} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.servicePresetLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.servicePresetLabel')}</label>
           <select value={formData.preset_id} onChange={e => {
             const preset = presets.find(p => p.id === e.target.value)
             setFormData(p => ({
@@ -496,11 +496,11 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           </select>
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.quotedPriceLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.quotedPriceLabel')}</label>
           <input type="number" value={formData.quoted_price} onChange={e => setFormData(p => ({ ...p, quoted_price: e.target.value }))} style={inputStyle} placeholder="0.00" step="0.01" />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.estMinutesLabel')}</label>
+          <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.estMinutesLabel')}</label>
           <input type="number" value={formData.estimated_minutes} onChange={e => setFormData(p => ({ ...p, estimated_minutes: e.target.value }))} style={inputStyle} placeholder="60" />
         </div>
       </div>
@@ -508,10 +508,10 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       {/* Add Another Device prompt */}
       {showAddAnother && lastCreatedJob && (
         <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: GREEN, marginBottom: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, marginBottom: 6 }}>
             {tc('pos_servicejobs.addAnotherJobCreated').replace('{ticket}', lastCreatedJob.ticket_number)}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', marginBottom: 12 }}>
             {tc('pos_servicejobs.addAnotherPrompt').replace('{customer}', formData.customer_name || formData.customer_phone || tc('pos_servicejobs.walkinFallback'))}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -546,8 +546,8 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <button onClick={() => { setView('queue'); setSelectedJob(null) }} style={{ ...btnSecondary, padding: '6px 14px' }}>{tc('pos_servicejobs.backBtn')}</button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{j.ticket_number}</div>
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{j.device_model || tc('pos_servicejobs.unknownDevice')} · {timeAgo(j.created_at)}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>{j.ticket_number}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{j.device_model || tc('pos_servicejobs.unknownDevice')} · {timeAgo(j.created_at)}</div>
           </div>
           <StatusBadge status={j.status} statusColors={STATUS_COLORS} />
         </div>
@@ -555,53 +555,53 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Job info grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.customerSection')}</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.customer_name || j.customer_phone || tc('pos_servicejobs.walkinFallback')}</div>
-            {j.customer_phone && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{j.customer_phone}</div>}
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.customerSection')}</div>
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{j.customer_name || j.customer_phone || tc('pos_servicejobs.walkinFallback')}</div>
+            {j.customer_phone && <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{j.customer_phone}</div>}
           </div>
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.deviceSection')}</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || tc('pos_servicejobs.notScanned')}</div>
-            {j.device_serial && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_servicejobs.serialShort').replace('{serial}', j.device_serial)}</div>}
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.deviceSection')}</div>
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{j.device_model || tc('pos_servicejobs.notScanned')}</div>
+            {j.device_serial && <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_servicejobs.serialShort').replace('{serial}', j.device_serial)}</div>}
           </div>
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.priceSection')}</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.quoted_price ? fmt(currencySymbol, j.quoted_price) : tc('pos_servicejobs.notQuoted')}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.priceSection')}</div>
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{j.quoted_price ? fmt(currencySymbol, j.quoted_price) : tc('pos_servicejobs.notQuoted')}</div>
             {j.original_quoted_price && j.original_quoted_price !== j.quoted_price && (
-              <div style={{ fontSize: 12, color: AMBER }}>{tc('pos_servicejobs.originallyPrice').replace('{price}', fmt(currencySymbol, j.original_quoted_price))}</div>
+              <div style={{ fontSize: 10, color: AMBER }}>{tc('pos_servicejobs.originallyPrice').replace('{price}', fmt(currencySymbol, j.original_quoted_price))}</div>
             )}
           </div>
         </div>
 
         {/* Fault & notes */}
         <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.faultDescriptionSection')}</div>
-          <div style={{ fontSize: 13 }}>{j.fault_description}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.faultDescriptionSection')}</div>
+          <div style={{ fontSize: 11 }}>{j.fault_description}</div>
         </div>
 
         {j.engineer_notes && (
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.engineerNotesSection')}</div>
-            <div style={{ fontSize: 13 }}>{j.engineer_notes}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.engineerNotesSection')}</div>
+            <div style={{ fontSize: 11 }}>{j.engineer_notes}</div>
           </div>
         )}
 
         {j.additional_issues && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${AMBER}40`, background: `rgba(202,138,4,.05)`, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: AMBER, marginBottom: 4 }}>{tc('pos_servicejobs.additionalIssuesSection')}</div>
-            <div style={{ fontSize: 13 }}>{j.additional_issues}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: AMBER, marginBottom: 4 }}>{tc('pos_servicejobs.additionalIssuesSection')}</div>
+            <div style={{ fontSize: 11 }}>{j.additional_issues}</div>
           </div>
         )}
 
         {/* Assignment */}
         {canAssign && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{tc('pos_servicejobs.assignEngineer')}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 8 }}>{tc('pos_servicejobs.assignEngineer')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {engineers.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_servicejobs.noEngineers')}</div>}
+              {engineers.length === 0 && <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_servicejobs.noEngineers')}</div>}
               {engineers.map(eng => (
                 <button key={eng.id} onClick={() => updateJob(j.id, { assigned_to: eng.id, status: j.status === 'accepted' ? 'in_progress' : j.status })}
-                  style={{ ...btnSecondary, padding: '6px 12px', fontSize: 12, background: j.assigned_to === eng.id ? ACC_BG : 'transparent', borderColor: j.assigned_to === eng.id ? ACC : ACC_BORDER }}>
+                  style={{ ...btnSecondary, padding: '6px 12px', fontSize: 10, background: j.assigned_to === eng.id ? ACC_BG : 'transparent', borderColor: j.assigned_to === eng.id ? ACC : ACC_BORDER }}>
                   {eng.name} {j.assigned_to === eng.id && '✓'}
                 </button>
               ))}
@@ -612,8 +612,8 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Warranty info */}
         {j.warranty_expires_at && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: GREEN, marginBottom: 4 }}>{tc('pos_servicejobs.warrantySection')}</div>
-            <div style={{ fontSize: 13 }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: GREEN, marginBottom: 4 }}>{tc('pos_servicejobs.warrantySection')}</div>
+            <div style={{ fontSize: 11 }}>
               {tc('pos_servicejobs.warrantyExpires').replace('{date}', new Date(j.warranty_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }))}
               {new Date(j.warranty_expires_at) > new Date()
                 ? tc('pos_servicejobs.warrantyDaysLeft').replace('{days}', String(Math.ceil((new Date(j.warranty_expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))))
@@ -625,12 +625,12 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Checkout photo warning */}
         {noCheckoutPhoto && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${AMBER}40`, background: 'rgba(202,138,4,.05)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 20 }}>⚠️</span>
+            <span style={{ fontSize: 18 }}>⚠️</span>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: AMBER }}>{tc('pos_servicejobs.noCheckoutPhotoTitle')}</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_servicejobs.noCheckoutPhotoDesc')}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: AMBER }}>{tc('pos_servicejobs.noCheckoutPhotoTitle')}</div>
+              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_servicejobs.noCheckoutPhotoDesc')}</div>
             </div>
-            <button onClick={startCheckoutCamera} style={{ ...btnSecondary, padding: '6px 12px', fontSize: 12, marginLeft: 'auto' }}>{tc('pos_servicejobs.takePhotoBtn')}</button>
+            <button onClick={startCheckoutCamera} style={{ ...btnSecondary, padding: '6px 12px', fontSize: 10, marginLeft: 'auto' }}>{tc('pos_servicejobs.takePhotoBtn')}</button>
           </div>
         )}
 
@@ -687,7 +687,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Engineer notes input (for engineers working on the job) */}
         {j.status === 'in_progress' && (
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{tc('pos_servicejobs.updateEngineerNotes')}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 8 }}>{tc('pos_servicejobs.updateEngineerNotes')}</div>
             <textarea
               defaultValue={j.engineer_notes || ''}
               onBlur={e => { if (e.target.value !== (j.engineer_notes || '')) updateJob(j.id, { engineer_notes: e.target.value }) }}
@@ -699,22 +699,22 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
         {/* Timeline / History */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{tc('pos_servicejobs.timelineTitle')}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 12 }}>{tc('pos_servicejobs.timelineTitle')}</div>
           {historyLoading ? (
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_servicejobs.timelineLoading')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_servicejobs.timelineLoading')}</div>
           ) : history.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_servicejobs.timelineEmpty')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_servicejobs.timelineEmpty')}</div>
           ) : (
             <div style={{ borderLeft: `2px solid ${ACC_BORDER}`, paddingLeft: 16 }}>
               {history.map((h, i) => (
                 <div key={h.id} style={{ marginBottom: i < history.length - 1 ? 16 : 0, position: 'relative' }}>
                   <div style={{ position: 'absolute', left: -21, top: 4, width: 10, height: 10, borderRadius: '50%', background: ACC, border: '2px solid var(--sf)' }} />
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600 }}>
                     {h.from_status ? <><StatusBadge status={h.from_status as JobStatus} statusColors={STATUS_COLORS} /> → </> : null}
                     <StatusBadge status={h.to_status as JobStatus} statusColors={STATUS_COLORS} />
                   </div>
-                  {h.notes && <div style={{ fontSize: 12, color: 'var(--tx2)', marginTop: 4 }}>{h.notes}</div>}
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
+                  {h.notes && <div style={{ fontSize: 10, color: 'var(--tx2)', marginTop: 4 }}>{h.notes}</div>}
+                  <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
                     {h.staff?.name || tc('pos_servicejobs.systemAuthor')} · {new Date(h.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -727,13 +727,13 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {j.intake_photo_url && (
             <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_servicejobs.intakePhotoLabel')}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_servicejobs.intakePhotoLabel')}</div>
               <img src={j.intake_photo_url} alt={tc('pos_servicejobs.intakePhotoLabel')} style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
             </div>
           )}
           {j.checkout_photo_url && (
             <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_servicejobs.checkoutPhotoLabel')}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_servicejobs.checkoutPhotoLabel')}</div>
               <img src={j.checkout_photo_url} alt={tc('pos_servicejobs.checkoutPhotoLabel')} style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
             </div>
           )}
@@ -746,7 +746,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>{tc('pos_servicejobs.serviceJobsTitle')}</div>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, flex: 1 }}>{tc('pos_servicejobs.serviceJobsTitle')}</div>
         <button onClick={() => setView('new_job')} style={btnPrimary}>{tc('pos_servicejobs.newJobBtn')}</button>
       </div>
 
@@ -756,7 +756,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           <button key={s} onClick={() => setStatusFilter(s)} style={{
             padding: '5px 12px', borderRadius: 8, border: statusFilter === s ? `1.5px solid ${ACC}` : '1px solid var(--b)',
             background: statusFilter === s ? ACC_BG : 'var(--sf)', color: statusFilter === s ? ACC : 'var(--tx3)',
-            fontSize: 12, fontWeight: statusFilter === s ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 10, fontWeight: statusFilter === s ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
           }}>
             {s === 'all' ? tc('pos_servicejobs.filterAll') : STATUS_COLORS[s]?.label || s}
             {s !== 'all' && <span style={{ marginLeft: 4, opacity: 0.6 }}>({jobs.filter(j => j.status === s).length})</span>}
@@ -772,12 +772,12 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
       {/* Jobs list */}
       {loading ? (
-        <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_servicejobs.loadingJobs')}</div>
+        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_servicejobs.loadingJobs')}</div>
       ) : jobs.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)' }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>🔧</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_servicejobs.emptyStateTitle')}</div>
-          <div style={{ fontSize: 13, marginTop: 8, maxWidth: 300, margin: '8px auto 0' }}>
+          <div style={{ fontSize: 38, marginBottom: 10 }}>🔧</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_servicejobs.emptyStateTitle')}</div>
+          <div style={{ fontSize: 11, marginTop: 8, maxWidth: 300, margin: '8px auto 0' }}>
             {tc('pos_servicejobs.emptyStateDesc')}
           </div>
         </div>
@@ -790,21 +790,21 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700 }}>{j.ticket_number}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>{j.ticket_number}</span>
                   <StatusBadge status={j.status} statusColors={STATUS_COLORS} />
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 11, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {j.device_model || tc('pos_servicejobs.unknownDevice')} — {j.fault_description}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
                   {j.customer_name || j.customer_phone || tc('pos_servicejobs.walkinFallback')}
                   {j.assigned_staff && tc('pos_servicejobs.engineerSuffix').replace('{name}', j.assigned_staff.name)}
                   {j.location && ` · ${j.location.name}`}
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                {j.quoted_price && <div style={{ fontSize: 14, fontWeight: 700 }}>{fmt(currencySymbol, j.quoted_price)}</div>}
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{timeAgo(j.created_at)}</div>
+                {j.quoted_price && <div style={{ fontSize: 12, fontWeight: 700 }}>{fmt(currencySymbol, j.quoted_price)}</div>}
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{timeAgo(j.created_at)}</div>
               </div>
             </div>
           ))}
@@ -817,7 +817,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 function StatusBadge({ status, statusColors }: { status: JobStatus; statusColors: Record<JobStatus, { bg: string; text: string; label: string }> }) {
   const s = statusColors[status] || statusColors.intake
   return (
-    <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+    <span style={{ fontSize: 9, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
       {s.label}
     </span>
   )

@@ -61,8 +61,8 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: isProfitable ? GREEN : AMBER }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_breakeven.cardTitle')}</span>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_breakeven.cardTitle')}</span>
+          <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
             background: isProfitable ? 'rgba(34,197,94,.1)' : 'rgba(245,158,11,.1)',
             color: isProfitable ? GREEN : AMBER }}>
             {isProfitable ? tc('cfo_breakeven.badgeAbove') : tc('cfo_breakeven.badgeToGo', { amount: fmt(revenueToGo, sym) })}
@@ -76,7 +76,7 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
             gm: gross_margin_pct,
             safety: safetyMarginPct.toFixed(1),
           }))}
-          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_breakeven.askAi')}
         </button>
       </div>
@@ -85,8 +85,8 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
         {/* Progress bar */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_breakeven.revenueProgress')}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: isProfitable ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_breakeven.revenueProgress')}</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: isProfitable ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>
               {fmt(revenue, sym)} / {fmt(breakEvenRevenue, sym)}
             </span>
           </div>
@@ -113,25 +113,25 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 14 }}>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_breakeven.kpiBreakEven')}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(breakEvenRevenue, sym)}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(breakEvenRevenue, sym)}</div>
           </div>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_breakeven.kpiSafetyMargin')}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: safetyMarginPct >= 20 ? GREEN : safetyMarginPct >= 0 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: safetyMarginPct >= 20 ? GREEN : safetyMarginPct >= 0 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
               {safetyMarginPct >= 0 ? '+' : ''}{safetyMarginPct.toFixed(1)}%
             </div>
           </div>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_breakeven.kpiDaysToBE')}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
               {daysToBreakEven != null ? tc('cfo_breakeven.daysValue', { n: daysToBreakEven }) : '—'}
             </div>
           </div>
         </div>
 
         {/* Breakdown */}
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_breakeven.howCalculated')}</div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 14 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_breakeven.howCalculated')}</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, marginBottom: 14 }}>
           <tbody>
             <tr style={{ borderBottom: '1px solid var(--b)' }}>
               <td style={{ padding: '6px 0', color: 'var(--tx)' }}>{tc('cfo_breakeven.rowFixedCosts')}</td>
@@ -151,29 +151,29 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
         {/* Units calculator */}
         <div style={{ padding: 12, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_breakeven.ordersTitle')}</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_breakeven.ordersTitle')}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_breakeven.avgOrderLabel')}</span>
+              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_breakeven.avgOrderLabel')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{sym}</span>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{sym}</span>
                 <input type="number" value={avgOrderValue || ''} placeholder={String(aov)}
                   onChange={e => setAvgOrderValue(Number(e.target.value) || null)}
-                  style={{ width: 60, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
+                  style={{ width: 60, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', fontSize: 9, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
                 />
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{unitsToBreakEven.toLocaleString()}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{unitsToBreakEven.toLocaleString()}</div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_breakeven.ordersNeeded')}</div>
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>{unitsSoFar.toLocaleString()}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>{unitsSoFar.toLocaleString()}</div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_breakeven.ordersDone')}</div>
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: unitsToGo > 0 ? AMBER : GREEN, fontVariantNumeric: 'tabular-nums' }}>{unitsToGo.toLocaleString()}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: unitsToGo > 0 ? AMBER : GREEN, fontVariantNumeric: 'tabular-nums' }}>{unitsToGo.toLocaleString()}</div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_breakeven.ordersToGo')}</div>
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
         {/* Monthly trend */}
         {monthlyBE.length > 1 && (
           <>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_breakeven.monthlyTrendTitle')}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_breakeven.monthlyTrendTitle')}</div>
             <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 60, marginBottom: 4 }}>
               {monthlyBE.map((be, i) => {
                 const max = Math.max(...monthlyBE, 1)

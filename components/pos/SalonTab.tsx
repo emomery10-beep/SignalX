@@ -585,10 +585,10 @@ export default function SalonTab({
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 22 }}>💇</span>
+        <span style={{ fontSize: 20 }}>💇</span>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_salon.salonAnalytics')}</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_salon.salonAnalytics')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
             {selectedLocation || tc('pos_salon.allLocations')} {tc('pos_salon.derivedFromPos')}
           </div>
         </div>
@@ -609,7 +609,7 @@ export default function SalonTab({
                 background: active ? PINK_BG : 'var(--sf)',
                 color: active ? PINK : 'var(--tx2)',
                 fontWeight: active ? 700 : 500,
-                fontSize: 13,
+                fontSize: 11,
                 cursor: 'pointer',
                 transition: 'all .15s',
               }}
@@ -668,11 +668,11 @@ function EmptyState() {
       textAlign: 'center',
       background: 'var(--sf)',
     }}>
-      <div style={{ fontSize: 34, marginBottom: 10 }}>💇</div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
+      <div style={{ fontSize: 32, marginBottom: 10 }}>💇</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
         {tc('pos_salon.emptyTitle')}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>
+      <div style={{ fontSize: 11, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>
         {tc('pos_salon.emptyBody')}
       </div>
     </div>
@@ -695,7 +695,7 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>
+    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>
       {children}
     </div>
   )
@@ -726,18 +726,18 @@ function Kpi({ label, value, sub, highlight, active, onClick }: KpiProps) {
         gap: 4,
       }}
     >
-      <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: .4, fontWeight: 600 }}>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: .4, fontWeight: 600 }}>
         {label}
       </div>
       <div style={{
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 800,
         color: highlight ? PINK : 'var(--tx)',
         fontVariantNumeric: 'tabular-nums',
       }}>
         {value}
       </div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{sub}</div>}
     </button>
   )
 }
@@ -754,7 +754,7 @@ function SortHeader<T extends string>({
       style={{
         textAlign: align,
         padding: '8px 10px',
-        fontSize: 11,
+        fontSize: 9,
         fontWeight: 700,
         color: active ? PINK : 'var(--tx3)',
         textTransform: 'uppercase',
@@ -776,7 +776,7 @@ function Td({ children, align = 'left', mono, color }: {
   return (
     <td style={{
       padding: '9px 10px',
-      fontSize: 13,
+      fontSize: 11,
       color: color || 'var(--tx2)',
       textAlign: align,
       fontVariantNumeric: mono ? 'tabular-nums' : undefined,
@@ -801,7 +801,7 @@ function SegmentBadge({ segment }: { segment: ClientSegment }) {
       display: 'inline-block',
       padding: '2px 8px',
       borderRadius: 9999,
-      fontSize: 11,
+      fontSize: 9,
       fontWeight: 700,
       color: c,
       background: `${c}1a`,
@@ -819,7 +819,7 @@ function HealthBar({ score }: { score: number }) {
       <div style={{ width: 50, height: 6, borderRadius: 3, background: 'var(--ev)', overflow: 'hidden' }}>
         <div style={{ width: `${Math.min(100, score)}%`, height: '100%', background: c }} />
       </div>
-      <span style={{ fontSize: 12, color: c, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{score}</span>
+      <span style={{ fontSize: 10, color: c, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{score}</span>
     </div>
   )
 }
@@ -863,7 +863,7 @@ function DonutChart({ data, sym }: { data: { name: string; value: number }[]; sy
   const total = data.reduce((s, d) => s + d.value, 0)
   const size = 160, r = 64, cx = size / 2, cy = size / 2, sw = 26
   if (total <= 0) {
-    return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{tc('pos_salon.noServiceRevenue')}</div>
+    return <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 20 }}>{tc('pos_salon.noServiceRevenue')}</div>
   }
   let acc = 0
   const circ = 2 * Math.PI * r
@@ -890,7 +890,7 @@ function DonutChart({ data, sym }: { data: { name: string; value: number }[]; sy
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 160 }}>
         {data.map((d, i) => (
-          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10 }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: CHART_COLORS[i % CHART_COLORS.length] }} />
             <span style={{ color: 'var(--tx2)', flex: 1 }}>{d.name}</span>
             <span style={{ color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
@@ -908,7 +908,7 @@ function HBarChart({ data, sym, color = PINK }: {
   data: { label: string; value: number }[]; sym: string; color?: string
 }) {
   const { tc } = useLang()
-  if (!data.length) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_salon.noData')}</div>
+  if (!data.length) return <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_salon.noData')}</div>
   const max = Math.max(1, ...data.map(d => d.value))
   const rowH = 30
   const H = data.length * rowH + 8
@@ -967,7 +967,7 @@ function OverviewSub({
         <SectionTitle>{tc('pos_salon.revenueByHourToday')}</SectionTitle>
         {hourlyRevenue.some(v => v > 0)
           ? <BarChartHours data={hourlyRevenue} sym={sym} />
-          : <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 16 }}>{tc('pos_salon.noTransactionsToday')}</div>}
+          : <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 16 }}>{tc('pos_salon.noTransactionsToday')}</div>}
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
@@ -979,7 +979,7 @@ function OverviewSub({
           <SectionTitle>{tc('pos_salon.chairOccupancyToday')}</SectionTitle>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <OccupancyRing pct={occupancy} />
-            <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
               {tc('pos_salon.occupancyNote')}
             </div>
           </div>
@@ -1001,8 +1001,8 @@ function OverviewSub({
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ padding: 12, borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)' }}>
-      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 700, color: PINK }}>{value}</div>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: PINK }}>{value}</div>
     </div>
   )
 }
@@ -1080,7 +1080,7 @@ function BookingsSub({ sym, txs, stylists }: {
 
   const selectStyle: React.CSSProperties = {
     padding: '7px 10px', borderRadius: 8, border: '1px solid var(--b)',
-    background: 'var(--sf)', color: 'var(--tx2)', fontSize: 13,
+    background: 'var(--sf)', color: 'var(--tx2)', fontSize: 11,
   }
 
   return (
@@ -1089,7 +1089,7 @@ function BookingsSub({ sym, txs, stylists }: {
         <SectionTitle>{tc('pos_salon.todayTimeline')}</SectionTitle>
         {todayAppts.length
           ? <TimelineSVG appts={todayAppts.map(a => ({ epoch: a.epoch, duration: a.duration, label: a.client }))} />
-          : <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 12 }}>{tc('pos_salon.noAppointmentsToday')}</div>}
+          : <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 12 }}>{tc('pos_salon.noAppointmentsToday')}</div>}
       </Card>
 
       <Card>
@@ -1111,7 +1111,7 @@ function BookingsSub({ sym, txs, stylists }: {
               {tc('pos_salon.clear')}
             </button>
           )}
-          <div style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: 'var(--tx3)' }}>
+          <div style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 10, color: 'var(--tx3)' }}>
             {tc('pos_salon.appointmentCount', { n: filtered.length })}
           </div>
         </div>
@@ -1131,7 +1131,7 @@ function BookingsSub({ sym, txs, stylists }: {
                 ].map((h, i) => (
                   <th key={h} style={{
                     textAlign: i >= 4 && i !== 6 ? 'right' : 'left',
-                    padding: '8px 10px', fontSize: 11, fontWeight: 700, color: 'var(--tx3)',
+                    padding: '8px 10px', fontSize: 9, fontWeight: 700, color: 'var(--tx3)',
                     textTransform: 'uppercase', letterSpacing: .3, borderBottom: '1px solid var(--b)',
                     whiteSpace: 'nowrap',
                   }}>{h}</th>
@@ -1140,16 +1140,16 @@ function BookingsSub({ sym, txs, stylists }: {
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noAppointmentsMatch')}</td></tr>
+                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('pos_salon.noAppointmentsMatch')}</td></tr>
               )}
               {filtered.slice(0, 200).map((a, i) => (
                 <tr key={i}>
-                  <Td mono>{fmtTime(a.epoch)}<div style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmtDate(a.epoch)}</div></Td>
+                  <Td mono>{fmtTime(a.epoch)}<div style={{ fontSize: 9, color: 'var(--tx3)' }}>{fmtDate(a.epoch)}</div></Td>
                   <Td color="var(--tx)">{a.client}</Td>
                   <Td>
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {a.cats.length ? a.cats.map(c => (
-                        <span key={c} style={{ fontSize: 11, padding: '1px 7px', borderRadius: 9999, background: PINK_BG, color: PINK }}>{c}</span>
+                        <span key={c} style={{ fontSize: 9, padding: '1px 7px', borderRadius: 9999, background: PINK_BG, color: PINK }}>{c}</span>
                       )) : <span style={{ color: 'var(--tx3)' }}>—</span>}
                     </div>
                   </Td>
@@ -1165,8 +1165,8 @@ function BookingsSub({ sym, txs, stylists }: {
       </Card>
 
       <Card style={{ borderStyle: 'dashed' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.noShowComingSoonTitle')}</div>
-        <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.noShowComingSoonTitle')}</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
           {tc('pos_salon.noShowComingSoonBody')}
         </div>
       </Card>
@@ -1261,7 +1261,7 @@ function ClientsSub({ sym, clients, retentionRate }: {
             const active = segFilter === s.id
             return (
               <button key={s.id} onClick={() => setSegFilter(s.id)} style={{
-                padding: '5px 12px', borderRadius: 9999, fontSize: 12, fontWeight: active ? 700 : 500,
+                padding: '5px 12px', borderRadius: 9999, fontSize: 10, fontWeight: active ? 700 : 500,
                 border: `1px solid ${active ? PINK : 'var(--b)'}`,
                 background: active ? PINK_BG : 'var(--sf)', color: active ? PINK : 'var(--tx2)', cursor: 'pointer',
               }}>{s.label}</button>
@@ -1286,7 +1286,7 @@ function ClientsSub({ sym, clients, retentionRate }: {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noClientsInSegment')}</td></tr>
+                <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('pos_salon.noClientsInSegment')}</td></tr>
               )}
               {rows.slice(0, 300).map(c => {
                 const open = expanded === c.key
@@ -1307,12 +1307,12 @@ function ClientsSub({ sym, clients, retentionRate }: {
                       <tr key={c.key + '-exp'}>
                         <td colSpan={9} style={{ padding: 0, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                           <div style={{ padding: 14 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>
                               {tc('pos_salon.visitHistory', { n: c.history.length })}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               {c.history.slice(0, 20).map((h, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10 }}>
                                   <span style={{ color: 'var(--tx3)', width: 90, fontVariantNumeric: 'tabular-nums' }}>{fmtDate(h.date)}</span>
                                   <span style={{ flex: 1, color: 'var(--tx2)' }}>
                                     {h.services.length ? Array.from(new Set(h.services)).join(', ') : 'Service'}
@@ -1338,7 +1338,7 @@ function ClientsSub({ sym, clients, retentionRate }: {
 
 function thStyle(align: 'left' | 'right'): React.CSSProperties {
   return {
-    textAlign: align, padding: '8px 10px', fontSize: 11, fontWeight: 700,
+    textAlign: align, padding: '8px 10px', fontSize: 9, fontWeight: 700,
     color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: .3,
     borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap',
   }
@@ -1395,7 +1395,7 @@ function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] })
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noStylistActivity')}</td></tr>
+                <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('pos_salon.noStylistActivity')}</td></tr>
               )}
               {rows.map(s => {
                 const open = expanded === s.name
@@ -1413,15 +1413,15 @@ function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] })
                       <tr key={s.name + '-exp'}>
                         <td colSpan={6} style={{ padding: 0, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                           <div style={{ padding: 14 }}>
-                            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 12, fontSize: 12, color: 'var(--tx3)' }}>
+                            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 12, fontSize: 10, color: 'var(--tx3)' }}>
                               <span>{tc('pos_salon.uniqueClients')} <b style={{ color: 'var(--tx)' }}>{s.uniqueClients}</b></span>
                               <span>{tc('pos_salon.returning')} <b style={{ color: 'var(--tx)' }}>{s.returningClients}</b></span>
                               <span>{tc('pos_salon.utilisation')} <b style={{ color: 'var(--tx)' }}>—</b> <span style={{ fontStyle: 'italic' }}>({tc('pos_salon.needsShiftData')})</span></span>
                             </div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_salon.recentClients')}</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_salon.recentClients')}</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               {s.clients.slice(0, 15).map((cl, i) => (
-                                <div key={i} style={{ display: 'flex', gap: 10, fontSize: 12 }}>
+                                <div key={i} style={{ display: 'flex', gap: 10, fontSize: 10 }}>
                                   <span style={{ color: 'var(--tx3)', width: 90, fontVariantNumeric: 'tabular-nums' }}>{fmtDate(cl.date)}</span>
                                   <span style={{ flex: 1, color: 'var(--tx2)' }}>{cl.name}</span>
                                   <span style={{ color: 'var(--tx3)', flex: 1 }}>{Array.from(new Set(cl.services)).join(', ')}</span>
@@ -1442,8 +1442,8 @@ function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] })
       </Card>
 
       <Card style={{ borderStyle: 'dashed' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.commissionComingSoonTitle')}</div>
-        <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.commissionComingSoonTitle')}</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
           {tc('pos_salon.commissionComingSoonBody')}
         </div>
       </Card>
@@ -1496,10 +1496,10 @@ function ProductsSub({ sym, products, attachmentRate }: {
 
       {lowStock.length > 0 && (
         <Card style={{ borderColor: AMBER, background: 'rgba(202,138,4,.06)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: AMBER, marginBottom: 8 }}>{tc('pos_salon.lowStockAlerts')}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: AMBER, marginBottom: 8 }}>{tc('pos_salon.lowStockAlerts')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {lowStock.map(p => (
-              <span key={p.name} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 9999, background: 'var(--sf)', border: `1px solid ${AMBER}55`, color: 'var(--tx2)' }}>
+              <span key={p.name} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 9999, background: 'var(--sf)', border: `1px solid ${AMBER}55`, color: 'var(--tx2)' }}>
                 {p.name} · <b style={{ color: AMBER }}>{p.stock} {tc('pos_salon.left')}</b>
               </span>
             ))}
@@ -1511,7 +1511,7 @@ function ProductsSub({ sym, products, attachmentRate }: {
         <SectionTitle>{tc('pos_salon.topSellingProducts')}</SectionTitle>
         {topSelling.length
           ? <HBarChart data={topSelling.map(p => ({ label: p.name, value: p.revenue }))} sym={sym} color={PURPLE} />
-          : <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_salon.noRetailSales')}</div>}
+          : <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_salon.noRetailSales')}</div>}
       </Card>
 
       <Card>
@@ -1531,7 +1531,7 @@ function ProductsSub({ sym, products, attachmentRate }: {
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noRetailProducts')}</td></tr>
+                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('pos_salon.noRetailProducts')}</td></tr>
               )}
               {rows.map((p, i) => (
                 <tr key={p.name + i}>
@@ -1609,11 +1609,11 @@ function MarketingSub({ sym, clients, segmentCounts }: {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {segData.map(s => (
             <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 70, fontSize: 12, color: 'var(--tx2)' }}>{s.name}</span>
+              <span style={{ width: 70, fontSize: 10, color: 'var(--tx2)' }}>{s.name}</span>
               <div style={{ flex: 1, height: 16, borderRadius: 8, background: 'var(--ev)', overflow: 'hidden' }}>
                 <div style={{ width: segTotal ? `${(s.value / segTotal) * 100}%` : '0%', height: '100%', background: s.c }} />
               </div>
-              <span style={{ width: 70, textAlign: 'right', fontSize: 12, color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ width: 70, textAlign: 'right', fontSize: 10, color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
                 {s.value} · {segTotal ? ((s.value / segTotal) * 100).toFixed(0) : 0}%
               </span>
             </div>
@@ -1626,21 +1626,21 @@ function MarketingSub({ sym, clients, segmentCounts }: {
         {birthdays.length ? (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {birthdays.map(c => (
-              <span key={c.key} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 9999, background: PINK_BG, color: PINK, border: `1px solid ${PINK}55` }}>
+              <span key={c.key} style={{ fontSize: 10, padding: '4px 12px', borderRadius: 9999, background: PINK_BG, color: PINK, border: `1px solid ${PINK}55` }}>
                 {c.name}{c.phone ? ` · ${c.phone}` : ''}
               </span>
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
             {tc('pos_salon.noBirthdays')}
           </div>
         )}
       </Card>
 
       <Card style={{ borderStyle: 'dashed' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.loyaltyComingSoonTitle')}</div>
-        <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.loyaltyComingSoonTitle')}</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
           {tc('pos_salon.loyaltyComingSoonBody', { lapsed: segmentCounts.lapsed, vip: segmentCounts.vip })}
         </div>
       </Card>

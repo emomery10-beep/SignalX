@@ -121,7 +121,7 @@ function renderGlyph(state: VoiceUIState, open: boolean, voiceNavActive: boolean
         </svg>
       )
     case 'confirm':
-      return <span aria-hidden style={{ fontSize: 16, fontWeight: 700, lineHeight: 1 }}>?</span>
+      return <span aria-hidden style={{ fontSize: 14, fontWeight: 700, lineHeight: 1 }}>?</span>
     default:
       // Long-press (or held Space/Enter) now opens the help panel instead of the
       // old tap-to-open — so the idle glyph is the mic whenever voice is capable,
@@ -681,7 +681,7 @@ export default function HelpWidget() {
         }}>
           {/* Header */}
           <div style={{ padding: '14px 16px 12px', borderBottom: `1px solid ${BD}`, background: ACC }}>
-            <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: SF, fontFamily: 'Sora, system-ui' }}>
+            <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: SF, fontFamily: 'Sora, system-ui' }}>
               {tc('help_helpwidget.panelTitle')}
             </p>
             {/* Search */}
@@ -692,7 +692,7 @@ export default function HelpWidget() {
               </svg>
               <input ref={inputRef} type="text" placeholder={tc('help_helpwidget.searchPlaceholder')}
                 value={query} onChange={e => setQuery(e.target.value)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px 8px 30px', fontSize: 13, background: 'rgba(255,255,255,.2)', border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 8, color: SF, outline: 'none', fontFamily: 'inherit' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px 8px 30px', fontSize: 11, background: 'rgba(255,255,255,.2)', border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 8, color: SF, outline: 'none', fontFamily: 'inherit' }}
               />
             </div>
           </div>
@@ -701,7 +701,7 @@ export default function HelpWidget() {
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {results.length > 0 ? (
               <div>
-                <p style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
+                <p style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
                   {tc('help_helpwidget.searchResults')}
                 </p>
                 {results.map(a => (
@@ -709,15 +709,15 @@ export default function HelpWidget() {
                     style={{ display: 'block', padding: '9px 14px', textDecoration: 'none', borderBottom: `1px solid ${BD}`, transition: 'background 100ms' }}
                     onMouseEnter={e => (e.currentTarget.style.background = BG)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{a.topic}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.35 }}>{a.title}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{a.topic}</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: TX, lineHeight: 1.35 }}>{a.title}</div>
                   </Link>
                 ))}
               </div>
             ) : (
               <>
                 {/* Contextual articles */}
-                <p style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
+                <p style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
                   {contextLabel}
                 </p>
                 {contextArticles.map(a => (
@@ -726,8 +726,8 @@ export default function HelpWidget() {
                     onMouseEnter={e => (e.currentTarget.style.background = BG)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.35, marginBottom: 2 }}>{a.title}</div>
-                      <div style={{ fontSize: 11, color: TX3 }}>{tc('help_helpwidget.minRead', { min: a.readTime })}</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: TX, lineHeight: 1.35, marginBottom: 2 }}>{a.title}</div>
+                      <div style={{ fontSize: 9, color: TX3 }}>{tc('help_helpwidget.minRead', { min: a.readTime })}</div>
                     </div>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
                       <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -736,12 +736,12 @@ export default function HelpWidget() {
                 ))}
 
                 {/* Quick links */}
-                <p style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
+                <p style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
                   {tc('help_helpwidget.quickLinks')}
                 </p>
                 {QUICK_LINKS.map(l => (
                   <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 14px', textDecoration: 'none', borderBottom: `1px solid ${BD}`, fontSize: 13, color: TX2, transition: 'background 100ms' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 14px', textDecoration: 'none', borderBottom: `1px solid ${BD}`, fontSize: 11, color: TX2, transition: 'background 100ms' }}
                     onMouseEnter={e => (e.currentTarget.style.background = BG)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     {l.label}
@@ -757,11 +757,11 @@ export default function HelpWidget() {
           {/* Footer */}
           <div style={{ padding: '10px 14px', borderTop: `1px solid ${BD}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link href="/help" onClick={() => setOpen(false)}
-              style={{ fontSize: 12, color: ACC, fontWeight: 600, textDecoration: 'none' }}>
+              style={{ fontSize: 10, color: ACC, fontWeight: 600, textDecoration: 'none' }}>
               {tc('help_helpwidget.fullHelpCentre')}
             </Link>
             <a href="mailto:hello@askbiz.co"
-              style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>
+              style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>
               {tc('help_helpwidget.emailSupport')}
             </a>
           </div>
@@ -818,7 +818,7 @@ export default function HelpWidget() {
             fontFamily: 'Sora, system-ui', zIndex: 20,
           }}
         >
-          <p style={{ margin: '0 0 8px', color: TX, fontSize: 12.5, lineHeight: 1.4 }}>
+          <p style={{ margin: '0 0 8px', color: TX, fontSize: 10.5, lineHeight: 1.4 }}>
             {tc('help_helpwidget.voiceConfirmPrompt', { label: pendingConfirm.label })}
           </p>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -828,7 +828,7 @@ export default function HelpWidget() {
               aria-label={tc('help_helpwidget.voiceConfirmYesAria', { label: pendingConfirm.label })}
               style={{
                 flex: 1, padding: '6px 10px', borderRadius: 8, border: 'none',
-                background: ACC, color: SF, fontWeight: 700, fontSize: 12,
+                background: ACC, color: SF, fontWeight: 700, fontSize: 10,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -839,7 +839,7 @@ export default function HelpWidget() {
               aria-label={tc('help_helpwidget.voiceConfirmNoAria', { label: pendingConfirm.label })}
               style={{
                 flex: 1, padding: '6px 10px', borderRadius: 8, border: `1px solid ${BD}`,
-                background: SF, color: TX2, fontWeight: 600, fontSize: 12,
+                background: SF, color: TX2, fontWeight: 600, fontSize: 10,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
@@ -879,7 +879,7 @@ export default function HelpWidget() {
         >
           {recentCommands.length > 0 && (
             <div style={{ padding: '8px 8px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, opacity: .6, textTransform: 'uppercase', letterSpacing: '.06em', padding: '0 2px' }}>
+              <span style={{ fontSize: 9, fontWeight: 700, opacity: .6, textTransform: 'uppercase', letterSpacing: '.06em', padding: '0 2px' }}>
                 {tc('help_helpwidget.voiceRecentLabel')}
               </span>
               {recentCommands.map(c => (
@@ -892,7 +892,7 @@ export default function HelpWidget() {
                   tabIndex={tooltipVisible ? 0 : -1}
                   style={{
                     textAlign: 'left', background: 'rgba(255,255,255,.12)', border: 'none',
-                    borderRadius: 999, padding: '5px 10px', color: SF, fontSize: 12,
+                    borderRadius: 999, padding: '5px 10px', color: SF, fontSize: 10,
                     fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
@@ -903,7 +903,7 @@ export default function HelpWidget() {
           )}
           {tooltipText && (
             <div style={{
-              padding: '6px 10px', fontSize: 11, whiteSpace: 'nowrap',
+              padding: '6px 10px', fontSize: 9, whiteSpace: 'nowrap',
               borderTop: recentCommands.length > 0 ? '1px solid rgba(255,255,255,.15)' : 'none',
             }}>
               {tooltipText}

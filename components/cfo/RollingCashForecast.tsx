@@ -173,11 +173,11 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_rolling.title')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_rolling.subtitle')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_rolling.title')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_rolling.subtitle')}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--tx3)' }}>
+          <div style={{ display: 'flex', gap: 10, fontSize: 9, color: 'var(--tx3)' }}>
             <span><span style={{ color: '#22C55E' }}>■</span> {tc('cfo_rolling.legend_inflow')}</span>
             <span><span style={{ color: '#EF4444' }}>■</span> {tc('cfo_rolling.legend_outflow')}</span>
             <span><span style={{ color: '#6366F1' }}>—</span> {tc('cfo_rolling.legend_cash')}</span>
@@ -188,7 +188,7 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
                 const lowestWeek = weeks.reduce((m, w) => w.endCash < m.endCash ? w : m)
                 onAsk(tc('cfo_rolling.ask_prompt', { balance: fmt(cashBalance), lowest: fmt(lowestWeek.endCash), week: lowestWeek.label, avgIn: fmt(avgInflow), avgOut: fmt(avgOutflow) }))
               }}
-              style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+              style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >{tc('cfo_rolling.ask_ai')}</button>
           )}
         </div>
@@ -281,8 +281,8 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
       {selectedWeekData && (
         <div style={{ margin: '0 18px 16px', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(99,102,241,.2)', background: 'rgba(99,102,241,.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_rolling.week_of', { label: selectedWeekData.label })}</span>
-            <button onClick={() => setSelectedWeek(null)} style={{ fontSize: 11, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_rolling.week_of', { label: selectedWeekData.label })}</span>
+            <button onClick={() => setSelectedWeek(null)} style={{ fontSize: 9, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: selectedWeekData.items.length > 0 ? 10 : 0 }}>
             <MiniMetric label={tc('cfo_rolling.metric_inflow')} value={fmt(selectedWeekData.inflow)} color="#22C55E" />
@@ -292,9 +292,9 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
           </div>
           {selectedWeekData.items.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('cfo_rolling.known_cash_flows')}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('cfo_rolling.known_cash_flows')}</div>
               {selectedWeekData.items.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: i < selectedWeekData.items.length - 1 ? '1px solid var(--b)' : undefined }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, padding: '4px 0', borderBottom: i < selectedWeekData.items.length - 1 ? '1px solid var(--b)' : undefined }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: item.type === 'ar' ? '#22C55E' : '#EF4444', display: 'inline-block', flexShrink: 0 }} />
                     <span style={{ color: 'var(--tx)' }}>{item.name}</span>
@@ -306,7 +306,7 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
             </div>
           )}
           {!selectedWeekData.isActual && selectedWeekData.items.length === 0 && (
-            <div style={{ fontSize: 10, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_rolling.forecast_note')}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_rolling.forecast_note')}</div>
           )}
         </div>
       )}
@@ -321,7 +321,7 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
 
       {/* Low cash warnings */}
       {weeks.some(w => !w.isActual && w.endCash <= 0) && (
-        <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', background: 'rgba(239,68,68,.03)', fontSize: 11, color: '#EF4444', fontWeight: 500 }}>
+        <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', background: 'rgba(239,68,68,.03)', fontSize: 9, color: '#EF4444', fontWeight: 500 }}>
           {tc('cfo_rolling.negative_warning', { week: weeks.find(w => !w.isActual && w.endCash <= 0)!.label })}
         </div>
       )}
@@ -333,7 +333,7 @@ function MiniMetric({ label, value, color }: { label: string; value: string; col
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 13, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color }}>{value}</div>
     </div>
   )
 }
@@ -342,7 +342,7 @@ function SummaryCell({ label, value, color }: { label: string; value: string; co
   return (
     <div style={{ padding: '10px 12px', background: 'var(--sf)', textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   )
 }

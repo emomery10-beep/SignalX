@@ -106,7 +106,7 @@ export default function COGSCalculator() {
       <div className="cogs-root">
         {/* Nav */}
         <nav className="cogs-nav">
-          <Link href="/" style={{ fontFamily: "Sora, sans-serif", fontWeight: 700, fontSize: 16, color: "#1a1a2e", textDecoration: "none" }}>
+          <Link href="/" style={{ fontFamily: "Sora, sans-serif", fontWeight: 700, fontSize: 14, color: "#1a1a2e", textDecoration: "none" }}>
             AskBiz
           </Link>
           <div className="cogs-nav-links">
@@ -121,7 +121,7 @@ export default function COGSCalculator() {
             <h1 style={{ fontFamily: "Sora, sans-serif", fontSize: "clamp(22px,4vw,34px)", fontWeight: 700, color: "#1a1a2e", marginBottom: 10 }}>
               COGS Calculator
             </h1>
-            <p style={{ fontSize: 16, color: "#555", lineHeight: 1.7 }}>
+            <p style={{ fontSize: 14, color: "#555", lineHeight: 1.7 }}>
               Calculate your true cost of goods sold — including materials, labour, shipping, packaging, and overhead. Free, no sign-up required.
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function COGSCalculator() {
           <div className="cogs-card" style={{ marginBottom: 20 }}>
             <label className="cogs-label">Currency</label>
             <select value={currency} onChange={(e) => setCurrency(e.target.value)}
-              style={{ padding: "9px 12px", fontSize: 13, border: "1px solid #ddd", borderRadius: 8, fontFamily: "inherit", background: "#fff", color: "#1a1916", cursor: "pointer" }}>
+              style={{ padding: "9px 12px", fontSize: 11, border: "1px solid #ddd", borderRadius: 8, fontFamily: "inherit", background: "#fff", color: "#1a1916", cursor: "pointer" }}>
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>{c.flag} {c.code} ({c.sym})</option>
               ))}
@@ -146,12 +146,12 @@ export default function COGSCalculator() {
                   <input
                     value={p.name}
                     onChange={(e) => updateProduct(p.id, "name", e.target.value)}
-                    style={{ fontFamily: "Sora, sans-serif", fontSize: 15, fontWeight: 700, color: "#1a1a2e", background: "none", border: "none", outline: "none", flex: 1 }}
+                    style={{ fontFamily: "Sora, sans-serif", fontSize: 13, fontWeight: 700, color: "#1a1a2e", background: "none", border: "none", outline: "none", flex: 1 }}
                     placeholder={tc("freetools.cogs_ph_product_name")}
                   />
                   {products.length > 1 && (
                     <button onClick={() => removeProduct(p.id)}
-                      style={{ background: "none", border: "1px solid #eee", borderRadius: 8, padding: "4px 10px", fontSize: 12, color: "#999", cursor: "pointer", flexShrink: 0 }}>
+                      style={{ background: "none", border: "1px solid #eee", borderRadius: 8, padding: "4px 10px", fontSize: 10, color: "#999", cursor: "pointer", flexShrink: 0 }}>
                       Remove
                     </button>
                   )}
@@ -193,8 +193,8 @@ export default function COGSCalculator() {
                       { label: "Gross margin",  value: `${fmt(cp.margin, 1)}%`, color: cp.margin >= 30 ? "#27ae60" : cp.margin >= 15 ? "#e67e22" : "#e74c3c" },
                     ].map((s) => (
                       <div key={s.label}>
-                        <div style={{ fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, color: s.color }}>{s.value}</div>
-                        <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{s.label}</div>
+                        <div style={{ fontFamily: "Sora, sans-serif", fontSize: 16, fontWeight: 700, color: s.color }}>{s.value}</div>
+                        <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -205,14 +205,14 @@ export default function COGSCalculator() {
 
           {/* Add product */}
           <button onClick={addProduct}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 9999, border: "1.5px dashed #ccc", background: "transparent", color: "#888", fontFamily: "inherit", fontSize: 13, cursor: "pointer", marginBottom: 24 }}>
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 9999, border: "1.5px dashed #ccc", background: "transparent", color: "#888", fontFamily: "inherit", fontSize: 11, cursor: "pointer", marginBottom: 24 }}>
             + Add another product
           </button>
 
           {/* Summary */}
           {hasResult && (
             <div className="cogs-result-card" style={{ marginBottom: 24 }}>
-              <div style={{ fontFamily: "Sora, sans-serif", fontSize: 12, fontWeight: 700, color: "#d08a59", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>
+              <div style={{ fontFamily: "Sora, sans-serif", fontSize: 10, fontWeight: 700, color: "#d08a59", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>
                 Total Summary
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 16, marginBottom: 20 }}>
@@ -223,18 +223,18 @@ export default function COGSCalculator() {
                   { label: "Avg gross margin",value: `${fmt(avgMargin, 1)}%`,       color: avgMargin >= 30 ? "#27ae60" : avgMargin >= 15 ? "#e67e22" : "#e74c3c" },
                 ].map((s) => (
                   <div key={s.label}>
-                    <div style={{ fontFamily: "Sora, sans-serif", fontSize: 22, fontWeight: 700, color: s.color, marginBottom: 2 }}>{s.value}</div>
-                    <div style={{ fontSize: 12, color: "#888" }}>{s.label}</div>
+                    <div style={{ fontFamily: "Sora, sans-serif", fontSize: 20, fontWeight: 700, color: s.color, marginBottom: 2 }}>{s.value}</div>
+                    <div style={{ fontSize: 10, color: "#888" }}>{s.label}</div>
                   </div>
                 ))}
               </div>
 
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid #eee" }}>
                       {["Product", "COGS", "Sale price", "Gross profit", "Margin", "COGS ratio"].map((h) => (
-                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#888", fontWeight: 500, fontSize: 11, whiteSpace: "nowrap" }}>{h}</th>
+                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#888", fontWeight: 500, fontSize: 9, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -259,14 +259,14 @@ export default function COGSCalculator() {
           {hasResult && (
             <div style={{ background: "#fff8f3", border: "1.5px solid #f0d5b8", borderRadius: 14, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
-                <div style={{ fontFamily: "Sora, sans-serif", fontSize: 15, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
+                <div style={{ fontFamily: "Sora, sans-serif", fontSize: 13, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
                   Want COGS calculated automatically on your real data?
                 </div>
-                <div style={{ fontSize: 13, color: "#6b6760" }}>
+                <div style={{ fontSize: 11, color: "#6b6760" }}>
                   AskBiz connects to Shopify, Amazon & QuickBooks — no spreadsheets needed.
                 </div>
               </div>
-              <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 12, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
                 Try free →
               </a>
             </div>
@@ -275,7 +275,7 @@ export default function COGSCalculator() {
           {/* Educational section (shown when no results yet) */}
           {!hasResult && (
             <div style={{ marginTop: 32 }}>
-              <h2 style={{ fontFamily: "Sora, sans-serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
+              <h2 style={{ fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
                 How to calculate COGS
               </h2>
               <div style={{ display: "grid", gap: 14 }}>
@@ -285,8 +285,8 @@ export default function COGSCalculator() {
                   { title: "Gross Margin", body: "Gross Margin = (Sale Price − COGS) ÷ Sale Price × 100. This is what covers overheads and profit. Retail aims for 25–40%; ecommerce 40–60%; SaaS 60–80%." },
                 ].map((s) => (
                   <div key={s.title} style={{ padding: "16px 20px", borderRadius: 12, background: "#fff", border: "1px solid #eee" }}>
-                    <div style={{ fontFamily: "Sora, sans-serif", fontSize: 14, fontWeight: 700, color: "#1a1a2e", marginBottom: 6 }}>{s.title}</div>
-                    <div style={{ fontSize: 13, color: "#555", lineHeight: 1.7 }}>{s.body}</div>
+                    <div style={{ fontFamily: "Sora, sans-serif", fontSize: 12, fontWeight: 700, color: "#1a1a2e", marginBottom: 6 }}>{s.title}</div>
+                    <div style={{ fontSize: 11, color: "#555", lineHeight: 1.7 }}>{s.body}</div>
                   </div>
                 ))}
               </div>

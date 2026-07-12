@@ -45,7 +45,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
             <rect x="2" y="3" width="20" height="14" rx="2"/>
             <path d="M8 21h8M12 17v4"/>
           </svg>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', textTransform: 'uppercase' }}>
             {tc('chat_cfoblock.headerLabel')}
           </span>
         </div>
@@ -57,7 +57,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
               padding: '4px 10px', borderRadius: 7,
               border: '1px solid rgba(99,102,241,.25)',
               background: 'transparent', color: '#6366F1',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              fontSize: 9, fontWeight: 600, cursor: 'pointer',
               fontFamily: 'inherit',
             }}
           >
@@ -73,7 +73,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
       {summary && (
         <div style={{
           padding: '14px',
-          fontSize: 13,
+          fontSize: 11,
           color: 'var(--tx)',
           lineHeight: 1.65,
           fontStyle: 'normal',
@@ -98,13 +98,13 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
                 padding: '12px 14px',
                 background: 'var(--sf)',
               }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>
                   {m.label}
                 </div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--tx)', letterSpacing: '-.02em', marginBottom: 3 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)', letterSpacing: '-.02em', marginBottom: 3 }}>
                   {m.value}
                 </div>
-                <div style={{ fontSize: 11, color: ds.color, fontWeight: 600 }}>
+                <div style={{ fontSize: 9, color: ds.color, fontWeight: 600 }}>
                   {ds.icon} {m.change}
                 </div>
               </div>

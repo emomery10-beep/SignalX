@@ -106,25 +106,25 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
   if (!summary && !noData) {
     return (
       <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('retention_card.sectionHeading')}</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('retention_card.sectionHeading')}</div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 28 }}>👥</span>
+          <span style={{ fontSize: 26 }}>👥</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: TX, marginBottom: 4 }}>{tc('retention_card.emptyHeading')}</div>
-            <div style={{ fontSize: 13, color: TX2, lineHeight: 1.5, marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: TX, marginBottom: 4 }}>{tc('retention_card.emptyHeading')}</div>
+            <div style={{ fontSize: 11, color: TX2, lineHeight: 1.5, marginBottom: 12 }}>
               {tc('retention_card.emptyBody')}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={runScan}
                 disabled={scanning}
-                style={{ fontSize: 12, fontWeight: 600, background: ACC, color: '#fff', border: 'none', borderRadius: 9, padding: '8px 14px', cursor: scanning ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: scanning ? .7 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}
+                style={{ fontSize: 10, fontWeight: 600, background: ACC, color: '#fff', border: 'none', borderRadius: 9, padding: '8px 14px', cursor: scanning ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: scanning ? .7 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}
               >
                 {scanning ? tc('retention_card.scanning') : tc('retention_card.scanNow')}
               </button>
               <button
                 onClick={() => router.push('/ask')}
-                style={{ fontSize: 12, color: TX2, background: 'transparent', border: `1px solid ${B2}`, borderRadius: 9, padding: '8px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ fontSize: 10, color: TX2, background: 'transparent', border: `1px solid ${B2}`, borderRadius: 9, padding: '8px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {tc('retention_card.uploadDataFirst')}
               </button>
@@ -139,11 +139,11 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
   if (noData) {
     return (
       <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('retention_card.sectionHeading')}</div>
-        <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('retention_card.sectionHeading')}</div>
+        <div style={{ fontSize: 11, color: TX2, lineHeight: 1.6 }}>
           {tc('retention_card.noDataBody')}
         </div>
-        <button onClick={() => router.push('/ask')} style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: ACC, background: 'transparent', border: `1px solid rgba(208,138,89,.3)`, borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={() => router.push('/ask')} style={{ marginTop: 10, fontSize: 10, fontWeight: 600, color: ACC, background: 'transparent', border: `1px solid rgba(208,138,89,.3)`, borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}>
           {tc('retention_card.uploadCustomerData')}
         </button>
       </div>
@@ -154,16 +154,16 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
   if (customers.length === 0) {
     return (
       <div style={{ background: 'rgba(34,197,94,.04)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{tc('retention_card.sectionHeading')}</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{tc('retention_card.sectionHeading')}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 22 }}>✅</span>
+          <span style={{ fontSize: 20 }}>✅</span>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#16a34a' }}>{tc('retention_card.allHealthy')}</div>
-            <div style={{ fontSize: 12, color: TX3, marginTop: 2 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a' }}>{tc('retention_card.allHealthy')}</div>
+            <div style={{ fontSize: 10, color: TX3, marginTop: 2 }}>
               {tc('retention_card.customersScored', { n: summary?.customers_scored || 0, date: summary ? new Date(summary.scanned_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '' })}
             </div>
           </div>
-          <button onClick={runScan} disabled={scanning} style={{ marginLeft: 'auto', fontSize: 11, color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={runScan} disabled={scanning} style={{ marginLeft: 'auto', fontSize: 9, color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
             {scanning ? tc('retention_card.scanning') : tc('retention_card.rescan')}
           </button>
         </div>
@@ -176,24 +176,24 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 3 }}>{tc('retention_card.sectionHeading')}</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: TX }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 3 }}>{tc('retention_card.sectionHeading')}</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: TX }}>
             {atRisk.length > 0 ? (
               <span style={{ color: '#dc2626' }}>{tc('retention_card.atRiskStat', { n: atRisk.length, symbol, ltv: ltv.toFixed(0) })}</span>
             ) : (
               <span style={{ color: '#d97706' }}>{tc('retention_card.watchStat', { n: watch.length })}</span>
             )}
-            {watch.length > 0 && atRisk.length > 0 && <span style={{ color: TX3, fontSize: 12, fontWeight: 400, marginLeft: 6 }}>{tc('retention_card.watchExtra', { n: watch.length })}</span>}
+            {watch.length > 0 && atRisk.length > 0 && <span style={{ color: TX3, fontSize: 10, fontWeight: 400, marginLeft: 6 }}>{tc('retention_card.watchExtra', { n: watch.length })}</span>}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 7 }}>
           <button
             onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: tc('retention_card.askAllAtRisk') })), 400) }}
-            style={{ fontSize: 11, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 8, padding: '5px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 8, padding: '5px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {tc('retention_card.askAskBiz')}
           </button>
-          <button onClick={runScan} disabled={scanning} style={{ fontSize: 11, color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={runScan} disabled={scanning} style={{ fontSize: 9, color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
             {scanning ? tc('retention_card.scanning') : tc('retention_card.rescan')}
           </button>
         </div>
@@ -207,16 +207,16 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: risk.bg, border: `1px solid ${risk.border}`, borderRadius: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TX }}>{c.customer_name || c.customer_ref}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: risk.text }}>{risk.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: TX }}>{c.customer_name || c.customer_ref}</span>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: risk.text }}>{risk.label}</span>
                 </div>
-                <div style={{ fontSize: 11, color: TX3 }}>
+                <div style={{ fontSize: 9, color: TX3 }}>
                   {tc('retention_card.customerRowMeta', { days: c.days_since_order, orders: c.order_count, symbol, ltv: c.total_spend.toFixed(0) })}
                 </div>
               </div>
               <button
                 onClick={() => askAboutCustomer(c)}
-                style={{ fontSize: 11, fontWeight: 600, color: risk.text, background: 'transparent', border: `1px solid ${risk.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                style={{ fontSize: 9, fontWeight: 600, color: risk.text, background: 'transparent', border: `1px solid ${risk.border}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
               >
                 {tc('retention_card.analyse')}
               </button>
@@ -229,7 +229,7 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
       {customers.length > 4 && (
         <button
           onClick={() => setExpanded(v => !v)}
-          style={{ width: '100%', fontSize: 12, color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, padding: '7px', cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ width: '100%', fontSize: 10, color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, padding: '7px', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {expanded ? tc('retention_card.showLess') : tc('retention_card.showMore', { n: customers.length - 4 })}
         </button>
@@ -237,7 +237,7 @@ export default function RetentionCard({ symbol = '£' }: { symbol?: string }) {
 
       {/* Last scan note */}
       {summary && (
-        <div style={{ fontSize: 11, color: TX3, marginTop: 8, textAlign: 'right' }}>
+        <div style={{ fontSize: 9, color: TX3, marginTop: 8, textAlign: 'right' }}>
           {tc('retention_card.customersScored', { n: summary.customers_scored, date: new Date(summary.scanned_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}
         </div>
       )}

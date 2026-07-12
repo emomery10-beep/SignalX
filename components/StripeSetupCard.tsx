@@ -49,7 +49,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '9px 12px',
-    fontSize: '13px',
+    fontSize: '11px',
     border: '1px solid var(--b)',
     borderRadius: '9px',
     backgroundColor: 'var(--sf)',
@@ -121,15 +121,15 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
         <div style={{
           width: 30, height: 30, borderRadius: 8, flexShrink: 0,
           background: 'rgba(99,91,255,.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13,
         }}>
           💜
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', whiteSpace: 'nowrap' }}>
             {tc('stripe_setupcard.connectStripeButton')}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
             {tc('stripe_setupcard.paymentMethods')}
           </div>
         </div>
@@ -146,27 +146,27 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
             style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 400, border: '1px solid var(--b)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(99,91,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>💜</div>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(99,91,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>💜</div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('stripe_setupcard.connectStripeTitle')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('stripe_setupcard.paymentMethods')}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('stripe_setupcard.connectStripeTitle')}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('stripe_setupcard.paymentMethods')}</div>
               </div>
             </div>
 
             {error && (
-              <div style={{ padding: '8px 12px', backgroundColor: '#fee2e2', borderRadius: 9, border: '1px solid #fecaca', marginBottom: 14, color: '#991b1b', fontSize: 12 }}>
+              <div style={{ padding: '8px 12px', backgroundColor: '#fee2e2', borderRadius: 9, border: '1px solid #fecaca', marginBottom: 14, color: '#991b1b', fontSize: 10 }}>
                 {error}
               </div>
             )}
             {success && (
-              <div style={{ padding: '8px 12px', backgroundColor: '#ede9fe', borderRadius: 9, border: '1px solid #ddd6fe', marginBottom: 14, color: '#5b21b6', fontSize: 12 }}>
+              <div style={{ padding: '8px 12px', backgroundColor: '#ede9fe', borderRadius: 9, border: '1px solid #ddd6fe', marginBottom: 14, color: '#5b21b6', fontSize: 10 }}>
                 {tc('stripe_setupcard.successMessage')}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                   {tc('stripe_setupcard.businessCountryLabel')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
@@ -182,7 +182,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
               </div>
 
               <div style={{ marginBottom: 18 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                   {tc('stripe_setupcard.businessNameLabel')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -195,7 +195,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
                 />
               </div>
 
-              <div style={{ padding: '8px 12px', background: 'rgba(99,91,255,.06)', borderRadius: 9, marginBottom: 16, fontSize: 11, color: '#5b21b6', lineHeight: 1.5 }}>
+              <div style={{ padding: '8px 12px', background: 'rgba(99,91,255,.06)', borderRadius: 9, marginBottom: 16, fontSize: 9, color: '#5b21b6', lineHeight: 1.5 }}>
                 {tc('stripe_setupcard.kycDisclaimer')}
               </div>
 
@@ -206,7 +206,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
                   style={{
                     flex: 1, padding: 11, borderRadius: 10, border: 'none',
                     background: !businessName || loading ? 'var(--b2, #d1d5db)' : '#635bff',
-                    color: '#fff', fontSize: 14, fontWeight: 600,
+                    color: '#fff', fontSize: 12, fontWeight: 600,
                     cursor: !businessName || loading ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -216,7 +216,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
                   type="button"
                   onClick={() => setShowModal(false)}
                   disabled={loading}
-                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+                  style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                 >
                   {tc('stripe_setupcard.buttonCancel')}
                 </button>

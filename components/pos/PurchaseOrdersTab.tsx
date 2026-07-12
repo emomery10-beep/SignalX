@@ -107,26 +107,26 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
     <div style={{ maxWidth: 860 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>📋 {t('poui_title')}</div>
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_subtitle')}</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>📋 {t('poui_title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{t('poui_subtitle')}</div>
         </div>
         <button
           onClick={() => setShowCreate(true)}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40,
             background: ACC, color: '#fff', border: 'none', borderRadius: 9,
-            padding: '0 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            padding: '0 16px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
             fontFamily: 'inherit', transition: 'opacity .15s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
         >
-          <span style={{ fontSize: 16 }}>＋</span> {t('poui_new_order')}
+          <span style={{ fontSize: 14 }}>＋</span> {t('poui_new_order')}
         </button>
       </div>
 
       {!loading && lowStock.length > 0 && (
-        <div style={{ fontSize: 12, color: AMBER, marginBottom: 12 }}>
+        <div style={{ fontSize: 10, color: AMBER, marginBottom: 12 }}>
           {t(lowStock.length === 1 ? 'poui_low_stock_one' : 'poui_low_stock_other', { count: lowStock.length })}
         </div>
       )}
@@ -142,7 +142,7 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
               key={c.k}
               onClick={() => setFilter(c.k)}
               style={{
-                minHeight: 32, padding: '0 12px', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
+                minHeight: 32, padding: '0 12px', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', fontSize: 10,
                 border: `1px solid ${filter === c.k ? ACC : 'var(--b)'}`,
                 background: filter === c.k ? ACC : 'transparent',
                 color: filter === c.k ? '#fff' : 'var(--tx3)',
@@ -156,23 +156,23 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
       )}
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{t('poui_loading')}</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{t('poui_loading')}</div>
       ) : orders.length === 0 ? (
         <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{t('poui_empty_title')}</div>
-          <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 380, margin: '0 auto 16px' }}>
+          <div style={{ fontSize: 30, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{t('poui_empty_title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', maxWidth: 380, margin: '0 auto 16px' }}>
             {t('poui_empty_body')}
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            style={{ minHeight: 40, background: ACC, color: '#fff', border: 'none', borderRadius: 9, padding: '0 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ minHeight: 40, background: ACC, color: '#fff', border: 'none', borderRadius: 9, padding: '0 18px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {t('poui_empty_cta')}
           </button>
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 28, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{t('poui_none_in_view')}</div>
+        <div style={{ padding: 28, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{t('poui_none_in_view')}</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map((po) => {
@@ -192,18 +192,18 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 14, fontWeight: 700 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700 }}>
                         {po.supplier?.name || t('poui_no_supplier')}
                       </span>
-                      <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999 }}>
+                      <span style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999 }}>
                         {statusLabel(t, po.status)}
                       </span>
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>
                       {t(itemCount === 1 ? 'poui_items_one' : 'poui_items_other', { count: itemCount })} · {new Date(po.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {fmt(po.total_cost)}
                   </div>
                 </div>
@@ -265,7 +265,7 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
   const canReceive = po.status !== 'received' && po.status !== 'cancelled'
   const receiveInput: CSSProperties = {
     width: '100%', minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)',
-    borderRadius: 8, padding: '0 8px', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit', textAlign: 'center',
+    borderRadius: 8, padding: '0 8px', fontSize: 11, color: 'var(--tx)', fontFamily: 'inherit', textAlign: 'center',
   }
 
   function startReceive() {
@@ -345,17 +345,17 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
         style={{ background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 -8px 30px rgba(0,0,0,.25)' }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{po.supplier?.name || t('poui_no_supplier')}</div>
-          <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{po.supplier?.name || t('poui_no_supplier')}</div>
+          <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 20, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
         </div>
-        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999, marginBottom: 14 }}>{statusLabel(t, po.status)}</span>
+        <span style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, color: style.text, background: style.bg, padding: '3px 9px', borderRadius: 9999, marginBottom: 14 }}>{statusLabel(t, po.status)}</span>
 
         <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', background: 'var(--ev)', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
             <span>{t('poui_col_item')}</span><span style={{ textAlign: 'center' }}>{t('poui_col_qty')}</span><span style={{ textAlign: 'right' }}>{t('poui_col_total')}</span>
           </div>
           {(po.items || []).map((it) => (
-            <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--b)' }}>
+            <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 84px', padding: '8px 12px', fontSize: 11, borderTop: '1px solid var(--b)' }}>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</span>
               <span style={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{it.qty_ordered}</span>
               <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(it.line_total)}</span>
@@ -363,17 +363,17 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
           ))}
         </div>
 
-        {po.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 14 }}>{po.notes}</div>}
+        {po.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 14 }}>{po.notes}</div>}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_total')}</span>
-          <span style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(po.total_cost)}</span>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{t('poui_total')}</span>
+          <span style={{ fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(po.total_cost)}</span>
         </div>
 
         {canReceive && !receiveMode && (
           <button
             onClick={startReceive}
-            style={{ width: '100%', minHeight: 44, background: BLUE, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10 }}
+            style={{ width: '100%', minHeight: 44, background: BLUE, color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10 }}
           >
             {t('poui_receive')}
           </button>
@@ -381,14 +381,14 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
 
         {receiveMode && (
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{t('poui_how_much')}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{t('poui_how_much')}</div>
             {(po.items || []).map((it) => {
               const outstanding = Math.max(0, Number(it.qty_ordered) - Number(it.qty_received))
               return (
                 <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '1fr 72px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
-                    <div style={{ fontSize: 11, color: outstanding <= 0 ? GREEN : 'var(--tx3)' }}>
+                    <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
+                    <div style={{ fontSize: 9, color: outstanding <= 0 ? GREEN : 'var(--tx3)' }}>
                       {outstanding <= 0
                         ? t('poui_fully_received')
                         : Number(it.qty_received) > 0
@@ -407,8 +407,8 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
               )
             })}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={() => setReceiveMode(false)} style={{ minHeight: 44, padding: '0 16px', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 10, color: 'var(--tx)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>{t('poui_cancel')}</button>
-              <button onClick={handleReceive} disabled={receiving} style={{ flex: 1, minHeight: 44, background: receiving ? 'var(--ev)' : GREEN, color: receiving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: receiving ? 'default' : 'pointer', fontFamily: 'inherit' }}>{receiving ? t('poui_saving') : t('poui_confirm_receipt')}</button>
+              <button onClick={() => setReceiveMode(false)} style={{ minHeight: 44, padding: '0 16px', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 10, color: 'var(--tx)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{t('poui_cancel')}</button>
+              <button onClick={handleReceive} disabled={receiving} style={{ flex: 1, minHeight: 44, background: receiving ? 'var(--ev)' : GREEN, color: receiving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: receiving ? 'default' : 'pointer', fontFamily: 'inherit' }}>{receiving ? t('poui_saving') : t('poui_confirm_receipt')}</button>
             </div>
           </div>
         )}
@@ -418,12 +418,12 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
             <button
               onClick={handleSend}
               disabled={sending || !supplierPhone}
-              style={{ width: '100%', minHeight: 44, background: sending || !supplierPhone ? 'var(--ev)' : '#25D366', color: sending || !supplierPhone ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: sending || !supplierPhone ? 'default' : 'pointer', fontFamily: 'inherit' }}
+              style={{ width: '100%', minHeight: 44, background: sending || !supplierPhone ? 'var(--ev)' : '#25D366', color: sending || !supplierPhone ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: sending || !supplierPhone ? 'default' : 'pointer', fontFamily: 'inherit' }}
             >
               {sending ? t('poui_sending') : po.status === 'draft' ? t('poui_send') : t('poui_resend')}
             </button>
             {!supplierPhone && (
-              <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
+              <div style={{ fontSize: 10, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
                 {t('poui_no_phone_hint')}
               </div>
             )}
@@ -521,7 +521,7 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
 
   const inputStyle: CSSProperties = {
     width: '100%', minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)',
-    borderRadius: 8, padding: '0 10px', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit',
+    borderRadius: 8, padding: '0 10px', fontSize: 11, color: 'var(--tx)', fontFamily: 'inherit',
   }
 
   const notAdded = allInventory.filter((i) => !items.some((it) => it.inventory_id === i.id))
@@ -536,18 +536,18 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
         style={{ background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 20, boxShadow: '0 -8px 30px rgba(0,0,0,.25)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{t('poui_create_title')}</div>
-          <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{t('poui_create_title')}</div>
+          <button onClick={onClose} aria-label={t('poui_close')} style={{ background: 'none', border: 'none', fontSize: 20, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer' }}>×</button>
         </div>
 
         {/* Supplier */}
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', marginBottom: 6 }}>{t('poui_supplier')}</label>
+        <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', display: 'block', marginBottom: 6 }}>{t('poui_supplier')}</label>
         {addingSupplier ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
             <input style={inputStyle} placeholder={t('poui_supplier_name_ph')} value={newSupName} onChange={(e) => setNewSupName(e.target.value)} />
             <input style={inputStyle} type="tel" inputMode="tel" placeholder={t('poui_supplier_phone_ph')} value={newSupPhone} onChange={(e) => setNewSupPhone(e.target.value)} />
             {suppliers.length > 0 && (
-              <button onClick={() => setAddingSupplier(false)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: ACC, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+              <button onClick={() => setAddingSupplier(false)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: ACC, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
                 {t('poui_pick_existing')}
               </button>
             )}
@@ -558,24 +558,24 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
               <option value="">{t('poui_select_supplier')}</option>
               {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <button onClick={() => setAddingSupplier(true)} style={{ minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '0 12px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx)', whiteSpace: 'nowrap' }}>{t('poui_new_supplier')}</button>
+            <button onClick={() => setAddingSupplier(true)} style={{ minHeight: 40, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '0 12px', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx)', whiteSpace: 'nowrap' }}>{t('poui_new_supplier')}</button>
           </div>
         )}
 
         {/* Items */}
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>
+        <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>
           {t('poui_items')} {lowStock.length > 0 && <span style={{ fontWeight: 400 }}>{t(lowStock.length === 1 ? 'poui_prefilled_one' : 'poui_prefilled_other', { count: lowStock.length })}</span>}
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.length === 0 && (
-            <div style={{ fontSize: 12, color: 'var(--tx3)', padding: '8px 0' }}>{t('poui_no_items')}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', padding: '8px 0' }}>{t('poui_no_items')}</div>
           )}
           {items.map((it, idx) => (
             <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 84px 28px', gap: 6, alignItems: 'center' }}>
-              <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
+              <div style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
               <input style={{ ...inputStyle, textAlign: 'center' }} type="number" min={0} inputMode="decimal" value={it.qty_ordered} onChange={(e) => updateItem(idx, { qty_ordered: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_qty', { name: it.name })} />
               <input style={{ ...inputStyle, textAlign: 'right' }} type="number" min={0} inputMode="decimal" value={it.unit_cost} onChange={(e) => updateItem(idx, { unit_cost: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_cost', { name: it.name })} />
-              <button onClick={() => removeItem(idx)} aria-label={t('poui_aria_remove', { name: it.name })} style={{ background: 'none', border: 'none', color: RED, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
+              <button onClick={() => removeItem(idx)} aria-label={t('poui_aria_remove', { name: it.name })} style={{ background: 'none', border: 'none', color: RED, fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
           ))}
         </div>
@@ -592,16 +592,16 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
         )}
 
         {/* Notes */}
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>{t('poui_notes')}</label>
+        <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>{t('poui_notes')}</label>
         <textarea style={{ ...inputStyle, minHeight: 56, padding: 10, resize: 'vertical' }} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('poui_notes_ph')} />
 
         {/* Footer */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, gap: 12 }}>
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{t('poui_total')} <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</span></div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{t('poui_total')} <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(total)}</span></div>
           <button
             onClick={handleSave}
             disabled={saving}
-            style={{ minHeight: 44, background: saving ? 'var(--ev)' : ACC, color: saving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, padding: '0 22px', fontSize: 14, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+            style={{ minHeight: 44, background: saving ? 'var(--ev)' : ACC, color: saving ? 'var(--tx3)' : '#fff', border: 'none', borderRadius: 10, padding: '0 22px', fontSize: 12, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
           >
             {saving ? t('poui_saving') : t('poui_create')}
           </button>

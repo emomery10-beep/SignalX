@@ -135,7 +135,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
       }}/>
 
       <span style={{
-        fontSize: 12,
+        fontSize: 10,
         color: style.text,
         flex: 1,
         lineHeight: 1.4,
@@ -146,7 +146,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
         {active.text}
       </span>
 
-      <span style={{ fontSize: 11, color: 'var(--tx3)', flexShrink: 0, opacity: 0.6 }}>→</span>
+      <span style={{ fontSize: 9, color: 'var(--tx3)', flexShrink: 0, opacity: 0.6 }}>→</span>
 
       {signal && (
         <button
@@ -156,7 +156,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
             border: 'none', background: 'transparent',
             color: 'var(--tx3)', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, flexShrink: 0, padding: 0,
+            fontSize: 9, flexShrink: 0, padding: 0,
           }}
         >
           ✕

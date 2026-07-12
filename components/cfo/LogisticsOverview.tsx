@@ -32,9 +32,9 @@ export default function LogisticsOverview({ data, currencySymbol: sym, onAsk }: 
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_logistics.title')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_logistics.title')}</span>
         </div>
-        <div style={{ padding: '20px 18px', textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>
+        <div style={{ padding: '20px 18px', textAlign: 'center', color: 'var(--tx3)', fontSize: 10 }}>
           {tc('cfo_logistics.emptyState')}
         </div>
       </div>
@@ -49,8 +49,8 @@ export default function LogisticsOverview({ data, currencySymbol: sym, onAsk }: 
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_logistics.title')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_logistics.provider')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_logistics.title')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_logistics.provider')}</span>
         </div>
         {onAsk && (
           <button
@@ -62,7 +62,7 @@ export default function LogisticsOverview({ data, currencySymbol: sym, onAsk }: 
               financingCost: fmt(data.financing_cost, sym),
               avgDays: data.avg_delivery_days,
             }))}
-            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_logistics.askAi')}
           </button>
@@ -79,7 +79,7 @@ export default function LogisticsOverview({ data, currencySymbol: sym, onAsk }: 
 
       {/* Status bar */}
       <div style={{ padding: '12px 18px' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_logistics.shipmentHealth')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_logistics.shipmentHealth')}</div>
         <div style={{ height: 22, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
           {data.in_transit_count - data.delayed_count > 0 && (
             <div style={{
@@ -100,13 +100,13 @@ export default function LogisticsOverview({ data, currencySymbol: sym, onAsk }: 
         </div>
 
         {data.at_risk_count > 0 && (
-          <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,.05)', border: '1px solid rgba(239,68,68,.15)', fontSize: 11, color: '#EF4444', fontWeight: 500 }}>
+          <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,.05)', border: '1px solid rgba(239,68,68,.15)', fontSize: 9, color: '#EF4444', fontWeight: 500 }}>
             {tc('cfo_logistics.atRiskWarning', { n: data.at_risk_count })}
           </div>
         )}
 
         {data.in_transit_value > 0 && (
-          <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
+          <div style={{ marginTop: 8, fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
             {tc('cfo_logistics.inTransitSummary', { value: fmt(data.in_transit_value, sym), days: data.avg_delivery_days })}
           </div>
         )}
@@ -119,7 +119,7 @@ function MetricCell({ label, value, sub, color }: { label: string; value: string
   return (
     <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{sub}</div>
     </div>
   )

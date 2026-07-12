@@ -110,8 +110,8 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_weekly.headerTitle')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{getWeekRange()}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_weekly.headerTitle')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{getWeekRange()}</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {onAsk && (
@@ -125,14 +125,14 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
                 concerns: concerns.length > 0 ? tc('cfo_weekly.aiNarrativeKeyConcerns', { list: concerns.join('; ') }) : tc('cfo_weekly.aiNarrativeNoConcerns'),
                 wins: wins.length > 0 ? tc('cfo_weekly.aiNarrativeWins', { list: wins.join('; ') }) : '',
               }))}
-              style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+              style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
               {tc('cfo_weekly.btnAiNarrative')}
             </button>
           )}
           <button
             onClick={copyDigest}
-            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {emailSent ? tc('cfo_weekly.btnCopied') : tc('cfo_weekly.btnCopyDigest')}
           </button>
@@ -141,10 +141,10 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
 
       {/* Status banner */}
       <div style={{ padding: '12px 18px', background: statusConfig.bg, borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 18 }}>{statusConfig.icon}</span>
+        <span style={{ fontSize: 16 }}>{statusConfig.icon}</span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: statusConfig.color }}>{statusConfig.label}</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: statusConfig.color }}>{statusConfig.label}</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
             {overallStatus === 'critical' ? tc('cfo_weekly.bannerCritical', { n: criticalAlerts.length }) :
              overallStatus === 'warning'  ? tc('cfo_weekly.bannerWarning',  { n: warningAlerts.length }) :
              overallStatus === 'healthy'  ? tc('cfo_weekly.bannerHealthy') :
@@ -163,10 +163,10 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
       {/* Wins */}
       {wins.length > 0 && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_weekly.sectionWins')}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_weekly.sectionWins')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {wins.map((w, i) => (
-              <div key={i} style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--tx2)' }}>
+              <div key={i} style={{ display: 'flex', gap: 6, fontSize: 9, color: 'var(--tx2)' }}>
                 <span style={{ color: '#22C55E', flexShrink: 0 }}>+</span>
                 <span>{w}</span>
               </div>
@@ -178,10 +178,10 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
       {/* Concerns */}
       {concerns.length > 0 && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)', background: 'rgba(239,68,68,.02)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_weekly.sectionActionItems')}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_weekly.sectionActionItems')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {concerns.map((c, i) => (
-              <div key={i} style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--tx2)' }}>
+              <div key={i} style={{ display: 'flex', gap: 6, fontSize: 9, color: 'var(--tx2)' }}>
                 <span style={{ color: '#EF4444', flexShrink: 0 }}>!</span>
                 <span>{c}</span>
               </div>
@@ -211,8 +211,8 @@ function DigestMetric({ label, value, change, sub, highlight }: {
   return (
     <div style={{ padding: '12px 14px', background: highlight ? 'rgba(239,68,68,.03)' : 'var(--sf)', textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: highlight ? '#EF4444' : 'var(--tx)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{value}</div>
-      <div style={{ fontSize: 10, marginTop: 2 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: highlight ? '#EF4444' : 'var(--tx)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 9, marginTop: 2 }}>
         <span style={{
           fontWeight: 600,
           color: change.dir === 'up' ? '#22C55E' : change.dir === 'down' ? '#EF4444' : 'var(--tx3)',
@@ -229,7 +229,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ padding: '8px 10px', background: 'var(--sf)', textAlign: 'center' }}>
       <div style={{ fontSize: 8, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   )
 }

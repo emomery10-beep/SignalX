@@ -40,7 +40,7 @@ function Avatar({ src, name, size }: { src: string; name: string; size: number }
 
 export default function ResearchClient() {
   const { lang } = useLang();
-  const navLink = { fontSize: 13, color: C.tx2, textDecoration: "none" } as const;
+  const navLink = { fontSize: 11, color: C.tx2, textDecoration: "none" } as const;
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.tx }}>
@@ -50,7 +50,7 @@ export default function ResearchClient() {
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="7" width="4" height="14" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></svg>
           </div>
-          <span style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700 }}>AskBiz</span>
+          <span style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700 }}>AskBiz</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span className="nav-desktop-links" style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -58,13 +58,13 @@ export default function ResearchClient() {
             <Link href={localePath("/academy", lang)} style={navLink}>Academy</Link>
             <Link href={localePath("/pricing", lang)} style={navLink}>Pricing</Link>
           </span>
-          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Try free</Link>
+          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Try free</Link>
         </div>
       </nav>
 
       {/* ── Author header ───────────────────────────────────────────────── */}
       <header style={{ maxWidth: 940, margin: "0 auto", padding: "clamp(40px,6vw,72px) clamp(16px,4vw,40px) clamp(28px,4vw,40px)" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 20 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: C.acc, letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 20 }}>
           Research &amp; Writing
         </div>
         <div className="author-row" style={{ display: "flex", alignItems: "center", gap: "clamp(20px,4vw,36px)" }}>
@@ -75,23 +75,23 @@ export default function ResearchClient() {
             </h1>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {CREDENTIALS.map((c) => (
-                <span key={c} style={{ fontSize: 12.5, fontWeight: 500, color: C.tx2, background: C.sf, border: `1px solid ${C.b}`, borderRadius: 9999, padding: "5px 13px" }}>{c}</span>
+                <span key={c} style={{ fontSize: 10.5, fontWeight: 500, color: C.tx2, background: C.sf, border: `1px solid ${C.b}`, borderRadius: 9999, padding: "5px 13px" }}>{c}</span>
               ))}
             </div>
           </div>
         </div>
 
         <div style={{ maxWidth: 660, marginTop: "clamp(24px,3vw,32px)", display: "flex", flexDirection: "column", gap: 14 }}>
-          <p style={{ fontSize: 16.5, lineHeight: 1.7, color: C.tx, margin: 0 }}>
+          <p style={{ fontSize: 14.5, lineHeight: 1.7, color: C.tx, margin: 0 }}>
             Idarus has spent more than fifteen years working across East Africa and the Middle East. Not from an office, but next to the people who actually run the economy: the market traders, the shopkeepers, the street vendors, the small businesses that keep families going.
           </p>
-          <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
+          <p style={{ fontSize: 13.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
             That closeness changed how he sees the problem. Most of these owners can&rsquo;t afford the software and the accountants that bigger companies take for granted, and for a long time nobody bothered to build anything for them. Idarus never accepted that. Being short of money should not mean being left behind, and the tools that help a business survive should reach the woman selling vegetables just as easily as the company with a finance team.
           </p>
-          <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
+          <p style={{ fontSize: 13.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
             That is why he founded AskBiz. A business tool that runs from a cheap phone, in the owner&rsquo;s own language, so anyone can see what they made today and know what to do tomorrow. No expensive hardware. No accountant. Just answers a trader can actually use.
           </p>
-          <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
+          <p style={{ fontSize: 13.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
             Idarus holds a BSc in Computer Science and an MA in Applied Linguistics. One taught him how systems work. The other taught him how people really talk, and how easily they get left out. The research here comes from that same world, and it is written about the people too often missing from it.
           </p>
         </div>
@@ -99,7 +99,7 @@ export default function ResearchClient() {
 
       {/* ── Papers ──────────────────────────────────────────────────────── */}
       <section style={{ maxWidth: 940, margin: "0 auto", padding: "0 clamp(16px,4vw,40px) clamp(48px,7vw,88px)" }}>
-        <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700, letterSpacing: ".02em", color: C.tx3, textTransform: "uppercase", borderTop: `1px solid ${C.b}`, paddingTop: 28, margin: "0 0 24px" }}>
+        <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", color: C.tx3, textTransform: "uppercase", borderTop: `1px solid ${C.b}`, paddingTop: 28, margin: "0 0 24px" }}>
           Papers
         </h2>
 
@@ -113,26 +113,26 @@ export default function ResearchClient() {
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = C.b; }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: C.acc, background: C.accBg, border: `1px solid ${C.accBdr}`, borderRadius: 9999, padding: "4px 11px" }}>{p.type}</span>
-                <span style={{ fontSize: 13, color: C.tx3 }}>{p.date}</span>
-                {p.length && <span style={{ fontSize: 13, color: C.tx3 }}>· {p.length}</span>}
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: C.acc, background: C.accBg, border: `1px solid ${C.accBdr}`, borderRadius: 9999, padding: "4px 11px" }}>{p.type}</span>
+                <span style={{ fontSize: 11, color: C.tx3 }}>{p.date}</span>
+                {p.length && <span style={{ fontSize: 11, color: C.tx3 }}>· {p.length}</span>}
               </div>
 
               <h3 style={{ fontFamily: "var(--font-sora)", fontSize: "clamp(18px,2.2vw,22px)", fontWeight: 700, lineHeight: 1.3, letterSpacing: "-.015em", color: C.tx, margin: "0 0 12px" }}>
                 {p.title}
               </h3>
 
-              <p style={{ fontSize: 15, lineHeight: 1.7, color: C.tx2, margin: "0 0 18px", maxWidth: 680 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: C.tx2, margin: "0 0 18px", maxWidth: 680 }}>
                 {p.summary}
               </p>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 20 }}>
                 {p.tags.map((t) => (
-                  <span key={t} style={{ fontSize: 12, color: C.tx3, background: C.el, borderRadius: 9999, padding: "4px 11px" }}>{t}</span>
+                  <span key={t} style={{ fontSize: 10, color: C.tx3, background: C.el, borderRadius: 9999, padding: "4px 11px" }}>{t}</span>
                 ))}
               </div>
 
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, color: C.acc }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: C.acc }}>
                 Read paper <span aria-hidden="true">→</span>
               </span>
             </Link>
@@ -142,10 +142,10 @@ export default function ResearchClient() {
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer style={{ borderTop: `1px solid ${C.b}`, background: C.sf, padding: "clamp(20px,3vw,28px) clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <span style={{ fontSize: 12, color: C.tx3 }}>AskBiz · Utauza © 2026</span>
+        <span style={{ fontSize: 10, color: C.tx3 }}>AskBiz · Utauza © 2026</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {([["/", "Home"], ["/blog", "Blog"], ["/academy", "Academy"], ["/help", "Help"], ["/privacy", "Privacy"], ["/terms", "Terms"]] as [string, string][]).map(([href, label]) => (
-            <a key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
+            <a key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

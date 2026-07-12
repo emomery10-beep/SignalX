@@ -149,9 +149,9 @@ export default function PosCardPayment({
   // Generating state
   if (status === 'generating') return (
     <div style={{ marginTop: 14, padding: '24px 16px', background: '#fff', borderRadius: 16, border: '1px solid #e5e2dc', textAlign: 'center' }}>
-      <div style={{ fontSize: 28, marginBottom: 8 }}>⏳</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1916' }}>{tc('pos_cardpayment.generatingTitle')}</div>
-      <div style={{ fontSize: 12, color: '#6b6760', marginTop: 4 }}>{tc('pos_cardpayment.generatingSubtitle')}</div>
+      <div style={{ fontSize: 26, marginBottom: 8 }}>⏳</div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#1a1916' }}>{tc('pos_cardpayment.generatingTitle')}</div>
+      <div style={{ fontSize: 10, color: '#6b6760', marginTop: 4 }}>{tc('pos_cardpayment.generatingSubtitle')}</div>
     </div>
   )
 
@@ -160,13 +160,13 @@ export default function PosCardPayment({
     <div style={{ marginTop: 14 }}>
       {/* Amount banner */}
       <div style={{ padding: '12px 16px', background: ACC, borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('pos_cardpayment.amountDue')}</span>
-        <span style={{ color: '#fff', fontSize: 22, fontWeight: 900 }}>{currencySymbol}{amount.toFixed(2)}</span>
+        <span style={{ color: '#fff', fontSize: 11, fontWeight: 600 }}>{tc('pos_cardpayment.amountDue')}</span>
+        <span style={{ color: '#fff', fontSize: 20, fontWeight: 900 }}>{currencySymbol}{amount.toFixed(2)}</span>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e2dc', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '16px' }}>
         {/* Cashier instruction */}
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#6b6760', textAlign: 'center', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: '#6b6760', textAlign: 'center', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {tc('pos_cardpayment.showQrInstruction')}
         </div>
 
@@ -184,23 +184,23 @@ export default function PosCardPayment({
         {/* How to pay */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
           <div style={{ padding: '10px 8px', background: '#f9f8f6', borderRadius: 10, textAlign: 'center' }}>
-            <div style={{ fontSize: 18, marginBottom: 2 }}>📱</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>{tc('pos_cardpayment.scanQrTitle')}</div>
-            <div style={{ fontSize: 10, color: '#6b6760' }}>{tc('pos_cardpayment.scanQrSubtitle')}</div>
+            <div style={{ fontSize: 16, marginBottom: 2 }}>📱</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#374151' }}>{tc('pos_cardpayment.scanQrTitle')}</div>
+            <div style={{ fontSize: 9, color: '#6b6760' }}>{tc('pos_cardpayment.scanQrSubtitle')}</div>
           </div>
           <div style={{ padding: '10px 8px', background: '#f9f8f6', borderRadius: 10, textAlign: 'center' }}>
-            <div style={{ fontSize: 18, marginBottom: 2 }}>󰀀</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>{tc('pos_cardpayment.walletTitle')}</div>
-            <div style={{ fontSize: 10, color: '#6b6760' }}>{tc('pos_cardpayment.walletSubtitle')}</div>
+            <div style={{ fontSize: 16, marginBottom: 2 }}>󰀀</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#374151' }}>{tc('pos_cardpayment.walletTitle')}</div>
+            <div style={{ fontSize: 9, color: '#6b6760' }}>{tc('pos_cardpayment.walletSubtitle')}</div>
           </div>
         </div>
 
         {/* Waiting indicator */}
         <div style={{ padding: '10px', background: 'rgba(59,130,246,.06)', borderRadius: 10, border: '1px solid rgba(59,130,246,.15)', textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: '#2563eb', fontWeight: 600 }}>
+          <div style={{ fontSize: 10, color: '#2563eb', fontWeight: 600 }}>
             {tc('pos_cardpayment.waitingMessage')}
           </div>
-          <div style={{ fontSize: 11, color: '#6b6760', marginTop: 2 }}>
+          <div style={{ fontSize: 9, color: '#6b6760', marginTop: 2 }}>
             {tc('pos_cardpayment.waitingSubtitle')}
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function PosCardPayment({
         {checkoutUrl && (
           <div style={{ marginTop: 10, textAlign: 'center' }}>
             <a href={checkoutUrl} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 11, color: '#6b6760', textDecoration: 'underline' }}>
+              style={{ fontSize: 9, color: '#6b6760', textDecoration: 'underline' }}>
               {tc('pos_cardpayment.shareLink')}
             </a>
           </div>
@@ -221,18 +221,18 @@ export default function PosCardPayment({
   // Completed
   if (status === 'completed') return (
     <div style={{ marginTop: 14, padding: '24px', background: 'rgba(22,163,74,.06)', border: '2px solid rgba(22,163,74,.3)', borderRadius: 16, textAlign: 'center' }}>
-      <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: '#16a34a' }}>{tc('pos_cardpayment.paymentReceived')}</div>
-      <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{tc('pos_cardpayment.paymentReceivedDetail', { symbol: currencySymbol, amount: amount.toFixed(2) })}</div>
+      <div style={{ fontSize: 38, marginBottom: 8 }}>✅</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: '#16a34a' }}>{tc('pos_cardpayment.paymentReceived')}</div>
+      <div style={{ fontSize: 11, color: '#6b6760', marginTop: 4 }}>{tc('pos_cardpayment.paymentReceivedDetail', { symbol: currencySymbol, amount: amount.toFixed(2) })}</div>
     </div>
   )
 
   // Failed
   if (status === 'failed') return (
     <div style={{ marginTop: 14, padding: '20px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 16, textAlign: 'center' }}>
-      <div style={{ fontSize: 28, marginBottom: 8 }}>❌</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#dc2626', marginBottom: 12 }}>{tc('pos_cardpayment.paymentFailed')}</div>
-      <button onClick={initiateCard} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+      <div style={{ fontSize: 26, marginBottom: 8 }}>❌</div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#dc2626', marginBottom: 12 }}>{tc('pos_cardpayment.paymentFailed')}</div>
+      <button onClick={initiateCard} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
         {tc('pos_cardpayment.tryAgain')}
       </button>
     </div>

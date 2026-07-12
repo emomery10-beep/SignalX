@@ -251,14 +251,14 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
         onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, color: deltaColor, background: delta >= 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', borderRadius: 6, padding: '2px 7px' }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: deltaColor, background: delta >= 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', borderRadius: 6, padding: '2px 7px' }}>
             {delta >= 0 ? '↑' : '↓'} {deltaLabel}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: barColor(lastScore), fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{lastScore}</span>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_minitrend.perHundred')}</span>
+          <span style={{ fontSize: 26, fontWeight: 800, color: barColor(lastScore), fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{lastScore}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_minitrend.perHundred')}</span>
         </div>
         <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', height: 'auto', maxHeight: height, overflow: 'visible' }} onMouseMove={handleMouseMove} onMouseLeave={() => setHovered(null)}>
           <rect x={padL} y={toY(100)} width={chartW} height={toY(65) - toY(100)} fill="rgba(34,197,94,.04)" />
@@ -291,8 +291,8 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 700, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{label}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{label}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
                   {tc('intel_minitrend.scoreLabel')} <strong style={{ color: barColor(lastScore) }}>{lastScore}{tc('intel_minitrend.perHundred')}</strong> · <span style={{ color: deltaColor }}>{deltaLabel} {tc('intel_minitrend.vsThirtyDays')}</span>
                 </div>
               </div>
@@ -302,7 +302,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
             </div>
 
             {selectedBar === null && (
-              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.12)', marginBottom: 14, fontSize: 11, color: '#6366F1', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.12)', marginBottom: 14, fontSize: 9, color: '#6366F1', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 {tc('intel_minitrend.clickBarHint')}
               </div>
@@ -322,12 +322,12 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                       onClick={() => { setSelectedBar(selectedBar === i ? null : i); setDrilledComponent(null) }}
                       style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', cursor: 'pointer' }}>
                       {isHov && !isSel && (
-                        <div style={{ position: 'absolute', bottom: ht + 8, left: '50%', transform: 'translateX(-50%)', background: 'var(--tx)', color: 'var(--sf)', borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
+                        <div style={{ position: 'absolute', bottom: ht + 8, left: '50%', transform: 'translateX(-50%)', background: 'var(--tx)', color: 'var(--sf)', borderRadius: 6, padding: '4px 8px', fontSize: 9, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
                           {formatDate(h) && <span style={{ opacity: 0.65, marginRight: 4 }}>{formatDate(h)}</span>}{sc}
                         </div>
                       )}
                       {isSel && (
-                        <div style={{ position: 'absolute', bottom: ht + 8, left: '50%', transform: 'translateX(-50%)', background: '#6366F1', color: '#fff', borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
+                        <div style={{ position: 'absolute', bottom: ht + 8, left: '50%', transform: 'translateX(-50%)', background: '#6366F1', color: '#fff', borderRadius: 6, padding: '4px 8px', fontSize: 9, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
                           {formatDate(h)} · {sc}
                         </div>
                       )}
@@ -348,7 +348,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                 </div>
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}><span>{tc('intel_minitrend.thirtyDaysAgo')}</span><span>{tc('intel_minitrend.today')}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 9, color: 'var(--tx3)' }}><span>{tc('intel_minitrend.thirtyDaysAgo')}</span><span>{tc('intel_minitrend.today')}</span></div>
 
             {/* ── Selected day deep-dive ── */}
             {selectedItem && (
@@ -357,31 +357,31 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                   {/* Day header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: barColor(selectedScore) }} />
                         {formatDateLong(selectedItem)}
                       </div>
-                      {selectedItem.summary && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4, lineHeight: 1.5 }}>{selectedItem.summary}</div>}
+                      {selectedItem.summary && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4, lineHeight: 1.5 }}>{selectedItem.summary}</div>}
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: barColor(selectedScore), fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{selectedScore}</div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_minitrend.perHundred')}</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: barColor(selectedScore), fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{selectedScore}</div>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_minitrend.perHundred')}</div>
                     </div>
                   </div>
 
                   {dayDelta !== null && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: dayDelta > 0 ? 'rgba(34,197,94,.06)' : dayDelta < 0 ? 'rgba(239,68,68,.06)' : 'var(--ev)' }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: dayDelta > 0 ? '#22C55E' : dayDelta < 0 ? '#EF4444' : 'var(--tx3)' }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: dayDelta > 0 ? '#22C55E' : dayDelta < 0 ? '#EF4444' : 'var(--tx3)' }}>
                         {dayDelta > 0 ? '↑' : dayDelta < 0 ? '↓' : '→'} {dayDelta > 0 ? '+' : ''}{dayDelta} pts
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_minitrend.vsPreviousDay')} ({prevScore})</span>
+                      <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_minitrend.vsPreviousDay')} ({prevScore})</span>
                     </div>
                   )}
 
                   {/* Clickable component cards */}
                   {selectedItem.components && selectedItem.components.length > 0 ? (
                     <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
                         {tc('intel_minitrend.clickComponentHint')}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -405,15 +405,15 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                      <span style={{ fontSize: 16 }}>{sn.icon}</span>
-                                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{sn.name}</span>
-                                      <span style={{ fontSize: 10, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 4, padding: '1px 6px' }}>{orig.label}</span>
+                                      <span style={{ fontSize: 14 }}>{sn.icon}</span>
+                                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{sn.name}</span>
+                                      <span style={{ fontSize: 9, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 4, padding: '1px 6px' }}>{orig.label}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                      <span style={{ fontSize: 16, fontWeight: 800, color: statusDot(orig.status) }}>{orig.score}</span>
-                                      <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_minitrend.perTwenty')}</span>
+                                      <span style={{ fontSize: 14, fontWeight: 800, color: statusDot(orig.status) }}>{orig.score}</span>
+                                      <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_minitrend.perTwenty')}</span>
                                       {comp.change !== 0 && (
-                                        <span style={{ fontSize: 10, fontWeight: 700, color: comp.change > 0 ? '#22C55E' : '#EF4444', background: comp.change > 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', borderRadius: 4, padding: '1px 5px' }}>
+                                        <span style={{ fontSize: 9, fontWeight: 700, color: comp.change > 0 ? '#22C55E' : '#EF4444', background: comp.change > 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', borderRadius: 4, padding: '1px 5px' }}>
                                           {comp.change > 0 ? '+' : ''}{comp.change}
                                         </span>
                                       )}
@@ -423,7 +423,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                   <div style={{ height: 6, background: 'var(--ev)', borderRadius: 3, overflow: 'hidden', marginBottom: 4 }}>
                                     <div style={{ height: '100%', width: `${(orig.score / 20) * 100}%`, background: `linear-gradient(90deg, ${statusDot(orig.status)}, ${statusDot(orig.status)}88)`, borderRadius: 3, transition: 'width 400ms ease' }} />
                                   </div>
-                                  <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{orig.detail}</div>
+                                  <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4 }}>{orig.detail}</div>
                                 </div>
 
                                 {/* ── Component deep-dive panel ── */}
@@ -431,10 +431,10 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                   <div style={{ marginTop: 4, padding: '14px', borderRadius: 10, border: `1px solid ${statusDot(orig.status)}20`, background: `${statusDot(orig.status)}04`, animation: 'fadeIn 200ms ease' }}>
                                     {/* Benchmark */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-                                      <span style={{ fontSize: 14 }}>🎯</span>
+                                      <span style={{ fontSize: 12 }}>🎯</span>
                                       <div>
-                                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_minitrend.benchmarkLabel')}</div>
-                                        <div style={{ fontSize: 12, fontWeight: 600, color: statusDot(orig.status) }}>{analysis.benchmark}</div>
+                                        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_minitrend.benchmarkLabel')}</div>
+                                        <div style={{ fontSize: 10, fontWeight: 600, color: statusDot(orig.status) }}>{analysis.benchmark}</div>
                                       </div>
                                     </div>
 
@@ -452,10 +452,10 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
 
                                     {/* Analysis tips */}
                                     <div style={{ marginBottom: 12 }}>
-                                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_minitrend.analysisLabel')}</div>
+                                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_minitrend.analysisLabel')}</div>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                         {analysis.tips.map((tip, ti) => (
-                                          <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
+                                          <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 10, color: 'var(--tx2)', lineHeight: 1.5 }}>
                                             <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusDot(orig.status), flexShrink: 0, marginTop: 6 }} />
                                             {tip}
                                           </div>
@@ -465,15 +465,15 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
 
                                     {/* Recommended action */}
                                     <div style={{ padding: '10px 12px', borderRadius: 8, background: `${statusDot(orig.status)}10`, border: `1px dashed ${statusDot(orig.status)}30`, marginBottom: 12 }}>
-                                      <div style={{ fontSize: 10, fontWeight: 700, color: statusDot(orig.status), textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_minitrend.recommendedAction')}</div>
-                                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>{analysis.action}</div>
+                                      <div style={{ fontSize: 9, fontWeight: 700, color: statusDot(orig.status), textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_minitrend.recommendedAction')}</div>
+                                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>{analysis.action}</div>
                                     </div>
 
                                     {/* Ask AI button */}
                                     {onAsk && (
                                       <button
                                         onClick={(e) => { e.stopPropagation(); onAsk(sn.drillPrompt) }}
-                                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${statusDot(orig.status)}30`, background: `${statusDot(orig.status)}08`, color: statusDot(orig.status), fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${statusDot(orig.status)}30`, background: `${statusDot(orig.status)}08`, color: statusDot(orig.status), fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                                       >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                                         {tc('intel_minitrend.askAiButton', { name: sn.name.toLowerCase() })}
@@ -488,14 +488,14 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                       </div>
 
                       <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)' }}>{tc('intel_minitrend.totalComponentScore')}</span>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: barColor(selectedScore) }}>{selectedItem.components.reduce((s, c) => s + c.score, 0)}/100</span>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)' }}>{tc('intel_minitrend.totalComponentScore')}</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: barColor(selectedScore) }}>{selectedItem.components.reduce((s, c) => s + c.score, 0)}/100</span>
                       </div>
                     </div>
                   ) : (
                     <div style={{ padding: '20px 16px', borderRadius: 10, background: 'var(--ev)', textAlign: 'center' }}>
-                      <div style={{ fontSize: 20, marginBottom: 6 }}>📊</div>
-                      <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('intel_minitrend.noBreakdownTitle')}<br/>{tc('intel_minitrend.noBreakdownBody')}</div>
+                      <div style={{ fontSize: 18, marginBottom: 6 }}>📊</div>
+                      <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('intel_minitrend.noBreakdownTitle')}<br/>{tc('intel_minitrend.noBreakdownBody')}</div>
                     </div>
                   )}
                 </div>
@@ -504,7 +504,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
 
             <div style={{ display: 'flex', gap: 16, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--b)' }}>
               {([['#22C55E', tc('intel_minitrend.modalLegendHealthy')], ['#F59E0B', tc('intel_minitrend.modalLegendWatch')], ['#EF4444', tc('intel_minitrend.modalLegendAtRisk')]] as [string, string][]).map(([col, lbl]) => (
-                <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--tx3)' }}>
+                <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: 'var(--tx3)' }}>
                   <div style={{ width: 10, height: 10, borderRadius: 2, background: col }} />{lbl}
                 </div>
               ))}

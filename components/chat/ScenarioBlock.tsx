@@ -41,11 +41,11 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
           {tc('chat_scenarioblock.headerLabel')}
         </span>
         <span style={{
-          fontSize: 11, fontWeight: 600,
+          fontSize: 9, fontWeight: 600,
           color: vs.color, background: vs.bg,
           padding: '3px 9px', borderRadius: 9999,
           border: `1px solid ${vs.border}`,
@@ -58,14 +58,14 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
         {/* Before */}
         <div style={{ padding: '14px', borderRight: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
             {tc('chat_scenarioblock.columnCurrent')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {before.map((item, i) => (
               <div key={i}>
-                <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 2 }}>{item.label}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.02em' }}>{item.value}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 2 }}>{item.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.02em' }}>{item.value}</div>
               </div>
             ))}
           </div>
@@ -73,7 +73,7 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
 
         {/* After */}
         <div style={{ padding: '14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
             {tc('chat_scenarioblock.columnAfter')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -82,16 +82,16 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
               const changed = item.value !== beforeVal
               return (
                 <div key={i}>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 2 }}>{item.label}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                     <span style={{
-                      fontSize: 16, fontWeight: 700, letterSpacing: '-.02em',
+                      fontSize: 14, fontWeight: 700, letterSpacing: '-.02em',
                       color: changed ? '#6366F1' : 'var(--tx)',
                     }}>
                       {item.value}
                     </span>
                     {changed && (
-                      <span style={{ fontSize: 10, color: '#6366F1', opacity: 0.7 }}>
+                      <span style={{ fontSize: 9, color: '#6366F1', opacity: 0.7 }}>
                         {tc('chat_scenarioblock.wasBadge', { value: beforeVal })}
                       </span>
                     )}
@@ -108,7 +108,7 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
         <div style={{
           padding: '10px 14px',
           borderTop: '1px solid var(--b)',
-          fontSize: 13,
+          fontSize: 11,
           color: 'var(--tx2)',
           lineHeight: 1.5,
           background: 'var(--sf)',

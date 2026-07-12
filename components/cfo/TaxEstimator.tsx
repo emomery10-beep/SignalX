@@ -108,13 +108,13 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_tax.header_title')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{region.countryName} ({cfg.taxAuthorityShort})</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_tax.header_title')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{region.countryName} ({cfg.taxAuthorityShort})</span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('cfo_tax.ask_prompt', { revenue: fmt(revenue, sym), netProfit: fmt(netProfit, sym), setAside: fmt(tax.totalSetAside, sym), pct: Math.round(tax.pctOfRevenue), smbLabel: region.smbLabel }))}
-            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_tax.ask_ai')}
           </button>
@@ -123,14 +123,14 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
 
       {/* Set-aside hero */}
       <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--b)', background: 'rgba(245,158,11,.03)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
           {tc('cfo_tax.set_aside_this_month')}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: '#F59E0B', fontFamily: 'var(--font-sora, inherit)' }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: '#F59E0B', fontFamily: 'var(--font-sora, inherit)' }}>
             {fmt(tax.totalSetAside, sym)}
           </span>
-          <span style={{ fontSize: 12, color: 'var(--tx3)' }}>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>
             {tc('cfo_tax.pct_of_revenue', { pct: Math.round(tax.pctOfRevenue) })}
           </span>
         </div>
@@ -176,23 +176,23 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
       {cfg.complianceSystem && (
         <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_tax.compliance_title', { system: cfg.complianceSystem })}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_tax.compliance_title', { system: cfg.complianceSystem })}</div>
             <button
               onClick={() => setExpanded(!expanded)}
-              style={{ fontSize: 10, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
+              style={{ fontSize: 9, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
             >
               {expanded ? tc('cfo_tax.hide_details') : tc('cfo_tax.learn_more')}
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: expanded ? 10 : 0 }}>
-            <span style={{ fontSize: 12 }}>&#9888;&#65039;</span>
-            <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>
+            <span style={{ fontSize: 10 }}>&#9888;&#65039;</span>
+            <span style={{ fontSize: 9, color: 'var(--tx2)', lineHeight: 1.5 }}>
               {cfg.compliancePenalty}
             </span>
           </div>
 
           {expanded && cfg.complianceItems && (
-            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.6, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
               <div style={{ marginBottom: 8 }}>
                 <strong style={{ color: 'var(--tx2)' }}>{tc('cfo_tax.what_you_need')}</strong>
               </div>
@@ -202,7 +202,7 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
                 ))}
               </ul>
               <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
-                <span style={{ fontSize: 10, color: '#22C55E', fontWeight: 600 }}>
+                <span style={{ fontSize: 9, color: '#22C55E', fontWeight: 600 }}>
                   {tc('cfo_tax.tip_prefix', { tip: region.complianceTip })}
                 </span>
               </div>
@@ -213,7 +213,7 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
 
       {/* Proactive tax-saving suggestions */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_tax.opportunities_title')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_tax.opportunities_title')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {netProfit > 0 && tax.incomeTax.amount > 0 && (
             <TaxSavingTip
@@ -265,7 +265,7 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
 
       {/* Filing calendar */}
       <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_tax.upcoming_deadlines')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_tax.upcoming_deadlines')}</div>
         <div style={{ display: 'flex', gap: 10 }}>
           <DeadlineChip label={tc('cfo_tax.vat_return', { name: tax.vat.name })} date={tax.vat.due} days={tax.vat.daysUntil} tc={tc} />
           <DeadlineChip label={tc('cfo_tax.income_tax')} date={tax.incomeTax.due} days={tax.incomeTax.daysUntil} tc={tc} />
@@ -282,15 +282,15 @@ function TaxRow({ label, amount, sym, dueDate, daysUntil, deadlineColor, detail,
   return (
     <div style={{ display: 'flex', alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--b)' }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{label}</div>
-        <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{detail}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{label}</div>
+        <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{detail}</div>
       </div>
       <div style={{ textAlign: 'right', marginRight: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(amount, sym)}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(amount, sym)}</div>
       </div>
       <div style={{ textAlign: 'right', minWidth: 80 }}>
-        <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_tax.due_date', { date: dueDate })}</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: deadlineColor }}>
+        <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_tax.due_date', { date: dueDate })}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: deadlineColor }}>
           {daysUntil <= 0 ? tc('cfo_tax.overdue') : tc('cfo_tax.days_until', { days: daysUntil })}
         </div>
       </div>
@@ -305,9 +305,9 @@ function DeadlineChip({ label, date, days, tc }: { label: string; date: string; 
 
   return (
     <div style={{ flex: 1, padding: '8px 10px', borderRadius: 8, background: bg, border: `1px solid ${border}`, textAlign: 'center' }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 600, color }}>{label}</div>
       <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{date}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, color, marginTop: 2 }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color, marginTop: 2 }}>
         {days <= 0 ? tc('cfo_tax.overdue') : tc('cfo_tax.days_short', { days })}
       </div>
     </div>
@@ -318,10 +318,10 @@ function TaxSavingTip({ title, saving, description, color, tc }: { title: string
   return (
     <div style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${color}20`, background: `${color}06` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{title}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{tc('cfo_tax.save_approx', { amount: saving })}</span>
+        <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{title}</span>
+        <span style={{ fontSize: 9, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{tc('cfo_tax.save_approx', { amount: saving })}</span>
       </div>
-      <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4 }}>{description}</div>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4 }}>{description}</div>
     </div>
   )
 }

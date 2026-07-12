@@ -23,25 +23,25 @@ export default function CaseStudiesClient() {
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
           </div>
-          <span style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700 }}>AskBiz</span>
+          <span style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700 }}>AskBiz</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href={localePath("/blog", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_blog")}</Link>
-          <Link href={localePath("/free-tools", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_free_tools")}</Link>
-          <Link href={localePath("/pricing", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_pricing")}</Link>
-          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>{tc("case_studies.nav_try_free")}</Link>
+          <Link href={localePath("/blog", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_blog")}</Link>
+          <Link href={localePath("/free-tools", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_free_tools")}</Link>
+          <Link href={localePath("/pricing", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_pricing")}</Link>
+          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>{tc("case_studies.nav_try_free")}</Link>
         </div>
       </nav>
 
       <section style={{ background: "linear-gradient(150deg, #1a1916 0%, #2d2a26 55%, #1a2030 100%)", padding: "clamp(52px,7vw,80px) clamp(16px,4vw,40px)", textAlign: "center" }}>
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          <div style={{ display: "inline-block", background: "rgba(208,138,89,.18)", border: "1px solid rgba(208,138,89,.3)", color: "#e8a87a", fontSize: 12, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase" as const, padding: "5px 14px", borderRadius: 100, marginBottom: 20 }}>
+          <div style={{ display: "inline-block", background: "rgba(208,138,89,.18)", border: "1px solid rgba(208,138,89,.3)", color: "#e8a87a", fontSize: 10, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase" as const, padding: "5px 14px", borderRadius: 100, marginBottom: 20 }}>
             {tc("case_studies.badge")}
           </div>
           <h1 style={{ fontFamily: "var(--font-sora)", fontSize: "clamp(28px,4.5vw,44px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", letterSpacing: "-.025em", lineHeight: 1.15 }}>
             {tc("case_studies.heading")}
           </h1>
-          <p style={{ color: "rgba(255,255,255,.72)", fontSize: 17, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: "rgba(255,255,255,.72)", fontSize: 15, margin: 0, lineHeight: 1.6 }}>
             {tc("case_studies.subheading")}
           </p>
         </div>
@@ -58,28 +58,28 @@ export default function CaseStudiesClient() {
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = C.b; }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 32 }}>{cs.logo}</span>
+                <span style={{ fontSize: 30 }}>{cs.logo}</span>
                 <div>
-                  <div style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700, color: C.tx }}>{cs.company}</div>
-                  <div style={{ fontSize: 12, color: C.tx3 }}>{cs.industry} · {cs.location}</div>
+                  <div style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700, color: C.tx }}>{cs.company}</div>
+                  <div style={{ fontSize: 10, color: C.tx3 }}>{cs.industry} · {cs.location}</div>
                 </div>
               </div>
 
-              <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 17, fontWeight: 700, color: C.tx, margin: 0, lineHeight: 1.35, letterSpacing: "-.01em" }}>
+              <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700, color: C.tx, margin: 0, lineHeight: 1.35, letterSpacing: "-.01em" }}>
                 {cs.headline}
               </h2>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {cs.results.slice(0, 2).map((r) => (
                   <div key={r.metric} style={{ background: C.el, borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 11, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".04em", marginBottom: 2 }}>{r.metric}</div>
-                    <div style={{ fontFamily: "var(--font-sora)", fontSize: 16, fontWeight: 800, color: C.acc }}>{r.improvement}</div>
+                    <div style={{ fontSize: 9, color: C.tx3, textTransform: "uppercase" as const, letterSpacing: ".04em", marginBottom: 2 }}>{r.metric}</div>
+                    <div style={{ fontFamily: "var(--font-sora)", fontSize: 14, fontWeight: 800, color: C.acc }}>{r.improvement}</div>
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: "auto", paddingTop: 8, borderTop: `1px solid ${C.b}` }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.acc }}>{tc("case_studies.read_case_study")}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.acc }}>{tc("case_studies.read_case_study")}</span>
               </div>
             </Link>
           ))}
@@ -88,23 +88,23 @@ export default function CaseStudiesClient() {
 
       <section style={{ background: "linear-gradient(135deg, #1a1916 0%, #2d2a26 100%)", padding: "clamp(40px,5vw,64px) clamp(16px,4vw,40px)", textAlign: "center" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 24, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>
+          <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>
             {tc("case_studies.cta_heading")}
           </h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.72)", margin: "0 0 24px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,.72)", margin: "0 0 24px", lineHeight: 1.6 }}>
             {tc("case_studies.cta_body")}
           </p>
-          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
+          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
             {tc("case_studies.cta_button")}
           </Link>
         </div>
       </section>
 
       <footer style={{ borderTop: `1px solid ${C.b}`, background: C.sf, padding: "clamp(20px,3vw,28px) clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <span style={{ fontSize: 12, color: C.tx3 }}>{tc("case_studies.footer_copyright")}</span>
+        <span style={{ fontSize: 10, color: C.tx3 }}>{tc("case_studies.footer_copyright")}</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {([["/", tc("case_studies.footer_home")], ["/blog", tc("case_studies.nav_blog")], ["/academy", tc("case_studies.footer_academy")], ["/free-tools", tc("case_studies.nav_free_tools")], ["/pricing", tc("case_studies.nav_pricing")], ["/help", tc("case_studies.footer_help")], ["/privacy", tc("case_studies.footer_privacy")], ["/terms", tc("case_studies.footer_terms")]] as [string, string][]).map(([href, label]) => (
-            <a key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
+            <a key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

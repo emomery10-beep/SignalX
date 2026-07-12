@@ -178,7 +178,7 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
         border: active ? `1.5px solid ${ACC}` : '1px solid var(--b)',
         background: active ? `rgba(208,138,89,.1)` : 'var(--sf)',
         color: active ? ACC : 'var(--tx2)',
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: active ? 700 : 400,
         cursor: 'pointer',
         fontFamily: 'var(--font-sora)',
@@ -321,7 +321,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
             border: '1px solid rgba(208,138,89,.2)',
             background: 'transparent',
             color: 'var(--tx)',
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',
             fontFamily: 'inherit',
@@ -330,7 +330,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
           {tc('pos_audit.backBtn')}
         </button>
 
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, flex: 1 }}>
           {tc('pos_audit.title')}
         </div>
 
@@ -341,7 +341,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
             borderRadius: 9999,
             background: 'var(--ev)',
             color: 'var(--tx2)',
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: 600,
             fontFamily: 'var(--font-sora)',
           }}>
@@ -353,7 +353,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               borderRadius: 9999,
               background: 'rgba(220,38,38,.1)',
               color: RED,
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: 700,
               fontFamily: 'var(--font-sora)',
             }}>
@@ -372,7 +372,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               border: '1px solid var(--b)',
               background: 'var(--sf)',
               color: 'var(--tx2)',
-              fontSize: 15,
+              fontSize: 13,
               cursor: loading ? 'default' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -415,7 +415,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               border: date === '' ? `1.5px solid ${ACC}` : '1px solid var(--b)',
               background: date === '' ? `rgba(208,138,89,.1)` : 'var(--sf)',
               color: date === '' ? ACC : 'var(--tx2)',
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: date === '' ? 700 : 400,
               cursor: 'pointer',
               fontFamily: 'var(--font-sora)',
@@ -432,7 +432,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               border: date === todayStr() ? `1.5px solid ${ACC}` : '1px solid var(--b)',
               background: date === todayStr() ? `rgba(208,138,89,.1)` : 'var(--sf)',
               color: date === todayStr() ? ACC : 'var(--tx2)',
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: date === todayStr() ? 700 : 400,
               cursor: 'pointer',
               fontFamily: 'var(--font-sora)',
@@ -450,7 +450,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               border: date && date !== todayStr() ? `1.5px solid ${ACC}` : '1px solid var(--b)',
               background: 'var(--sf)',
               color: 'var(--tx)',
-              fontSize: 12,
+              fontSize: 10,
               fontFamily: 'inherit',
               cursor: 'pointer',
               outline: 'none',
@@ -470,7 +470,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
             border: '1px solid var(--b)',
             background: 'var(--sf)',
             color: 'var(--tx)',
-            fontSize: 12,
+            fontSize: 10,
             fontFamily: 'inherit',
             outline: 'none',
             width: 200,
@@ -490,13 +490,13 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
           color: 'var(--tx3)',
           ...cardStyle,
         }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>
+          <div style={{ fontSize: 38, marginBottom: 12 }}>
             {sectorIcon(selectedSector)}
           </div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, fontFamily: 'var(--font-sora)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, fontFamily: 'var(--font-sora)' }}>
             {tc('pos_audit.emptyTitle')}
           </div>
-          <div style={{ fontSize: 13, maxWidth: 340, margin: '0 auto', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 11, maxWidth: 340, margin: '0 auto', lineHeight: 1.6 }}>
             {search.trim() ? tc('pos_audit.emptySearchMessage', { search }) : emptyMessage}
           </div>
         </div>
@@ -539,7 +539,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', minHeight: 48 }}>
 
                   {/* Sector icon */}
-                  <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, lineHeight: 1, flexShrink: 0 }}>
                     {sectorIcon(event.sector)}
                   </span>
 
@@ -566,7 +566,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
 
                     {/* Title */}
                     <div style={{
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: 600,
                       color: 'var(--tx)',
                       whiteSpace: 'nowrap',
@@ -579,7 +579,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                     {/* Detail (truncated to one line) */}
                     {event.detail && (
                       <div style={{
-                        fontSize: 10.5,
+                        fontSize: 9.5,
                         color: 'var(--tx3)',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -592,7 +592,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
 
                   {/* Timestamp */}
                   <span style={{
-                    fontSize: 10,
+                    fontSize: 9,
                     color: 'var(--tx3)',
                     flexShrink: 0,
                     whiteSpace: 'nowrap',
@@ -611,19 +611,19 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                     {/* Chips row */}
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: metaEntries.length > 0 ? 10 : 0 }}>
                       {event.actor && (
-                        <span style={{ fontSize: 11, color: 'var(--tx2)', background: 'var(--ev)', padding: '2px 8px', borderRadius: 9999 }}>
+                        <span style={{ fontSize: 9, color: 'var(--tx2)', background: 'var(--ev)', padding: '2px 8px', borderRadius: 9999 }}>
                           {event.actor_role
                             ? tc('pos_audit.actorWithRole', { actor: event.actor, role: event.actor_role })
                             : tc('pos_audit.actorPrefix', { actor: event.actor })}
                         </span>
                       )}
                       {event.entity_ref && (
-                        <span style={{ fontSize: 11, color: sc, background: `${sc}12`, padding: '2px 8px', borderRadius: 9999, fontWeight: 600, fontFamily: 'var(--font-sora)' }}>
+                        <span style={{ fontSize: 9, color: sc, background: `${sc}12`, padding: '2px 8px', borderRadius: 9999, fontWeight: 600, fontFamily: 'var(--font-sora)' }}>
                           #{event.entity_ref}
                         </span>
                       )}
                       {(event.from_value || event.to_value) && (
-                        <span style={{ fontSize: 11, color: 'var(--tx3)', background: 'var(--ev)', padding: '2px 8px', borderRadius: 9999 }}>
+                        <span style={{ fontSize: 9, color: 'var(--tx3)', background: 'var(--ev)', padding: '2px 8px', borderRadius: 9999 }}>
                           {event.from_value && <span style={{ textDecoration: 'line-through', marginRight: 4 }}>{event.from_value}</span>}
                           {event.to_value && <span style={{ color: 'var(--tx2)' }}>{event.to_value}</span>}
                         </span>
@@ -634,7 +634,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                     {metaEntries.length > 0 && (
                       <>
                         <div style={{
-                          fontSize: 11,
+                          fontSize: 9,
                           fontWeight: 700,
                           color: 'var(--tx3)',
                           marginBottom: 8,
@@ -651,10 +651,10 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                         }}>
                           {metaEntries.map(([key, value]) => (
                             <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'capitalize' }}>
+                              <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'capitalize' }}>
                                 {key.replace(/_/g, ' ')}
                               </span>
-                              <span style={{ fontSize: 12, color: 'var(--tx)', wordBreak: 'break-word' }}>
+                              <span style={{ fontSize: 10, color: 'var(--tx)', wordBreak: 'break-word' }}>
                                 {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                               </span>
                             </div>
@@ -673,7 +673,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
       {/* ── Pagination ── */}
       {!loading && visibleEvents.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', paddingTop: 4 }}>
-          <span style={{ fontSize: 12, color: 'var(--tx3)' }}>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>
             {tc('pos_audit.showingCount', { shown: visibleEvents.length.toLocaleString(), total: total.toLocaleString() })}
           </span>
           {visibleEvents.length < total && (
@@ -686,7 +686,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                 border: '1px solid var(--b)',
                 background: 'var(--sf)',
                 color: 'var(--tx)',
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: 600,
                 cursor: loadingMore ? 'default' : 'pointer',
                 fontFamily: 'inherit',

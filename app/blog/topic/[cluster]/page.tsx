@@ -109,7 +109,7 @@ export default function TradeClusterHubPage({ params }: { params: { cluster: str
       `}</style>
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '48px 20px 80px' }}>
-        <nav aria-label="Breadcrumb" style={{ fontSize: 13, color: TX3, marginBottom: 24 }}>
+        <nav aria-label="Breadcrumb" style={{ fontSize: 11, color: TX3, marginBottom: 24 }}>
           <Link href="/" style={{ color: TX3, textDecoration: 'none' }}>Home</Link>
           {' / '}
           <Link href="/blog" style={{ color: TX3, textDecoration: 'none' }}>Blog</Link>
@@ -118,7 +118,7 @@ export default function TradeClusterHubPage({ params }: { params: { cluster: str
         </nav>
 
         <span style={{
-          display: 'inline-block', fontSize: 12, fontWeight: 700, padding: '4px 12px',
+          display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '4px 12px',
           borderRadius: 9999, color: colour.text, background: colour.bg, marginBottom: 14,
         }}>
           Global Trade Intelligence
@@ -127,23 +127,23 @@ export default function TradeClusterHubPage({ params }: { params: { cluster: str
         <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 'clamp(28px,4vw,40px)', fontWeight: 700, letterSpacing: '-.02em', color: TX, marginBottom: 14 }}>
           {cluster}
         </h1>
-        <p style={{ fontSize: 16, lineHeight: 1.7, color: TX2, maxWidth: 640, marginBottom: 24 }}>
+        <p style={{ fontSize: 14, lineHeight: 1.7, color: TX2, maxWidth: 640, marginBottom: 24 }}>
           {CLUSTER_INTRO[cluster]}
         </p>
 
         {/* Stats bar — replaces the plain "N guides" caption with a scannable summary */}
         <div style={{ display: 'flex', gap: 28, paddingBottom: 24, marginBottom: 32, borderBottom: `1px solid ${B}`, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: TX, fontFamily: 'var(--font-sora, Sora)' }}>{posts.length}</div>
-            <div style={{ fontSize: 12, color: TX3 }}>guides</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: TX, fontFamily: 'var(--font-sora, Sora)' }}>{posts.length}</div>
+            <div style={{ fontSize: 10, color: TX3 }}>guides</div>
           </div>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: TX, fontFamily: 'var(--font-sora, Sora)' }}>{totalMinutes}</div>
-            <div style={{ fontSize: 12, color: TX3 }}>min total reading</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: TX, fontFamily: 'var(--font-sora, Sora)' }}>{totalMinutes}</div>
+            <div style={{ fontSize: 10, color: TX3 }}>min total reading</div>
           </div>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: colour.text, fontFamily: 'var(--font-sora, Sora)' }}>3</div>
-            <div style={{ fontSize: 12, color: TX3 }}>trade topics covered</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: colour.text, fontFamily: 'var(--font-sora, Sora)' }}>3</div>
+            <div style={{ fontSize: 10, color: TX3 }}>trade topics covered</div>
           </div>
         </div>
 
@@ -154,29 +154,29 @@ export default function TradeClusterHubPage({ params }: { params: { cluster: str
               border: `1px solid ${B}`, background: SF, textDecoration: 'none',
             }}>
               <span style={{
-                flexShrink: 0, fontSize: 12, fontWeight: 700, color: TX3, background: BG,
+                flexShrink: 0, fontSize: 10, fontWeight: 700, color: TX3, background: BG,
                 width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginTop: 2,
               }}>
                 {i + 1}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: TX, marginBottom: 4, lineHeight: 1.4 }}>{p.title}</h3>
-                <p style={{ fontSize: 14, color: TX2, lineHeight: 1.5, margin: 0 }}>{p.tldr}</p>
-                <span style={{ fontSize: 12, color: TX3, marginTop: 6, display: 'inline-block' }}>{p.readTime} min read</span>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: TX, marginBottom: 4, lineHeight: 1.4 }}>{p.title}</h3>
+                <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>{p.tldr}</p>
+                <span style={{ fontSize: 10, color: TX3, marginTop: 6, display: 'inline-block' }}>{p.readTime} min read</span>
               </div>
-              <span className="hub-card-arrow" style={{ flexShrink: 0, color: colour.text, fontSize: 18, marginTop: 2 }} aria-hidden="true">→</span>
+              <span className="hub-card-arrow" style={{ flexShrink: 0, color: colour.text, fontSize: 16, marginTop: 2 }} aria-hidden="true">→</span>
             </Link>
           ))}
         </div>
 
-        <h2 style={{ fontSize: 14, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 48, marginBottom: 14 }}>
+        <h2 style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 48, marginBottom: 14 }}>
           Other trade intelligence topics
         </h2>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {CLUSTERS.filter(c => c !== cluster).map(c => (
             <Link key={c} href={`/blog/topic/${slugifyCluster(c)}`} className="hub-card" style={{
-              fontSize: 13, fontWeight: 600, color: (CLUSTER_COLOURS[c] || { text: ACC }).text, textDecoration: 'none',
+              fontSize: 11, fontWeight: 600, color: (CLUSTER_COLOURS[c] || { text: ACC }).text, textDecoration: 'none',
               padding: '10px 16px', borderRadius: 9999, border: `1px solid ${B}`, background: SF,
             }}>
               {c} →

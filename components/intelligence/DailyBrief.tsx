@@ -74,8 +74,8 @@ export default function DailyBrief({ onAsk }: Props) {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1' }}>{tc('intel_dailybrief.title')}</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{today}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1' }}>{tc('intel_dailybrief.title')}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{today}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -87,7 +87,7 @@ export default function DailyBrief({ onAsk }: Props) {
               width: 24, height: 24, borderRadius: '50%', border: 'none',
               background: 'var(--ev)', color: 'var(--tx3)', cursor: refreshing ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, padding: 0, lineHeight: 1,
+              fontSize: 11, padding: 0, lineHeight: 1,
               opacity: refreshing ? 0.5 : 1,
               transition: 'opacity 150ms',
             }}
@@ -96,7 +96,7 @@ export default function DailyBrief({ onAsk }: Props) {
           </button>
           <button
             onClick={() => setDismissed(true)}
-            style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--ev)', color: 'var(--tx3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, padding: 0 }}>
+            style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--ev)', color: 'var(--tx3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, padding: 0 }}>
             ✕
           </button>
         </div>
@@ -117,8 +117,8 @@ export default function DailyBrief({ onAsk }: Props) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,.06)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
-            <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>🟢</span>
-            <p style={{ fontSize: 13, color: 'var(--tx)', margin: 0, lineHeight: 1.5 }}>{brief.improved}</p>
+            <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>🟢</span>
+            <p style={{ fontSize: 11, color: 'var(--tx)', margin: 0, lineHeight: 1.5 }}>{brief.improved}</p>
           </div>
 
           {/* Worsened */}
@@ -128,8 +128,8 @@ export default function DailyBrief({ onAsk }: Props) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,.04)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
-            <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>🔴</span>
-            <p style={{ fontSize: 13, color: 'var(--tx)', margin: 0, lineHeight: 1.5 }}>{brief.worsened}</p>
+            <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>🔴</span>
+            <p style={{ fontSize: 11, color: 'var(--tx)', margin: 0, lineHeight: 1.5 }}>{brief.worsened}</p>
           </div>
 
           {/* Action */}
@@ -139,13 +139,13 @@ export default function DailyBrief({ onAsk }: Props) {
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <p style={{ fontSize: 12, fontWeight: 600, color: '#6366F1', margin: 0, flex: 1, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 10, fontWeight: 600, color: '#6366F1', margin: 0, flex: 1, lineHeight: 1.4 }}>
               {tc('intel_dailybrief.todayPrefix')} {brief.action}
             </p>
             {onAsk && (
               <button
                 onClick={() => onAsk(brief.action)}
-                style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                style={{ fontSize: 9, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                 {tc('intel_dailybrief.askAskBiz')}
               </button>
             )}

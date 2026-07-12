@@ -78,32 +78,32 @@ export default function Paywall({ type, questionsUsed = 0, questionLimit = 10, f
 
   return (
     <div onMouseEnter={logTrigger} style={{ maxWidth:460, margin:'16px auto', padding:'24px 26px', borderRadius:18, border:'1px solid rgba(30,212,202,.28)', background:'linear-gradient(135deg,rgba(30,212,202,.06),rgba(146,104,248,.06))', textAlign:'center' }}>
-      <div style={{ fontSize:30, marginBottom:12 }}>{content.emoji}</div>
-      <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:600, marginBottom:8, letterSpacing:'-.02em' }}>
+      <div style={{ fontSize:28, marginBottom:12 }}>{content.emoji}</div>
+      <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:600, marginBottom:8, letterSpacing:'-.02em' }}>
         {content.title}
       </div>
-      <div style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.7, marginBottom:20, maxWidth:360, margin:'0 auto 20px' }}>
+      <div style={{ fontSize:11, color:'var(--tx2)', lineHeight:1.7, marginBottom:20, maxWidth:360, margin:'0 auto 20px' }}>
         {content.body}
       </div>
 
       {/* Feature highlights */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginBottom:20, textAlign:'left' }}>
         {features.map((f, i) => (
-          <div key={i} style={{ fontSize:11, color:'var(--tx2)', padding:'6px 10px', borderRadius:8, background:'rgba(30,212,202,.07)', border:'1px solid rgba(30,212,202,.15)' }}>
+          <div key={i} style={{ fontSize:9, color:'var(--tx2)', padding:'6px 10px', borderRadius:8, background:'rgba(30,212,202,.07)', border:'1px solid rgba(30,212,202,.15)' }}>
             ✓ {f}
           </div>
         ))}
       </div>
 
-      <button onClick={upgrade} style={{ width:'100%', padding:'13px', borderRadius:9999, border:'none', background:'linear-gradient(135deg,#1ed4ca,#9268f8)', color:'#04080f', fontFamily:'var(--font-sora,Sora,sans-serif)', fontSize:14, fontWeight:700, cursor:'pointer', marginBottom:10 }}>
+      <button onClick={upgrade} style={{ width:'100%', padding:'13px', borderRadius:9999, border:'none', background:'linear-gradient(135deg,#1ed4ca,#9268f8)', color:'#04080f', fontFamily:'var(--font-sora,Sora,sans-serif)', fontSize:12, fontWeight:700, cursor:'pointer', marginBottom:10 }}>
         {content.cta}
       </button>
 
-      <button onClick={() => router.push('/billing')} style={{ background:'none', border:'none', color:'var(--tx3)', fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>
+      <button onClick={() => router.push('/billing')} style={{ background:'none', border:'none', color:'var(--tx3)', fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
         {content.secondary}
       </button>
 
-      <div style={{ fontSize:11, color:'var(--tx3)', marginTop:10 }}>
+      <div style={{ fontSize:9, color:'var(--tx3)', marginTop:10 }}>
         {tc('billing_paywall.footer')}
       </div>
     </div>

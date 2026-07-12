@@ -28,11 +28,11 @@ export default function SeoPage({
           <div style={{ width: 26, height: 26, borderRadius: 7, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 15, fontWeight: 700, letterSpacing: '-.02em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 700, letterSpacing: '-.02em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link href="/signin" style={{ fontSize: 13, color: '#6b6760', textDecoration: 'none', padding: '7px 14px' }}>Sign in</Link>
-          <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+          <Link href="/signin" style={{ fontSize: 11, color: '#6b6760', textDecoration: 'none', padding: '7px 14px' }}>Sign in</Link>
+          <Link href="/signin" style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
         </div>
       </nav>
 
@@ -40,7 +40,7 @@ export default function SeoPage({
 
       {/* Hero */}
       <section style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(16px,4vw,24px) clamp(40px,6vw,64px)', textAlign: 'center' }}>
-        <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 600, color: '#d08a59', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 9999, padding: '4px 14px', marginBottom: 20, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+        <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, color: '#d08a59', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 9999, padding: '4px 14px', marginBottom: 20, letterSpacing: '.04em', textTransform: 'uppercase' }}>
           {keyword}
         </div>
         <h1 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(26px,5vw,44px)', fontWeight: 700, letterSpacing: '-.03em', lineHeight: 1.2, marginBottom: 18, color: '#1a1916' }}>
@@ -50,19 +50,19 @@ export default function SeoPage({
           {subheading}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/signin" style={{ fontSize: 15, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '12px 28px', textDecoration: 'none', display: 'inline-block' }}>
+          <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '12px 28px', textDecoration: 'none', display: 'inline-block' }}>
             Start free — no card needed →
           </Link>
-          <Link href="/" style={{ fontSize: 15, color: '#6b6760', borderRadius: 9999, padding: '12px 22px', textDecoration: 'none', border: '1px solid #e8e6e1', background: '#fff', display: 'inline-block' }}>
+          <Link href="/" style={{ fontSize: 13, color: '#6b6760', borderRadius: 9999, padding: '12px 22px', textDecoration: 'none', border: '1px solid #e8e6e1', background: '#fff', display: 'inline-block' }}>
             See how it works
           </Link>
         </div>
-        <p style={{ fontSize: 12, color: '#a39e97', marginTop: 14 }}>10 free questions every month. No credit card required.</p>
+        <p style={{ fontSize: 10, color: '#a39e97', marginTop: 14 }}>10 free questions every month. No credit card required.</p>
       </section>
 
       {/* Intro paragraph — keyword-rich */}
       <section style={{ maxWidth: 760, margin: '0 auto', padding: '0 clamp(16px,4vw,24px) clamp(40px,6vw,64px)' }}>
-        <p style={{ fontSize: 16, lineHeight: 1.85, color: '#4a4844' }}>{intro}</p>
+        <p style={{ fontSize: 14, lineHeight: 1.85, color: '#4a4844' }}>{intro}</p>
       </section>
 
       {/* Problem */}
@@ -71,7 +71,7 @@ export default function SeoPage({
           <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(20px,3.5vw,28px)', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 16, color: '#1a1916' }}>
             {problem.heading}
           </h2>
-          <p style={{ fontSize: 16, lineHeight: 1.85, color: '#4a4844' }}>{problem.body}</p>
+          <p style={{ fontSize: 14, lineHeight: 1.85, color: '#4a4844' }}>{problem.body}</p>
         </div>
       </section>
 
@@ -80,7 +80,7 @@ export default function SeoPage({
         <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(20px,3.5vw,28px)', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 16, color: '#1a1916' }}>
           {solution.heading}
         </h2>
-        <p style={{ fontSize: 16, lineHeight: 1.85, color: '#4a4844' }}>{solution.body}</p>
+        <p style={{ fontSize: 14, lineHeight: 1.85, color: '#4a4844' }}>{solution.body}</p>
       </section>
 
       {/* Features grid */}
@@ -89,13 +89,13 @@ export default function SeoPage({
           <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(20px,3.5vw,28px)', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 8, textAlign: 'center', color: '#1a1916' }}>
             Everything you need. Nothing you don't.
           </h2>
-          <p style={{ fontSize: 15, color: '#6b6760', textAlign: 'center', marginBottom: 40, lineHeight: 1.6 }}>Built for business owners, not data scientists.</p>
+          <p style={{ fontSize: 13, color: '#6b6760', textAlign: 'center', marginBottom: 40, lineHeight: 1.6 }}>Built for business owners, not data scientists.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
             {features.map((f, i) => (
               <div key={i} style={{ padding: '20px 22px', borderRadius: 16, border: '1px solid #e8e6e1', background: '#f9f8f6' }}>
-                <div style={{ fontSize: 24, marginBottom: 10 }}>{f.icon}</div>
-                <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 15, fontWeight: 600, marginBottom: 6, color: '#1a1916' }}>{f.title}</div>
-                <p style={{ fontSize: 14, color: '#6b6760', lineHeight: 1.65, margin: 0 }}>{f.body}</p>
+                <div style={{ fontSize: 22, marginBottom: 10 }}>{f.icon}</div>
+                <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#1a1916' }}>{f.title}</div>
+                <p style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.65, margin: 0 }}>{f.body}</p>
               </div>
             ))}
           </div>
@@ -110,10 +110,10 @@ export default function SeoPage({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           {howItWorks.map((s, i) => (
             <div key={i} style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#d08a59', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora, system-ui)', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{s.step}</div>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#d08a59', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora, system-ui)', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{s.step}</div>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 16, fontWeight: 600, marginBottom: 4, color: '#1a1916' }}>{s.title}</div>
-                <p style={{ fontSize: 14, color: '#6b6760', lineHeight: 1.65, margin: 0 }}>{s.body}</p>
+                <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 14, fontWeight: 600, marginBottom: 4, color: '#1a1916' }}>{s.title}</div>
+                <p style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.65, margin: 0 }}>{s.body}</p>
               </div>
             </div>
           ))}
@@ -130,8 +130,8 @@ export default function SeoPage({
             {faqs.map((faq, i) => (
               <div key={i} style={{ borderBottom: i < faqs.length - 1 ? '1px solid #e8e6e1' : 'none', padding: '20px 0' }}
                 itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
-                <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 15, fontWeight: 600, marginBottom: 8, color: '#1a1916' }} itemProp="name">{faq.q}</div>
-                <div style={{ fontSize: 14, color: '#6b6760', lineHeight: 1.7 }} itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#1a1916' }} itemProp="name">{faq.q}</div>
+                <div style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.7 }} itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
                   <span itemProp="text">{faq.a}</span>
                 </div>
               </div>
@@ -143,21 +143,21 @@ export default function SeoPage({
       {/* CTA */}
       <section style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(48px,8vw,80px) clamp(16px,4vw,24px)', textAlign: 'center' }}>
         <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(22px,4vw,34px)', fontWeight: 700, letterSpacing: '-.025em', marginBottom: 14, color: '#1a1916' }}>{cta.heading}</h2>
-        <p style={{ fontSize: 16, color: '#6b6760', lineHeight: 1.7, marginBottom: 28, maxWidth: 500, margin: '0 auto 28px' }}>{cta.body}</p>
-        <Link href="/signin" style={{ fontSize: 16, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '14px 36px', textDecoration: 'none', display: 'inline-block' }}>
+        <p style={{ fontSize: 14, color: '#6b6760', lineHeight: 1.7, marginBottom: 28, maxWidth: 500, margin: '0 auto 28px' }}>{cta.body}</p>
+        <Link href="/signin" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '14px 36px', textDecoration: 'none', display: 'inline-block' }}>
           Start free — no card needed →
         </Link>
-        <p style={{ fontSize: 12, color: '#a39e97', marginTop: 14 }}>10 free questions every month. Upgrade when you're ready. Cancel anytime.</p>
+        <p style={{ fontSize: 10, color: '#a39e97', marginTop: 14 }}>10 free questions every month. Upgrade when you're ready. Cancel anytime.</p>
       </section>
 
       {/* Related pages */}
       {relatedPages && relatedPages.length > 0 && (
         <section style={{ background: '#fff', borderTop: '1px solid #e8e6e1', padding: 'clamp(32px,5vw,48px) clamp(16px,4vw,24px)' }}>
           <div style={{ maxWidth: 760, margin: '0 auto' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#a39e97', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16 }}>Related guides</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: '#a39e97', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16 }}>Related guides</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {relatedPages.map((p, i) => (
-                <Link key={i} href={p.href} style={{ fontSize: 13, color: '#d08a59', textDecoration: 'none', padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(208,138,89,.3)', background: 'rgba(208,138,89,.05)' }}>
+                <Link key={i} href={p.href} style={{ fontSize: 11, color: '#d08a59', textDecoration: 'none', padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(208,138,89,.3)', background: 'rgba(208,138,89,.05)' }}>
                   {p.label} →
                 </Link>
               ))}
@@ -174,12 +174,12 @@ export default function SeoPage({
           <div style={{ width: 22, height: 22, borderRadius: 6, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 700 }}>AskBiz</span>
-          <span style={{ fontSize: 12, color: '#a39e97', marginLeft: 8 }}>© 2026</span>
+          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 11, fontWeight: 700 }}>AskBiz</span>
+          <span style={{ fontSize: 10, color: '#a39e97', marginLeft: 8 }}>© 2026</span>
         </div>
         <div style={{ display: 'flex', gap: 20 }}>
           {[['/', 'Home'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['mailto:hello@askbiz.co', 'Contact']].map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 13, color: '#6b6760', textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={href} style={{ fontSize: 11, color: '#6b6760', textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

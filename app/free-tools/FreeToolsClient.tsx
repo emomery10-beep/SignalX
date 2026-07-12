@@ -121,7 +121,7 @@ export default function FreeToolsClient() {
       <div className="ft-root">
         {/* ── Breadcrumb ── */}
         <nav aria-label="Breadcrumb" style={{ background: 'rgba(249,248,246,.9)', borderBottom: '1px solid rgba(0,0,0,.08)', padding: '0 clamp(16px,4vw,32px)' }}>
-          <ol style={{ listStyle: 'none', margin: 0, padding: '7px 0', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#a39e97' }}>
+          <ol style={{ listStyle: 'none', margin: 0, padding: '7px 0', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#a39e97' }}>
             <li><Link href={localePath('/', lang as Locale)} style={{ color: '#a39e97', textDecoration: 'none' }}>Home</Link></li>
             <li style={{ margin: '0 2px' }}>›</li>
             <li style={{ color: '#6b6760', fontWeight: 500 }}>Free Tools</li>
@@ -160,7 +160,7 @@ export default function FreeToolsClient() {
         {/* ── Africa tools highlight strip ── */}
         <section style={{ background: 'var(--acc-light)', borderBottom: '1px solid rgba(208,138,89,.2)', padding: 'clamp(24px,3vw,36px) 24px' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--acc)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 12 }}>Popular for Africa-based sellers</p>
+            <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--acc)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 12 }}>Popular for Africa-based sellers</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               {[
                 { icon: '💰', label: 'Profit Margin Calculator', sub: 'Works in KES, NGN, GHS, ZAR', href: '/free-tools/profit-margin-calculator' },
@@ -168,10 +168,10 @@ export default function FreeToolsClient() {
                 { icon: '🧮', label: 'COGS Calculator', sub: 'True cost of goods sold', href: '/free-tools/cogs-calculator' },
               ].map(({ icon, label, sub, href }) => (
                 <a key={href} href={localePath(href, lang as Locale)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--sf)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 10, padding: '12px 16px', textDecoration: 'none', flex: '1 1 220px', minWidth: 200 }}>
-                  <span style={{ fontSize: 24 }}>{icon}</span>
+                  <span style={{ fontSize: 22 }}>{icon}</span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{label}</div>
-                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{sub}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{sub}</div>
                   </div>
                 </a>
               ))}

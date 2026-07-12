@@ -110,13 +110,13 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_threeway.title')}</span>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_threeway.title')}</span>
+          <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>
             {tc('cfo_threeway.badge')}
           </span>
         </div>
         <button onClick={() => onAsk(tc('cfo_threeway.askPrompt', { summary: projected.map(p => tc('cfo_threeway.askMonthLine', { month: p.month, revenue: fmt(p.revenue, sym), net: fmt(p.netProfit, sym), cash: fmt(p.cashBalance, sym) })).join('. '), growth: (forecast.avgRevGrowth * 100).toFixed(1) }))}
-          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_threeway.askAi')}
         </button>
       </div>
@@ -126,7 +126,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
         <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
           {([['linked', tc('cfo_threeway.tabLinked')], ['waterfall', tc('cfo_threeway.tabWaterfall')], ['scenario', tc('cfo_threeway.tabScenario')]] as [View, string][]).map(([id, label]) => (
             <button key={id} onClick={() => setView(id)}
-              style={{ fontSize: 11, fontWeight: view === id ? 600 : 400, padding: '5px 12px', borderRadius: 8, border: `1px solid ${view === id ? INDIGO + '30' : 'var(--b)'}`, background: view === id ? 'rgba(99,102,241,.06)' : 'transparent', color: view === id ? INDIGO : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ fontSize: 9, fontWeight: view === id ? 600 : 400, padding: '5px 12px', borderRadius: 8, border: `1px solid ${view === id ? INDIGO + '30' : 'var(--b)'}`, background: view === id ? 'rgba(99,102,241,.06)' : 'transparent', color: view === id ? INDIGO : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
               {label}
             </button>
           ))}
@@ -137,7 +137,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             {projected.map(p => (
               <div key={p.month} style={{ borderRadius: 10, border: '1px solid var(--b)', overflow: 'hidden' }}>
-                <div style={{ padding: '8px 10px', background: 'var(--ev, #f9f9f8)', borderBottom: '1px solid var(--b)', fontSize: 11, fontWeight: 700, color: 'var(--tx)', textAlign: 'center' }}>
+                <div style={{ padding: '8px 10px', background: 'var(--ev, #f9f9f8)', borderBottom: '1px solid var(--b)', fontSize: 9, fontWeight: 700, color: 'var(--tx)', textAlign: 'center' }}>
                   {p.month}
                 </div>
 
@@ -181,7 +181,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
         {/* ── CASH WATERFALL ── */}
         {view === 'waterfall' && (
           <div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
               {tc('cfo_threeway.waterfallIntro')}
             </div>
             {projected.map((p, i) => {
@@ -193,14 +193,14 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
               return (
                 <div key={p.month} style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 8 }}>{p.month}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', marginBottom: 8 }}>{p.month}</div>
                   <WaterfallRow label={tc('cfo_threeway.openingCash')} value={prevCash} sym={sym} />
                   <WaterfallRow label={tc('cfo_threeway.plusNetProfit')} value={cashFromOps} sym={sym} positive />
                   <WaterfallRow label={tc('cfo_threeway.workingCapital')} value={-wcChange} sym={sym} />
                   <div style={{ borderTop: '2px solid var(--b)', marginTop: 6, paddingTop: 6 }}>
                     <WaterfallRow label={tc('cfo_threeway.closingCash')} value={p.cashBalance} sym={sym} bold />
                   </div>
-                  <div style={{ marginTop: 6, fontSize: 10, color: netCashChange >= 0 ? GREEN : RED, fontWeight: 600 }}>
+                  <div style={{ marginTop: 6, fontSize: 9, color: netCashChange >= 0 ? GREEN : RED, fontWeight: 600 }}>
                     {netCashChange >= 0 ? '↑' : '↓'} {tc('cfo_threeway.netChange', { amount: fmt(Math.abs(netCashChange), sym) })}
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
         {/* ── WHAT-IF SCENARIO ── */}
         {view === 'scenario' && (
           <div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
               {tc('cfo_threeway.scenarioIntro')}
             </div>
 
@@ -222,7 +222,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
               <SliderRow label={tc('cfo_threeway.fixedCostsChange')} value={fixedAdj} onChange={setFixedAdj} color={AMBER} />
               {(revenueAdj !== 0 || cogsAdj !== 0 || fixedAdj !== 0) && (
                 <button onClick={() => { setRevenueAdj(0); setCogsAdj(0); setFixedAdj(0) }}
-                  style={{ fontSize: 10, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>
+                  style={{ fontSize: 9, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>
                   {tc('cfo_threeway.resetBaseline')}
                 </button>
               )}
@@ -238,14 +238,14 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
               ].map(([label, value, color]) => (
                 <div key={label} style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                   <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
                 </div>
               ))}
             </div>
 
             {/* Cascade visualization */}
             <div style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{tc('cfo_threeway.cascadeEffect')}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{tc('cfo_threeway.cascadeEffect')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <CascadeChip label={tc('cfo_threeway.revenue')} change={revenueAdj} color={GREEN} />
                 <Arrow />
@@ -261,8 +261,8 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
         {/* Link explanation */}
         <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)' }}>
-          <div style={{ fontSize: 10, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>{tc('cfo_threeway.howConnectTitle')}</div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>{tc('cfo_threeway.howConnectTitle')}</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
             {tc('cfo_threeway.howConnectBody')}
           </div>
         </div>
@@ -274,8 +274,8 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 function Row({ label, value, color, bold }: { label: string; value: string; color: string; bold?: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
-      <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: bold ? 600 : 400 }}>{label}</span>
-      <span style={{ fontSize: 11, fontWeight: bold ? 700 : 600, color, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+      <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: bold ? 600 : 400 }}>{label}</span>
+      <span style={{ fontSize: 9, fontWeight: bold ? 700 : 600, color, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   )
 }
@@ -283,8 +283,8 @@ function Row({ label, value, color, bold }: { label: string; value: string; colo
 function WaterfallRow({ label, value, sym, bold, positive }: { label: string; value: number; sym: string; bold?: boolean; positive?: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0' }}>
-      <span style={{ fontSize: 11, color: 'var(--tx)', fontWeight: bold ? 700 : 400 }}>{label}</span>
-      <span style={{ fontSize: 12, fontWeight: bold ? 700 : 600, color: value >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
+      <span style={{ fontSize: 9, color: 'var(--tx)', fontWeight: bold ? 700 : 400 }}>{label}</span>
+      <span style={{ fontSize: 10, fontWeight: bold ? 700 : 600, color: value >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
         {fmt(value, sym)}
       </span>
     </div>
@@ -294,10 +294,10 @@ function WaterfallRow({ label, value, sym, bold, positive }: { label: string; va
 function SliderRow({ label, value, onChange, color }: { label: string; value: number; onChange: (v: number) => void; color: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ fontSize: 11, color: 'var(--tx)', fontWeight: 500, minWidth: 110 }}>{label}</span>
+      <span style={{ fontSize: 9, color: 'var(--tx)', fontWeight: 500, minWidth: 110 }}>{label}</span>
       <input type="range" min={-30} max={30} step={5} value={value} onChange={e => onChange(Number(e.target.value))}
         style={{ flex: 1, accentColor: color, height: 4 }} />
-      <span style={{ fontSize: 12, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: value === 0 ? 'var(--tx3)' : value > 0 ? '#22C55E' : '#EF4444', minWidth: 45, textAlign: 'right' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: value === 0 ? 'var(--tx3)' : value > 0 ? '#22C55E' : '#EF4444', minWidth: 45, textAlign: 'right' }}>
         {value > 0 ? '+' : ''}{value}%
       </span>
     </div>
@@ -308,7 +308,7 @@ function CascadeChip({ label, change, color }: { label: string; change: number; 
   return (
     <div style={{ padding: '4px 8px', borderRadius: 6, border: `1px solid ${color}25`, background: `${color}08`, textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500 }}>{label}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
         {change >= 0 ? '+' : ''}{change.toFixed(1)}%
       </div>
     </div>

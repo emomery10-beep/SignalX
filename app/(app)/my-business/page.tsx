@@ -423,12 +423,12 @@ export default function MyBusinessPage() {
               <h1 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(18px,3vw,23px)', fontWeight:700, letterSpacing:'-.025em', marginBottom:3 }}>
                 {tc('page_mybusiness.greetingHeading', { greeting, name: loading ? '…' : userName })}
               </h1>
-              <p style={{ fontSize:17, color:'var(--tx2)' }}>
+              <p style={{ fontSize:15, color:'var(--tx2)' }}>
                 {tc('page_mybusiness.headerSubtitle')}
               </p>
             </div>
             <button onClick={() => router.push('/chat')}
-              style={{ padding:'9px 18px', borderRadius:9999, border:'none', background:'var(--acc)', color:'#fff', fontFamily:'inherit', fontSize:17, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:7, flexShrink:0 }}>
+              style={{ padding:'9px 18px', borderRadius:9999, border:'none', background:'var(--acc)', color:'#fff', fontFamily:'inherit', fontSize:15, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:7, flexShrink:0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               {tc('page_mybusiness.btnAskAskbiz')}
             </button>
@@ -442,14 +442,14 @@ export default function MyBusinessPage() {
                   onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform='translateY(-2px)'; el.style.boxShadow='0 4px 16px rgba(0,0,0,.08)' }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.transform='none'; el.style.boxShadow='none' }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-                    <div style={{ width:30, height:30, borderRadius:8, background:k.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{k.icon}</div>
-                    <div style={{ fontSize:20, color: k.trend==='up'?'#22c55e':k.trend==='down'?'#f48080':'var(--tx3)', fontWeight:500 }}>
+                    <div style={{ width:30, height:30, borderRadius:8, background:k.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>{k.icon}</div>
+                    <div style={{ fontSize:18, color: k.trend==='up'?'#22c55e':k.trend==='down'?'#f48080':'var(--tx3)', fontWeight:500 }}>
                       {k.trend==='up'?'↑':k.trend==='down'?'↓':''}
                     </div>
                   </div>
-                  <div style={{ fontFamily:'var(--font-sora)', fontSize:22, fontWeight:700, color:k.color, marginBottom:2, lineHeight:1.2 }}>{k.value}</div>
-                  <div style={{ fontSize:15, color:'var(--tx2)', fontWeight:500 }}>{k.label}</div>
-                  <div style={{ fontSize:14, color:'var(--tx3)', marginTop:1 }}>{k.sub}</div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:20, fontWeight:700, color:k.color, marginBottom:2, lineHeight:1.2 }}>{k.value}</div>
+                  <div style={{ fontSize:13, color:'var(--tx2)', fontWeight:500 }}>{k.label}</div>
+                  <div style={{ fontSize:12, color:'var(--tx3)', marginTop:1 }}>{k.sub}</div>
                 </div>
               ))}
             </div>
@@ -480,8 +480,8 @@ export default function MyBusinessPage() {
                   <div style={{ width: 18, height: 18, border: `2px solid ${c.border}`, borderTopColor: c.text, borderRadius: '50%', animation: 'spin .8s linear infinite' }}/>
                 ) : (
                   <>
-                    <span style={{ fontSize: 28, fontWeight: 700, color: c.text, letterSpacing: '-.04em', lineHeight: 1, fontFamily: 'var(--font-sora)' }}>{score}</span>
-                    <span style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 1 }}>{tc('page_mybusiness.pulseScoreSuffix')}</span>
+                    <span style={{ fontSize: 26, fontWeight: 700, color: c.text, letterSpacing: '-.04em', lineHeight: 1, fontFamily: 'var(--font-sora)' }}>{score}</span>
+                    <span style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 1 }}>{tc('page_mybusiness.pulseScoreSuffix')}</span>
                   </>
                 )}
               </div>
@@ -491,25 +491,25 @@ export default function MyBusinessPage() {
                 <span style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(14px,2.5vw,16px)', fontWeight: 600, color: c.text }}>
                   {loading ? tc('page_mybusiness.pulseCalculating') : health?.label || 'Business Pulse'}
                 </span>
-                <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('page_mybusiness.pulseHealthScore')}</span>
+                <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('page_mybusiness.pulseHealthScore')}</span>
               </div>
-              <p style={{ fontSize: 17, color: 'var(--tx2)', margin: '0 0 12px', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 15, color: 'var(--tx2)', margin: '0 0 12px', lineHeight: 1.6 }}>
                 {loading
                   ? tc('page_mybusiness.pulseFetching')
                   : health?.summary || tc('page_mybusiness.pulseConnectCta')}
               </p>
               {health?.topIssue && (
                 <button onClick={() => ask(health.topIssue!)}
-                  style={{ fontSize: 16, fontWeight: 600, color: c.text, background: 'transparent', border: `1px solid ${c.border}`, borderRadius: 'var(--rf)', padding: '5px 13px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>
+                  style={{ fontSize: 14, fontWeight: 600, color: c.text, background: 'transparent', border: `1px solid ${c.border}`, borderRadius: 'var(--rf)', padding: '5px 13px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>
                   {tc('page_mybusiness.pulseWhatToDo')}
                 </button>
               )}
               {!health && !loading && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button onClick={() => router.push('/sources')} style={{ fontSize: 16, fontWeight: 600, color: 'var(--acc)', background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 'var(--rf)', padding: '5px 13px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>
+                  <button onClick={() => router.push('/sources')} style={{ fontSize: 14, fontWeight: 600, color: 'var(--acc)', background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 'var(--rf)', padding: '5px 13px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>
                     {tc('page_mybusiness.pulseConnectShopify')}
                   </button>
-                  <button onClick={() => router.push('/ask')} style={{ fontSize: 16, color: 'var(--tx2)', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 'var(--rf)', padding: '5px 13px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>
+                  <button onClick={() => router.push('/ask')} style={{ fontSize: 14, color: 'var(--tx2)', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 'var(--rf)', padding: '5px 13px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 32 }}>
                     {tc('page_mybusiness.pulseUploadFile')}
                   </button>
                 </div>
@@ -522,10 +522,10 @@ export default function MyBusinessPage() {
             <div style={{ background:'var(--sf)', border:'1px solid var(--b)', borderRadius:18, padding:'16px 18px', marginBottom:12 }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
                 <div>
-                  <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:600, marginBottom:2 }}>{tc('page_mybusiness.insightsTitle')}</div>
-                  <div style={{ fontSize:15, color:'var(--tx3)' }}>{tc('page_mybusiness.insightsWatching')}</div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:600, marginBottom:2 }}>{tc('page_mybusiness.insightsTitle')}</div>
+                  <div style={{ fontSize:13, color:'var(--tx3)' }}>{tc('page_mybusiness.insightsWatching')}</div>
                 </div>
-                <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:15, color:'#22c55e', fontWeight:500 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:'#22c55e', fontWeight:500 }}>
                   <span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', display:'inline-block', animation:'pulse 2s infinite' }}/>
                   {tc('page_mybusiness.insightsLive')}
                 </div>
@@ -535,9 +535,9 @@ export default function MyBusinessPage() {
                   style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 13px', borderRadius:12, border:`1px solid ${URGENCY_BORDER[ins.urgency]}`, background:URGENCY_BG[ins.urgency], marginBottom:7, cursor:'pointer', transition:'transform 150ms' }}
                   onMouseEnter={e => e.currentTarget.style.transform='translateX(3px)'}
                   onMouseLeave={e => e.currentTarget.style.transform='none'}>
-                  <div style={{ fontSize:20, flexShrink:0 }}>{ins.type==='alert'?'⚠️':ins.type==='win'?'🎯':ins.type==='trend'?'📈':'💡'}</div>
-                  <div style={{ flex:1, fontSize:17, color:'var(--tx)', lineHeight:1.5 }}>{ins.message}</div>
-                  <div style={{ fontSize:15, color:URGENCY_COLOR[ins.urgency], fontWeight:500, flexShrink:0, whiteSpace:'nowrap' }}>{ins.action} →</div>
+                  <div style={{ fontSize:18, flexShrink:0 }}>{ins.type==='alert'?'⚠️':ins.type==='win'?'🎯':ins.type==='trend'?'📈':'💡'}</div>
+                  <div style={{ flex:1, fontSize:15, color:'var(--tx)', lineHeight:1.5 }}>{ins.message}</div>
+                  <div style={{ fontSize:13, color:URGENCY_COLOR[ins.urgency], fontWeight:500, flexShrink:0, whiteSpace:'nowrap' }}>{ins.action} →</div>
                 </div>
               ))}
             </div>
@@ -551,9 +551,9 @@ export default function MyBusinessPage() {
               { label: tc('page_mybusiness.metricShipping30d'), value: loading ? '–' : fmt(2410, sym),  sub: tc('page_mybusiness.metricShippingSub'), warn: true },
             ].map((m, i) => (
               <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)', padding: '13px 15px', boxShadow: 'var(--sh)' }}>
-                <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 6, fontWeight: 500 }}>{m.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.02em', fontFamily: 'var(--font-sora)', marginBottom: 4 }}>{m.value}</div>
-                <div style={{ fontSize: 15, color: m.warn ? '#d97706' : '#16a34a', fontWeight: 500 }}>{m.sub}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 6, fontWeight: 500 }}>{m.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', letterSpacing: '-.02em', fontFamily: 'var(--font-sora)', marginBottom: 4 }}>{m.value}</div>
+                <div style={{ fontSize: 13, color: m.warn ? '#d97706' : '#16a34a', fontWeight: 500 }}>{m.sub}</div>
               </div>
             ))}
           </div>
@@ -562,22 +562,22 @@ export default function MyBusinessPage() {
           <div className="mbc-trends" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 12 }}>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)', padding: '14px 15px', boxShadow: 'var(--sh)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)' }}>{tc('page_mybusiness.chartRevenue')}</div>
-                <span style={{ fontSize: 14, padding: '2px 7px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.1)', color: '#16a34a', fontWeight: 600 }}>{tc('page_mybusiness.chartRevBadge')}</span>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{tc('page_mybusiness.chartRevenue')}</div>
+                <span style={{ fontSize: 12, padding: '2px 7px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.1)', color: '#16a34a', fontWeight: 600 }}>{tc('page_mybusiness.chartRevBadge')}</span>
               </div>
               <Bars data={revTrend} accent="#16a34a"/>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 14, color: 'var(--tx3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 12, color: 'var(--tx3)' }}>
                 <span>{tc('page_mybusiness.chartSixMonthsAgo')}</span>
                 <span style={{ color: '#16a34a', fontWeight: 600 }}>{tc('page_mybusiness.chartThisMonth')}</span>
               </div>
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)', padding: '14px 15px', boxShadow: 'var(--sh)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)' }}>{tc('page_mybusiness.chartShipping')}</div>
-                <span style={{ fontSize: 14, padding: '2px 7px', borderRadius: 'var(--rf)', background: 'rgba(245,158,11,.1)', color: '#d97706', fontWeight: 600 }}>{tc('page_mybusiness.chartShippingBadge')}</span>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{tc('page_mybusiness.chartShipping')}</div>
+                <span style={{ fontSize: 12, padding: '2px 7px', borderRadius: 'var(--rf)', background: 'rgba(245,158,11,.1)', color: '#d97706', fontWeight: 600 }}>{tc('page_mybusiness.chartShippingBadge')}</span>
               </div>
               <Bars data={shipTrend} accent="var(--acc)"/>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 14, color: 'var(--tx3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 12, color: 'var(--tx3)' }}>
                 <span>{tc('page_mybusiness.chartSixMonthsAgo')}</span>
                 <span style={{ color: 'var(--acc)', fontWeight: 600 }}>{tc('page_mybusiness.chartThisMonth')}</span>
               </div>
@@ -588,20 +588,20 @@ export default function MyBusinessPage() {
           <div style={{ background:'var(--sf)', border:'1px solid var(--b)', borderRadius:18, padding:'16px 18px', marginBottom:12 }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
               <div>
-                <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:600, marginBottom:2 }}>{tc('page_mybusiness.revByProductTitle')}</div>
-                <div style={{ fontSize:15, color:'var(--tx3)' }}>{tc('page_mybusiness.revByProductSub')}</div>
+                <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:600, marginBottom:2 }}>{tc('page_mybusiness.revByProductTitle')}</div>
+                <div style={{ fontSize:13, color:'var(--tx3)' }}>{tc('page_mybusiness.revByProductSub')}</div>
               </div>
               <div style={{ display:'flex', gap:8 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:15, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(208,138,89,.75)', display:'inline-block' }}/> {tc('page_mybusiness.revByProductTop3')}</div>
-                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:15, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(140,111,224,.65)', display:'inline-block' }}/> {tc('page_mybusiness.revByProductOthers')}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:13, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(208,138,89,.75)', display:'inline-block' }}/> {tc('page_mybusiness.revByProductTop3')}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:13, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(140,111,224,.65)', display:'inline-block' }}/> {tc('page_mybusiness.revByProductOthers')}</div>
               </div>
             </div>
             <div style={{ position:'relative', height:180 }}>
               {uploads.length === 0
                 ? <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:10 }}>
-                    <div style={{ fontSize:32 }}>📊</div>
-                    <div style={{ fontSize:17, color:'var(--tx3)', textAlign:'center' }}>{tc('page_mybusiness.revByProductUploadCta')}</div>
-                    <button onClick={() => router.push('/files')} style={{ padding:'6px 14px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--acc)', fontFamily:'inherit', fontSize:16, cursor:'pointer' }}>{tc('page_mybusiness.uploadCsvBtn')}</button>
+                    <div style={{ fontSize:30 }}>📊</div>
+                    <div style={{ fontSize:15, color:'var(--tx3)', textAlign:'center' }}>{tc('page_mybusiness.revByProductUploadCta')}</div>
+                    <button onClick={() => router.push('/files')} style={{ padding:'6px 14px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--acc)', fontFamily:'inherit', fontSize:14, cursor:'pointer' }}>{tc('page_mybusiness.uploadCsvBtn')}</button>
                   </div>
                 : <canvas ref={chartRef}/>
               }
@@ -610,13 +610,13 @@ export default function MyBusinessPage() {
 
           {/* ── Margin health (donut) ──────────────────────── */}
           <div style={{ background:'var(--sf)', border:'1px solid var(--b)', borderRadius:18, padding:'16px 18px', marginBottom:12 }}>
-            <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:600, marginBottom:2 }}>{tc('page_mybusiness.marginHealthTitle')}</div>
-            <div style={{ fontSize:15, color:'var(--tx3)', marginBottom:12 }}>{tc('page_mybusiness.marginHealthSub')}</div>
+            <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:600, marginBottom:2 }}>{tc('page_mybusiness.marginHealthTitle')}</div>
+            <div style={{ fontSize:13, color:'var(--tx3)', marginBottom:12 }}>{tc('page_mybusiness.marginHealthSub')}</div>
             <div style={{ position:'relative', height:160 }}>
               {uploads.length === 0
                 ? <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:8 }}>
-                    <div style={{ fontSize:28 }}>🍩</div>
-                    <div style={{ fontSize:16, color:'var(--tx3)', textAlign:'center' }}>{tc('page_mybusiness.marginHealthUploadCta')}</div>
+                    <div style={{ fontSize:26 }}>🍩</div>
+                    <div style={{ fontSize:14, color:'var(--tx3)', textAlign:'center' }}>{tc('page_mybusiness.marginHealthUploadCta')}</div>
                   </div>
                 : <canvas ref={chart2Ref}/>
               }
@@ -634,10 +634,10 @@ export default function MyBusinessPage() {
             <div style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--acc)', marginTop: 5, flexShrink: 0 }}/>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>
                   {tc('page_mybusiness.shippingInsightTitle')}
                 </div>
-                <div style={{ fontSize: 16, color: 'var(--tx2)', lineHeight: 1.6 }}>
+                <div style={{ fontSize: 14, color: 'var(--tx2)', lineHeight: 1.6 }}>
                   {tc('page_mybusiness.shippingInsightBody', { spent: fmt(2410, sym), prev: fmt(2042, sym), perParcel: sym + '4.20', low: sym + '2.90', high: sym + '3.40' })}
                 </div>
               </div>
@@ -645,7 +645,7 @@ export default function MyBusinessPage() {
             <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
               <button
                 onClick={() => { setShowQuote(v => !v); setQuotes([]); setBookedUrl('') }}
-                style={{ fontSize: 16, fontWeight: 600, background: 'var(--acc)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', padding: '8px 15px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36, boxShadow: '0 2px 8px rgba(208,138,89,.3)', transition: 'opacity 150ms' }}
+                style={{ fontSize: 14, fontWeight: 600, background: 'var(--acc)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', padding: '8px 15px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36, boxShadow: '0 2px 8px rgba(208,138,89,.3)', transition: 'opacity 150ms' }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = '.85')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
               >
@@ -653,7 +653,7 @@ export default function MyBusinessPage() {
               </button>
               <button
                 onClick={() => ask('Break down my shipping costs by route and carrier for the last 30 days')}
-                style={{ fontSize: 16, color: 'var(--tx2)', background: 'transparent', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>
+                style={{ fontSize: 14, color: 'var(--tx2)', background: 'transparent', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', minHeight: 36 }}>
                 {tc('page_mybusiness.btnAnalyseRoute')}
               </button>
             </div>
@@ -672,10 +672,10 @@ export default function MyBusinessPage() {
               boxShadow: 'var(--shl)',
               animation: 'scaleIn 200ms var(--ease)',
             }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>
                 {tc('page_mybusiness.quotePanelTitle')}
               </div>
-              <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 14 }}>
+              <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 14 }}>
                 {tc('page_mybusiness.quotePanelSub')}
               </div>
 
@@ -685,12 +685,12 @@ export default function MyBusinessPage() {
                   onChange={e => setNlInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleNlParse()}
                   placeholder={tc('page_mybusiness.quoteNlPlaceholder')}
-                  style={{ flex: 1, padding: '10px 13px', fontSize: 17, background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', color: 'var(--tx)', outline: 'none', fontFamily: 'inherit' }}
+                  style={{ flex: 1, padding: '10px 13px', fontSize: 15, background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', color: 'var(--tx)', outline: 'none', fontFamily: 'inherit' }}
                 />
                 <button
                   onClick={handleNlParse}
                   disabled={nlParsing || !nlInput.trim()}
-                  style={{ padding: '10px 16px', fontSize: 17, fontWeight: 600, background: 'var(--tx)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--r-md)', cursor: nlParsing ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: nlParsing ? .6 : 1, whiteSpace: 'nowrap', minHeight: 44 }}>
+                  style={{ padding: '10px 16px', fontSize: 15, fontWeight: 600, background: 'var(--tx)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--r-md)', cursor: nlParsing ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: nlParsing ? .6 : 1, whiteSpace: 'nowrap', minHeight: 44 }}>
                   {nlParsing ? tc('page_mybusiness.quoteReading') : tc('page_mybusiness.btnGetQuotes')}
                 </button>
               </div>
@@ -732,15 +732,15 @@ export default function MyBusinessPage() {
               <button
                 onClick={() => fetchQuotes()}
                 disabled={quoteLoading}
-                style={{ width: '100%', padding: '11px', fontSize: 17, fontWeight: 600, background: 'var(--acc)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: quoteLoading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: quoteLoading ? .7 : 1, minHeight: 44, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}>
+                style={{ width: '100%', padding: '11px', fontSize: 15, fontWeight: 600, background: 'var(--acc)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: quoteLoading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: quoteLoading ? .7 : 1, minHeight: 44, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}>
                 {quoteLoading ? tc('page_mybusiness.quoteChecking') : tc('page_mybusiness.btnGetQuotes')}
               </button>
 
               {quoteError && (
-                <div style={{ marginTop: 10, padding: '9px 12px', borderRadius: 'var(--r-md)', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', fontSize: 16, color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ marginTop: 10, padding: '9px 12px', borderRadius: 'var(--r-md)', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', fontSize: 14, color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <span>{quoteError}</span>
                   {quoteError.includes('Settings') && (
-                    <button onClick={() => router.push('/settings')} style={{ fontSize: 16, color: 'var(--acc)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, whiteSpace: 'nowrap', minHeight: 'unset' }}>
+                    <button onClick={() => router.push('/settings')} style={{ fontSize: 14, color: 'var(--acc)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, whiteSpace: 'nowrap', minHeight: 'unset' }}>
                       {tc('page_mybusiness.btnGoSettings')}
                     </button>
                   )}
@@ -749,7 +749,7 @@ export default function MyBusinessPage() {
 
               {quotes.length > 0 && (
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 9 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 9 }}>
                     {tc('page_mybusiness.quoteServicesAvailable', { count: quotes.length })}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 12 }}>
@@ -762,13 +762,13 @@ export default function MyBusinessPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{q.carrier}</span>
-                              {i === 0 && <span style={{ fontSize: 14, padding: '1px 6px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.12)', color: '#16a34a', fontWeight: 700 }}>{tc('page_mybusiness.quoteCheapest')}</span>}
-                              {q.customs_invoice_required && <span style={{ fontSize: 14, padding: '1px 6px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', color: 'var(--acc)', fontWeight: 500 }}>{tc('page_mybusiness.quoteCustomsDocs')}</span>}
+                              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)' }}>{q.carrier}</span>
+                              {i === 0 && <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.12)', color: '#16a34a', fontWeight: 700 }}>{tc('page_mybusiness.quoteCheapest')}</span>}
+                              {q.customs_invoice_required && <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', color: 'var(--acc)', fontWeight: 500 }}>{tc('page_mybusiness.quoteCustomsDocs')}</span>}
                             </div>
-                            <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{q.service_name} · {q.service_description}</div>
+                            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{q.service_name} · {q.service_description}</div>
                           </div>
-                          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: i === 0 ? '#16a34a' : 'var(--tx)', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: i === 0 ? '#16a34a' : 'var(--tx)', flexShrink: 0 }}>
                             £{parseFloat(q.total_price_gross).toFixed(2)}
                           </div>
                         </div>
@@ -779,7 +779,7 @@ export default function MyBusinessPage() {
                   {selectedService && !bookedUrl && (
                     <button
                       onClick={handleBook}
-                      style={{ width: '100%', padding: '11px', fontSize: 17, fontWeight: 600, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer', fontFamily: 'inherit', minHeight: 44, boxShadow: '0 2px 8px rgba(34,197,94,.25)', transition: 'opacity 150ms' }}
+                      style={{ width: '100%', padding: '11px', fontSize: 15, fontWeight: 600, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer', fontFamily: 'inherit', minHeight: 44, boxShadow: '0 2px 8px rgba(34,197,94,.25)', transition: 'opacity 150ms' }}
                       onMouseEnter={e => (e.currentTarget.style.opacity = '.85')}
                       onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
                       {tc('page_mybusiness.btnBook', { carrier: quotes.find(q => q.service === selectedService)?.carrier ?? '' })}
@@ -788,11 +788,11 @@ export default function MyBusinessPage() {
 
                   {bookedUrl && (
                     <div style={{ padding: '14px 16px', borderRadius: 'var(--r-lg)', background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)' }}>
-                      <div style={{ fontSize: 17, fontWeight: 600, color: '#16a34a', marginBottom: 9 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: '#16a34a', marginBottom: 9 }}>
                         {tc('page_mybusiness.shipmentBooked')}
                       </div>
                       <a href={bookedUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', padding: '9px 18px', background: '#16a34a', color: '#fff', borderRadius: 'var(--r-md)', fontSize: 17, fontWeight: 600, textDecoration: 'none', minHeight: 44 }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', padding: '9px 18px', background: '#16a34a', color: '#fff', borderRadius: 'var(--r-md)', fontSize: 15, fontWeight: 600, textDecoration: 'none', minHeight: 44 }}>
                         {tc('page_mybusiness.btnPayPrint')}
                       </a>
                     </div>
@@ -811,29 +811,29 @@ export default function MyBusinessPage() {
               padding: '14px 16px',
               marginBottom: 12,
             }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
                 {tc('page_mybusiness.dailyBriefTitle')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 11 }}>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 17, flexShrink: 0 }}>🟢</span>
-                  <p style={{ fontSize: 17, color: 'var(--tx)', margin: 0, lineHeight: 1.55 }}>{brief.improved}</p>
+                  <span style={{ fontSize: 15, flexShrink: 0 }}>🟢</span>
+                  <p style={{ fontSize: 15, color: 'var(--tx)', margin: 0, lineHeight: 1.55 }}>{brief.improved}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 17, flexShrink: 0 }}>🔴</span>
-                  <p style={{ fontSize: 17, color: 'var(--tx)', margin: 0, lineHeight: 1.55 }}>{brief.worsened}</p>
+                  <span style={{ fontSize: 15, flexShrink: 0 }}>🔴</span>
+                  <p style={{ fontSize: 15, color: 'var(--tx)', margin: 0, lineHeight: 1.55 }}>{brief.worsened}</p>
                 </div>
               </div>
               <div style={{ padding: '10px 12px', borderRadius: 'var(--r-md)', background: 'rgba(99,102,241,.08)', border: '1px solid rgba(99,102,241,.12)', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
-                <p style={{ fontSize: 16, fontWeight: 600, color: '#6366F1', margin: 0, flex: 1, lineHeight: 1.4 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#6366F1', margin: 0, flex: 1, lineHeight: 1.4 }}>
                   {tc('page_mybusiness.dailyBriefToday', { action: brief.action })}
                 </p>
                 <button
                   onClick={() => ask(brief.action)}
-                  style={{ fontSize: 15, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 'var(--rf)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 32 }}>
+                  style={{ fontSize: 13, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 'var(--rf)', padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 32 }}>
                   {tc('page_mybusiness.btnAsk')}
                 </button>
               </div>
@@ -842,20 +842,20 @@ export default function MyBusinessPage() {
 
           {/* ── Quick actions ──────────────────────────────── */}
           <div style={{ background:'var(--sf)', border:'1px solid var(--b)', borderRadius:18, padding:'16px 18px', marginBottom:12 }}>
-            <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:600, marginBottom:3 }}>{tc('page_mybusiness.quickActionsTitle')}</div>
-            <div style={{ fontSize:15, color:'var(--tx3)', marginBottom:10 }}>{tc('page_mybusiness.quickActionsSub')}</div>
+            <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:600, marginBottom:3 }}>{tc('page_mybusiness.quickActionsTitle')}</div>
+            <div style={{ fontSize:13, color:'var(--tx3)', marginBottom:10 }}>{tc('page_mybusiness.quickActionsSub')}</div>
             <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
               {quickActions.map((a,i) => (
                 <div key={i} onClick={() => router.push(a.href)}
                   style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:`1px solid ${a.border}`, background:a.accent, cursor:'pointer', transition:'transform 150ms' }}
                   onMouseEnter={e => e.currentTarget.style.transform='translateX(3px)'}
                   onMouseLeave={e => e.currentTarget.style.transform='none'}>
-                  <div style={{ fontSize:20, flexShrink:0 }}>{a.icon}</div>
+                  <div style={{ fontSize:18, flexShrink:0 }}>{a.icon}</div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:17, fontWeight:500 }}>{a.label}</div>
-                    <div style={{ fontSize:15, color:'var(--tx3)' }}>{a.desc}</div>
+                    <div style={{ fontSize:15, fontWeight:500 }}>{a.label}</div>
+                    <div style={{ fontSize:13, color:'var(--tx3)' }}>{a.desc}</div>
                   </div>
-                  <div style={{ color:'var(--tx3)', fontSize:16 }}>→</div>
+                  <div style={{ color:'var(--tx3)', fontSize:14 }}>→</div>
                 </div>
               ))}
             </div>
@@ -864,22 +864,22 @@ export default function MyBusinessPage() {
           {/* ── Your files ─────────────────────────────────── */}
           <div style={{ background:'var(--sf)', border:'1px solid var(--b)', borderRadius:18, padding:'16px 18px', marginBottom:12 }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:600 }}>{tc('page_mybusiness.filesTitle')}</div>
-              <button onClick={() => router.push('/files')} style={{ fontSize:15, color:'var(--acc)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>{tc('page_mybusiness.filesManage')}</button>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:600 }}>{tc('page_mybusiness.filesTitle')}</div>
+              <button onClick={() => router.push('/files')} style={{ fontSize:13, color:'var(--acc)', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>{tc('page_mybusiness.filesManage')}</button>
             </div>
             {uploads.length === 0
-              ? <label style={{ display:'block', padding:'14px', borderRadius:12, border:'2px dashed var(--b2)', textAlign:'center', cursor:'pointer', color:'var(--tx3)', fontSize:16 }}>
+              ? <label style={{ display:'block', padding:'14px', borderRadius:12, border:'2px dashed var(--b2)', textAlign:'center', cursor:'pointer', color:'var(--tx3)', fontSize:14 }}>
                   {tc('page_mybusiness.filesUploadLabel')}
                   <input type="file" accept=".csv,.xlsx,.xls" style={{ display:'none' }} onChange={() => router.push('/files')}/>
                 </label>
               : uploads.slice(0,3).map((f,i) => (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0', borderBottom: i < Math.min(uploads.length,3)-1 ? '1px solid var(--b)' : 'none' }}>
-                  <div style={{ width:30, height:30, borderRadius:8, background:'rgba(208,138,89,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>📄</div>
+                  <div style={{ width:30, height:30, borderRadius:8, background:'rgba(208,138,89,.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>📄</div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:16, fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.filename}</div>
-                    <div style={{ fontSize:14, color:'var(--tx3)' }}>{tc('page_mybusiness.filesRows', { count: f.row_count?.toLocaleString() })}</div>
+                    <div style={{ fontSize:14, fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.filename}</div>
+                    <div style={{ fontSize:12, color:'var(--tx3)' }}>{tc('page_mybusiness.filesRows', { count: f.row_count?.toLocaleString() })}</div>
                   </div>
-                  <button onClick={() => router.push('/chat')} style={{ fontSize:14, padding:'3px 8px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx2)', cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0 }}>{tc('page_mybusiness.filesAsk')}</button>
+                  <button onClick={() => router.push('/chat')} style={{ fontSize:12, padding:'3px 8px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx2)', cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', flexShrink:0 }}>{tc('page_mybusiness.filesAsk')}</button>
                 </div>
               ))
             }
@@ -888,18 +888,18 @@ export default function MyBusinessPage() {
           {/* ── No data state ──────────────────────────────── */}
           {!health && !loading && uploads.length === 0 && (
             <div style={{ padding: '20px', borderRadius: 'var(--r-xl)', border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center', boxShadow: 'var(--sh)' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>📊</div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
+              <div style={{ fontSize: 34, marginBottom: 12 }}>📊</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
                 {tc('page_mybusiness.noDataTitle')}
               </div>
-              <p style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6, maxWidth: 360, margin: '0 auto 16px' }}>
+              <p style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6, maxWidth: 360, margin: '0 auto 16px' }}>
                 {tc('page_mybusiness.noDataBody')}
               </p>
               <div style={{ display: 'flex', gap: 9, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => router.push('/sources')} style={{ padding: '10px 20px', borderRadius: 'var(--r-md)', border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44, boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}>
+                <button onClick={() => router.push('/sources')} style={{ padding: '10px 20px', borderRadius: 'var(--r-md)', border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44, boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}>
                   {tc('page_mybusiness.noDataConnectBtn')}
                 </button>
-                <button onClick={() => router.push('/ask')} style={{ padding: '10px 18px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                <button onClick={() => router.push('/ask')} style={{ padding: '10px 18px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
                   {tc('page_mybusiness.noDataUploadBtn')}
                 </button>
               </div>

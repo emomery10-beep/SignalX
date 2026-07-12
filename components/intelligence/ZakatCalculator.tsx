@@ -27,7 +27,7 @@ function daysAgo(iso: string): number {
 }
 
 const TILE_INPUT_STYLE = {
-  fontSize: 16, fontWeight: 600, color: 'var(--tx)', background: 'var(--sf)',
+  fontSize: 14, fontWeight: 600, color: 'var(--tx)', background: 'var(--sf)',
   border: '1px solid var(--b)', borderRadius: 6, padding: '4px 6px',
   fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' as const,
 }
@@ -56,7 +56,7 @@ function EditableTile({ label, value, sym, tone, editHint, notSet, notSetLabel, 
   if (editing) {
     return (
       <div style={{ background: 'var(--ev)', borderRadius: 10, padding: '10px 12px' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
           {label}
         </div>
         <input
@@ -88,16 +88,16 @@ function EditableTile({ label, value, sym, tone, editHint, notSet, notSetLabel, 
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 4 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
           {label}
         </span>
-        <span style={{ fontSize: 11, opacity: hover || notSet ? 1 : 0.5, transition: 'opacity 120ms', flexShrink: 0 }} aria-hidden="true">✏️</span>
+        <span style={{ fontSize: 9, opacity: hover || notSet ? 1 : 0.5, transition: 'opacity 120ms', flexShrink: 0 }} aria-hidden="true">✏️</span>
       </div>
       {notSet ? (
-        <div style={{ fontSize: 14, fontWeight: 600, color: AMBER }}>{notSetLabel}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{notSetLabel}</div>
       ) : (
         <div style={{
-          fontSize: 16, fontWeight: 600,
+          fontSize: 14, fontWeight: 600,
           color: tone === 'negative' ? '#EF4444' : 'var(--tx)',
           borderBottom: `1px dashed ${tone === 'negative' ? 'rgba(239,68,68,.35)' : 'var(--b)'}`,
           paddingBottom: 2, display: 'inline-block',
@@ -240,7 +240,7 @@ export default function ZakatCalculator() {
 
   if (error || !data || !breakdown || !effective) {
     return (
-      <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, color: 'var(--tx3)' }}>
+      <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)', fontSize: 11, color: 'var(--tx3)' }}>
         {tc('intel_zakat.loadError')}
       </div>
     )
@@ -267,22 +267,22 @@ export default function ZakatCalculator() {
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: ACCENT }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_zakat.title')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_zakat.title')}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('intel_zakat.amountDueLabel')}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)' }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 4 }}>{tc('intel_zakat.amountDueLabel')}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)' }}>
               {fmtMoney(data.due ? data.amountDue : liveEstimate, sym)}
             </div>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 600, color: statusBadge.color, background: statusBadge.bg, borderRadius: 8, padding: '4px 10px', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 9, fontWeight: 600, color: statusBadge.color, background: statusBadge.bg, borderRadius: 8, padding: '4px 10px', whiteSpace: 'nowrap' }}>
             {statusBadge.label}
           </span>
         </div>
 
-        <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('intel_zakat.editHint')}</div>
+        <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 8 }}>{tc('intel_zakat.editHint')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: breakdown.payablesFromPOs > 0 ? 6 : 14 }}>
           <EditableTile label={tc('intel_zakat.inventoryLabel')} value={effective.inventoryValue} sym={sym} editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('inventoryValue', v)} />
           <EditableTile
@@ -294,25 +294,25 @@ export default function ZakatCalculator() {
           <EditableTile label={tc('intel_zakat.payablesLabel')} value={effective.payablesValue} sym={sym} tone="negative" editHint={tc('intel_zakat.editHint')} onCommit={v => setOverride('payablesValue', v)} />
         </div>
         {breakdown.payablesFromPOs > 0 && overrides.payablesValue === undefined && (
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14 }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 14 }}>
             {tc('intel_zakat.payablesFromPOsNote', { amount: fmtMoney(breakdown.payablesFromPOs, sym) })}
           </div>
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--b)', paddingTop: 12, marginBottom: 14 }}>
-          <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_zakat.estimateLabel')}</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{fmtMoney(liveEstimate, sym)}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_zakat.estimateLabel')}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{fmtMoney(liveEstimate, sym)}</span>
         </div>
 
         <div style={{ borderTop: '1px solid var(--b)', paddingTop: 12, marginBottom: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--tx3)' }}>
+            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>
               {data.hawl.active
                 ? tc('intel_zakat.hawlProgress', { elapsed: data.hawl.daysElapsed ?? 0, total: HAWL_TOTAL_DAYS })
                 : tc('intel_zakat.hawlNotStarted')}
             </span>
             {data.hawl.dueDate && (
-              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_zakat.hawlDue', { date: data.hawl.dueDate })}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_zakat.hawlDue', { date: data.hawl.dueDate })}</span>
             )}
           </div>
           {data.hawl.active && (
@@ -330,7 +330,7 @@ export default function ZakatCalculator() {
                 onClick={() => handleSwitchMetal(m)}
                 disabled={switchingMetal}
                 style={{
-                  fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: 'none',
+                  fontSize: 10, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: 'none',
                   background: data.nisab.metal === m ? 'var(--sf)' : 'transparent',
                   color: data.nisab.metal === m ? 'var(--tx)' : 'var(--tx3)',
                   cursor: switchingMetal ? 'default' : 'pointer', fontFamily: 'inherit',
@@ -342,7 +342,7 @@ export default function ZakatCalculator() {
             ))}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
+            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
               {tc('intel_zakat.nisabLabel', { metal: metalLabel })}
               {': '}
               {data.nisab.cachedValue != null ? fmtMoney(data.nisab.cachedValue, sym) : '—'}
@@ -355,7 +355,7 @@ export default function ZakatCalculator() {
               onClick={handleCheckPrice}
               disabled={checkingPrice}
               style={{
-                fontSize: 12, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)',
+                fontSize: 10, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)',
                 background: 'transparent', color: 'var(--tx)', cursor: checkingPrice ? 'default' : 'pointer',
                 fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: checkingPrice ? 0.6 : 1,
               }}
@@ -365,7 +365,7 @@ export default function ZakatCalculator() {
           </div>
         </div>
         {priceError && (
-          <div style={{ fontSize: 11, color: '#EF4444', marginTop: 8 }}>{priceError}</div>
+          <div style={{ fontSize: 9, color: '#EF4444', marginTop: 8 }}>{priceError}</div>
         )}
 
         {(hasOverrides || savedFlash) && (
@@ -374,7 +374,7 @@ export default function ZakatCalculator() {
               onClick={handleSave}
               disabled={saving || !hasOverrides}
               style={{
-                fontSize: 12, fontWeight: 600, padding: '8px 16px', borderRadius: 8, border: 'none',
+                fontSize: 10, fontWeight: 600, padding: '8px 16px', borderRadius: 8, border: 'none',
                 background: savedFlash ? 'rgba(34,197,94,.12)' : ACCENT,
                 color: savedFlash ? ACCENT : '#fff',
                 cursor: saving || !hasOverrides ? 'default' : 'pointer', fontFamily: 'inherit',
@@ -386,14 +386,14 @@ export default function ZakatCalculator() {
           </div>
         )}
         {saveError && (
-          <div style={{ fontSize: 11, color: '#EF4444', marginTop: 8, textAlign: 'end' }}>{saveError}</div>
+          <div style={{ fontSize: 9, color: '#EF4444', marginTop: 8, textAlign: 'end' }}>{saveError}</div>
         )}
       </div>
 
       <div>
-        <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>{tc('intel_zakat.charitiesHeading')}</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 10 }}>{tc('intel_zakat.charitiesHeading')}</div>
         {charities.length === 0 ? (
-          <div style={{ fontSize: 12, color: 'var(--tx3)', padding: '12px 0' }}>{tc('intel_zakat.noCharities')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', padding: '12px 0' }}>{tc('intel_zakat.noCharities')}</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
             {charities.map(c => (
@@ -412,16 +412,16 @@ export default function ZakatCalculator() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.logo_url} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(34,197,94,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(34,197,94,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
                       🤲
                     </div>
                   )}
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                    {c.cause_category && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.cause_category}</div>}
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                    {c.cause_category && <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{c.cause_category}</div>}
                   </div>
                 </div>
-                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>{tc('intel_zakat.donateLink')}</span>
+                <span style={{ fontSize: 10, color: ACCENT, fontWeight: 600 }}>{tc('intel_zakat.donateLink')}</span>
               </a>
             ))}
           </div>

@@ -335,7 +335,7 @@ export default function PosLiveDemo({ initialCountry, showBanner = true, showMar
   return (
     <div style={{ minHeight: pinned ? undefined : '100vh', background: 'var(--bg, #f9f8f6)', color: 'var(--tx, #1a1916)' }}>
       {showBanner && (
-        <div style={{ background: '#1a1916', color: '#fff', padding: '8px 16px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ background: '#1a1916', color: '#fff', padding: '8px 16px', fontSize: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
           <strong>PREVIEW MODE</strong>
           <span style={{ opacity: 0.7 }}>Mock data · no auth · {active.label} analytics tab as it appears in the owner dashboard</span>
         </div>
@@ -343,13 +343,13 @@ export default function PosLiveDemo({ initialCountry, showBanner = true, showMar
 
       {/* Sector switcher */}
       <div style={{ display: 'flex', gap: 8, padding: '14px 20px', borderBottom: '1px solid var(--b, rgba(0,0,0,.08))', flexWrap: 'wrap', alignItems: 'center', background: 'var(--sf, #fff)' }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx3, #888)', marginRight: 4 }}>Sector:</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3, #888)', marginRight: 4 }}>Sector:</span>
         {SECTORS.map(s => (
           <button
             key={s.id}
             onClick={() => setSector(s.id)}
             style={{
-              padding: '8px 16px', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
+              padding: '8px 16px', borderRadius: 10, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
               fontWeight: sector === s.id ? 700 : 500,
               border: sector === s.id ? `2px solid ${s.color}` : '1px solid var(--b, rgba(0,0,0,.12))',
               background: sector === s.id ? `${s.color}14` : 'var(--sf, #fff)',
@@ -360,12 +360,12 @@ export default function PosLiveDemo({ initialCountry, showBanner = true, showMar
           </button>
         ))}
         {showSelector && (
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: 13, color: 'var(--tx2, #555)' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: 11, color: 'var(--tx2, #555)' }}>
             <span style={{ color: 'var(--tx3, #888)' }}>Market</span>
             <select
               value={geo.currency}
               onChange={e => pickMarket(e.target.value)}
-              style={{ padding: '7px 12px', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', border: '1px solid var(--b, rgba(0,0,0,.12))', background: 'var(--sf, #fff)', color: 'var(--tx, #1a1916)', cursor: 'pointer' }}
+              style={{ padding: '7px 12px', borderRadius: 10, fontSize: 11, fontFamily: 'inherit', border: '1px solid var(--b, rgba(0,0,0,.12))', background: 'var(--sf, #fff)', color: 'var(--tx, #1a1916)', cursor: 'pointer' }}
             >
               {MARKETS.map(m => (
                 <option key={m.code} value={m.currency}>
@@ -380,7 +380,7 @@ export default function PosLiveDemo({ initialCountry, showBanner = true, showMar
       {/* Active tab — client-only to avoid hydration mismatch from mock data */}
       <div style={{ padding: '20px', maxWidth: 1100, margin: '0 auto' }}>
         {!mounted ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3, #888)', fontSize: 14 }}>Loading preview…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3, #888)', fontSize: 12 }}>Loading preview…</div>
         ) : (
           <>
             {sector === 'restaurant' && <RestaurantTab {...common} />}

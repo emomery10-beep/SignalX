@@ -218,7 +218,7 @@ const cardStyle: React.CSSProperties = {
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
   padding: '10px 12px',
-  fontSize: 11,
+  fontSize: 9,
   fontWeight: 700,
   color: 'var(--tx3)',
   textTransform: 'uppercase',
@@ -231,7 +231,7 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: '10px 12px',
-  fontSize: 13,
+  fontSize: 11,
   color: 'var(--tx)',
   borderBottom: '1px solid var(--b)',
   verticalAlign: 'top',
@@ -282,9 +282,9 @@ function EmptyState({ icon, title, sub }: { icon: string; title: string; sub?: s
       alignItems: 'center',
       gap: 8,
     }}>
-      <div style={{ fontSize: 32 }}>{icon}</div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{title}</div>
-      {sub && <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 380 }}>{sub}</div>}
+      <div style={{ fontSize: 30 }}>{icon}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{title}</div>
+      {sub && <div style={{ fontSize: 11, color: 'var(--tx3)', maxWidth: 380 }}>{sub}</div>}
     </div>
   )
 }
@@ -292,7 +292,7 @@ function EmptyState({ icon, title, sub }: { icon: string; title: string; sub?: s
 // ── Section heading ──────────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)', marginBottom: 12 }}>
+    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)', marginBottom: 12 }}>
       {children}
     </div>
   )
@@ -330,13 +330,13 @@ function KpiCard({
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = ACC }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--b)' }}
     >
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
         {label}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora)', lineHeight: 1.1 }}>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora)', lineHeight: 1.1 }}>
         {value}
       </div>
-      <div style={{ fontSize: 12, fontWeight: 600, color: changeColor }}>
+      <div style={{ fontSize: 10, fontWeight: 600, color: changeColor }}>
         {hasChange
           ? (up ? '▲' : '▼') + ' ' + Math.abs(change as number).toFixed(1) + '% ' + tc('pos_restaurant.vsYesterday')
           : tc('pos_restaurant.noPriorData')}
@@ -378,7 +378,7 @@ function SubTabStrip({ active, onChange }: { active: SubTab; onChange: (t: SubTa
                 borderBottom: isActive ? `2.5px solid ${ACC}` : '2.5px solid transparent',
                 background: 'transparent',
                 color: isActive ? ACC : 'var(--tx2)',
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: isActive ? 700 : 500,
                 cursor: 'pointer',
                 fontFamily: 'var(--font-sora)',
@@ -406,7 +406,7 @@ function ClassBadge({ c }: { c: Classification }) {
       gap: 5,
       padding: '3px 9px',
       borderRadius: 9999,
-      fontSize: 11,
+      fontSize: 9,
       fontWeight: 700,
       color,
       background: `${color}1a`,
@@ -430,7 +430,7 @@ function StatusBadge({ status }: { status: string }) {
       display: 'inline-block',
       padding: '2px 8px',
       borderRadius: 9999,
-      fontSize: 11,
+      fontSize: 9,
       fontWeight: 700,
       color,
       background: `${color}1a`,
@@ -898,15 +898,15 @@ export default function RestaurantTab({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 20 }}>🍴</div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>
+        <div style={{ fontSize: 18 }}>🍴</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>
           {tc('pos_restaurant.restaurantAnalytics')}
         </div>
         {selectedLocation !== 'all' && (
           <span style={{
             padding: '2px 10px',
             borderRadius: 9999,
-            fontSize: 11,
+            fontSize: 9,
             fontWeight: 700,
             color: ACC,
             background: `${ACC}1a`,
@@ -1085,7 +1085,7 @@ function OverviewPanel({
       {/* Hourly revenue chart */}
       <div style={cardStyle}>
         <SectionTitle>{tc('pos_restaurant.hourlyRevenueSectionTitle')}</SectionTitle>
-        <div style={{ display: 'flex', gap: 16, marginBottom: 8, fontSize: 12, color: 'var(--tx2)' }}>
+        <div style={{ display: 'flex', gap: 16, marginBottom: 8, fontSize: 10, color: 'var(--tx2)' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 12, height: 12, borderRadius: 3, background: ACC, display: 'inline-block' }} /> {tc('pos_restaurant.legendToday')}
           </span>
@@ -1162,9 +1162,9 @@ function OverviewPanel({
           ].map((row) => (
             <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
               <span style={{ width: 10, height: 10, borderRadius: 3, background: row.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: 'var(--tx)', flex: 1 }}>{row.label}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{row.count}</span>
-              <span style={{ fontSize: 12, color: 'var(--tx3)', width: 48, textAlign: 'right' }}>{row.pct.toFixed(1)}%</span>
+              <span style={{ fontSize: 11, color: 'var(--tx)', flex: 1 }}>{row.label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{row.count}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)', width: 48, textAlign: 'right' }}>{row.pct.toFixed(1)}%</span>
             </div>
           ))}
         </div>
@@ -1174,19 +1174,19 @@ function OverviewPanel({
           <SectionTitle>{tc('pos_restaurant.voidsCompsSectionTitle')}</SectionTitle>
           <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
             <div style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--ev)' }}>
-              <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>{tc('pos_restaurant.voided')}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: RED, fontFamily: 'var(--font-sora)' }}>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>{tc('pos_restaurant.voided')}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: RED, fontFamily: 'var(--font-sora)' }}>
                 {fmtMoney(currencySymbol, voidsComps.voidTotal)}
               </div>
             </div>
             <div style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--ev)' }}>
-              <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>{tc('pos_restaurant.comped')}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: AMBER, fontFamily: 'var(--font-sora)' }}>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>{tc('pos_restaurant.comped')}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: AMBER, fontFamily: 'var(--font-sora)' }}>
                 {fmtMoney(currencySymbol, voidsComps.compTotal)}
               </div>
             </div>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
+          <div style={{ fontSize: 11, color: 'var(--tx2)' }}>
             {tc('pos_restaurant.topVoidReason')}{' '}
             <span style={{ fontWeight: 700, color: 'var(--tx)' }}>{voidsComps.topVoidReason}</span>
             {voidsComps.topVoidCount > 0 && (
@@ -1252,7 +1252,7 @@ function OrdersPanel({
     border: '1px solid var(--b)',
     background: 'var(--sf)',
     color: 'var(--tx)',
-    fontSize: 12,
+    fontSize: 10,
     fontFamily: 'inherit',
     cursor: 'pointer',
   }
@@ -1273,7 +1273,7 @@ function OrdersPanel({
             border: '1px solid var(--b)',
             background: 'var(--sf)',
             color: 'var(--tx)',
-            fontSize: 13,
+            fontSize: 11,
             fontFamily: 'inherit',
           }}
         />
@@ -1299,7 +1299,7 @@ function OrdersPanel({
         />
       </div>
 
-      <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_restaurant.ordersCount', { n: orders.length })}</div>
+      <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_restaurant.ordersCount', { n: orders.length })}</div>
 
       {orders.length === 0 ? (
         <EmptyState icon="🧾" title={tc('pos_restaurant.noMatchingOrdersTitle')} sub={tc('pos_restaurant.noMatchingOrdersSub')} />
@@ -1362,14 +1362,14 @@ function OrderDetail({ currencySymbol, t }: { currencySymbol: string; t: Tx }) {
   const items = t.pos_items ?? []
   return (
     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
         {tc('pos_restaurant.lineItems')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {items.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_restaurant.noLineItems')}</div>}
+        {items.length === 0 && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_restaurant.noLineItems')}</div>}
         {items.map((it, i) => (
           <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--tx)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx)' }}>
               <span>
                 <span style={{ fontWeight: 700 }}>{it.qty ?? 1}×</span> {it.name ?? 'Item'}
               </span>
@@ -1378,7 +1378,7 @@ function OrderDetail({ currencySymbol, t }: { currencySymbol: string; t: Tx }) {
               </span>
             </div>
             {Array.isArray(it.modifiers) && it.modifiers.length > 0 && (
-              <div style={{ fontSize: 12, color: 'var(--tx3)', paddingLeft: 18 }}>
+              <div style={{ fontSize: 10, color: 'var(--tx3)', paddingLeft: 18 }}>
                 + {it.modifiers.map((m: any) => (typeof m === 'string' ? m : m?.name ?? '')).filter(Boolean).join(', ')}
               </div>
             )}
@@ -1399,14 +1399,14 @@ function OrderDetail({ currencySymbol, t }: { currencySymbol: string; t: Tx }) {
       </div>
 
       {/* Meta */}
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 12, color: 'var(--tx2)' }}>
+      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 10, color: 'var(--tx2)' }}>
         <span>{tc('pos_restaurant.paymentLabel')} <strong style={{ color: 'var(--tx)', textTransform: 'capitalize' }}>{t.payment_type ?? '—'}</strong></span>
         {t.pos_customers?.name && <span>{tc('pos_restaurant.customerLabel')} <strong style={{ color: 'var(--tx)' }}>{t.pos_customers.name}</strong></span>}
         {t.table != null && <span>{tc('pos_restaurant.tableLabel')} <strong style={{ color: 'var(--tx)' }}>{String(t.table)}</strong></span>}
       </div>
 
       {statusOf(t).includes('void') && (t.void_reason || t.notes) && (
-        <div style={{ fontSize: 12, color: RED, background: `${RED}14`, padding: '8px 12px', borderRadius: 8 }}>
+        <div style={{ fontSize: 10, color: RED, background: `${RED}14`, padding: '8px 12px', borderRadius: 8 }}>
           <strong>{tc('pos_restaurant.voidReason')}</strong> {t.void_reason ?? t.notes}
         </div>
       )}
@@ -1472,7 +1472,7 @@ function MenuEngineeringPanel({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={cardStyle}>
         <SectionTitle>{tc('pos_restaurant.menuEngineeringTitle')}</SectionTitle>
-        <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12 }}>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 12 }}>
           {tc('pos_restaurant.menuEngineeringDesc')}
         </div>
         <div style={{ width: '100%', overflowX: 'auto' }}>
@@ -1620,8 +1620,8 @@ function FloorPanel({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         {tiles.map((t) => (
           <div key={t.label} style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{t.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: t.color, fontFamily: 'var(--font-sora)' }}>{t.value}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{t.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: t.color, fontFamily: 'var(--font-sora)' }}>{t.value}</div>
           </div>
         ))}
       </div>
@@ -1648,7 +1648,7 @@ function FloorPanel({
           </table>
         </div>
       ) : (
-        <div style={{ ...cardStyle, fontSize: 13, color: 'var(--tx2)' }}>
+        <div style={{ ...cardStyle, fontSize: 11, color: 'var(--tx2)' }}>
           {tc('pos_restaurant.noSectionData')}
         </div>
       )}
@@ -1665,7 +1665,7 @@ function FloorPanel({
           textDecoration: 'none',
           color: ACC,
           fontWeight: 700,
-          fontSize: 14,
+          fontSize: 12,
         }}
       >
         <span>{tc('pos_restaurant.floorManagementLink')}</span>
@@ -1707,12 +1707,12 @@ function StaffPanel({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.activeStaff')}</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>{activeStaff}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.activeStaff')}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>{activeStaff}</div>
         </div>
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.revenuePerStaff')}</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: GREEN, fontFamily: 'var(--font-sora)' }}>{fmtMoney(currencySymbol, revPerStaff)}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.revenuePerStaff')}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: GREEN, fontFamily: 'var(--font-sora)' }}>{fmtMoney(currencySymbol, revPerStaff)}</div>
         </div>
       </div>
 
@@ -1746,12 +1746,12 @@ function StaffPanel({
                   {isExpanded && (
                     <tr>
                       <td colSpan={cols.length} style={{ padding: 16, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 10 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 10 }}>
                           {tc('pos_restaurant.recentOrders')}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           {ordersByServer(r.name).map((t, i) => (
-                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--tx2)' }}>
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)' }}>
                               <span>#{(t.id ?? '').slice(0, 8) || i + 1} · {fmtTime(t.created_at)}</span>
                               <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                                 <StatusBadge status={statusOf(t)} />
@@ -1760,7 +1760,7 @@ function StaffPanel({
                             </div>
                           ))}
                           {ordersByServer(r.name).length === 0 && (
-                            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_restaurant.noRecentOrders')}</div>
+                            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_restaurant.noRecentOrders')}</div>
                           )}
                         </div>
                       </td>
@@ -1793,11 +1793,11 @@ function KitchenPanel({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.avgPrepTime')}</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.avgPrepTime')}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>
             {stats.prepCount ? stats.avgPrepMin + ' ' + tc('pos_restaurant.min') : '—'}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
             {stats.prepCount ? tc('pos_restaurant.fromCompletedOrders', { n: stats.prepCount }) : tc('pos_restaurant.noCompletionTimestamps')}
           </div>
         </div>
@@ -1806,18 +1806,18 @@ function KitchenPanel({
       <div style={cardStyle}>
         <SectionTitle>{tc('pos_restaurant.mostOrderedToday')}</SectionTitle>
         {stats.topItems.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_restaurant.noItemsSoldToday')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_restaurant.noItemsSoldToday')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {stats.topItems.map((it) => (
               <div key={it.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 140, fontSize: 13, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ width: 140, fontSize: 11, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.name}
                 </div>
                 <div style={{ flex: 1, height: 18, background: 'var(--ev)', borderRadius: 6, overflow: 'hidden' }}>
                   <div style={{ width: `${(it.units / maxUnits) * 100}%`, height: '100%', background: ACC, borderRadius: 6 }} />
                 </div>
-                <div style={{ width: 40, textAlign: 'right', fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{it.units}</div>
+                <div style={{ width: 40, textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{it.units}</div>
               </div>
             ))}
           </div>
@@ -1836,7 +1836,7 @@ function KitchenPanel({
           textDecoration: 'none',
           color: ACC,
           fontWeight: 700,
-          fontSize: 14,
+          fontSize: 12,
         }}
       >
         <span>{tc('pos_restaurant.kitchenDisplayLink')}</span>

@@ -93,7 +93,7 @@ function StarRating({ articleSlug, articleTitle }: { articleSlug: string; articl
         </p>
         {rating <= 2 && (
           <>
-            <p style={{ fontSize: 13, color: "var(--hc-secondary)", margin: "0 0 12px" }}>Still need help?</p>
+            <p style={{ fontSize: 11, color: "var(--hc-secondary)", margin: "0 0 12px" }}>Still need help?</p>
             <div className="art-escalate">
               <a href={`mailto:hello@askbiz.co?subject=Help: ${encodeURIComponent(articleTitle)}&body=Article: https://askbiz.co/help/${articleSlug}%0AProblems: ${[...reasons].join(', ')}%0A%0ADetails: `}
                 className="art-esc-btn art-esc-btn--primary">Email support</a>
@@ -110,7 +110,7 @@ function StarRating({ articleSlug, articleTitle }: { articleSlug: string; articl
   if (phase === 'reasons') {
     return (
       <div className="art-feedback">
-        <p className="art-feedback-q">What could we improve? <span style={{ fontWeight: 400, fontSize: 13, color: "var(--hc-secondary)" }}>(optional)</span></p>
+        <p className="art-feedback-q">What could we improve? <span style={{ fontWeight: 400, fontSize: 11, color: "var(--hc-secondary)" }}>(optional)</span></p>
         <div className="art-reasons">
           {FEEDBACK_REASONS.map(r => (
             <button key={r}

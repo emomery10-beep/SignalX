@@ -33,7 +33,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
     <main style={{ fontFamily: "DM Sans, system-ui", background: "#faf9f7", minHeight: "100vh" }}>
       {/* Breadcrumb */}
       <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 13, color: "#999" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 11, color: "#999" }}>
           <Link href={localePath('/', lang)} style={{ color: "#999", textDecoration: "none" }}>{tc('academy.art_breadcrumb_home')}</Link>
           {" / "}
           <Link href={localePath('/academy', lang)} style={{ color: "#999", textDecoration: "none" }}>{tc('academy.art_breadcrumb_academy')}</Link>
@@ -51,13 +51,13 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
         <article>
           {/* Meta */}
           <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-            <span style={{ background: "#f0e8df", color: "#d08a59", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+            <span style={{ background: "#f0e8df", color: "#d08a59", padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 600 }}>
               {article.category}
             </span>
-            <span style={{ background: "#f0faf4", color: diffColor, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+            <span style={{ background: "#f0faf4", color: diffColor, padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 600 }}>
               {article.difficulty}
             </span>
-            <span style={{ color: "#999", fontSize: 12, padding: "4px 0" }}>
+            <span style={{ color: "#999", fontSize: 10, padding: "4px 0" }}>
               {article.readTime} {tc('academy.art_min_read')}
             </span>
           </div>
@@ -66,7 +66,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
             {article.title}
           </h1>
 
-          <p style={{ fontSize: 18, color: "#555", lineHeight: 1.7, margin: "0 0 36px" }}>
+          <p style={{ fontSize: 16, color: "#555", lineHeight: 1.7, margin: "0 0 36px" }}>
             {article.description}
           </p>
 
@@ -94,12 +94,12 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
 
           {/* Key Takeaways */}
           <div style={{ background: "#fff8f3", border: "1px solid #f0e0cc", borderRadius: 12, padding: 24, marginBottom: 40 }}>
-            <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 15, fontWeight: 700, color: "#d08a59", margin: "0 0 14px" }}>
+            <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 13, fontWeight: 700, color: "#d08a59", margin: "0 0 14px" }}>
               {tc('academy.art_key_takeaways')}
             </h2>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
               {article.keyTakeaways.map((kt, i) => (
-                <li key={i} style={{ fontSize: 15, color: "#333", lineHeight: 1.6, marginBottom: 8 }}>
+                <li key={i} style={{ fontSize: 13, color: "#333", lineHeight: 1.6, marginBottom: 8 }}>
                   {kt}
                 </li>
               ))}
@@ -112,11 +112,11 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               <div style={{ marginBottom: 36 }}>
                 <h2
                   id={`section-${i}`}
-                  style={{ fontFamily: "Sora, system-ui", fontSize: 20, fontWeight: 700, color: "#1a1a2e", margin: "0 0 12px" }}
+                  style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", margin: "0 0 12px" }}
                 >
                   {section.heading}
                 </h2>
-                <p style={{ fontSize: 16, color: "#444", lineHeight: 1.8, margin: 0 }}>
+                <p style={{ fontSize: 14, color: "#444", lineHeight: 1.8, margin: 0 }}>
                   {section.body}
                 </p>
                 {section.image && (
@@ -135,7 +135,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {/* Related Articles */}
           {related.length > 0 && (
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
-              <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
+              <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 16, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
                 {tc('academy.art_related_articles')}
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
@@ -151,12 +151,12 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                       border: "1px solid #eee",
                       textDecoration: "none",
                       color: "#1a1a2e",
-                      fontSize: 14,
+                      fontSize: 12,
                       lineHeight: 1.4,
                     }}
                   >
                     {rel.title}
-                    <span style={{ display: "block", color: "#999", fontSize: 11, marginTop: 6 }}>
+                    <span style={{ display: "block", color: "#999", fontSize: 9, marginTop: 6 }}>
                       {rel.readTime} {tc('academy.art_min_read')} · {rel.difficulty}
                     </span>
                   </Link>
@@ -168,7 +168,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {/* Blog cross-links — boosts internal link graph between academy and blog */}
           {blogCrossLinks.length > 0 && (
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
-              <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
+              <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 16, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
                 {tc('academy.art_further_reading')}
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
@@ -184,15 +184,15 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                       border: "1px solid #eee",
                       textDecoration: "none",
                       color: "#1a1a2e",
-                      fontSize: 14,
+                      fontSize: 12,
                       lineHeight: 1.4,
                     }}
                   >
-                    <span style={{ display: "block", color: "#d08a59", fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+                    <span style={{ display: "block", color: "#d08a59", fontSize: 9, fontWeight: 600, marginBottom: 6 }}>
                       {post.cluster}
                     </span>
                     {post.title}
-                    <span style={{ display: "block", color: "#999", fontSize: 11, marginTop: 6 }}>
+                    <span style={{ display: "block", color: "#999", fontSize: 9, marginTop: 6 }}>
                       {post.readTime} {tc('academy.art_min_read')}
                     </span>
                   </Link>
@@ -205,7 +205,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
         {/* Sidebar TOC */}
         <aside style={{ position: "sticky", top: 80 }}>
           <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 14, padding: 24, marginBottom: 24 }}>
-            <h3 style={{ fontFamily: "Sora, system-ui", fontSize: 13, fontWeight: 700, color: "#999", margin: "0 0 14px" }}>
+            <h3 style={{ fontFamily: "Sora, system-ui", fontSize: 11, fontWeight: 700, color: "#999", margin: "0 0 14px" }}>
               {tc('academy.art_toc_heading')}
             </h3>
             <nav>
@@ -215,7 +215,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                   href={`#section-${i}`}
                   style={{
                     display: "block",
-                    fontSize: 13,
+                    fontSize: 11,
                     color: "#555",
                     textDecoration: "none",
                     padding: "6px 0",
@@ -231,13 +231,13 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
 
           {/* CTA box */}
           <div style={{ background: "#1a1a2e", borderRadius: 14, padding: 24, textAlign: "center" }}>
-            <p style={{ color: "#d08a59", fontFamily: "Sora, system-ui", fontSize: 12, fontWeight: 600, marginBottom: 10 }}>
+            <p style={{ color: "#d08a59", fontFamily: "Sora, system-ui", fontSize: 10, fontWeight: 600, marginBottom: 10 }}>
               {tc('academy.art_cta_eyebrow')}
             </p>
-            <p style={{ color: "#fff", fontFamily: "Sora, system-ui", fontSize: 16, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>
+            <p style={{ color: "#fff", fontFamily: "Sora, system-ui", fontSize: 14, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>
               {tc('academy.art_cta_heading')}
             </p>
-            <p style={{ color: "#b0b8c8", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
+            <p style={{ color: "#b0b8c8", fontSize: 11, marginBottom: 20, lineHeight: 1.5 }}>
               {tc('academy.art_cta_body')}
             </p>
             <Link
@@ -249,7 +249,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 padding: "12px 20px",
                 borderRadius: 8,
                 fontWeight: 700,
-                fontSize: 14,
+                fontSize: 12,
                 textDecoration: "none",
                 fontFamily: "Sora, system-ui",
                 marginBottom: 10,
@@ -262,7 +262,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               style={{
                 display: "block",
                 color: "#b0b8c8",
-                fontSize: 12,
+                fontSize: 10,
                 textDecoration: "none",
               }}
             >

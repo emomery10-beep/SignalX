@@ -39,8 +39,8 @@ export default function AnomalyFeed({ anomalies, onAsk, onDismiss, compact = fal
   const { tc } = useLang()
   if (!anomalies.length) {
     return (
-      <div style={{ padding: '16px', textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
-        <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+      <div style={{ padding: '16px', textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>
+        <div style={{ fontSize: 22, marginBottom: 8 }}>✅</div>
         {tc('intel_anomalyfeed.noAlerts')}
       </div>
     )
@@ -73,11 +73,11 @@ export default function AnomalyFeed({ anomalies, onAsk, onDismiss, compact = fal
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: s.labelColor, letterSpacing: '.08em' }}>{icon} {s.label}</span>
-                  {a.product && <span style={{ fontSize: 11, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 4, padding: '1px 6px' }}>{a.product}</span>}
+                  <span style={{ fontSize: 9, fontWeight: 700, color: s.labelColor, letterSpacing: '.08em' }}>{icon} {s.label}</span>
+                  {a.product && <span style={{ fontSize: 9, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 4, padding: '1px 6px' }}>{a.product}</span>}
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{a.title}</div>
-                {!compact && <p style={{ fontSize: 12, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>{a.body}</p>}
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{a.title}</div>
+                {!compact && <p style={{ fontSize: 10, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>{a.body}</p>}
               </div>
             </div>
 
@@ -86,14 +86,14 @@ export default function AnomalyFeed({ anomalies, onAsk, onDismiss, compact = fal
                 {a.prompt && onAsk && (
                   <button
                     onClick={() => onAsk(a.prompt!)}
-                    style={{ fontSize: 11, fontWeight: 600, color: s.labelColor, background: 'transparent', border: `1px solid ${s.border}`, borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 9, fontWeight: 600, color: s.labelColor, background: 'transparent', border: `1px solid ${s.border}`, borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {tc('intel_anomalyfeed.askAskBiz')}
                   </button>
                 )}
                 {onDismiss && (
                   <button
                     onClick={() => onDismiss(a.id)}
-                    style={{ fontSize: 11, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b)', borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ fontSize: 9, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b)', borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {tc('intel_anomalyfeed.dismiss')}
                   </button>
                 )}

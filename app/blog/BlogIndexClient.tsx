@@ -374,22 +374,22 @@ function BlogContent() {
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
-            <span style={{ fontSize: 11, fontWeight: 500, color: c.text }}>{post.cluster}</span>
+            <span style={{ fontSize: 9, fontWeight: 500, color: c.text }}>{post.cluster}</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 17, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
+          <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
             {post.title}
           </div>
-          <p style={{ fontSize: 14, color: TX2, lineHeight: 1.55, margin: 0 }}>
+          <p style={{ fontSize: 12, color: TX2, lineHeight: 1.55, margin: 0 }}>
             {post.tldr?.slice(0, 120)}{(post.tldr?.length ?? 0) > 120 ? '…' : ''}
           </p>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 13, color: TX3, whiteSpace: 'nowrap' }}>{tc('blog_index.post_min', { count: post.readTime })}</div>
+          <div style={{ fontSize: 11, color: TX3, whiteSpace: 'nowrap' }}>{tc('blog_index.post_min', { count: post.readTime })}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isRTL ? 'flex-start' : 'flex-end', marginTop: 2 }}>
             {isNew(post.publishDate) && (
               <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em', lineHeight: 1.4 }}>{tc('blog_index.badge_new')}</span>
             )}
-            <div style={{ fontSize: 13, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, lang, tc)}</div>
+            <div style={{ fontSize: 11, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, lang, tc)}</div>
           </div>
         </div>
       </Link>
@@ -444,10 +444,10 @@ function BlogContent() {
                 <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
           {tc('blog_index.nav_try_free')}
         </Link>
       </nav>
@@ -463,9 +463,9 @@ function BlogContent() {
           <aside style={{ minHeight: '100%', [isRTL ? 'borderLeft' : 'borderRight']: `1px solid ${BD}`, padding: '20px 0 32px' }}>
 
             <div style={{ padding: '0 12px', marginBottom: 4 }}>
-              <button className="sb-btn" onClick={goHome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 13, fontWeight: isHome ? 600 : 400 }}>
+              <button className="sb-btn" onClick={goHome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 11, fontWeight: isHome ? 600 : 400 }}>
                 <span>{tc('blog_index.sidebar_all_topics')}</span>
-                <span style={{ fontSize: 11, color: TX3 }}>{posts.length}</span>
+                <span style={{ fontSize: 9, color: TX3 }}>{posts.length}</span>
               </button>
             </div>
 
@@ -481,10 +481,10 @@ function BlogContent() {
               return (
                 <div key={cluster} style={{ padding: '0 12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', borderRadius: 8, background: isActive ? c.bg : 'transparent', marginBottom: 1 }}>
-                    <button className="sb-btn" onClick={() => selectCluster(cluster)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px 7px 10px', borderRadius: '8px 0 0 8px', color: isActive ? c.text : TX2, fontSize: 13, fontWeight: isActive ? 600 : 400, textAlign: 'left' }}>
+                    <button className="sb-btn" onClick={() => selectCluster(cluster)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px 7px 10px', borderRadius: '8px 0 0 8px', color: isActive ? c.text : TX2, fontSize: 11, fontWeight: isActive ? 600 : 400, textAlign: 'left' }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
                       <span style={{ lineHeight: 1.35, flex: 1 }}>{cluster}</span>
-                      <span style={{ fontSize: 10, color: isActive ? c.text : TX3, flexShrink: 0 }}>{count}</span>
+                      <span style={{ fontSize: 9, color: isActive ? c.text : TX3, flexShrink: 0 }}>{count}</span>
                     </button>
                     {pillars.length > 0 && (
                       <button className="sb-btn" onClick={() => toggleExpand(cluster)} aria-label={isExp ? tc('blog_index.sidebar_collapse') : tc('blog_index.sidebar_expand')} style={{ padding: '7px 10px', borderRadius: '0 8px 8px 0', color: isActive ? c.text : TX3, display: 'flex', alignItems: 'center' }}>
@@ -497,7 +497,7 @@ function BlogContent() {
                       {pillars.map(pillar => {
                         const isPA = activePillar === pillar && active === cluster
                         return (
-                          <button key={pillar} className="pillar-btn" onClick={() => { setActive(cluster); setActivePillar(pillar); setSearch(''); setVisibleCount(PAGE_SIZE); setSidebarOpen(false) }} style={{ display: 'block', width: '100%', padding: '5px 8px', borderRadius: 6, fontSize: 12, color: isPA ? c.text : TX2, fontWeight: isPA ? 600 : 400, background: isPA ? c.bg : 'transparent' }}>
+                          <button key={pillar} className="pillar-btn" onClick={() => { setActive(cluster); setActivePillar(pillar); setSearch(''); setVisibleCount(PAGE_SIZE); setSidebarOpen(false) }} style={{ display: 'block', width: '100%', padding: '5px 8px', borderRadius: 6, fontSize: 10, color: isPA ? c.text : TX2, fontWeight: isPA ? 600 : 400, background: isPA ? c.bg : 'transparent' }}>
                             {pillar}
                           </button>
                         )
@@ -520,7 +520,7 @@ function BlogContent() {
                 <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(30px,4.5vw,46px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
                   {tc('blog_index.home_heading')}
                 </h1>
-                <p style={{ fontSize: 16, color: TX2, margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: 14, color: TX2, margin: 0, lineHeight: 1.6 }}>
                   {tc('blog_index.home_subtitle', { count: posts.length.toLocaleString(), topics: clusters.length })}
                 </p>
               </div>
@@ -530,10 +530,10 @@ function BlogContent() {
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
               <input className="search-input" type="text" placeholder={tc('blog_index.search_placeholder')} value={search} onChange={e => { setSearch(e.target.value); setActive(null); setActivePillar(null); setVisibleCount(PAGE_SIZE) }}
-                style={{ width: '100%', boxSizing: 'border-box', padding: isRTL ? '11px 44px 11px 38px' : '11px 38px 11px 44px', fontSize: 14, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: isRTL ? '11px 44px 11px 38px' : '11px 38px 11px 44px', fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
               />
               {search && (
-                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 18, lineHeight: 1, padding: '0 2px' }}>×</button>
+                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
               )}
             </div>
           </div>
@@ -542,7 +542,7 @@ function BlogContent() {
           {isHome && (
             <>
               <section style={{ marginBottom: 52 }}>
-                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('blog_index.popular_topics')}</h2>
+                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('blog_index.popular_topics')}</h2>
                 {/* Featured top 3 — data-driven from actual post counts */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18 }}>
                   {topClusters.slice(0, 3).map(topic => {
@@ -560,9 +560,9 @@ function BlogContent() {
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: c.bg, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, color: c.text, flexShrink: 0 }}>
                           {topic.icon}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
-                        <p style={{ fontSize: 14, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
-                        <span style={{ fontSize: 12, color: c.text, fontWeight: 600 }}>{tc('blog_index.topic_articles_count', { count: topic.count })}</span>
+                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
+                        <p style={{ fontSize: 12, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
+                        <span style={{ fontSize: 10, color: c.text, fontWeight: 600 }}>{tc('blog_index.topic_articles_count', { count: topic.count })}</span>
                       </button>
                     )
                   })}
@@ -572,10 +572,10 @@ function BlogContent() {
                   {topClusters.slice(3).map(topic => {
                     const c = getColour(topic.cluster)
                     return (
-                      <button key={topic.cluster} className="sb-btn" onClick={() => selectCluster(topic.cluster)} style={{ fontSize: 13, color: TX, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36 }}>
+                      <button key={topic.cluster} className="sb-btn" onClick={() => selectCluster(topic.cluster)} style={{ fontSize: 11, color: TX, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36 }}>
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
                         <span style={{ fontWeight: 500 }}>{topic.cluster}</span>
-                        <span style={{ fontSize: 11, color: TX3, fontWeight: 400 }}>{topic.count}</span>
+                        <span style={{ fontSize: 9, color: TX3, fontWeight: 400 }}>{topic.count}</span>
                       </button>
                     )
                   })}
@@ -585,9 +585,9 @@ function BlogContent() {
               {popularThisMonth.length > 0 && (
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
+                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
                     {popularThisMonth[0]?.cluster && (
-                      <span style={{ fontSize: 11, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
+                      <span style={{ fontSize: 9, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
                         {popularThisMonth[0].cluster}
                       </span>
                     )}
@@ -603,8 +603,8 @@ function BlogContent() {
               {newThisMonth.length > 0 && (
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: SF, background: ACC, borderRadius: 9999, padding: '2px 8px' }}>{tc('blog_index.new_count', { count: newThisMonth.length })}</span>
+                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: SF, background: ACC, borderRadius: 9999, padding: '2px 8px' }}>{tc('blog_index.new_count', { count: newThisMonth.length })}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {newThisMonth.map((post, i) => (
@@ -616,8 +616,8 @@ function BlogContent() {
 
               <section>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.recent_articles')}</h2>
-                  <span style={{ fontSize: 12, color: TX3 }}>{tc('blog_index.total_count', { count: posts.length })}</span>
+                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.recent_articles')}</h2>
+                  <span style={{ fontSize: 10, color: TX3 }}>{tc('blog_index.total_count', { count: posts.length })}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {posts.slice(0, 8).map((post, i) => (
@@ -625,7 +625,7 @@ function BlogContent() {
                   ))}
                 </div>
                 <div style={{ marginTop: 20, textAlign: 'center' }}>
-                  <button className="sb-btn" onClick={() => { setActive(null); setSearch(''); setVisibleCount(PAGE_SIZE) }} style={{ fontSize: 13, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontWeight: 600 }}>
+                  <button className="sb-btn" onClick={() => { setActive(null); setSearch(''); setVisibleCount(PAGE_SIZE) }} style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontWeight: 600 }}>
                     {tc('blog_index.browse_all_articles', { count: posts.length })}
                   </button>
                 </div>
@@ -637,11 +637,11 @@ function BlogContent() {
           {!isHome && (
             <>
               {/* Breadcrumb */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22, fontSize: 13, color: TX2, flexWrap: 'wrap' }}>
-                <button className="crumb-btn" onClick={goHome} style={{ color: ACC, fontSize: 13, fontWeight: 500 }}>{tc('blog_index.crumb_all_topics')}</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22, fontSize: 11, color: TX2, flexWrap: 'wrap' }}>
+                <button className="crumb-btn" onClick={goHome} style={{ color: ACC, fontSize: 11, fontWeight: 500 }}>{tc('blog_index.crumb_all_topics')}</button>
                 {active && (
                   <><span style={{ color: TX3 }}>/</span>
-                  <button className="crumb-btn" onClick={() => { setActivePillar(null) }} style={{ color: activePillar ? TX2 : TX, fontWeight: activePillar ? 400 : 600, fontSize: 13 }}>{active}</button></>
+                  <button className="crumb-btn" onClick={() => { setActivePillar(null) }} style={{ color: activePillar ? TX2 : TX, fontWeight: activePillar ? 400 : 600, fontSize: 11 }}>{active}</button></>
                 )}
                 {activePillar && (
                   <><span style={{ color: TX3 }}>/</span><span style={{ color: TX, fontWeight: 600 }}>{activePillar}</span></>
@@ -656,7 +656,7 @@ function BlogContent() {
                 <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
                   {search ? tc('blog_index.results_for', { query: search }) : activePillar || active}
                 </h1>
-                <p style={{ fontSize: 15, color: TX2, margin: 0 }}>
+                <p style={{ fontSize: 13, color: TX2, margin: 0 }}>
                   {filtered.length !== 1 ? tc('blog_index.article_count_plural', { count: filtered.length }) : tc('blog_index.article_count', { count: filtered.length })}
                   {active && !search && ` · ${active}`}
                 </p>
@@ -667,7 +667,7 @@ function BlogContent() {
                 {/* Sort */}
                 <div style={{ display: 'flex', background: SF, border: `1px solid ${BD}`, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
                   {(['date', 'quickest'] as const).map(s => (
-                    <button key={s} onClick={() => setSortBy(s)} style={{ padding: '6px 14px', fontSize: 12, fontWeight: sortBy === s ? 700 : 400, color: sortBy === s ? SF : TX2, background: sortBy === s ? ACC : 'transparent', border: 'none', cursor: 'pointer', transition: 'background 120ms' }}>
+                    <button key={s} onClick={() => setSortBy(s)} style={{ padding: '6px 14px', fontSize: 10, fontWeight: sortBy === s ? 700 : 400, color: sortBy === s ? SF : TX2, background: sortBy === s ? ACC : 'transparent', border: 'none', cursor: 'pointer', transition: 'background 120ms' }}>
                       {s === 'date' ? tc('blog_index.sort_newest') : tc('blog_index.sort_quickest')}
                     </button>
                   ))}
@@ -679,7 +679,7 @@ function BlogContent() {
                     const active = ctFilter === ct
                     return (
                       <button key={ct} onClick={() => { setCtFilter(active ? null : ct); setVisibleCount(PAGE_SIZE) }}
-                        style={{ fontSize: 11, fontWeight: active ? 700 : 500, color: active ? SF : col, background: active ? col : `${col}14`, border: `1px solid ${col}44`, borderRadius: 9999, padding: '4px 12px', cursor: 'pointer', transition: 'all 120ms' }}>
+                        style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? SF : col, background: active ? col : `${col}14`, border: `1px solid ${col}44`, borderRadius: 9999, padding: '4px 12px', cursor: 'pointer', transition: 'all 120ms' }}>
                         {tc('blog_index.' + CTYPE_KEYS[ct])}
                       </button>
                     )
@@ -690,8 +690,8 @@ function BlogContent() {
               {/* No results */}
               {filtered.length === 0 && (
                 <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <div style={{ fontSize: 14, color: TX2, marginBottom: 16 }}>{search ? tc('blog_index.no_results_for', { query: search }) : tc('blog_index.no_results')}</div>
-                  <button onClick={goHome} style={{ fontSize: 13, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}>
+                  <div style={{ fontSize: 12, color: TX2, marginBottom: 16 }}>{search ? tc('blog_index.no_results_for', { query: search }) : tc('blog_index.no_results')}</div>
+                  <button onClick={goHome} style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}>
                     {tc('blog_index.back_to_all_topics')}
                   </button>
                 </div>
@@ -710,11 +710,11 @@ function BlogContent() {
                   <button
                     className="load-more-btn"
                     onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-                    style={{ fontSize: 13, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '9px 24px', fontWeight: 600, display: 'inline-block' }}
+                    style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '9px 24px', fontWeight: 600, display: 'inline-block' }}
                   >
                     {tc('blog_index.load_more', { count: Math.min(PAGE_SIZE, filtered.length - visibleCount) })}
                   </button>
-                  <div style={{ fontSize: 11, color: TX3, marginTop: 8 }}>
+                  <div style={{ fontSize: 9, color: TX3, marginTop: 8 }}>
                     {tc('blog_index.showing_count', { shown: visibleRows.length, total: filtered.length })}
                   </div>
                 </div>
@@ -726,10 +726,10 @@ function BlogContent() {
 
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${BD}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: SF }}>
-        <span style={{ fontSize: 12, color: TX3 }}>{tc('blog_index.footer_copyright')}</span>
+        <span style={{ fontSize: 10, color: TX3 }}>{tc('blog_index.footer_copyright')}</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
           {[['/', 'footer_home'], ['/blog', 'footer_blog'], ['/rss.xml', 'footer_rss'], ['/privacy', 'footer_privacy'], ['/developers', 'footer_api']].map(([href, key]) => (
-            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{tc('blog_index.' + key)}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{tc('blog_index.' + key)}</Link>
           ))}
         </div>
       </footer>
@@ -760,7 +760,7 @@ export default function BlogIndexClient() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BLOG_JSON_LD) }} />
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm), system-ui' }}>
-        <div style={{ fontSize: 14, color: '#a39e97' }}>{tc('blog_index.loading')}</div>
+        <div style={{ fontSize: 12, color: '#a39e97' }}>{tc('blog_index.loading')}</div>
       </div>
     }>
       <BlogContent />

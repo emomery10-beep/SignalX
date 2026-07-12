@@ -41,11 +41,11 @@ export default function LogisticsPulseCard() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
           </svg>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
             {tc('logistics_pulsecard.title')}
           </span>
           <span style={{
-            fontSize: 10, fontWeight: 600, padding: '2px 8px',
+            fontSize: 9, fontWeight: 600, padding: '2px 8px',
             borderRadius: 'var(--r-pill, 9999px)',
             background: bg, border: `1px solid ${border}`, color,
             fontFamily: 'var(--font-dm), sans-serif',
@@ -54,8 +54,8 @@ export default function LogisticsPulseCard() {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 20, fontWeight: 800, color, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
-          <span style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('logistics_pulsecard.outOf100')}</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('logistics_pulsecard.outOf100')}</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ marginLeft: 2 }}>
             <path d="M9 18l6-6-6-6"/>
           </svg>
@@ -69,22 +69,22 @@ export default function LogisticsPulseCard() {
 
       {/* Summary + stats */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
-        <p style={{ fontSize: 12, color: 'var(--tx3)', margin: 0, lineHeight: 1.5, fontFamily: 'var(--font-dm), sans-serif', flex: 1 }}>
+        <p style={{ fontSize: 10, color: 'var(--tx3)', margin: 0, lineHeight: 1.5, fontFamily: 'var(--font-dm), sans-serif', flex: 1 }}>
           {health.summary || ''}
         </p>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           {health.active_shipments > 0 && (
-            <span style={{ fontSize: 11, color: 'var(--tx2)', fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 9, color: 'var(--tx2)', fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap' }}>
               <strong style={{ color: 'var(--tx)' }}>{health.active_shipments}</strong> {tc('logistics_pulsecard.active')}
             </span>
           )}
           {health.at_risk > 0 && (
-            <span style={{ fontSize: 11, color: '#d97706', fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 9, color: '#d97706', fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap' }}>
               <strong>{health.at_risk}</strong> {tc('logistics_pulsecard.atRisk')}
             </span>
           )}
           {health.customs_holds > 0 && (
-            <span style={{ fontSize: 11, color: '#dc2626', fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 9, color: '#dc2626', fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap' }}>
               <strong>{health.customs_holds}</strong> {tc('logistics_pulsecard.customsHold')}
             </span>
           )}

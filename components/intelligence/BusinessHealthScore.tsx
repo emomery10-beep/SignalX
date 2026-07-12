@@ -71,7 +71,7 @@ function ScoreDial({ score, color, size }: { score: number; color: 'green' | 'am
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize, fontWeight: 800, color: c.text, letterSpacing: '-.03em', lineHeight: 1 }}>{displayed}</span>
-        {size !== 'sm' && <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 500, marginTop: 2 }}>/100</span>}
+        {size !== 'sm' && <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, marginTop: 2 }}>/100</span>}
       </div>
     </div>
   )
@@ -123,11 +123,11 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
         <div style={{ width: size === 'sm' ? 64 : 90, height: size === 'sm' ? 64 : 90, borderRadius: '50%', background: 'var(--ov)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{tc('intel_healthscore.noData')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{tc('intel_healthscore.noData')}</span>
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{tc('intel_healthscore.title')}</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_healthscore.uploadCta')}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{tc('intel_healthscore.title')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_healthscore.uploadCta')}</div>
         </div>
       </div>
     )
@@ -149,14 +149,14 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
             <span style={{ fontFamily: 'var(--font-sora)', fontSize: size === 'sm' ? 13 : 15, fontWeight: 700, color: c.text }}>
               {health.label}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_healthscore.title')}</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_healthscore.title')}</span>
           </div>
-          <p style={{ fontSize: 12, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>{health.summary}</p>
+          <p style={{ fontSize: 10, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>{health.summary}</p>
 
           {health.topIssue && (
             <button
               onClick={(e) => { e.stopPropagation(); onAsk?.(health.topIssue || '') }}
-              style={{ marginTop: 8, fontSize: 11, color: c.text, background: 'transparent', border: `1px solid ${c.border}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ marginTop: 8, fontSize: 9, color: c.text, background: 'transparent', border: `1px solid ${c.border}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
               {tc('intel_healthscore.askAskBiz')}
             </button>
           )}
@@ -176,14 +176,14 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
           {health.components.map((comp, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_DOT[comp.status], flexShrink: 0 }}/>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', minWidth: 110 }}>{sectorName(comp.name)}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)', minWidth: 110 }}>{sectorName(comp.name)}</span>
               <div style={{ flex: 1, height: 4, background: 'var(--ov)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${(comp.score / 20) * 100}%`, background: STATUS_DOT[comp.status], borderRadius: 2, transition: 'width 0.8s var(--ease)' }}></div>
               </div>
-              <span style={{ fontSize: 11, color: 'var(--tx3)', minWidth: 70, textAlign: 'right' }}>{comp.label}</span>
+              <span style={{ fontSize: 9, color: 'var(--tx3)', minWidth: 70, textAlign: 'right' }}>{comp.label}</span>
             </div>
           ))}
-          <div style={{ marginTop: 4, fontSize: 11, color: 'var(--tx3)', textAlign: 'right' }}>
+          <div style={{ marginTop: 4, fontSize: 9, color: 'var(--tx3)', textAlign: 'right' }}>
             {health.components.reduce((s, c) => s + c.score, 0)}/100
           </div>
         </div>

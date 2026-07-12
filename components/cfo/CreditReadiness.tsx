@@ -149,8 +149,8 @@ export default function CreditReadiness(props: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_credit.title')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_credit.subtitle')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_credit.title')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_credit.subtitle')}</span>
         </div>
         {onAsk && (
           <button
@@ -162,7 +162,7 @@ export default function CreditReadiness(props: Props) {
               country: region.countryName,
               lenders: region.lenders.slice(0, 3).map(l => l.name).join(', '),
             }))}
-            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_credit.ask_ai')}
           </button>
@@ -184,19 +184,19 @@ export default function CreditReadiness(props: Props) {
             />
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: gradeColor }}>{result.grade}</div>
-            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>{result.total}/{result.maxTotal}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: gradeColor }}>{result.grade}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600 }}>{result.total}/{result.maxTotal}</div>
           </div>
         </div>
 
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
             {result.grade === 'A' ? tc('cfo_credit.hero_grade_a') :
              result.grade === 'B' ? tc('cfo_credit.hero_grade_b') :
              result.grade === 'C' ? tc('cfo_credit.hero_grade_c') :
              tc('cfo_credit.hero_grade_low')}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
             {result.grade === 'A' || result.grade === 'B'
               ? tc('cfo_credit.hero_desc_high', { lenders: region.lenders.filter(l => l.minGrade === 'B' || l.minGrade === 'A').map(l => l.name).join(', ') })
               : tc('cfo_credit.hero_desc_low', { lender: region.lenders.find(l => l.minGrade === 'C')?.name || tc('cfo_credit.hero_desc_low_fallback') })}
@@ -220,11 +220,11 @@ export default function CreditReadiness(props: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{factor.label}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{factor.label}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: statusColor }}>{factor.score}/{factor.maxScore}</span>
-                    <span style={{ fontSize: 10, color: 'var(--tx3)', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>▼</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: statusColor }}>{factor.score}/{factor.maxScore}</span>
+                    <span style={{ fontSize: 9, color: 'var(--tx3)', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>▼</span>
                   </div>
                 </div>
                 <div style={{ height: 6, borderRadius: 3, background: 'var(--ev, #e5e5e5)', overflow: 'hidden' }}>
@@ -233,7 +233,7 @@ export default function CreditReadiness(props: Props) {
               </button>
 
               {isExpanded && (
-                <div style={{ padding: '0 18px 14px', fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6 }}>
+                <div style={{ padding: '0 18px 14px', fontSize: 9, color: 'var(--tx3)', lineHeight: 1.6 }}>
                   <div style={{ marginBottom: 6 }}>{factor.detail}</div>
                   <div style={{ padding: '8px 12px', borderRadius: 8, background: factor.status === 'good' ? 'rgba(34,197,94,.04)' : 'rgba(245,158,11,.04)', border: `1px solid ${factor.status === 'good' ? 'rgba(34,197,94,.12)' : 'rgba(245,158,11,.12)'}` }}>
                     <span style={{ fontWeight: 600, color: factor.status === 'good' ? '#22C55E' : '#F59E0B' }}>
@@ -250,7 +250,7 @@ export default function CreditReadiness(props: Props) {
 
       {/* DSCR & Debt Capacity */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.dscr_section')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.dscr_section')}</div>
         {(() => {
           const annualNetIncome = props.revenue * 12 * (props.netMarginPct / 100)
           const estimatedDebtService = props.revenue * 12 * 0.1 // assume 10% of annual revenue as potential debt service
@@ -262,30 +262,30 @@ export default function CreditReadiness(props: Props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_credit.dscr_label')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: dscrColor, fontVariantNumeric: 'tabular-nums' }}>{dscr.toFixed(2)}x</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: dscrColor, fontVariantNumeric: 'tabular-nums' }}>{dscr.toFixed(2)}x</div>
                 <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{dscrLabel}</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_credit.dscr_max_debt')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService / 12, sym)}{tc('cfo_credit.dscr_per_month')}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService / 12, sym)}{tc('cfo_credit.dscr_per_month')}</div>
                 <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_credit.dscr_max_debt_note')}</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_credit.dscr_capacity')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService * 3, sym)}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService * 3, sym)}</div>
                 <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_credit.dscr_capacity_note')}</div>
               </div>
             </div>
           )
         })()}
-        <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4, padding: '6px 0' }}>
+        <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4, padding: '6px 0' }}>
           {tc('cfo_credit.dscr_explainer')}
         </div>
       </div>
 
       {/* Financing comparison */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.financing_section')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.financing_section')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {buildFinancingOptions(tc).map(opt => {
             const gradeOrder = ['F', 'D', 'C', 'B', 'A']
@@ -293,15 +293,15 @@ export default function CreditReadiness(props: Props) {
             return (
               <div key={opt.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', opacity: eligible ? 1 : 0.5 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{opt.type}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{opt.type}</div>
                   <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{opt.best}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.rate}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{opt.rate}</div>
                   <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_credit.financing_cost')}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.speed}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{opt.speed}</div>
                   <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_credit.financing_speed')}</div>
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
@@ -317,7 +317,7 @@ export default function CreditReadiness(props: Props) {
 
       {/* Lender products */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.lenders_section')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.lenders_section')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {region.lenders.map(lender => (
             <LenderRow key={lender.name} name={lender.name} range={lender.range} minGrade={lender.minGrade} currentGrade={result.grade} tc={tc} />
@@ -325,7 +325,7 @@ export default function CreditReadiness(props: Props) {
         </div>
       </div>
 
-      <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
+      <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
         {tc('cfo_credit.footer_disclaimer', { tip: region.complianceTip })}
       </div>
     </div>
@@ -349,11 +349,11 @@ function LenderRow({ name, range, minGrade, currentGrade, tc }: { name: string; 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
       <div>
-        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{name}</span>
-        <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 6 }}>{range}</span>
+        <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx)' }}>{name}</span>
+        <span style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 6 }}>{range}</span>
       </div>
       <span style={{
-        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+        fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
         background: eligible ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.06)',
         color: eligible ? '#22C55E' : '#EF4444',
       }}>

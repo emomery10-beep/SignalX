@@ -88,8 +88,8 @@ function SettingRow({ label, description, right, border = true, top = false }: {
   return (
     <div style={{ display: 'flex', alignItems: top ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 24, padding: '16px 20px', borderBottom: border ? '1px solid var(--b)' : 'none' }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: description ? 3 : 0 }}>{label}</div>
-        {description && <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5 }}>{description}</div>}
+        <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: description ? 3 : 0 }}>{label}</div>
+        {description && <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>{description}</div>}
       </div>
       {right}
     </div>
@@ -106,7 +106,7 @@ function Card({ children, danger = false }: { children: React.ReactNode; danger?
 
 function CardHeader({ title, danger = false }: { title: string; danger?: boolean }) {
   return (
-    <div style={{ padding: '13px 20px', borderBottom: `1px solid ${danger ? 'rgba(220,38,38,.1)' : 'var(--b)'}`, fontSize: 15, fontWeight: 700, color: danger ? '#dc2626' : 'var(--tx3)', textTransform: 'uppercase' as const, letterSpacing: '.07em' }}>
+    <div style={{ padding: '13px 20px', borderBottom: `1px solid ${danger ? 'rgba(220,38,38,.1)' : 'var(--b)'}`, fontSize: 13, fontWeight: 700, color: danger ? '#dc2626' : 'var(--tx3)', textTransform: 'uppercase' as const, letterSpacing: '.07em' }}>
       {title}
     </div>
   )
@@ -115,8 +115,8 @@ function CardHeader({ title, danger = false }: { title: string; danger?: boolean
 function PanelHeader({ title, description }: { title: string; description: string }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, color: 'var(--tx)', margin: '0 0 6px' }}>{title}</h2>
-      <p style={{ fontSize: 18, color: 'var(--tx3)', margin: 0, lineHeight: 1.5 }}>{description}</p>
+      <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: 'var(--tx)', margin: '0 0 6px' }}>{title}</h2>
+      <p style={{ fontSize: 16, color: 'var(--tx3)', margin: 0, lineHeight: 1.5 }}>{description}</p>
     </div>
   )
 }
@@ -127,12 +127,12 @@ function SaveRow({ onClick, saving, saved, label }: { onClick: () => void; savin
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <button
         onClick={onClick} disabled={saving}
-        style={{ padding: '10px 22px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', border: 'none', fontSize: 17, fontWeight: 600, fontFamily: 'inherit', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? .7 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}
+        style={{ padding: '10px 22px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', border: 'none', fontSize: 15, fontWeight: 600, fontFamily: 'inherit', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? .7 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}
       >
         {saving ? tc('settings.saving') : (label ?? tc('settings.save_changes'))}
       </button>
       {saved && (
-        <span style={{ fontSize: 17, color: '#16a34a', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+        <span style={{ fontSize: 15, color: '#16a34a', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
           {tc('settings.saved')}
         </span>
@@ -143,14 +143,14 @@ function SaveRow({ onClick, saving, saved, label }: { onClick: () => void; savin
 
 function UpgradeBadge({ plan }: { plan: string }) {
   return (
-    <a href="/billing" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.2)', fontSize: 15, fontWeight: 600, color: 'var(--acc)', textDecoration: 'none', whiteSpace: 'nowrap' as const }}>
+    <a href="/billing" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.2)', fontSize: 13, fontWeight: 600, color: 'var(--acc)', textDecoration: 'none', whiteSpace: 'nowrap' as const }}>
       Upgrade to {plan}
     </a>
   )
 }
 
 const inp: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', fontSize: 18,
+  width: '100%', padding: '9px 12px', fontSize: 16,
   background: 'var(--bg)', border: '1px solid var(--b2)',
   borderRadius: 'var(--r-md)', color: 'var(--tx)',
   outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
@@ -158,7 +158,7 @@ const inp: React.CSSProperties = {
 }
 
 const sel: React.CSSProperties = {
-  fontFamily: 'inherit', fontSize: 17, color: 'var(--tx)',
+  fontFamily: 'inherit', fontSize: 15, color: 'var(--tx)',
   background: 'var(--ev)', border: '1px solid var(--b2)',
   borderRadius: 'var(--r-md)', padding: '7px 10px', outline: 'none', cursor: 'pointer',
 }
@@ -296,27 +296,27 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
       {/* Avatar + info */}
       <Card>
         <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--b)' }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--acc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--acc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
             {initials}
           </div>
           <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 3 }}>{user.name || '—'}</div>
-            <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{user.email}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600, marginBottom: 3 }}>{user.name || '—'}</div>
+            <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{user.email}</div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.2)' }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--acc)' }}/>
-            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--acc)', textTransform: 'capitalize' }}>{user.plan} {tc('settings.plan_suffix')}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc)', textTransform: 'capitalize' }}>{user.plan} {tc('settings.plan_suffix')}</span>
           </div>
         </div>
 
         {/* Name editing */}
         <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.first_name')}</label>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.first_name')}</label>
             <input style={inp} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={tc('settings.first_name')}/>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.last_name')}</label>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.last_name')}</label>
             <input style={inp} value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('settings.last_name')}/>
           </div>
         </div>
@@ -328,20 +328,20 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
       {/* Sign-in methods */}
       <Card>
         <CardHeader title={tc('settings.card_signin_methods')}/>
-        <SettingRow label="Google" description={tc('settings.google_desc')} right={<span style={{ fontSize: 16, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_connected')}</span>}/>
-        <SettingRow label="Email magic link" description={tc('settings.magic_link_desc')} right={<span style={{ fontSize: 16, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_connected')}</span>}/>
+        <SettingRow label="Google" description={tc('settings.google_desc')} right={<span style={{ fontSize: 14, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_connected')}</span>}/>
+        <SettingRow label="Email magic link" description={tc('settings.magic_link_desc')} right={<span style={{ fontSize: 14, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_connected')}</span>}/>
         <SettingRow
           label="Passkey"
           description={tc('settings.passkey_desc')}
           border={false}
           right={
             hasPasskey || passkeyStatus === 'enrolled' ? (
-              <span style={{ fontSize: 16, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_registered')}</span>
+              <span style={{ fontSize: 14, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_registered')}</span>
             ) : (
               <button
                 onClick={enrollPasskey}
                 disabled={passkeyStatus === 'enrolling'}
-                style={{ fontSize: 16, padding: '6px 14px', borderRadius: 'var(--rf)', background: 'var(--acc)', color: '#fff', fontWeight: 600, border: 'none', cursor: passkeyStatus === 'enrolling' ? 'not-allowed' : 'pointer', opacity: passkeyStatus === 'enrolling' ? .6 : 1, fontFamily: 'inherit' }}
+                style={{ fontSize: 14, padding: '6px 14px', borderRadius: 'var(--rf)', background: 'var(--acc)', color: '#fff', fontWeight: 600, border: 'none', cursor: passkeyStatus === 'enrolling' ? 'not-allowed' : 'pointer', opacity: passkeyStatus === 'enrolling' ? .6 : 1, fontFamily: 'inherit' }}
               >
                 {passkeyStatus === 'enrolling' ? tc('settings.registering') : tc('settings.register_passkey')}
               </button>
@@ -349,13 +349,13 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
           }
         />
         {passkeyError && (
-          <div style={{ padding: '8px 20px 12px', fontSize: 16, color: '#f48080' }}>{passkeyError}</div>
+          <div style={{ padding: '8px 20px 12px', fontSize: 14, color: '#f48080' }}>{passkeyError}</div>
         )}
       </Card>
 
       <button
         onClick={onSignOut}
-        style={{ width: '100%', padding: '11px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 17, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}
+        style={{ width: '100%', padding: '11px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 15, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}
       >
         {tc('settings.sign_out')}
       </button>
@@ -433,10 +433,10 @@ function TeamPanel() {
       {!canInvite ? (
         <Card>
           <div style={{ padding: '28px 24px', textAlign: 'center' as const }}>
-            <div style={{ fontSize: 32, marginBottom: 10 }}>👥</div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 6 }}>{tc('settings.team_upgrade_title')}</div>
-            <div style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>{tc('settings.team_upgrade_desc')}</div>
-            <a href="/billing" style={{ display: 'inline-block', padding: '10px 22px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 17, fontWeight: 600, fontFamily: 'var(--font-sora)', boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}>
+            <div style={{ fontSize: 30, marginBottom: 10 }}>👥</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600, marginBottom: 6 }}>{tc('settings.team_upgrade_title')}</div>
+            <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>{tc('settings.team_upgrade_desc')}</div>
+            <a href="/billing" style={{ display: 'inline-block', padding: '10px 22px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-sora)', boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}>
               {tc('settings.team_upgrade_btn')}
             </a>
           </div>
@@ -446,9 +446,9 @@ function TeamPanel() {
           {/* Usage bar */}
           <Card>
             <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ fontSize: 17, color: 'var(--tx2)' }}>
+              <div style={{ fontSize: 15, color: 'var(--tx2)' }}>
                 <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{activeCount}</span> {tc('settings.team_of')} <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{maxMembers === -1 ? '∞' : maxMembers}</span> {tc('settings.team_seats_used')}
-                {pendingCount > 0 && <span style={{ marginLeft: 8, fontSize: 15, color: 'var(--tx3)' }}>· {pendingCount} {pendingCount > 1 ? tc('settings.team_invites_pending') : tc('settings.team_invite_pending')}</span>}
+                {pendingCount > 0 && <span style={{ marginLeft: 8, fontSize: 13, color: 'var(--tx3)' }}>· {pendingCount} {pendingCount > 1 ? tc('settings.team_invites_pending') : tc('settings.team_invite_pending')}</span>}
               </div>
               {maxMembers !== -1 && (
                 <div style={{ width: 120, height: 4, background: 'var(--ev)', borderRadius: 2, overflow: 'hidden' }}>
@@ -464,34 +464,34 @@ function TeamPanel() {
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.team_email_label')}</label>
+                  <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.team_email_label')}</label>
                   <input style={inp} value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@company.com" type="email" onKeyDown={e => e.key === 'Enter' && invite()}/>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.team_name_label')}</label>
+                  <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.team_name_label')}</label>
                   <input style={inp} value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Jane Smith"/>
                 </div>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{tc('settings.team_role_label')}</label>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{tc('settings.team_role_label')}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
                   {roles.filter(r => r !== 'owner').map(r => (
                     <button
                       key={r}
                       onClick={() => setInviteRole(r)}
-                      style={{ padding: '7px 14px', borderRadius: 'var(--r-md)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: inviteRole === r ? 600 : 400, border: inviteRole === r ? '1.5px solid var(--acc)' : '1px solid var(--b2)', background: inviteRole === r ? 'rgba(208,138,89,.08)' : 'var(--sf)', color: inviteRole === r ? 'var(--acc)' : 'var(--tx2)', textAlign: 'left' as const }}
+                      style={{ padding: '7px 14px', borderRadius: 'var(--r-md)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: inviteRole === r ? 600 : 400, border: inviteRole === r ? '1.5px solid var(--acc)' : '1px solid var(--b2)', background: inviteRole === r ? 'rgba(208,138,89,.08)' : 'var(--sf)', color: inviteRole === r ? 'var(--acc)' : 'var(--tx2)', textAlign: 'left' as const }}
                     >
                       <div style={{ textTransform: 'capitalize' as const }}>{r}</div>
-                      <div style={{ fontSize: 14, color: 'var(--tx3)', fontWeight: 400, marginTop: 1 }}>{ROLE_DESC[r]}</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 400, marginTop: 1 }}>{ROLE_DESC[r]}</div>
                     </button>
                   ))}
                 </div>
               </div>
-              {inviteError && <div style={{ fontSize: 16, color: '#dc2626', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.15)', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>{inviteError}</div>}
-              {inviteSuccess && <div style={{ fontSize: 16, color: '#16a34a', background: 'rgba(34,197,94,.05)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>✓ {inviteSuccess}</div>}
+              {inviteError && <div style={{ fontSize: 14, color: '#dc2626', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.15)', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>{inviteError}</div>}
+              {inviteSuccess && <div style={{ fontSize: 14, color: '#16a34a', background: 'rgba(34,197,94,.05)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>✓ {inviteSuccess}</div>}
               <button
                 onClick={invite} disabled={inviting || !inviteEmail.trim() || activeCount >= maxMembers}
-                style={{ padding: '10px 20px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', border: 'none', fontSize: 17, fontWeight: 600, fontFamily: 'inherit', cursor: (inviting || !inviteEmail.trim() || activeCount >= maxMembers) ? 'not-allowed' : 'pointer', opacity: (inviting || !inviteEmail.trim() || activeCount >= maxMembers) ? .6 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.2)' }}
+                style={{ padding: '10px 20px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', border: 'none', fontSize: 15, fontWeight: 600, fontFamily: 'inherit', cursor: (inviting || !inviteEmail.trim() || activeCount >= maxMembers) ? 'not-allowed' : 'pointer', opacity: (inviting || !inviteEmail.trim() || activeCount >= maxMembers) ? .6 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.2)' }}
               >
                 {inviting ? tc('settings.team_sending_invite') : tc('settings.team_send_invite')}
               </button>
@@ -504,37 +504,37 @@ function TeamPanel() {
               <CardHeader title={tc('settings.card_members')}/>
               {/* Owner row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid var(--b)' }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--acc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--acc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                   {(useStore.getState().user.name || '?')[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{useStore.getState().user.name || 'You'}</div>
-                  <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{useStore.getState().user.email}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)' }}>{useStore.getState().user.name || 'You'}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{useStore.getState().user.email}</div>
                 </div>
-                <span style={{ fontSize: 15, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', color: 'var(--acc)', fontWeight: 600, border: '1px solid rgba(208,138,89,.2)' }}>{tc('settings.team_owner')}</span>
+                <span style={{ fontSize: 13, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', color: 'var(--acc)', fontWeight: 600, border: '1px solid rgba(208,138,89,.2)' }}>{tc('settings.team_owner')}</span>
               </div>
               {members.map((mb, i) => (
                 <div key={mb.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < members.length - 1 ? '1px solid var(--b)' : 'none' }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: 'var(--tx2)', flexShrink: 0 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--tx2)', flexShrink: 0 }}>
                     {(mb.name || mb.email)[0].toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mb.name || mb.email}</div>
-                    <div style={{ fontSize: 16, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mb.email}</div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mb.name || mb.email}</div>
+                    <div style={{ fontSize: 14, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mb.email}</div>
                   </div>
                   {mb.status === 'pending' && (
-                    <span style={{ fontSize: 15, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(245,158,11,.1)', color: '#d97706', fontWeight: 600, border: '1px solid rgba(245,158,11,.2)', flexShrink: 0 }}>{tc('settings.team_pending_badge')}</span>
+                    <span style={{ fontSize: 13, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(245,158,11,.1)', color: '#d97706', fontWeight: 600, border: '1px solid rgba(245,158,11,.2)', flexShrink: 0 }}>{tc('settings.team_pending_badge')}</span>
                   )}
                   <select
                     value={mb.role}
                     onChange={e => changeRole(mb.id, e.target.value)}
-                    style={{ ...sel, fontSize: 16, flexShrink: 0 }}
+                    style={{ ...sel, fontSize: 14, flexShrink: 0 }}
                   >
                     {roles.filter(r => r !== 'owner').map(r => <option key={r} value={r} style={{ textTransform: 'capitalize' }}>{r}</option>)}
                   </select>
                   <button
                     onClick={() => removeMember(mb.id)}
-                    style={{ fontSize: 16, color: '#dc2626', background: 'transparent', border: '1px solid rgba(220,38,38,.2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                    style={{ fontSize: 14, color: '#dc2626', background: 'transparent', border: '1px solid rgba(220,38,38,.2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                   >
                     {tc('settings.team_remove')}
                   </button>
@@ -543,7 +543,7 @@ function TeamPanel() {
             </Card>
           )}
           {!loading && members.length === 0 && (
-            <div style={{ padding: '32px', textAlign: 'center' as const, background: 'var(--ev)', borderRadius: 'var(--r-lg)', color: 'var(--tx3)', fontSize: 17 }}>
+            <div style={{ padding: '32px', textAlign: 'center' as const, background: 'var(--ev)', borderRadius: 'var(--r-lg)', color: 'var(--tx3)', fontSize: 15 }}>
               {tc('settings.team_no_members')}
             </div>
           )}
@@ -639,7 +639,7 @@ function AddressPanel() {
       <PanelHeader title={tc('settings.address_title')} description={tc('settings.address_desc')}/>
 
       {!addressComplete && (
-        <div style={{ display: 'flex', gap: 10, padding: '12px 16px', background: 'rgba(208,138,89,.07)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', marginBottom: 20, fontSize: 17, color: '#7a4a1c', lineHeight: 1.6 }}>
+        <div style={{ display: 'flex', gap: 10, padding: '12px 16px', background: 'rgba(208,138,89,.07)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', marginBottom: 20, fontSize: 15, color: '#7a4a1c', lineHeight: 1.6 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           {tc('settings.address_complete_hint')}
         </div>
@@ -651,38 +651,38 @@ function AddressPanel() {
         <Card>
           <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_business_name')}</label>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_business_name')}</label>
               <input style={inp} value={address.business_name} onChange={e => setAddress(a => ({ ...a, business_name: e.target.value }))} placeholder="e.g. Acme Ltd"/>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_phone')}</label>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_phone')}</label>
               <input style={inp} value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} placeholder="e.g. 07700 900000"/>
             </div>
           </div>
           <div style={{ padding: '0 20px 14px' }}>
-            <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_line1')} *</label>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_line1')} *</label>
             <input style={{ ...inp, borderColor: errors.address ? '#dc2626' : 'var(--b2)' }} value={address.address} onChange={e => { setAddress(a => ({ ...a, address: e.target.value })); setErrors(er => ({ ...er, address: undefined })) }} placeholder="e.g. 12 High Street"/>
-            {errors.address && <div style={{ fontSize: 15, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
+            {errors.address && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
           </div>
           <div style={{ padding: '0 20px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 140px', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_town')} *</label>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_town')} *</label>
               <input style={{ ...inp, borderColor: errors.town ? '#dc2626' : 'var(--b2)' }} value={address.town} onChange={e => { setAddress(a => ({ ...a, town: e.target.value })); setErrors(er => ({ ...er, town: undefined })) }} placeholder="e.g. London"/>
-              {errors.town && <div style={{ fontSize: 15, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
+              {errors.town && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_county')}</label>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_county')}</label>
               <input style={inp} value={address.county} onChange={e => setAddress(a => ({ ...a, county: e.target.value }))} placeholder="e.g. Greater London"/>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_postcode')} *</label>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_postcode')} *</label>
               <input style={{ ...inp, borderColor: errors.postcode ? '#dc2626' : 'var(--b2)' }} value={address.postcode} onChange={e => { setAddress(a => ({ ...a, postcode: e.target.value })); setErrors(er => ({ ...er, postcode: undefined })) }} placeholder="EC1A 1BB"/>
-              {errors.postcode && <div style={{ fontSize: 15, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
+              {errors.postcode && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
             </div>
           </div>
           <div style={{ padding: '0 20px 16px' }}>
             <SaveRow onClick={save} saving={saving} saved={saved} label={tc('settings.save_address')}/>
-            {saveError && <div style={{ fontSize: 16, color: '#dc2626', marginTop: 8 }}>{saveError}</div>}
+            {saveError && <div style={{ fontSize: 14, color: '#dc2626', marginTop: 8 }}>{saveError}</div>}
           </div>
         </Card>
       )}
@@ -778,21 +778,21 @@ function IntegrationsPanel() {
                 const isError = src.status === 'error' || !!src.error_message
                 return (
                   <div key={src.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: i < sources.length - 1 ? '1px solid var(--b)' : 'none' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 8, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                       {meta.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{src.name || meta.label}</div>
-                      <div style={{ fontSize: 16, color: isError ? '#dc2626' : 'var(--tx3)', marginTop: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)' }}>{src.name || meta.label}</div>
+                      <div style={{ fontSize: 14, color: isError ? '#dc2626' : 'var(--tx3)', marginTop: 1 }}>
                         {isError ? src.error_message || tc('settings.int_sync_error') :
                           src.last_synced_at ? `${tc('settings.int_synced')} ${new Date(src.last_synced_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : tc('settings.int_never_synced')}
                       </div>
                     </div>
-                    <span style={{ fontSize: 15, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: isError ? 'rgba(220,38,38,.08)' : 'rgba(34,197,94,.08)', color: isError ? '#dc2626' : '#16a34a', border: `1px solid ${isError ? 'rgba(220,38,38,.2)' : 'rgba(34,197,94,.2)'}`, flexShrink: 0 }}>
+                    <span style={{ fontSize: 13, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: isError ? 'rgba(220,38,38,.08)' : 'rgba(34,197,94,.08)', color: isError ? '#dc2626' : '#16a34a', border: `1px solid ${isError ? 'rgba(220,38,38,.2)' : 'rgba(34,197,94,.2)'}`, flexShrink: 0 }}>
                       {isError ? tc('settings.int_error_badge') : tc('settings.int_active')}
                     </span>
                     <button onClick={() => disconnect(src.id, src.name || meta.label)} disabled={disconnecting === src.id}
-                      style={{ fontSize: 16, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, opacity: disconnecting === src.id ? .5 : 1 }}>
+                      style={{ fontSize: 14, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, opacity: disconnecting === src.id ? .5 : 1 }}>
                       {disconnecting === src.id ? tc('settings.int_removing') : tc('settings.int_disconnect')}
                     </button>
                   </div>
@@ -804,7 +804,7 @@ function IntegrationsPanel() {
           {/* All connectors grouped by category */}
           {CONNECTOR_GROUPS.map(group => (
             <div key={group.category} style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8, padding: '0 2px' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8, padding: '0 2px' }}>
                 {group.category}
               </div>
               <Card>
@@ -813,20 +813,20 @@ function IntegrationsPanel() {
                   const meta        = sourceMeta(c.id)
                   return (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 20px', borderBottom: i < group.items.length - 1 ? '1px solid var(--b)' : 'none' }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
                         {meta.icon}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
                           {c.label}
-                          {!c.oauth && <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 3, padding: '1px 4px', letterSpacing: '.05em', textTransform: 'uppercase' }}>Token</span>}
+                          {!c.oauth && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 3, padding: '1px 4px', letterSpacing: '.05em', textTransform: 'uppercase' }}>Token</span>}
                         </div>
-                        <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 1 }}>{c.desc}</div>
+                        <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 1 }}>{c.desc}</div>
                       </div>
                       {isConnected ? (
-                        <span style={{ fontSize: 15, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: 'rgba(34,197,94,.08)', color: '#16a34a', border: '1px solid rgba(34,197,94,.2)', flexShrink: 0 }}>{tc('settings.int_connected_badge')}</span>
+                        <span style={{ fontSize: 13, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: 'rgba(34,197,94,.08)', color: '#16a34a', border: '1px solid rgba(34,197,94,.2)', flexShrink: 0 }}>{tc('settings.int_connected_badge')}</span>
                       ) : (
-                        <a href={c.href} style={{ fontSize: 16, fontWeight: 600, color: 'var(--acc)', background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', padding: '5px 12px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                        <a href={c.href} style={{ fontSize: 14, fontWeight: 600, color: 'var(--acc)', background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', padding: '5px 12px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
                           {c.oauth ? tc('settings.int_connect') : tc('settings.int_setup')}
                         </a>
                       )}
@@ -837,7 +837,7 @@ function IntegrationsPanel() {
             </div>
           ))}
 
-          <div style={{ padding: '12px 14px', borderRadius: 10, border: '1px dashed var(--b2)', fontSize: 17, color: 'var(--tx3)', lineHeight: 1.6 }}>
+          <div style={{ padding: '12px 14px', borderRadius: 10, border: '1px dashed var(--b2)', fontSize: 15, color: 'var(--tx3)', lineHeight: 1.6 }}>
             💡 {tc('settings.int_csv_hint')}
           </div>
         </>
@@ -892,7 +892,7 @@ function AIPanel() {
         />
       </Card>
 
-      <div style={{ padding: '12px 16px', background: 'var(--ev)', borderRadius: 'var(--r-md)', fontSize: 17, color: 'var(--tx3)' }}>
+      <div style={{ padding: '12px 16px', background: 'var(--ev)', borderRadius: 'var(--r-md)', fontSize: 15, color: 'var(--tx3)' }}>
         {tc('settings.ai_pref_hint')}
       </div>
     </div>
@@ -934,15 +934,15 @@ function NotificationsPanel() {
   const inp: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: 9,
     border: '1px solid var(--b2)', background: 'var(--ev)',
-    color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit',
+    color: 'var(--tx)', fontSize: 15, fontFamily: 'inherit',
     outline: 'none', boxSizing: 'border-box',
   }
 
   const row = (label: string, sub: string, checked: boolean, onChange: () => void) => (
     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '14px 0', borderBottom: '1px solid var(--b)' }}>
       <div>
-        <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{label}</div>
-        <div style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.5 }}>{sub}</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 14, color: 'var(--tx3)', lineHeight: 1.5 }}>{sub}</div>
       </div>
       <div
         onClick={onChange}
@@ -955,12 +955,12 @@ function NotificationsPanel() {
 
   return (
     <div>
-      <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700, color: 'var(--tx)' }}>{tc('settings.notifications_title')}</h2>
-      <p style={{ margin: '0 0 28px', fontSize: 17, color: 'var(--tx3)' }}>{tc('settings.notifications_desc')}</p>
+      <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{tc('settings.notifications_title')}</h2>
+      <p style={{ margin: '0 0 28px', fontSize: 15, color: 'var(--tx3)' }}>{tc('settings.notifications_desc')}</p>
 
       {/* Channels */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{tc('settings.notif_channels')}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{tc('settings.notif_channels')}</div>
         {row(tc('settings.notif_email_alerts'), tc('settings.notif_email_alerts_desc'), form.notify_email_alerts, () => setForm(f => ({ ...f, notify_email_alerts: !f.notify_email_alerts })))}
         {row(tc('settings.notif_whatsapp'), tc('settings.notif_whatsapp_desc'), form.notify_whatsapp, () => setForm(f => ({ ...f, notify_whatsapp: !f.notify_whatsapp })))}
       </div>
@@ -968,14 +968,14 @@ function NotificationsPanel() {
       {/* WhatsApp number */}
       {form.notify_whatsapp && (
         <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 16, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.notif_whatsapp_number')}</label>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.notif_whatsapp_number')}</label>
           <input
             style={inp}
             value={form.whatsapp_number}
             onChange={e => setForm(f => ({ ...f, whatsapp_number: e.target.value }))}
             placeholder="+44 7700 900000"
           />
-          <p style={{ margin: '6px 0 0', fontSize: 15, color: 'var(--tx3)' }}>
+          <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--tx3)' }}>
             {tc('settings.notif_whatsapp_hint')}
           </p>
         </div>
@@ -983,7 +983,7 @@ function NotificationsPanel() {
 
       {/* Info box */}
       <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)', marginBottom: 24 }}>
-        <p style={{ margin: 0, fontSize: 16, color: 'var(--tx2)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--tx2)', lineHeight: 1.6 }}>
           {tc('settings.notif_info')}
         </p>
       </div>
@@ -991,7 +991,7 @@ function NotificationsPanel() {
       <button
         onClick={save}
         disabled={saving}
-        style={{ padding: '10px 22px', borderRadius: 9999, border: 'none', background: '#d08a59', color: '#fff', fontSize: 17, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+        style={{ padding: '10px 22px', borderRadius: 9999, border: 'none', background: '#d08a59', color: '#fff', fontSize: 15, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
       >
         {saved ? `${tc('settings.saved')} ✓` : saving ? tc('settings.saving') : tc('settings.save_preferences')}
       </button>
@@ -1056,9 +1056,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_financial_title')}</div>
-                  <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_financial_desc')}</div>
-                  {consent.data_consent_at && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.data_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_financial_title')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_financial_desc')}</div>
+                  {consent.data_consent_at && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.data_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.data_consent} onChange={() => toggle('data')}/>
               </div>
@@ -1066,9 +1066,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_improve_title')}</div>
-                  <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_improve_desc')}</div>
-                  {consent.training_consent_at && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.training_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_improve_title')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_improve_desc')}</div>
+                  {consent.training_consent_at && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.training_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.training_consent} onChange={() => toggle('training')} color="#8c6fe0"/>
               </div>
@@ -1080,9 +1080,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_camera_title')}</div>
-                  <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_camera_desc')}</div>
-                  {consent.camera_consent_at && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.camera_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_camera_title')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_camera_desc')}</div>
+                  {consent.camera_consent_at && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.camera_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.camera_consent} onChange={() => toggle('camera')} color="#16a34a"/>
               </div>
@@ -1090,9 +1090,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_logistics_title')}</div>
-                  <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_logistics_desc')}</div>
-                  {consent.logistics_consent_at && <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.logistics_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_logistics_title')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_logistics_desc')}</div>
+                  {consent.logistics_consent_at && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.logistics_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.logistics_consent} onChange={() => toggle('logistics')} color="#d08a59"/>
               </div>
@@ -1100,15 +1100,15 @@ function PrivacyPanel() {
           </Card>
 
           <div style={{ padding: '14px 16px', background: 'var(--ev)', borderRadius: 'var(--r-md)', marginBottom: 16 }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('settings.priv_payment_title')}</div>
-            <p style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('settings.priv_payment_title')}</div>
+            <p style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
               {tc('settings.priv_payment_desc')}
             </p>
           </div>
         </>
       )}
 
-      <p style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
+      <p style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
         {tc('settings.priv_read_full')} <a href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>{tc('settings.priv_policy_link')}</a> {tc('settings.priv_read_full_post')}
       </p>
     </div>
@@ -1177,10 +1177,10 @@ function AccountPanel() {
       {pendingDeletion && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.18)', borderRadius: 'var(--r-md)', marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 600, color: '#dc2626', marginBottom: 2 }}>{tc('settings.acc_deletion_pending')}</div>
-            <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('settings.acc_deletion_pending_desc')}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#dc2626', marginBottom: 2 }}>{tc('settings.acc_deletion_pending')}</div>
+            <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('settings.acc_deletion_pending_desc')}</div>
           </div>
-          <button onClick={cancelDeletion} disabled={cancellingDeletion} style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 'var(--r-md)', border: '1px solid rgba(220,38,38,.3)', background: 'transparent', color: '#dc2626', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: cancellingDeletion ? .6 : 1 }}>
+          <button onClick={cancelDeletion} disabled={cancellingDeletion} style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 'var(--r-md)', border: '1px solid rgba(220,38,38,.3)', background: 'transparent', color: '#dc2626', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: cancellingDeletion ? .6 : 1 }}>
             {cancellingDeletion ? tc('settings.acc_cancelling') : tc('settings.acc_cancel_deletion')}
           </button>
         </div>
@@ -1191,18 +1191,18 @@ function AccountPanel() {
         <CardHeader title={tc('settings.card_current_plan')}/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--b)' }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: 'var(--tx)', textTransform: 'capitalize', marginBottom: 3 }}>{plan} {tc('settings.plan_suffix')}</div>
-            <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{plan === 'free' ? tc('settings.acc_no_card') : plan === 'growth' ? tc('settings.acc_price_growth') : tc('settings.acc_price_business')}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, color: 'var(--tx)', textTransform: 'capitalize', marginBottom: 3 }}>{plan} {tc('settings.plan_suffix')}</div>
+            <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{plan === 'free' ? tc('settings.acc_no_card') : plan === 'growth' ? tc('settings.acc_price_growth') : tc('settings.acc_price_business')}</div>
           </div>
-          <a href="/billing" style={{ padding: '8px 18px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 17, fontWeight: 600, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.2)', flexShrink: 0 }}>
+          <a href="/billing" style={{ padding: '8px 18px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 15, fontWeight: 600, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.2)', flexShrink: 0 }}>
             {plan === 'free' ? tc('settings.acc_upgrade_plan') : tc('settings.acc_manage_billing')}
           </a>
         </div>
         <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
           {PLAN_LIMITS.map((l, i) => (
             <div key={l.label} style={{ padding: '10px 12px', borderRight: i < PLAN_LIMITS.length - 1 ? '1px solid var(--b)' : 'none' }}>
-              <div style={{ fontSize: 17, fontWeight: 600, color: l.value === 'Not included' ? 'var(--tx3)' : 'var(--tx)', marginBottom: 2 }}>{String(l.value)}</div>
-              <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{l.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: l.value === 'Not included' ? 'var(--tx3)' : 'var(--tx)', marginBottom: 2 }}>{String(l.value)}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{l.label}</div>
             </div>
           ))}
         </div>
@@ -1213,10 +1213,10 @@ function AccountPanel() {
         <CardHeader title={tc('settings.card_your_data')}/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.acc_export_title')}</div>
-            <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('settings.acc_export_desc')}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.acc_export_title')}</div>
+            <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('settings.acc_export_desc')}</div>
           </div>
-          <button onClick={exportData} disabled={exporting} style={{ flexShrink: 0, padding: '8px 18px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 17, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500, opacity: exporting ? .6 : 1 }}>
+          <button onClick={exportData} disabled={exporting} style={{ flexShrink: 0, padding: '8px 18px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 15, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500, opacity: exporting ? .6 : 1 }}>
             {exporting ? tc('settings.acc_preparing') : tc('settings.acc_export_btn')}
           </button>
         </div>
@@ -1227,10 +1227,10 @@ function AccountPanel() {
         <CardHeader title={tc('settings.card_danger_zone')} danger/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.acc_delete_title')}</div>
-            <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('settings.acc_delete_desc')}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.acc_delete_title')}</div>
+            <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('settings.acc_delete_desc')}</div>
           </div>
-          <button onClick={() => setShowDeleteModal(true)} disabled={pendingDeletion} style={{ flexShrink: 0, padding: '8px 18px', borderRadius: 'var(--r-md)', border: '1px solid rgba(220,38,38,.3)', background: 'rgba(220,38,38,.04)', color: '#dc2626', fontSize: 17, fontFamily: 'inherit', cursor: pendingDeletion ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: pendingDeletion ? .5 : 1 }}>
+          <button onClick={() => setShowDeleteModal(true)} disabled={pendingDeletion} style={{ flexShrink: 0, padding: '8px 18px', borderRadius: 'var(--r-md)', border: '1px solid rgba(220,38,38,.3)', background: 'rgba(220,38,38,.04)', color: '#dc2626', fontSize: 15, fontFamily: 'inherit', cursor: pendingDeletion ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: pendingDeletion ? .5 : 1 }}>
             {pendingDeletion ? tc('settings.acc_pending') : tc('settings.acc_delete_btn')}
           </button>
         </div>
@@ -1240,15 +1240,15 @@ function AccountPanel() {
         <>
           <div onClick={() => setShowDeleteModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 199 }}/>
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '90%', maxWidth: 420, background: 'var(--sf)', borderRadius: 16, border: '1px solid rgba(220,38,38,.3)', zIndex: 200, padding: 24 }}>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: '#dc2626', marginBottom: 8 }}>{tc('settings.acc_modal_title')}</div>
-            <p style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>{tc('settings.acc_modal_desc')}</p>
-            <label style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.acc_reason_label')}</label>
-            <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder={tc('settings.acc_reason_placeholder')} style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const, resize: 'none' as const, height: 80, marginBottom: 16 }}/>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, color: '#dc2626', marginBottom: 8 }}>{tc('settings.acc_modal_title')}</div>
+            <p style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>{tc('settings.acc_modal_desc')}</p>
+            <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.acc_reason_label')}</label>
+            <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder={tc('settings.acc_reason_placeholder')} style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const, resize: 'none' as const, height: 80, marginBottom: 16 }}/>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={requestDeletion} disabled={deleting} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#dc2626', color: '#fff', fontSize: 17, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={requestDeletion} disabled={deleting} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#dc2626', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {deleting ? tc('settings.acc_submitting') : tc('settings.acc_request_deletion')}
               </button>
-              <button onClick={() => setShowDeleteModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 17, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={() => setShowDeleteModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {tc('settings.acc_cancel')}
               </button>
             </div>
@@ -1257,7 +1257,7 @@ function AccountPanel() {
       )}
 
       {deleteRequested && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', padding: '12px 20px', borderRadius: 12, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', color: '#16a34a', fontSize: 17, fontWeight: 500, zIndex: 300 }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', padding: '12px 20px', borderRadius: 12, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', color: '#16a34a', fontSize: 15, fontWeight: 500, zIndex: 300 }}>
           ✅ {tc('settings.acc_deletion_toast')}
         </div>
       )}
@@ -1315,7 +1315,7 @@ function CompliancePanel() {
   }
 
   const STATUS_BADGE = (label: string, ok: boolean) => (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: ok ? 'rgba(34,197,94,.08)' : 'rgba(234,179,8,.08)', border: `1px solid ${ok ? 'rgba(34,197,94,.25)' : 'rgba(234,179,8,.25)'}`, fontSize: 15, fontWeight: 600, color: ok ? '#16a34a' : '#a16207' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, background: ok ? 'rgba(34,197,94,.08)' : 'rgba(234,179,8,.08)', border: `1px solid ${ok ? 'rgba(34,197,94,.25)' : 'rgba(234,179,8,.25)'}`, fontSize: 13, fontWeight: 600, color: ok ? '#16a34a' : '#a16207' }}>
       <span>{ok ? '✓' : '⚠'}</span>{label}
     </span>
   )
@@ -1336,8 +1336,8 @@ function CompliancePanel() {
               { label: tc('settings.comp_backup_retention'), value: '30 days, same region' },
             ].map(item => (
               <div key={item.label} style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--ev)' }}>
-                <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 4 }}>{item.label}</div>
-                <div style={{ fontSize: 17, fontWeight: 500, color: 'var(--tx)' }}>{item.value}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 4 }}>{item.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx)' }}>{item.value}</div>
               </div>
             ))}
           </div>
@@ -1356,7 +1356,7 @@ function CompliancePanel() {
             {STATUS_BADGE(tc('settings.comp_policy_published'), true)}
             {STATUS_BADGE(tc('settings.comp_dpa_signed'), true)}
           </div>
-          <p style={{ fontSize: 16, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             AskBiz acts as a <strong>data processor</strong> on your behalf. You remain the data controller for any customer or staff data you process through the platform. Download our <a href="/dpa" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Data Processing Agreement (DPA) →</a>
           </p>
         </div>
@@ -1368,29 +1368,29 @@ function CompliancePanel() {
           <CardHeader title={tc('settings.card_registration_numbers')}/>
           <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.comp_ico_label')}</label>
+              <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.comp_ico_label')}</label>
               <input
                 value={icoNumber}
                 onChange={e => setIcoNumber(e.target.value)}
                 placeholder="e.g. ZB123456"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const }}
               />
-              <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.comp_ico_hint')} <a href="https://ico.org.uk/for-organisations/register/" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('settings.comp_ico_register')}</a></div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.comp_ico_hint')} <a href="https://ico.org.uk/for-organisations/register/" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('settings.comp_ico_register')}</a></div>
             </div>
             <div>
-              <label style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.comp_vat_label')}</label>
+              <label style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.comp_vat_label')}</label>
               <input
                 value={vatNumber}
                 onChange={e => setVatNumber(e.target.value)}
                 placeholder="e.g. GB 123456789"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 17, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const }}
               />
-              <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.comp_vat_hint')}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.comp_vat_hint')}</div>
             </div>
             <button
               onClick={saveCompliance}
               disabled={saving}
-              style={{ alignSelf: 'flex-start', padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 17, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', opacity: saving ? .6 : 1 }}
+              style={{ alignSelf: 'flex-start', padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', opacity: saving ? .6 : 1 }}
             >
               {saved ? `✓ ${tc('settings.saved')}` : saving ? tc('settings.saving') : tc('settings.comp_save_numbers')}
             </button>
@@ -1406,12 +1406,12 @@ function CompliancePanel() {
             {STATUS_BADGE(tc('settings.comp_mtd_exports_badge'), true)}
             {STATUS_BADGE(tc('settings.comp_digital_records_badge'), true)}
           </div>
-          <p style={{ fontSize: 17, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             All POS transactions are stored as digital records in HMRC-compatible format. Export VAT-period reports directly from <a href="/pos" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Point of Sale → Export</a>.
           </p>
           <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--acc)', marginBottom: 3 }}>{tc('settings.comp_mtd_included')}</div>
-            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 16, color: 'var(--tx3)', lineHeight: 1.8 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--acc)', marginBottom: 3 }}>{tc('settings.comp_mtd_included')}</div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: 'var(--tx3)', lineHeight: 1.8 }}>
               <li>{tc('settings.comp_mtd_li1')}</li>
               <li>{tc('settings.comp_mtd_li2')}</li>
               <li>{tc('settings.comp_mtd_li3')}</li>
@@ -1428,11 +1428,11 @@ function CompliancePanel() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.comp_anon_benchmark_title')}</div>
-                <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.comp_anon_benchmark_title')}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
                   {tc('settings.comp_anon_benchmark_desc')}
                 </div>
-                <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('settings.comp_anon_benchmark_note')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.comp_anon_benchmark_note')}</div>
               </div>
               <Toggle value={collectiveOpt} onChange={toggleCollective} color="#8c6fe0"/>
             </div>
@@ -1447,11 +1447,11 @@ function CompliancePanel() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.comp_global_price_title')}</div>
-                <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.comp_global_price_title')}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
                   {tc('settings.comp_global_price_desc')}
                 </div>
-                <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('settings.comp_global_price_note')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.comp_global_price_note')}</div>
               </div>
               <Toggle value={marketIntelOpt} onChange={toggleMarketIntel} color="#d08a59"/>
             </div>
@@ -1463,10 +1463,10 @@ function CompliancePanel() {
       <Card>
         <CardHeader title={tc('settings.card_pos_staff_data')}/>
         <div style={{ padding: '16px 20px' }}>
-          <p style={{ fontSize: 17, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             When you add cashier or inventory staff to your POS, you are acting as their data controller. Their phone numbers and login activity are stored securely in the UK. You are responsible for informing them under UK GDPR Article 13. <a href="/privacy#staff" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Staff privacy notice template →</a>
           </p>
-          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 16, color: 'var(--tx3)' }}>
+          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 14, color: 'var(--tx3)' }}>
             Staff OTP codes expire after <strong>10 minutes</strong> and are deleted after use. Phone numbers are stored only to authenticate your team — they are not used for marketing.
           </div>
         </div>
@@ -1476,7 +1476,7 @@ function CompliancePanel() {
       <Card>
         <CardHeader title={tc('settings.card_pos_logistics_camera')}/>
         <div style={{ padding: '16px 20px' }}>
-          <p style={{ fontSize: 17, color: 'var(--tx3)', margin: 0, lineHeight: 1.6, marginBottom: 10 }}>
+          <p style={{ fontSize: 15, color: 'var(--tx3)', margin: 0, lineHeight: 1.6, marginBottom: 10 }}>
             The POS logistics module processes delivery addresses, parcel tracking data, route information, and vehicle inspection photos. Camera scanning processes barcode and price tag images in real time without storing raw images.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
@@ -1485,7 +1485,7 @@ function CompliancePanel() {
             {STATUS_BADGE(tc('settings.comp_vehicle_retention'), true)}
             {STATUS_BADGE(tc('settings.comp_offline_cleared'), true)}
           </div>
-          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 16, color: 'var(--tx3)' }}>
+          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 14, color: 'var(--tx3)' }}>
             Offline mode stores transactions locally in your browser during internet outages. Data is automatically synced and cleared when connectivity resumes. Mobile money payments (M-Pesa, MTN, Airtel) are processed via PesaPal — AskBiz never sees your mobile money PIN.
           </div>
         </div>
@@ -1495,10 +1495,10 @@ function CompliancePanel() {
       <Card>
         <CardHeader title={tc('settings.card_breach_notification')}/>
         <div style={{ padding: '16px 20px' }}>
-          <p style={{ fontSize: 17, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             In the event of a data breach affecting your business data, AskBiz will notify you within <strong>72 hours</strong> of becoming aware, in accordance with UK GDPR Article 33. Notifications are sent to your registered email address.
           </p>
-          <div style={{ marginTop: 10, fontSize: 16, color: 'var(--tx3)' }}>
+          <div style={{ marginTop: 10, fontSize: 14, color: 'var(--tx3)' }}>
             Registered contact: <strong style={{ color: 'var(--tx)' }}>{user.email}</strong>
           </div>
         </div>
@@ -1554,7 +1554,7 @@ export default function SettingsPage() {
                 <path d={activeItem.icon}/>
               </svg>
             )}
-            <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--tx)' }}>{activeItem ? tc('settings.nav_' + activeItem.id) : ''}</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)' }}>{activeItem ? tc('settings.nav_' + activeItem.id) : ''}</span>
           </div>
           <button
             onClick={() => setMobileNavOpen(o => !o)}
@@ -1574,7 +1574,7 @@ export default function SettingsPage() {
                   <button
                     key={item.id}
                     onClick={() => { setActive(item.id); setMobileNavOpen(false) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 'var(--r-md)', border: 'none', background: isActive ? 'rgba(208,138,89,.1)' : 'transparent', color: isActive ? 'var(--acc)' : 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const, fontSize: 17, fontWeight: isActive ? 600 : 500 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 'var(--r-md)', border: 'none', background: isActive ? 'rgba(208,138,89,.1)' : 'transparent', color: isActive ? 'var(--acc)' : 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const, fontSize: 15, fontWeight: isActive ? 600 : 500 }}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <path d={item.icon}/>
@@ -1605,7 +1605,7 @@ export default function SettingsPage() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d={item.icon}/>
                   </svg>
-                  <span style={{ fontSize: 17, fontWeight: isActive ? 600 : 500 }}>{tc('settings.nav_' + item.id)}</span>
+                  <span style={{ fontSize: 15, fontWeight: isActive ? 600 : 500 }}>{tc('settings.nav_' + item.id)}</span>
                   {isActive && (
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: 'auto', flexShrink: 0 }}>
                       <path d="M9 18l6-6-6-6"/>

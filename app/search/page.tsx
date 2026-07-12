@@ -107,9 +107,9 @@ export default function SearchPage() {
               <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
             </svg>
           </div>
-          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
-        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
       </nav>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,32px)' }}>
@@ -129,10 +129,10 @@ export default function SearchPage() {
               placeholder={tc('common.search_placeholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              style={{ width: '100%', boxSizing: 'border-box', padding: '14px 44px 14px 50px', fontSize: 16, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 12, outline: 'none' }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '14px 44px 14px 50px', fontSize: 14, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 12, outline: 'none' }}
             />
             {query && (
-              <button onClick={() => setQuery('')} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 20, padding: 0 }}>×</button>
+              <button onClick={() => setQuery('')} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 18, padding: 0 }}>×</button>
             )}
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function SearchPage() {
                   background: filter === f ? TX : SF,
                   color: filter === f ? '#fff' : TX2,
                   border: `1px solid ${filter === f ? TX : BD}`,
-                  borderRadius: 9999, padding: '6px 14px', fontSize: 13, fontWeight: filter === f ? 600 : 400,
+                  borderRadius: 9999, padding: '6px 14px', fontSize: 11, fontWeight: filter === f ? 600 : 400,
                   cursor: 'pointer', fontFamily: 'DM Sans, system-ui',
                 }}
               >
@@ -163,13 +163,13 @@ export default function SearchPage() {
           <>
             {filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-                <div style={{ fontSize: 15, color: TX2, marginBottom: 8 }}>No results for &ldquo;{query}&rdquo;</div>
-                <div style={{ fontSize: 13, color: TX3 }}>{tc('common.search_no_results_try')} <Link href={localePath('/academy', lang)} style={{ color: ACC }}>{tc('nav.academy')}</Link></div>
+                <div style={{ fontSize: 30, marginBottom: 12 }}>🔍</div>
+                <div style={{ fontSize: 13, color: TX2, marginBottom: 8 }}>No results for &ldquo;{query}&rdquo;</div>
+                <div style={{ fontSize: 11, color: TX3 }}>{tc('common.search_no_results_try')} <Link href={localePath('/academy', lang)} style={{ color: ACC }}>{tc('nav.academy')}</Link></div>
               </div>
             ) : (
               <>
-                <div style={{ fontSize: 13, color: TX3, marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: TX3, marginBottom: 16 }}>
                   {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -180,13 +180,13 @@ export default function SearchPage() {
                       style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '16px 18px', textDecoration: 'none', display: 'block', transition: 'border-color 120ms' }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: r.tagColor, background: r.tagColor + '18', border: `1px solid ${r.tagColor}30`, padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.05em', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: r.tagColor, background: r.tagColor + '18', border: `1px solid ${r.tagColor}30`, padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.05em', whiteSpace: 'nowrap' }}>
                           {TYPE_META[r.type].label}
                         </span>
-                        <span style={{ fontSize: 11, color: TX3 }}>{r.tag}</span>
+                        <span style={{ fontSize: 9, color: TX3 }}>{r.tag}</span>
                       </div>
-                      <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 4, lineHeight: 1.4 }}>{r.title}</div>
-                      <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.55 }}>
+                      <div style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX, marginBottom: 4, lineHeight: 1.4 }}>{r.title}</div>
+                      <p style={{ fontSize: 11, color: TX2, margin: 0, lineHeight: 1.55 }}>
                         {(r.description || '').slice(0, 120)}{(r.description || '').length > 120 ? '…' : ''}
                       </p>
                     </Link>
@@ -207,9 +207,9 @@ export default function SearchPage() {
               { href: localePath('/free-tools', lang), icon: '🛠️', label: 'Free Tools', sub: 'Calculators & tools' },
             ] as {href:string;icon:string;label:string;sub:string}[]).map(item => (
               <Link key={item.href} href={item.href} style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '18px 16px', textDecoration: 'none', display: 'block' }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
-                <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{item.label}</div>
-                <div style={{ fontSize: 12, color: TX3 }}>{item.sub}</div>
+                <div style={{ fontSize: 22, marginBottom: 8 }}>{item.icon}</div>
+                <div style={{ fontFamily: 'Sora, system-ui', fontSize: 12, fontWeight: 700, color: TX, marginBottom: 3 }}>{item.label}</div>
+                <div style={{ fontSize: 10, color: TX3 }}>{item.sub}</div>
               </Link>
             ))}
           </div>
@@ -217,10 +217,10 @@ export default function SearchPage() {
       </div>
 
       <footer style={{ borderTop: `1px solid ${BD}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: SF, marginTop: 48 }}>
-        <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz Ltd.</span>
+        <span style={{ fontSize: 10, color: TX3 }}>© 2026 AskBiz Ltd.</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {([['/', 'Home'], ['/academy', 'Academy'], ['/help', 'Help'], ['/blog', 'Blog']] as [string,string][]).map(([path, label]) => (
-            <Link key={path} href={localePath(path, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+            <Link key={path} href={localePath(path, lang)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

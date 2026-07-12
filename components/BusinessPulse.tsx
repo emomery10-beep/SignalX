@@ -71,18 +71,18 @@ function SignalCard({
           boxShadow: isNew ? `0 0 6px ${c.dot}` : 'none',
           animation: signal.severity === 'red' ? 'pulse 1.5s infinite' : 'none',
         }} />
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: 'var(--tx)', flex: 1, lineHeight: 1.4 }}>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 11, fontWeight: 600, color: 'var(--tx)', flex: 1, lineHeight: 1.4 }}>
           {signal.title}
         </div>
         {signal.metric && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: c.text, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 9999, padding: '2px 7px', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: c.text, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 9999, padding: '2px 7px', flexShrink: 0, whiteSpace: 'nowrap' }}>
             {signal.metric}
           </span>
         )}
       </div>
 
       {/* Description */}
-      <p style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.65, margin: '0 0 10px 16px' }}>
+      <p style={{ fontSize: 10, color: 'var(--tx2)', lineHeight: 1.65, margin: '0 0 10px 16px' }}>
         {signal.description}
       </p>
 
@@ -91,7 +91,7 @@ function SignalCard({
         <button
           onClick={() => onAction(signal.prompt)}
           style={{
-            fontSize: 12, fontWeight: 600, padding: '5px 12px',
+            fontSize: 10, fontWeight: 600, padding: '5px 12px',
             borderRadius: 9999, border: 'none',
             background: c.dot, color: '#fff',
             cursor: 'pointer', fontFamily: 'inherit',
@@ -105,7 +105,7 @@ function SignalCard({
         <button
           onClick={handleDismiss}
           style={{
-            fontSize: 12, padding: '5px 10px',
+            fontSize: 10, padding: '5px 10px',
             borderRadius: 9999,
             border: '1px solid var(--b)',
             background: 'transparent', color: 'var(--tx3)',
@@ -244,11 +244,11 @@ export default function BusinessPulse({ onActionClick }: Props) {
 
         {open && (
           <>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, flex: 1, whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 11, fontWeight: 600, flex: 1, whiteSpace: 'nowrap' }}>
               {tc('business_pulse.panelTitle')}
             </span>
             {hasSignals && (
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: redCount > 0 ? '#ef4444' : '#f59e0b', color: '#fff' }}>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: redCount > 0 ? '#ef4444' : '#f59e0b', color: '#fff' }}>
                 {visibleSignals.length}
               </span>
             )}
@@ -283,11 +283,11 @@ export default function BusinessPulse({ onActionClick }: Props) {
                   <path d="M20 6L9 17l-5-5"/>
                 </svg>
               </div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: '#22c55e', marginBottom: 6 }}>{tc('business_pulse.allClear')}</div>
-              <p style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.65 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 11, fontWeight: 600, color: '#22c55e', marginBottom: 6 }}>{tc('business_pulse.allClear')}</div>
+              <p style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.65 }}>
                 {tc('business_pulse.allClearBody')}
               </p>
-              <p style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 10, lineHeight: 1.5 }}>
                 {tc('business_pulse.uploadPrompt')}
               </p>
             </div>
@@ -300,7 +300,7 @@ export default function BusinessPulse({ onActionClick }: Props) {
         <div style={{ padding: '8px 12px', borderTop: '1px solid var(--b)', flexShrink: 0 }}>
           <button
             onClick={fetchSignals}
-            style={{ width: '100%', padding: '7px', borderRadius: 9, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'background 150ms' }}
+            style={{ width: '100%', padding: '7px', borderRadius: 9, border: '1px solid var(--b)', background: 'transparent', fontSize: 9, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'background 150ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >

@@ -347,15 +347,15 @@ export default function SourcesPage() {
       <div className="page-shell-body">
 
         {toast && (
-          <div style={{ padding: '12px 16px', borderRadius: 12, marginBottom: 20, background: toast.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 17, color: toast.ok ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
+          <div style={{ padding: '12px 16px', borderRadius: 12, marginBottom: 20, background: toast.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 15, color: toast.ok ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
             {toast.ok ? '✓' : '✗'} {toast.msg}
           </div>
         )}
 
         {/* Syncing banner — shown after fresh Shopify connect */}
         {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('syncing') === 'true' && (
-          <div style={{ padding: '12px 16px', borderRadius: 12, marginBottom: 20, background: 'rgba(149,191,71,.08)', border: '1px solid rgba(149,191,71,.3)', fontSize: 17, color: '#7aaa2e', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 20 }}>🛍️</span>
+          <div style={{ padding: '12px 16px', borderRadius: 12, marginBottom: 20, background: 'rgba(149,191,71,.08)', border: '1px solid rgba(149,191,71,.3)', fontSize: 15, color: '#7aaa2e', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🛍️</span>
             <span><strong>{tc('sources.syncing_banner_title')}</strong> {tc('sources.syncing_banner_body')}</span>
           </div>
         )}
@@ -363,7 +363,7 @@ export default function SourcesPage() {
         {/* ── Connected ─────────────────────────────────────────────────────── */}
         {sources.length > 0 && (
           <div style={{ marginBottom: 32 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
               {tc('sources.connected_heading', { count: sources.length })}
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 14, overflow: 'hidden' }}>
@@ -372,21 +372,21 @@ export default function SourcesPage() {
                 const isError = source.status === 'error' || !!source.error_message
                 return (
                   <div key={source.id} style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: i < sources.length - 1 ? '1px solid var(--b)' : 'none', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 24, flexShrink: 0 }}>{info?.icon || '🔌'}</span>
+                    <span style={{ fontSize: 22, flexShrink: 0 }}>{info?.icon || '🔌'}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 17, fontWeight: 600 }}>{source.name}</div>
-                      <div style={{ fontSize: 16, color: isError ? '#ef4444' : 'var(--tx3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600 }}>{source.name}</div>
+                      <div style={{ fontSize: 14, color: isError ? '#ef4444' : 'var(--tx3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ width: 5, height: 5, borderRadius: '50%', background: isError ? '#ef4444' : source.status === 'active' ? '#22c55e' : '#f59e0b', display: 'inline-block', flexShrink: 0 }}/>
                         {isError ? source.error_message?.slice(0,60) || tc('sources.sync_error_fallback') : tc('sources.synced_label', { time: timeAgo(source.last_synced_at, tc) })}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
                       <button onClick={() => syncSource(source.id)} disabled={syncing === source.id}
-                        style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', fontSize: 16, fontWeight: 500, color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', fontSize: 14, fontWeight: 500, color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {syncing === source.id ? tc('sources.btn_syncing') : tc('sources.btn_sync_now')}
                       </button>
                       <button onClick={() => disconnectSource(source.id)} disabled={deleting === source.id}
-                        style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', fontSize: 16, color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', fontSize: 14, color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {deleting === source.id ? '…' : tc('sources.btn_disconnect')}
                       </button>
                     </div>
@@ -399,7 +399,7 @@ export default function SourcesPage() {
 
         {/* ── Search bar ────────────────────────────────────────────────────── */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
             {sources.length === 0 ? tc('sources.heading_connect_platform') : tc('sources.heading_add_another')}
             <span style={{ marginLeft: 8, fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--tx3)' }}>{tc('sources.integrations_count', { count: SOURCES.length })}</span>
           </div>
@@ -410,7 +410,7 @@ export default function SourcesPage() {
             <input
               value={search} onChange={e => setSearch(e.target.value)}
               placeholder={tc('sources.search_placeholder')}
-              style={{ width: '100%', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
         </div>
@@ -421,14 +421,14 @@ export default function SourcesPage() {
             {[1,2,3,4,5,6].map(i => <div key={i} style={{ height: 52, borderRadius: 10, background: 'var(--ev)', animation: 'shimmer 1.4s infinite' }}/>)}
           </div>
         ) : grouped.length === 0 ? (
-          <div style={{ padding: '32px', textAlign: 'center', background: 'var(--ev)', borderRadius: 12, color: 'var(--tx3)', fontSize: 17 }}>
+          <div style={{ padding: '32px', textAlign: 'center', background: 'var(--ev)', borderRadius: 12, color: 'var(--tx3)', fontSize: 15 }}>
             {tc('sources.no_matches', { query: search })}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {grouped.map(({ category, items }) => (
               <div key={category}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>
                   {tc('sources.' + (CATEGORY_KEY[category] || ''))}
                 </div>
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
@@ -437,37 +437,37 @@ export default function SourcesPage() {
                     return (
                       <div key={src.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderBottom: i < items.length - 1 ? '1px solid var(--b)' : 'none', background: isConnected ? src.color : 'transparent', transition: 'background 150ms' }}>
                         {/* Icon */}
-                        <div style={{ width: 34, height: 34, borderRadius: 8, background: src.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, flexShrink: 0 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 8, background: src.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, flexShrink: 0 }}>
                           {src.icon}
                         </div>
                         {/* Label + desc */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {src.label}
                             {!src.oauthFlow && src.id !== 'askbiz_pos' && (
-                              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.05em', textTransform: 'uppercase' }}>
                                 {tc('sources.badge_api_token')}
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {src.desc}
                           </div>
                         </div>
                         {/* Action */}
                         {isConnected ? (
-                          <span style={{ fontSize: 15, fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>
                             {tc('sources.badge_connected')}
                           </span>
                         ) : src.id === 'shopify' ? (
-                          <span style={{ fontSize: 15, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0, whiteSpace: 'nowrap' }}>
                             {tc('sources.badge_coming_soon')}
                           </span>
                         ) : (
                           <button
                             onClick={() => openModal(src.id)}
                             disabled={connecting === src.id}
-                            style={{ padding: '6px 14px', borderRadius: 9999, border: 'none', background: src.accent, color: '#fff', fontSize: 16, fontWeight: 600, cursor: connecting === src.id ? 'default' : 'pointer', opacity: connecting === src.id ? 0.6 : 1, fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}
+                            style={{ padding: '6px 14px', borderRadius: 9999, border: 'none', background: src.accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: connecting === src.id ? 'default' : 'pointer', opacity: connecting === src.id ? 0.6 : 1, fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}
                           >
                             {connecting === src.id ? tc('sources.btn_connecting') : tc('sources.btn_connect')}
                           </button>
@@ -481,11 +481,11 @@ export default function SourcesPage() {
           </div>
         )}
 
-        <div style={{ marginTop: 28, padding: '13px 16px', borderRadius: 12, border: '1px dashed var(--b2)', fontSize: 17, color: 'var(--tx3)', lineHeight: 1.6 }}>
+        <div style={{ marginTop: 28, padding: '13px 16px', borderRadius: 12, border: '1px dashed var(--b2)', fontSize: 15, color: 'var(--tx3)', lineHeight: 1.6 }}>
           {tc('sources.csv_hint_prefix')} <strong style={{ color: 'var(--tx)' }}>{tc('sources.csv_hint_strong')}</strong> {tc('sources.csv_hint_suffix')}
         </div>
 
-        <p style={{ marginTop: 16, fontSize: 15, color: 'var(--tx3)', lineHeight: 1.6, textAlign: 'center' }}>
+        <p style={{ marginTop: 16, fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6, textAlign: 'center' }}>
           The term &ldquo;Etsy&rdquo; is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
         </p>
       </div>
@@ -498,16 +498,16 @@ export default function SourcesPage() {
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <span style={{ fontSize: 24 }}>🛍️</span>
-              <span style={{ fontSize: 19, fontWeight: 700 }}>{tc('sources.shopify_modal_title')}</span>
-              <button onClick={() => setShopifyModal(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 22, lineHeight: 1, padding: 2 }}>×</button>
+              <span style={{ fontSize: 22 }}>🛍️</span>
+              <span style={{ fontSize: 17, fontWeight: 700 }}>{tc('sources.shopify_modal_title')}</span>
+              <button onClick={() => setShopifyModal(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 20, lineHeight: 1, padding: 2 }}>×</button>
             </div>
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, background: 'var(--ev)', borderRadius: 9, padding: 3, marginBottom: 16 }}>
               {(['oauth', 'manual'] as const).map(tab => (
                 <button key={tab} onClick={() => { setShopifyTab(tab); setShopifyError('') }}
-                  style={{ flex: 1, padding: '6px 0', borderRadius: 7, border: 'none', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  style={{ flex: 1, padding: '6px 0', borderRadius: 7, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                     background: shopifyTab === tab ? 'var(--sf)' : 'transparent',
                     color: shopifyTab === tab ? 'var(--tx)' : 'var(--tx3)',
                     boxShadow: shopifyTab === tab ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
@@ -519,17 +519,17 @@ export default function SourcesPage() {
 
             {/* Error */}
             {shopifyError && (
-              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 16, color: '#ef4444', marginBottom: 12 }}>
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 14, color: '#ef4444', marginBottom: 12 }}>
                 {shopifyError}
               </div>
             )}
 
             {/* OAuth panel */}
             <div style={{ display: shopifyTab === 'oauth' ? 'block' : 'none' }}>
-              <p style={{ fontSize: 16, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 14, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
                 {tc('sources.shopify_oauth_intro')}
               </p>
-              <label style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+              <label style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
                 {tc('sources.shopify_field_domain')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
@@ -538,36 +538,36 @@ export default function SourcesPage() {
                 value={shopifyOauthShop}
                 onChange={e => setShopifyOauthShop(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleShopifyOAuth()}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
               />
               <button onClick={handleShopifyOAuth} disabled={shopifyConnecting === 'oauth'}
-                style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 17, fontWeight: 600, cursor: shopifyConnecting === 'oauth' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 15, fontWeight: 600, cursor: shopifyConnecting === 'oauth' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
                 {shopifyConnecting === 'oauth' ? tc('sources.shopify_btn_redirecting') : tc('sources.shopify_btn_connect_oauth')}
               </button>
             </div>
 
             {/* Manual token panel */}
             <div style={{ display: shopifyTab === 'manual' ? 'block' : 'none' }}>
-              <p style={{ fontSize: 16, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
-                {tc('sources.shopify_manual_intro_prefix')} <code style={{ fontSize: 15, background: 'var(--ev)', padding: '1px 4px', borderRadius: 3 }}>shpat_</code> {tc('sources.shopify_manual_intro_suffix')}
+              <p style={{ fontSize: 14, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
+                {tc('sources.shopify_manual_intro_prefix')} <code style={{ fontSize: 13, background: 'var(--ev)', padding: '1px 4px', borderRadius: 3 }}>shpat_</code> {tc('sources.shopify_manual_intro_suffix')}
               </p>
-              <label style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+              <label style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
                 {tc('sources.shopify_field_domain')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="text" placeholder="mystore.myshopify.com" value={shopifyShop} onChange={e => setShopifyShop(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
-              <label style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+              <label style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
                 {tc('sources.shopify_field_access_token')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="password" placeholder="shpat_xxxxxxxxxxxxxxxxxxxx" value={shopifyToken} onChange={e => setShopifyToken(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
               <button onClick={handleShopifyManual} disabled={shopifyConnecting === 'manual'}
-                style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 17, fontWeight: 600, cursor: shopifyConnecting === 'manual' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 15, fontWeight: 600, cursor: shopifyConnecting === 'manual' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
                 {shopifyConnecting === 'manual' ? tc('sources.shopify_btn_connecting') : tc('sources.shopify_btn_connect_token')}
               </button>
             </div>
 
-            <p style={{ fontSize: 15, color: 'var(--tx3)', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.4 }}>
+            <p style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.4 }}>
               {tc('sources.shopify_modal_footer')}
             </p>
           </div>
@@ -580,23 +580,23 @@ export default function SourcesPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 360, border: '1px solid var(--b)', textAlign: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 32 }}>🎵</span>
-              <span style={{ fontFamily: 'var(--font-sora)', fontSize: 21, fontWeight: 700 }}>Connect TikTok Shop</span>
+              <span style={{ fontSize: 30 }}>🎵</span>
+              <span style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 700 }}>Connect TikTok Shop</span>
             </div>
-            <p style={{ fontSize: 17, color: 'var(--tx2)', marginBottom: 20, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 15, color: 'var(--tx2)', marginBottom: 20, lineHeight: 1.6 }}>
               Open the <strong>TikTok</strong> app on your phone, tap the scan icon, and scan this code to authorise your shop.
             </p>
             <div style={{ display: 'inline-flex', padding: 12, background: '#fff', borderRadius: 12, border: '1px solid var(--b)', marginBottom: 20 }}>
               <QRCodeSVG value={tiktokQr.authUrl} size={180} level="M" />
             </div>
-            <p style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 14 }}>Waiting for authorisation<span className="dots">…</span></p>
+            <p style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 14 }}>Waiting for authorisation<span className="dots">…</span></p>
             <div style={{ display: 'flex', gap: 8 }}>
               <a href={tiktokQr.authUrl} target="_blank" rel="noopener noreferrer"
-                style={{ flex: 1, padding: 10, borderRadius: 10, background: '#010101', color: '#fff', fontSize: 17, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                style={{ flex: 1, padding: 10, borderRadius: 10, background: '#010101', color: '#fff', fontSize: 15, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 Open on this device
               </a>
               <button onClick={() => { setTiktokQr(null); if (tiktokPollRef.current) { clearInterval(tiktokPollRef.current); tiktokPollRef.current = null } }}
-                style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', fontSize: 17, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', fontSize: 15, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Cancel
               </button>
             </div>
@@ -610,41 +610,41 @@ export default function SourcesPage() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 400, border: '1px solid var(--b)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: activeSrc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: activeSrc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
                 {activeSrc.icon}
               </div>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700 }}>{tc('sources.modal_connect_title', { label: activeSrc.label })}</div>
-                <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 2 }}>{activeSrc.hint}</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{tc('sources.modal_connect_title', { label: activeSrc.label })}</div>
+                <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 2 }}>{activeSrc.hint}</div>
               </div>
             </div>
             {activeSrc.fields.map(f => (
               <div key={f.key} style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                <label style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
                   {f.label}{f.required && <span style={{ color: '#ef4444' }}> *</span>}
                 </label>
                 <input type={f.type} placeholder={f.placeholder} value={modalFields[f.key] || ''}
                   onChange={e => setModalFields(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}/>
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 15, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}/>
               </div>
             ))}
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button onClick={() => handleConnect(modal)} disabled={connecting === modal}
-                style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: activeSrc.accent, color: '#fff', fontSize: 18, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: activeSrc.accent, color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {connecting === modal ? tc('sources.btn_connecting') : activeSrc.oauthFlow ? tc('sources.modal_authorise', { label: activeSrc.label }) : tc('sources.btn_connect')}
               </button>
               <button onClick={() => setModal(null)}
-                style={{ padding: '11px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', fontSize: 18, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '11px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', fontSize: 16, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit' }}>
                 {tc('sources.btn_cancel')}
               </button>
             </div>
             {activeSrc.oauthFlow && (
-              <p style={{ marginTop: 12, fontSize: 15, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6 }}>
+              <p style={{ marginTop: 12, fontSize: 13, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6 }}>
                 {tc('sources.modal_oauth_footer', { label: activeSrc.label })}
               </p>
             )}
             {activeSrc.id === 'etsy' && (
-              <p style={{ marginTop: 8, fontSize: 14, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5, padding: '8px 4px 0', borderTop: '1px solid var(--b)' }}>
+              <p style={{ marginTop: 8, fontSize: 12, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5, padding: '8px 4px 0', borderTop: '1px solid var(--b)' }}>
                 The term &ldquo;Etsy&rdquo; is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
               </p>
             )}

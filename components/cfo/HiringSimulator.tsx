@@ -80,29 +80,29 @@ export default function HiringSimulator({ totals, cash, currencySymbol: sym, onA
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_hiring.title')}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_hiring.title')}</span>
           {totalHeadcount > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>
+            <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>
               +{totalHeadcount} {tc('cfo_hiring.hireBadge', { n: totalHeadcount })} · {fmt(totalMonthlyCost, sym)}/mo
             </span>
           )}
         </div>
         <button onClick={() => onAsk(tc('cfo_hiring.askAiPrompt', { headcount: totalHeadcount, monthlyCost: fmt(totalMonthlyCost, sym), annualCost: fmt(totalAnnualCost, sym), netProfit: fmt(currentNetProfit, sym), runway: String(currentRunway ?? '∞'), newNetProfit: fmt(newNetProfit, sym), newRunway: String(newRunway ?? '∞'), revenueNeeded: fmt(revenueNeeded, sym) }))}
-          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_hiring.askAiBtn')}
         </button>
       </div>
 
       <div style={{ padding: '16px 18px' }}>
-        <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
           {tc('cfo_hiring.subtitle')}
         </div>
 
         {/* Burden rate */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'var(--ev, #f9f9f8)' }}>
-          <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>{tc('cfo_hiring.burdenRateLabel')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600 }}>{tc('cfo_hiring.burdenRateLabel')}</span>
           <select value={burdenRate} onChange={e => saveBurden(Number(e.target.value))}
-            style={{ fontSize: 11, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', background: 'var(--sf)', fontFamily: 'inherit', color: 'var(--tx)' }}>
+            style={{ fontSize: 9, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', background: 'var(--sf)', fontFamily: 'inherit', color: 'var(--tx)' }}>
             <option value={1.15}>{tc('cfo_hiring.burdenMinimal')}</option>
             <option value={1.3}>{tc('cfo_hiring.burdenStandard')}</option>
             <option value={1.4}>{tc('cfo_hiring.burdenFullBenefits')}</option>
@@ -116,33 +116,33 @@ export default function HiringSimulator({ totals, cash, currencySymbol: sym, onA
           <div key={h.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 60px 40px', gap: 8, marginBottom: 8, alignItems: 'center' }}>
             <input value={h.role} placeholder={tc('cfo_hiring.rolePlaceholder')}
               onChange={e => updateHire(h.id, 'role', e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', outline: 'none' }} />
+              style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 9, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', outline: 'none' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{sym}</span>
+              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{sym}</span>
               <input type="number" value={h.salary || ''} placeholder={tc('cfo_hiring.salaryPlaceholder')}
                 onChange={e => updateHire(h.id, 'salary', Number(e.target.value) || 0)}
-                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }} />
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 9, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }} />
             </div>
             <select value={h.count} onChange={e => updateHire(h.id, 'count', Number(e.target.value))}
-              style={{ padding: '6px 4px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)' }}>
+              style={{ padding: '6px 4px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 9, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)' }}>
               {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}x</option>)}
             </select>
             <button onClick={() => removeHire(h.id)}
-              style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'var(--sf)', color: RED, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>
+              style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'var(--sf)', color: RED, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>
               ×
             </button>
           </div>
         ))}
 
         <button onClick={addHire}
-          style={{ width: '100%', padding: '8px', borderRadius: 8, border: '1px dashed var(--b)', background: 'transparent', color: INDIGO, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
+          style={{ width: '100%', padding: '8px', borderRadius: 8, border: '1px dashed var(--b)', background: 'transparent', color: INDIGO, fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
           {tc('cfo_hiring.addRoleBtn')}
         </button>
 
         {/* Impact analysis */}
         {totalHeadcount > 0 && (
           <>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>{tc('cfo_hiring.financialImpactHeading')}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>{tc('cfo_hiring.financialImpactHeading')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 14 }}>
               {([
                 [tc('cfo_hiring.monthlyCostLabel'), fmt(totalMonthlyCost, sym), INDIGO],
@@ -151,19 +151,19 @@ export default function HiringSimulator({ totals, cash, currencySymbol: sym, onA
               ] as const).map(([label, value, color]) => (
                 <div key={label} style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                   <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
                 </div>
               ))}
             </div>
 
             {/* Before vs After */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                  <th style={{ textAlign: 'left', padding: '6px 0', fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}></th>
-                  <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_hiring.colNow')}</th>
-                  <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_hiring.colAfterHiring')}</th>
-                  <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_hiring.colChange')}</th>
+                  <th style={{ textAlign: 'left', padding: '6px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}></th>
+                  <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_hiring.colNow')}</th>
+                  <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_hiring.colAfterHiring')}</th>
+                  <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_hiring.colChange')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -203,10 +203,10 @@ function ImpactRow({ label, before, after, sym, negative, pct, months }: {
 
   return (
     <tr style={{ borderBottom: '1px solid var(--b)' }}>
-      <td style={{ padding: '7px 0', fontSize: 12, color: 'var(--tx)' }}>{label}</td>
+      <td style={{ padding: '7px 0', fontSize: 10, color: 'var(--tx)' }}>{label}</td>
       <td style={{ padding: '7px 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--tx)' }}>{fmtVal(before)}</td>
       <td style={{ padding: '7px 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: after != null && after < 0 ? RED : 'var(--tx)' }}>{fmtVal(after)}</td>
-      <td style={{ padding: '7px 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontSize: 11, fontWeight: 600, color: diffColor }}>
+      <td style={{ padding: '7px 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontSize: 9, fontWeight: 600, color: diffColor }}>
         {diff != null ? `${diff >= 0 ? '+' : ''}${pct ? diff.toFixed(1) + '%' : months ? diff.toFixed(1) + ' mo' : fmt(diff, sym)}` : '—'}
       </td>
     </tr>
@@ -216,8 +216,8 @@ function ImpactRow({ label, before, after, sym, negative, pct, months }: {
 function InsightRow({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <div style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${color}20`, background: `${color}08`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{label}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+      <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--tx)' }}>{label}</span>
+      <span style={{ fontSize: 9, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   )
 }

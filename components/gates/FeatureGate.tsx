@@ -52,7 +52,7 @@ export default function FeatureGate({
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={badge.colour} strokeWidth="2" strokeLinecap="round">
           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        <span style={{ fontSize: 11, color: badge.colour, fontWeight: 600 }}>{tc('gates_featuregate.featureLabel', { label: badge.label })}</span>
+        <span style={{ fontSize: 9, color: badge.colour, fontWeight: 600 }}>{tc('gates_featuregate.featureLabel', { label: badge.label })}</span>
       </div>
     )
   }
@@ -65,27 +65,27 @@ export default function FeatureGate({
           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
       </div>
-      <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, color: TX, marginBottom: 8 }}>
+      <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 8 }}>
         {name}
       </div>
-      <p style={{ fontSize: 14, color: TX2, lineHeight: 1.65, marginBottom: 24, maxWidth: 340, margin: '0 auto 24px' }}>
+      <p style={{ fontSize: 12, color: TX2, lineHeight: 1.65, marginBottom: 24, maxWidth: 340, margin: '0 auto 24px' }}>
         {message.desc}
       </p>
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
         <button
           onClick={() => router.push('/billing')}
-          style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: badge.colour, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 12px ${badge.colour}35` }}
+          style={{ padding: '11px 24px', borderRadius: 10, border: 'none', background: badge.colour, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 12px ${badge.colour}35` }}
         >
           {tc('gates_featuregate.upgradeTo', { label: badge.label })}
         </button>
         <button
           onClick={() => router.push('/billing')}
-          style={{ padding: '11px 16px', borderRadius: 10, border: `1px solid ${B}`, background: 'transparent', color: TX2, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '11px 16px', borderRadius: 10, border: `1px solid ${B}`, background: 'transparent', color: TX2, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {tc('gates_featuregate.seeAllPlans')}
         </button>
       </div>
-      <div style={{ marginTop: 16, fontSize: 12, color: TX3 }}>
+      <div style={{ marginTop: 16, fontSize: 10, color: TX3 }}>
         {tc('gates_featuregate.currentPlan', { plan: planId })}
       </div>
     </div>

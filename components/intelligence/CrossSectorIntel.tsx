@@ -54,7 +54,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_crosssector.title')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_crosssector.title')}</span>
         </div>
         {[1, 2, 3].map(i => (
           <div key={i} style={{ height: 36, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />
@@ -80,15 +80,15 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_crosssector.title')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)', background: 'var(--ev, #f3f2ef)', borderRadius: 6, padding: '1px 6px' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_crosssector.title')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', background: 'var(--ev, #f3f2ef)', borderRadius: 6, padding: '1px 6px' }}>
             {getSectorLabel(userSector)}
           </span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('intel_crosssector.askAiPrompt'))}
-            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >{tc('intel_crosssector.askAi')}</button>
         )}
       </div>
@@ -100,10 +100,10 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
           return (
             <div key={r.key}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{r.label}</span>
-                <span style={{ fontSize: 12, color: 'var(--tx)' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{r.label}</span>
+                <span style={{ fontSize: 10, color: 'var(--tx)' }}>
                   {fmt(r.value, r.unit)}
-                  <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 6 }}>
+                  <span style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 6 }}>
                     #{r.rank}/{r.total}
                   </span>
                 </span>
@@ -122,7 +122,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
       </div>
 
       {/* Sector comparisons */}
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8, letterSpacing: '.02em' }}>
+      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8, letterSpacing: '.02em' }}>
         {tc('intel_crosssector.compareWithSectors')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -139,14 +139,14 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>
                   {getSectorLabel(comp.sector)}
                 </span>
                 {comp.is_user_sector && (
                   <span style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.1)', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{tc('intel_crosssector.youBadge')}</span>
                 )}
               </div>
-              <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{expanded === comp.sector ? '▴' : '▾'}</span>
+              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{expanded === comp.sector ? '▴' : '▾'}</span>
             </button>
 
             {expanded === comp.sector && (
@@ -155,13 +155,13 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
                   const better = m.key === 'refund_rate' ? (m.diff_pct || 0) < 0 : (m.diff_pct || 0) > 0
                   return (
                     <div key={m.key} style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev, #f3f2ef)' }}>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{m.label}</div>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{m.label}</div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>
                           {fmt(m.benchmark_value!, m.unit)}
                         </span>
                         {m.diff_pct !== null && (
-                          <span style={{ fontSize: 10, color: better ? '#10B981' : '#EF4444' }}>
+                          <span style={{ fontSize: 9, color: better ? '#10B981' : '#EF4444' }}>
                             {m.diff_pct > 0 ? '+' : ''}{m.diff_pct}%
                           </span>
                         )}

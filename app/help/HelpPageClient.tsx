@@ -137,7 +137,7 @@ export default function HelpPageClient() {
           <Link href="/help" className="hc-brand-label" style={{ textDecoration: 'none' }}>{tc('help.help_centre')}</Link>
           <div style={{ flex: 1 }} />
           <Link href="/signin" style={{
-            fontSize: 13, fontWeight: 600, color: '#fff',
+            fontSize: 11, fontWeight: 600, color: '#fff',
             background: 'var(--hc-accent)', borderRadius: 9999,
             padding: '7px 18px', textDecoration: 'none',
             transition: 'background 0.15s',
@@ -221,7 +221,7 @@ export default function HelpPageClient() {
                 }}>
                   {tc('help.hero_heading')}
                 </h1>
-                <p style={{ fontSize: 15, color: 'var(--hc-secondary)', margin: 0, lineHeight: 1.55 }}>
+                <p style={{ fontSize: 13, color: 'var(--hc-secondary)', margin: 0, lineHeight: 1.55 }}>
                   {tc('help.search_count_prefix')} {HELP_ARTICLES.length} {tc('help.search_count_middle')} {HELP_TOPICS.length} {tc('help.search_count_suffix')}
                 </p>
               </div>
@@ -279,7 +279,7 @@ export default function HelpPageClient() {
                       ))}
                     </>
                   ) : (
-                    <p style={{ fontSize: 13, color: 'var(--hc-muted)', margin: 0, padding: '12px 16px' }}>{tc('help.no_suggestions')}</p>
+                    <p style={{ fontSize: 11, color: 'var(--hc-muted)', margin: 0, padding: '12px 16px' }}>{tc('help.no_suggestions')}</p>
                   )}
                 </div>
               )}
@@ -373,7 +373,7 @@ export default function HelpPageClient() {
               {/* Breadcrumb */}
               <nav className="hc-breadcrumb" aria-label="Breadcrumb" style={{ marginBottom: 20 }}>
                 <ol className="hc-breadcrumb-list">
-                  <li><button onClick={goHome} className="hc-breadcrumb-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--hc-font)', fontSize: 13 }}>{tc('help.help_centre')}</button></li>
+                  <li><button onClick={goHome} className="hc-breadcrumb-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--hc-font)', fontSize: 11 }}>{tc('help.help_centre')}</button></li>
                   {activeTopic && currentTopic && (
                     <>
                       <li><span className="hc-breadcrumb-sep">›</span></li>
@@ -397,7 +397,7 @@ export default function HelpPageClient() {
                 }}>
                   {isSearch ? tc('help.results_for_prefix') + ' “' + search + '”' : currentTopic?.title}
                 </h1>
-                <p style={{ fontSize: 13, color: 'var(--hc-secondary)', margin: 0 }}>
+                <p style={{ fontSize: 11, color: 'var(--hc-secondary)', margin: 0 }}>
                   {displayList.length} {displayList.length !== 1 ? tc('help.article_plural') : tc('help.article_singular')}
                   {activeTopic && currentTopic && !isSearch && ` · ${currentTopic.description}`}
                 </p>
@@ -406,11 +406,11 @@ export default function HelpPageClient() {
               {/* No results */}
               {displayList.length === 0 && (
                 <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <div style={{ fontSize: 14, color: 'var(--hc-secondary)', marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, color: 'var(--hc-secondary)', marginBottom: 16 }}>
                     {isSearch ? tc('help.no_articles_found_for') + ' “' + search + '”' : tc('help.no_articles_found')}.
                   </div>
                   <button onClick={goHome} style={{
-                    fontSize: 13, color: 'var(--hc-accent)', background: 'none',
+                    fontSize: 11, color: 'var(--hc-accent)', background: 'none',
                     border: '1px solid var(--hc-accent)', borderRadius: 8,
                     padding: '7px 16px', cursor: 'pointer', fontWeight: 600,
                     fontFamily: 'var(--hc-font)',
@@ -450,7 +450,7 @@ export default function HelpPageClient() {
                   <button
                     onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
                     style={{
-                      fontSize: 13, color: 'var(--hc-accent)', background: 'none',
+                      fontSize: 11, color: 'var(--hc-accent)', background: 'none',
                       border: '1px solid var(--hc-accent)', borderRadius: 9999,
                       padding: '9px 24px', fontWeight: 600, cursor: 'pointer',
                       fontFamily: 'var(--hc-font)', transition: 'background 0.15s',

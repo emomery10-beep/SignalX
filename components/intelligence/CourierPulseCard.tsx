@@ -106,25 +106,25 @@ export default function CourierPulseCard({ onAsk }: { onAsk?: (prompt: string) =
               style={{ transition: 'stroke-dashoffset 1s ease' }} />
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 18, fontWeight: 700, color, fontFamily: 'var(--font-sora)', lineHeight: 1 }}>{score}</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color, fontFamily: 'var(--font-sora)', lineHeight: 1 }}>{score}</span>
             <span style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('intel_courierpulse.scoreOutOf')}</span>
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('intel_courierpulse.courierOperations')}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color, background: bg, border: `1px solid ${border}`, padding: '1px 6px', borderRadius: 9999 }}>{label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('intel_courierpulse.courierOperations')}</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color, background: bg, border: `1px solid ${border}`, padding: '1px 6px', borderRadius: 9999 }}>{label}</span>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--tx2)' }}><strong>{data.todayIn}</strong> {tc('intel_courierpulse.today')}</span>
-            <span style={{ fontSize: 11, color: '#6366f1' }}><strong>{data.inTransit}</strong> {tc('intel_courierpulse.inTransit')}</span>
-            <span style={{ fontSize: 11, color: AMBER }}><strong>{data.atBranch}</strong> {tc('intel_courierpulse.atBranch')}</span>
-            {data.failed > 0 && <span style={{ fontSize: 11, color: RED }}><strong>{data.failed}</strong> {tc('intel_courierpulse.failed')}</span>}
+            <span style={{ fontSize: 9, color: 'var(--tx2)' }}><strong>{data.todayIn}</strong> {tc('intel_courierpulse.today')}</span>
+            <span style={{ fontSize: 9, color: '#6366f1' }}><strong>{data.inTransit}</strong> {tc('intel_courierpulse.inTransit')}</span>
+            <span style={{ fontSize: 9, color: AMBER }}><strong>{data.atBranch}</strong> {tc('intel_courierpulse.atBranch')}</span>
+            {data.failed > 0 && <span style={{ fontSize: 9, color: RED }}><strong>{data.failed}</strong> {tc('intel_courierpulse.failed')}</span>}
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, color: GREEN }}>{tc('intel_courierpulse.deliveryRate').replace('{rate}', String(data.deliveryRate))}</span>
-            {data.stuckOver48h > 0 && <span style={{ fontSize: 11, color: RED }}>{tc('intel_courierpulse.stuckOver48h', { n: data.stuckOver48h })}</span>}
-            {data.unpaidRevenue > 0 && <span style={{ fontSize: 11, color: AMBER }}>{tc('intel_courierpulse.unpaidRevenue').replace('{amount}', data.unpaidRevenue.toLocaleString())}</span>}
+            <span style={{ fontSize: 9, color: GREEN }}>{tc('intel_courierpulse.deliveryRate').replace('{rate}', String(data.deliveryRate))}</span>
+            {data.stuckOver48h > 0 && <span style={{ fontSize: 9, color: RED }}>{tc('intel_courierpulse.stuckOver48h', { n: data.stuckOver48h })}</span>}
+            {data.unpaidRevenue > 0 && <span style={{ fontSize: 9, color: AMBER }}>{tc('intel_courierpulse.unpaidRevenue').replace('{amount}', data.unpaidRevenue.toLocaleString())}</span>}
           </div>
         </div>
       </div>
@@ -134,8 +134,8 @@ export default function CourierPulseCard({ onAsk }: { onAsk?: (prompt: string) =
         {fleetItems.map((f, i) => (
           <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 6, height: 6, borderRadius: 3, background: f.c }} />
-            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{f.l}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: f.c }}>{fleetValues[i]}</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{f.l}</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: f.c }}>{fleetValues[i]}</span>
           </div>
         ))}
       </div>

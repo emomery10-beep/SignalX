@@ -282,7 +282,7 @@ export default function HumanFirstSearch({
             background: 'transparent',
             outline: 'none',
             fontFamily: 'var(--font-dm, DM Sans, sans-serif)',
-            fontSize: 14,
+            fontSize: 12,
             color: 'var(--tx)',
             lineHeight: 1.6,
             padding: hasVoice ? '16px 90px 16px 18px' : '16px 52px 16px 18px',

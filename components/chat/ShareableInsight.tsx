@@ -80,7 +80,7 @@ export default function ShareableInsight({ question, result }: Props) {
         border: `1px solid ${isGreen ? 'rgba(34,197,94,.3)' : isRed ? 'rgba(239,68,68,.25)' : 'var(--b2)'}`,
         background: isGreen ? 'rgba(34,197,94,.08)' : isRed ? 'rgba(239,68,68,.07)' : 'transparent',
         color: isGreen ? '#16a34a' : isRed ? '#dc2626' : 'var(--tx3)',
-        fontSize: 12, fontWeight: 500,
+        fontSize: 10, fontWeight: 500,
         cursor: state === 'loading' ? 'wait' : 'pointer',
         fontFamily: 'inherit', transition: 'all 180ms', whiteSpace: 'nowrap',
       }}

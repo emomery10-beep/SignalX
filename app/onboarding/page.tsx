@@ -119,7 +119,7 @@ type Geo = { countryCode: string; country: string; currency: string; currencySym
 const COUNTRY_LIST = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }))
 
 const inp: React.CSSProperties = {
-  width: '100%', padding: '10px 13px', fontSize: 14,
+  width: '100%', padding: '10px 13px', fontSize: 12,
   background: EV, border: `1.5px solid ${B2}`, borderRadius: 10,
   color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
 }
@@ -316,21 +316,21 @@ export default function OnboardingPage() {
 
   const btn: React.CSSProperties = {
     padding: '12px 28px', borderRadius: 10, border: 'none',
-    background: ACC, color: '#fff', fontSize: 15, fontWeight: 600,
+    background: ACC, color: '#fff', fontSize: 13, fontWeight: 600,
     cursor: 'pointer', fontFamily: 'inherit',
     boxShadow: '0 2px 12px rgba(208,138,89,.3)',
   }
 
   const ghostBtn: React.CSSProperties = {
     padding: '12px 28px', borderRadius: 10, border: `1.5px solid ${B2}`,
-    background: 'transparent', color: TX2, fontSize: 15, fontWeight: 600,
+    background: 'transparent', color: TX2, fontSize: 13, fontWeight: 600,
     cursor: 'pointer', fontFamily: 'inherit',
   }
 
   const chipBase: React.CSSProperties = {
     padding: '9px 14px', borderRadius: 10, border: `1.5px solid ${B2}`,
     background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
-    fontSize: 13, color: TX2, transition: 'all 150ms', textAlign: 'left',
+    fontSize: 11, color: TX2, transition: 'all 150ms', textAlign: 'left',
   }
 
   const chipActive: React.CSSProperties = {
@@ -360,9 +360,9 @@ export default function OnboardingPage() {
             <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
           </svg>
         </div>
-        <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 16, fontWeight: 700, color: TX }}>AskBiz</span>
+        <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 700, color: TX }}>AskBiz</span>
         {!POS_LANDING_TYPES.has(bizType) && (
-          <span style={{ marginLeft: 'auto', fontSize: 12, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: STEPS.length })}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: STEPS.length })}</span>
         )}
       </div>
 
@@ -376,14 +376,14 @@ export default function OnboardingPage() {
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
                 {firstName ? tc('onboarding.business_title_named', { name: firstName }) : tc('onboarding.business_title')}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, marginBottom: 14, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: TX2, marginBottom: 14, lineHeight: 1.6 }}>
                 {tc('onboarding.business_subtitle')}
               </p>
               {/* Helper-mode: acknowledge a helper/family member is often present
                   (the real driver of M-Pesa-style adoption for low-literacy users). */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(208,138,89,.08)', marginBottom: 24 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                <span style={{ fontSize: 12.5, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.helper_hint')}</span>
+                <span style={{ fontSize: 10.5, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.helper_hint')}</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, marginBottom: 28 }}>
                 {BIZ_TYPES.map(bt => (
@@ -401,8 +401,8 @@ export default function OnboardingPage() {
                         Real photo/illustration assets + vendor validation next. */}
                     <span style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bizType === bt.id ? ACC : EV, color: bizType === bt.id ? '#fff' : TX }}>{bizIcon(bt.id)}</span>
                     <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: bizType === bt.id ? ACC : TX }}>{bt.label}</div>
-                      <div style={{ fontSize: 12, color: TX3, marginTop: 2 }}>{bt.desc}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: bizType === bt.id ? ACC : TX }}>{bt.label}</div>
+                      <div style={{ fontSize: 10, color: TX3, marginTop: 2 }}>{bt.desc}</div>
                     </div>
                   </button>
                 ))}
@@ -410,7 +410,7 @@ export default function OnboardingPage() {
               <div style={{ display: 'flex', gap: 10 }}>
                 <button style={{ ...btn, opacity: canNext.business ? 1 : .5 }} onClick={next} disabled={!canNext.business}>{tc('onboarding.continue')}</button>
               </div>
-              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 11, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
                 {tc('onboarding.skip')}
               </button>
             </div>
@@ -422,12 +422,12 @@ export default function OnboardingPage() {
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
                 {tc('onboarding.location_title')}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
                 {tc('onboarding.location_subtitle')}
               </p>
 
               {geoLoading && (
-                <div style={{ padding: '32px 0', textAlign: 'center', color: TX3, fontSize: 14 }}>
+                <div style={{ padding: '32px 0', textAlign: 'center', color: TX3, fontSize: 12 }}>
                   {tc('onboarding.location_detecting')}
                 </div>
               )}
@@ -435,10 +435,10 @@ export default function OnboardingPage() {
               {!geoLoading && geo && !manualLocation && (
                 <div>
                   <div style={{ padding: '24px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, textAlign: 'center', marginBottom: 20 }}>
-                    <div style={{ fontSize: 40, marginBottom: 10 }} aria-hidden>{geo.flag}</div>
-                    <div style={{ fontWeight: 700, fontSize: 18, color: TX, marginBottom: 4 }}>{geo.country}</div>
-                    <div style={{ fontSize: 14, color: TX2 }}>{geo.currencySymbol} · {geo.currency}</div>
-                    <div style={{ fontSize: 13, color: TX3, marginTop: 10 }}>{tc('onboarding.location_confirm_question')}</div>
+                    <div style={{ fontSize: 38, marginBottom: 10 }} aria-hidden>{geo.flag}</div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: TX, marginBottom: 4 }}>{geo.country}</div>
+                    <div style={{ fontSize: 12, color: TX2 }}>{geo.currencySymbol} · {geo.currency}</div>
+                    <div style={{ fontSize: 11, color: TX3, marginTop: 10 }}>{tc('onboarding.location_confirm_question')}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button style={btn} onClick={() => { setCurrency(geo.currency); setRegion(geo.region); next() }}>
@@ -456,13 +456,13 @@ export default function OnboardingPage() {
                   {geo && (
                     <button
                       onClick={() => setManualLocation(false)}
-                      style={{ background: 'none', border: 'none', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '0 0 14px', fontFamily: 'inherit' }}
+                      style={{ background: 'none', border: 'none', color: ACC, fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: '0 0 14px', fontFamily: 'inherit' }}
                     >
                       ← {tc('onboarding.location_use_detected')}
                     </button>
                   )}
                   <div style={{ marginBottom: 16, position: 'relative' }}>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
                     {(() => {
                       const q = region.trim().toLowerCase()
                       const matches = q ? COUNTRY_LIST.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8) : []
@@ -502,7 +502,7 @@ export default function OnboardingPage() {
                                   aria-selected={i === countryActiveIdx}
                                   onMouseEnter={() => setCountryActiveIdx(i)}
                                   onMouseDown={() => selectCountry(c)}
-                                  style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '9px 13px', background: i === countryActiveIdx ? EV : 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: TX }}
+                                  style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '9px 13px', background: i === countryActiveIdx ? EV : 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, color: TX }}
                                 >
                                   {c.name}
                                 </button>
@@ -514,7 +514,7 @@ export default function OnboardingPage() {
                     })()}
                   </div>
                   <div style={{ marginBottom: 20 }}>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>{tc('onboarding.location_currency_label')}</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>{tc('onboarding.location_currency_label')}</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
                       {CURRENCIES.map(c => (
                         <button
@@ -529,7 +529,7 @@ export default function OnboardingPage() {
                   </div>
                   {!POS_LANDING_TYPES.has(bizType) && (
                     <div style={{ marginBottom: 20 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.business_name_label')}</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.business_name_label')}</label>
                       <input style={inp} value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder={resolvedBusinessName()}/>
                     </div>
                   )}
@@ -548,7 +548,7 @@ export default function OnboardingPage() {
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
                 {tc('onboarding.sector_title')}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
                 {tc('onboarding.sector_subtitle')}
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
@@ -566,7 +566,7 @@ export default function OnboardingPage() {
                 <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
                 <button style={{ ...btn, opacity: canNext.sector ? 1 : .5 }} onClick={next} disabled={!canNext.sector}>{tc('onboarding.continue')}</button>
               </div>
-              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 11, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
                 {tc('onboarding.skip')}
               </button>
             </div>
@@ -578,7 +578,7 @@ export default function OnboardingPage() {
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
                 {tc('onboarding.export_title')}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, marginBottom: 20, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: TX2, marginBottom: 20, lineHeight: 1.6 }}>
                 {tc('onboarding.export_subtitle')}
               </p>
 
@@ -590,7 +590,7 @@ export default function OnboardingPage() {
                   <button
                     key={String(opt.val)}
                     onClick={() => setWantsExport(opt.val)}
-                    style={{ flex: 1, padding: '14px', borderRadius: 12, border: `1.5px solid ${wantsExport === opt.val ? ACC : B2}`, background: wantsExport === opt.val ? 'rgba(208,138,89,.08)' : 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: wantsExport === opt.val ? 600 : 400, color: wantsExport === opt.val ? ACC : TX2 }}
+                    style={{ flex: 1, padding: '14px', borderRadius: 12, border: `1.5px solid ${wantsExport === opt.val ? ACC : B2}`, background: wantsExport === opt.val ? 'rgba(208,138,89,.08)' : 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: wantsExport === opt.val ? 600 : 400, color: wantsExport === opt.val ? ACC : TX2 }}
                   >
                     {opt.label}
                   </button>
@@ -599,7 +599,7 @@ export default function OnboardingPage() {
 
               {wantsExport && (
                 <>
-                  <p style={{ fontSize: 13, color: TX3, marginBottom: 12 }}>{tc('onboarding.export_markets_prompt')}</p>
+                  <p style={{ fontSize: 11, color: TX3, marginBottom: 12 }}>{tc('onboarding.export_markets_prompt')}</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
                     {EXPORT_MARKETS.map(m => (
                       <button
@@ -618,7 +618,7 @@ export default function OnboardingPage() {
                 <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
                 <button style={{ ...btn, opacity: canNext.export ? 1 : .5 }} onClick={next} disabled={!canNext.export}>{tc('onboarding.continue')}</button>
               </div>
-              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 11, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
                 {tc('onboarding.skip')}
               </button>
             </div>
@@ -630,7 +630,7 @@ export default function OnboardingPage() {
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 12 }}>
                 {tc('onboarding.connect_title')}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
+              <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
                 {tc('onboarding.connect_subtitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
@@ -643,7 +643,7 @@ export default function OnboardingPage() {
                   { label: tc('onboarding.connect_source_tiktok') },
                 ].map(s => (
                   <div key={s.label} style={{ padding: '14px 10px', borderRadius: 12, border: `1px solid ${B}`, background: SF, textAlign: 'center' }}>
-                    <div style={{ fontSize: 12, color: TX2, fontWeight: 500 }}>{s.label}</div>
+                    <div style={{ fontSize: 10, color: TX2, fontWeight: 500 }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -666,11 +666,11 @@ export default function OnboardingPage() {
                   ? (firstName ? tc('onboarding.done_title_pos_named', { name: firstName }) : tc('onboarding.done_title'))
                   : (firstName ? tc('onboarding.done_title_named', { name: firstName }) : tc('onboarding.done_title'))}
               </h2>
-              <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
+              <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
                 {isPosPersona ? tc('onboarding.done_subtitle_pos') : tc('onboarding.done_subtitle')}
               </p>
               {saveError && (
-                <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 13, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
+                <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 11, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
                   {saveError}
                 </div>
               )}

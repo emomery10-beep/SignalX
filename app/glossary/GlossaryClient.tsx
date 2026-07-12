@@ -102,7 +102,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
           style={{
             color: "#d08a59",
             fontFamily: "Sora, sans-serif",
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: 700,
             letterSpacing: 2.5,
             textTransform: "uppercase",
@@ -126,7 +126,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
         <p
           style={{
             color: "#b0b8c8",
-            fontSize: 17,
+            fontSize: 15,
             maxWidth: 520,
             margin: "0 auto 32px",
             lineHeight: 1.6,
@@ -143,7 +143,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               [isRTL ? "right" : "left"]: 16,
               top: "50%",
               transform: "translateY(-50%)",
-              fontSize: 17,
+              fontSize: 15,
               color: "#999",
               pointerEvents: "none",
             }}
@@ -163,7 +163,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               padding: isRTL ? "14px 46px 14px 42px" : "14px 42px 14px 46px",
               borderRadius: 10,
               border: "none",
-              fontSize: 15,
+              fontSize: 13,
               fontFamily: "DM Sans, sans-serif",
               outline: "none",
               boxSizing: "border-box",
@@ -183,7 +183,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 border: "none",
                 cursor: "pointer",
                 color: "#999",
-                fontSize: 20,
+                fontSize: 18,
                 lineHeight: 1,
                 padding: 0,
               }}
@@ -226,7 +226,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               borderColor: !activeLetter ? "#d08a59" : "#e5e5e5",
               background: !activeLetter ? "#d08a59" : "transparent",
               color: !activeLetter ? "#fff" : "#999",
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: 700,
               cursor: "pointer",
               fontFamily: "DM Sans, sans-serif",
@@ -257,7 +257,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                     : "transparent",
                   background: isActive ? "#d08a59" : "transparent",
                   color: isActive ? "#fff" : hasArticles ? "#1a1a2e" : "#ddd",
-                  fontSize: 13,
+                  fontSize: 11,
                   fontWeight: 700,
                   cursor: hasArticles ? "pointer" : "default",
                   fontFamily: "DM Sans, sans-serif",
@@ -285,7 +285,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
         <aside style={{ position: "sticky", top: 72 }}>
           <p
             style={{
-              fontSize: 11,
+              fontSize: 9,
               fontWeight: 700,
               color: "#aaa",
               textTransform: "uppercase",
@@ -308,7 +308,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 border: "none",
                 background: !activeCategory ? "#f0e8df" : "transparent",
                 color: !activeCategory ? "#d08a59" : "#555",
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: !activeCategory ? 700 : 400,
                 cursor: "pointer",
                 fontFamily: "DM Sans, sans-serif",
@@ -341,7 +341,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                     border: "none",
                     background: isActive ? "#f0e8df" : "transparent",
                     color: isActive ? "#d08a59" : "#555",
-                    fontSize: 13,
+                    fontSize: 11,
                     fontWeight: isActive ? 700 : 400,
                     cursor: "pointer",
                     fontFamily: "DM Sans, sans-serif",
@@ -372,7 +372,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
           >
             <p
               style={{
-                fontSize: 11,
+                fontSize: 9,
                 color: "#aaa",
                 textTransform: "uppercase",
                 letterSpacing: 1,
@@ -384,7 +384,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             </p>
             <p
               style={{
-                fontSize: 28,
+                fontSize: 26,
                 fontFamily: "Sora, sans-serif",
                 fontWeight: 700,
                 color: "#1a1a2e",
@@ -393,7 +393,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             >
               {totalShowing}
             </p>
-            <p style={{ fontSize: 13, color: "#999", margin: 0 }}>
+            <p style={{ fontSize: 11, color: "#999", margin: 0 }}>
               {tc("glossary.of_n_terms", { n: articles.length })}
             </p>
             {isFiltered && (
@@ -411,7 +411,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                   border: "1px solid #eee",
                   background: "none",
                   color: "#d08a59",
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: 600,
                   cursor: "pointer",
                   fontFamily: "DM Sans, sans-serif",
@@ -431,7 +431,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 textAlign: "center",
                 padding: "64px 0",
                 color: "#999",
-                fontSize: 15,
+                fontSize: 13,
               }}
             >
               {tc("glossary.no_terms", { query })}
@@ -461,7 +461,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                       color: "#d08a59",
                       fontFamily: "Sora, sans-serif",
                       fontWeight: 700,
-                      fontSize: 20,
+                      fontSize: 18,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -477,7 +477,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                       background: "#eee",
                     }}
                   />
-                  <span style={{ fontSize: 12, color: "#bbb", flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, color: "#bbb", flexShrink: 0 }}>
                     {tc("glossary.term_count", { n: grouped[letter].length })}
                   </span>
                 </div>
@@ -517,7 +517,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                       >
                         <span
                           style={{
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: 700,
                             lineHeight: 1.3,
                             color: "#1a1a2e",
@@ -528,7 +528,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                         <span
                           style={{
                             color: "#d08a59",
-                            fontSize: 14,
+                            fontSize: 12,
                             flexShrink: 0,
                           }}
                         >
@@ -537,7 +537,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                       </div>
                       <p
                         style={{
-                          fontSize: 12,
+                          fontSize: 10,
                           color: "#777",
                           lineHeight: 1.5,
                           margin: "0 0 10px",
@@ -558,7 +558,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                       >
                         <span
                           style={{
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: 600,
                             color: diffColor(article.difficulty),
                             textTransform: "uppercase",
@@ -567,14 +567,14 @@ export default function GlossaryClient({ articles, categories }: Props) {
                         >
                           {article.difficulty}
                         </span>
-                        <span style={{ color: "#ddd", fontSize: 10 }}>·</span>
-                        <span style={{ fontSize: 10, color: "#aaa" }}>
+                        <span style={{ color: "#ddd", fontSize: 9 }}>·</span>
+                        <span style={{ fontSize: 9, color: "#aaa" }}>
                           {article.readTime} min
                         </span>
-                        <span style={{ color: "#ddd", fontSize: 10 }}>·</span>
+                        <span style={{ color: "#ddd", fontSize: 9 }}>·</span>
                         <span
                           style={{
-                            fontSize: 10,
+                            fontSize: 9,
                             color: "#bbb",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -605,7 +605,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
           style={{
             color: "#fff",
             fontFamily: "Sora, sans-serif",
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: 700,
             marginBottom: 14,
           }}
@@ -615,7 +615,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
         <p
           style={{
             color: "#b0b8c8",
-            fontSize: 16,
+            fontSize: 14,
             marginBottom: 28,
             maxWidth: 440,
             margin: "0 auto 28px",
@@ -632,7 +632,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             padding: "13px 30px",
             borderRadius: 10,
             fontWeight: 700,
-            fontSize: 15,
+            fontSize: 13,
             textDecoration: "none",
             fontFamily: "Sora, sans-serif",
           }}

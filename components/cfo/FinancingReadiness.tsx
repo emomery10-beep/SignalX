@@ -152,10 +152,10 @@ export default function FinancingReadiness({ totals, cash, receivablesSummary, c
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_financing.title')}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_financing.title')}</span>
         </div>
         <button onClick={() => onAsk(tc('cfo_financing.askAiPrompt', { revenue: fmt(totals.revenue, sym), netProfit: fmt(totals.net_profit, sym), cash: fmt(cash.balance, sym), receivables: fmt(receivables, sym), maxBorrow: fmt(Math.max(maxDebtFromIncome, maxDebtFromRevenue), sym) }))}
-          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_financing.askAi')}
         </button>
       </div>
@@ -165,65 +165,65 @@ export default function FinancingReadiness({ totals, cash, receivablesSummary, c
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_financing.capacityIncomeBased')}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: maxDebtFromIncome > 0 ? INDIGO : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtFromIncome, sym)}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: maxDebtFromIncome > 0 ? INDIGO : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtFromIncome, sym)}</div>
             <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_financing.capacityIncomeNote')}</div>
           </div>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_financing.capacityRevenueBased')}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtFromRevenue, sym)}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtFromRevenue, sym)}</div>
             <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_financing.capacityRevenueNote')}</div>
           </div>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_financing.capacityInvoiceFinance')}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: maxInvoiceFinance > 0 ? INDIGO : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxInvoiceFinance, sym)}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: maxInvoiceFinance > 0 ? INDIGO : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxInvoiceFinance, sym)}</div>
             <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_financing.capacityInvoiceNote')}</div>
           </div>
         </div>
 
         {/* Quick loan calculator */}
         <div style={{ padding: 12, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>{tc('cfo_financing.calcTitle')}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>{tc('cfo_financing.calcTitle')}</div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_financing.calcAmountLabel', { sym })}</div>
               <input type="number" value={loanAmount || ''} placeholder={String(amount)}
                 onChange={e => setLoanAmount(Number(e.target.value) || null)}
-                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 12, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', outline: 'none' }}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 10, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', outline: 'none' }}
               />
             </div>
             <div>
               <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_financing.calcTermLabel')}</div>
               <select value={termMonths} onChange={e => setTermMonths(Number(e.target.value))}
-                style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 12, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)' }}>
+                style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 10, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)' }}>
                 {[6, 12, 24, 36, 48, 60].map(m => <option key={m} value={m}>{tc('cfo_financing.calcMonths', { n: m })}</option>)}
               </select>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, textAlign: 'center' }}>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(calcPayment, sym)}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(calcPayment, sym)}</div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_financing.calcMonthlyPayment')}</div>
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: AMBER, fontVariantNumeric: 'tabular-nums' }}>{fmt(totalInterest, sym)}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: AMBER, fontVariantNumeric: 'tabular-nums' }}>{fmt(totalInterest, sym)}</div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_financing.calcTotalInterest')}</div>
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: affordability <= 30 ? GREEN : affordability <= 50 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: affordability <= 30 ? GREEN : affordability <= 50 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
                 {affordability < 999 ? `${affordability.toFixed(0)}%` : '—'}
               </div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_financing.calcOfNetProfit')}</div>
             </div>
           </div>
           {affordability > 40 && affordability < 999 && (
-            <div style={{ marginTop: 8, fontSize: 10, color: RED, fontWeight: 500, textAlign: 'center' }}>
+            <div style={{ marginTop: 8, fontSize: 9, color: RED, fontWeight: 500, textAlign: 'center' }}>
               {tc('cfo_financing.calcAffordabilityWarning')}
             </div>
           )}
         </div>
 
         {/* Financing options */}
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_financing.availableOptionsLabel')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_financing.availableOptionsLabel')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {options.map(opt => (
             <FinancingOptionCard key={opt.type} option={opt} sym={sym} />
@@ -244,7 +244,7 @@ function FinancingOptionCard({ option: opt, sym }: { option: FinancingOption; sy
         style={{ width: '100%', padding: '10px 12px', background: opt.eligible ? 'transparent' : `${RED}04`, border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{opt.type}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.type}</span>
             <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
               background: opt.eligible ? `${GREEN}10` : `${RED}10`,
               color: opt.eligible ? GREEN : RED }}>
@@ -253,26 +253,26 @@ function FinancingOptionCard({ option: opt, sym }: { option: FinancingOption; sy
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {opt.eligible && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>
                 {tc('cfo_financing.upTo')} {fmt(opt.estimatedAmount, sym)}
               </span>
             )}
-            <span style={{ fontSize: 10, color: 'var(--tx3)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>▼</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>▼</span>
           </div>
         </div>
       </button>
       {expanded && (
         <div style={{ padding: '0 12px 12px' }}>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 8 }}>{opt.description}</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 8 }}>{opt.description}</div>
           <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailRate')}</span> <strong>{opt.typicalRate}</strong></div>
-            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailTerm')}</span> <strong>{opt.typicalTerm}</strong></div>
-            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailBestFor')}</span> <strong>{opt.bestFor}</strong></div>
+            <div style={{ fontSize: 9 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailRate')}</span> <strong>{opt.typicalRate}</strong></div>
+            <div style={{ fontSize: 9 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailTerm')}</span> <strong>{opt.typicalTerm}</strong></div>
+            <div style={{ fontSize: 9 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailBestFor')}</span> <strong>{opt.bestFor}</strong></div>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4 }}>{tc('cfo_financing.requirements')}</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 4 }}>{tc('cfo_financing.requirements')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {opt.requirements.map((r, i) => (
-              <div key={i} style={{ fontSize: 10, color: 'var(--tx2)', paddingLeft: 8 }}>• {r}</div>
+              <div key={i} style={{ fontSize: 9, color: 'var(--tx2)', paddingLeft: 8 }}>• {r}</div>
             ))}
           </div>
         </div>

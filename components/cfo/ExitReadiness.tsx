@@ -191,8 +191,8 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: gradeColor }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_exit.title')}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_exit.title')}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
             background: `${gradeColor}15`, color: gradeColor }}>
             {tc('cfo_exit.grade_badge', { grade, label: gradeLabel })}
           </span>
@@ -205,7 +205,7 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
             netMargin: totals.net_margin_pct,
             growth: revGrowth != null ? revGrowth.toFixed(1) + '%' : tc('cfo_exit.unknown'),
           }))}
-          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_exit.ask_ai')}
         </button>
       </div>
@@ -222,26 +222,26 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
                 strokeLinecap="round" style={{ transition: 'stroke-dasharray 600ms ease' }} />
             </svg>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: gradeColor, lineHeight: 1 }}>{pct}</span>
+              <span style={{ fontSize: 20, fontWeight: 800, color: gradeColor, lineHeight: 1 }}>{pct}</span>
               <span style={{ fontSize: 8, color: 'var(--tx3)', fontWeight: 600 }}>{tc('cfo_exit.of_100')}</span>
             </div>
           </div>
 
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
               {gradeLabel}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
               {pct >= 85 ? tc('cfo_exit.headline_a') :
                pct >= 70 ? tc('cfo_exit.headline_b') :
                pct >= 55 ? tc('cfo_exit.headline_c') :
                tc('cfo_exit.headline_d')}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
                 {tc('cfo_exit.est_timeline')} <span style={{ fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_exit.timeline_value', { months: timelineMonths })}</span>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
                 {tc('cfo_exit.score')} <span style={{ fontWeight: 700, color: 'var(--tx)' }}>{totalScore}/{maxPossible}</span>
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
 
         {/* Factor bars */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>
             {tc('cfo_exit.factor_breakdown')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -260,27 +260,27 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
               return (
                 <div key={f.id}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{f.label}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: barColor, fontVariantNumeric: 'tabular-nums' }}>{f.score}/{f.maxScore}</span>
+                    <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--tx)' }}>{f.label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: barColor, fontVariantNumeric: 'tabular-nums' }}>{f.score}/{f.maxScore}</span>
                   </div>
                   <div style={{ height: 6, background: 'var(--ev, #f3f2ef)', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${fpct}%`, background: barColor, borderRadius: 3, transition: 'width 400ms ease' }} />
                   </div>
                   {expanded && (
-                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{f.description}</div>
+                    <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{f.description}</div>
                   )}
                 </div>
               )
             })}
           </div>
           <button onClick={() => setExpanded(!expanded)}
-            style={{ fontSize: 10, color: INDIGO, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', marginTop: 6, padding: 0 }}>
+            style={{ fontSize: 9, color: INDIGO, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', marginTop: 6, padding: 0 }}>
             {expanded ? tc('cfo_exit.hide_descriptions') : tc('cfo_exit.show_descriptions')}
           </button>
         </div>
 
         {/* Top weaknesses & actions */}
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>
           {tc('cfo_exit.priority_improvements')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
@@ -299,12 +299,12 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
               <div key={w.id} style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${fpct < 50 ? RED : AMBER}20`,
                 background: `${fpct < 50 ? RED : AMBER}06` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>
                     {i + 1}. {w.label}
                   </span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: fpct < 50 ? RED : AMBER }}>{Math.round(fpct)}%</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: fpct < 50 ? RED : AMBER }}>{Math.round(fpct)}%</span>
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
                   {actions[w.id] || w.description}
                 </div>
               </div>
@@ -316,25 +316,25 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_exit.metric_net_margin')}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: totals.net_margin_pct >= 10 ? GREEN : totals.net_margin_pct >= 0 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: totals.net_margin_pct >= 10 ? GREEN : totals.net_margin_pct >= 0 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
               {totals.net_margin_pct.toFixed(1)}%
             </div>
           </div>
           <div style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_exit.metric_growth')}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: revGrowth != null && revGrowth > 0 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: revGrowth != null && revGrowth > 0 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>
               {revGrowth != null ? `${revGrowth > 0 ? '+' : ''}${revGrowth.toFixed(0)}%` : '—'}
             </div>
           </div>
           <div style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_exit.metric_gross_margin')}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: totals.gross_margin_pct >= 40 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: totals.gross_margin_pct >= 40 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>
               {totals.gross_margin_pct.toFixed(1)}%
             </div>
           </div>
           <div style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_exit.metric_runway')}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: (cash.runway_months ?? 99) >= 12 ? GREEN : (cash.runway_months ?? 0) >= 6 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: (cash.runway_months ?? 99) >= 12 ? GREEN : (cash.runway_months ?? 0) >= 6 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
               {cash.runway_months != null ? tc('cfo_exit.runway_months_short', { months: cash.runway_months }) : tc('cfo_exit.runway_not_set')}
             </div>
           </div>

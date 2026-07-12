@@ -75,13 +75,13 @@ export default function GettingStartedChecklist() {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>Getting started</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{doneCount} of {steps.length} done</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Getting started</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{doneCount} of {steps.length} done</div>
         </div>
         <button
           onClick={dismiss}
           title="Dismiss"
-          style={{ width: 26, height: 26, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
+          style={{ width: 26, height: 26, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
         >
           ×
         </button>
@@ -110,7 +110,7 @@ export default function GettingStartedChecklist() {
               )}
             </span>
             <span style={{
-              fontSize: 13, fontWeight: 500, color: s.done ? 'var(--tx3)' : 'var(--tx)',
+              fontSize: 11, fontWeight: 500, color: s.done ? 'var(--tx3)' : 'var(--tx)',
               textDecoration: s.done ? 'line-through' : 'none',
             }}>
               {s.label}

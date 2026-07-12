@@ -90,20 +90,20 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
   return (
     <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_scenario.title')}</div>
-        <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_scenario.subtitle')}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_scenario.title')}</div>
+        <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_scenario.subtitle')}</div>
       </div>
 
       {/* Presets */}
       <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_scenario.quickScenariosLabel')}</div>
+        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_scenario.quickScenariosLabel')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {PRESETS.map(p => (
             <button
               key={p.label}
               onClick={() => applyPreset(p.label, p.scenario)}
               style={{
-                padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+                padding: '6px 10px', borderRadius: 8, fontSize: 9, fontWeight: 500,
                 border: activePreset === p.label ? '1px solid #6366F1' : '1px solid var(--b)',
                 background: activePreset === p.label ? 'rgba(99,102,241,.08)' : 'transparent',
                 color: activePreset === p.label ? '#6366F1' : 'var(--tx2)',
@@ -119,7 +119,7 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
         {/* Left: Sliders */}
         <div style={{ padding: '16px 18px', borderRight: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>{tc('cfo_scenario.adjustAssumptionsLabel')}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>{tc('cfo_scenario.adjustAssumptionsLabel')}</div>
 
           <SliderControl label={tc('cfo_scenario.sliderRevenue')} value={s.revenueChange} min={-50} max={50} step={5} unit="%" onChange={v => update('revenueChange', v)} />
           <SliderControl label={tc('cfo_scenario.sliderCogs')} value={s.cogsChange} min={-30} max={30} step={5} unit="%" onChange={v => update('cogsChange', v)} />
@@ -129,7 +129,7 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
 
         {/* Right: Results */}
         <div style={{ padding: '16px 18px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>{tc('cfo_scenario.projectedMonthlyLabel')}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>{tc('cfo_scenario.projectedMonthlyLabel')}</div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <ResultRow label={tc('cfo_scenario.rowRevenue')} base={baseRevenue} projected={projRevenue} sym={sym} />
@@ -142,16 +142,16 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
 
             <div style={{ borderTop: '1px solid var(--b)', paddingTop: 8, marginTop: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_scenario.cashRunwayLabel')}</span>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_scenario.cashRunwayLabel')}</span>
                 <span style={{
-                  fontSize: 14, fontWeight: 700,
+                  fontSize: 12, fontWeight: 700,
                   color: runwayMonths != null && runwayMonths < 3 ? '#EF4444' : runwayMonths != null && runwayMonths < 6 ? '#F59E0B' : '#22C55E',
                 }}>
                   {runwayLabel}
                 </span>
               </div>
               {baseRunway != null && runwayMonths != null && (
-                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
                   {tc('cfo_scenario.runwayComparison', { base: baseRunway, scenario: runwayMonths })}
                   <span style={{ marginLeft: 4, color: runwayMonths > baseRunway ? '#22C55E' : '#EF4444', fontWeight: 600 }}>
                     ({runwayMonths > baseRunway ? '+' : ''}{tc('cfo_scenario.runwayChangeSuffix', { delta: (runwayMonths - baseRunway).toFixed(1) })})
@@ -167,11 +167,11 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
               border: `1px solid ${revenueGap >= 0 ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)'}`,
             }}>
               {revenueGap >= 0 ? (
-                <div style={{ fontSize: 11, color: '#22C55E', fontWeight: 500 }}>
+                <div style={{ fontSize: 9, color: '#22C55E', fontWeight: 500 }}>
                   {tc('cfo_scenario.aboveBreakEven', { amount: fmt(revenueGap, sym) })}
                 </div>
               ) : (
-                <div style={{ fontSize: 11, color: '#EF4444', fontWeight: 500 }}>
+                <div style={{ fontSize: 9, color: '#EF4444', fontWeight: 500 }}>
                   {tc('cfo_scenario.belowBreakEven', { amount: fmt(Math.abs(revenueGap), sym) })}
                 </div>
               )}
@@ -192,8 +192,8 @@ function SliderControl({ label, value, min, max, step, unit, onChange }: {
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontSize: 11, color: 'var(--tx2)' }}>{label}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: value !== 0 ? '#6366F1' : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{displayVal}</span>
+        <span style={{ fontSize: 9, color: 'var(--tx2)' }}>{label}</span>
+        <span style={{ fontSize: 9, fontWeight: 600, color: value !== 0 ? '#6366F1' : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{displayVal}</span>
       </div>
       <div style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
         <div style={{ position: 'absolute', width: '100%', height: 4, borderRadius: 2, background: 'var(--ev, #e5e5e5)' }} />
@@ -234,7 +234,7 @@ function ResultRow({ label, base, projected, sym, negative, bold, unit, isPercen
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: bold ? 600 : 400 }}>{label}</span>
+      <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: bold ? 600 : 400 }}>{label}</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{
           fontSize: bold ? 15 : 13, fontWeight: bold ? 700 : 500,
@@ -245,7 +245,7 @@ function ResultRow({ label, base, projected, sym, negative, bold, unit, isPercen
         </span>
         {Math.abs(diff) > 0.5 && (
           <span style={{
-            fontSize: 10, fontWeight: 600,
+            fontSize: 9, fontWeight: 600,
             color: (bold ? diff >= 0 : negative ? diff <= 0 : diff >= 0) ? '#22C55E' : '#EF4444',
           }}>
             {diff > 0 ? '+' : ''}{isPercent ? `${diff.toFixed(1)}pp` : fmtVal(diff)}

@@ -104,13 +104,13 @@ export default function AlertsPage() {
         {/* Fired alerts banner */}
         {firedAlerts.length > 0 && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>⚡ {tc('alerts.fired_banner_label')}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>⚡ {tc('alerts.fired_banner_label')}</div>
             {firedAlerts.map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1px solid ${severityColor(f.severity)}33`, background: `${severityColor(f.severity)}11`, marginBottom: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: severityColor(f.severity), flexShrink: 0, marginTop: 4 }}></div>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 500, marginBottom: 3 }}>{f.alertName}</div>
-                  <div style={{ fontSize: 16, color: 'var(--tx2)' }}>{f.message}</div>
+                  <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 3 }}>{f.alertName}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx2)' }}>{f.message}</div>
                 </div>
               </div>
             ))}
@@ -120,8 +120,8 @@ export default function AlertsPage() {
         {/* Alert list */}
         {alerts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--tx3)' }}>
-            <div style={{ fontSize: 19, marginBottom: 8 }}>{tc('alerts.empty_title')}</div>
-            <div style={{ fontSize: 17 }}>{tc('alerts.empty_desc')}</div>
+            <div style={{ fontSize: 17, marginBottom: 8 }}>{tc('alerts.empty_title')}</div>
+            <div style={{ fontSize: 15 }}>{tc('alerts.empty_desc')}</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -129,15 +129,15 @@ export default function AlertsPage() {
               <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: 14, border: `1px solid ${a.is_active ? 'var(--b2)' : 'var(--b)'}`, background: 'var(--sf)' }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: a.is_active ? '#22c55e' : 'var(--tx3)', flexShrink: 0 }}></div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 3 }}>{a.name}</div>
-                  <div style={{ fontSize: 16, color: 'var(--tx3)' }}>
+                  <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 3 }}>{a.name}</div>
+                  <div style={{ fontSize: 14, color: 'var(--tx3)' }}>
                     {a.alert_type.replace('_',' ')} · {a.column_name} {a.threshold ? `< ${a.threshold}` : ''} · {(a.fire_count!==1 ? tc('alerts.fired_many', { n: a.fire_count||0 }) : tc('alerts.fired_one', { n: a.fire_count||0 }))}
                     {a.last_fired_at ? ' · ' + tc('alerts.last_fired', { date: new Date(a.last_fired_at).toLocaleDateString() }) : ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 7 }}>
-                  <button onClick={() => toggleAlert(a.id, a.is_active)} style={{ ...outlineBtn, fontSize: 15, padding: '4px 10px' }}>{a.is_active ? tc('alerts.pause') : tc('alerts.resume')}</button>
-                  <button onClick={() => deleteAlert(a.id)} style={{ padding: '4px 10px', borderRadius: 9999, border: '1px solid rgba(232,64,64,.28)', background: 'rgba(232,64,64,.08)', color: '#f48080', fontFamily: 'inherit', fontSize: 15, cursor: 'pointer' }}>{tc('alerts.delete')}</button>
+                  <button onClick={() => toggleAlert(a.id, a.is_active)} style={{ ...outlineBtn, fontSize: 13, padding: '4px 10px' }}>{a.is_active ? tc('alerts.pause') : tc('alerts.resume')}</button>
+                  <button onClick={() => deleteAlert(a.id)} style={{ padding: '4px 10px', borderRadius: 9999, border: '1px solid rgba(232,64,64,.28)', background: 'rgba(232,64,64,.08)', color: '#f48080', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>{tc('alerts.delete')}</button>
                 </div>
               </div>
             ))}
@@ -148,7 +148,7 @@ export default function AlertsPage() {
         {showForm && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(4,8,15,.75)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b2)', borderRadius: 20, width: '100%', maxWidth: 460, padding: 28 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 21, fontWeight: 600, marginBottom: 20 }}>{tc('alerts.new_alert_title')}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 20 }}>{tc('alerts.new_alert_title')}</div>
               <div style={{ marginBottom: 12 }}><label style={labelSt}>{tc('alerts.alert_name_label')}</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder={tc('alerts.alert_name_placeholder')} style={inputSt}/></div>
               <div style={{ marginBottom: 12 }}><label style={labelSt}>{tc('alerts.dataset_label')}</label>
                 <select style={inputSt} value={form.uploadId} onChange={e=>setForm({...form,uploadId:e.target.value})}>
@@ -167,7 +167,7 @@ export default function AlertsPage() {
               </div>
               <div style={{ display:'flex',gap:10,marginTop:20 }}>
                 <button onClick={()=>setShowForm(false)} style={{...outlineBtn,flex:1,padding:10}}>{tc('alerts.cancel')}</button>
-                <button onClick={saveAlert} disabled={saving||!form.name||!form.column} style={{flex:1,padding:10,borderRadius:9999,border:'none',background:'#1ed4ca',color:'#04080f',fontFamily:'inherit',fontSize:17,fontWeight:600,cursor:'pointer'}}>
+                <button onClick={saveAlert} disabled={saving||!form.name||!form.column} style={{flex:1,padding:10,borderRadius:9999,border:'none',background:'#1ed4ca',color:'#04080f',fontFamily:'inherit',fontSize:15,fontWeight:600,cursor:'pointer'}}>
                   {saving?tc('alerts.saving'):tc('alerts.create_alert')}
                 </button>
               </div>
@@ -179,7 +179,7 @@ export default function AlertsPage() {
   )
 }
 
-const primaryBtn: React.CSSProperties = { padding:'7px 16px', borderRadius:9999, border:'none', background:'#1ed4ca', color:'#04080f', fontFamily:'inherit', fontSize:16, fontWeight:600, cursor:'pointer' }
-const outlineBtn: React.CSSProperties = { padding:'7px 14px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx)', fontFamily:'inherit', fontSize:16, cursor:'pointer' }
-const labelSt: React.CSSProperties = { display:'block', fontSize:16, fontWeight:500, color:'var(--tx2)', marginBottom:5 }
-const inputSt: React.CSSProperties = { fontFamily:'inherit', fontSize:17, color:'var(--tx)', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:10, padding:'9px 12px', outline:'none', width:'100%' }
+const primaryBtn: React.CSSProperties = { padding:'7px 16px', borderRadius:9999, border:'none', background:'#1ed4ca', color:'#04080f', fontFamily:'inherit', fontSize:14, fontWeight:600, cursor:'pointer' }
+const outlineBtn: React.CSSProperties = { padding:'7px 14px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx)', fontFamily:'inherit', fontSize:14, cursor:'pointer' }
+const labelSt: React.CSSProperties = { display:'block', fontSize:14, fontWeight:500, color:'var(--tx2)', marginBottom:5 }
+const inputSt: React.CSSProperties = { fontFamily:'inherit', fontSize:15, color:'var(--tx)', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:10, padding:'9px 12px', outline:'none', width:'100%' }

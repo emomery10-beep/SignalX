@@ -7,18 +7,18 @@ import { localePath } from '@/lib/i18n-locale'
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 44 }}>
-      <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid rgba(208,138,89,.3)' }}>{title}</h2>
+      <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid rgba(208,138,89,.3)' }}>{title}</h2>
       {children}
     </div>
   )
 }
 
 function P({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <p style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 12, ...style }}>{children}</p>
+  return <p style={{ fontSize: 13, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 12, ...style }}>{children}</p>
 }
 
 function Li({ children }: { children: React.ReactNode }) {
-  return <li style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 6 }}>{children}</li>
+  return <li style={{ fontSize: 13, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 6 }}>{children}</li>
 }
 
 function ConsentBox({ type, label, description, stored, notStored, storedTitle, notStoredTitle }: {
@@ -26,16 +26,16 @@ function ConsentBox({ type, label, description, stored, notStored, storedTitle, 
 }) {
   return (
     <div style={{ padding: '18px 20px', borderRadius: 14, border: '1px solid var(--b2)', background: 'var(--ev)', marginBottom: 14 }}>
-      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{label}</div>
-      <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 10, lineHeight: 1.65 }}>{description}</p>
+      <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{label}</div>
+      <p style={{ fontSize: 11, color: 'var(--tx2)', marginBottom: 10, lineHeight: 1.65 }}>{description}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>{storedTitle}</div>
-          {stored.map((s, i) => <div key={i} style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 3 }}>• {s}</div>)}
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>{storedTitle}</div>
+          {stored.map((s, i) => <div key={i} style={{ fontSize: 10, color: 'var(--tx2)', marginBottom: 3 }}>• {s}</div>)}
         </div>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#f48080', marginBottom: 4 }}>{notStoredTitle}</div>
-          {notStored.map((s, i) => <div key={i} style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 3 }}>• {s}</div>)}
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#f48080', marginBottom: 4 }}>{notStoredTitle}</div>
+          {notStored.map((s, i) => <div key={i} style={{ fontSize: 10, color: 'var(--tx2)', marginBottom: 3 }}>• {s}</div>)}
         </div>
       </div>
     </div>
@@ -58,14 +58,14 @@ function DeleteSection({ tc }: { tc: (key: string) => string }) {
       <div style={{ fontWeight: 600, marginBottom: 6, color: '#f48080' }}>{tc('privacy.delete_requested_heading')}</div>
       <P>{tc('privacy.delete_requested_body_pre')}<strong>{scheduledFor ? new Date(scheduledFor).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : tc('privacy.delete_requested_fallback_date')}</strong>{tc('privacy.delete_requested_body_post')}</P>
       <button onClick={async () => { setStatus('loading'); const d = await fetch('/api/account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'cancel_deletion' }) }).then(r=>r.json()); if(d.success) setStatus('cancelled'); else { setError(d.error); setStatus('requested') } }}
-        style={{ padding: '9px 20px', borderRadius: 9999, border: 'none', background: '#22c55e', color: '#fff', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+        style={{ padding: '9px 20px', borderRadius: 9999, border: 'none', background: '#22c55e', color: '#fff', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
         {tc('privacy.delete_cancel_button')}
       </button>
     </div>
   )
 
   if (status === 'cancelled') return (
-    <div style={{ padding: '14px 18px', borderRadius: 12, border: '1px solid rgba(34,197,94,.3)', background: 'rgba(34,197,94,.06)', fontSize: 14, color: '#22c55e', fontWeight: 500 }}>
+    <div style={{ padding: '14px 18px', borderRadius: 12, border: '1px solid rgba(34,197,94,.3)', background: 'rgba(34,197,94,.06)', fontSize: 12, color: '#22c55e', fontWeight: 500 }}>
       {tc('privacy.delete_cancelled')}
     </div>
   )
@@ -77,10 +77,10 @@ function DeleteSection({ tc }: { tc: (key: string) => string }) {
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
         <button onClick={async () => { if(!confirm(tc('privacy.delete_confirm_prompt'))) return; setStatus('loading'); const d = await fetch('/api/account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'request_deletion' }) }).then(r=>r.json()); if(d.success) { setStatus('requested'); setScheduledFor(d.scheduled_for) } else { setError(d.error); setStatus('idle') } }}
           disabled={status === 'loading'}
-          style={{ padding: '9px 18px', borderRadius: 9999, border: '1px solid rgba(244,128,128,.5)', background: 'transparent', color: '#f48080', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          style={{ padding: '9px 18px', borderRadius: 9999, border: '1px solid rgba(244,128,128,.5)', background: 'transparent', color: '#f48080', fontFamily: 'inherit', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
           {status === 'loading' ? tc('privacy.delete_request_processing') : tc('privacy.delete_request_button')}
         </button>
-        <a href="mailto:privacy@askbiz.co" style={{ padding: '9px 18px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+        <a href="mailto:privacy@askbiz.co" style={{ padding: '9px 18px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 11, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
           {tc('privacy.delete_email_button')}
         </a>
       </div>
@@ -117,7 +117,7 @@ function POSGroup({ tc, heading, prefix, count }: { tc: (key: string) => string;
   for (let i = 0; i < count; i++) items.push(i)
   return (
     <div style={{ marginTop: 20, marginBottom: 20 }}>
-      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>{heading}</div>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12, color: 'var(--tx)' }}>{heading}</div>
       <ul style={{ paddingLeft: 24 }}>
         {items.map(i => (
           <Li key={i}><strong>{tc('privacy.' + prefix + '_' + i + '_bold')}</strong>{tc('privacy.' + prefix + '_' + i + '_post')}</Li>
@@ -135,16 +135,16 @@ export default function PrivacyPage() {
 
         {lang !== 'en' && (
           <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
-            <Link href={localePath('/privacy', lang)} style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
+            <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
+            <Link href={localePath('/privacy', lang)} style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
           </div>
         )}
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <Link href={localePath('/', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('privacy.back_to_askbiz')}</Link>
-          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('privacy.page_title')}</h1>
-          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('privacy.page_meta')}</p>
+          <Link href={localePath('/', lang)} style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('privacy.back_to_askbiz')}</Link>
+          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('privacy.page_title')}</h1>
+          <p style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('privacy.page_meta')}</p>
         </div>
 
         <Section title={tc('privacy.sec_1_title')}>
@@ -174,7 +174,7 @@ export default function PrivacyPage() {
 
         <Section title={tc('privacy.sec_4_title')}>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
                   {[tc('privacy.sec_4_th_0'), tc('privacy.sec_4_th_1'), tc('privacy.sec_4_th_2')].map(h => (
@@ -186,7 +186,7 @@ export default function PrivacyPage() {
                 {buildLegalBasisRows(tc).map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
                     {row.map((cell, j) => (
-                      <td key={j} style={{ padding: '9px 14px', fontSize: 13, color: 'var(--tx2)' }}>{cell}</td>
+                      <td key={j} style={{ padding: '9px 14px', fontSize: 11, color: 'var(--tx2)' }}>{cell}</td>
                     ))}
                   </tr>
                 ))}
@@ -276,7 +276,7 @@ export default function PrivacyPage() {
 
         <Section title={tc('privacy.sec_9_title')}>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
                   {[tc('privacy.sec_9_th_0'), tc('privacy.sec_9_th_1'), tc('privacy.sec_9_th_2')].map(h => (
@@ -288,7 +288,7 @@ export default function PrivacyPage() {
                 {buildRetentionRows(tc).map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
                     {row.map((cell, j) => (
-                      <td key={j} style={{ padding: '9px 14px', fontSize: 13, color: 'var(--tx2)' }}>{cell}</td>
+                      <td key={j} style={{ padding: '9px 14px', fontSize: 11, color: 'var(--tx2)' }}>{cell}</td>
                     ))}
                   </tr>
                 ))}
@@ -355,7 +355,7 @@ export default function PrivacyPage() {
           <P>{tc('privacy.sec_15_p1')}</P>
         </Section>
 
-        <div style={{ padding: '20px', borderRadius: 14, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 13, color: 'var(--tx2)' }}>
+        <div style={{ padding: '20px', borderRadius: 14, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 11, color: 'var(--tx2)' }}>
           <strong>{tc('privacy.contact_heading')}</strong><br/>
           {tc('privacy.contact_privacy')}<br/>
           {tc('privacy.contact_security')}<br/>

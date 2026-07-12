@@ -170,9 +170,9 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: RED }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_dunning.title')}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_dunning.title')}</span>
           {stats && stats.total_failed > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(239,68,68,.08)', color: RED }}>
+            <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(239,68,68,.08)', color: RED }}>
               {tc('pos_dunning.atRisk').replace('{count}', String(stats.total_failed)).replace('{amount}', fmt(stats.total_amount, sym))}
             </span>
           )}
@@ -192,9 +192,9 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
 
         {/* Retry schedule selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'var(--ev, #f9f9f8)' }}>
-          <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_dunning.autoRetryLabel')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_dunning.autoRetryLabel')}</span>
           <select value={retrySchedule} onChange={e => setRetrySchedule(e.target.value)}
-            style={{ fontSize: 11, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', background: 'var(--sf)', fontFamily: 'inherit', color: 'var(--tx)' }}>
+            style={{ fontSize: 9, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', background: 'var(--sf)', fontFamily: 'inherit', color: 'var(--tx)' }}>
             {RETRY_SCHEDULES.map(s => (
               <option key={s.value} value={s.value}>{s.label} — {s.desc}</option>
             ))}
@@ -206,7 +206,7 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
           {(['all', 'failed', 'retrying', 'recovered', 'abandoned'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               style={{
-                fontSize: 10, fontWeight: filter === f ? 600 : 400, padding: '4px 10px', borderRadius: 6,
+                fontSize: 9, fontWeight: filter === f ? 600 : 400, padding: '4px 10px', borderRadius: 6,
                 border: `1px solid ${filter === f ? INDIGO + '30' : 'var(--b)'}`,
                 background: filter === f ? 'rgba(99,102,241,.06)' : 'transparent',
                 color: filter === f ? INDIGO : 'var(--tx3)',
@@ -219,7 +219,7 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
 
         {/* Payment list */}
         {loading ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>{tc('pos_dunning.loading')}</div>
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 10 }}>{tc('pos_dunning.loading')}</div>
         ) : !hasData ? (
           <div style={{ padding: '28px 16px', textAlign: 'center' }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
@@ -227,8 +227,8 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                 <path d="M20 6L9 17l-5-5"/>
               </svg>
             </div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: GREEN, marginBottom: 4 }}>{tc('pos_dunning.emptyTitle')}</div>
-            <p style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, margin: 0 }}>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 11, fontWeight: 600, color: GREEN, marginBottom: 4 }}>{tc('pos_dunning.emptyTitle')}</div>
+            <p style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5, margin: 0 }}>
               {tc('pos_dunning.emptyBody')}
             </p>
           </div>
@@ -240,13 +240,13 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                 <div key={payment.id} style={{ padding: '10px 12px', borderRadius: 10, border: `1px solid ${sc.border}`, background: sc.bg }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{payment.customer_name}</div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 1 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{payment.customer_name}</div>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>
                         {FAILURE_REASONS[payment.failure_reason] || payment.failure_reason} · {timeAgo(payment.created_at)}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: sc.text, fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: sc.text, fontVariantNumeric: 'tabular-nums' }}>
                         {fmt(payment.amount, payment.currency_symbol || sym)}
                       </div>
                       <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 9999, background: sc.bg, border: `1px solid ${sc.border}`, color: sc.text }}>
@@ -269,23 +269,23 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                   {(payment.status === 'failed' || payment.status === 'retrying') && (
                     <div style={{ display: 'flex', gap: 5 }}>
                       <button onClick={() => retryPayment(payment.id)}
-                        style={{ fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 9, fontWeight: 600, padding: '4px 10px', borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {tc('pos_dunning.btnRetryNow')}
                       </button>
                       <button onClick={() => sendReminder(payment.id)}
-                        style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 9, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {sendingReminder === payment.id ? tc('pos_dunning.btnReminderSent') : tc('pos_dunning.btnSendReminder')}
                       </button>
                       {payment.retry_count >= payment.max_retries && (
                         <button onClick={() => abandonPayment(payment.id)}
-                          style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ fontSize: 9, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
                           {tc('pos_dunning.btnMarkLost')}
                         </button>
                       )}
                     </div>
                   )}
                   {payment.status === 'recovered' && payment.recovered_at && (
-                    <div style={{ fontSize: 10, color: GREEN, fontWeight: 500 }}>
+                    <div style={{ fontSize: 9, color: GREEN, fontWeight: 500 }}>
                       {tc('pos_dunning.recoveredLine')
                         .replace('{when}', timeAgo(payment.recovered_at))
                         .replace('{count}', String(payment.retry_count))
@@ -300,8 +300,8 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
 
         {/* Recovery tips */}
         <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)' }}>
-          <div style={{ fontSize: 10, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>{tc('pos_dunning.tipsTitle')}</div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 9, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>{tc('pos_dunning.tipsTitle')}</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.6 }}>
             {tc('pos_dunning.tipsBody')}
           </div>
         </div>
@@ -314,7 +314,7 @@ function StatCell({ label, value, sub, color }: { label: string; value: string; 
   return (
     <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
       <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{sub}</div>
     </div>
   )

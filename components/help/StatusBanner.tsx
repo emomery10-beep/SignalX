@@ -36,17 +36,17 @@ export default function StatusBanner() {
       alignItems: 'center', gap: 12, flexWrap: 'wrap',
     }}>
       <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.dot, flexShrink: 0 }}/>
-      <p style={{ flex: 1, margin: 0, fontSize: 13, color: s.tx, fontWeight: 500, lineHeight: 1.4, minWidth: 0 }}>
+      <p style={{ flex: 1, margin: 0, fontSize: 11, color: s.tx, fontWeight: 500, lineHeight: 1.4, minWidth: 0 }}>
         {STATUS.message}
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
         <a href="/help/topic/troubleshooting"
-          style={{ fontSize: 12, color: s.dot, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          style={{ fontSize: 10, color: s.dot, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
           {tc('help_statusbanner.viewUpdates')}
         </a>
         <button
           onClick={() => { localStorage.setItem(`sb-${STATUS.id}`, '1'); setShow(false) }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: s.tx, fontSize: 20, lineHeight: 1, padding: 0, opacity: 0.5 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: s.tx, fontSize: 18, lineHeight: 1, padding: 0, opacity: 0.5 }}
           aria-label={tc('help_statusbanner.dismiss')}>
           ×
         </button>

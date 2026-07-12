@@ -27,9 +27,9 @@ export default function TermsPage() {
           <div style={{ width: 26, height: 26, borderRadius: 7, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 700 }}>AskBiz</span>
+          <span style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 13, fontWeight: 700 }}>AskBiz</span>
         </Link>
-        <Link href={localePath('/signin', locale)} style={{ padding: '7px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+        <Link href={localePath('/signin', locale)} style={{ padding: '7px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}>
           {t('terms.nav_cta')}
         </Link>
       </nav>
@@ -38,17 +38,17 @@ export default function TermsPage() {
 
         {locale !== 'en' && (
           <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {t('common.legal_mt_notice')}</span>
-            <Link href="/terms" style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{t('common.legal_mt_link')}</Link>
+            <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {t('common.legal_mt_notice')}</span>
+            <Link href="/terms" style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{t('common.legal_mt_link')}</Link>
           </div>
         )}
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>{t('terms.eyebrow')}</div>
-          <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 36, fontWeight: 700, letterSpacing: '-.025em', marginBottom: 12 }}>{t('terms.h1')}</h1>
-          <p style={{ fontSize: 15, color: 'var(--tx2)' }}>{t('terms.last_updated_line')}</p>
-          <div style={{ marginTop: 20, padding: '14px 18px', borderRadius: 12, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)', fontSize: 14, color: 'var(--tx2)', lineHeight: 1.65 }}>
+          <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>{t('terms.eyebrow')}</div>
+          <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 34, fontWeight: 700, letterSpacing: '-.025em', marginBottom: 12 }}>{t('terms.h1')}</h1>
+          <p style={{ fontSize: 13, color: 'var(--tx2)' }}>{t('terms.last_updated_line')}</p>
+          <div style={{ marginTop: 20, padding: '14px 18px', borderRadius: 12, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)', fontSize: 12, color: 'var(--tx2)', lineHeight: 1.65 }}>
             <strong style={{ color: 'var(--tx)' }}>{t('terms.summary_label')}</strong> {t('terms.summary_body')}
           </div>
         </div>
@@ -247,8 +247,8 @@ export default function TermsPage() {
 
         {/* Footer links */}
         <div style={{ marginTop: 56, paddingTop: 28, borderTop: '1px solid var(--b)', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          <Link href={localePath('/privacy', locale)} style={{ fontSize: 14, color: 'var(--acc)', textDecoration: 'none' }}>{t('terms.footer_privacy')}</Link>
-          <Link href={localePath('/', locale)} style={{ fontSize: 14, color: 'var(--tx3)', textDecoration: 'none' }}>{t('terms.footer_back')}</Link>
+          <Link href={localePath('/privacy', locale)} style={{ fontSize: 12, color: 'var(--acc)', textDecoration: 'none' }}>{t('terms.footer_privacy')}</Link>
+          <Link href={localePath('/', locale)} style={{ fontSize: 12, color: 'var(--tx3)', textDecoration: 'none' }}>{t('terms.footer_back')}</Link>
         </div>
 
       </div>
@@ -259,8 +259,8 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 20, fontWeight: 700, marginBottom: 16, letterSpacing: '-.01em', paddingBottom: 10, borderBottom: '1px solid var(--b)' }}>{title}</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 15, lineHeight: 1.75, color: 'var(--tx2)' }}>
+      <h2 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 18, fontWeight: 700, marginBottom: 16, letterSpacing: '-.01em', paddingBottom: 10, borderBottom: '1px solid var(--b)' }}>{title}</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, lineHeight: 1.75, color: 'var(--tx2)' }}>
         {children}
       </div>
     </div>
@@ -270,7 +270,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 8 }}>
-      <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 8 }}>{title}</h3>
+      <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 8 }}>{title}</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
     </div>
   )

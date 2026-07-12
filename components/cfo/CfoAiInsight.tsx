@@ -66,14 +66,14 @@ export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_aiinsight.sectionTitle')}</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_aiinsight.poweredBy')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_aiinsight.sectionTitle')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_aiinsight.poweredBy')}</span>
         </div>
         <button
           onClick={() => fetchInsights(true)}
           disabled={loading}
           style={{
-            fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)',
+            fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)',
             border: 'none', borderRadius: 6, padding: '3px 8px', cursor: loading ? 'default' : 'pointer',
             fontWeight: 600, fontFamily: 'inherit', opacity: loading ? 0.5 : 1,
           }}
@@ -84,7 +84,7 @@ export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
 
       {loading && !insights.length && (
         <div style={{ padding: '20px 18px', textAlign: 'center' }}>
-          <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 4 }}>{tc('cfo_aiinsight.analyzingBody')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4 }}>{tc('cfo_aiinsight.analyzingBody')}</div>
           <div style={{ height: 3, borderRadius: 2, background: 'var(--ev, #e5e5e5)', overflow: 'hidden', maxWidth: 200, margin: '0 auto' }}>
             <div style={{ height: '100%', width: '60%', background: '#6366F1', borderRadius: 2, animation: 'pulse 1s infinite' }} />
           </div>
@@ -105,10 +105,10 @@ export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
                 }}
                 onClick={onAsk ? () => onAsk(tc('cfo_aiinsight.expandPrompt', { title: insight.title, body: insight.body })) : undefined}
               >
-                <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{cfg.icon}</span>
+                <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>{cfg.icon}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: cfg.color, marginBottom: 2 }}>{insight.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{insight.body}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: cfg.color, marginBottom: 2 }}>{insight.title}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx2)', lineHeight: 1.5 }}>{insight.body}</div>
                 </div>
                 {onAsk && <span style={{ fontSize: 9, color: 'var(--tx3)', flexShrink: 0, marginTop: 2 }}>{tc('cfo_aiinsight.askAi')}</span>}
               </div>
@@ -118,7 +118,7 @@ export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
       )}
 
       {loaded && !insights.length && !loading && (
-        <div style={{ padding: '16px 18px', textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>
+        <div style={{ padding: '16px 18px', textAlign: 'center', color: 'var(--tx3)', fontSize: 10 }}>
           {tc('cfo_aiinsight.noInsights')}
         </div>
       )}

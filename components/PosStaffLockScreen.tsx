@@ -66,11 +66,11 @@ export default function PosStaffLockScreen({
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
     }}>
       <div style={{ width: 'min(360px, 100%)', background: '#fff', borderRadius: 16, padding: 28, textAlign: 'center', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fdf1e8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 22 }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fdf1e8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 20 }}>
           🔒
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1916', marginBottom: 4 }}>{tr('lock_title')}</div>
-        <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 20 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1916', marginBottom: 4 }}>{tr('lock_title')}</div>
+        <div style={{ fontSize: 11, color: '#6b6760', marginBottom: 20 }}>
           {staffName ? `${staffName} — ` : ''}{tr('lock_subtitle')}
         </div>
         <input
@@ -81,21 +81,21 @@ export default function PosStaffLockScreen({
           onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 8)); setError('') }}
           onKeyDown={e => e.key === 'Enter' && submit()}
           placeholder={tr('enter_pin')}
-          style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${error ? '#e8b4ae' : '#e5e2dc'}`, fontSize: 20, letterSpacing: 6, textAlign: 'center', marginBottom: 12, boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${error ? '#e8b4ae' : '#e5e2dc'}`, fontSize: 18, letterSpacing: 6, textAlign: 'center', marginBottom: 12, boxSizing: 'border-box' }}
         />
-        {error && <div style={{ fontSize: 12, color: '#b3261e', marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ fontSize: 10, color: '#b3261e', marginBottom: 12 }}>{error}</div>}
         <button
           onClick={submit}
           disabled={loading || !pin}
           style={{
             width: '100%', padding: 12, borderRadius: 10, border: 'none',
-            background: ACC, color: '#fff', fontSize: 14, fontWeight: 700,
+            background: ACC, color: '#fff', fontSize: 12, fontWeight: 700,
             cursor: loading || !pin ? 'default' : 'pointer', opacity: loading || !pin ? 0.6 : 1, marginBottom: 14,
           }}
         >
           {loading ? tr('verifying') : tr('unlock_btn')}
         </button>
-        <button onClick={onSignOut} style={{ background: 'none', border: 'none', color: '#6b6760', fontSize: 12, textDecoration: 'underline', cursor: 'pointer' }}>
+        <button onClick={onSignOut} style={{ background: 'none', border: 'none', color: '#6b6760', fontSize: 10, textDecoration: 'underline', cursor: 'pointer' }}>
           {tr('not_you_sign_out')}
         </button>
       </div>

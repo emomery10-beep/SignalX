@@ -25,12 +25,12 @@ export default function StaffTemplatesTab({
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
           {businessType === 'factory'
             ? tc('pos_stafftemplates.headingFactory')
             : tc('pos_stafftemplates.headingRestaurant')}
         </h2>
-        <p style={{ fontSize: 13, color: '#888', marginBottom: 24 }}>
+        <p style={{ fontSize: 11, color: '#888', marginBottom: 24 }}>
           {tc('pos_stafftemplates.subtitle')}
         </p>
 
@@ -64,14 +64,14 @@ export default function StaffTemplatesTab({
             >
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 24 }}>{template.icon}</span>
+                <span style={{ fontSize: 22 }}>{template.icon}</span>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, margin: 0 }}>
                     {template.name}
                   </h3>
                   <p
                     style={{
-                      fontSize: 12,
+                      fontSize: 10,
                       color: '#666',
                       margin: '4px 0 0 0',
                       lineHeight: 1.4,
@@ -91,7 +91,7 @@ export default function StaffTemplatesTab({
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
                   gap: 12,
-                  fontSize: 12,
+                  fontSize: 10,
                 }}
               >
                 <div>
@@ -134,7 +134,7 @@ export default function StaffTemplatesTab({
                   borderTop: '1px solid #e0e0e0',
                 }}
               >
-                <span style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>
+                <span style={{ fontSize: 9, color: '#999', fontWeight: 600 }}>
                   {tc('pos_stafftemplates.permissionsHeading')}
                 </span>
                 <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -142,7 +142,7 @@ export default function StaffTemplatesTab({
                     <span
                       key={perm}
                       style={{
-                        fontSize: 11,
+                        fontSize: 9,
                         background: '#e8e8e8',
                         color: '#555',
                         padding: '2px 8px',
@@ -169,7 +169,7 @@ export default function StaffTemplatesTab({
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: 600,
                   color: '#d08a59',
                   padding: '8px 0',
@@ -188,12 +188,12 @@ export default function StaffTemplatesTab({
                     borderTop: '1px solid #e0e0e0',
                   }}
                 >
-                  <span style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>
+                  <span style={{ fontSize: 9, color: '#999', fontWeight: 600 }}>
                     {tc('pos_stafftemplates.responsibilitiesHeading')}
                   </span>
                   <ul
                     style={{
-                      fontSize: 12,
+                      fontSize: 10,
                       margin: '6px 0 0 0',
                       paddingLeft: 16,
                       color: '#555',
@@ -225,7 +225,7 @@ export default function StaffTemplatesTab({
                     color: '#fff',
                     border: 'none',
                     borderRadius: 6,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: 600,
                     cursor: 'pointer',
                     transition: 'background 0.2s',
@@ -257,7 +257,7 @@ export default function StaffTemplatesTab({
           borderRadius: 12,
         }}
       >
-        <p style={{ fontSize: 13, margin: 0, color: '#0066cc' }}>
+        <p style={{ fontSize: 11, margin: 0, color: '#0066cc' }}>
           {tc('pos_stafftemplates.tipText')}
         </p>
       </div>

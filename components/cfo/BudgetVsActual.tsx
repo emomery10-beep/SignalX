@@ -123,16 +123,16 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_budget.card_title')}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_budget.card_title')}</span>
             {!hasBudget && (
-              <span style={{ fontSize: 10, color: '#F59E0B', background: 'rgba(245,158,11,.1)', borderRadius: 6, padding: '1px 6px', fontWeight: 600 }}>{tc('cfo_budget.no_budget_badge')}</span>
+              <span style={{ fontSize: 9, color: '#F59E0B', background: 'rgba(245,158,11,.1)', borderRadius: 6, padding: '1px 6px', fontWeight: 600 }}>{tc('cfo_budget.no_budget_badge')}</span>
             )}
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {!hasBudget && (
               <button
                 onClick={importFromActuals}
-                style={{ fontSize: 10, color: '#F59E0B', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+                style={{ fontSize: 9, color: '#F59E0B', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
               >
                 {tc('cfo_budget.use_actuals_btn')}
               </button>
@@ -151,7 +151,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                     netVar: (profVar > 0 ? '+' : '') + profVar + '%',
                   }))
                 }}
-                style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+                style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
               >{tc('cfo_budget.ask_ai')}</button>
             )}
           </div>
@@ -159,14 +159,14 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
 
         {/* Main comparison table */}
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                <th style={{ textAlign: 'left', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_line_item')}</th>
-                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_budget')}</th>
-                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_actual')}</th>
-                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_variance')}</th>
-                <th style={{ textAlign: 'right', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_pct_var')}</th>
+                <th style={{ textAlign: 'left', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_line_item')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_budget')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_actual')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_variance')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_pct_var')}</th>
               </tr>
             </thead>
             <tbody>
@@ -192,7 +192,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
               />
               {/* Gross Profit (computed) */}
               <tr style={{ background: 'rgba(34,197,94,.02)', borderTop: '2px solid var(--b)' }}>
-                <td style={{ padding: '9px 18px', fontWeight: 700, color: 'var(--tx)', fontSize: 12 }}>{tc('cfo_budget.row_gross_profit')}</td>
+                <td style={{ padding: '9px 18px', fontWeight: 700, color: 'var(--tx)', fontSize: 10 }}>{tc('cfo_budget.row_gross_profit')}</td>
                 <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(budgetGrossProfit, sym)}</td>
                 <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(grossProfit, sym)}</td>
                 <VarCells actual={grossProfit} budget={budgetGrossProfit} isNeg={false} sym={sym} />
@@ -209,9 +209,9 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
               />
               {/* Net Profit (computed) */}
               <tr style={{ background: totals.net_profit >= 0 ? 'rgba(99,102,241,.03)' : 'rgba(239,68,68,.03)', borderTop: '2px solid var(--b)' }}>
-                <td style={{ padding: '11px 18px', fontWeight: 800, color: 'var(--tx)', fontSize: 13 }}>{tc('cfo_budget.row_net_profit')}</td>
-                <td style={{ padding: '11px 14px', textAlign: 'right', fontWeight: 800, color: budget.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>{fmt(budget.net_profit, sym)}</td>
-                <td style={{ padding: '11px 14px', textAlign: 'right', fontWeight: 800, color: totals.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>{fmt(totals.net_profit, sym)}</td>
+                <td style={{ padding: '11px 18px', fontWeight: 800, color: 'var(--tx)', fontSize: 11 }}>{tc('cfo_budget.row_net_profit')}</td>
+                <td style={{ padding: '11px 14px', textAlign: 'right', fontWeight: 800, color: budget.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums', fontSize: 11 }}>{fmt(budget.net_profit, sym)}</td>
+                <td style={{ padding: '11px 14px', textAlign: 'right', fontWeight: 800, color: totals.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums', fontSize: 11 }}>{fmt(totals.net_profit, sym)}</td>
                 <VarCells actual={totals.net_profit} budget={budget.net_profit} isNeg={false} sym={sym} large />
               </tr>
             </tbody>
@@ -220,7 +220,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
 
         {/* Budget setting hint */}
         {!hasBudget && (
-          <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)', fontSize: 11, color: 'var(--tx3)', background: 'rgba(245,158,11,.02)', lineHeight: 1.5 }}>
+          <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)', fontSize: 9, color: 'var(--tx3)', background: 'rgba(245,158,11,.02)', lineHeight: 1.5 }}>
             {tc('cfo_budget.set_budget_hint')}
           </div>
         )}
@@ -230,7 +230,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
       {hasBudget && (
         <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
           <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--b)' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_budget.attainment_title')}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_budget.attainment_title')}</div>
           </div>
           <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {uniqueLines.filter(l => l.key !== 'net_profit').map(line => {
@@ -244,8 +244,8 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
               return (
                 <div key={line.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{line.label}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color }}>{tc('cfo_budget.pct_of_budget', { n: rawPct.toFixed(0) })}</span>
+                    <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--tx)' }}>{line.label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 600, color }}>{tc('cfo_budget.pct_of_budget', { n: rawPct.toFixed(0) })}</span>
                   </div>
                   <div style={{ height: 10, borderRadius: 5, background: 'var(--ev, #f3f2ef)', overflow: 'hidden' }}>
                     <div style={{
@@ -253,7 +253,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                       background: color, borderRadius: 5, transition: 'width 400ms',
                     }} />
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--tx3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 9, color: 'var(--tx3)' }}>
                     <span>{tc('cfo_budget.actual_suffix', { v: fmt(line.actual, sym) })}</span>
                     <span>{tc('cfo_budget.budget_suffix', { v: fmt(b, sym) })}</span>
                   </div>
@@ -268,19 +268,19 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
       {pnlMonthly && pnlMonthly.length > 1 && hasBudget && (
         <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
           <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_budget.monthly_trend_title')}</span>
-            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_budget.click_month_hint')}</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_budget.monthly_trend_title')}</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_budget.click_month_hint')}</span>
           </div>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                  <th style={{ textAlign: 'left', padding: '7px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_month')}</th>
-                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.row_revenue')}</th>
-                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_bgt_rev')}</th>
-                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_gm')}</th>
-                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_net')}</th>
-                  <th style={{ textAlign: 'right', padding: '7px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_budget.col_bgt_net')}</th>
+                  <th style={{ textAlign: 'left', padding: '7px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_month')}</th>
+                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.row_revenue')}</th>
+                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_bgt_rev')}</th>
+                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_gm')}</th>
+                  <th style={{ textAlign: 'right', padding: '7px 12px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_net')}</th>
+                  <th style={{ textAlign: 'right', padding: '7px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_budget.col_bgt_net')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,7 +327,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
             const netVar = budget.net_profit !== 0 ? ((m.net - budget.net_profit) / Math.abs(budget.net_profit)) * 100 : 0
             return (
               <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>
                   {new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} — {tc('cfo_budget.detail_suffix')}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
@@ -342,10 +342,10 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                     const col = item.isNeg ? (item.actual <= item.budget ? '#22C55E' : '#EF4444') : (item.actual >= item.budget ? '#22C55E' : '#EF4444')
                     return (
                       <div key={i} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-                        <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{item.label}</div>
+                        <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{item.label}</div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                          <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--tx)' }}>{fmt(item.actual, sym)}</span>
-                          {item.budget !== 0 && <span style={{ fontSize: 10, fontWeight: 600, color: col }}>{var_ > 0 ? '+' : ''}{var_.toFixed(1)}%</span>}
+                          <span style={{ fontWeight: 700, fontSize: 11, color: 'var(--tx)' }}>{fmt(item.actual, sym)}</span>
+                          {item.budget !== 0 && <span style={{ fontSize: 9, fontWeight: 600, color: col }}>{var_ > 0 ? '+' : ''}{var_.toFixed(1)}%</span>}
                         </div>
                         {item.budget !== 0 && <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_budget.budget_inline', { v: fmt(item.budget, sym) })}</div>}
                       </div>
@@ -374,7 +374,7 @@ function BudgetRow({ label, actual, budget, sym, editing, isNeg, onEdit, onInput
 
   return (
     <tr style={{ borderTop: '1px solid var(--b)' }}>
-      <td style={{ padding: '9px 18px', color: 'var(--tx3)', fontSize: 12 }}>{label}</td>
+      <td style={{ padding: '9px 18px', color: 'var(--tx3)', fontSize: 10 }}>{label}</td>
       <td style={{ padding: '9px 14px', textAlign: 'right', cursor: 'pointer' }} onClick={onEdit}>
         {editing ? (
           <input
@@ -385,11 +385,11 @@ function BudgetRow({ label, actual, budget, sym, editing, isNeg, onEdit, onInput
             onBlur={onCommit}
             onKeyDown={e => e.key === 'Enter' && onCommit()}
             onClick={e => e.stopPropagation()}
-            style={{ width: 80, padding: '2px 6px', borderRadius: 4, border: '1px solid #6366F1', fontSize: 11, fontFamily: 'inherit', textAlign: 'right', outline: 'none' }}
+            style={{ width: 80, padding: '2px 6px', borderRadius: 4, border: '1px solid #6366F1', fontSize: 9, fontFamily: 'inherit', textAlign: 'right', outline: 'none' }}
           />
         ) : (
-          <span style={{ fontSize: 12, color: budget > 0 ? 'var(--tx)' : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-            {budget > 0 ? fmt(budget, sym) : <span style={{ fontSize: 10, color: '#6366F1' }}>{tc('cfo_budget.set_label')}</span>}
+          <span style={{ fontSize: 10, color: budget > 0 ? 'var(--tx)' : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
+            {budget > 0 ? fmt(budget, sym) : <span style={{ fontSize: 9, color: '#6366F1' }}>{tc('cfo_budget.set_label')}</span>}
           </span>
         )}
       </td>

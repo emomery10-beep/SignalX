@@ -87,16 +87,16 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: RED }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_churn.title')}</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_churn.title')}</span>
           {hasCohorts && (
-            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+            <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
               background: `${nrrColor}15`, color: nrrColor }}>
               NRR {avgNetRetention.toFixed(0)}%
             </span>
           )}
         </div>
         <button onClick={() => onAsk(tc('cfo_churn.ask_prompt', { retention: avgRetention.toFixed(1), churn: avgChurn.toFixed(1), nrr: avgNetRetention.toFixed(1), atRisk: fmt(monthlyChurnRevenue, sym), trend: churnTrend > 0 ? tc('cfo_churn.trend_worsening') : tc('cfo_churn.trend_improving') }))}
-          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_churn.ask_ai')}
         </button>
       </div>
@@ -106,7 +106,7 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
         <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
           {(['overview', 'cohort', 'channel'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
-              style={{ fontSize: 10, padding: '4px 10px', borderRadius: 6,
+              style={{ fontSize: 9, padding: '4px 10px', borderRadius: 6,
                 background: view === v ? 'rgba(99,102,241,.1)' : 'transparent',
                 color: view === v ? INDIGO : 'var(--tx3)', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
               {tc('cfo_churn.tab_' + v)}
@@ -120,15 +120,15 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 14 }}>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_churn.gross_retention')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: avgRetention >= 90 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>{avgRetention.toFixed(1)}%</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: avgRetention >= 90 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>{avgRetention.toFixed(1)}%</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_churn.monthly_churn')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: churnColor, fontVariantNumeric: 'tabular-nums' }}>{avgChurn.toFixed(1)}%</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: churnColor, fontVariantNumeric: 'tabular-nums' }}>{avgChurn.toFixed(1)}%</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_churn.net_retention')}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: nrrColor, fontVariantNumeric: 'tabular-nums' }}>{avgNetRetention.toFixed(1)}%</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: nrrColor, fontVariantNumeric: 'tabular-nums' }}>{avgNetRetention.toFixed(1)}%</div>
               </div>
             </div>
 
@@ -136,12 +136,12 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             <div style={{ padding: 12, borderRadius: 8, border: `1px solid ${RED}20`, background: `${RED}06`, marginBottom: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_churn.revenue_at_risk')}</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_churn.revenue_at_risk_desc')}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_churn.revenue_at_risk')}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_churn.revenue_at_risk_desc')}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(monthlyChurnRevenue, sym)}{tc('cfo_churn.per_month_suffix')}</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmt(annualChurnRevenue, sym)}{tc('cfo_churn.per_year_suffix')}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(monthlyChurnRevenue, sym)}{tc('cfo_churn.per_month_suffix')}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{fmt(annualChurnRevenue, sym)}{tc('cfo_churn.per_year_suffix')}</div>
                 </div>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             {/* Churn trend mini chart */}
             {hasCohorts && (
               <>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                   {tc('cfo_churn.churn_trend')}
                   {churnTrend !== 0 && (
                     <span style={{ marginLeft: 6, color: churnTrend > 0 ? RED : GREEN, fontWeight: 700 }}>
@@ -175,7 +175,7 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             )}
 
             {/* Retention strategies */}
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 14, marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 14, marginBottom: 8 }}>
               {tc('cfo_churn.retention_strategies')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -196,7 +196,7 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
         {/* Cohort view */}
         {view === 'cohort' && hasCohorts && (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--b)' }}>
                   <th style={{ textAlign: 'left', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_churn.col_month')}</th>
@@ -231,16 +231,16 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
               return (
                 <div key={ch.source} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--b)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{ch.label}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(ch.revenue, sym)}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{ch.label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(ch.revenue, sym)}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--tx3)' }}>
+                  <div style={{ display: 'flex', gap: 10, fontSize: 9, color: 'var(--tx3)' }}>
                     <span>{tc('cfo_churn.orders', { n: ch.orders })}</span>
                     <span>{tc('cfo_churn.margin', { n: ch.margin_pct })}</span>
                     <span style={{ color: riskColor, fontWeight: 600 }}>{tc('cfo_churn.pct_of_revenue', { n: share.toFixed(0) })}</span>
                   </div>
                   {share > 50 && (
-                    <div style={{ fontSize: 10, color: RED, fontWeight: 500, marginTop: 4 }}>
+                    <div style={{ fontSize: 9, color: RED, fontWeight: 500, marginTop: 4 }}>
                       {tc('cfo_churn.concentration_risk', { n: share.toFixed(0) })}
                     </div>
                   )}
@@ -257,8 +257,8 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
 function InsightRow({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <div style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${color}20`, background: `${color}08`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{label}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{value}</span>
+      <span style={{ fontSize: 9, fontWeight: 500, color: 'var(--tx)' }}>{label}</span>
+      <span style={{ fontSize: 9, fontWeight: 600, color, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{value}</span>
     </div>
   )
 }

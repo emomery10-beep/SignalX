@@ -36,20 +36,20 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
           <div style={{ width: 26, height: 26, borderRadius: 7, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 15, fontWeight: 700, letterSpacing: '-.02em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 700, letterSpacing: '-.02em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link href={isHowTo ? '/how-to' : '/translate'} style={{ fontSize: 13, color: '#6b6760', textDecoration: 'none', padding: '6px 12px' }}>
+          <Link href={isHowTo ? '/how-to' : '/translate'} style={{ fontSize: 11, color: '#6b6760', textDecoration: 'none', padding: '6px 12px' }}>
             ← {isHowTo ? 'How-to guides' : 'Glossary'}
           </Link>
-          <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '7px 16px', textDecoration: 'none' }}>Try free →</Link>
+          <Link href="/signin" style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '7px 16px', textDecoration: 'none' }}>Try free →</Link>
         </div>
       </nav>
 
       <main style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(32px,6vw,56px) clamp(16px,4vw,24px) clamp(48px,8vw,80px)' }}>
 
         {/* Breadcrumb */}
-        <nav aria-label="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#a39e97', marginBottom: 28, flexWrap: 'wrap' }}>
+        <nav aria-label="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#a39e97', marginBottom: 28, flexWrap: 'wrap' }}>
           <Link href="/" style={{ color: '#a39e97', textDecoration: 'none' }}>AskBiz</Link>
           <span>›</span>
           <Link href={isHowTo ? '/how-to' : '/translate'} style={{ color: '#a39e97', textDecoration: 'none' }}>{isHowTo ? 'How-to guides' : 'Business glossary'}</Link>
@@ -59,7 +59,7 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
 
         {/* Header */}
         <div style={{ marginBottom: 36 }}>
-          <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, color: '#d08a59', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '3px 12px', marginBottom: 14, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+          <div style={{ display: 'inline-block', fontSize: 9, fontWeight: 600, color: '#d08a59', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '3px 12px', marginBottom: 14, letterSpacing: '.04em', textTransform: 'uppercase' }}>
             {isHowTo ? 'How-to guide' : 'Plain English definition'}
           </div>
           <h1 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(24px,4.5vw,38px)', fontWeight: 700, letterSpacing: '-.025em', lineHeight: 1.2, color: '#1a1916', marginBottom: 14 }}>
@@ -72,15 +72,15 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
 
         {/* Term highlight box */}
         <div style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(140,111,224,.06)', border: '1px solid rgba(140,111,224,.2)', marginBottom: 36 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#8c6fe0', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{entry.term} — in plain English</div>
-          <p style={{ fontSize: 15, lineHeight: 1.75, color: '#1a1916', margin: 0 }}>{entry.simpleEnglish}</p>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#8c6fe0', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{entry.term} — in plain English</div>
+          <p style={{ fontSize: 13, lineHeight: 1.75, color: '#1a1916', margin: 0 }}>{entry.simpleEnglish}</p>
         </div>
 
         {/* Formula if exists */}
         {entry.formula && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: '#1a1916', marginBottom: 28 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#a39e97', marginBottom: 6, letterSpacing: '.06em', textTransform: 'uppercase' }}>Formula</div>
-            <code style={{ fontSize: 14, color: '#d08a59', fontFamily: 'var(--font-mono, monospace)', lineHeight: 1.6 }}>{entry.formula}</code>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#a39e97', marginBottom: 6, letterSpacing: '.06em', textTransform: 'uppercase' }}>Formula</div>
+            <code style={{ fontSize: 12, color: '#d08a59', fontFamily: 'var(--font-mono, monospace)', lineHeight: 1.6 }}>{entry.formula}</code>
           </div>
         )}
 
@@ -89,7 +89,7 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
           <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(18px,3vw,22px)', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 12, color: '#1a1916' }}>
             Why {entry.term} matters for your business
           </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.85, color: '#4a4844' }}>{entry.whyItMatters}</p>
+          <p style={{ fontSize: 13, lineHeight: 1.85, color: '#4a4844' }}>{entry.whyItMatters}</p>
         </section>
 
         {/* How AskBiz does it */}
@@ -97,7 +97,7 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
           <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(18px,3vw,22px)', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 16, color: '#1a1916' }}>
             How AskBiz calculates {entry.term} from your data
           </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.85, color: '#4a4844', marginBottom: 20 }}>{entry.howAskBizDoesIt}</p>
+          <p style={{ fontSize: 13, lineHeight: 1.85, color: '#4a4844', marginBottom: 20 }}>{entry.howAskBizDoesIt}</p>
 
           {/* Steps */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -107,10 +107,10 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
               { n: '3', t: 'Get your answer instantly', d: 'AskBiz returns the calculation with a chart, KPI breakdown, and specific recommendations — in seconds.' },
             ].map(s => (
               <div key={s.n} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#d08a59', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora, system-ui)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.n}</div>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#d08a59', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora, system-ui)', fontWeight: 700, fontSize: 11, flexShrink: 0 }}>{s.n}</div>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 14, fontWeight: 600, marginBottom: 3, color: '#1a1916' }}>{s.t}</div>
-                  <p style={{ fontSize: 14, color: '#6b6760', lineHeight: 1.6, margin: 0 }}>{s.d}</p>
+                  <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 12, fontWeight: 600, marginBottom: 3, color: '#1a1916' }}>{s.t}</div>
+                  <p style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.6, margin: 0 }}>{s.d}</p>
                 </div>
               </div>
             ))}
@@ -123,7 +123,7 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
             Real-world example
           </h2>
           <div style={{ padding: '18px 20px', borderRadius: 14, border: '1px solid #e8e6e1', background: '#fff' }}>
-            <p style={{ fontSize: 15, lineHeight: 1.85, color: '#4a4844', margin: 0 }}>{entry.example}</p>
+            <p style={{ fontSize: 13, lineHeight: 1.85, color: '#4a4844', margin: 0 }}>{entry.example}</p>
           </div>
         </section>
 
@@ -132,13 +132,13 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
           <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(18px,3vw,22px)', fontWeight: 700, marginBottom: 10, color: '#1a1916' }}>
             Ask AskBiz about your {entry.term}
           </div>
-          <p style={{ fontSize: 15, color: '#6b6760', lineHeight: 1.6, marginBottom: 22, maxWidth: 480, margin: '0 auto 22px' }}>
+          <p style={{ fontSize: 13, color: '#6b6760', lineHeight: 1.6, marginBottom: 22, maxWidth: 480, margin: '0 auto 22px' }}>
             Upload your CSV or Excel file and ask "{entry.title}" — get the answer with a chart and recommendations in under 60 seconds.
           </p>
-          <Link href="/signin" style={{ display: 'inline-block', fontSize: 15, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '12px 28px', textDecoration: 'none' }}>
+          <Link href="/signin" style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '12px 28px', textDecoration: 'none' }}>
             Upload your data — free →
           </Link>
-          <p style={{ fontSize: 12, color: '#a39e97', marginTop: 10 }}>No card required · 10 free questions · Results in seconds</p>
+          <p style={{ fontSize: 10, color: '#a39e97', marginTop: 10 }}>No card required · 10 free questions · Results in seconds</p>
         </div>
 
         {/* FAQs */}
@@ -149,9 +149,9 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
           {entry.faqs.map((faq, i) => (
             <div key={i} style={{ borderBottom: i < entry.faqs.length - 1 ? '1px solid #e8e6e1' : 'none', padding: '18px 0' }}
               itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
-              <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 15, fontWeight: 600, marginBottom: 8, color: '#1a1916' }} itemProp="name">{faq.q}</div>
+              <div style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#1a1916' }} itemProp="name">{faq.q}</div>
               <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
-                <p style={{ fontSize: 14, color: '#6b6760', lineHeight: 1.75, margin: 0 }} itemProp="text">{faq.a}</p>
+                <p style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.75, margin: 0 }} itemProp="text">{faq.a}</p>
               </div>
             </div>
           ))}
@@ -160,10 +160,10 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
         {/* Related */}
         {related.length > 0 && (
           <section>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#a39e97', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>Related terms</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: '#a39e97', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>Related terms</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {related.map(r => (
-                <Link key={r.slug} href={`/${r.category}/${r.slug}`} style={{ fontSize: 13, color: '#d08a59', textDecoration: 'none', padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(208,138,89,.3)', background: 'rgba(208,138,89,.05)' }}>
+                <Link key={r.slug} href={`/${r.category}/${r.slug}`} style={{ fontSize: 11, color: '#d08a59', textDecoration: 'none', padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(208,138,89,.3)', background: 'rgba(208,138,89,.05)' }}>
                   {r.term} →
                 </Link>
               ))}
@@ -178,12 +178,12 @@ export default function ProgrammaticPage({ entry, related }: { entry: SeoEntry; 
           <div style={{ width: 20, height: 20, borderRadius: 5, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 13, fontWeight: 700, color: '#1a1916' }}>AskBiz</span>
-          <span style={{ fontSize: 12, color: '#a39e97' }}>© 2026</span>
+          <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 11, fontWeight: 700, color: '#1a1916' }}>AskBiz</span>
+          <span style={{ fontSize: 10, color: '#a39e97' }}>© 2026</span>
         </Link>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {[['/', 'Home'], ['/how-to', 'How-to guides'], ['/translate', 'Glossary'], ['/privacy', 'Privacy']].map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 13, color: '#6b6760', textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={href} style={{ fontSize: 11, color: '#6b6760', textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

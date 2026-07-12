@@ -50,18 +50,18 @@ function ArticleRow({ article, index, total }: { article: AcademyArticle; index:
       }}
     >
       <div>
-        <span style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+        <span style={{ fontSize: 9, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.04em' }}>
           {article.category}
         </span>
-        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 17, fontWeight: 600, color: TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
+        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
           {article.title}
         </div>
-        <p style={{ fontSize: 14, color: TX2, lineHeight: 1.5, margin: 0 }}>
+        <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
           {(article.description || '').slice(0, 120)}{(article.description || '').length > 120 ? '…' : ''}
         </p>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: 13, color: TX3, whiteSpace: 'nowrap' }}>{article.readTime} {tc('academy.read_time_min')}</div>
+        <div style={{ fontSize: 11, color: TX3, whiteSpace: 'nowrap' }}>{article.readTime} {tc('academy.read_time_min')}</div>
       </div>
     </Link>
   )
@@ -193,10 +193,10 @@ export default function AcademyClient() {
                 <rect x="19" y="9"  width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
           {tc('academy.try_free')}
         </Link>
       </nav>
@@ -220,11 +220,11 @@ export default function AcademyClient() {
                 width: '100%', padding: '8px 12px', borderRadius: 8,
                 background: isHome ? 'rgba(208,138,89,.12)' : 'transparent',
                 color: isHome ? ACC : TX2,
-                fontSize: 13, fontWeight: isHome ? 600 : 400,
+                fontSize: 11, fontWeight: isHome ? 600 : 400,
               }}
             >
               <span>{tc('academy.all_categories')}</span>
-              <span style={{ fontSize: 11, color: TX3 }}>{academyArticles.length}</span>
+              <span style={{ fontSize: 9, color: TX3 }}>{academyArticles.length}</span>
             </button>
           </div>
 
@@ -239,15 +239,15 @@ export default function AcademyClient() {
                 textDecoration: 'none', color: '#6c3fc5',
               }}
             >
-              <span style={{ fontSize: 16, flexShrink: 0 }}>🎓</span>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>🎓</span>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>{tc('academy.learn_askbiz')}</div>
-                <div style={{ fontSize: 10, color: '#9575cd', lineHeight: 1.3 }}>{tc('academy.learn_askbiz_tutorials')}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.3 }}>{tc('academy.learn_askbiz')}</div>
+                <div style={{ fontSize: 9, color: '#9575cd', lineHeight: 1.3 }}>{tc('academy.learn_askbiz_tutorials')}</div>
               </div>
             </Link>
           </div>
 
-          <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '10px 24px 6px' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '10px 24px 6px' }}>
             {tc('academy.browse_categories')}
           </div>
 
@@ -267,12 +267,12 @@ export default function AcademyClient() {
                       flex: 1, display: 'flex', alignItems: 'center', gap: 8,
                       padding: '7px 6px 7px 10px', borderRadius: '8px 0 0 8px',
                       color: isActive ? color : TX2,
-                      fontSize: 13, fontWeight: isActive ? 600 : 400, textAlign: 'left',
+                      fontSize: 11, fontWeight: isActive ? 600 : 400, textAlign: 'left',
                     }}
                   >
                     <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
                     <span style={{ lineHeight: 1.35, flex: 1 }}>{cat.title}</span>
-                    <span style={{ fontSize: 10, color: isActive ? color : TX3, flexShrink: 0 }}>{count}</span>
+                    <span style={{ fontSize: 9, color: isActive ? color : TX3, flexShrink: 0 }}>{count}</span>
                   </button>
                   <button
                     className="ac-sb-btn"
@@ -300,15 +300,15 @@ export default function AcademyClient() {
           {/* Extra links */}
           <div style={{ padding: '0 12px', marginTop: 12 }}>
             <div style={{ height: 1, background: BD, margin: '8px 0 12px' }} />
-            <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '4px 10px 6px' }}>{tc('academy.tools')}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '4px 10px 6px' }}>{tc('academy.tools')}</div>
             {([[tc('academy.tool_learning_paths'), '/academy/learning-paths'], [tc('academy.tool_checklists'), '/academy/checklists']] as [string,string][]).map(([label, href]) => (
-              <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
+              <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
                 {label}
               </Link>
             ))}
             <div style={{ height: 1, background: BD, margin: '8px 0 8px' }} />
             {([[tc('academy.link_help_centre'), '/help'], [tc('academy.link_blog'), '/blog'], [tc('academy.link_free_tools'), '/free-tools']] as [string,string][]).map(([label, href]) => (
-              <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
+              <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
                 {label}
               </Link>
             ))}
@@ -325,7 +325,7 @@ export default function AcademyClient() {
                 <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(26px,3vw,34px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 6 }}>
                   {tc('academy.page_title')}
                 </h1>
-                <p style={{ fontSize: 16, color: TX2, margin: 0 }}>
+                <p style={{ fontSize: 14, color: TX2, margin: 0 }}>
                   {academyArticles.length}{tc('academy.intro_suffix')} {academyCategories.length} {tc('academy.intro_categories_suffix')}
                 </p>
               </div>
@@ -343,10 +343,10 @@ export default function AcademyClient() {
                 onChange={e => { setSearch(e.target.value); setActiveCategory(null); setVisibleCount(PAGE_SIZE) }}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '11px 38px 11px 44px', fontSize: 14, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '11px 38px 11px 44px', fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
               />
               {search && (
-                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 18, lineHeight: 1, padding: '0 2px' }}>×</button>
+                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
               )}
             </div>
           </div>
@@ -357,24 +357,24 @@ export default function AcademyClient() {
               {/* Learning Paths + Checklists promo */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14, marginBottom: 36 }}>
                 <Link href={localePath('/academy/learning-paths', lang)} style={{ textDecoration: 'none', background: '#fff8f3', border: `1px solid ${ACC}30`, borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
-                  <span style={{ fontSize: 28, flexShrink: 0 }}>🗺️</span>
+                  <span style={{ fontSize: 26, flexShrink: 0 }}>🗺️</span>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_learning_paths_title')}</div>
-                    <div style={{ fontSize: 12, color: TX2 }}>{tc('academy.promo_learning_paths_desc')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_learning_paths_title')}</div>
+                    <div style={{ fontSize: 10, color: TX2 }}>{tc('academy.promo_learning_paths_desc')}</div>
                   </div>
                 </Link>
                 <Link href={localePath('/academy/checklists', lang)} style={{ textDecoration: 'none', background: '#f3faf6', border: '1px solid #a3e4b830', borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
-                  <span style={{ fontSize: 28, flexShrink: 0 }}>✅</span>
+                  <span style={{ fontSize: 26, flexShrink: 0 }}>✅</span>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_checklists_title')}</div>
-                    <div style={{ fontSize: 12, color: TX2 }}>{tc('academy.promo_checklists_desc')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_checklists_title')}</div>
+                    <div style={{ fontSize: 10, color: TX2 }}>{tc('academy.promo_checklists_desc')}</div>
                   </div>
                 </Link>
               </div>
 
               {/* Category cards — top 5 featured, rest compact */}
               <section style={{ marginBottom: 52 }}>
-                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('academy.browse_categories_heading')}</h2>
+                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('academy.browse_categories_heading')}</h2>
                 {/* Featured top 5 */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 16 }}>
                   {academyCategories.slice(0, 5).map(cat => {
@@ -387,11 +387,11 @@ export default function AcademyClient() {
                         onClick={() => selectCategory(cat.slug)}
                         style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
                       >
-                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{cat.title}</div>
-                        <p style={{ fontSize: 14, color: TX2, margin: '0 0 10px', lineHeight: 1.55 }}>
+                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{cat.title}</div>
+                        <p style={{ fontSize: 12, color: TX2, margin: '0 0 10px', lineHeight: 1.55 }}>
                           {cat.description.slice(0, 72)}{cat.description.length > 72 ? '…' : ''}
                         </p>
-                        <span style={{ fontSize: 12, color, fontWeight: 600 }}>{count} {tc('academy.articles_arrow_suffix')}</span>
+                        <span style={{ fontSize: 10, color, fontWeight: 600 }}>{count} {tc('academy.articles_arrow_suffix')}</span>
                       </div>
                     )
                   })}
@@ -406,10 +406,10 @@ export default function AcademyClient() {
                         key={cat.slug}
                         className="ac-sb-btn"
                         onClick={() => selectCategory(cat.slug)}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BD}`, background: SF, fontSize: 13, color: TX, fontWeight: 500 }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BD}`, background: SF, fontSize: 11, color: TX, fontWeight: 500 }}
                       >
                         {cat.title}
-                        <span style={{ fontSize: 11, color: TX3 }}>{count}</span>
+                        <span style={{ fontSize: 9, color: TX3 }}>{count}</span>
                       </button>
                     )
                   })}
@@ -419,8 +419,8 @@ export default function AcademyClient() {
               {/* Featured beginner articles */}
               <section>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('academy.start_here')}</h2>
-                  <span style={{ fontSize: 12, color: TX3 }}>{academyArticles.length} {tc('academy.total_suffix')}</span>
+                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('academy.start_here')}</h2>
+                  <span style={{ fontSize: 10, color: TX3 }}>{academyArticles.length} {tc('academy.total_suffix')}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {featuredArticles.map((a, i) => (
@@ -431,7 +431,7 @@ export default function AcademyClient() {
                   <button
                     className="ac-sb-btn"
                     onClick={() => { setActiveCategory(null); setSearch(''); setVisibleCount(PAGE_SIZE) }}
-                    style={{ fontSize: 13, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontWeight: 600 }}
+                    style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontWeight: 600 }}
                   >
                     {tc('academy.browse_all_prefix')} {academyArticles.length} {tc('academy.browse_all_suffix')}
                   </button>
@@ -444,10 +444,10 @@ export default function AcademyClient() {
           {!isHome && (
             <>
               {/* Breadcrumb */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22, fontSize: 13, color: TX2, flexWrap: 'wrap' }}>
-                <button className="ac-crumb" onClick={goHome} style={{ color: ACC, fontSize: 13, fontWeight: 500 }}>{tc('academy.all_categories')}</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22, fontSize: 11, color: TX2, flexWrap: 'wrap' }}>
+                <button className="ac-crumb" onClick={goHome} style={{ color: ACC, fontSize: 11, fontWeight: 500 }}>{tc('academy.all_categories')}</button>
                 {activeCategory && currentCategory && (
-                  <><span style={{ color: TX3 }}>/</span><button className="ac-crumb" style={{ color: TX, fontWeight: 600, fontSize: 13 }}>{currentCategory.title}</button></>
+                  <><span style={{ color: TX3 }}>/</span><button className="ac-crumb" style={{ color: TX, fontWeight: 600, fontSize: 11 }}>{currentCategory.title}</button></>
                 )}
                 {isSearch && !activeCategory && (
                   <><span style={{ color: TX3 }}>/</span><span style={{ color: TX, fontWeight: 600 }}>“{search}”</span></>
@@ -459,7 +459,7 @@ export default function AcademyClient() {
                 <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
                   {isSearch ? tc('academy.results_for_prefix') + ' “' + search + '”' : currentCategory?.title}
                 </h1>
-                <p style={{ fontSize: 15, color: TX2, margin: 0 }}>
+                <p style={{ fontSize: 13, color: TX2, margin: 0 }}>
                   {displayList.length} {displayList.length !== 1 ? tc('academy.article_plural') : tc('academy.article_singular')}
                   {activeCategory && currentCategory && !isSearch && ' · ' + currentCategory.description}
                 </p>
@@ -468,8 +468,8 @@ export default function AcademyClient() {
               {/* No results */}
               {displayList.length === 0 && (
                 <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <div style={{ fontSize: 14, color: TX2, marginBottom: 16 }}>{tc('academy.no_articles_found')}{isSearch ? ' ' + tc('academy.no_articles_found_for_prefix') + ' “' + search + '”' : ''}.</div>
-                  <button onClick={goHome} style={{ fontSize: 13, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}>
+                  <div style={{ fontSize: 12, color: TX2, marginBottom: 16 }}>{tc('academy.no_articles_found')}{isSearch ? ' ' + tc('academy.no_articles_found_for_prefix') + ' “' + search + '”' : ''}.</div>
+                  <button onClick={goHome} style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}>
                     {tc('academy.back_to_all_categories')}
                   </button>
                 </div>
@@ -488,11 +488,11 @@ export default function AcademyClient() {
                   <button
                     className="ac-more"
                     onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-                    style={{ fontSize: 13, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '9px 24px', fontWeight: 600, display: 'inline-block' }}
+                    style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '9px 24px', fontWeight: 600, display: 'inline-block' }}
                   >
                     {tc('academy.load_prefix')} {Math.min(PAGE_SIZE, displayList.length - visibleCount)} {tc('academy.load_suffix')}
                   </button>
-                  <div style={{ fontSize: 11, color: TX3, marginTop: 8 }}>
+                  <div style={{ fontSize: 9, color: TX3, marginTop: 8 }}>
                     {tc('academy.showing_prefix')} {visibleRows.length} {tc('academy.showing_of')} {displayList.length}
                   </div>
                 </div>
@@ -502,10 +502,10 @@ export default function AcademyClient() {
 
           {/* Footer inside main so it scrolls with content */}
           <footer style={{ borderTop: `1px solid ${BD}`, marginTop: 64, padding: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <span style={{ fontSize: 12, color: TX3 }}>{tc('academy.footer_copyright')}</span>
+            <span style={{ fontSize: 10, color: TX3 }}>{tc('academy.footer_copyright')}</span>
             <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
               {([['/', tc('academy.footer_home')], ['/blog', tc('academy.footer_blog')], ['/help', tc('academy.footer_help')], ['/academy', tc('academy.footer_academy')], ['/rules', tc('academy.footer_rules')], ['/privacy', tc('academy.footer_privacy')]] as [string,string][]).map(([href, label]) => (
-                <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+                <Link key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{label}</Link>
               ))}
             </div>
           </footer>

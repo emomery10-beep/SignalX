@@ -513,14 +513,14 @@ export default function FXRiskModeller() {
 
               <div style={{ background: "#fff8f3", border: "1.5px solid #f0d5b8", borderRadius: 14, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
                 <div>
-                  <div style={{ fontFamily: "var(--font-head)", fontSize: 15, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
+                  <div style={{ fontFamily: "var(--font-head)", fontSize: 13, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
                     Want this calculated automatically on your real data?
                   </div>
-                  <div style={{ fontSize: 13, color: "#6b6760" }}>
+                  <div style={{ fontSize: 11, color: "#6b6760" }}>
                     AskBiz connects to Shopify, Amazon & QuickBooks — no spreadsheets needed.
                   </div>
                 </div>
-                <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+                <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 12, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
                   Try free →
                 </a>
               </div>

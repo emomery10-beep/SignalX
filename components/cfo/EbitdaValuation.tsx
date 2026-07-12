@@ -238,11 +238,11 @@ function EditableValue({ value, autoValue, sym, isOverridden, onSave, onReset, a
     return (
       <td style={{ padding: '4px 0', textAlign: 'right' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{sym}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{sym}</span>
           <input ref={inputRef} type="number" min={0} defaultValue={Math.round(value)}
             onBlur={handleSave}
             onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
-            style={{ width: 90, padding: '4px 6px', borderRadius: 5, border: `1.5px solid ${INDIGO}`, fontSize: 12, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
+            style={{ width: 90, padding: '4px 6px', borderRadius: 5, border: `1.5px solid ${INDIGO}`, fontSize: 10, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
           />
         </div>
       </td>
@@ -253,7 +253,7 @@ function EditableValue({ value, autoValue, sym, isOverridden, onSave, onReset, a
     <td onClick={() => setEditing(true)}
       title={isOverridden ? tc('cfo_ebitda.editable_auto_tooltip', { value: fmtFull(autoValue, sym) }) : tc('cfo_ebitda.editable_tooltip')}
       onContextMenu={e => { if (isOverridden) { e.preventDefault(); onReset() } }}
-      style={{ padding: '6px 0', textAlign: 'right', cursor: 'pointer', fontVariantNumeric: 'tabular-nums', fontSize: 12, color: add && value > 0 ? INDIGO : value < 0 ? RED : 'var(--tx)' }}>
+      style={{ padding: '6px 0', textAlign: 'right', cursor: 'pointer', fontVariantNumeric: 'tabular-nums', fontSize: 10, color: add && value > 0 ? INDIGO : value < 0 ? RED : 'var(--tx)' }}>
       <span style={{ borderBottom: `1px dashed ${isOverridden ? INDIGO : 'var(--tx3)'}`, paddingBottom: 1 }}>
         {add && value > 0 ? '+' : ''}{fmtFull(value, sym)}
       </span>
@@ -286,12 +286,12 @@ function InlineAmount({ value, sym, onChange, placeholder, tc }: {
   if (editing) {
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{sym}</span>
+        <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{sym}</span>
         <input ref={inputRef} type="number" min={0} defaultValue={value || ''}
           placeholder={placeholder || '0'}
           onBlur={save}
           onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
-          style={{ width: 80, padding: '3px 6px', borderRadius: 5, border: `1.5px solid ${INDIGO}`, fontSize: 11, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
+          style={{ width: 80, padding: '3px 6px', borderRadius: 5, border: `1.5px solid ${INDIGO}`, fontSize: 9, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
         />
       </div>
     )
@@ -299,7 +299,7 @@ function InlineAmount({ value, sym, onChange, placeholder, tc }: {
 
   return (
     <span onClick={() => setEditing(true)}
-      style={{ cursor: 'pointer', borderBottom: '1px dashed var(--tx3)', paddingBottom: 1, fontSize: 11, fontVariantNumeric: 'tabular-nums', color: value > 0 ? GREEN : 'var(--tx3)' }}>
+      style={{ cursor: 'pointer', borderBottom: '1px dashed var(--tx3)', paddingBottom: 1, fontSize: 9, fontVariantNumeric: 'tabular-nums', color: value > 0 ? GREEN : 'var(--tx3)' }}>
       {value > 0 ? `+${fmtFull(value, sym)}` : tc('cfo_ebitda.click_to_set')}
     </span>
   )
@@ -314,9 +314,9 @@ function SectionHeader({ color, label, badge, right }: { color: string; label: s
     <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 3, height: 14, borderRadius: 2, background: color }} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{label}</span>
         {badge && (
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>{badge}</span>
+          <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>{badge}</span>
         )}
       </div>
       {right}
@@ -459,9 +459,9 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_ebitda.summary_title')}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_ebitda.summary_title')}</span>
             {ebitda > 0 && (
-              <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
                 background: ebitdaMargin >= 20 ? 'rgba(34,197,94,.1)' : ebitdaMargin >= 10 ? 'rgba(245,158,11,.1)' : 'rgba(239,68,68,.1)',
                 color: ebitdaMargin >= 20 ? GREEN : ebitdaMargin >= 10 ? AMBER : RED }}>
                 {tc('cfo_ebitda.margin_badge', { n: ebitdaMargin.toFixed(1) })}
@@ -482,12 +482,12 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
             </div>
             {hasAnyOverride && (
               <button onClick={() => { setOverrides({}); save({ overrides: {} }) }}
-                style={{ fontSize: 10, color: 'var(--tx3)', background: 'rgba(0,0,0,.04)', border: 'none', borderRadius: 5, padding: '3px 8px', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
+                style={{ fontSize: 9, color: 'var(--tx3)', background: 'rgba(0,0,0,.04)', border: 'none', borderRadius: 5, padding: '3px 8px', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' }}>
                 {tc('cfo_ebitda.reset')}
               </button>
             )}
             <button onClick={() => onAsk(tc('cfo_ebitda.ask_ai_prompt', { ebitda: fmt(ebitda, sym), margin: ebitdaMargin.toFixed(1), adjusted: fmt(adjustedEbitda, sym), sde: fmt(sde, sym), revenue: fmt(totals.revenue, sym), industry: ind.label, quality: Math.round(qualityPct), multiple, valuation: fmt(valuation, sym) }))}
-              style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+              style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
               {tc('cfo_ebitda.ask_ai')}
             </button>
           </div>
@@ -496,44 +496,44 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
         {/* KPI Strip */}
         <div style={{ display: 'grid', gridTemplateColumns: metricMode === 'both' ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: 1, background: 'var(--b)' }}>
           <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_ebitda')}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(ebitda, sym)}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_ebitda')}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(ebitda, sym)}</div>
             {ebitdaChange != null && (
-              <div style={{ fontSize: 10, fontWeight: 600, color: ebitdaChange > 0 ? GREEN : ebitdaChange < 0 ? RED : 'var(--tx3)', marginTop: 2 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: ebitdaChange > 0 ? GREEN : ebitdaChange < 0 ? RED : 'var(--tx3)', marginTop: 2 }}>
                 {ebitdaChange > 0 ? '▲' : ebitdaChange < 0 ? '▼' : '–'} {Math.abs(ebitdaChange).toFixed(1)}%
               </div>
             )}
           </div>
           {(metricMode === 'sde' || metricMode === 'both') && (
             <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_sde')}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: sde >= 0 ? CYAN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(sde, sym)}</div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.kpi_sde_sub')}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_sde')}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: sde >= 0 ? CYAN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(sde, sym)}</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.kpi_sde_sub')}</div>
             </div>
           )}
           <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_margin')}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: ebitdaMargin >= 20 ? GREEN : ebitdaMargin >= 10 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>{ebitdaMargin.toFixed(1)}%</div>
-            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMargin >= 20 ? tc('cfo_ebitda.margin_healthy') : ebitdaMargin >= 10 ? tc('cfo_ebitda.margin_moderate') : tc('cfo_ebitda.margin_needs_attention')}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_margin')}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaMargin >= 20 ? GREEN : ebitdaMargin >= 10 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>{ebitdaMargin.toFixed(1)}%</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMargin >= 20 ? tc('cfo_ebitda.margin_healthy') : ebitdaMargin >= 10 ? tc('cfo_ebitda.margin_moderate') : tc('cfo_ebitda.margin_needs_attention')}</div>
           </div>
           <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_valuation', { n: multiple })}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(valuation, sym)}</div>
-            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.valuation_sub', { label: primaryLabel, n: multiple })}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('cfo_ebitda.kpi_valuation', { n: multiple })}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(valuation, sym)}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.valuation_sub', { label: primaryLabel, n: multiple })}</div>
           </div>
         </div>
 
         {/* EBITDA Breakdown */}
         <div style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>{tc('cfo_ebitda.breakdown_title')}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)' }}>{tc('cfo_ebitda.breakdown_title')}</div>
             <div style={{ fontSize: 9, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_ebitda.breakdown_hint')}</div>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
             <tbody>
               <tr>
-                <td style={{ padding: '6px 0', fontWeight: 700, color: 'var(--tx)', fontSize: 12 }}>{tc('cfo_ebitda.row_net_profit')}</td>
-                <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 700, color: totals.net_profit >= 0 ? 'var(--tx)' : RED, fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>{fmtFull(totals.net_profit, sym)}</td>
+                <td style={{ padding: '6px 0', fontWeight: 700, color: 'var(--tx)', fontSize: 10 }}>{tc('cfo_ebitda.row_net_profit')}</td>
+                <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 700, color: totals.net_profit >= 0 ? 'var(--tx)' : RED, fontVariantNumeric: 'tabular-nums', fontSize: 10 }}>{fmtFull(totals.net_profit, sym)}</td>
               </tr>
               {([['interest', tc('cfo_ebitda.row_interest'), interest, auto.interest] as const,
                 ['tax', tc('cfo_ebitda.row_taxes'), tax, auto.tax] as const,
@@ -541,7 +541,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                 ['amortization', tc('cfo_ebitda.row_amortization'), amortization, auto.amortization] as const,
               ]).map(([key, label, val, autoVal]) => (
                 <tr key={key}>
-                  <td style={{ padding: '6px 0', color: INDIGO, fontSize: 12 }}>
+                  <td style={{ padding: '6px 0', color: INDIGO, fontSize: 10 }}>
                     {label}
                     {overrides[key] == null && <span style={{ fontSize: 8, color: 'var(--tx3)', marginLeft: 4 }}>{tc('cfo_ebitda.est')}</span>}
                   </td>
@@ -550,12 +550,12 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                 </tr>
               ))}
               <tr style={{ borderTop: '2px solid var(--b)' }}>
-                <td style={{ padding: '8px 0', fontWeight: 700, fontSize: 13, color: 'var(--tx)' }}>{tc('cfo_ebitda.row_ebitda_total')}</td>
-                <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, fontSize: 13, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmtFull(ebitda, sym)}</td>
+                <td style={{ padding: '8px 0', fontWeight: 700, fontSize: 11, color: 'var(--tx)' }}>{tc('cfo_ebitda.row_ebitda_total')}</td>
+                <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, fontSize: 11, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmtFull(ebitda, sym)}</td>
               </tr>
             </tbody>
           </table>
-          <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 6, background: 'rgba(99,102,241,.04)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
+          <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 6, background: 'rgba(99,102,241,.04)', fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
             {tc('cfo_ebitda.breakdown_note_prefix')} <span style={{ fontSize: 8, background: 'var(--sf)', padding: '1px 4px', borderRadius: 3, border: '1px solid var(--b)' }}>{tc('cfo_ebitda.est')}</span> {tc('cfo_ebitda.breakdown_note_suffix')}
           </div>
         </div>
@@ -569,7 +569,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           badge={totalAcceptedAddBacks > 0 ? tc('cfo_ebitda.addbacks_badge', { n: fmt(totalAcceptedAddBacks, sym) }) : undefined}
           right={
             <button onClick={() => setShowAddBacks(v => !v)}
-              style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+              style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
               {showAddBacks ? tc('cfo_ebitda.collapse_addbacks') : tc('cfo_ebitda.expand_addbacks')}
             </button>
           }
@@ -579,49 +579,49 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
             <div style={{ padding: 10, borderRadius: 8, border: '1px solid var(--b)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_ebitda.summary_ebitda')}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(ebitda, sym)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(ebitda, sym)}</div>
             </div>
             <div style={{ padding: 10, borderRadius: 8, border: '1px solid var(--b)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_ebitda.summary_addbacks')}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: totalAcceptedAddBacks > 0 ? GREEN : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalAcceptedAddBacks, sym)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: totalAcceptedAddBacks > 0 ? GREEN : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalAcceptedAddBacks, sym)}</div>
             </div>
             <div style={{ padding: 10, borderRadius: 8, border: `1px solid ${GREEN}`, background: 'rgba(34,197,94,.04)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: GREEN, textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_ebitda.summary_adj_ebitda')}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>{fmt(adjustedEbitda, sym)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>{fmt(adjustedEbitda, sym)}</div>
             </div>
           </div>
 
           {showAddBacks && (
             <>
               {/* Accepted add-backs */}
-              <div style={{ fontSize: 10, fontWeight: 600, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                 {tc('cfo_ebitda.accepted_addbacks_heading')}
               </div>
               {ADD_BACK_TEMPLATES.filter(t => t.accepted).map(t => (
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{t.label}</div>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{t.description}</div>
+                    <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx)' }}>{t.label}</div>
+                    <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{t.description}</div>
                   </div>
                   <InlineAmount value={addBacks[t.id] || 0} sym={sym} onChange={v => saveAddBack(t.id, v)} tc={tc} />
                 </div>
               ))}
 
               {/* Rejected add-backs */}
-              <div style={{ fontSize: 10, fontWeight: 600, color: RED, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 16, marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: RED, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 16, marginBottom: 8 }}>
                 {tc('cfo_ebitda.rejected_addbacks_heading')}
               </div>
               {ADD_BACK_TEMPLATES.filter(t => !t.accepted).map(t => (
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--b)', opacity: 0.7 }}>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{t.label}</div>
-                    <div style={{ fontSize: 10, color: RED }}>{t.description}</div>
+                    <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx)' }}>{t.label}</div>
+                    <div style={{ fontSize: 9, color: RED }}>{t.description}</div>
                   </div>
                   <InlineAmount value={addBacks[t.id] || 0} sym={sym} onChange={v => saveAddBack(t.id, v)} tc={tc} />
                 </div>
               ))}
               {totalRejectedAddBacks > 0 && (
-                <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 6, background: 'rgba(239,68,68,.06)', fontSize: 10, color: RED, lineHeight: 1.5 }}>
+                <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 6, background: 'rgba(239,68,68,.06)', fontSize: 9, color: RED, lineHeight: 1.5 }}>
                   {tc('cfo_ebitda.rejected_warning', { n: fmt(totalRejectedAddBacks, sym) })}
                 </div>
               )}
@@ -639,10 +639,10 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
             badge={sde > 0 ? fmt(sde, sym) : undefined}
           />
           <div style={{ padding: '16px 18px' }}>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 12, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 12, lineHeight: 1.6 }}>
               {tc('cfo_ebitda.sde_intro', { sym })}
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
               <tbody>
                 <tr>
                   <td style={{ padding: '6px 0', fontWeight: 600 }}>{tc('cfo_ebitda.sde_row_adj_ebitda')}</td>
@@ -655,12 +655,12 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                   </td>
                 </tr>
                 <tr style={{ borderTop: '2px solid var(--b)' }}>
-                  <td style={{ padding: '8px 0', fontWeight: 700, fontSize: 13 }}>{tc('cfo_ebitda.sde_row_total')}</td>
-                  <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, fontSize: 13, color: sde >= 0 ? CYAN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmtFull(sde, sym)}</td>
+                  <td style={{ padding: '8px 0', fontWeight: 700, fontSize: 11 }}>{tc('cfo_ebitda.sde_row_total')}</td>
+                  <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, fontSize: 11, color: sde >= 0 ? CYAN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmtFull(sde, sym)}</td>
                 </tr>
               </tbody>
             </table>
-            <div style={{ marginTop: 10, padding: '6px 10px', borderRadius: 6, background: 'rgba(6,182,212,.05)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
+            <div style={{ marginTop: 10, padding: '6px 10px', borderRadius: 6, background: 'rgba(6,182,212,.05)', fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
               {tc('cfo_ebitda.sde_note')}
             </div>
           </div>
@@ -675,9 +675,9 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
         <div style={{ padding: '16px 18px' }}>
           {/* Industry selector */}
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('cfo_ebitda.your_industry')}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('cfo_ebitda.your_industry')}</div>
             <select value={industry} onChange={e => saveIndustry(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', fontSize: 12, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', cursor: 'pointer', outline: 'none' }}>
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', fontSize: 10, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', cursor: 'pointer', outline: 'none' }}>
               {INDUSTRIES.map(i => <option key={i.id} value={i.id}>{i.label}</option>)}
             </select>
           </div>
@@ -685,14 +685,14 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           {/* Multiple range visual */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_ebitda.ebitda_multiple')}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{multiple}x</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_ebitda.ebitda_multiple')}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{multiple}x</div>
             </div>
             <input type="range" min={1} max={15} step={0.5} value={multiple} onChange={e => saveMultiple(Number(e.target.value))}
               style={{ width: '100%', accentColor: INDIGO, cursor: 'pointer' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
               <span>1x</span>
-              <span style={{ fontSize: 10, color: INDIGO, fontWeight: 500 }}>
+              <span style={{ fontSize: 9, color: INDIGO, fontWeight: 500 }}>
                 {tc('cfo_ebitda.industry_range_inline', { label: ind.label, low: ind.ebitdaLow, high: ind.ebitdaHigh })}
               </span>
               <span>15x</span>
@@ -708,21 +708,21 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                 left: `calc(${(multiple / 15) * 100}% - 4px)`, border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
               }} />
             </div>
-            {multiple < ind.ebitdaLow && <div style={{ fontSize: 10, color: RED, marginTop: 4 }}>{tc('cfo_ebitda.below_industry_range')}</div>}
-            {multiple > ind.ebitdaHigh && <div style={{ fontSize: 10, color: GREEN, marginTop: 4 }}>{tc('cfo_ebitda.above_industry_range')}</div>}
+            {multiple < ind.ebitdaLow && <div style={{ fontSize: 9, color: RED, marginTop: 4 }}>{tc('cfo_ebitda.below_industry_range')}</div>}
+            {multiple > ind.ebitdaHigh && <div style={{ fontSize: 9, color: GREEN, marginTop: 4 }}>{tc('cfo_ebitda.above_industry_range')}</div>}
           </div>
 
           {/* Valuation Results */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 4 }}>{tc('cfo_ebitda.period_valuation')}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(valuation, sym)}</div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.valuation_sub', { label: primaryLabel, n: multiple })}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(valuation, sym)}</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.valuation_sub', { label: primaryLabel, n: multiple })}</div>
             </div>
             <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 4 }}>{tc('cfo_ebitda.annualized')}</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(annualizedValuation, sym)}</div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.annualized_sub', { value: fmt(annualized, sym), n: multiple })}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(annualizedValuation, sym)}</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_ebitda.annualized_sub', { value: fmt(annualized, sym), n: multiple })}</div>
             </div>
           </div>
 
@@ -732,8 +732,8 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
               {[ind.ebitdaLow, Math.round((ind.ebitdaLow + ind.ebitdaHigh) / 2), ind.ebitdaHigh, 10, 12].map(m => (
                 <div key={m} onClick={() => saveMultiple(m)}
                   style={{ padding: '8px 4px', background: m === multiple ? 'rgba(99,102,241,.08)' : 'var(--sf)', textAlign: 'center', cursor: 'pointer' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: m === multiple ? INDIGO : 'var(--tx3)' }}>{m}x</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: m === multiple ? INDIGO : 'var(--tx)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{fmt(annualized * m, sym)}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: m === multiple ? INDIGO : 'var(--tx3)' }}>{m}x</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: m === multiple ? INDIGO : 'var(--tx)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{fmt(annualized * m, sym)}</div>
                 </div>
               ))}
             </div>
@@ -749,7 +749,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           badge={tc('cfo_ebitda.quality_badge', { pct: Math.round(qualityPct), multiple: suggestedMultiple })}
         />
         <div style={{ padding: '16px 18px' }}>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
             {tc('cfo_ebitda.quality_intro', { low: ind.ebitdaLow, high: ind.ebitdaHigh })}
           </div>
 
@@ -758,8 +758,8 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
             return (
               <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--b)' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{f.label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{f.description}</div>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx)' }}>{f.label}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{f.description}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
                   {[0, 1, 2, 3].map(s => (
@@ -767,7 +767,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                       style={{
                         width: 28, height: 28, borderRadius: 6, border: `1px solid ${score === s ? INDIGO : 'var(--b)'}`,
                         background: score === s ? INDIGO : score >= s ? 'rgba(99,102,241,.1)' : 'var(--sf)',
-                        color: score === s ? '#fff' : 'var(--tx3)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                        color: score === s ? '#fff' : 'var(--tx3)', fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                       }}>
                       {s}
                     </button>
@@ -781,13 +781,13 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: 'rgba(6,182,212,.05)', border: '1px solid rgba(6,182,212,.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_ebitda.quality_score_label', { n: Math.round(qualityPct) })}</div>
-                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_ebitda.quality_score_label', { n: Math.round(qualityPct) })}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
                   {tc('cfo_ebitda.suggested_multiple')} <strong style={{ color: INDIGO }}>{suggestedMultiple}x</strong> {tc('cfo_ebitda.suggested_multiple_range', { label: ind.label })}
                 </div>
               </div>
               <button onClick={() => saveMultiple(suggestedMultiple)}
-                style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+                style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
                 {tc('cfo_ebitda.apply_multiple', { n: suggestedMultiple })}
               </button>
             </div>
@@ -808,14 +808,14 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
       <div style={CARD}>
         <SectionHeader color={INDIGO} label={tc('cfo_ebitda.scenario_section_title')} badge={tc('cfo_ebitda.scenario_badge')} />
         <div style={{ padding: '16px 18px' }}>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 12, lineHeight: 1.5 }}>
             {tc('cfo_ebitda.scenario_intro', { label: primaryLabel })}
           </div>
 
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_ebitda.scenario_change', { label: primaryLabel })}</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: scenarioDelta >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_ebitda.scenario_change', { label: primaryLabel })}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: scenarioDelta >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>
                 {scenarioDelta >= 0 ? '+' : ''}{fmtFull(scenarioDelta, sym)}
               </div>
             </div>
@@ -835,17 +835,17 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 10, alignItems: 'center' }}>
             <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--b)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_ebitda.scenario_current')}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(primaryMetric, sym)}</div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_ebitda.scenario_val', { value: fmt(primaryMetric * multiple, sym) })}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(primaryMetric, sym)}</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_ebitda.scenario_val', { value: fmt(primaryMetric * multiple, sym) })}</div>
             </div>
-            <div style={{ fontSize: 18, color: 'var(--tx3)' }}>→</div>
+            <div style={{ fontSize: 16, color: 'var(--tx3)' }}>→</div>
             <div style={{ padding: 12, borderRadius: 10, border: `1px solid ${scenarioDelta >= 0 ? GREEN : RED}`, background: scenarioDelta >= 0 ? 'rgba(34,197,94,.04)' : 'rgba(239,68,68,.04)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 600, color: scenarioDelta >= 0 ? GREEN : RED, textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_ebitda.scenario_scenario')}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: scenarioDelta >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(scenarioEbitda, sym)}</div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_ebitda.scenario_val', { value: fmt(scenarioValuation, sym) })}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: scenarioDelta >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(scenarioEbitda, sym)}</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_ebitda.scenario_val', { value: fmt(scenarioValuation, sym) })}</div>
             </div>
           </div>
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, fontWeight: 600, color: scenarioDelta >= 0 ? GREEN : RED }}>
+          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 9, fontWeight: 600, color: scenarioDelta >= 0 ? GREEN : RED }}>
             {scenarioDelta >= 0 ? tc('cfo_ebitda.scenario_result_increase', { value: fmt(Math.abs(scenarioValuation - primaryMetric * multiple), sym) }) : tc('cfo_ebitda.scenario_result_decrease', { value: fmt(Math.abs(scenarioValuation - primaryMetric * multiple), sym) })}
           </div>
         </div>
@@ -868,7 +868,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                 link.click()
               } catch {}
             }}
-              style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
+              style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
               </svg>
@@ -877,7 +877,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           }
         />
         <div style={{ padding: '16px 18px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
             <tbody>
               {([
                 [tc('cfo_ebitda.row_revenue'), fmt(totals.revenue, sym)],
@@ -895,14 +895,14 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                 [tc('cfo_ebitda.row_annualized_valuation'), fmt(annualizedValuation, sym)],
               ] as [string, string][]).map(([label, value], i) => (
                 <tr key={i} style={{ borderBottom: '1px solid var(--b)' }}>
-                  <td style={{ padding: '7px 0', color: 'var(--tx3)', fontSize: 11 }}>{label}</td>
+                  <td style={{ padding: '7px 0', color: 'var(--tx3)', fontSize: 9 }}>{label}</td>
                   <td style={{ padding: '7px 0', textAlign: 'right', fontWeight: 600, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{value}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
+          <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 8, background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.15)', fontSize: 9, color: 'var(--tx3)', lineHeight: 1.6 }}>
             <strong style={{ color: AMBER }}>{tc('cfo_ebitda.disclaimer_label')}</strong> {tc('cfo_ebitda.disclaimer_body')}
           </div>
         </div>

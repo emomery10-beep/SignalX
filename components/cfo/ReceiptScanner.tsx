@@ -121,7 +121,7 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)',
+    width: '100%', fontSize: 11, color: 'var(--tx)', background: 'var(--ev)',
     border: '1px solid var(--b)', borderRadius: 8, padding: '8px 10px',
     fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
   }
@@ -131,13 +131,13 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
       {/* Header */}
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 18 }}>📷</span>
+          <span style={{ fontSize: 16 }}>📷</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_receipts.headerTitle')}</div>
-            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_receipts.headerSubtitle')}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_receipts.headerTitle')}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_receipts.headerSubtitle')}</div>
           </div>
         </div>
-        <button onClick={onCancel} style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+        <button onClick={onCancel} style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
       </div>
 
       <div style={{ padding: '18px' }}>
@@ -150,23 +150,23 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
                 onClick={() => cameraInputRef.current?.click()}
                 style={{ padding: '20px', borderRadius: 12, border: `2px dashed ${INDIGO}50`, background: `${INDIGO}06`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'inherit' }}
               >
-                <span style={{ fontSize: 28 }}>📸</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: INDIGO }}>{tc('cfo_receipts.takePhoto')}</span>
-                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_receipts.takePhotoHint')}</span>
+                <span style={{ fontSize: 26 }}>📸</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: INDIGO }}>{tc('cfo_receipts.takePhoto')}</span>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_receipts.takePhotoHint')}</span>
               </button>
               {/* Upload button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 style={{ padding: '20px', borderRadius: 12, border: `2px dashed var(--b)`, background: 'var(--ev)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'inherit' }}
               >
-                <span style={{ fontSize: 28 }}>🗂</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_receipts.uploadFile')}</span>
-                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_receipts.uploadFileHint')}</span>
+                <span style={{ fontSize: 26 }}>🗂</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_receipts.uploadFile')}</span>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_receipts.uploadFileHint')}</span>
               </button>
             </div>
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-            <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5 }}>
               {tc('cfo_receipts.captureFooter')}
             </div>
           </div>
@@ -181,8 +181,8 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
               </div>
             )}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, background: `${INDIGO}10`, border: `1px solid ${INDIGO}30` }}>
-              <span style={{ fontSize: 18, animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
-              <span style={{ fontSize: 12, color: INDIGO, fontWeight: 600 }}>{tc('cfo_receipts.scanningLabel')}</span>
+              <span style={{ fontSize: 16, animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+              <span style={{ fontSize: 10, color: INDIGO, fontWeight: 600 }}>{tc('cfo_receipts.scanningLabel')}</span>
             </div>
             <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
           </div>
@@ -199,10 +199,10 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
 
             {/* Confidence badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-              <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: scanned.confidence >= 80 ? `${GREEN}20` : scanned.confidence >= 60 ? `${YELLOW}20` : `${RED}20`, color: scanned.confidence >= 80 ? GREEN : scanned.confidence >= 60 ? YELLOW : RED }}>
+              <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, background: scanned.confidence >= 80 ? `${GREEN}20` : scanned.confidence >= 60 ? `${YELLOW}20` : `${RED}20`, color: scanned.confidence >= 80 ? GREEN : scanned.confidence >= 60 ? YELLOW : RED }}>
                 {tc('cfo_receipts.confidenceBadge', { n: scanned.confidence })}
               </span>
-              <span style={{ fontSize: 11, color: 'var(--tx3)' }}>
+              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>
                 {scanned.confidence >= 80 ? tc('cfo_receipts.confidenceGood') : scanned.confidence >= 60 ? tc('cfo_receipts.confidencePartial') : tc('cfo_receipts.confidenceLow')}
               </span>
             </div>
@@ -210,26 +210,26 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Vendor */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelVendor')}</label>
+                <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelVendor')}</label>
                 <input value={editedExpense.vendor} onChange={e => setEditedExpense(p => p ? { ...p, vendor: e.target.value } : p)} placeholder={tc('cfo_receipts.placeholderVendor')} style={inputStyle} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                 {/* Date */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelDate')}</label>
+                  <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelDate')}</label>
                   <input type="date" value={editedExpense.date} onChange={e => setEditedExpense(p => p ? { ...p, date: e.target.value } : p)} style={inputStyle} />
                 </div>
                 {/* Amount */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelAmount', { sym })}</label>
+                  <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelAmount', { sym })}</label>
                   <input type="number" min="0" step="0.01" value={editedExpense.amount || ''} onChange={e => setEditedExpense(p => p ? { ...p, amount: Number(e.target.value) } : p)} placeholder="0.00" style={inputStyle} />
                 </div>
               </div>
 
               {/* Category */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelCategory')}</label>
+                <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelCategory')}</label>
                 <select value={editedExpense.category} onChange={e => setEditedExpense(p => p ? { ...p, category: e.target.value } : p)} style={{ ...inputStyle, cursor: 'pointer' }}>
                   {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{tc('cfo_receipts.' + CAT_KEY[c])}</option>)}
                 </select>
@@ -237,20 +237,20 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
 
               {/* Notes */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelNotes')}</label>
+                <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelNotes')}</label>
                 <input value={editedExpense.notes} onChange={e => setEditedExpense(p => p ? { ...p, notes: e.target.value } : p)} placeholder={tc('cfo_receipts.placeholderNotes')} style={inputStyle} />
               </div>
             </div>
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => { setStage('capture'); setPreview(null); setScanned(null) }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={() => { setStage('capture'); setPreview(null); setScanned(null) }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {tc('cfo_receipts.btnScanAgain')}
               </button>
               <button
                 onClick={() => editedExpense && onConfirm(editedExpense)}
                 disabled={!editedExpense?.vendor || !editedExpense?.amount}
-                style={{ flex: 2, padding: '9px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!editedExpense?.vendor || !editedExpense?.amount) ? 0.5 : 1 }}
+                style={{ flex: 2, padding: '9px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!editedExpense?.vendor || !editedExpense?.amount) ? 0.5 : 1 }}
               >
                 {tc('cfo_receipts.btnSaveExpense')}
               </button>
@@ -261,10 +261,10 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
         {/* ERROR STAGE */}
         {stage === 'error' && (
           <div style={{ textAlign: 'center', padding: '10px 0' }}>
-            <div style={{ fontSize: 32, marginBottom: 10 }}>⚠️</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('cfo_receipts.errorTitle')}</div>
-            <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 16 }}>{errorMsg}</div>
-            <button onClick={() => setStage('capture')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <div style={{ fontSize: 30, marginBottom: 10 }}>⚠️</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('cfo_receipts.errorTitle')}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 16 }}>{errorMsg}</div>
+            <button onClick={() => setStage('capture')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
               {tc('cfo_receipts.btnTryAgain')}
             </button>
           </div>

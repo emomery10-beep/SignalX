@@ -48,7 +48,7 @@ function ConvItem({ conv, active }: { conv: { id: string; title?: string }; acti
         padding: '6px 9px',
         borderRadius: 7,
         textDecoration: 'none',
-        fontSize: 16,
+        fontSize: 14,
         color: active ? 'var(--tx)' : 'var(--tx2)',
         background: active ? 'var(--ev)' : 'transparent',
         whiteSpace: 'nowrap',
@@ -114,15 +114,15 @@ function ProfilePanel({ user, onClose, onSignOut }: {
               width: 44, height: 44, borderRadius: '50%',
               background: ACC,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 19, fontWeight: 700, color: '#fff', flexShrink: 0,
+              fontSize: 17, fontWeight: 700, color: '#fff', flexShrink: 0,
             }}>
               {initials}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user.name}
               </div>
-              <div style={{ fontSize: 15, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user.email}
               </div>
             </div>
@@ -142,22 +142,22 @@ function ProfilePanel({ user, onClose, onSignOut }: {
             background: ACC_BG, border: `1px solid ${ACC_BORDER}`,
           }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: ACC }}/>
-            <span style={{ fontSize: 15, fontWeight: 600, color: ACC, textTransform: 'capitalize' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: ACC, textTransform: 'capitalize' }}>
               {user.plan} Plan
             </span>
           </div>
         </div>
 
         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
             AI response style
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 17, color: 'var(--tx2)', flex: 1, paddingRight: 10 }}>Show charts and graphs</span>
+            <span style={{ fontSize: 15, color: 'var(--tx2)', flex: 1, paddingRight: 10 }}>Show charts and graphs</span>
             <Toggle value={includeCharts} onChange={() => setIncludeCharts(v => !v)}/>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 17, color: 'var(--tx2)', flex: 1, paddingRight: 10 }}>Show follow-up suggestions</span>
+            <span style={{ fontSize: 15, color: 'var(--tx2)', flex: 1, paddingRight: 10 }}>Show follow-up suggestions</span>
             <Toggle value={includeFollowUps} onChange={() => setIncludeFollowUps(v => !v)}/>
           </div>
         </div>
@@ -165,13 +165,13 @@ function ProfilePanel({ user, onClose, onSignOut }: {
         <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
             onClick={onSignOut}
-            style={{ padding: '10px', borderRadius: 11, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontFamily: 'inherit', fontSize: 17, cursor: 'pointer' }}
+            style={{ padding: '10px', borderRadius: 11, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontFamily: 'inherit', fontSize: 15, cursor: 'pointer' }}
           >
             Sign out
           </button>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, paddingTop: 4 }}>
-            <a href={localePath('/privacy', lang)} style={{ fontSize: 15, color: 'var(--tx3)', textDecoration: 'none' }}>Privacy</a>
-            <a href={localePath('/terms', lang)} style={{ fontSize: 15, color: 'var(--tx3)', textDecoration: 'none' }}>Terms</a>
+            <a href={localePath('/privacy', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none' }}>Privacy</a>
+            <a href={localePath('/terms', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none' }}>Terms</a>
           </div>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 700, letterSpacing: '-.02em', whiteSpace: 'nowrap' }}>AskBiz</span>
+            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, letterSpacing: '-.02em', whiteSpace: 'nowrap' }}>AskBiz</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
             <NotificationBell />
@@ -327,7 +327,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   padding: '7px 4px', borderRadius: 8,
-                  textDecoration: 'none', fontSize: 16, fontWeight: active ? 600 : 500,
+                  textDecoration: 'none', fontSize: 14, fontWeight: active ? 600 : 500,
                   color: active ? activeColor : 'var(--tx3)',
                   background: 'transparent',
                   transition: 'color 120ms',
@@ -350,7 +350,7 @@ export default function AppShellClient({ user, conversations, children }: {
           {/* New question */}
           <button
             onClick={newChat}
-            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx2)', fontSize: 17, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 2, transition: 'background 120ms' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx2)', fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 2, transition: 'background 120ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
@@ -370,7 +370,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 9,
                   padding: '9px 10px', borderRadius: 10,
-                  textDecoration: 'none', fontSize: 17, fontWeight: 500,
+                  textDecoration: 'none', fontSize: 15, fontWeight: 500,
                   background: active ? ACC_BG : 'transparent',
                   color: active ? ACC : 'var(--tx2)',
                   marginBottom: 2, transition: 'all 120ms',
@@ -390,7 +390,7 @@ export default function AppShellClient({ user, conversations, children }: {
           <button
             onClick={() => setMoreOpen(v => !v)}
             aria-expanded={moreOpen}
-            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx3)', fontSize: 17, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginTop: 2, transition: 'background 120ms' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx3)', fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginTop: 2, transition: 'background 120ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
@@ -413,7 +413,7 @@ export default function AppShellClient({ user, conversations, children }: {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9,
                     padding: '8px 10px', borderRadius: 8,
-                    textDecoration: 'none', fontSize: 16, fontWeight: 400,
+                    textDecoration: 'none', fontSize: 14, fontWeight: 400,
                     background: active ? ACC_BG2 : 'transparent',
                     color: active ? ACC : 'var(--tx3)',
                     marginBottom: 1, transition: 'all 120ms',
@@ -429,7 +429,7 @@ export default function AppShellClient({ user, conversations, children }: {
               )
             })}
             {isAdmin && (
-              <Link href={localePath('/admin', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 16, color: 'var(--tx3)', marginBottom: 1 }}>
+              <Link href={localePath('/admin', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 14, color: 'var(--tx3)', marginBottom: 1 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
                 {tc('appnav.admin')}
               </Link>
@@ -449,7 +449,7 @@ export default function AppShellClient({ user, conversations, children }: {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={tc('appnav.search_placeholder')}
-              style={{ fontFamily: 'inherit', fontSize: 16, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '6px 8px 6px 26px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+              style={{ fontFamily: 'inherit', fontSize: 14, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '6px 8px 6px 26px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
             />
           </div>
         </div>
@@ -461,7 +461,7 @@ export default function AppShellClient({ user, conversations, children }: {
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('appnav.history')}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('appnav.history')}</span>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" style={{ transition: 'transform 200ms', transform: convOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
             <path d="M6 9l6 6 6-6"/>
           </svg>
@@ -472,18 +472,18 @@ export default function AppShellClient({ user, conversations, children }: {
           <div style={{ height: '100%', overflowY: 'auto', padding: '3px 7px' }}>
             {todayConvs.length > 0 && (
               <>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '3px 5px 2px' }}>{tc('appnav.today')}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '3px 5px 2px' }}>{tc('appnav.today')}</div>
                 {todayConvs.map(c => <ConvItem key={c.id} conv={c} active={pathname.includes(c.id)}/>)}
               </>
             )}
             {olderConvs.length > 0 && (
               <>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '5px 5px 2px' }}>{tc('appnav.earlier')}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '5px 5px 2px' }}>{tc('appnav.earlier')}</div>
                 {olderConvs.slice(0, 30).map(c => <ConvItem key={c.id} conv={c} active={pathname.includes(c.id)}/>)}
               </>
             )}
             {conversations.length === 0 && (
-              <div style={{ padding: '12px 8px', fontSize: 16, color: 'var(--tx3)', textAlign: 'center' }}>{tc('appnav.no_conversations')}</div>
+              <div style={{ padding: '12px 8px', fontSize: 14, color: 'var(--tx3)', textAlign: 'center' }}>{tc('appnav.no_conversations')}</div>
             )}
           </div>
         </div>
@@ -497,14 +497,14 @@ export default function AppShellClient({ user, conversations, children }: {
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
                 {initials}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-sora)' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-sora)' }}>
                   {user.name}
                 </div>
-                <div style={{ fontSize: 14, color: 'var(--tx3)', textTransform: 'capitalize' }}>{user.plan} plan</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'capitalize' }}>{user.plan} plan</div>
               </div>
             </div>
             <LanguageToggle compact />
@@ -568,7 +568,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 justifyContent: 'center', gap: 3, textDecoration: 'none',
                 color: active ? activeColor : 'var(--tx3)',
-                fontSize: 14, fontWeight: active ? 600 : 400,
+                fontSize: 12, fontWeight: active ? 600 : 400,
                 transition: 'color 120ms',
                 fontFamily: 'var(--font-dm)',
               }}

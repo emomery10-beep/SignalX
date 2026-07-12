@@ -44,7 +44,7 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
   const btnBase: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '6px 12px', borderRadius: 8,
-    fontSize: 12, fontWeight: 600,
+    fontSize: 10, fontWeight: 600,
     textDecoration: 'none', cursor: 'pointer',
     border: `1px solid ${BD}`, background: SF,
     transition: 'background 120ms, border-color 120ms',
@@ -52,7 +52,7 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 12, color: TX3, fontWeight: 600, marginRight: 2 }}>Share:</span>
+      <span style={{ fontSize: 10, color: TX3, fontWeight: 600, marginRight: 2 }}>Share:</span>
 
       {/* X / Twitter */}
       <a href={twitterUrl} target="_blank" rel="noopener noreferrer" style={{ ...btnBase, color: '#0f1419' }}>

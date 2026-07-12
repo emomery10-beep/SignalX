@@ -87,8 +87,8 @@ export default function TemplatesPage() {
         <div style={{ padding: 'clamp(14px,4vw,22px) clamp(14px,3vw,24px) 14px', borderBottom: '1px solid var(--b)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
             <div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, letterSpacing: '-.025em' }}>{tc('templates.page_title')}</div>
-              <div style={{ fontSize: 17, color: 'var(--tx2)', marginTop: 3 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, letterSpacing: '-.025em' }}>{tc('templates.page_title')}</div>
+              <div style={{ fontSize: 15, color: 'var(--tx2)', marginTop: 3 }}>
                 {loading ? tc('templates.loading') : filtered.length + ' ' + (filtered.length !== 1 ? tc('templates.count_suffix_other') : tc('templates.count_suffix_one'))}
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function TemplatesPage() {
                 placeholder={tc('templates.search_placeholder')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ width: '100%', paddingLeft: 32, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: 17, background: 'var(--bg)', border: '1px solid var(--b2)', borderRadius: 10, color: 'var(--tx)', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                style={{ width: '100%', paddingLeft: 32, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: 15, background: 'var(--bg)', border: '1px solid var(--b2)', borderRadius: 10, color: 'var(--tx)', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -131,9 +131,9 @@ export default function TemplatesPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--tx3)' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
-              <div style={{ fontSize: 19, fontWeight: 600, marginBottom: 6 }}>{tc('templates.empty_title')}</div>
-              <div style={{ fontSize: 17 }}>{tc('templates.empty_desc')}</div>
+              <div style={{ fontSize: 34, marginBottom: 12 }}>🔍</div>
+              <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>{tc('templates.empty_title')}</div>
+              <div style={{ fontSize: 15 }}>{tc('templates.empty_desc')}</div>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 14 }}>
@@ -151,26 +151,26 @@ export default function TemplatesPage() {
                     <div style={{ padding: '16px 18px 12px' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 40, height: 40, borderRadius: 12, background: ac.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 12, background: ac.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
                             {t.icon}
                           </div>
                           <div>
-                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{t.name}</div>
-                            <div style={{ fontSize: 15, color: ac.color, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 1 }}>{t.biz_type}</div>
+                            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>{t.name}</div>
+                            <div style={{ fontSize: 13, color: ac.color, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 1 }}>{t.biz_type}</div>
                           </div>
                         </div>
-                        <div style={{ padding: '3px 9px', borderRadius: 9999, background: ac.bg, fontSize: 15, color: ac.color, fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                        <div style={{ padding: '3px 9px', borderRadius: 9999, background: ac.bg, fontSize: 13, color: ac.color, fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>
                           {t.questions.length} {tc('templates.questions_count')}
                         </div>
                       </div>
 
-                      <div style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 12 }}>{t.description}</div>
+                      <div style={{ fontSize: 15, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 12 }}>{t.description}</div>
 
                       {/* Quick preview of first question */}
                       {!isExpanded && t.questions[0] && (
                         <div
                           onClick={() => useTemplate(t.questions[0])}
-                          style={{ padding: '9px 12px', borderRadius: 10, background: ac.bg, border: `1px solid ${ac.color}33`, cursor: 'pointer', fontSize: 16, color: 'var(--tx)', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, transition: 'opacity 150ms', opacity: usingTemplate === t.questions[0] ? 0.6 : 1 }}
+                          style={{ padding: '9px 12px', borderRadius: 10, background: ac.bg, border: `1px solid ${ac.color}33`, cursor: 'pointer', fontSize: 14, color: 'var(--tx)', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, transition: 'opacity 150ms', opacity: usingTemplate === t.questions[0] ? 0.6 : 1 }}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ac.color} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                           <span style={{ flex: 1 }}>{t.questions[0]}</span>
@@ -179,7 +179,7 @@ export default function TemplatesPage() {
                       )}
 
                       <button onClick={() => setExpanded(isExpanded ? null : t.id)}
-                        style={{ fontSize: 16, color: ac.color, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        style={{ fontSize: 14, color: ac.color, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span>{isExpanded ? tc('templates.hide_questions') : tc('templates.see_all_prefix') + ' ' + t.questions.length + ' ' + tc('templates.see_all_suffix')}</span>
                       </button>
                     </div>
@@ -194,12 +194,12 @@ export default function TemplatesPage() {
                             <div style={{ width: 20, height: 20, borderRadius: 6, background: ac.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={ac.color} strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             </div>
-                            <span style={{ fontSize: 16, color: 'var(--tx)', flex: 1, lineHeight: 1.5 }}>{q}</span>
-                            <span style={{ fontSize: 14, color: ac.color, fontWeight: 600, flexShrink: 0 }}>{tc('templates.use')}</span>
+                            <span style={{ fontSize: 14, color: 'var(--tx)', flex: 1, lineHeight: 1.5 }}>{q}</span>
+                            <span style={{ fontSize: 12, color: ac.color, fontWeight: 600, flexShrink: 0 }}>{tc('templates.use')}</span>
                           </div>
                         ))}
                         <button onClick={() => useTemplate(t.questions[0])}
-                          style={{ width: '100%', marginTop: 10, padding: '10px', borderRadius: 9999, border: 'none', background: ac.color, color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 600, cursor: 'pointer', letterSpacing: '-.01em' }}>
+                          style={{ width: '100%', marginTop: 10, padding: '10px', borderRadius: 9999, border: 'none', background: ac.color, color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer', letterSpacing: '-.01em' }}>
                           {tc('templates.use_first_in_chat')}
                         </button>
                       </div>

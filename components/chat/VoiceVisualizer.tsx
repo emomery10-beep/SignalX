@@ -92,7 +92,7 @@ export default function VoiceVisualizer({ isActive, transcript, analyserNode, on
       {/* Live transcript */}
       <div style={{
         position: 'absolute', bottom: 12, left: 16, right: 52,
-        fontSize: 13, color: 'rgba(148,163,184,0.8)',
+        fontSize: 11, color: 'rgba(148,163,184,0.8)',
         fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         fontFamily: 'var(--font-dm)',
       }}>

@@ -79,9 +79,9 @@ export default function ExpansionPage() {
             { label: tc('expansion.kpi_low_cannibal_label'), value: lowRisk, sub: tc('expansion.kpi_low_cannibal_sub'), color: '#22c55e' },
           ].map((k, i) => (
             <div key={i} style={{ padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, color: k.color }}>{k.value}</div>
-              <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)', marginTop: 2 }}>{k.label}</div>
-              <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2 }}>{k.sub}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, color: k.color }}>{k.value}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginTop: 2 }}>{k.label}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 2 }}>{k.sub}</div>
             </div>
           ))}
         </div>
@@ -95,7 +95,7 @@ export default function ExpansionPage() {
             { key: 'testing', label: tc('expansion.filter_testing', { count: candidates.filter(c => c.status === 'testing').length }) },
           ].map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)}
-              style={{ padding: '6px 14px', borderRadius: 9999, border: `1px solid ${filter === f.key ? 'rgba(208,138,89,.4)' : 'var(--b)'}`, background: filter === f.key ? 'rgba(208,138,89,.1)' : 'transparent', color: filter === f.key ? 'var(--acc)' : 'var(--tx2)', fontFamily: 'inherit', fontSize: 17, cursor: 'pointer', fontWeight: filter === f.key ? 600 : 400 }}>
+              style={{ padding: '6px 14px', borderRadius: 9999, border: `1px solid ${filter === f.key ? 'rgba(208,138,89,.4)' : 'var(--b)'}`, background: filter === f.key ? 'rgba(208,138,89,.1)' : 'transparent', color: filter === f.key ? 'var(--acc)' : 'var(--tx2)', fontFamily: 'inherit', fontSize: 15, cursor: 'pointer', fontWeight: filter === f.key ? 600 : 400 }}>
               {f.label}
             </button>
           ))}
@@ -115,22 +115,22 @@ export default function ExpansionPage() {
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.background = 'var(--sf)' }}>
 
                 {/* Rank */}
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: i === 0 ? 'var(--acc)' : 'var(--ev)', color: i === 0 ? '#fff' : 'var(--tx2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: i === 0 ? 'var(--acc)' : 'var(--ev)', color: i === 0 ? '#fff' : 'var(--tx2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
                   {i + 1}
                 </div>
 
                 {/* Main info */}
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600 }}>{c.candidate_name}</span>
-                    <span style={{ padding: '2px 8px', borderRadius: 9999, background: typeInfo.color, fontSize: 15, fontWeight: 500, color: 'var(--tx2)' }}>
+                    <span style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600 }}>{c.candidate_name}</span>
+                    <span style={{ padding: '2px 8px', borderRadius: 9999, background: typeInfo.color, fontSize: 13, fontWeight: 500, color: 'var(--tx2)' }}>
                       {typeInfo.emoji} {typeInfo.label}
                     </span>
-                    <span style={{ padding: '2px 8px', borderRadius: 9999, background: c.confidence === 'high' ? 'rgba(34,197,94,.1)' : 'rgba(245,197,90,.1)', fontSize: 15, color: c.confidence === 'high' ? '#22c55e' : '#f5c55a' }}>
+                    <span style={{ padding: '2px 8px', borderRadius: 9999, background: c.confidence === 'high' ? 'rgba(34,197,94,.1)' : 'rgba(245,197,90,.1)', fontSize: 13, color: c.confidence === 'high' ? '#22c55e' : '#f5c55a' }}>
                       {tc('expansion.confidence_suffix', { level: c.confidence })}
                     </span>
                   </div>
-                  <div style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.5 }}>{c.why_it_fits}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx2)', lineHeight: 1.5 }}>{c.why_it_fits}</div>
                 </div>
 
                 {/* Metrics */}
@@ -144,25 +144,25 @@ export default function ExpansionPage() {
                           strokeDasharray={`${(c.opportunity_score / 100) * 125.6} 125.6`}
                           strokeLinecap="round" transform="rotate(-90 24 24)"/>
                       </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700 }}>
                         {c.opportunity_score}
                       </div>
                     </div>
-                    <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('expansion.metric_score')}</div>
+                    <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('expansion.metric_score')}</div>
                   </div>
 
                   {/* Margin */}
                   <div style={{ textAlign: 'center', minWidth: 50 }}>
-                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: '#22c55e' }}>{c.estimated_margin_pct}%</div>
-                    <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('expansion.metric_est_margin')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: '#22c55e' }}>{c.estimated_margin_pct}%</div>
+                    <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('expansion.metric_est_margin')}</div>
                   </div>
 
                   {/* Cannibalisation */}
                   <div style={{ textAlign: 'center', minWidth: 60 }}>
-                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, color: RISK_COLOR[c.cannibalization_risk] }}>
+                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: RISK_COLOR[c.cannibalization_risk] }}>
                       {c.cannibalization_risk.charAt(0).toUpperCase() + c.cannibalization_risk.slice(1)}
                     </div>
-                    <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('expansion.metric_cannibal_risk')}</div>
+                    <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('expansion.metric_cannibal_risk')}</div>
                   </div>
 
                   {/* Arrow */}
@@ -176,10 +176,10 @@ export default function ExpansionPage() {
         </div>
 
         {/* Bottom CTA */}
-        <div style={{ padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(208,138,89,.2)', background: 'rgba(208,138,89,.04)', fontSize: 17, color: 'var(--tx2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(208,138,89,.2)', background: 'rgba(208,138,89,.04)', fontSize: 15, color: 'var(--tx2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <span>{tc('expansion.cta_text')}</span>
           <button onClick={() => router.push('/sources')}
-            style={{ padding: '7px 16px', borderRadius: 9999, border: '1px solid var(--acc)', background: 'transparent', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 17, fontWeight: 500, cursor: 'pointer' }}>
+            style={{ padding: '7px 16px', borderRadius: 9999, border: '1px solid var(--acc)', background: 'transparent', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
             {tc('expansion.cta_button')}
           </button>
         </div>

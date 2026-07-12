@@ -226,7 +226,7 @@ export default function ComparePage() {
 
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" style={{ background: 'rgba(249,248,246,.9)', borderBottom: `1px solid ${C.b}`, padding: '0 clamp(16px,4vw,32px)' }}>
-        <ol style={{ listStyle: 'none', margin: 0, padding: '7px 0', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.tx3 }}>
+        <ol style={{ listStyle: 'none', margin: 0, padding: '7px 0', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: C.tx3 }}>
           <li><Link href={localePath('/', locale)} style={{ color: C.tx3, textDecoration: 'none' }}>Home</Link></li>
           <li style={{ margin: '0 2px' }}>›</li>
           <li style={{ color: C.tx2, fontWeight: 500 }}>Compare</li>
@@ -235,12 +235,12 @@ export default function ComparePage() {
 
       {/* Nav */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(249,248,246,.96)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.b}`, padding: '0 clamp(16px,4vw,32px)', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href={localePath('/', locale)} style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 800, color: C.tx, textDecoration: 'none', letterSpacing: '-.03em' }}>
+        <Link href={localePath('/', locale)} style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 800, color: C.tx, textDecoration: 'none', letterSpacing: '-.03em' }}>
           ask<span style={{ color: C.acc }}>biz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link href={localePath('/pricing', locale)} style={{ fontSize: 13, color: C.tx2, textDecoration: 'none', fontWeight: 500 }}>{t('compare.nav_pricing')}</Link>
-          <Link href={localePath('/signin', locale)} style={{ padding: '8px 18px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+          <Link href={localePath('/pricing', locale)} style={{ fontSize: 11, color: C.tx2, textDecoration: 'none', fontWeight: 500 }}>{t('compare.nav_pricing')}</Link>
+          <Link href={localePath('/signin', locale)} style={{ padding: '8px 18px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
             {t('compare.nav_try_free')}
           </Link>
         </div>
@@ -248,7 +248,7 @@ export default function ComparePage() {
 
       {/* Hero */}
       <section style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(56px,8vw,96px) clamp(16px,4vw,40px) clamp(32px,5vw,56px)', textAlign: 'center' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 20 }}>{t('compare.hero_eyebrow')}</p>
+        <p style={{ fontSize: 9, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 20 }}>{t('compare.hero_eyebrow')}</p>
         <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(28px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-.03em', marginBottom: 20, color: C.tx }}>
           {t('compare.hero_h1')}
         </h1>
@@ -259,21 +259,21 @@ export default function ComparePage() {
         {/* Pricing clarity strip */}
         <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', padding: '14px 20px', background: C.greenBg, border: `1px solid rgba(22,163,74,.18)`, borderRadius: 12, marginBottom: 8 }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.green }}>{t('compare.strip_askbiz_name')}</div>
-            <div style={{ fontSize: 12, color: C.tx2 }}>{t('compare.strip_askbiz_price')}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.green }}>{t('compare.strip_askbiz_name')}</div>
+            <div style={{ fontSize: 10, color: C.tx2 }}>{t('compare.strip_askbiz_price')}</div>
           </div>
           <div style={{ width: 1, background: C.b, alignSelf: 'stretch' }} />
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2 }}>{t('compare.strip_shopify_name')}</div>
-            <div style={{ fontSize: 12, color: C.tx3 }}>{t('compare.strip_shopify_price')}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.tx2 }}>{t('compare.strip_shopify_name')}</div>
+            <div style={{ fontSize: 10, color: C.tx3 }}>{t('compare.strip_shopify_price')}</div>
           </div>
           <div style={{ width: 1, background: C.b, alignSelf: 'stretch' }} />
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2 }}>{t('compare.strip_powerbi_name')}</div>
-            <div style={{ fontSize: 12, color: C.tx3 }}>{t('compare.strip_powerbi_price')}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.tx2 }}>{t('compare.strip_powerbi_name')}</div>
+            <div style={{ fontSize: 10, color: C.tx3 }}>{t('compare.strip_powerbi_price')}</div>
           </div>
         </div>
-        <p style={{ fontSize: 11, color: C.tx3, marginTop: 6 }}>
+        <p style={{ fontSize: 9, color: C.tx3, marginTop: 6 }}>
           {t('compare.strip_note')}
         </p>
       </section>
@@ -285,7 +285,7 @@ export default function ComparePage() {
           {/* Header row */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 2fr', background: C.ev, borderBottom: `1px solid ${C.b2}` }}>
             {[t('compare.col_feature'), t('compare.col_askbiz'), t('compare.col_shopify'), t('compare.col_powerbi')].map((h, i) => (
-              <div key={i} style={{ padding: '14px 20px', fontSize: 12, fontWeight: 700, color: i === 1 ? C.acc : C.tx2, letterSpacing: '.06em', textTransform: 'uppercase', borderRight: i < 3 ? `1px solid ${C.b}` : undefined }}>
+              <div key={i} style={{ padding: '14px 20px', fontSize: 10, fontWeight: 700, color: i === 1 ? C.acc : C.tx2, letterSpacing: '.06em', textTransform: 'uppercase', borderRight: i < 3 ? `1px solid ${C.b}` : undefined }}>
                 {h}
               </div>
             ))}
@@ -293,12 +293,12 @@ export default function ComparePage() {
 
           {ROWS.map((row, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 2fr', borderBottom: i < ROWS.length - 1 ? `1px solid ${C.b}` : undefined, background: i % 2 === 0 ? C.sf : C.bg }}>
-              <div style={{ padding: '14px 20px', fontSize: 13, fontWeight: 600, color: C.tx, borderRight: `1px solid ${C.b}` }}>{row.feature}</div>
-              <div style={{ padding: '14px 20px', fontSize: 12, color: C.tx2, lineHeight: 1.55, borderRight: `1px solid ${C.b}`, background: row.askbizWin ? C.accBg : undefined }}>
+              <div style={{ padding: '14px 20px', fontSize: 11, fontWeight: 600, color: C.tx, borderRight: `1px solid ${C.b}` }}>{row.feature}</div>
+              <div style={{ padding: '14px 20px', fontSize: 10, color: C.tx2, lineHeight: 1.55, borderRight: `1px solid ${C.b}`, background: row.askbizWin ? C.accBg : undefined }}>
                 {row.askbiz}
               </div>
-              <div style={{ padding: '14px 20px', fontSize: 12, color: C.tx2, lineHeight: 1.55, borderRight: `1px solid ${C.b}` }}>{row.shopify}</div>
-              <div style={{ padding: '14px 20px', fontSize: 12, color: C.tx2, lineHeight: 1.55 }}>{row.powerbi}</div>
+              <div style={{ padding: '14px 20px', fontSize: 10, color: C.tx2, lineHeight: 1.55, borderRight: `1px solid ${C.b}` }}>{row.shopify}</div>
+              <div style={{ padding: '14px 20px', fontSize: 10, color: C.tx2, lineHeight: 1.55 }}>{row.powerbi}</div>
             </div>
           ))}
         </div>
@@ -307,11 +307,11 @@ export default function ComparePage() {
         <div className="compare-mobile" style={{ display: 'none' }}>
           {ROWS.map((row, i) => (
             <div key={i} style={{ background: C.sf, borderRadius: 10, border: `1px solid ${C.b2}`, padding: '16px', marginBottom: 12 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.tx, marginBottom: 10 }}>{row.feature}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.tx, marginBottom: 10 }}>{row.feature}</div>
               {[[t('compare.col_askbiz'), row.askbiz, true], [t('compare.col_shopify'), row.shopify, false], [t('compare.col_powerbi'), row.powerbi, false]].map(([name, val, isAsk], j) => (
                 <div key={j} style={{ marginBottom: 8, padding: '8px 10px', borderRadius: 7, background: isAsk && row.askbizWin ? C.accBg : C.bg }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: isAsk ? C.acc : C.tx3, marginBottom: 2 }}>{name as string}</div>
-                  <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.5 }}>{val as string}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: isAsk ? C.acc : C.tx3, marginBottom: 2 }}>{name as string}</div>
+                  <div style={{ fontSize: 10, color: C.tx2, lineHeight: 1.5 }}>{val as string}</div>
                 </div>
               ))}
             </div>
@@ -322,22 +322,22 @@ export default function ComparePage() {
       {/* Verdict section */}
       <section style={{ background: C.ev, borderTop: `1px solid ${C.b2}`, borderBottom: `1px solid ${C.b2}`, padding: 'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 16, textAlign: 'center' }}>{t('compare.verdict_eyebrow')}</p>
+          <p style={{ fontSize: 9, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 16, textAlign: 'center' }}>{t('compare.verdict_eyebrow')}</p>
           <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(22px,3vw,36px)', fontWeight: 700, textAlign: 'center', marginBottom: 40, color: C.tx }}>
             {t('compare.verdict_heading')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {VERDICT.map((v, i) => (
               <div key={i} style={{ background: C.sf, borderRadius: 12, border: `1px solid ${C.b2}`, padding: '20px 24px' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2, marginBottom: 12 }}>{t('compare.verdict_if_label')} {v.title}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.tx2, marginBottom: 12 }}>{t('compare.verdict_if_label')} {v.title}</div>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 220, padding: '12px 16px', borderRadius: 9, background: C.greenBg, border: `1px solid rgba(22,163,74,.2)` }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>{t('compare.verdict_use_label')} {v.winner}</div>
-                    <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.55 }}>{v.reason}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: C.green, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>{t('compare.verdict_use_label')} {v.winner}</div>
+                    <div style={{ fontSize: 10, color: C.tx2, lineHeight: 1.55 }}>{v.reason}</div>
                   </div>
                   <div style={{ flex: 1, minWidth: 220, padding: '12px 16px', borderRadius: 9, background: C.redBg, border: `1px solid rgba(220,38,38,.12)` }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: C.red, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>{t('compare.verdict_not_label')} {v.notThis}</div>
-                    <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.55 }}>{v.notReason}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: C.red, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>{t('compare.verdict_not_label')} {v.notThis}</div>
+                    <div style={{ fontSize: 10, color: C.tx2, lineHeight: 1.55 }}>{v.notReason}</div>
                   </div>
                 </div>
               </div>
@@ -352,13 +352,13 @@ export default function ComparePage() {
           <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(22px,3vw,36px)', fontWeight: 700, marginBottom: 14, color: C.tx }}>
             {t('compare.cta_heading')}
           </h2>
-          <p style={{ fontSize: 15, color: C.tx2, lineHeight: 1.7, marginBottom: 28 }}>
+          <p style={{ fontSize: 13, color: C.tx2, lineHeight: 1.7, marginBottom: 28 }}>
             {t('compare.cta_subtitle')}
           </p>
-          <Link href={localePath('/signin?mode=signup', locale)} style={{ display: 'inline-block', padding: '14px 32px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: `0 4px 20px rgba(208,138,89,.3)` }}>
+          <Link href={localePath('/signin?mode=signup', locale)} style={{ display: 'inline-block', padding: '14px 32px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: `0 4px 20px rgba(208,138,89,.3)` }}>
             {t('compare.cta_button')}
           </Link>
-          <p style={{ fontSize: 12, color: C.tx3, marginTop: 12 }}>
+          <p style={{ fontSize: 10, color: C.tx3, marginTop: 12 }}>
             <Link href={localePath('/pricing', locale)} style={{ color: C.acc, textDecoration: 'none' }}>{t('compare.cta_pricing_link')}</Link>
             {' '}·{' '}
             <Link href={localePath('/point-of-sale', locale)} style={{ color: C.tx3, textDecoration: 'none' }}>{t('compare.cta_pos_link')}</Link>
@@ -369,7 +369,7 @@ export default function ComparePage() {
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${C.b}`, padding: '20px clamp(16px,4vw,40px)', display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
         {([['/', t('compare.footer_home')], ['/pricing', t('compare.footer_pricing')], ['/point-of-sale', t('compare.footer_pos')], ['/blog', t('compare.footer_blog')]] as [string, string][]).map(([href, label]) => (
-          <Link key={href} href={localePath(href, locale)} style={{ fontSize: 12, color: C.tx3, textDecoration: 'none' }}>{label}</Link>
+          <Link key={href} href={localePath(href, locale)} style={{ fontSize: 10, color: C.tx3, textDecoration: 'none' }}>{label}</Link>
         ))}
       </footer>
     </div>

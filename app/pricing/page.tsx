@@ -122,11 +122,11 @@ export default function PricingPage() {
               <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
             </svg>
           </div>
-          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LanguageToggle />
-          <Link href={localePath('/signin', locale)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{t('pricing.try_free')} →</Link>
+          <Link href={localePath('/signin', locale)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{t('pricing.try_free')} →</Link>
         </div>
       </nav>
 
@@ -134,14 +134,14 @@ export default function PricingPage() {
 
         {/* ── Header — left-aligned, no centered AI template ── */}
         <div style={{ maxWidth: 560, marginBottom: 52 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: ACC, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 14 }}>{t('pricing.eyebrow')}</p>
+          <p style={{ fontSize: 9, fontWeight: 700, color: ACC, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 14 }}>{t('pricing.eyebrow')}</p>
           <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(28px,3.5vw,44px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 14, lineHeight: 1.08 }}>
             {t('pricing.h1_line1')}<br/>{t('pricing.h1_line2')}
           </h1>
-          <p style={{ fontSize: 15, color: TX2, lineHeight: 1.7, marginBottom: 10 }}>
+          <p style={{ fontSize: 13, color: TX2, lineHeight: 1.7, marginBottom: 10 }}>
             {t('pricing.subtitle')}
           </p>
-          <p style={{ fontSize: 13, color: GREEN, fontWeight: 600 }}>✓ {t('pricing.annual_note')}</p>
+          <p style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>✓ {t('pricing.annual_note')}</p>
         </div>
 
         {/* ── Plans — all equal weight, Growth marked by border only ── */}
@@ -154,15 +154,15 @@ export default function PricingPage() {
               padding: '28px 24px',
             }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: TX }}>{plan.name}</span>
-                {plan.primary && <span style={{ fontSize: 11, fontWeight: 600, color: ACC }}>{t('pricing.most_used')}</span>}
+                <span style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX }}>{plan.name}</span>
+                {plan.primary && <span style={{ fontSize: 9, fontWeight: 600, color: ACC }}>{t('pricing.most_used')}</span>}
               </div>
-              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 26, fontWeight: 700, color: plan.primary ? ACC : TX, marginBottom: 12 }}>
+              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 24, fontWeight: 700, color: plan.primary ? ACC : TX, marginBottom: 12 }}>
                 {plan.label}
               </div>
-              <p style={{ fontSize: 13, color: TX2, lineHeight: 1.6, marginBottom: 20, minHeight: 60 }}>{plan.description}</p>
+              <p style={{ fontSize: 11, color: TX2, lineHeight: 1.6, marginBottom: 20, minHeight: 60 }}>{plan.description}</p>
               <Link href={localePath(plan.ctaHref, locale)} style={{
-                display: 'block', textAlign: 'center', fontSize: 14, fontWeight: 700,
+                display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 700,
                 color: plan.primary ? SF : TX,
                 background: plan.primary ? ACC : 'transparent',
                 border: plan.primary ? 'none' : `1.5px solid ${TX3}`,
@@ -170,14 +170,14 @@ export default function PricingPage() {
               }}>
                 {plan.cta} →
               </Link>
-              <p style={{ fontSize: 11, color: TX3, textAlign: 'center', marginBottom: 20 }}>{plan.note}</p>
+              <p style={{ fontSize: 9, color: TX3, textAlign: 'center', marginBottom: 20 }}>{plan.note}</p>
               <div style={{ borderTop: `1px solid ${BD}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {plan.features.map((f, i) => (
                   <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    <span style={{ fontSize: 13, color: TX2, lineHeight: 1.4 }}>{f}</span>
+                    <span style={{ fontSize: 11, color: TX2, lineHeight: 1.4 }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -188,13 +188,13 @@ export default function PricingPage() {
         {/* ── PoS Add-on — horizontal strip, no floating pill ── */}
         <div className="pos-addon" style={{ background: `${ACC}07`, border: `1px solid ${BD}`, borderTop: `2px solid ${ACC}`, borderRadius: 12, padding: '24px 28px', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: ACC, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 10 }}>{t('pricing.addon_label')}</div>
-            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 4 }}>{t('pricing.addon_title')}</div>
-            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 28, fontWeight: 700, color: ACC, marginBottom: 12 }}>£5 <span style={{ fontSize: 14, fontWeight: 400, color: TX3 }}>{t('pricing.addon_per_seat')}</span></div>
-            <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 18 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: ACC, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 10 }}>{t('pricing.addon_label')}</div>
+            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>{t('pricing.addon_title')}</div>
+            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 26, fontWeight: 700, color: ACC, marginBottom: 12 }}>£5 <span style={{ fontSize: 12, fontWeight: 400, color: TX3 }}>{t('pricing.addon_per_seat')}</span></div>
+            <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 18 }}>
               {t('pricing.addon_desc')}
             </p>
-            <Link href={localePath('/signin', locale)} style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 8, padding: '9px 20px', textDecoration: 'none' }}>{t('pricing.addon_cta')} →</Link>
+            <Link href={localePath('/signin', locale)} style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 8, padding: '9px 20px', textDecoration: 'none' }}>{t('pricing.addon_cta')} →</Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
@@ -206,8 +206,8 @@ export default function PricingPage() {
               [t('pricing.addon_feat_accounting_t'), t('pricing.addon_feat_accounting_d')],
             ].map(([label, desc], i) => (
               <div key={i}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: TX, marginBottom: 2 }}>{label}</div>
-                <div style={{ fontSize: 11, color: TX3, lineHeight: 1.4 }}>{desc}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: TX, marginBottom: 2 }}>{label}</div>
+                <div style={{ fontSize: 9, color: TX3, lineHeight: 1.4 }}>{desc}</div>
               </div>
             ))}
           </div>
@@ -216,15 +216,15 @@ export default function PricingPage() {
         {/* ── Enterprise ── */}
         <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 72 }}>
           <div>
-            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 3 }}>{t('pricing.enterprise_title')}</div>
-            <div style={{ fontSize: 13, color: TX2 }}>{t('pricing.enterprise_desc')}</div>
+            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX, marginBottom: 3 }}>{t('pricing.enterprise_title')}</div>
+            <div style={{ fontSize: 11, color: TX2 }}>{t('pricing.enterprise_desc')}</div>
           </div>
-          <Link href={localePath('/help', locale)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: TX, borderRadius: 8, padding: '9px 20px', textDecoration: 'none', whiteSpace: 'nowrap' }}>{t('pricing.enterprise_cta')}</Link>
+          <Link href={localePath('/help', locale)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: TX, borderRadius: 8, padding: '9px 20px', textDecoration: 'none', whiteSpace: 'nowrap' }}>{t('pricing.enterprise_cta')}</Link>
         </div>
 
         {/* ── What's included — clean list, no emoji icon grid ── */}
         <div style={{ marginBottom: 72 }}>
-          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 28, letterSpacing: '-.02em' }}>{t('pricing.included_title')}</h2>
+          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 28, letterSpacing: '-.02em' }}>{t('pricing.included_title')}</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 48px' }}>
             {[
               [t('pricing.inc_dashboards_t'), t('pricing.inc_dashboards_d')],
@@ -245,8 +245,8 @@ export default function PricingPage() {
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 <div>
-                  <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX }}>{title}</span>
-                  <span style={{ fontSize: 13, color: TX3 }}> — {desc}</span>
+                  <span style={{ fontFamily: 'Sora, system-ui', fontSize: 11, fontWeight: 700, color: TX }}>{title}</span>
+                  <span style={{ fontSize: 11, color: TX3 }}> — {desc}</span>
                 </div>
               </div>
             ))}
@@ -255,12 +255,12 @@ export default function PricingPage() {
 
         {/* ── FAQs ── */}
         <div style={{ marginBottom: 72 }}>
-          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 24, letterSpacing: '-.02em' }}>{t('pricing.faq_title')}</h2>
+          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 24, letterSpacing: '-.02em' }}>{t('pricing.faq_title')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
               <div key={i} style={{ borderTop: i === 0 ? `1px solid ${BD}` : 'none', borderBottom: `1px solid ${BD}`, padding: '20px 0' }}>
-                <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 8 }}>{faq.q}</div>
-                <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: 0 }}>{faq.a}</p>
+                <div style={{ fontFamily: 'Sora, system-ui', fontSize: 12, fontWeight: 700, color: TX, marginBottom: 8 }}>{faq.q}</div>
+                <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, margin: 0 }}>{faq.a}</p>
               </div>
             ))}
           </div>
@@ -272,8 +272,8 @@ export default function PricingPage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
-            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 6 }}>{t('pricing.guarantee_title')}</div>
-            <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: 0, maxWidth: 560 }}>
+            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX, marginBottom: 6 }}>{t('pricing.guarantee_title')}</div>
+            <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, margin: 0, maxWidth: 560 }}>
               {t('pricing.guarantee_desc')}
             </p>
           </div>
@@ -282,20 +282,20 @@ export default function PricingPage() {
         {/* ── Bottom CTA — editorial strip, not a rounded dark card ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24, padding: '32px 0', borderTop: `2px solid ${TX}` }}>
           <div>
-            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 22, fontWeight: 700, color: TX, marginBottom: 6, letterSpacing: '-.02em' }}>{t('pricing.cta_title')}</h2>
-            <p style={{ fontSize: 14, color: TX2, margin: 0 }}>{t('pricing.cta_desc')}</p>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 6, letterSpacing: '-.02em' }}>{t('pricing.cta_title')}</h2>
+            <p style={{ fontSize: 12, color: TX2, margin: 0 }}>{t('pricing.cta_desc')}</p>
           </div>
-          <Link href={localePath('/signin', locale)} style={{ fontSize: 15, fontWeight: 700, color: SF, background: ACC, borderRadius: 10, padding: '14px 32px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          <Link href={localePath('/signin', locale)} style={{ fontSize: 13, fontWeight: 700, color: SF, background: ACC, borderRadius: 10, padding: '14px 32px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
             {t('pricing.cta_button')} →
           </Link>
         </div>
       </div>
 
       <footer style={{ borderTop: `1px solid ${BD}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: SF, marginTop: 48 }}>
-        <span style={{ fontSize: 12, color: TX3 }}>{t('pricing.footer_copy')}</span>
+        <span style={{ fontSize: 10, color: TX3 }}>{t('pricing.footer_copy')}</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {([['/', 'home'], ['/help', 'help'], ['/privacy', 'privacy'], ['/terms', 'terms']] as [string, string][]).map(([href, key]) => (
-            <Link key={href} href={localePath(href, locale)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{t('nav.' + key)}</Link>
+            <Link key={href} href={localePath(href, locale)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{t('nav.' + key)}</Link>
           ))}
         </div>
       </footer>

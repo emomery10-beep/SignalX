@@ -7,18 +7,18 @@ import { localePath } from '@/lib/i18n-locale'
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 44 }}>
-      <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid rgba(208,138,89,.3)' }}>{title}</h2>
+      <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid rgba(208,138,89,.3)' }}>{title}</h2>
       {children}
     </div>
   )
 }
 
 function P({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <p style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 12, ...style }}>{children}</p>
+  return <p style={{ fontSize: 13, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 12, ...style }}>{children}</p>
 }
 
 function Li({ children }: { children: React.ReactNode }) {
-  return <li style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 6 }}>{children}</li>
+  return <li style={{ fontSize: 13, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 6 }}>{children}</li>
 }
 
 function buildSubprocessors(tc: (key: string) => string): [string, string, string][] {
@@ -39,16 +39,16 @@ export default function DpaPage() {
 
         {lang !== 'en' && (
           <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
-            <Link href={localePath('/dpa', lang)} style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
+            <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
+            <Link href={localePath('/dpa', lang)} style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
           </div>
         )}
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <Link href={localePath('/privacy', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('dpa.back_to_privacy')}</Link>
-          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('dpa.title')}</h1>
-          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('dpa.meta')}</p>
+          <Link href={localePath('/privacy', lang)} style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('dpa.back_to_privacy')}</Link>
+          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('dpa.title')}</h1>
+          <p style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('dpa.meta')}</p>
         </div>
 
         <Section title={tc('dpa.s1_title')}>
@@ -91,9 +91,9 @@ export default function DpaPage() {
 
         <Section title={tc('dpa.s6_title')}>
           <P>{tc('dpa.s6_p1')}</P>
-          <P style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('dpa.s6_note')}</P>
+          <P style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('dpa.s6_note')}</P>
           <div style={{ overflowX: 'auto', marginTop: 14 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
                   {[tc('dpa.s6_col_subprocessor'), tc('dpa.s6_col_purpose'), tc('dpa.s6_col_region')].map(h => (

@@ -153,7 +153,7 @@ const cardStyle: React.CSSProperties = {
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
-  fontSize: 11,
+  fontSize: 9,
   fontWeight: 700,
   color: 'var(--tx3)',
   textTransform: 'uppercase',
@@ -165,7 +165,7 @@ const thStyle: React.CSSProperties = {
 }
 
 const tdStyle: React.CSSProperties = {
-  fontSize: 13,
+  fontSize: 11,
   color: 'var(--tx)',
   padding: '10px 12px',
   borderBottom: '1px solid var(--b)',
@@ -190,7 +190,7 @@ function StatusBadge({ status, label }: { status: JobStatus; label: string }) {
         display: 'inline-block',
         padding: '2px 10px',
         borderRadius: 999,
-        fontSize: 11,
+        fontSize: 9,
         fontWeight: 700,
         color,
         background: `${color}1a`,
@@ -318,8 +318,8 @@ export default function RepairTab({
 
   if (loading) {
     return (
-      <div style={{ padding: 48, textAlign: 'center', color: 'var(--tx3)', fontSize: 14 }}>
-        <div style={{ fontSize: 28, marginBottom: 8 }}>🔧</div>
+      <div style={{ padding: 48, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>
+        <div style={{ fontSize: 26, marginBottom: 8 }}>🔧</div>
         {tc('pos_repair.loadingRepair')}
       </div>
     )
@@ -329,10 +329,10 @@ export default function RepairTab({
     <div style={{ paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 22 }}>🔧</span>
+        <span style={{ fontSize: 20 }}>🔧</span>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{tc('pos_repair.heading')}</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{tc('pos_repair.heading')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
             {tc('pos_repair.ticketsTracked', { n: jobs.length })}
             {selectedLocation && selectedLocation !== 'all' ? tc('pos_repair.filteredByLocation') : ''}
           </div>
@@ -346,7 +346,7 @@ export default function RepairTab({
             borderColor: `${RED}55`,
             background: `${RED}0d`,
             color: RED,
-            fontSize: 13,
+            fontSize: 11,
             marginBottom: 16,
           }}
         >
@@ -372,7 +372,7 @@ export default function RepairTab({
               onClick={() => setSubTab(t.id)}
               style={{
                 padding: '10px 16px',
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: active ? 700 : 500,
                 color: active ? INDIGO : 'var(--tx2)',
                 background: 'transparent',
@@ -425,11 +425,11 @@ function KpiCard({
         transition: 'outline .1s',
       }}
     >
-      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.04em' }}>
         {label}
       </div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: color || 'var(--tx)' }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 24, fontWeight: 800, color: color || 'var(--tx)' }}>{value}</div>
+      {sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
     </div>
   )
 }
@@ -446,7 +446,7 @@ function DonutChart({ segments, noDataLabel, jobsLabel }: { segments: { label: s
   let offset = 0
 
   if (total === 0) {
-    return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{noDataLabel}</div>
+    return <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 20 }}>{noDataLabel}</div>
   }
 
   return (
@@ -486,7 +486,7 @@ function DonutChart({ segments, noDataLabel, jobsLabel }: { segments: { label: s
         {segments
           .filter((s) => s.value > 0)
           .map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10 }}>
               <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color, display: 'inline-block' }} />
               <span style={{ color: 'var(--tx2)' }}>{s.label}</span>
               <span style={{ color: 'var(--tx)', fontWeight: 700, marginLeft: 'auto' }}>{s.value}</span>
@@ -510,7 +510,7 @@ function LineChart({ points, color, unit, noDataLabel }: { points: { label: stri
   const valid = points.filter((p) => p.value > 0)
 
   if (valid.length < 2) {
-    return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{noDataLabel}</div>
+    return <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 20 }}>{noDataLabel}</div>
   }
 
   const max = Math.max(...points.map((p) => p.value), 1)
@@ -570,28 +570,28 @@ function CompareBars({
 }) {
   const max = Math.max(...rows.map((r) => Math.max(r.revenue, r.parts)), 1)
   if (rows.every((r) => r.revenue === 0 && r.parts === 0)) {
-    return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{noDataLabel}</div>
+    return <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 20 }}>{noDataLabel}</div>
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--tx3)' }}>
+      <div style={{ display: 'flex', gap: 16, fontSize: 9, color: 'var(--tx3)' }}>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, background: GREEN, borderRadius: 2, marginRight: 4 }} />{legendRevenue}</span>
         <span><span style={{ display: 'inline-block', width: 10, height: 10, background: AMBER, borderRadius: 2, marginRight: 4 }} />{legendPartsCost}</span>
       </div>
       {rows.map((r, i) => (
         <div key={i}>
-          <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 4 }}>{r.label}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx2)', marginBottom: 4 }}>{r.label}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
             <div style={{ flex: 1, height: 14, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ width: `${(r.revenue / max) * 100}%`, height: '100%', background: GREEN }} />
             </div>
-            <span style={{ fontSize: 11, color: 'var(--tx2)', width: 90, textAlign: 'right' }}>{fmt(currencySymbol, r.revenue)}</span>
+            <span style={{ fontSize: 9, color: 'var(--tx2)', width: 90, textAlign: 'right' }}>{fmt(currencySymbol, r.revenue)}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ flex: 1, height: 14, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ width: `${(r.parts / max) * 100}%`, height: '100%', background: AMBER }} />
             </div>
-            <span style={{ fontSize: 11, color: 'var(--tx2)', width: 90, textAlign: 'right' }}>{fmt(currencySymbol, r.parts)}</span>
+            <span style={{ fontSize: 9, color: 'var(--tx2)', width: 90, textAlign: 'right' }}>{fmt(currencySymbol, r.parts)}</span>
           </div>
         </div>
       ))}
@@ -700,7 +700,7 @@ function OverviewSub({ jobs, currencySymbol, statusMeta }: { jobs: ServiceJob[];
   if (jobs.length === 0) {
     return (
       <div style={{ ...cardStyle, textAlign: 'center', padding: 48, color: 'var(--tx3)' }}>
-        <div style={{ fontSize: 28, marginBottom: 8 }}>🔧</div>
+        <div style={{ fontSize: 26, marginBottom: 8 }}>🔧</div>
         {tc('pos_repair.noRepairTickets')}
       </div>
     )
@@ -721,23 +721,23 @@ function OverviewSub({ jobs, currencySymbol, statusMeta }: { jobs: ServiceJob[];
       {/* Charts row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
         <div style={cardStyle}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.chartJobsByStatus')}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.chartJobsByStatus')}</div>
           <DonutChart segments={statusSegments} noDataLabel={tc('pos_repair.noJobsToChart')} jobsLabel={tc('pos_repair.donutJobsLabel')} />
         </div>
         <div style={cardStyle}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.chartAvgTurnaround')}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.chartAvgTurnaround')}</div>
           <LineChart points={trend} color={INDIGO} unit={tc('pos_repair.chartTurnaroundUnit')} noDataLabel={tc('pos_repair.notEnoughTrend')} />
         </div>
       </div>
 
       <div style={cardStyle}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.chartRevenueVsParts')}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.chartRevenueVsParts')}</div>
         <CompareBars rows={compareRows} currencySymbol={currencySymbol} legendRevenue={tc('pos_repair.legendRevenue')} legendPartsCost={tc('pos_repair.legendPartsCost')} noDataLabel={tc('pos_repair.noRevenueData')} />
       </div>
 
       {/* Overdue alert */}
       <div style={{ ...cardStyle, borderColor: overdue.length ? `${RED}55` : 'var(--b)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: overdue.length ? RED : 'var(--tx)', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: overdue.length ? RED : 'var(--tx)', marginBottom: 12 }}>
           {overdue.length
             ? (overdue.length > 1
                 ? tc('pos_repair.overdueJobsPlural', { n: overdue.length })
@@ -747,7 +747,7 @@ function OverviewSub({ jobs, currencySymbol, statusMeta }: { jobs: ServiceJob[];
         {overdue.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {overdue.slice(0, 8).map((j) => (
-              <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>
+              <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>
                 <span style={{ color: 'var(--tx)', fontWeight: 600 }}>{j.device_model || j.device_type || tc('pos_repair.overdueDevice')}</span>
                 <span style={{ color: 'var(--tx3)' }}>{j.customer_name || '—'}</span>
                 <StatusBadge status={j.status} label={statusMeta[j.status]?.label ?? j.status} />
@@ -780,10 +780,10 @@ function TicketDetail({ job, parts, currencySymbol, statusMeta }: { job: Service
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
         {/* Timeline */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.ticketDetailTimelineHeading')}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.ticketDetailTimelineHeading')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {timeline.map((t, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12 }}>
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10 }}>
                 <span style={{ width: 8, height: 8, borderRadius: 999, background: INDIGO, display: 'inline-block' }} />
                 <span style={{ color: 'var(--tx)' }}>{t.label}</span>
                 <span style={{ marginLeft: 'auto', color: 'var(--tx3)' }}>{dateTime(t.date)}</span>
@@ -793,8 +793,8 @@ function TicketDetail({ job, parts, currencySymbol, statusMeta }: { job: Service
         </div>
         {/* Cost breakdown */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.ticketDetailCostBreakdown')}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.ticketDetailCostBreakdown')}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10 }}>
             <Row k={tc('pos_repair.ticketDetailCostEstimated')} v={fmt(currencySymbol, job.estimated_cost || 0)} />
             <Row k={tc('pos_repair.ticketDetailCostParts')} v={fmt(currencySymbol, job.parts_cost || 0)} />
             <Row k={tc('pos_repair.ticketDetailCostLabor')} v={fmt(currencySymbol, Math.max(0, labor))} />
@@ -803,27 +803,27 @@ function TicketDetail({ job, parts, currencySymbol, statusMeta }: { job: Service
         </div>
         {/* Parts used */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.ticketDetailPartsUsed')}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.ticketDetailPartsUsed')}</div>
           {usedParts.length ? (
             usedParts.map((p) => (
-              <div key={p.id} style={{ fontSize: 12, color: 'var(--tx)', marginBottom: 3 }}>
+              <div key={p.id} style={{ fontSize: 10, color: 'var(--tx)', marginBottom: 3 }}>
                 • {p.name} {p.sku ? <span style={{ color: 'var(--tx3)' }}>({p.sku})</span> : null}
               </div>
             ))
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_repair.ticketDetailNoPartsRecorded')}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_repair.ticketDetailNoPartsRecorded')}</div>
           )}
         </div>
       </div>
       {job.notes && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_repair.ticketDetailNotes')}</div>
-          <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>{job.notes}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_repair.ticketDetailNotes')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx2)', lineHeight: 1.5 }}>{job.notes}</div>
         </div>
       )}
       {Array.isArray(job.photos) && job.photos.length > 0 && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_repair.ticketDetailPhotos')}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos_repair.ticketDetailPhotos')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {job.photos.map((p, i) => (
               <img key={i} src={p} alt={`photo ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--b)' }} />
@@ -925,7 +925,7 @@ function TicketsSub({
   }
 
   const selectStyle: React.CSSProperties = {
-    padding: '6px 10px', fontSize: 12, borderRadius: 8, border: '1px solid var(--b)',
+    padding: '6px 10px', fontSize: 10, borderRadius: 8, border: '1px solid var(--b)',
     background: 'var(--sf)', color: 'var(--tx)',
   }
 
@@ -939,7 +939,7 @@ function TicketsSub({
               key={v}
               onClick={() => setView(v)}
               style={{
-                padding: '6px 14px', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
+                padding: '6px 14px', fontSize: 10, fontWeight: 600, border: 'none', cursor: 'pointer',
                 background: view === v ? INDIGO : 'var(--sf)', color: view === v ? '#fff' : 'var(--tx2)',
               }}
             >
@@ -976,7 +976,7 @@ function TicketsSub({
         <input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} style={selectStyle} />
       </div>
 
-      <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
+      <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
         {sorted.length === 1 ? tc('pos_repair.ticketCountSingular') : tc('pos_repair.ticketCountPlural', { n: sorted.length })}
       </div>
 
@@ -990,8 +990,8 @@ function TicketsSub({
               <div key={status} style={{ minWidth: 220, width: 220, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 999, background: statusMeta[status].color }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{statusMeta[status].label}</span>
-                  <span style={{ fontSize: 11, color: 'var(--tx3)', marginLeft: 'auto' }}>{col.length}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{statusMeta[status].label}</span>
+                  <span style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 'auto' }}>{col.length}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {col.map((j) => (
@@ -1005,11 +1005,11 @@ function TicketsSub({
                         boxShadow: '0 1px 3px rgba(0,0,0,.06)',
                       }}
                     >
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
                         {j.device_model || j.device_type || tc('pos_repair.overdueDevice')}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 6 }}>{j.customer_name || '—'}</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)' }}>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 6 }}>{j.customer_name || '—'}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--tx2)' }}>
                         <span>{j.engineer || tc('pos_repair.kanbanUnassigned')}</span>
                         <span>{daysBetween(j.created_at, isCompleted(j) ? j.completed_at || j.updated_at : undefined)}d</span>
                       </div>
@@ -1041,7 +1041,7 @@ function TicketsSub({
                 {sorted.map((j) => (
                   <Fragment key={j.id}>
                     <tr onClick={() => setExpanded(expanded === j.id ? null : j.id)} style={{ cursor: 'pointer' }}>
-                      <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: 'var(--tx3)' }}>#{String(j.id).slice(0, 8)}</td>
+                      <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 9, color: 'var(--tx3)' }}>#{String(j.id).slice(0, 8)}</td>
                       <td style={tdStyle}>{j.device_model || j.device_type || '—'}</td>
                       <td style={tdStyle}>{j.customer_name || '—'}</td>
                       <td style={tdStyle}><StatusBadge status={j.status} label={statusMeta[j.status]?.label ?? j.status} /></td>
@@ -1169,7 +1169,7 @@ function EngineersSub({
               {sorted.map((e) => (
                 <Fragment key={e.id}>
                   <tr onClick={() => setExpanded(expanded === e.id ? null : e.id)} style={{ cursor: 'pointer' }}>
-                    <td style={{ ...tdStyle, fontWeight: 700 }}>{e.name}{e.active > 10 && <span style={{ color: RED, fontSize: 11, marginLeft: 6 }}>{tc('pos_repair.engineerOverloaded')}</span>}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700 }}>{e.name}{e.active > 10 && <span style={{ color: RED, fontSize: 9, marginLeft: 6 }}>{tc('pos_repair.engineerOverloaded')}</span>}</td>
                     <td style={tdStyle}>{e.active}</td>
                     <td style={tdStyle}>{e.completed30}</td>
                     <td style={{ ...tdStyle, color: e.avgTurn <= 2 ? GREEN : e.avgTurn <= 5 ? AMBER : RED }}>{e.avgTurn.toFixed(1)}d</td>
@@ -1182,22 +1182,22 @@ function EngineersSub({
                         <div style={{ padding: '14px 16px', background: 'var(--ev)', borderTop: '1px solid var(--b)' }}>
                           {e.skills.length > 0 && (
                             <div style={{ marginBottom: 12 }}>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginRight: 8 }}>{tc('pos_repair.engineerSkills')}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginRight: 8 }}>{tc('pos_repair.engineerSkills')}</span>
                               {e.skills.map((s: string, i: number) => (
-                                <span key={i} style={{ fontSize: 11, color: INDIGO, background: `${INDIGO}1a`, padding: '2px 8px', borderRadius: 999, marginRight: 6 }}>{s}</span>
+                                <span key={i} style={{ fontSize: 9, color: INDIGO, background: `${INDIGO}1a`, padding: '2px 8px', borderRadius: 999, marginRight: 6 }}>{s}</span>
                               ))}
                             </div>
                           )}
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.engineerRecentJobs')}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.engineerRecentJobs')}</div>
                           {e.recent.length ? e.recent.map((j) => (
-                            <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 6 }}>
+                            <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 10, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 6 }}>
                               <span style={{ color: 'var(--tx)', fontWeight: 600 }}>{j.device_model || j.device_type}</span>
                               <span style={{ color: 'var(--tx3)' }}>{j.customer_name || '—'}</span>
                               <StatusBadge status={j.status} label={statusMeta[j.status]?.label ?? j.status} />
                               <span style={{ marginLeft: 'auto', color: 'var(--tx2)' }}>{fmt(currencySymbol, jobRevenue(j))}</span>
                               <span style={{ color: 'var(--tx3)' }}>{shortDate(j.completed_at || j.updated_at)}</span>
                             </div>
-                          )) : <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_repair.engineerNoCompletedJobs')}</div>}
+                          )) : <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_repair.engineerNoCompletedJobs')}</div>}
                         </div>
                       </td>
                     </tr>
@@ -1211,15 +1211,15 @@ function EngineersSub({
 
       {/* Workload distribution */}
       <div style={cardStyle}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.workloadDistribution')}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.workloadDistribution')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {rows.map((e) => (
             <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 120, fontSize: 12, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</span>
+              <span style={{ width: 120, fontSize: 10, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</span>
               <div style={{ flex: 1, height: 16, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
                 <div style={{ width: `${(e.active / maxActive) * 100}%`, height: '100%', background: e.active > 10 ? RED : INDIGO }} />
               </div>
-              <span style={{ width: 32, textAlign: 'right', fontSize: 12, fontWeight: 700, color: e.active > 10 ? RED : 'var(--tx)' }}>{e.active}</span>
+              <span style={{ width: 32, textAlign: 'right', fontSize: 10, fontWeight: 700, color: e.active > 10 ? RED : 'var(--tx)' }}>{e.active}</span>
             </div>
           ))}
         </div>
@@ -1343,8 +1343,8 @@ function PartsSub({
                 return (
                   <Fragment key={p.id}>
                     <tr onClick={() => setExpanded(expanded === p.id ? null : p.id)} style={{ cursor: 'pointer', background: low ? `${RED}0d` : undefined }}>
-                      <td style={{ ...tdStyle, fontWeight: 600 }}>{p.name || '—'}{low && <span style={{ color: RED, fontSize: 11, marginLeft: 6 }}>{tc('pos_repair.partLowStock')}</span>}</td>
-                      <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: 'var(--tx3)' }}>{p.sku || '—'}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600 }}>{p.name || '—'}{low && <span style={{ color: RED, fontSize: 9, marginLeft: 6 }}>{tc('pos_repair.partLowStock')}</span>}</td>
+                      <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 9, color: 'var(--tx3)' }}>{p.sku || '—'}</td>
                       <td style={{ ...tdStyle, color: low ? RED : 'var(--tx)', fontWeight: low ? 700 : 400 }}>{p.stock_qty ?? '—'}</td>
                       <td style={{ ...tdStyle, textAlign: 'right' }}>{fmt(currencySymbol, p.cost || 0)}</td>
                       <td style={tdStyle}>{p.reorder_point ?? '—'}</td>
@@ -1355,15 +1355,15 @@ function PartsSub({
                       <tr>
                         <td colSpan={7} style={{ padding: 0 }}>
                           <div style={{ padding: '14px 16px', background: 'var(--ev)', borderTop: '1px solid var(--b)' }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.partRecentlyUsedIn')}</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.partRecentlyUsedIn')}</div>
                             {jobsUsingPart(p.id).length ? jobsUsingPart(p.id).slice(0, 8).map((j) => (
-                              <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, marginBottom: 5 }}>
+                              <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 10, marginBottom: 5 }}>
                                 <span style={{ color: 'var(--tx)' }}>{j.device_model || j.device_type}</span>
                                 <span style={{ color: 'var(--tx3)' }}>{j.customer_name || '—'}</span>
                                 <StatusBadge status={j.status} label={statusMeta[j.status]?.label ?? j.status} />
                                 <span style={{ marginLeft: 'auto', color: 'var(--tx3)' }}>{shortDate(j.created_at)}</span>
                               </div>
-                            )) : <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_repair.partNoLinkedJobs')}</div>}
+                            )) : <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_repair.partNoLinkedJobs')}</div>}
                           </div>
                         </td>
                       </tr>
@@ -1378,7 +1378,7 @@ function PartsSub({
 
       {/* Parts cost trend */}
       <div style={cardStyle}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.partsSpendPerWeek')}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.partsSpendPerWeek')}</div>
         <LineChart points={weekTrend} color={AMBER} unit={currencySymbol} noDataLabel={tc('pos_repair.notEnoughTrend')} />
       </div>
     </div>
@@ -1468,17 +1468,17 @@ function CustomersSub({ jobs, currencySymbol, statusMeta }: { jobs: ServiceJob[]
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Top customers */}
       <div style={cardStyle}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('pos_repair.topCustomersBySpend')}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('pos_repair.topCustomersBySpend')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {topByCustomer.map((c) => {
             const max = topByCustomer[0]?.spend || 1
             return (
               <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 140, fontSize: 12, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                <span style={{ width: 140, fontSize: 10, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
                 <div style={{ flex: 1, height: 14, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
                   <div style={{ width: `${(c.spend / max) * 100}%`, height: '100%', background: INDIGO }} />
                 </div>
-                <span style={{ width: 90, textAlign: 'right', fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.spend)}</span>
+                <span style={{ width: 90, textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.spend)}</span>
               </div>
             )
           })}
@@ -1489,7 +1489,7 @@ function CustomersSub({ jobs, currencySymbol, statusMeta }: { jobs: ServiceJob[]
         placeholder={tc('pos_repair.searchCustomersPlaceholder')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ padding: '8px 12px', fontSize: 13, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)' }}
+        style={{ padding: '8px 12px', fontSize: 11, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)' }}
       />
 
       <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
@@ -1520,9 +1520,9 @@ function CustomersSub({ jobs, currencySymbol, statusMeta }: { jobs: ServiceJob[]
                     <tr>
                       <td colSpan={6} style={{ padding: 0 }}>
                         <div style={{ padding: '14px 16px', background: 'var(--ev)', borderTop: '1px solid var(--b)' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.repairHistory', { n: c.history.length })}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_repair.repairHistory', { n: c.history.length })}</div>
                           {c.history.map((j) => (
-                            <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 6 }}>
+                            <div key={j.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 10, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 6 }}>
                               <span style={{ color: 'var(--tx)', fontWeight: 600 }}>{j.device_model || j.device_type}</span>
                               <span style={{ color: 'var(--tx3)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.issue_description || ''}</span>
                               <StatusBadge status={j.status} label={statusMeta[j.status]?.label ?? j.status} />
@@ -1627,41 +1627,41 @@ function WarrantySub({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Warranty rate by repair type */}
       <div style={cardStyle}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.warrantyReturnRateByType')}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>{tc('pos_repair.warrantyReturnRateByType')}</div>
         {byType.length ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {byType.map((x) => (
               <div key={x.type} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 130, fontSize: 12, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.type}</span>
+                <span style={{ width: 130, fontSize: 10, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.type}</span>
                 <div style={{ flex: 1, height: 14, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
                   <div style={{ width: `${(x.rate / maxRate) * 100}%`, height: '100%', background: x.rate > 12 ? RED : x.rate > 5 ? AMBER : GREEN }} />
                 </div>
-                <span style={{ width: 100, textAlign: 'right', fontSize: 12, color: 'var(--tx2)' }}>{x.rate.toFixed(1)}% ({x.returns}/{x.total})</span>
+                <span style={{ width: 100, textAlign: 'right', fontSize: 10, color: 'var(--tx2)' }}>{x.rate.toFixed(1)}% ({x.returns}/{x.total})</span>
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_repair.noCompletedRepairs')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_repair.noCompletedRepairs')}</div>
         )}
       </div>
 
       {/* Expiring soon */}
       <div style={{ ...cardStyle, borderColor: expiringSoon.length ? `${AMBER}55` : 'var(--b)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: expiringSoon.length ? AMBER : 'var(--tx)', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: expiringSoon.length ? AMBER : 'var(--tx)', marginBottom: 12 }}>
           {tc('pos_repair.expiringIn30Days', { n: expiringSoon.length })}
         </div>
         {expiringSoon.length ? expiringSoon.map((w) => (
-          <div key={w.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 6 }}>
+          <div key={w.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 10, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 6 }}>
             <span style={{ color: 'var(--tx)', fontWeight: 600 }}>{w.device}</span>
             <span style={{ color: 'var(--tx3)' }}>{w.customer}</span>
             <span style={{ marginLeft: 'auto', color: AMBER, fontWeight: 700 }}>{tc('pos_repair.daysLeft', { n: daysUntil(w.expiry) })}</span>
           </div>
-        )) : <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_repair.nothingExpiringSoon')}</div>}
+        )) : <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_repair.nothingExpiringSoon')}</div>}
       </div>
 
       {/* Active warranties */}
       <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', padding: '14px 16px 8px' }}>{tc('pos_repair.activeWarrantiesHeading', { n: active.length })}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', padding: '14px 16px 8px' }}>{tc('pos_repair.activeWarrantiesHeading', { n: active.length })}</div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -1679,7 +1679,7 @@ function WarrantySub({
                 const d = daysUntil(w.expiry)
                 return (
                   <tr key={w.id}>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: 'var(--tx3)' }}>#{String(w.id).slice(0, 8)}</td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 9, color: 'var(--tx3)' }}>#{String(w.id).slice(0, 8)}</td>
                     <td style={tdStyle}>{w.customer}</td>
                     <td style={tdStyle}>{w.device}</td>
                     <td style={{ ...tdStyle, color: 'var(--tx2)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.repairType}</td>
@@ -1697,7 +1697,7 @@ function WarrantySub({
 
       {/* Warranty claims */}
       <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', padding: '14px 16px 8px' }}>{tc('pos_repair.warrantyClaimsHeading', { n: claims.length })}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', padding: '14px 16px 8px' }}>{tc('pos_repair.warrantyClaimsHeading', { n: claims.length })}</div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -1712,11 +1712,11 @@ function WarrantySub({
             <tbody>
               {claims.length ? claims.map((w) => (
                 <tr key={w.id}>
-                  <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: 'var(--tx3)' }}>#{String(w.id).slice(0, 8)}</td>
+                  <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 9, color: 'var(--tx3)' }}>#{String(w.id).slice(0, 8)}</td>
                   <td style={tdStyle}>{w.customer}</td>
                   <td style={tdStyle}>{w.device}</td>
                   <td style={{ ...tdStyle, color: 'var(--tx2)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.repairType}</td>
-                  <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11, color: INDIGO }}>{w.original ? `#${String(w.original).slice(0, 8)}` : '—'}</td>
+                  <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 9, color: INDIGO }}>{w.original ? `#${String(w.original).slice(0, 8)}` : '—'}</td>
                 </tr>
               )) : (
                 <tr><td colSpan={5} style={{ ...tdStyle, textAlign: 'center', color: 'var(--tx3)' }}>{tc('pos_repair.noWarrantyClaims')}</td></tr>

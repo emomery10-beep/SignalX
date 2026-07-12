@@ -105,18 +105,18 @@ export default function CandidateDetailPage() {
       {/* Header */}
       <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--b)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <button onClick={() => router.back()}
-          style={{ padding: '6px 12px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+          style={{ padding: '6px 12px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
           {tc('page_expansion_id.backButton')}
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 600 }}>{c.candidate_name}</div>
-          <div style={{ fontSize: 17, color: 'var(--tx2)', marginTop: 2 }}>{tc('page_expansion_id.headerSubtitle')}</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 600 }}>{c.candidate_name}</div>
+          <div style={{ fontSize: 15, color: 'var(--tx2)', marginTop: 2 }}>{tc('page_expansion_id.headerSubtitle')}</div>
         </div>
         {/* Status buttons */}
         <div style={{ display: 'flex', gap: 8 }}>
           {['shortlisted', 'testing', 'launched', 'rejected'].map(s => (
             <button key={s} onClick={() => updateStatus(s)} disabled={saving}
-              style={{ padding: '6px 14px', borderRadius: 9999, border: `1px solid ${status === s ? 'rgba(208,138,89,.4)' : 'var(--b)'}`, background: status === s ? 'rgba(208,138,89,.1)' : 'transparent', color: status === s ? 'var(--acc)' : 'var(--tx2)', fontFamily: 'inherit', fontSize: 16, cursor: 'pointer', fontWeight: status === s ? 600 : 400, textTransform: 'capitalize' }}>
+              style={{ padding: '6px 14px', borderRadius: 9999, border: `1px solid ${status === s ? 'rgba(208,138,89,.4)' : 'var(--b)'}`, background: status === s ? 'rgba(208,138,89,.1)' : 'transparent', color: status === s ? 'var(--acc)' : 'var(--tx2)', fontFamily: 'inherit', fontSize: 14, cursor: 'pointer', fontWeight: status === s ? 600 : 400, textTransform: 'capitalize' }}>
               {s}
             </button>
           ))}
@@ -136,15 +136,15 @@ export default function CandidateDetailPage() {
             { label: tc('page_expansion_id.metricRecoverIn'), value: tc('page_expansion_id.metricRecoverInValue').replace('{months}', String(c.financial.months_to_recover)), color: 'var(--tx)' },
           ].map((m, i) => (
             <div key={i} style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: m.color }}>{m.value}</div>
-              <div style={{ fontSize: 16, color: 'var(--tx2)', marginTop: 3 }}>{m.label}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: m.color }}>{m.value}</div>
+              <div style={{ fontSize: 14, color: 'var(--tx2)', marginTop: 3 }}>{m.label}</div>
             </div>
           ))}
         </div>
 
         {/* Why this */}
         <Card title={tc('page_expansion_id.cardWhyProduct')}>
-          <p style={{ fontSize: 18, lineHeight: 1.7, color: 'var(--tx2)' }}>{c.why_it_fits}</p>
+          <p style={{ fontSize: 16, lineHeight: 1.7, color: 'var(--tx2)' }}>{c.why_it_fits}</p>
         </Card>
 
         {/* Evidence */}
@@ -157,9 +157,9 @@ export default function CandidateDetailPage() {
               { icon: '👥', label: tc('page_expansion_id.evidenceCustomerFitLabel'), text: c.evidence.customer_fit },
             ].map((e, i) => (
               <div key={i} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>{e.icon}</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', marginBottom: 5 }}>{e.label}</div>
-                <div style={{ fontSize: 17, color: 'var(--tx2)', lineHeight: 1.6 }}>{e.text}</div>
+                <div style={{ fontSize: 18, marginBottom: 6 }}>{e.icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 5 }}>{e.label}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx2)', lineHeight: 1.6 }}>{e.text}</div>
               </div>
             ))}
           </div>
@@ -169,15 +169,15 @@ export default function CandidateDetailPage() {
         <Card title={tc('page_expansion_id.cardCannibalisationRisk')}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             <div style={{ padding: '10px 18px', borderRadius: 12, background: RISK_BG[c.cannibalization.risk_level], flexShrink: 0, textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, color: RISK_COLOR[c.cannibalization.risk_level] }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: RISK_COLOR[c.cannibalization.risk_level] }}>
                 {c.cannibalization.risk_level.toUpperCase()}
               </div>
-              <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2 }}>{tc('page_expansion_id.riskLevelLabel')}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 2 }}>{tc('page_expansion_id.riskLevelLabel')}</div>
             </div>
             <div>
-              <p style={{ fontSize: 18, lineHeight: 1.7, color: 'var(--tx2)', marginBottom: 8 }}>{c.cannibalization.explanation}</p>
+              <p style={{ fontSize: 16, lineHeight: 1.7, color: 'var(--tx2)', marginBottom: 8 }}>{c.cannibalization.explanation}</p>
               {c.cannibalization.affected_skus.length > 0 && (
-                <div style={{ fontSize: 17, color: 'var(--tx3)' }}>{tc('page_expansion_id.affectedSkusLabel').replace('{skus}', c.cannibalization.affected_skus.join(', '))}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('page_expansion_id.affectedSkusLabel').replace('{skus}', c.cannibalization.affected_skus.join(', '))}</div>
               )}
             </div>
           </div>
@@ -195,13 +195,13 @@ export default function CandidateDetailPage() {
               { key: 'returnRatePct', label: tc('page_expansion_id.simFieldReturnRate'), min: 0, max: 20, step: 0.5 },
             ].map(f => (
               <div key={f.key}>
-                <label style={{ fontSize: 16, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
+                <label style={{ fontSize: 14, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="range" min={f.min} max={f.max} step={f.step}
                     value={simInputs[f.key as keyof typeof simInputs]}
                     onChange={e => setSimInputs(prev => ({ ...prev, [f.key]: Number(e.target.value) }))}
                     style={{ flex: 1, accentColor: 'var(--acc)' }}/>
-                  <span style={{ fontSize: 17, fontWeight: 600, minWidth: 40, textAlign: 'right' }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, minWidth: 40, textAlign: 'right' }}>
                     {simInputs[f.key as keyof typeof simInputs]}
                   </span>
                 </div>
@@ -209,7 +209,7 @@ export default function CandidateDetailPage() {
             ))}
           </div>
           <button onClick={runSimulator}
-            style={{ padding: '9px 20px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 600, cursor: 'pointer', marginBottom: 16 }}>
+            style={{ padding: '9px 20px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: 16 }}>
             {tc('page_expansion_id.recalculateButton')}
           </button>
           {simResult && (
@@ -222,7 +222,7 @@ export default function CandidateDetailPage() {
               ].map((r, i) => (
                 <div key={i} style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev)', gridColumn: r.wide ? '1 / -1' : undefined }}>
                   <div style={{ fontFamily: 'var(--font-sora)', fontSize: r.wide ? 14 : 18, fontWeight: 700, color: r.color }}>{r.value}</div>
-                  <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2 }}>{r.label}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 2 }}>{r.label}</div>
                 </div>
               ))}
             </div>
@@ -241,9 +241,9 @@ export default function CandidateDetailPage() {
               { icon: '💰', label: tc('page_expansion_id.launchSuggestedPrice'), value: c.financial.suggested_price_range },
             ].map((l, i) => (
               <div key={i} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)' }}>
-                <div style={{ fontSize: 18, marginBottom: 5 }}>{l.icon}</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{l.label}</div>
-                <div style={{ fontSize: 17, color: 'var(--tx)', lineHeight: 1.5 }}>{l.value}</div>
+                <div style={{ fontSize: 16, marginBottom: 5 }}>{l.icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{l.label}</div>
+                <div style={{ fontSize: 15, color: 'var(--tx)', lineHeight: 1.5 }}>{l.value}</div>
               </div>
             ))}
           </div>
@@ -253,7 +253,7 @@ export default function CandidateDetailPage() {
         <Card title={tc('page_expansion_id.cardRiskFlags')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {c.risks.map((r, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(245,197,90,.25)', background: 'rgba(245,197,90,.06)', fontSize: 17, color: 'var(--tx2)', lineHeight: 1.55 }}>
+              <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(245,197,90,.25)', background: 'rgba(245,197,90,.06)', fontSize: 15, color: 'var(--tx2)', lineHeight: 1.55 }}>
                 <span style={{ color: '#f5c55a', flexShrink: 0 }}>⚠</span> {r}
               </div>
             ))}
@@ -263,11 +263,11 @@ export default function CandidateDetailPage() {
         {/* Chat CTA */}
         <div style={{ padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(208,138,89,.2)', background: 'rgba(208,138,89,.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 3 }}>{tc('page_expansion_id.ctaHeading')}</div>
-            <div style={{ fontSize: 17, color: 'var(--tx2)' }}>{tc('page_expansion_id.ctaBody')}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 3 }}>{tc('page_expansion_id.ctaHeading')}</div>
+            <div style={{ fontSize: 15, color: 'var(--tx2)' }}>{tc('page_expansion_id.ctaBody')}</div>
           </div>
           <button onClick={() => router.push('/chat')}
-            style={{ padding: '8px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 600, cursor: 'pointer' }}>
+            style={{ padding: '8px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
             {tc('page_expansion_id.ctaButton')}
           </button>
         </div>
@@ -280,7 +280,7 @@ export default function CandidateDetailPage() {
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>{title}</div>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 600 }}>{title}</div>
       <div style={{ padding: '16px 18px' }}>{children}</div>
     </div>
   )

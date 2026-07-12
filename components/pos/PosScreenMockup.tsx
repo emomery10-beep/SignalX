@@ -36,8 +36,8 @@ function buildTabLabels(tc: (k: string) => string): Record<Screen, string> {
 function KpiCard({ label, value, sub, color = green }: { label: string; value: string; sub?: string; color?: string }) {
   return (
     <div style={{ background: sf, border: `1px solid ${b}`, borderRadius: 8, padding: '12px 14px', flex: 1 }}>
-      <div style={{ fontSize: 10, color: tx3, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 9, color: tx3, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: 9, color: sub.startsWith('↑') ? green : red, marginTop: 3 }}>{sub}</div>}
     </div>
   )
@@ -83,9 +83,9 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         </div>
       </div>
       <div style={{ background: `${red}08`, border: `1px solid ${red}20`, borderRadius: 7, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 16 }}>⚠️</span>
+        <span style={{ fontSize: 14 }}>⚠️</span>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: red }}>{tc('pos_screenmockup.lowStockAlert')}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: red }}>{tc('pos_screenmockup.lowStockAlert')}</div>
           <div style={{ fontSize: 9, color: tx2 }}>{tc('pos_screenmockup.lowStockDetail')}</div>
         </div>
       </div>
@@ -97,8 +97,8 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
       {/* Product panel */}
       <div style={{ flex: 1, borderRight: `1px solid ${b}`, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: bg, border: `1px solid ${b}`, borderRadius: 6 }}>
-          <span style={{ fontSize: 12 }}>🔍</span>
-          <span style={{ fontSize: 10, color: tx3 }}>{tc('pos_screenmockup.registerSearch')}</span>
+          <span style={{ fontSize: 10 }}>🔍</span>
+          <span style={{ fontSize: 9, color: tx3 }}>{tc('pos_screenmockup.registerSearch')}</span>
         </div>
         {[
           { name: 'Argan Oil 30ml', price: 'KSh 150', sku: 'ARG-001', stock: 20 },
@@ -107,11 +107,11 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         ].map((p, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: sf, border: `1px solid ${b}`, borderRadius: 7 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: tx }}>{p.name}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: tx }}>{p.name}</div>
               <div style={{ fontSize: 9, color: tx3 }}>{p.sku} · {tc('pos_screenmockup.registerStockLabel', { stock: p.stock })}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: tx }}>{p.price}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: tx }}>{p.price}</span>
               <button style={{ fontSize: 9, background: acc, color: '#fff', border: 'none', borderRadius: 4, padding: '3px 8px', cursor: 'default' }}>{tc('pos_screenmockup.registerAddBtn')}</button>
             </div>
           </div>
@@ -119,16 +119,16 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
       </div>
       {/* Basket panel */}
       <div style={{ width: 140, padding: '12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.basketTitle')}</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.basketTitle')}</div>
         {[
           { name: 'Argan Oil 30ml', qty: 2, price: 'KSh 300' },
           { name: 'Banadir Coffee', qty: 1, price: 'KSh 100' },
         ].map((item, i) => (
           <div key={i} style={{ padding: '6px 8px', background: bg, border: `1px solid ${b}`, borderRadius: 6 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: tx }}>{item.name}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: tx }}>{item.name}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
               <span style={{ fontSize: 9, color: tx3 }}>× {item.qty}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: tx }}>{item.price}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: tx }}>{item.price}</span>
             </div>
           </div>
         ))}
@@ -139,14 +139,14 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: tx2, marginBottom: 4 }}>
             <span>{tc('pos_screenmockup.basketTax')}</span><span>KSh 64</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 800, color: tx }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 800, color: tx }}>
             <span>{tc('pos_screenmockup.basketTotal')}</span><span>KSh 464</span>
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 4 }}>
-          <button style={{ padding: '7px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: 'default' }}>{tc('pos_screenmockup.payBtnCash')}</button>
-          <button style={{ padding: '7px', background: acc, color: '#fff', border: 'none', borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: 'default' }}>{tc('pos_screenmockup.payBtnCard')}</button>
-          <button style={{ padding: '7px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 10, fontWeight: 700, cursor: 'default' }}>{tc('pos_screenmockup.payBtnMobile')}</button>
+          <button style={{ padding: '7px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, fontSize: 9, fontWeight: 700, cursor: 'default' }}>{tc('pos_screenmockup.payBtnCash')}</button>
+          <button style={{ padding: '7px', background: acc, color: '#fff', border: 'none', borderRadius: 6, fontSize: 9, fontWeight: 700, cursor: 'default' }}>{tc('pos_screenmockup.payBtnCard')}</button>
+          <button style={{ padding: '7px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 9, fontWeight: 700, cursor: 'default' }}>{tc('pos_screenmockup.payBtnMobile')}</button>
         </div>
       </div>
     </div>
@@ -155,7 +155,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
   if (screen === 'inventory') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, color: tx2 }}>{tc('pos_screenmockup.inventoryProductCount')}</span>
+        <span style={{ fontSize: 9, color: tx2 }}>{tc('pos_screenmockup.inventoryProductCount')}</span>
         <div style={{ display: 'flex', gap: 6 }}>
           <button style={{ fontSize: 9, padding: '4px 8px', border: `1px solid ${b}`, borderRadius: 5, background: sf, cursor: 'default', color: tx2 }}>{tc('pos_screenmockup.inventoryScanBtn')}</button>
           <button style={{ fontSize: 9, padding: '4px 8px', border: 'none', borderRadius: 5, background: acc, color: '#fff', cursor: 'default', fontWeight: 600 }}>{tc('pos_screenmockup.inventoryAddBtn')}</button>
@@ -183,12 +183,12 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         ].map((p, i) => (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 0, padding: '8px 10px', borderBottom: i < 3 ? `1px solid ${b}` : 'none', background: p.low ? `${red}04` : 'transparent' }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: tx }}>{p.name}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: tx }}>{p.name}</div>
               <div style={{ fontSize: 8, color: tx3 }}>{p.tag}</div>
             </div>
-            <div style={{ fontSize: 10, color: tx, alignSelf: 'center' }}>{p.price}</div>
-            <div style={{ fontSize: 10, color: green, alignSelf: 'center' }}>{p.cost}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: p.low ? red : tx, alignSelf: 'center' }}>{p.stock}</div>
+            <div style={{ fontSize: 9, color: tx, alignSelf: 'center' }}>{p.price}</div>
+            <div style={{ fontSize: 9, color: green, alignSelf: 'center' }}>{p.cost}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: p.low ? red : tx, alignSelf: 'center' }}>{p.stock}</div>
           </div>
         ))}
       </div>
@@ -222,7 +222,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < 2 ? `1px solid ${b}` : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 9, fontWeight: 700, color: acc }}>#{i+1}</span>
-              <span style={{ fontSize: 10, color: tx }}>{p.name}</span>
+              <span style={{ fontSize: 9, color: tx }}>{p.name}</span>
             </div>
             <div style={{ display: 'flex', gap: 10, fontSize: 9, color: tx2 }}>
               <span>{p.units} units</span>
@@ -242,7 +242,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
   if (screen === 'staff') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, color: tx2 }}>{tc('pos_screenmockup.staffSeatsUsed')}</span>
+        <span style={{ fontSize: 9, color: tx2 }}>{tc('pos_screenmockup.staffSeatsUsed')}</span>
         <button style={{ fontSize: 9, padding: '5px 10px', background: red, color: '#fff', border: 'none', borderRadius: 5, cursor: 'default', fontWeight: 600 }}>{tc('pos_screenmockup.staffUpgradeBtn')}</button>
       </div>
       {[
@@ -250,10 +250,10 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         { name: 'james', role: 'inventory', tag: 'retail', branch: 'town', last: '18/05/2026', color: '#2563eb' },
       ].map((s, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: sf, border: `1px solid ${b}`, borderRadius: 8 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${acc}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: acc }}>{s.name[0].toUpperCase()}</div>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${acc}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11, color: acc }}>{s.name[0].toUpperCase()}</div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: tx }}>{s.name}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: tx }}>{s.name}</span>
               <StatusBadge label="retail" color={green} />
             </div>
             <div style={{ fontSize: 9, color: tx3 }}>{s.role} · {s.branch} · {tc('pos_screenmockup.staffPinSet')} · {tc('pos_screenmockup.staffLastLogin', { date: s.last })}</div>
@@ -265,9 +265,9 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         </div>
       ))}
       <div style={{ background: `${green}08`, border: `1px solid ${green}25`, borderRadius: 7, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 14 }}>✅</span>
+        <span style={{ fontSize: 12 }}>✅</span>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: green }}>{tc('pos_screenmockup.staffLiveTitle')}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: green }}>{tc('pos_screenmockup.staffLiveTitle')}</div>
           <div style={{ fontSize: 9, color: tx2 }}>{tc('pos_screenmockup.staffLiveDetail')}</div>
         </div>
       </div>
@@ -276,7 +276,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
 
   if (screen === 'retail') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.retailOpsTitle')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.retailOpsTitle')}</div>
       <div style={{ fontSize: 9, color: tx2, marginBottom: 4 }}>{tc('pos_screenmockup.retailOpsSubtitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
         {[
@@ -289,8 +289,8 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         ].map((tile, i) => (
           <div key={i} style={{ background: sf, border: `1px solid ${b}`, borderRadius: 8, padding: '10px 10px', position: 'relative' }}>
             {tile.badge && <div style={{ position: 'absolute', top: 6, right: 6, background: red, color: '#fff', fontSize: 8, fontWeight: 700, borderRadius: 9999, padding: '1px 5px' }}>{tile.badge}</div>}
-            <div style={{ fontSize: 20, marginBottom: 4 }}>{tile.icon}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: tx }}>{tile.title}</div>
+            <div style={{ fontSize: 18, marginBottom: 4 }}>{tile.icon}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: tx }}>{tile.title}</div>
             <div style={{ fontSize: 8, color: tx3, lineHeight: 1.4 }}>{tile.desc}</div>
           </div>
         ))}
@@ -300,7 +300,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
 
   if (screen === 'restaurant') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.restaurantOpsTitle')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.restaurantOpsTitle')}</div>
       <div style={{ fontSize: 9, color: tx2, marginBottom: 4 }}>{tc('pos_screenmockup.restaurantOpsSubtitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
         {[
@@ -315,8 +315,8 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           { icon: '🗑️', title: tc('pos_screenmockup.restaurantTileWasteTitle'), desc: tc('pos_screenmockup.restaurantTileWasteDesc') },
         ].map((tile, i) => (
           <div key={i} style={{ background: sf, border: `1px solid ${b}`, borderRadius: 8, padding: '10px 10px' }}>
-            <div style={{ fontSize: 18, marginBottom: 4 }}>{tile.icon}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: tx }}>{tile.title}</div>
+            <div style={{ fontSize: 16, marginBottom: 4 }}>{tile.icon}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: tx }}>{tile.title}</div>
             <div style={{ fontSize: 8, color: tx3, lineHeight: 1.4 }}>{tile.desc}</div>
           </div>
         ))}
@@ -326,7 +326,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
 
   if (screen === 'repair') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.repairOpsTitle')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.repairOpsTitle')}</div>
       <div style={{ fontSize: 9, color: tx2, marginBottom: 2 }}>{tc('pos_screenmockup.repairOpsSubtitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 5 }}>
         {[
@@ -337,13 +337,13 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           { icon: '🔍', title: tc('pos_screenmockup.repairTileAuditTitle'), desc: tc('pos_screenmockup.repairTileAuditDesc') },
         ].map((tile, i) => (
           <div key={i} style={{ background: sf, border: `1px solid ${b}`, borderRadius: 7, padding: '8px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: 16, marginBottom: 3 }}>{tile.icon}</div>
+            <div style={{ fontSize: 14, marginBottom: 3 }}>{tile.icon}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: tx }}>{tile.title}</div>
             <div style={{ fontSize: 7, color: tx3, lineHeight: 1.4 }}>{tile.desc}</div>
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx, marginTop: 4 }}>{tc('pos_screenmockup.repairServiceJobsHeading')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginTop: 4 }}>{tc('pos_screenmockup.repairServiceJobsHeading')}</div>
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {[
           tc('pos_screenmockup.repairFilterAll'),
@@ -358,7 +358,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
         ))}
       </div>
       <div style={{ padding: '10px 12px', background: bg, border: `1px solid ${b}`, borderRadius: 7, textAlign: 'center' }}>
-        <div style={{ fontSize: 10, color: tx2 }}>{tc('pos_screenmockup.repairEmptyTitle')}</div>
+        <div style={{ fontSize: 9, color: tx2 }}>{tc('pos_screenmockup.repairEmptyTitle')}</div>
         <div style={{ fontSize: 9, color: tx3 }}>{tc('pos_screenmockup.repairEmptyDetail')}</div>
       </div>
     </div>
@@ -366,7 +366,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
 
   if (screen === 'salon') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.salonOpsTitle')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.salonOpsTitle')}</div>
       <div style={{ fontSize: 9, color: tx2, marginBottom: 4 }}>{tc('pos_screenmockup.salonOpsSubtitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
         {[
@@ -376,16 +376,16 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           { icon: '📊', title: tc('pos_screenmockup.salonTilePerfTitle'), desc: tc('pos_screenmockup.salonTilePerfDesc') },
         ].map((tile, i) => (
           <div key={i} style={{ background: sf, border: `1px solid ${b}`, borderRadius: 8, padding: '10px 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 20 }}>{tile.icon}</span>
+            <span style={{ fontSize: 18 }}>{tile.icon}</span>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: tx, marginBottom: 2 }}>{tile.title}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tile.title}</div>
               <div style={{ fontSize: 8, color: tx3, lineHeight: 1.4 }}>{tile.desc}</div>
             </div>
           </div>
         ))}
       </div>
       <div style={{ background: `${acc}08`, border: `1px solid ${acc}25`, borderRadius: 8, padding: '10px 12px' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: acc, marginBottom: 4 }}>{tc('pos_screenmockup.salonTodayAppts')}</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: acc, marginBottom: 4 }}>{tc('pos_screenmockup.salonTodayAppts')}</div>
         {[
           { time: '09:00', client: 'Sarah M.', service: 'Cut & Blow dry', stylist: 'annet', dur: '60 min' },
           { time: '11:00', client: 'James K.', service: "Men's cut", stylist: 'james', dur: '30 min' },
@@ -394,7 +394,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderTop: i > 0 ? `1px solid ${b}` : 'none' }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: acc, width: 36 }}>{a.time}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: tx }}>{a.client}</div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: tx }}>{a.client}</div>
               <div style={{ fontSize: 8, color: tx3 }}>{a.service} · {a.stylist} · {a.dur}</div>
             </div>
             <StatusBadge label={tc('pos_screenmockup.salonStatusConfirmed')} color={green} />
@@ -406,7 +406,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
 
   if (screen === 'factory') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.factoryOpsTitle')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 2 }}>{tc('pos_screenmockup.factoryOpsTitle')}</div>
       <div style={{ fontSize: 9, color: tx2, marginBottom: 4 }}>{tc('pos_screenmockup.factoryOpsSubtitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 5 }}>
         {[
@@ -417,7 +417,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           { icon: '📦', title: tc('pos_screenmockup.factoryTileInventoryTitle'), desc: tc('pos_screenmockup.factoryTileInventoryDesc') },
         ].map((tile, i) => (
           <div key={i} style={{ background: sf, border: `1px solid ${b}`, borderRadius: 7, padding: '8px 8px', textAlign: 'center' }}>
-            <div style={{ fontSize: 16, marginBottom: 3 }}>{tile.icon}</div>
+            <div style={{ fontSize: 14, marginBottom: 3 }}>{tile.icon}</div>
             <div style={{ fontSize: 9, fontWeight: 700, color: tx }}>{tile.title}</div>
             <div style={{ fontSize: 7, color: tx3, lineHeight: 1.4 }}>{tile.desc}</div>
           </div>
@@ -458,7 +458,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
 
   if (screen === 'logistics') return (
     <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tx }}>{tc('pos_screenmockup.logisticsTitle')}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: tx }}>{tc('pos_screenmockup.logisticsTitle')}</div>
       <div style={{ fontSize: 9, color: tx2, marginBottom: 2 }}>{tc('pos_screenmockup.logisticsSubtitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
         {[
@@ -468,14 +468,14 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           { labelKey: 'pos_screenmockup.logisticsKpiDelivered', value: '47', color: green },
         ].map(k => (
           <div key={k.labelKey} style={{ background: sf, border: `1px solid ${b}`, borderRadius: 7, padding: '8px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: k.color }}>{k.value}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: k.color }}>{k.value}</div>
             <div style={{ fontSize: 8, color: tx3, marginTop: 2 }}>{tc(k.labelKey)}</div>
           </div>
         ))}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
         <div style={{ background: sf, border: `1px solid ${b}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: tx, marginBottom: 6 }}>{tc('pos_screenmockup.logisticsRevenueTitle')}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 6 }}>{tc('pos_screenmockup.logisticsRevenueTitle')}</div>
           {[
             [tc('pos_screenmockup.logisticsRevToday'), 'KSh 4,200'],
             [tc('pos_screenmockup.logisticsRevTotal'), 'KSh 28,900'],
@@ -488,7 +488,7 @@ function ScreenContent({ screen, tc }: { screen: Screen; tc: (k: string, vars?: 
           ))}
         </div>
         <div style={{ background: sf, border: `1px solid ${b}`, borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: tx, marginBottom: 6 }}>{tc('pos_screenmockup.logisticsFleetTitle')}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: tx, marginBottom: 6 }}>{tc('pos_screenmockup.logisticsFleetTitle')}</div>
           {[
             [tc('pos_screenmockup.logisticsFleetAvailable'), '3', green],
             [tc('pos_screenmockup.logisticsFleetInTransit'), '4', '#2563eb'],
@@ -532,7 +532,7 @@ export default function PosScreenMockup({ screen }: { screen: Screen }) {
           <div style={{ width: 11, height: 11, borderRadius: '50%', background: '#FEBC2E' }} />
           <div style={{ width: 11, height: 11, borderRadius: '50%', background: '#28C840' }} />
         </div>
-        <div style={{ flex: 1, background: sf, borderRadius: 5, padding: '3px 10px', fontSize: 10, color: tx3 }}>
+        <div style={{ flex: 1, background: sf, borderRadius: 5, padding: '3px 10px', fontSize: 9, color: tx3 }}>
           {tc('pos_screenmockup.browserUrlPrefix', { tab: tabLabel })}
         </div>
       </div>
@@ -547,7 +547,7 @@ export default function PosScreenMockup({ screen }: { screen: Screen }) {
               <div style={{ width: 22, height: 22, borderRadius: 6, background: acc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="9" height="9" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>AskBiz</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>AskBiz</span>
             </div>
           </div>
           {/* Top nav */}
@@ -558,8 +558,8 @@ export default function PosScreenMockup({ screen }: { screen: Screen }) {
               { icon: '🖥', label: tc('pos_screenmockup.navPos'), active: true },
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 12px', margin: '1px 6px', borderRadius: 6, background: item.active ? `${acc}25` : 'transparent' }}>
-                <span style={{ fontSize: 11 }}>{item.icon}</span>
-                <span style={{ fontSize: 10, color: item.active ? acc : 'rgba(255,255,255,.5)', fontWeight: item.active ? 700 : 400 }}>{item.label}</span>
+                <span style={{ fontSize: 9 }}>{item.icon}</span>
+                <span style={{ fontSize: 9, color: item.active ? acc : 'rgba(255,255,255,.5)', fontWeight: item.active ? 700 : 400 }}>{item.label}</span>
               </div>
             ))}
           </div>
@@ -567,7 +567,7 @@ export default function PosScreenMockup({ screen }: { screen: Screen }) {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, padding: '0 0' }}>
             {navItems.map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 12px', margin: '1px 6px', borderRadius: 6, background: item.active ? `${acc}20` : 'transparent', borderLeft: item.active ? `2px solid ${acc}` : '2px solid transparent' }}>
-                <span style={{ fontSize: 10 }}>{item.icon}</span>
+                <span style={{ fontSize: 9 }}>{item.icon}</span>
                 <span style={{ fontSize: 9, color: item.active ? '#fff' : 'rgba(255,255,255,.45)', fontWeight: item.active ? 700 : 400 }}>{item.label}</span>
               </div>
             ))}
@@ -587,7 +587,7 @@ export default function PosScreenMockup({ screen }: { screen: Screen }) {
           {/* Top bar */}
           <div style={{ background: sf, borderBottom: `1px solid ${b}`, padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: tx }}>{tc('pos_screenmockup.appTitle')}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tx }}>{tc('pos_screenmockup.appTitle')}</div>
               <div style={{ fontSize: 9, color: tx3 }}>{tc('pos_screenmockup.appDateSubtitle')}</div>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>

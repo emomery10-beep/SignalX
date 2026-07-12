@@ -250,7 +250,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '9px 12px',
-    fontSize: '13px',
+    fontSize: '11px',
     border: '1px solid var(--b)',
     borderRadius: '9px',
     backgroundColor: 'var(--sf)',
@@ -285,20 +285,20 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
         <div style={{
           width: 30, height: 30, borderRadius: 8, flexShrink: 0,
           background: statusLabel === 'Active' ? 'rgba(16,185,129,.15)' : 'rgba(99,91,255,.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13,
         }}>
           💳
         </div>
 
         {/* Text */}
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
             {statusLabel === tc('payment_setupcard.statusActiveLabel') ? providerLabel : tc('payment_setupcard.widgetLabel')}
             {statusLabel === tc('payment_setupcard.statusActiveLabel') && (
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
             )}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
             {statusLabel === tc('payment_setupcard.statusActiveLabel')
               ? tc('payment_setupcard.cardMobilePaymentsActive', { country: currentConfig?.country || '' })
               : statusLabel === tc('payment_setupcard.statusPendingKyc')
@@ -309,10 +309,10 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
 
         {/* Right badge / button */}
         {configLoading ? (
-          <span style={{ fontSize: 11, color: 'var(--tx3)', flexShrink: 0 }}>…</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', flexShrink: 0 }}>…</span>
         ) : statusLabel ? (
           <span style={{
-            fontSize: 11, fontWeight: 600, borderRadius: 9999,
+            fontSize: 9, fontWeight: 600, borderRadius: 9999,
             padding: '3px 10px', flexShrink: 0, whiteSpace: 'nowrap',
             background: statusLabel === tc('payment_setupcard.statusActiveLabel') ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.1)',
             color: statusLabel === tc('payment_setupcard.statusActiveLabel') ? '#059669' : '#d97706',
@@ -326,7 +326,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
             style={{
               padding: '6px 14px', borderRadius: 9999, border: 'none',
               background: '#635bff', color: '#fff',
-              fontSize: 12, fontWeight: 600, flexShrink: 0,
+              fontSize: 10, fontWeight: 600, flexShrink: 0,
               whiteSpace: 'nowrap', cursor: 'pointer',
             }}
           >
@@ -360,13 +360,13 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                 width: 44, height: 44, borderRadius: 10,
                 background: 'rgba(99,91,255,.1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24,
+                fontSize: 22,
               }}>
                 💳
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('payment_setupcard.modalTitle')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('payment_setupcard.modalTitle')}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
                   {tc('payment_setupcard.modalSubtitle')}
                 </div>
               </div>
@@ -374,12 +374,12 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
 
             {/* Error / Success banners */}
             {error && (
-              <div style={{ padding: '8px 12px', backgroundColor: '#fee2e2', borderRadius: 9, border: '1px solid #fecaca', marginBottom: 14, color: '#991b1b', fontSize: 12 }}>
+              <div style={{ padding: '8px 12px', backgroundColor: '#fee2e2', borderRadius: 9, border: '1px solid #fecaca', marginBottom: 14, color: '#991b1b', fontSize: 10 }}>
                 {error}
               </div>
             )}
             {success && (
-              <div style={{ padding: '8px 12px', backgroundColor: '#d1fae5', borderRadius: 9, border: '1px solid #a7f3d0', marginBottom: 14, color: '#065f46', fontSize: 12 }}>
+              <div style={{ padding: '8px 12px', backgroundColor: '#d1fae5', borderRadius: 9, border: '1px solid #a7f3d0', marginBottom: 14, color: '#065f46', fontSize: 10 }}>
                 {provider === 'stripe' ? tc('payment_setupcard.successStripe') : tc('payment_setupcard.successPaystack')}
               </div>
             )}
@@ -388,7 +388,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
             <form onSubmit={handleSubmit}>
               {/* Country */}
               <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                   {tc('payment_setupcard.labelCountry')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
@@ -414,7 +414,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
 
               {selectedCountry && (
                 <div style={{
-                  padding: '6px 10px', borderRadius: 8, marginBottom: 12, fontSize: 11,
+                  padding: '6px 10px', borderRadius: 8, marginBottom: 12, fontSize: 9,
                   background: provider === 'paystack' ? 'rgba(245,158,11,.08)' : 'rgba(99,91,255,.08)',
                   color: provider === 'paystack' ? '#92400e' : '#4338ca',
                 }}>
@@ -428,7 +428,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
 
               {/* Business Name */}
               <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                   {tc('payment_setupcard.labelBusinessName')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -444,7 +444,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
               {/* Contact Phone (for Stripe) */}
               {provider === 'stripe' && (
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                     {tc('payment_setupcard.labelContactPhone')}
                   </label>
                   <input
@@ -464,7 +464,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   padding: 14, borderRadius: 12, marginBottom: 14,
                   border: '1px solid var(--b)', background: 'rgba(245,158,11,.03)',
                 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>
                     {tc('payment_setupcard.sectionSettlementAccount')}
                   </div>
 
@@ -478,7 +478,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                           flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)',
                           background: settlementType === 'mpesa' ? '#16a34a' : 'transparent',
                           color: settlementType === 'mpesa' ? '#fff' : 'var(--tx)',
-                          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                          fontSize: 10, fontWeight: 600, cursor: 'pointer',
                         }}
                       >
                         {tc('payment_setupcard.btnMpesa')}
@@ -490,7 +490,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                           flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)',
                           background: settlementType === 'bank' ? '#635bff' : 'transparent',
                           color: settlementType === 'bank' ? '#fff' : 'var(--tx)',
-                          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                          fontSize: 10, fontWeight: 600, cursor: 'pointer',
                         }}
                       >
                         {tc('payment_setupcard.btnBankAccount')}
@@ -501,7 +501,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   {/* M-Pesa phone input */}
                   {settlementType === 'mpesa' && hasMpesa && (
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                      <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                         {tc('payment_setupcard.labelMpesaPhone')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
@@ -512,7 +512,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                         placeholder="254712345678"
                         style={inputStyle}
                       />
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>
                         {tc('payment_setupcard.mpesaPhoneHint')}
                       </div>
                     </div>
@@ -522,7 +522,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   {(settlementType === 'bank' || !hasMpesa) && (
                     <div>
                       <div style={{ marginBottom: 10 }}>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                           {tc('payment_setupcard.labelBank')} <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         {banksLoading ? (
@@ -546,7 +546,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                         )}
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
                           {tc('payment_setupcard.labelAccountNumber')} <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
@@ -571,7 +571,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   style={{
                     flex: 1, padding: 11, borderRadius: 10, border: 'none',
                     background: !canSubmit ? 'var(--b2, #d1d5db)' : provider === 'paystack' ? '#16a34a' : '#635bff',
-                    color: '#fff', fontSize: 14, fontWeight: 600,
+                    color: '#fff', fontSize: 12, fontWeight: 600,
                     cursor: !canSubmit ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -590,7 +590,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   style={{
                     padding: '11px 18px', borderRadius: 10,
                     border: '1px solid var(--b)', background: 'transparent',
-                    color: 'var(--tx)', fontSize: 14, fontWeight: 500,
+                    color: 'var(--tx)', fontSize: 12, fontWeight: 500,
                     cursor: 'pointer',
                   }}
                 >
@@ -600,7 +600,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
             </form>
 
             {/* Setup steps hint */}
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--b)', fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--b)', fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
               {provider === 'stripe' ? (
                 <span>{tc('payment_setupcard.hintStripe')}</span>
               ) : provider === 'paystack' ? (

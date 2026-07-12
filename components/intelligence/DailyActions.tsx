@@ -65,7 +65,7 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_dailyactions.title')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_dailyactions.title')}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2, 3].map(i => (
@@ -85,15 +85,15 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_dailyactions.title')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_dailyactions.title')}</span>
           {urgentCount > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,.1)', borderRadius: 6, padding: '1px 6px' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,.1)', borderRadius: 6, padding: '1px 6px' }}>
               {tc('intel_dailyactions.urgentBadge', { n: urgentCount })}
             </span>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{allVisible.length !== 1 ? tc('intel_dailyactions.actionCountPlural', { n: allVisible.length }) : tc('intel_dailyactions.actionCount', { n: allVisible.length })}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{allVisible.length !== 1 ? tc('intel_dailyactions.actionCountPlural', { n: allVisible.length }) : tc('intel_dailyactions.actionCount', { n: allVisible.length })}</span>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -102,7 +102,7 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
               width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--b)',
               background: 'transparent', color: 'var(--tx3)', cursor: refreshing ? 'default' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, padding: 0, lineHeight: 1, fontFamily: 'inherit',
+              fontSize: 11, padding: 0, lineHeight: 1, fontFamily: 'inherit',
               opacity: refreshing ? 0.5 : 1,
               transition: 'opacity 150ms',
             }}
@@ -124,27 +124,27 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
               background: action.priority === 1 ? 'rgba(239,68,68,.03)' : 'var(--sf)',
               transition: 'opacity 200ms',
             }}>
-              <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{TYPE_ICON[action.type] || '📋'}</span>
+              <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{TYPE_ICON[action.type] || '📋'}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{action.title}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{action.title}</span>
                   <span style={{
                     fontSize: 9, fontWeight: 700, color: p.color, background: p.bg,
                     borderRadius: 4, padding: '1px 5px', textTransform: 'uppercase', letterSpacing: '.04em', flexShrink: 0,
                   }}>{pLabel}</span>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{action.why}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4 }}>{action.why}</div>
               </div>
               <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2 }}>
                 {onAsk && action.type !== 'info' && (
                   <button
                     onClick={() => onAsk(tc('intel_dailyactions.askActionPrompt', { title: action.title, why: action.why }))}
-                    style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+                    style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
                   >{tc('intel_dailyactions.askAi')}</button>
                 )}
                 <button
                   onClick={() => dismiss(i)}
-                  style={{ fontSize: 10, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px 4px', fontFamily: 'inherit' }}
+                  style={{ fontSize: 9, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px 4px', fontFamily: 'inherit' }}
                   title={tc('intel_dailyactions.dismiss')}
                 >✕</button>
               </div>
@@ -159,7 +159,7 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
           style={{
             display: 'block', width: '100%', marginTop: 10, padding: '8px 0',
             border: 'none', background: 'transparent', color: '#6366F1',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
             textAlign: 'center',
           }}
         >

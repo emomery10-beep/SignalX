@@ -53,9 +53,9 @@ function Cross() {
 }
 
 function renderCell(val: string | boolean, winner: boolean) {
-  if (val === true)  return <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Tick />{winner ? <span style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>✓</span> : null}</span>
+  if (val === true)  return <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Tick />{winner ? <span style={{ fontSize: 9, color: GREEN, fontWeight: 700 }}>✓</span> : null}</span>
   if (val === false) return <Cross />
-  return <span style={{ fontSize: 13, color: TX2 }}>{val}</span>
+  return <span style={{ fontSize: 11, color: TX2 }}>{val}</span>
 }
 
 export default function ComparisonPage({ params }: { params: { competitor: string } }) {
@@ -91,11 +91,11 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
                 <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <Link href={localePath('/vs', lang)} style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>{catalogT(lang, 'vs.all_comparisons')}</Link>
-            <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{catalogT(lang, 'vs.try_free')}</Link>
+            <Link href={localePath('/vs', lang)} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{catalogT(lang, 'vs.all_comparisons')}</Link>
+            <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{catalogT(lang, 'vs.try_free')}</Link>
           </div>
         </nav>
 
@@ -109,18 +109,18 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
                 <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontSize: 28, color: '#a0a0a0' }}>vs</span>
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: c.theirColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Sora, system-ui', fontSize: 22, fontWeight: 700, color: 'white' }}>
+            <span style={{ fontSize: 26, color: '#a0a0a0' }}>vs</span>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: c.theirColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: 'white' }}>
               {c.competitor[0]}
             </div>
           </div>
           <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(22px,4vw,38px)', fontWeight: 700, color: '#fff', letterSpacing: '-.03em', marginBottom: 14 }}>
             {c.heroHeading}
           </h1>
-          <p style={{ fontSize: 16, color: '#b0b8c8', maxWidth: 560, margin: '0 auto 32px', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14, color: '#b0b8c8', maxWidth: 560, margin: '0 auto 32px', lineHeight: 1.7 }}>
             {c.heroSubtitle}
           </p>
-          <Link href={localePath('/signin', lang)} style={{ fontSize: 14, fontWeight: 700, color: TX, background: ACC, borderRadius: 10, padding: '13px 28px', textDecoration: 'none', display: 'inline-block' }}>
+          <Link href={localePath('/signin', lang)} style={{ fontSize: 12, fontWeight: 700, color: TX, background: ACC, borderRadius: 10, padding: '13px 28px', textDecoration: 'none', display: 'inline-block' }}>
             {catalogT(lang, 'vs.try_free_14')}
           </Link>
         </section>
@@ -130,36 +130,36 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
           {/* Score banner */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center', marginBottom: 48, background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '20px 24px' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 36, fontWeight: 700, color: ACC }}>{askbizWins}</div>
-              <div style={{ fontSize: 12, color: TX3, marginTop: 2 }}>{catalogT(lang, 'vs.askbiz_wins')}</div>
+              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 34, fontWeight: 700, color: ACC }}>{askbizWins}</div>
+              <div style={{ fontSize: 10, color: TX3, marginTop: 2 }}>{catalogT(lang, 'vs.askbiz_wins')}</div>
             </div>
-            <div style={{ fontSize: 13, color: TX3, textAlign: 'center', padding: '0 8px' }}>{catalogT(lang, 'vs.out_of_features', { n: c.features.length })}</div>
+            <div style={{ fontSize: 11, color: TX3, textAlign: 'center', padding: '0 8px' }}>{catalogT(lang, 'vs.out_of_features', { n: c.features.length })}</div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 36, fontWeight: 700, color: c.theirColor }}>{themWins}</div>
-              <div style={{ fontSize: 12, color: TX3, marginTop: 2 }}>{catalogT(lang, 'vs.them_wins', { competitor: c.competitor })}</div>
+              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 34, fontWeight: 700, color: c.theirColor }}>{themWins}</div>
+              <div style={{ fontSize: 10, color: TX3, marginTop: 2 }}>{catalogT(lang, 'vs.them_wins', { competitor: c.competitor })}</div>
             </div>
           </div>
 
           {/* Best for */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 48 }}>
             <div style={{ background: ACC + '10', border: `1px solid ${ACC}30`, borderRadius: 12, padding: '18px 20px' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{catalogT(lang, 'vs.askbiz_best_for')}</div>
-              <div style={{ fontSize: 14, color: TX, lineHeight: 1.5 }}>{c.bestFor.askbiz}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{catalogT(lang, 'vs.askbiz_best_for')}</div>
+              <div style={{ fontSize: 12, color: TX, lineHeight: 1.5 }}>{c.bestFor.askbiz}</div>
             </div>
             <div style={{ background: c.theirColor + '10', border: `1px solid ${c.theirColor}30`, borderRadius: 12, padding: '18px 20px' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: c.theirColor, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{catalogT(lang, 'vs.them_best_for', { competitor: c.competitor })}</div>
-              <div style={{ fontSize: 14, color: TX, lineHeight: 1.5 }}>{c.bestFor.them}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: c.theirColor, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{catalogT(lang, 'vs.them_best_for', { competitor: c.competitor })}</div>
+              <div style={{ fontSize: 12, color: TX, lineHeight: 1.5 }}>{c.bestFor.them}</div>
             </div>
           </div>
 
           {/* Feature comparison table */}
-          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>{catalogT(lang, 'vs.feature_comparison')}</h2>
+          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>{catalogT(lang, 'vs.feature_comparison')}</h2>
           <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, overflow: 'hidden', marginBottom: 48 }}>
             {/* Table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 120px', background: BG, borderBottom: `1px solid ${BD}`, padding: '12px 20px' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em' }}>{catalogT(lang, 'vs.feature')}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', textAlign: 'center' }}>{catalogT(lang, 'vs.askbiz')}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: c.theirColor, textTransform: 'uppercase', letterSpacing: '.08em', textAlign: 'center' }}>{c.competitor}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em' }}>{catalogT(lang, 'vs.feature')}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', textAlign: 'center' }}>{catalogT(lang, 'vs.askbiz')}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: c.theirColor, textTransform: 'uppercase', letterSpacing: '.08em', textAlign: 'center' }}>{c.competitor}</div>
             </div>
             {c.features.map((f, i) => (
               <div
@@ -171,7 +171,7 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
                   background: f.winner === 'askbiz' ? ACC + '06' : 'transparent',
                 }}
               >
-                <div style={{ fontSize: 14, color: TX }}>{f.feature}</div>
+                <div style={{ fontSize: 12, color: TX }}>{f.feature}</div>
                 <div style={{ display: 'flex', justifyContent: 'center' }}>{renderCell(f.askbiz, f.winner === 'askbiz')}</div>
                 <div style={{ display: 'flex', justifyContent: 'center' }}>{renderCell(f.them, f.winner === 'them')}</div>
               </div>
@@ -180,19 +180,19 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
 
           {/* Verdict */}
           <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '28px 32px', marginBottom: 48 }}>
-            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 12, letterSpacing: '-.02em' }}>{catalogT(lang, 'vs.the_verdict')}</h2>
-            <p style={{ fontSize: 15, color: TX2, lineHeight: 1.8, margin: 0 }}>{c.verdict}</p>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 12, letterSpacing: '-.02em' }}>{catalogT(lang, 'vs.the_verdict')}</h2>
+            <p style={{ fontSize: 13, color: TX2, lineHeight: 1.8, margin: 0 }}>{c.verdict}</p>
           </div>
 
           {/* FAQs */}
           {c.faqs.length > 0 && (
             <>
-              <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>{catalogT(lang, 'vs.common_questions')}</h2>
+              <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>{catalogT(lang, 'vs.common_questions')}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 48 }}>
                 {c.faqs.map((faq, i) => (
                   <div key={i} style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 24px' }}>
-                    <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 8 }}>{faq.q}</div>
-                    <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: 0 }}>{faq.a}</p>
+                    <div style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX, marginBottom: 8 }}>{faq.q}</div>
+                    <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, margin: 0 }}>{faq.a}</p>
                   </div>
                 ))}
               </div>
@@ -201,19 +201,19 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
 
           {/* CTA */}
           <div style={{ background: TX, borderRadius: 16, padding: '36px 32px', textAlign: 'center' }}>
-            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 10 }}>{catalogT(lang, 'vs.cta_heading')}</h2>
-            <p style={{ fontSize: 14, color: '#b0b8c8', marginBottom: 24 }}>{catalogT(lang, 'vs.cta_body')}</p>
-            <Link href={localePath('/signin', lang)} style={{ fontSize: 14, fontWeight: 700, color: TX, background: ACC, borderRadius: 10, padding: '13px 28px', textDecoration: 'none', display: 'inline-block' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: '#fff', marginBottom: 10 }}>{catalogT(lang, 'vs.cta_heading')}</h2>
+            <p style={{ fontSize: 12, color: '#b0b8c8', marginBottom: 24 }}>{catalogT(lang, 'vs.cta_body')}</p>
+            <Link href={localePath('/signin', lang)} style={{ fontSize: 12, fontWeight: 700, color: TX, background: ACC, borderRadius: 10, padding: '13px 28px', textDecoration: 'none', display: 'inline-block' }}>
               {catalogT(lang, 'vs.start_free_trial')}
             </Link>
           </div>
 
           {/* Other comparisons */}
           <div style={{ marginTop: 48 }}>
-            <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 14 }}>{catalogT(lang, 'vs.other_comparisons')}</h3>
+            <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX, marginBottom: 14 }}>{catalogT(lang, 'vs.other_comparisons')}</h3>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {COMPARISONS.filter(x => x.slug !== c.slug).map(x => (
-                <Link key={x.slug} href={localePath(`/vs/${x.slug}`, lang)} style={{ fontSize: 13, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+                <Link key={x.slug} href={localePath(`/vs/${x.slug}`, lang)} style={{ fontSize: 11, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
                   {catalogT(lang, 'vs.vs_competitor', { competitor: x.competitor })}
                 </Link>
               ))}
@@ -222,10 +222,10 @@ export default function ComparisonPage({ params }: { params: { competitor: strin
         </div>
 
         <footer style={{ borderTop: `1px solid ${BD}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: SF }}>
-          <span style={{ fontSize: 12, color: TX3 }}>{catalogT(lang, 'vs.footer_copyright')}</span>
+          <span style={{ fontSize: 10, color: TX3 }}>{catalogT(lang, 'vs.footer_copyright')}</span>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
             {([['/','vs.footer_home'],['/vs','vs.footer_comparisons'],['/academy','vs.footer_academy'],['/help','vs.footer_help'],['/privacy','vs.footer_privacy']] as [string,string][]).map(([href, key]) => (
-              <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{catalogT(lang, key)}</Link>
+              <Link key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{catalogT(lang, key)}</Link>
             ))}
           </div>
         </footer>

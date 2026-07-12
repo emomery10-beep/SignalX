@@ -479,11 +479,11 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
             </svg>
           </div>
-          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Link href={localePath('/blog', lang)} className="nav-link" style={{ fontSize: 13, color: TX2, textDecoration: 'none', transition: 'color 120ms' }}>{t(lang, 'blog.back_to_articles')}</Link>
-          <Link href={localePath('/home', lang)} style={{ fontSize: 13, fontWeight: 600, color: ACC, textDecoration: 'none', padding: '6px 14px', background: 'rgba(208,138,89,.1)', borderRadius: 9999 }}>
+          <Link href={localePath('/blog', lang)} className="nav-link" style={{ fontSize: 11, color: TX2, textDecoration: 'none', transition: 'color 120ms' }}>{t(lang, 'blog.back_to_articles')}</Link>
+          <Link href={localePath('/home', lang)} style={{ fontSize: 11, fontWeight: 600, color: ACC, textDecoration: 'none', padding: '6px 14px', background: 'rgba(208,138,89,.1)', borderRadius: 9999 }}>
             Try AskBiz free →
           </Link>
         </div>
@@ -493,7 +493,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       <article id="article-body" style={{ maxWidth: 720, margin: '0 auto', padding: 'clamp(28px,5vw,52px) clamp(16px,4vw,32px) 80px' }}>
 
         {/* Breadcrumb */}
-        <nav aria-label="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 12, color: TX3, flexWrap: 'wrap' }}>
+        <nav aria-label="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 10, color: TX3, flexWrap: 'wrap' }}>
           <Link href={localePath('/', lang)} style={{ color: TX3, textDecoration: 'none' }}>{t(lang, 'blog.home')}</Link>
           <span>/</span>
           <Link href={localePath('/blog', lang)} style={{ color: TX3, textDecoration: 'none' }}>{t(lang, 'blog.blog_label')}</Link>
@@ -511,14 +511,14 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             href={post.pillar === 'Global Trade Intelligence'
               ? localePath(`/blog/topic/${post.cluster.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-')}`, lang)
               : localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, lang)}
-            style={{ fontSize: 11, fontWeight: 700, color: clusterColour.text, background: clusterColour.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em', textDecoration: 'none' }}
+            style={{ fontSize: 9, fontWeight: 700, color: clusterColour.text, background: clusterColour.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em', textDecoration: 'none' }}
           >
             {post.cluster}
           </Link>
           {post.pillar && (
             <Link
               href={localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}&pillar=${encodeURIComponent(post.pillar)}`, lang)}
-              style={{ fontSize: 11, color: TX3, textDecoration: 'none', background: EV, padding: '3px 9px', borderRadius: 9999 }}
+              style={{ fontSize: 9, color: TX3, textDecoration: 'none', background: EV, padding: '3px 9px', borderRadius: 9999 }}
             >
               {post.pillar}
             </Link>
@@ -533,8 +533,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Meta row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           {post.author?.name && <>
-            <span style={{ fontSize: 13, fontWeight: 600, color: TX }}>{t(lang, 'blog.written_by', { name: post.author.name })}</span>
-            <span style={{ fontSize: 13, color: TX3 }}>·</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: TX }}>{t(lang, 'blog.written_by', { name: post.author.name })}</span>
+            <span style={{ fontSize: 11, color: TX3 }}>·</span>
           </>}
           {(() => {
             const diffDays = Math.floor((Date.now() - displayPublishDate.getTime()) / 86400000)
@@ -543,23 +543,23 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             return (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 {isRecent && <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em' }}>NEW</span>}
-                <span style={{ fontSize: 13, color: isRecent ? '#16a34a' : TX3, fontWeight: isRecent ? 500 : 400 }}>{label}</span>
+                <span style={{ fontSize: 11, color: isRecent ? '#16a34a' : TX3, fontWeight: isRecent ? 500 : 400 }}>{label}</span>
               </span>
             )
           })()}
-          <span style={{ fontSize: 13, color: TX3 }}>·</span>
+          <span style={{ fontSize: 11, color: TX3 }}>·</span>
           {!post.author && <>
-            <span style={{ fontSize: 12, color: TX3 }}>
+            <span style={{ fontSize: 10, color: TX3 }}>
               Updated {lastUpdated.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
             </span>
-            <span style={{ fontSize: 13, color: TX3 }}>·</span>
+            <span style={{ fontSize: 11, color: TX3 }}>·</span>
           </>}
-          <span style={{ fontSize: 13, color: TX3 }}>{post.readTime} min read</span>
-          <span style={{ fontSize: 13, color: TX3 }}>·</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: ctColour.text, background: ctColour.bg, padding: '2px 8px', borderRadius: 9999 }}>
+          <span style={{ fontSize: 11, color: TX3 }}>{post.readTime} min read</span>
+          <span style={{ fontSize: 11, color: TX3 }}>·</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: ctColour.text, background: ctColour.bg, padding: '2px 8px', borderRadius: 9999 }}>
             {contentType}
           </span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: diffColour.text, background: diffColour.bg, padding: '2px 8px', borderRadius: 9999 }}>
+          <span style={{ fontSize: 9, fontWeight: 600, color: diffColour.text, background: diffColour.bg, padding: '2px 8px', borderRadius: 9999 }}>
             {difficulty}
           </span>
         </div>
@@ -574,13 +574,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Table of contents */}
         {tocItems.length >= 3 && (
           <div style={{ background: EV, borderRadius: 12, padding: '16px 20px', marginBottom: 36, border: `1px solid ${B}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
               In this article
             </div>
             <ol style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 8, listStyleType: 'decimal' }}>
               {tocItems.map((item, i) => (
                 <li key={i}>
-                  <a href={`#${item.id}`} className="toc-link" style={{ fontSize: 13, color: TX2, textDecoration: 'none', lineHeight: 1.4, transition: 'color 120ms' }}>
+                  <a href={`#${item.id}`} className="toc-link" style={{ fontSize: 11, color: TX2, textDecoration: 'none', lineHeight: 1.4, transition: 'color 120ms' }}>
                     {item.heading}
                   </a>
                 </li>
@@ -595,18 +595,18 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em' }}>{t(lang, 'blog.key_takeaways')}</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em' }}>{t(lang, 'blog.key_takeaways')}</span>
           </div>
-          <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: '0 0 12px' }}>{post.tldr}</p>
+          <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, margin: '0 0 12px' }}>{post.tldr}</p>
           <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 5, listStyleType: 'disc' }}>
             {(post.sections || []).filter(s => s.level === 2).slice(0, 5).map((s, i) => (
-              <li key={i} style={{ fontSize: 13, color: TX2, lineHeight: 1.55 }}>{s.heading}</li>
+              <li key={i} style={{ fontSize: 11, color: TX2, lineHeight: 1.55 }}>{s.heading}</li>
             ))}
           </ul>
         </div>
 
         {/* Body */}
-        <div className="blog-body" style={{ fontSize: 15, color: TX2, lineHeight: 1.8 }}>
+        <div className="blog-body" style={{ fontSize: 13, color: TX2, lineHeight: 1.8 }}>
           {(post.sections || []).map((s, i) => {
             const id = slugify(s.heading || '')
             return (
@@ -624,19 +624,19 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 )}
                 {/* Intro section gets larger font */}
                 {i === 0 ? (
-                  <p style={{ fontSize: 17, lineHeight: 1.85, color: TX }}>{s.body}</p>
+                  <p style={{ fontSize: 15, lineHeight: 1.85, color: TX }}>{s.body}</p>
                 ) : (
                   <p>{s.body}</p>
                 )}
                 {/* Contextual in-body links after 4th section */}
                 {i === 3 && contextualLinks.length > 0 && (
                   <div style={{ background: EV, borderRadius: 10, padding: '14px 18px', margin: '28px 0', border: `1px solid ${B}` }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: TX2, marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: TX2, marginBottom: 10 }}>
                       More in {post.cluster}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {contextualLinks.map(p => (
-                        <Link key={p.slug} href={localePath(`/blog/${p.slug}`, lang)} style={{ fontSize: 13, color: clusterColour.text, textDecoration: 'none', fontWeight: 500, lineHeight: 1.4 }}>
+                        <Link key={p.slug} href={localePath(`/blog/${p.slug}`, lang)} style={{ fontSize: 11, color: clusterColour.text, textDecoration: 'none', fontWeight: 500, lineHeight: 1.4 }}>
                           → {p.title}
                         </Link>
                       ))}
@@ -653,10 +653,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             if (stats.length < 2) return null
             return (
               <div style={{ background: EV, borderRadius: 14, padding: '20px 24px', marginBottom: 36 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: TX2, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📊 By The Numbers</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: TX2, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📊 By The Numbers</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {stats.map((s, i) => (
-                    <span key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 8, padding: '6px 14px', fontSize: 14, fontWeight: 700, color: TX, fontFamily: 'Sora, system-ui' }}>{s}</span>
+                    <span key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, color: TX, fontFamily: 'Sora, system-ui' }}>{s}</span>
                   ))}
                 </div>
               </div>
@@ -668,19 +668,19 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* PAA */}
         {post.paa?.length > 0 && (
           <div style={{ marginTop: 48, marginBottom: 48 }}>
-            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
               People also ask
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {post.paa.map((item, i) => (
                 <details key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 12, padding: '14px 18px', cursor: 'pointer' }}>
-                  <summary style={{ fontSize: 14, fontWeight: 600, color: TX, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                  <summary style={{ fontSize: 12, fontWeight: 600, color: TX, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                     {item.q}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, transition: 'transform 200ms' }}>
                       <path d="M6 9l6 6 6-6"/>
                     </svg>
                   </summary>
-                  <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginTop: 10, marginBottom: 0 }}>{item.a}</p>
+                  <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginTop: 10, marginBottom: 0 }}>{item.a}</p>
                 </details>
               ))}
             </div>
@@ -690,7 +690,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {/* Author bio */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '20px 0', borderTop: `1px solid ${B}`, borderBottom: `1px solid ${B}`, marginBottom: 40 }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: post.author ? 'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)' : `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Sora, system-ui' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: post.author ? 'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)' : `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'Sora, system-ui' }}>
             {post.author ? post.author.name.split(' ').map(n => n[0]).join('') : (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.6"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.8"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
@@ -698,9 +698,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             )}
           </div>
           <div>
-            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 2 }}>{post.author?.name || 'AskBiz Editorial Team'}</div>
-            <div style={{ fontSize: 12, color: post.author ? '#6366F1' : ACC, marginBottom: 6, fontWeight: 600 }}>{post.author?.role || 'Business Intelligence Experts'}</div>
-            <p style={{ fontSize: 13, color: TX2, lineHeight: 1.6, margin: 0 }}>
+            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 12, fontWeight: 700, color: TX, marginBottom: 2 }}>{post.author?.name || 'AskBiz Editorial Team'}</div>
+            <div style={{ fontSize: 10, color: post.author ? '#6366F1' : ACC, marginBottom: 6, fontWeight: 600 }}>{post.author?.role || 'Business Intelligence Experts'}</div>
+            <p style={{ fontSize: 11, color: TX2, lineHeight: 1.6, margin: 0 }}>
               {post.author?.bio || 'Our team combines expertise in data analytics, SME strategy, and AI tools to produce practical guides that help founders and operators make better business decisions.'}
             </p>
           </div>
@@ -708,22 +708,22 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {/* CTA */}
         <div style={{ background: TX, borderRadius: 16, padding: 'clamp(20px,4vw,32px)', marginBottom: 48, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>14-day free trial · No credit card needed</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>14-day free trial · No credit card needed</div>
           <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(17px,3vw,22px)', fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-.02em' }}>
             {clusterCta?.headline || post.cta?.heading || post.cta?.text || 'See this data for your own business'}
           </h3>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', marginBottom: 24, lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px' }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', marginBottom: 24, lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px' }}>
             {clusterCta?.body || post.cta?.body || 'AskBiz connects to your existing tools and surfaces insights like these automatically — no spreadsheets, no analysts, no waiting.'}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href={localePath(clusterCta?.href || post.cta?.href || '/signin', lang)} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
+            <Link href={localePath(clusterCta?.href || post.cta?.href || '/signin', lang)} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
               {clusterCta?.cta || 'Start free trial →'}
             </Link>
-            <Link href={localePath('/pricing', lang)} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 20px', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.8)', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+            <Link href={localePath('/pricing', lang)} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 20px', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.8)', borderRadius: 10, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
               See pricing
             </Link>
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 14, marginBottom: 0 }}>Connects to Shopify, Xero, Amazon, QuickBooks, Stripe & more in minutes</p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 14, marginBottom: 0 }}>Connects to Shopify, Xero, Amazon, QuickBooks, Stripe & more in minutes</p>
         </div>
 
         {/* Share again (bottom) */}
@@ -736,16 +736,16 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 48 }}>
             {prevPost ? (
               <Link href={localePath(`/blog/${prevPost.slug}`, lang)} className="prevnext-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
-                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>← Previous</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{prevPost.title}</div>
-                <div style={{ fontSize: 11, color: TX3, marginTop: 4 }}>{prevPost.readTime} min read</div>
+                <div style={{ fontSize: 9, color: TX3, marginBottom: 6 }}>← Previous</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{prevPost.title}</div>
+                <div style={{ fontSize: 9, color: TX3, marginTop: 4 }}>{prevPost.readTime} min read</div>
               </Link>
             ) : <div />}
             {nextPost && (
               <Link href={localePath(`/blog/${nextPost.slug}`, lang)} className="prevnext-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', textAlign: 'right', transition: 'background 120ms' }}>
-                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>Next →</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{nextPost.title}</div>
-                <div style={{ fontSize: 11, color: TX3, marginTop: 4 }}>{nextPost.readTime} min read</div>
+                <div style={{ fontSize: 9, color: TX3, marginBottom: 6 }}>Next →</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{nextPost.title}</div>
+                <div style={{ fontSize: 9, color: TX3, marginTop: 4 }}>{nextPost.readTime} min read</div>
               </Link>
             )}
           </div>
@@ -754,15 +754,15 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Related */}
         {relatedPosts.length > 0 && (
           <div>
-            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
               Related articles
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
               {relatedPosts.map((r, i) => r && (
                 <Link key={i} href={localePath(`/blog/${r.slug}`, lang)} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{r.cluster}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{r.title}</div>
-                  <div style={{ fontSize: 11, color: TX3, marginTop: 6 }}>{r.readTime} min read</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{r.cluster}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{r.title}</div>
+                  <div style={{ fontSize: 9, color: TX3, marginTop: 6 }}>{r.readTime} min read</div>
                 </Link>
               ))}
             </div>
@@ -772,15 +772,15 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Academy cross-links — boosts internal link graph between blog and academy */}
         {academyCrossLinks.length > 0 && (
           <div style={{ marginTop: 32 }}>
-            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
               Learn the concepts
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
               {academyCrossLinks.map((a, i) => (
                 <Link key={i} href={localePath(`/academy/${a.slug}`, lang)} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{a.category}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{a.title}</div>
-                  <div style={{ fontSize: 11, color: TX3, marginTop: 6 }}>{a.readTime} min · {a.difficulty}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{a.category}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{a.title}</div>
+                  <div style={{ fontSize: 9, color: TX3, marginTop: 6 }}>{a.readTime} min · {a.difficulty}</div>
                 </Link>
               ))}
             </div>
@@ -790,7 +790,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${B}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz. Scan it, sell it, see what you made.</span>
+        <span style={{ fontSize: 10, color: TX3 }}>© 2026 AskBiz. Scan it, sell it, see what you made.</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {[
             ['/blog', 'Blog'],
@@ -798,7 +798,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             ['/privacy', 'Privacy'],
             ['/developers', 'API'],
           ].map(([href, label]) => (
-            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

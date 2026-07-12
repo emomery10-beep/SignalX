@@ -189,7 +189,7 @@ export default function NotificationBell() {
             <button
               onClick={() => setTab('pulse')}
               style={{
-                flex: 1, padding: '10px 0', fontSize: 12, fontWeight: tab === 'pulse' ? 700 : 500,
+                flex: 1, padding: '10px 0', fontSize: 10, fontWeight: tab === 'pulse' ? 700 : 500,
                 color: tab === 'pulse' ? '#ef4444' : 'var(--tx3)',
                 background: tab === 'pulse' ? 'rgba(239,68,68,.04)' : 'transparent',
                 border: 'none', borderBottom: tab === 'pulse' ? '2px solid #ef4444' : '2px solid transparent',
@@ -209,7 +209,7 @@ export default function NotificationBell() {
             <button
               onClick={() => setTab('notifications')}
               style={{
-                flex: 1, padding: '10px 0', fontSize: 12, fontWeight: tab === 'notifications' ? 700 : 500,
+                flex: 1, padding: '10px 0', fontSize: 10, fontWeight: tab === 'notifications' ? 700 : 500,
                 color: tab === 'notifications' ? '#d08a59' : 'var(--tx3)',
                 background: tab === 'notifications' ? 'rgba(208,138,89,.04)' : 'transparent',
                 border: 'none', borderBottom: tab === 'notifications' ? '2px solid #d08a59' : '2px solid transparent',
@@ -238,8 +238,8 @@ export default function NotificationBell() {
                       <path d="M20 6L9 17l-5-5"/>
                     </svg>
                   </div>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>{tc('layout_notifbell.pulseEmptyHeading')}</div>
-                  <p style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, margin: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 11, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>{tc('layout_notifbell.pulseEmptyHeading')}</div>
+                  <p style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5, margin: 0 }}>
                     {tc('layout_notifbell.pulseEmptyBody')}
                   </p>
                 </div>
@@ -259,7 +259,7 @@ export default function NotificationBell() {
                             width: 7, height: 7, borderRadius: '50%', background: col, flexShrink: 0, marginTop: 4,
                             animation: signal.severity === 'red' ? 'pulse 1.5s infinite' : 'none',
                           }} />
-                          <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>
+                          <div style={{ flex: 1, fontSize: 10, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>
                             {signal.title}
                           </div>
                           {signal.metric && (
@@ -268,19 +268,19 @@ export default function NotificationBell() {
                             </span>
                           )}
                         </div>
-                        <p style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5, margin: '0 0 8px 14px' }}>
+                        <p style={{ fontSize: 9, color: 'var(--tx2)', lineHeight: 1.5, margin: '0 0 8px 14px' }}>
                           {signal.description}
                         </p>
                         <div style={{ display: 'flex', gap: 5, marginLeft: 14 }}>
                           <button
                             onClick={() => handleSignalAction(signal)}
-                            style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 9999, border: 'none', background: col, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}
+                            style={{ fontSize: 9, fontWeight: 600, padding: '4px 10px', borderRadius: 9999, border: 'none', background: col, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}
                           >
                             {signal.suggested_action} →
                           </button>
                           <button
                             onClick={() => dismissSignal(signal.id)}
-                            style={{ fontSize: 11, padding: '4px 8px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}
+                            style={{ fontSize: 9, padding: '4px 8px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}
                           >
                             {tc('layout_notifbell.signalDismiss')}
                           </button>
@@ -295,7 +295,7 @@ export default function NotificationBell() {
               <div style={{ padding: '8px 10px', borderTop: '1px solid var(--b)', flexShrink: 0 }}>
                 <button
                   onClick={fetchSignals}
-                  style={{ width: '100%', padding: '6px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                  style={{ width: '100%', padding: '6px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', fontSize: 9, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
@@ -314,7 +314,7 @@ export default function NotificationBell() {
               {/* Header actions */}
               {unread > 0 && (
                 <div style={{ padding: '8px 14px 4px', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-                  <button onClick={markAll} style={{ fontSize: 11, color: '#6366F1', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+                  <button onClick={markAll} style={{ fontSize: 9, color: '#6366F1', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
                     {tc('layout_notifbell.notifMarkAllRead')}
                   </button>
                 </div>
@@ -326,7 +326,7 @@ export default function NotificationBell() {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.5" strokeLinecap="round" style={{ margin: '0 auto 8px', display: 'block' }}>
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--tx3)' }}>{tc('layout_notifbell.notifEmpty')}</p>
+                    <p style={{ margin: 0, fontSize: 10, color: 'var(--tx3)' }}>{tc('layout_notifbell.notifEmpty')}</p>
                   </div>
                 ) : (
                   notifications.map(n => (
@@ -355,11 +355,11 @@ export default function NotificationBell() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                          <span style={{ fontSize: 12, fontWeight: n.read_at ? 500 : 700, color: 'var(--tx)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</span>
+                          <span style={{ fontSize: 10, fontWeight: n.read_at ? 500 : 700, color: 'var(--tx)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</span>
                           {!n.read_at && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#d08a59', flexShrink: 0 }}/>}
                         </div>
-                        <p style={{ margin: '0 0 3px', fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</p>
-                        <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{timeAgo(n.created_at)}</span>
+                        <p style={{ margin: '0 0 3px', fontSize: 9, color: 'var(--tx2)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.body}</p>
+                        <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{timeAgo(n.created_at)}</span>
                       </div>
                     </div>
                   ))

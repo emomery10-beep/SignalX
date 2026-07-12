@@ -97,7 +97,7 @@ export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: stri
   }
 
   const inp: React.CSSProperties = {
-    padding: '8px 11px', fontSize: 13, background: EV,
+    padding: '8px 11px', fontSize: 11, background: EV,
     border: `1px solid ${B2}`, borderRadius: 9, color: TX,
     outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const,
   }
@@ -145,39 +145,39 @@ export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: stri
   return (
     <div style={{ maxWidth: 720 }}>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>{tc('intel_landedcost.title')}</div>
-        <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6 }}>{tc('intel_landedcost.subtitle')}</div>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 4 }}>{tc('intel_landedcost.title')}</div>
+        <div style={{ fontSize: 11, color: TX2, lineHeight: 1.6 }}>{tc('intel_landedcost.subtitle')}</div>
       </div>
 
       <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '18px 20px', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 14 }}>{tc('intel_landedcost.sectionProduct')}</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 14 }}>{tc('intel_landedcost.sectionProduct')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelOrigin')}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelOrigin')}</div>
             <select value={origin} onChange={e => setOrigin(e.target.value)} style={{ ...inp, cursor: 'pointer' }}>
               {ORIGINS.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}
             </select>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelQuantity')}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelQuantity')}</div>
             <input style={inp} type="number" value={quantity} onChange={e => { setQuantity(e.target.value); setCalculated(false) }} placeholder={tc('intel_landedcost.placeholderQuantity')} />
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelSupplierPrice', { sym })}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelSupplierPrice', { sym })}</div>
             <input style={inp} type="number" value={unitCost} onChange={e => { setUnitCost(e.target.value); setCalculated(false) }} placeholder={tc('intel_landedcost.placeholderSupplierPrice')} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelSellingPrice', { sym })}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelSellingPrice', { sym })}</div>
             <input style={inp} type="number" value={sellingPrice} onChange={e => { setSellingPrice(e.target.value); setCalculated(false) }} placeholder={tc('intel_landedcost.placeholderSellingPrice')} />
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelFxBuffer')}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelFxBuffer')}</div>
             <input style={inp} type="number" value={fxMarkup} onChange={e => { setFxMarkup(e.target.value); setCalculated(false) }} placeholder={tc('intel_landedcost.placeholderFxBuffer')} />
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelDutyCategory')}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelDutyCategory')}</div>
             <select value={dutyPreset} onChange={e => { setDutyPreset(e.target.value); setCalculated(false) }} style={{ ...inp, cursor: 'pointer' }}>
               {DUTY_PRESETS.map(d => <option key={d.label} value={d.rate}>{d.label}</option>)}
             </select>
@@ -185,27 +185,27 @@ export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: stri
         </div>
         {dutyPreset === 'custom' && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelCustomDutyRate')}</div>
+            <div style={{ fontSize: 10, color: TX3, marginBottom: 5 }}>{tc('intel_landedcost.labelCustomDutyRate')}</div>
             <input style={{ ...inp, maxWidth: 160 }} type="number" value={customDuty} onChange={e => { setCustomDuty(e.target.value); setCalculated(false) }} placeholder={tc('intel_landedcost.placeholderCustomDutyRate')} />
           </div>
         )}
       </div>
 
       <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '18px 20px', marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 14 }}>{tc('intel_landedcost.sectionShipping')}</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 14 }}>{tc('intel_landedcost.sectionShipping')}</div>
         <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, marginBottom: 12 }}>
           {extras.map((e) => (
             <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: 8, alignItems: 'center' }}>
               <input style={inp} value={e.label} onChange={ev => updateExtra(e.id, 'label', ev.target.value)} placeholder={tc('intel_landedcost.placeholderCostDescription')} />
               <input style={{ ...inp, paddingLeft: e.pct ? 11 : 22 }} type="number" value={e.value} onChange={ev => updateExtra(e.id, 'value', ev.target.value)} placeholder={e.pct ? '%' : sym} />
-              <button onClick={() => updateExtra(e.id, 'pct', !e.pct)} style={{ fontSize: 11, fontWeight: 600, color: e.pct ? ACC : TX3, background: e.pct ? 'rgba(208,138,89,.08)' : EV, border: `1px solid ${e.pct ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={() => updateExtra(e.id, 'pct', !e.pct)} style={{ fontSize: 9, fontWeight: 600, color: e.pct ? ACC : TX3, background: e.pct ? 'rgba(208,138,89,.08)' : EV, border: `1px solid ${e.pct ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>
                 {e.pct ? '%' : sym}
               </button>
             </div>
           ))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={calculate} disabled={!unitCost || !quantity} style={{ padding: '9px 22px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: (!unitCost || !quantity) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: (!unitCost || !quantity) ? .6 : 1 }}>
+          <button onClick={calculate} disabled={!unitCost || !quantity} style={{ padding: '9px 22px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: (!unitCost || !quantity) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: (!unitCost || !quantity) ? .6 : 1 }}>
             {tc('intel_landedcost.btnCalculate')}
           </button>
         </div>
@@ -215,29 +215,29 @@ export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: stri
         <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '18px 20px', marginBottom: 12 }}>
           {result.marginGap > 3 && (
             <div style={{ background: 'rgba(239,68,68,.05)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 3 }}>{tc('intel_landedcost.alertOverEstimatingTitle', { gap: fmtPct(result.marginGap) })}</div>
-              <div style={{ fontSize: 12, color: TX2 }}>{tc('intel_landedcost.alertOverEstimatingBody', { naive: fmtPct(result.naiveMarginPct), true: fmtPct(result.grossMarginPct) })}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 3 }}>{tc('intel_landedcost.alertOverEstimatingTitle', { gap: fmtPct(result.marginGap) })}</div>
+              <div style={{ fontSize: 10, color: TX2 }}>{tc('intel_landedcost.alertOverEstimatingBody', { naive: fmtPct(result.naiveMarginPct), true: fmtPct(result.grossMarginPct) })}</div>
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 18 }}>
             <div style={{ textAlign: 'center' as const }}>
-              <div style={{ fontSize: 11, color: TX3, marginBottom: 4 }}>{tc('intel_landedcost.statLandedCostPerUnit')}</div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 800, color: TX }}>{fmt(result.landedPerUnit)}</div>
+              <div style={{ fontSize: 9, color: TX3, marginBottom: 4 }}>{tc('intel_landedcost.statLandedCostPerUnit')}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 800, color: TX }}>{fmt(result.landedPerUnit)}</div>
             </div>
             <div style={{ textAlign: 'center' as const, borderLeft: `1px solid ${B}`, borderRight: `1px solid ${B}` }}>
-              <div style={{ fontSize: 11, color: TX3, marginBottom: 4 }}>{tc('intel_landedcost.statActualMargin')}</div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 800, color: marginColour }}>{fmtPct(result.grossMarginPct)}</div>
+              <div style={{ fontSize: 9, color: TX3, marginBottom: 4 }}>{tc('intel_landedcost.statActualMargin')}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 800, color: marginColour }}>{fmtPct(result.grossMarginPct)}</div>
             </div>
             <div style={{ textAlign: 'center' as const }}>
-              <div style={{ fontSize: 11, color: TX3, marginBottom: 4 }}>{tc('intel_landedcost.statBreakEvenPrice')}</div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 800, color: TX }}>{fmt(result.breakEven)}</div>
+              <div style={{ fontSize: 9, color: TX3, marginBottom: 4 }}>{tc('intel_landedcost.statBreakEvenPrice')}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 800, color: TX }}>{fmt(result.breakEven)}</div>
             </div>
           </div>
           {result.lines.map((line: any, i: number) => (
             <div key={i} style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                <span style={{ fontSize: 12, color: TX2 }}>{line.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: TX }}>{fmt(line.amount)} · {fmtPct(line.pct)}</span>
+                <span style={{ fontSize: 10, color: TX2 }}>{line.label}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: TX }}>{fmt(line.amount)} · {fmtPct(line.pct)}</span>
               </div>
               <div style={{ height: 4, background: EV, borderRadius: 3 }}>
                 <div style={{ height: '100%', width: `${Math.max(line.pct, 0.5)}%`, background: ACC, borderRadius: 3 }}/>
@@ -245,24 +245,24 @@ export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: stri
             </div>
           ))}
           <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 9, background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 12, color: TX2 }}><strong style={{ color: '#6366F1' }}>{tc('intel_landedcost.importVatLabel')}</strong> {tc('intel_landedcost.importVatRecoverable', { amount: fmt(result.vatAmount) })}</div>
-            <button onClick={() => setShowVAT(v => !v)} style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <div style={{ fontSize: 10, color: TX2 }}><strong style={{ color: '#6366F1' }}>{tc('intel_landedcost.importVatLabel')}</strong> {tc('intel_landedcost.importVatRecoverable', { amount: fmt(result.vatAmount) })}</div>
+            <button onClick={() => setShowVAT(v => !v)} style={{ fontSize: 9, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
               {showVAT ? tc('intel_landedcost.vatToggleHide') : tc('intel_landedcost.vatToggleShow')}
             </button>
           </div>
-          {showVAT && <div style={{ fontSize: 12, color: TX3, marginTop: 8, lineHeight: 1.6 }}>{tc('intel_landedcost.vatExplanation')}</div>}
+          {showVAT && <div style={{ fontSize: 10, color: TX3, marginTop: 8, lineHeight: 1.6 }}>{tc('intel_landedcost.vatExplanation')}</div>}
           <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-            <button onClick={() => onAsk(tc('intel_landedcost.askPrompt', { origin, sym, unitCost, sellingPrice, dutyRate: String(dutyRate) }))} style={{ flex: 1, padding: '10px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('intel_landedcost.btnAskAskBiz')}</button>
-            <button onClick={() => { setCalculated(false); setResult(null) }} style={{ padding: '10px 14px', color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('intel_landedcost.btnReset')}</button>
+            <button onClick={() => onAsk(tc('intel_landedcost.askPrompt', { origin, sym, unitCost, sellingPrice, dutyRate: String(dutyRate) }))} style={{ flex: 1, padding: '10px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('intel_landedcost.btnAskAskBiz')}</button>
+            <button onClick={() => { setCalculated(false); setResult(null) }} style={{ padding: '10px 14px', color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('intel_landedcost.btnReset')}</button>
           </div>
         </div>
       )}
 
       {!calculated && (
         <div style={{ padding: '24px', textAlign: 'center' as const, background: SF, border: `1px solid ${B}`, borderRadius: 14 }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>🧮</div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, color: TX, marginBottom: 6 }}>{tc('intel_landedcost.emptyHeading')}</div>
-          <p style={{ fontSize: 13, color: TX3, lineHeight: 1.6, maxWidth: 380, margin: '0 auto' }}>{tc('intel_landedcost.emptyBody')}</p>
+          <div style={{ fontSize: 30, marginBottom: 10 }}>🧮</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 12, fontWeight: 600, color: TX, marginBottom: 6 }}>{tc('intel_landedcost.emptyHeading')}</div>
+          <p style={{ fontSize: 11, color: TX3, lineHeight: 1.6, maxWidth: 380, margin: '0 auto' }}>{tc('intel_landedcost.emptyBody')}</p>
         </div>
       )}
     </div>

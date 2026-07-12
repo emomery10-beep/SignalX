@@ -94,9 +94,9 @@ function KpiCard({
         cursor: onClick ? 'pointer' : 'default', transition: 'all .15s',
       }}
     >
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: accent || 'var(--tx)', marginTop: 6, lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: accent || 'var(--tx)', marginTop: 6, lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
     </div>
   )
 }
@@ -109,7 +109,7 @@ function ABCBadge({ cls }: { cls: 'A' | 'B' | 'C' }) {
   }
   const s = map[cls]
   return (
-    <span style={{ fontSize: 11, fontWeight: 800, color: s.c, background: s.bg, padding: '2px 8px', borderRadius: 6 }}>{cls}</span>
+    <span style={{ fontSize: 9, fontWeight: 800, color: s.c, background: s.bg, padding: '2px 8px', borderRadius: 6 }}>{cls}</span>
   )
 }
 
@@ -117,7 +117,7 @@ function StatusPill({ refunded }: { refunded: boolean }) {
   const { tc } = useLang()
   return (
     <span style={{
-      fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase',
+      fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase',
       color: refunded ? RED : GREEN, background: refunded ? 'rgba(220,38,38,.1)' : 'rgba(22,163,74,.1)',
     }}>
       {refunded ? tc('pos_retail.statusRefunded') : tc('pos_retail.statusCompleted')}
@@ -128,9 +128,9 @@ function StatusPill({ refunded }: { refunded: boolean }) {
 function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?: string }) {
   return (
     <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--tx3)' }}>
-      <div style={{ fontSize: 40, marginBottom: 8 }}>{icon}</div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx2)' }}>{title}</div>
-      {hint && <div style={{ fontSize: 13, marginTop: 4 }}>{hint}</div>}
+      <div style={{ fontSize: 38, marginBottom: 8 }}>{icon}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)' }}>{title}</div>
+      {hint && <div style={{ fontSize: 11, marginTop: 4 }}>{hint}</div>}
     </div>
   )
 }
@@ -143,7 +143,7 @@ function SortHeader({
     <th
       onClick={() => onSort(col)}
       style={{
-        padding: '10px 12px', textAlign: align || 'left', fontSize: 11, fontWeight: 700, color: active ? ACC : 'var(--tx3)',
+        padding: '10px 12px', textAlign: align || 'left', fontSize: 9, fontWeight: 700, color: active ? ACC : 'var(--tx3)',
         textTransform: 'uppercase', letterSpacing: '.03em', cursor: 'pointer', whiteSpace: 'nowrap', userSelect: 'none',
       }}
     >
@@ -221,7 +221,7 @@ function HBars({ data, symbol }: { data: { label: string; value: number; color?:
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {data.map((d, i) => (
         <div key={i}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, marginBottom: 3 }}>
             <span style={{ color: 'var(--tx2)', fontWeight: 600 }}>{d.label}</span>
             <span style={{ color: 'var(--tx3)' }}>{fmt(symbol, d.value)}</span>
           </div>
@@ -268,7 +268,7 @@ function Legend({ items }: { items: { label: string; color: string; value?: stri
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {items.map((it, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10 }}>
           <span style={{ width: 12, height: 12, borderRadius: 3, background: it.color, flexShrink: 0 }} />
           <span style={{ color: 'var(--tx2)', flex: 1 }}>{it.label}</span>
           {it.value && <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{it.value}</span>}
@@ -282,7 +282,7 @@ function Card({ title, children, right }: { title: string; children: React.React
   return (
     <div style={{ padding: 18, borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{title}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{title}</div>
         {right}
       </div>
       {children}
@@ -318,7 +318,7 @@ export default function RetailTab({ currencySymbol, selectedLocation, transactio
             key={key}
             onClick={() => setSubTab(key)}
             style={{
-              padding: '10px 16px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+              padding: '10px 16px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
               background: 'transparent', border: 'none', cursor: 'pointer',
               color: subTab === key ? ACC : 'var(--tx3)',
               borderBottom: `2px solid ${subTab === key ? ACC : 'transparent'}`,
@@ -423,7 +423,7 @@ function OverviewSub({ symbol, txns, completedTxns, refundedTxns, inv }: {
 
       <Card title={tc('pos_retail.cardHourlySales')}>
         <BarChart data={m.hourly} compare={m.hourlyPrev} symbol={symbol} color={ACC} />
-        <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--tx3)', marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 16, fontSize: 10, color: 'var(--tx3)', marginTop: 8 }}>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, borderRadius: 2, marginRight: 5 }} />{tc('pos_retail.legendToday')}</span>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, opacity: 0.25, borderRadius: 2, marginRight: 5 }} />{tc('pos_retail.legendYesterday')}</span>
         </div>
@@ -471,22 +471,22 @@ function OverviewSub({ symbol, txns, completedTxns, refundedTxns, inv }: {
 function QuickStat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ padding: 14, borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)' }}>
-      <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.03em' }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)', marginTop: 4 }}>{value}</div>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.03em' }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', marginTop: 4 }}>{value}</div>
     </div>
   )
 }
 
 const inputStyle: React.CSSProperties = {
   padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)',
-  color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none',
+  color: 'var(--tx)', fontSize: 11, fontFamily: 'inherit', outline: 'none',
 }
 const selectStyle: React.CSSProperties = { ...inputStyle, cursor: 'pointer' }
 const thStyle: React.CSSProperties = {
-  padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--tx3)',
+  padding: '10px 12px', textAlign: 'left', fontSize: 9, fontWeight: 700, color: 'var(--tx3)',
   textTransform: 'uppercase', letterSpacing: '.03em', whiteSpace: 'nowrap',
 }
-const tdStyle: React.CSSProperties = { padding: '10px 12px', fontSize: 13, color: 'var(--tx2)', borderTop: '1px solid var(--b)' }
+const tdStyle: React.CSSProperties = { padding: '10px 12px', fontSize: 11, color: 'var(--tx2)', borderTop: '1px solid var(--b)' }
 
 // ===================================================================
 // TRANSACTIONS
@@ -564,7 +564,7 @@ function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[];
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={inputStyle} />
       </div>
 
-      <Card title={tc('pos_retail.cardZReport')} right={<span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_retail.zTxns', { n: filtered.length })}</span>}>
+      <Card title={tc('pos_retail.cardZReport')} right={<span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_retail.zTxns', { n: filtered.length })}</span>}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
           <ZStat label={tc('pos_retail.zTotalSales')} value={fmt(symbol, z.sales)} accent={GREEN} />
           <ZStat label={tc('pos_retail.zTotalRefunds')} value={fmt(symbol, z.refunds)} accent={RED} />
@@ -630,8 +630,8 @@ function FragmentRow({ children }: { children: React.ReactNode; open: boolean })
 function ZStat({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div style={{ padding: 12, borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)' }}>
-      <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: accent || 'var(--tx)', marginTop: 3 }}>{value}</div>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: accent || 'var(--tx)', marginTop: 3 }}>{value}</div>
     </div>
   )
 }
@@ -671,7 +671,7 @@ function TxnDetail({ t, symbol }: { t: any; symbol: string }) {
           })}
         </tbody>
       </table>
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13, color: 'var(--tx2)' }}>
+      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 11, color: 'var(--tx2)' }}>
         <span>{tc('pos_retail.txnDetailSubtotal')}<b style={{ color: 'var(--tx)' }}>{fmt(symbol, t.subtotal || 0)}</b></span>
         <span>{tc('pos_retail.txnDetailDiscount')}<b style={{ color: t.discount_amount ? RED : 'var(--tx)' }}>{fmt(symbol, t.discount_amount || 0)}</b></span>
         <span>{tc('pos_retail.txnDetailTax')}<b style={{ color: 'var(--tx)' }}>{fmt(symbol, t.tax_amount || 0)}</b></span>
@@ -811,7 +811,7 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
               { label: tc('pos_retail.abcLegendC'), color: RED, value: tc('pos_retail.abcSkus', { n: abcDist.C }) },
             ]} />
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 10, lineHeight: 1.5 }}>
             {tc('pos_retail.abcTip')}
           </div>
         </Card>
@@ -825,16 +825,16 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
           </div>
         </Card>
 
-        <Card title={tc('pos_retail.cardDeadStockAlert')} right={<span style={{ fontSize: 12, color: deadStock.length ? RED : GREEN, fontWeight: 700 }}>{deadStock.length}</span>}>
+        <Card title={tc('pos_retail.cardDeadStockAlert')} right={<span style={{ fontSize: 10, color: deadStock.length ? RED : GREEN, fontWeight: 700 }}>{deadStock.length}</span>}>
           {deadStock.length ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
               {deadStock.slice(0, 8).map((r) => (
                 <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 8, borderRadius: 8, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.18)' }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{r.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{r.daysSinceSold === 9999 ? tc('pos_retail.deadStockNeverSold') : tc('pos_retail.deadStockDaysSince', { n: r.daysSinceSold })} · {r.stock} in stock</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{r.name}</div>
+                    <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{r.daysSinceSold === 9999 ? tc('pos_retail.deadStockNeverSold') : tc('pos_retail.deadStockDaysSince', { n: r.daysSinceSold })} · {r.stock} in stock</div>
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: RED }}>{fmt(symbol, r.carryingCost)}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: RED }}>{fmt(symbol, r.carryingCost)}</div>
                 </div>
               ))}
             </div>
@@ -848,7 +848,7 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
           <option value="all">{tc('pos_retail.filterAllCategories')}</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_retail.productsCount', { n: display.length })}</span>
+        <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_retail.productsCount', { n: display.length })}</span>
       </div>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
@@ -879,10 +879,10 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
                     <td style={tdStyle}><ABCBadge cls={r.abc} /></td>
                     <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--tx)' }}>
                       {r.name}
-                      {lowStock && <span style={{ fontSize: 10, fontWeight: 700, color: AMBER, marginLeft: 6 }}>{tc('pos_retail.badgeLow')}</span>}
-                      {r.deadStock && <span style={{ fontSize: 10, fontWeight: 700, color: RED, marginLeft: 6 }}>{tc('pos_retail.badgeDead')}</span>}
+                      {lowStock && <span style={{ fontSize: 9, fontWeight: 700, color: AMBER, marginLeft: 6 }}>{tc('pos_retail.badgeLow')}</span>}
+                      {r.deadStock && <span style={{ fontSize: 9, fontWeight: 700, color: RED, marginLeft: 6 }}>{tc('pos_retail.badgeDead')}</span>}
                     </td>
-                    <td style={{ ...tdStyle, color: 'var(--tx3)', fontFamily: 'monospace', fontSize: 12 }}>{r.sku}</td>
+                    <td style={{ ...tdStyle, color: 'var(--tx3)', fontFamily: 'monospace', fontSize: 10 }}>{r.sku}</td>
                     <td style={tdStyle}>{r.category}</td>
                     <td style={{ ...tdStyle, textAlign: 'right', color: lowStock ? AMBER : 'var(--tx2)', fontWeight: lowStock ? 700 : 400 }}>{r.stock}</td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>{fmt(symbol, r.price)}</td>
@@ -902,7 +902,7 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
         {!display.length && <EmptyState icon="🔍" title={tc('pos_retail.emptyNoMatchingProducts')} />}
       </div>
 
-      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6, padding: '0 4px' }}>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.6, padding: '0 4px' }}>
         {tc('pos_retail.gmroiTip')}
       </div>
     </div>
@@ -912,8 +912,8 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
 function ValRow({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--b)' }}>
-      <span style={{ fontSize: 13, color: 'var(--tx2)' }}>{label}</span>
-      <span style={{ fontSize: 16, fontWeight: 700, color: accent || 'var(--tx)' }}>{value}</span>
+      <span style={{ fontSize: 11, color: 'var(--tx2)' }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 700, color: accent || 'var(--tx)' }}>{value}</span>
     </div>
   )
 }
@@ -1021,12 +1021,12 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {topSpenders.map((c, i) => (
               <div key={c.phone} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 8, background: 'var(--ev)' }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: ACC, width: 20 }}>#{i + 1}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: ACC, width: 20 }}>#{i + 1}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone} · {tc('pos_retail.topSpenderOrders', { n: c.orders })}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{c.phone} · {tc('pos_retail.topSpenderOrders', { n: c.orders })}</div>
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 700, color: GREEN }}>{fmt(symbol, c.spend)}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: GREEN }}>{fmt(symbol, c.spend)}</span>
               </div>
             ))}
           </div>
@@ -1041,7 +1041,7 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
           <option value="Loyal">{tc('pos_retail.segLoyal')}</option>
           <option value="Lapsed">{tc('pos_retail.segLapsed')}</option>
         </select>
-        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_retail.customersCount', { n: display.length })}</span>
+        <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('pos_retail.customersCount', { n: display.length })}</span>
       </div>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
@@ -1067,7 +1067,7 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
                       <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</td>
                       <td style={{ ...tdStyle, color: 'var(--tx3)' }}>{c.phone}</td>
                       <td style={tdStyle}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: segColors[c.segment], background: `${segColors[c.segment]}1a`, padding: '2px 8px', borderRadius: 6 }}>{c.segment}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: segColors[c.segment], background: `${segColors[c.segment]}1a`, padding: '2px 8px', borderRadius: 6 }}>{c.segment}</span>
                       </td>
                       <td style={{ ...tdStyle, textAlign: 'right' }}>{c.orders}</td>
                       <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--tx)' }}>{fmt(symbol, c.spend)}</td>
@@ -1077,10 +1077,10 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
                     {open && (
                       <tr>
                         <td colSpan={7} style={{ padding: 16, borderTop: '1px solid var(--b)', background: 'var(--ev)' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_retail.purchaseHistoryLtv', { amount: fmt(symbol, c.ltv) })}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_retail.purchaseHistoryLtv', { amount: fmt(symbol, c.ltv) })}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {c.history.map((h) => (
-                              <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
+                              <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                                 <span style={{ color: 'var(--tx3)' }}>{shortId(h.id)} · {fmtDateTime(h.date)}</span>
                                 <span style={{ color: 'var(--tx2)' }}>{tc('pos_retail.purchaseHistoryItems', { n: h.items })} · <b style={{ color: 'var(--tx)' }}>{fmt(symbol, h.total)}</b></span>
                               </div>
@@ -1144,7 +1144,7 @@ function PromotionsSub({ symbol, txns }: { symbol: string; txns: any[] }) {
             { label: tc('pos_retail.discountedRevLabel'), value: m.discountedRev, color: AMBER },
             { label: tc('pos_retail.fullPriceRevLabel'), value: m.nonDiscountedRev, color: ACC },
           ]} symbol={symbol} />
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 12, lineHeight: 1.5 }}>
             {tc('pos_retail.discountImpactTip')}
           </div>
         </Card>
@@ -1156,9 +1156,9 @@ function PromotionsSub({ symbol, txns }: { symbol: string; txns: any[] }) {
 
       <Card title={tc('pos_retail.cardCreatePromotion')}>
         <div style={{ padding: '24px 16px', textAlign: 'center', border: '1px dashed var(--b)', borderRadius: 10, background: ACC_BG }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>✨</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_retail.promoComingSoon')}</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_retail.promoComingSoonSub')}</div>
+          <div style={{ fontSize: 26, marginBottom: 6 }}>✨</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_retail.promoComingSoon')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_retail.promoComingSoonSub')}</div>
         </div>
       </Card>
     </div>
@@ -1226,7 +1226,7 @@ function ReturnsSub({ symbol, refundedTxns, txns }: { symbol: string; refundedTx
           {m.reasonList.length ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {m.reasonList.map((r) => (
-                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
+                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                   <span style={{ color: 'var(--tx2)' }}>{r.label}</span>
                   <b style={{ color: 'var(--tx)' }}>{r.value}</b>
                 </div>
@@ -1237,7 +1237,7 @@ function ReturnsSub({ symbol, refundedTxns, txns }: { symbol: string; refundedTx
       </div>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_retail.refundedTxnsTitle')}</div>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_retail.refundedTxnsTitle')}</div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

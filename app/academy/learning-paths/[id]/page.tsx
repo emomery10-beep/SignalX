@@ -31,8 +31,8 @@ export default function LearningPathPage({ params }: { params: { id: string } })
     return (
       <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', maxWidth: 560 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: TX, marginBottom: 12 }}>Learning Path Not Found</h1>
-          <p style={{ fontSize: 15, color: TX2, marginBottom: 36 }}>The learning path you're looking for doesn't exist.</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: TX, marginBottom: 12 }}>Learning Path Not Found</h1>
+          <p style={{ fontSize: 13, color: TX2, marginBottom: 36 }}>The learning path you're looking for doesn't exist.</p>
           <Link href={localePath('/academy/learning-paths', lang)} style={{ display: 'inline-block', padding: '12px 28px', background: ACC, color: SF, textDecoration: 'none', borderRadius: 10, fontWeight: 700 }}>
             ← Back to Learning Paths
           </Link>
@@ -70,19 +70,19 @@ export default function LearningPathPage({ params }: { params: { id: string } })
       {/* Header */}
       <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '24px clamp(16px, 4vw, 32px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <Link href={localePath('/academy/learning-paths', lang)} style={{ color: ACC, textDecoration: 'none', fontSize: 14, fontWeight: 600, marginBottom: 16, display: 'inline-block' }}>
+          <Link href={localePath('/academy/learning-paths', lang)} style={{ color: ACC, textDecoration: 'none', fontSize: 12, fontWeight: 600, marginBottom: 16, display: 'inline-block' }}>
             ← Back to Learning Paths
           </Link>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 24 }}>
-            <div style={{ fontSize: 56, lineHeight: 1 }}>{path.icon}</div>
+            <div style={{ fontSize: 54, lineHeight: 1 }}>{path.icon}</div>
             <div style={{ flex: 1 }}>
               <h1 style={{ fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: 700, color: TX, margin: '0 0 12px 0', letterSpacing: '-0.025em' }}>
                 {path.title}
               </h1>
-              <p style={{ fontSize: 18, color: TX2, margin: '0 0 16px 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 16, color: TX2, margin: '0 0 16px 0', lineHeight: 1.5 }}>
                 {path.subtitle}
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 13, color: TX2 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 11, color: TX2 }}>
                 <span>📚 {path.articles.length} articles</span>
                 <span>⏱️ {path.duration}</span>
                 <span style={{ background: path.color, color: SF, padding: '4px 12px', borderRadius: 6, lineHeight: 1 }}>
@@ -99,15 +99,15 @@ export default function LearningPathPage({ params }: { params: { id: string } })
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           {/* Description */}
           <div style={{ marginBottom: 48, background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: 24 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: TX, marginBottom: 12 }}>About This Learning Path</h2>
-            <p style={{ fontSize: 15, lineHeight: 1.7, color: TX2, margin: 0 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: TX, marginBottom: 12 }}>About This Learning Path</h2>
+            <p style={{ fontSize: 13, lineHeight: 1.7, color: TX2, margin: 0 }}>
               {path.description}
             </p>
           </div>
 
           {/* Modules */}
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: TX, marginBottom: 24 }}>Modules ({path.articles.length})</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: TX, marginBottom: 24 }}>Modules ({path.articles.length})</h2>
             <div style={{ display: 'grid', gap: 12 }}>
               {path.articles.map((article, index) => (
                 <div
@@ -133,21 +133,21 @@ export default function LearningPathPage({ params }: { params: { id: string } })
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 13,
+                    fontSize: 11,
                     fontWeight: 700,
                     marginTop: 2,
                   }}>
                     {index + 1}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, color: TX, margin: '0 0 4px 0' }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 600, color: TX, margin: '0 0 4px 0' }}>
                       {article.title}
                     </h3>
-                    <p style={{ fontSize: 13, color: TX3, margin: 0 }}>
+                    <p style={{ fontSize: 11, color: TX3, margin: 0 }}>
                       Article from AskBiz Academy
                     </p>
                   </div>
-                  <div style={{ fontSize: 18 }}>→</div>
+                  <div style={{ fontSize: 16 }}>→</div>
                 </div>
               ))}
             </div>
@@ -155,8 +155,8 @@ export default function LearningPathPage({ params }: { params: { id: string } })
 
           {/* CTA */}
           <div style={{ marginTop: 48, background: ACC, color: SF, borderRadius: 12, padding: 32, textAlign: 'center' }}>
-            <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 12px 0' }}>Ready to start learning?</h2>
-            <p style={{ fontSize: 15, margin: '0 0 24px 0', lineHeight: 1.6 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 12px 0' }}>Ready to start learning?</h2>
+            <p style={{ fontSize: 13, margin: '0 0 24px 0', lineHeight: 1.6 }}>
               Follow this learning path to master {path.title.toLowerCase()}.
             </p>
             <Link href={localePath('/signin', lang)} style={{
@@ -167,7 +167,7 @@ export default function LearningPathPage({ params }: { params: { id: string } })
               textDecoration: 'none',
               borderRadius: 10,
               fontWeight: 700,
-              fontSize: 14,
+              fontSize: 12,
             }}>
               Get Started Free →
             </Link>

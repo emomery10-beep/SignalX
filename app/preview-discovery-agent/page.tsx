@@ -22,11 +22,11 @@ export default function PreviewDiscoveryAgent() {
 
         {/* Breadcrumb */}
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:28 }}>
-          <span style={{ fontSize:12, color:'var(--tx3)', fontWeight:500 }}>Admin</span>
-          <span style={{ fontSize:12, color:'var(--b2)' }}>›</span>
-          <span style={{ fontSize:12, color:'var(--tx3)', fontWeight:500 }}>Agents</span>
-          <span style={{ fontSize:12, color:'var(--b2)' }}>›</span>
-          <span style={{ fontSize:12, color:'var(--tx2)', fontWeight:600 }}>Automation</span>
+          <span style={{ fontSize:10, color:'var(--tx3)', fontWeight:500 }}>Admin</span>
+          <span style={{ fontSize:10, color:'var(--b2)' }}>›</span>
+          <span style={{ fontSize:10, color:'var(--tx3)', fontWeight:500 }}>Agents</span>
+          <span style={{ fontSize:10, color:'var(--b2)' }}>›</span>
+          <span style={{ fontSize:10, color:'var(--tx2)', fontWeight:600 }}>Automation</span>
         </div>
 
         {/* Tab strip */}
@@ -34,7 +34,7 @@ export default function PreviewDiscoveryAgent() {
           {['Alice Watson — Blog Scout', 'Automation', 'Security & GDPR'].map((t, i) => (
             <div key={t} style={{
               padding: '10px 20px',
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: i===1 ? 600 : 400,
               color: i===1 ? '#6366F1' : 'var(--tx3)',
               borderBottom: i===1 ? '2px solid #6366F1' : '2px solid transparent',
@@ -48,8 +48,8 @@ export default function PreviewDiscoveryAgent() {
 
         {/* Section header */}
         <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:14, fontWeight:600, color:'var(--tx)' }}>Automated Jobs</div>
-          <div style={{ fontSize:12, color:'var(--tx3)', marginTop:2 }}>
+          <div style={{ fontSize:12, fontWeight:600, color:'var(--tx)' }}>Automated Jobs</div>
+          <div style={{ fontSize:10, color:'var(--tx3)', marginTop:2 }}>
             Cron jobs that run automatically on schedule. You can also trigger them manually.
           </div>
         </div>
@@ -70,19 +70,19 @@ export default function PreviewDiscoveryAgent() {
               width:40, height:40, borderRadius:'var(--r-md)',
               background:'rgba(99,102,241,.08)',
               display:'flex', alignItems:'center', justifyContent:'center',
-              fontSize:18, flexShrink:0,
+              fontSize:16, flexShrink:0,
             }}>{job.icon}</div>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
-                <span style={{ fontSize:13, fontWeight:600, color:'var(--tx)' }}>{job.name}</span>
-                <span style={{ fontSize:10, padding:'2px 8px', borderRadius:9999, background:'rgba(99,102,241,.08)', color:'#6366F1', fontWeight:600 }}>{job.schedule}</span>
+                <span style={{ fontSize:11, fontWeight:600, color:'var(--tx)' }}>{job.name}</span>
+                <span style={{ fontSize:9, padding:'2px 8px', borderRadius:9999, background:'rgba(99,102,241,.08)', color:'#6366F1', fontWeight:600 }}>{job.schedule}</span>
               </div>
-              <div style={{ fontSize:12, color:'var(--tx3)', lineHeight:1.5 }}>{job.desc}</div>
+              <div style={{ fontSize:10, color:'var(--tx3)', lineHeight:1.5 }}>{job.desc}</div>
             </div>
             <button style={{
               padding:'9px 18px', borderRadius:9999, border:'none',
               background:'#6366F1', color:'#fff',
-              fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit', flexShrink:0,
+              fontSize:10, fontWeight:600, cursor:'pointer', fontFamily:'inherit', flexShrink:0,
             }}>
               Run Now
             </button>
@@ -102,14 +102,14 @@ export default function PreviewDiscoveryAgent() {
             width:40, height:40, borderRadius:'var(--r-md)',
             background:'rgba(16,185,129,.08)',
             display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:18, flexShrink:0,
+            fontSize:16, flexShrink:0,
           }}>✨</div>
           <div style={{ flex:1 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
-              <span style={{ fontSize:13, fontWeight:600, color:'var(--tx)' }}>Blog Auto-Publish</span>
-              <span style={{ fontSize:10, padding:'2px 8px', borderRadius:9999, background:'rgba(16,185,129,.1)', color:'#10b981', fontWeight:600 }}>Active</span>
+              <span style={{ fontSize:11, fontWeight:600, color:'var(--tx)' }}>Blog Auto-Publish</span>
+              <span style={{ fontSize:9, padding:'2px 8px', borderRadius:9999, background:'rgba(16,185,129,.1)', color:'#10b981', fontWeight:600 }}>Active</span>
             </div>
-            <div style={{ fontSize:12, color:'var(--tx3)', lineHeight:1.5 }}>
+            <div style={{ fontSize:10, color:'var(--tx3)', lineHeight:1.5 }}>
               High-quality blog posts (score 80+) are auto-published by Alice Watson. Lower-scoring posts go to Pending Review. Google & Bing are pinged on every publish.
             </div>
           </div>

@@ -168,7 +168,7 @@ export default function TopicPage({ params }: Props) {
             {/* Popular */}
             {popularArticles.length > 0 && (
               <section style={{ marginBottom: 28 }}>
-                <h2 className="hc-section-title" style={{ fontSize: 14, color: 'var(--hc-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Most Popular</h2>
+                <h2 className="hc-section-title" style={{ fontSize: 12, color: 'var(--hc-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Most Popular</h2>
                 <div className="hc-article-list">
                   {popularArticles.map((a) => (
                     <Link key={a.slug} href={`/help/${a.slug}`} className="hc-article-row">
@@ -191,7 +191,7 @@ export default function TopicPage({ params }: Props) {
 
             {/* All articles */}
             <section>
-              <h2 className="hc-section-title" style={{ fontSize: 14, color: 'var(--hc-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>All Articles</h2>
+              <h2 className="hc-section-title" style={{ fontSize: 12, color: 'var(--hc-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>All Articles</h2>
               <div className="hc-article-list">
                 {articles.map((a) => (
                   <Link key={a.slug} href={`/help/${a.slug}`} className="hc-article-row">
