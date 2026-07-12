@@ -64,6 +64,7 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
   const [visible, setVisible] = useState(false)
   const [revShown, setRevShown] = useState(0)
   const [custShown, setCustShown] = useState(0)
+  const [mamaOpen, setMamaOpen] = useState(false)
   const reduce = useRef(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -188,11 +189,35 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
             </article>
           ))}
           </div>
-          {/* Mama Nia — above the perspective layer so she sizes + stacks reliably */}
-          <div className={visible ? 'mama-day mama-day-play' : 'mama-day'} aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 70, pointerEvents: 'none', borderRadius: 18, overflow: 'hidden' }}>
+          {/* Mama Nia — hover/tap the avatar to fade her portrait in over the deck; move away or tap again to fade out */}
+          <div
+            className={mamaOpen ? 'mama-day mama-day-open' : 'mama-day'}
+            aria-hidden="true"
+            onClick={() => setMamaOpen(false)}
+            style={{ position: 'absolute', inset: 0, zIndex: 70, pointerEvents: mamaOpen ? 'auto' : 'none', cursor: mamaOpen ? 'pointer' : 'default', borderRadius: 18, overflow: 'hidden' }}
+          >
             <img src="/mama-mboga.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 32%' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(26,20,16,.34), transparent 52%)' }} />
           </div>
+          <button
+            type="button"
+            onMouseEnter={() => setMamaOpen(true)}
+            onMouseLeave={() => setMamaOpen(false)}
+            onClick={() => setMamaOpen(v => !v)}
+            aria-label={tc('landing.day_meet_mama')}
+            style={{
+              position: 'absolute', top: 14, left: 14, zIndex: 80,
+              display: 'flex', alignItems: 'center', gap: 9,
+              padding: '5px 12px 5px 5px', borderRadius: 9999,
+              background: 'rgba(255,255,255,.94)', border: 'none', cursor: 'pointer',
+              boxShadow: '0 6px 16px rgba(26,20,16,.18)',
+            }}
+          >
+            <span style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }}>
+              <img src="/mama-mboga.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 28%' }} />
+            </span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: C.tx }}>{tc('landing.day_meet_mama')}</span>
+          </button>
         </div>
 
         {/* Controls + running tally */}
@@ -236,9 +261,8 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
       <style>{`
         .dil-btn{transition:background .15s,border-color .15s}
         .dil-btn:hover{background:#e8eaed}
-        .mama-day{opacity:0}
-        .mama-day.mama-day-play{animation:mamaDay 6500ms ease forwards}
-        @keyframes mamaDay{0%{opacity:0}9%{opacity:1}64%{opacity:1}100%{opacity:0}}
+        .mama-day{opacity:0;transition:opacity 420ms ease}
+        .mama-day.mama-day-open{opacity:1;transition:opacity 320ms ease}
       `}</style>
     </section>
   )
