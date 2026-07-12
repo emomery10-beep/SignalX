@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
               style={{
                 background: "#d08a59",
                 color: "#fff",
-                fontSize: "14px",
+                fontSize: "12px",
                 fontWeight: 700,
                 padding: "6px 16px",
                 borderRadius: "20px",
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
             <div
               style={{
                 color: "#b0b8c8",
-                fontSize: "14px",
+                fontSize: "12px",
                 padding: "6px 16px",
                 borderRadius: "20px",
                 border: "1px solid #2d3a50",
@@ -98,12 +98,12 @@ export async function GET(req: NextRequest) {
 
           {/* Bottom: meta */}
           <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <div style={{ color: "#b0b8c8", fontSize: "16px" }}>{footer}</div>
+            <div style={{ color: "#b0b8c8", fontSize: "14px" }}>{footer}</div>
             {difficulty && (
               <div
                 style={{
                   color: "#d08a59",
-                  fontSize: "14px",
+                  fontSize: "12px",
                   fontWeight: 600,
                   padding: "4px 12px",
                   borderRadius: "12px",
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
               </div>
             )}
             {readTime && (
-              <div style={{ color: "#b0b8c8", fontSize: "14px" }}>{readTime} min read</div>
+              <div style={{ color: "#b0b8c8", fontSize: "12px" }}>{readTime} min read</div>
             )}
           </div>
         </div>

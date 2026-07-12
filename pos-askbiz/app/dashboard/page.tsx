@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getRoleHomeRoute, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import AnimatedNumber from '@/components/AnimatedNumber'
 
 const ACC        = '#d08a59'
 const ACC_LIGHT  = 'rgba(208,138,89,.12)'
@@ -117,7 +118,7 @@ function StatTile({ label, value, color = 'var(--pos-ink)', sub }: { label: stri
   return (
     <Card>
       <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: statTileFontSize(value), fontWeight: 700, color, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
+      <div style={{ fontSize: statTileFontSize(value), fontWeight: 700, color, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><AnimatedNumber value={value} /></div>
       {sub && <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 4 }}>{sub}</div>}
     </Card>
   )
@@ -494,7 +495,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
         <Card style={{ gridColumn: 'span 2' }}>
           <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 4 }}>{tc('dashboard.retail_todays_revenue')}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 32, fontWeight: 800, color: GREEN, lineHeight: 1 }}>{fmt(sym, revenue)}</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: GREEN, lineHeight: 1 }}><AnimatedNumber value={fmt(sym, revenue)} /></div>
             {revDelta != null && (
               <div style={{ fontSize: 13, fontWeight: 700, color: revDelta >= 0 ? GREEN : RED, marginBottom: 3 }}>
                 {revDelta >= 0 ? '↑' : '↓'} {tc('dashboard.retail_vs_yesterday', { pct: Math.abs(revDelta).toFixed(0) })}

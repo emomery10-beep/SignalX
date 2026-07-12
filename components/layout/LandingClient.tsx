@@ -7,7 +7,9 @@ import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { localePath } from '@/lib/i18n-locale'
 import type { Locale } from '@/lib/i18n-locale'
+import DayInTheLife from '@/components/marketing/DayInTheLife'
 import { createClient } from '@/lib/supabase/client'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -633,9 +635,55 @@ function DemoUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       </div>
 
       <a href={`https://pos.askbiz.co/preview/${tab==='courier'?'logistics':tab}`} target="_blank" rel="noopener noreferrer"
-         style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:11,fontSize:11,fontWeight:700,color:'#C97A44',textDecoration:'none',background:'#FAFAFA',borderTop:'1px solid #F0F0F0'}}>
+         style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:11,fontSize:9,fontWeight:700,color:'#C97A44',textDecoration:'none',background:'#FAFAFA',borderTop:'1px solid #F0F0F0'}}>
         {tc('landing.demo_cta')} →
       </a>
+    </div>
+  )
+}
+
+// ── KPI drill-downs ── wordless "deeper dive" per metric. Inline SVG only (no chart
+// lib), rendered lazily on tap. Representative data — never mutates the widget's numbers.
+const KPI_DRILL: Record<string,{bars:number[];parts:number[]}> = {
+  revenue:      {bars:[62,70,58,76,68,85,100], parts:[38,26,19,17]},
+  sales:        {bars:[55,60,52,66,61,73,100], parts:[34,28,22,16]},
+  refunds:      {bars:[20,6,26,9,12,30,60],    parts:[55,30,15]},
+  low_stock:    {bars:[64,70,74,68,82,90,100], parts:[42,33,25]},
+  gross_profit: {bars:[60,66,57,73,67,82,100], parts:[36,29,20,15]},
+  margin:       {bars:[88,90,86,92,95,96,97],  parts:[41,26,19,14]},
+  avg_sale:     {bars:[58,62,55,67,60,72,100], parts:[40,30,18,12]},
+}
+function KpiDrilldown({metric,tc,onClose}:{metric:{mkey:string;label:string;value:string;color:string};tc:(k:string)=>string;onClose:()=>void}) {
+  const d = KPI_DRILL[metric.mkey] || KPI_DRILL.revenue
+  const bw=22, gap=8, maxH=46
+  return (
+    <div className="pos-drill" style={{position:'absolute',inset:0,background:'#fff',zIndex:6,display:'flex',flexDirection:'column',padding:'14px 16px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <button onClick={onClose} aria-label="Back" style={{width:28,height:28,borderRadius:7,border:'1px solid #E5E5E5',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{metric.label}</span>
+        </div>
+        <button onClick={onClose} aria-label="Close" style={{width:28,height:28,borderRadius:7,border:'none',background:'none',cursor:'pointer',color:'#AAA',padding:0}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div style={{fontSize:24,fontWeight:800,color:metric.color,lineHeight:1}}>{metric.value}</div>
+      <div style={{fontSize:9,color:'#AAA',margin:'3px 0 12px'}}>{tc('landing.pos_date_7days')}</div>
+      <svg viewBox="0 0 216 56" width="100%" height="62" style={{marginBottom:14}}>
+        {d.bars.map((h,i)=>{const x=i*(bw+gap)+2;const bh=h/100*maxH;const y=52-bh;const today=i===d.bars.length-1;return <rect key={i} x={x} y={y} width={bw} height={bh} rx={3} fill={today?metric.color:'#EAEAEA'}/>})}
+      </svg>
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {d.parts.map((p,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{flex:1,height:8,background:'#F0F0F0',borderRadius:5,overflow:'hidden'}}>
+              <div style={{width:`${p}%`,height:'100%',background:metric.color,opacity:1-i*0.18,borderRadius:5}}/>
+            </div>
+            <span style={{fontSize:9,fontWeight:700,color:'#555',width:32,textAlign:'right',fontVariantNumeric:'tabular-nums'}}>{p}%</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -644,6 +692,7 @@ function DemoUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
 function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   type TabId = 'overview'|'operations'|'staff'|'branches'|'map'|'audit'|'payments'|'logistics'
   const [tab, setTab] = useState<TabId>('overview')
+  const [drill, setDrill] = useState<null|{mkey:string;label:string;value:string;color:string}>(null)
   const TABS:{id:TabId;label:string}[] = [
     {id:'overview',label:tc('landing.pos_tab_overview')},
     {id:'operations',label:tc('landing.pos_tab_operations')},
@@ -654,20 +703,32 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
     {id:'payments',label:tc('landing.pos_tab_payments')},
     {id:'logistics',label:tc('landing.pos_tab_logistics')},
   ]
+  const overviewRef = useRef<HTMLDivElement>(null)
+  // Present the Overview once: a spotlight sweeps card-by-card (CSS, delay set inline
+  // per card) while each number counts up (AnimatedNumber delay). Data never changes.
+  useEffect(()=>{
+    if(tab!=='overview') return
+    const el = overviewRef.current; if(!el) return
+    const io = new IntersectionObserver(es=>{
+      if(es.some(e=>e.isIntersecting)){ el.classList.add('pos-present'); io.disconnect() }
+    },{threshold:0.3})
+    io.observe(el)
+    return ()=>io.disconnect()
+  },[tab])
   return (
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
       {/* App chrome */}
       <div style={{display:'flex',alignItems:'center',background:'#fff',borderBottom:'1px solid #F0F0F0',minHeight:44}}>
         <div style={{width:180,borderRight:'1px solid #F0F0F0',height:44,display:'flex',alignItems:'center',padding:'0 14px',gap:8,background:'#FAFAFA',flexShrink:0}}>
           <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={9}/></div>
-          <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
+          <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
           <span style={{marginLeft:'auto',fontSize:8,padding:'1px 6px',borderRadius:9999,background:'#FDEEE0',color:'#C97A44',fontWeight:700}}>POS</span>
         </div>
         <div className="pos-tabs-wrap" style={{flex:1,overflow:'hidden'}}>
           <div className="pos-tabs" style={{display:'flex',overflowX:'auto'}}>
             {TABS.map(t=>(
               <button key={t.id} onClick={()=>setTab(t.id)}
-                style={{padding:'0 13px',height:44,fontSize:10.5,fontWeight:tab===t.id?700:400,color:tab===t.id?'#1A1410':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
+                style={{padding:'0 13px',height:44,fontSize:9.5,fontWeight:tab===t.id?700:400,color:tab===t.id?'#1A1410':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
                 {t.label}
               </button>
             ))}
@@ -681,7 +742,8 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
 
       {/* Tab content */}
       {tab==='overview' && (
-        <div style={{padding:'16px 18px'}}>
+        <div ref={overviewRef} className="pos-overview" style={{position:'relative',padding:'16px 18px'}}>
+          {drill && <KpiDrilldown metric={drill} tc={tc} onClose={()=>setDrill(null)} />}
           {/* Date filters */}
           <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
             {[tc('landing.pos_date_today'),tc('landing.pos_date_yesterday'),tc('landing.pos_date_7days'),tc('landing.pos_date_30days')].map((d,i)=>(
@@ -691,14 +753,18 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           {/* Top row: 4 KPI cards */}
           <div className="rep-4col" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
             {[
-              {label:tc('landing.pos_kpi_revenue'),value:demo.pnl.rev,sub:tc('landing.pos_kpi_vs_prev_up34'),color:'#16a34a'},
-              {label:tc('landing.pos_kpi_sales'),value:'143',sub:tc('landing.pos_kpi_vs_prev_up12'),color:'#16a34a'},
-              {label:tc('landing.pos_kpi_refunds'),value:'3',sub:tc('landing.pos_kpi_vs_prev_down2'),color:'#f87171'},
-              {label:tc('landing.pos_kpi_low_stock'),value:'42',sub:tc('landing.pos_kpi_products'),color:'#fb923c'},
+              {mkey:'revenue',label:tc('landing.pos_kpi_revenue'),value:demo.pnl.rev,sub:tc('landing.pos_kpi_vs_prev_up34'),color:'#16a34a'},
+              {mkey:'sales',label:tc('landing.pos_kpi_sales'),value:'143',sub:tc('landing.pos_kpi_vs_prev_up12'),color:'#16a34a'},
+              {mkey:'refunds',label:tc('landing.pos_kpi_refunds'),value:'3',sub:tc('landing.pos_kpi_vs_prev_down2'),color:'#f87171'},
+              {mkey:'low_stock',label:tc('landing.pos_kpi_low_stock'),value:'42',sub:tc('landing.pos_kpi_products'),color:'#fb923c'},
             ].map((k,i)=>(
-              <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
+              <div key={i} className="pos-kpi" role="button" tabIndex={0}
+                onClick={()=>setDrill({mkey:k.mkey,label:k.label,value:String(k.value),color:k.color})}
+                onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setDrill({mkey:k.mkey,label:k.label,value:String(k.value),color:k.color})}}}
+                style={{position:'relative',padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',animationDelay:`${150+i*560}ms`}}>
+                <span className="kpi-more" aria-hidden="true" style={{position:'absolute',top:8,right:9,color:'#C97A44'}}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
                 <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
-                <div style={{fontSize:18,fontWeight:800,color:k.color,marginBottom:3}}>{k.value}</div>
+                <div style={{fontSize:16,fontWeight:800,color:k.color,marginBottom:3}}><AnimatedNumber value={k.value} duration={620} delay={150+i*560} /></div>
                 <div style={{fontSize:8,color:'#AAA'}}>{k.sub}</div>
               </div>
             ))}
@@ -706,13 +772,17 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           {/* Second row: 3 cards */}
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
             {[
-              {label:tc('landing.pos_kpi_gross_profit'),value:demo.pnl.gross,color:'#16a34a'},
-              {label:tc('landing.pos_kpi_margin'),value:'34.2%',color:'#C97A44'},
-              {label:tc('landing.pos_kpi_avg_sale'),value:demo.pnl.avg,color:'#1A1410'},
+              {mkey:'gross_profit',label:tc('landing.pos_kpi_gross_profit'),value:demo.pnl.gross,color:'#16a34a'},
+              {mkey:'margin',label:tc('landing.pos_kpi_margin'),value:'34.2%',color:'#C97A44'},
+              {mkey:'avg_sale',label:tc('landing.pos_kpi_avg_sale'),value:demo.pnl.avg,color:'#1A1410'},
             ].map((k,i)=>(
-              <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
+              <div key={i} className="pos-kpi" role="button" tabIndex={0}
+                onClick={()=>setDrill({mkey:k.mkey,label:k.label,value:String(k.value),color:k.color})}
+                onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setDrill({mkey:k.mkey,label:k.label,value:String(k.value),color:k.color})}}}
+                style={{position:'relative',padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',animationDelay:`${150+(i+4)*560}ms`}}>
+                <span className="kpi-more" aria-hidden="true" style={{position:'absolute',top:8,right:9,color:'#C97A44'}}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
                 <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
-                <div style={{fontSize:16,fontWeight:800,color:k.color}}>{k.value}</div>
+                <div style={{fontSize:14,fontWeight:800,color:k.color}}><AnimatedNumber value={k.value} duration={620} delay={150+(i+4)*560} /></div>
               </div>
             ))}
           </div>
@@ -729,11 +799,11 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
               <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'6px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
                 <div style={{width:24,height:24,borderRadius:'50%',background:'#F0F0F0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#555',flexShrink:0}}>{s.name[0]}</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410'}}>{s.name}</div>
+                  <div style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{s.name}</div>
                   <div style={{fontSize:8,color:'#AAA'}}>{s.role}</div>
                 </div>
                 <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'#16a34a'}}>{s.sales}</div>
+                  <div style={{fontSize:9,fontWeight:700,color:'#16a34a'}}><AnimatedNumber value={s.sales} duration={620} delay={150+(i+7)*560} /></div>
                   <div style={{fontSize:8,color:'#AAA'}}>{s.tx} {tc('landing.pos_transactions')}</div>
                 </div>
               </div>
@@ -1067,15 +1137,41 @@ function CalcInput({placeholder,value,onChange,isInt}:{placeholder:string;value:
         // allow digits, one dot (or comma), leading minus for deletions
         if(v===''||v==='-'||/^-?\d*\.?\d*$/.test(v))onChange(v)
       }}
-      style={{width:'100%',height:36,padding:'0 10px',fontSize:13,border:`1px solid ${T.bd}`,borderRadius:8,background:T.alt,color:T.tx,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
+      style={{width:'100%',height:36,padding:'0 10px',fontSize:11,border:`1px solid ${T.bd}`,borderRadius:8,background:T.alt,color:T.tx,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
     />
   )
 }
 function CalcResult({value,label,color}:{value:string;label:string;color:string}) {
   return (
     <div style={{textAlign:'center',padding:'6px 2px',background:T.alt,borderRadius:8}}>
-      <div style={{fontFamily:'var(--font-instrument)',fontSize:16,fontWeight:700,color,lineHeight:1.2}}>{value}</div>
+      <div style={{fontFamily:'var(--font-instrument)',fontSize:14,fontWeight:700,color,lineHeight:1.2}}>{value}</div>
       <div style={{fontSize:8,color:T.tx3,fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:'.03em'}}>{label}</div>
+    </div>
+  )
+}
+
+// Light cashier-shaped skeleton shown for the ~1s the live PoS iframe is deferred,
+// so the deferred state reads as "opening your till", not a blank box.
+function PosPoster() {
+  return (
+    <div style={{ height:640, background:'#FAFAFA', display:'grid', gridTemplateColumns:'1.4fr .95fr', gap:14, padding:16, position:'relative' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        <div className="sk" style={{ height:34, width:'55%', borderRadius:9 }} />
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gridAutoRows:'1fr', gap:10, flex:1 }}>
+          {Array.from({length:9}).map((_,i)=>(<div key={i} className="sk" style={{ borderRadius:12 }} />))}
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:10, background:'#fff', borderRadius:14, border:'1px solid #F0F0F0', padding:14 }}>
+        <div className="sk" style={{ height:15, width:'50%', borderRadius:6 }} />
+        {Array.from({length:4}).map((_,i)=>(<div key={i} className="sk" style={{ height:30, borderRadius:8 }} />))}
+        <div style={{ flex:1 }} />
+        <div style={{ height:44, borderRadius:12, background:'#cbe8d5' }} />
+      </div>
+      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+        <div className="pos-poster-mark" style={{ width:54, height:54, borderRadius:15, background:T.acc, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 10px 30px -8px rgba(201,122,68,.5)' }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1085,10 +1181,25 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
     {id:'ops' as const, label:'Business Intelligence', icon:'chart'},
     {id:'cashier' as const, label:'PoS', icon:'camera'},
   ]
-  const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('ops')
+  const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('cashier')
+  const [posLoaded,setPosLoaded] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  // Land on PoS, but never let the live cashier iframe block first paint:
+  // mount it only once the hero is on screen and the browser is idle.
+  useEffect(()=>{
+    const el = rootRef.current; if(!el) return
+    const io = new IntersectionObserver(es=>{
+      if(es.some(e=>e.isIntersecting)){
+        const ric = (window as unknown as {requestIdleCallback?:(cb:()=>void)=>void}).requestIdleCallback || ((cb:()=>void)=>window.setTimeout(cb,900))
+        ric(()=>setPosLoaded(true)); io.disconnect()
+      }
+    },{threshold:0.2})
+    io.observe(el)
+    return ()=>io.disconnect()
+  },[])
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
   return (
-    <div style={{ position:'relative', borderRadius:22, background:'#fff', boxShadow:'0 1px 2px rgba(0,0,0,.03), 0 8px 24px rgba(0,0,0,.04), 0 40px 100px rgba(0,0,0,.09), 0 90px 160px -40px rgba(0,0,0,.12)', overflow:'hidden', minHeight:640 }}>
+    <div ref={rootRef} style={{ position:'relative', borderRadius:22, background:'#fff', boxShadow:'0 1px 2px rgba(0,0,0,.03), 0 8px 24px rgba(0,0,0,.04), 0 40px 100px rgba(0,0,0,.09), 0 90px 160px -40px rgba(0,0,0,.12)', overflow:'hidden', minHeight:640 }}>
       <div style={{ padding:16, background:'#fff' }}>
         <div style={{
           position:'relative', display:'flex', background:'#F0F0F0', borderRadius:12, padding:4,
@@ -1104,8 +1215,8 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             transition:'transform 480ms cubic-bezier(0.65,0,0.35,1)',
           }}/>
           {HERO_TABS.map(t=>(
-            <button key={t.id} className="hero-tab-btn" onClick={()=>setHeroTab(t.id)} style={{
-              position:'relative', flex:1, padding:'11px 24px', fontSize:17, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
+            <button key={t.id} className="hero-tab-btn" onClick={()=>{ setHeroTab(t.id); if(t.id==='cashier') setPosLoaded(true) }} style={{
+              position:'relative', flex:1, padding:'11px 24px', fontSize:15, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
               display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', gap:8,
               background:'none', border:'none', borderRadius:9, zIndex:1,
               color: heroTab===t.id ? '#1A1410' : '#8A8A8A', transition:'color 200ms',
@@ -1119,12 +1230,15 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       </div>
       {heroTab==='ops' ? (
         <PosShowcase tc={tc} demo={demo} />
-      ) : (
+      ) : posLoaded ? (
         <iframe
           src="https://pos.askbiz.co/preview/cashier"
           title="AskBiz cashier — live demo"
+          loading="lazy"
           style={{ width:'100%', height:640, border:'none', display:'block' }}
         />
+      ) : (
+        <PosPoster />
       )}
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
@@ -1567,6 +1681,25 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
         @keyframes tdot{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
         @keyframes demoFadeIn{from{opacity:.4}to{opacity:1}}
+        /* PosShowcase "present itself": a spotlight sweeps each KPI card once (per-card delay set inline) */
+        @keyframes posSpot{0%,100%{transform:none;box-shadow:0 0 0 0 rgba(201,122,68,0);border-color:#F0F0F0}30%,62%{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 22px -12px rgba(201,122,68,.55);border-color:#C97A44}}
+        .pos-present .pos-kpi{animation-name:posSpot;animation-duration:660ms;animation-timing-function:cubic-bezier(0.22,1,0.36,1);animation-fill-mode:both;will-change:transform}
+        @media(prefers-reduced-motion:reduce){.pos-present .pos-kpi{animation:none!important}}
+        /* tap-to-drill affordance + lazy panel */
+        .pos-overview .pos-kpi{cursor:pointer}
+        .pos-overview .pos-kpi:hover{box-shadow:0 6px 16px -10px rgba(201,122,68,.5)}
+        .pos-overview .pos-kpi:focus-visible{outline:2px solid #C97A44;outline-offset:2px}
+        .pos-overview .pos-kpi .kpi-more{opacity:.4;transition:opacity 180ms}
+        .pos-overview .pos-kpi:hover .kpi-more{opacity:.95}
+        .pos-drill{animation:drillIn 260ms cubic-bezier(0.22,1,0.36,1)}
+        @keyframes drillIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+        @media(prefers-reduced-motion:reduce){.pos-drill{animation:none}}
+        /* PoS deferred-state skeleton shimmer + gentle mark pulse */
+        .sk{background:linear-gradient(90deg,#E5E6EA 25%,#F1F2F4 37%,#E5E6EA 63%);background-size:400% 100%;animation:skSh 1.4s ease infinite}
+        @keyframes skSh{0%{background-position:100% 0}100%{background-position:0 0}}
+        .pos-poster-mark{animation:markPulse 1.8s ease-in-out infinite}
+        @keyframes markPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.82}}
+        @media(prefers-reduced-motion:reduce){.sk{animation:none;background:#E5E6EA}.pos-poster-mark{animation:none}}
         [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
         [data-reveal].revealed{opacity:1;transform:translateY(0)}
         [data-reveal-delay="1"].revealed{transition-delay:80ms}
@@ -1798,25 +1931,28 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
+      {/* ── A DAY IN THE LIFE — narrative fold-card deck ───────────────── */}
+      <DayInTheLife tc={tc} />
+
       {/* ── POINT OF SALE — Eleven-pattern example section ─────────────── */}
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
           <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'end', marginBottom:40 }} data-reveal>
             <div>
-              <div style={{ fontSize:12, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:T.acc, marginBottom:14 }}>Point of sale</div>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:T.acc, marginBottom:14 }}>Point of sale</div>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,50px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
                 {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
               </h2>
               <div style={{ display:'flex',gap:12,flexWrap:'wrap' }}>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:12,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
                   {tc('landing.pos_cta')}
                 </Link>
-                <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
+                <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:12,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
                   {tc('landing.pos_demo_cta')}
                 </Link>
               </div>
             </div>
-            <p style={{ fontSize:16,color:T.tx2,lineHeight:1.7,margin:0 }}>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,margin:0 }}>
               {tc('landing.pos_subtitle')} <span style={{ color:T.tx3 }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
             </p>
           </div>

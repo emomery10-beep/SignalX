@@ -34,6 +34,15 @@ export default function RestaurantHub() {
   const [accepting, setAccepting]       = useState<string | null>(null)
   const [brief, setBrief]               = useState<{ improved: string; worsened: string; action: string; health_score: number } | null>(null)
   const [anomalies, setAnomalies]       = useState<{ title: string; severity: string; prompt: string }[]>([])
+  const [readinessScore, setReadinessScore] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!authReady || !session) return
+    fetch('/api/pos/restaurant/readiness', { headers: session.headers })
+      .then(r => r.json())
+      .then(d => setReadinessScore(d.readiness?.readiness_score ?? 0))
+      .catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -126,6 +135,7 @@ export default function RestaurantHub() {
   }
 
   const nav = [
+    { label: tc('restaurant.nav_get_listed_label'),  href: '/restaurant/get-listed',     desc: tc('restaurant.nav_get_listed_desc') },
     { label: tc('restaurant.nav_floor_label'),       href: '/restaurant/floor',         desc: tc('restaurant.nav_floor_desc') },
     { label: tc('restaurant.nav_orders_label'),      href: '/restaurant/orders',        desc: tc('restaurant.nav_orders_desc') },
     { label: tc('restaurant.nav_kitchen_label'),     href: '/restaurant/kitchen',       desc: tc('restaurant.nav_kitchen_desc') },
@@ -350,18 +360,25 @@ export default function RestaurantHub() {
 
         {/* Navigation tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
-          {nav.map((n, idx) => (
+          {nav.map((n, idx) => {
+            const isGetListed = n.href === '/restaurant/get-listed'
+            const badge = isGetListed && readinessScore != null
+              ? (readinessScore >= 100 ? tc('restaurant.get_listed_done') : tc('restaurant.get_listed_ready', { score: readinessScore }))
+              : null
+            const done = readinessScore != null && readinessScore >= 100
+            return (
             <button key={n.href} onClick={() => router.push(n.href)}
               className="pos-item"
-              style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '18px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
+              style={{ position: 'relative', background: '#1e293b', border: `1px solid ${isGetListed ? ACC + '80' : '#334155'}`, borderRadius: 12, padding: '18px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#334155')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = isGetListed ? ACC + '80' : '#334155')}
             >
+              {badge && <span style={{ position: 'absolute', top: 12, right: 12, background: done ? '#16a34a' : ACC, color: '#0f172a', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 100, fontVariantNumeric: 'tabular-nums' }}>{badge}</span>}
               <div style={{ fontSize: 22, marginBottom: 6 }}>{n.label.split(' ')[0]}</div>
               <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 14 }}>{n.label.split(' ').slice(1).join(' ')}</div>
               <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{n.desc}</div>
             </button>
-          ))}
+          )})}
         </div>
       </div>
     </div>
