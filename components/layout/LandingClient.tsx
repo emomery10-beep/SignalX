@@ -1499,6 +1499,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       links: [
         { href: '/blog', label: tc('landing.footer_blog') },
         { href: '/academy', label: tc('landing.footer_academy') },
+        { href: '/research', label: 'Research' },
         { href: '/help', label: tc('landing.footer_help') },
         { href: '/glossary', label: tc('landing.nav_glossary_label') },
         { href: '/benchmarks', label: tc('landing.nav_benchmarks_label') },
