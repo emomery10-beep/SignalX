@@ -93,6 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/dpa`,                                        lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/search`,                                     lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/benchmarks`,                                 lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/research`,                                   lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     // SEO landing pages
     { url: `${base}/bloomberg-alternative`,                      lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/ai-business-analytics`,                      lastModified: now, changeFrequency: "monthly", priority: 0.8 },
