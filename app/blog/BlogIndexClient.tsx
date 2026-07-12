@@ -376,20 +376,20 @@ function BlogContent() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
             <span style={{ fontSize: 11, fontWeight: 500, color: c.text }}>{post.cluster}</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
+          <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 17, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
             {post.title}
           </div>
-          <p style={{ fontSize: 12, color: TX2, lineHeight: 1.55, margin: 0 }}>
+          <p style={{ fontSize: 14, color: TX2, lineHeight: 1.55, margin: 0 }}>
             {post.tldr?.slice(0, 120)}{(post.tldr?.length ?? 0) > 120 ? '…' : ''}
           </p>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 11, color: TX3, whiteSpace: 'nowrap' }}>{tc('blog_index.post_min', { count: post.readTime })}</div>
+          <div style={{ fontSize: 13, color: TX3, whiteSpace: 'nowrap' }}>{tc('blog_index.post_min', { count: post.readTime })}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isRTL ? 'flex-start' : 'flex-end', marginTop: 2 }}>
             {isNew(post.publishDate) && (
               <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em', lineHeight: 1.4 }}>{tc('blog_index.badge_new')}</span>
             )}
-            <div style={{ fontSize: 11, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, lang, tc)}</div>
+            <div style={{ fontSize: 13, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, lang, tc)}</div>
           </div>
         </div>
       </Link>
@@ -517,10 +517,10 @@ function BlogContent() {
           <div style={{ marginBottom: isHome ? 36 : 28 }}>
             {isHome && (
               <div style={{ marginBottom: 22 }}>
-                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
+                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(30px,4.5vw,46px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
                   {tc('blog_index.home_heading')}
                 </h1>
-                <p style={{ fontSize: 14, color: TX2, margin: 0, lineHeight: 1.6 }}>
+                <p style={{ fontSize: 16, color: TX2, margin: 0, lineHeight: 1.6 }}>
                   {tc('blog_index.home_subtitle', { count: posts.length.toLocaleString(), topics: clusters.length })}
                 </p>
               </div>
@@ -542,7 +542,7 @@ function BlogContent() {
           {isHome && (
             <>
               <section style={{ marginBottom: 52 }}>
-                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('blog_index.popular_topics')}</h2>
+                <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>{tc('blog_index.popular_topics')}</h2>
                 {/* Featured top 3 — data-driven from actual post counts */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18 }}>
                   {topClusters.slice(0, 3).map(topic => {
@@ -560,9 +560,9 @@ function BlogContent() {
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: c.bg, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, color: c.text, flexShrink: 0 }}>
                           {topic.icon}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
-                        <p style={{ fontSize: 12, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
-                        <span style={{ fontSize: 11, color: c.text, fontWeight: 600 }}>{tc('blog_index.topic_articles_count', { count: topic.count })}</span>
+                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
+                        <p style={{ fontSize: 14, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
+                        <span style={{ fontSize: 12, color: c.text, fontWeight: 600 }}>{tc('blog_index.topic_articles_count', { count: topic.count })}</span>
                       </button>
                     )
                   })}
@@ -585,7 +585,7 @@ function BlogContent() {
               {popularThisMonth.length > 0 && (
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
+                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
                     {popularThisMonth[0]?.cluster && (
                       <span style={{ fontSize: 11, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
                         {popularThisMonth[0].cluster}
@@ -603,7 +603,7 @@ function BlogContent() {
               {newThisMonth.length > 0 && (
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
+                    <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
                     <span style={{ fontSize: 10, fontWeight: 700, color: SF, background: ACC, borderRadius: 9999, padding: '2px 8px' }}>{tc('blog_index.new_count', { count: newThisMonth.length })}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -616,7 +616,7 @@ function BlogContent() {
 
               <section>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.recent_articles')}</h2>
+                  <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 20, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.recent_articles')}</h2>
                   <span style={{ fontSize: 12, color: TX3 }}>{tc('blog_index.total_count', { count: posts.length })}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -653,10 +653,10 @@ function BlogContent() {
 
               {/* Header */}
               <div style={{ marginBottom: 24 }}>
-                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(18px,3vw,26px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
+                <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
                   {search ? tc('blog_index.results_for', { query: search }) : activePillar || active}
                 </h1>
-                <p style={{ fontSize: 13, color: TX2, margin: 0 }}>
+                <p style={{ fontSize: 15, color: TX2, margin: 0 }}>
                   {filtered.length !== 1 ? tc('blog_index.article_count_plural', { count: filtered.length }) : tc('blog_index.article_count', { count: filtered.length })}
                   {active && !search && ` · ${active}`}
                 </p>

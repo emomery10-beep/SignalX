@@ -33,18 +33,6 @@
   --fs-3xl: 28px;
 }
 
-/* TEMP — site-wide Patrick Hand test. Overrides every brand-voice font
-   variable (display/body/label/wordmark) to the handwriting face; --font-mono
-   is left alone since it's only used for API keys/policy IDs, not brand voice.
-   !important is required because next/font sets these vars via a class on
-   <body> with normal specificity — remove this whole block to revert. */
-body {
-  --font-sora: var(--font-patrick) !important;
-  --font-dm: var(--font-patrick) !important;
-  --font-jakarta: var(--font-patrick) !important;
-  --font-instrument: var(--font-patrick) !important;
-}
-
 /* ── Base ───────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 /* +6px over the 16px browser default so every Tailwind rem-based size
@@ -467,9 +455,12 @@ img {
 }
 
 /* ── MOBILE SIDEBAR ─────────────────────────────────────────── */
-/* Sidebar shown as overlay when open (mobile) */
+/* Sidebar scrim shown ONLY when the drawer is open (mobile).
+   Must be qualified with .open — an unqualified `.sidebar-overlay { display:block }`
+   here collides with the blog's overlay (same class) and greys out the whole
+   page on mobile even when the drawer is closed. */
 @media (max-width: 768px) {
-  .sidebar-overlay { display: block !important; }
+  .sidebar-overlay.open { display: block !important; }
 }
 
 @keyframes voiceListenPulse {
