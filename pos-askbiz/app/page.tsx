@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import { COUNTRY_DIAL, toE164 } from '@/lib/phone'
-import { markPosSessionStarted } from '@/lib/pos-session'
+import { markPosSessionStarted, ensurePosSessionCookie } from '@/lib/pos-session'
 
 const ACC = '#d08a59'
 
@@ -58,6 +58,9 @@ function LoginPageContent() {
       if (raw) {
         const s = JSON.parse(raw)
         if (s?.id && s?.owner_id && s?.role !== undefined) {
+          // Existing PIN session (pre-dates the gate cookie): set the cookie so
+          // the edge gate lets them back into the app instead of looping here.
+          ensurePosSessionCookie()
           router.replace(getLoginDest(s.role))
           return
         }

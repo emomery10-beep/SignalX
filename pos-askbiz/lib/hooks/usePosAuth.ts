@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { ensurePosSessionCookie } from '@/lib/pos-session'
 
 export interface PosAuthSession {
   ownerId: string
@@ -30,6 +31,7 @@ export function usePosAuth(redirectTo = '/'): { session: PosAuthSession | null; 
       if (raw) {
         const s = JSON.parse(raw)
         if (s?.owner_id && s?.id) {
+          ensurePosSessionCookie() // keep the edge-gate cookie alive while active
           setSession({
             ownerId: s.owner_id,
             staffId: s.id,
