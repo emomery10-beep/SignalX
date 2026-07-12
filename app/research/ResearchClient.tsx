@@ -89,10 +89,10 @@ export default function ResearchClient() {
 
         <div style={{ maxWidth: 660, marginTop: "clamp(24px,3vw,32px)", display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={{ fontSize: 16.5, lineHeight: 1.7, color: C.tx, margin: 0 }}>
-            I build things, and I study how people actually work. I hold a BSc in Computer Science and an MA in Applied Linguistics — one taught me systems, the other taught me people.
+            Idarus Ali builds things, and studies how people actually work. He holds a BSc in Computer Science and an MA in Applied Linguistics — one taught him systems, the other taught him people.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
-            Over the last fifteen years I&rsquo;ve worked and researched across East Africa and the Middle East, close to the markets, traders, and small shops most reports only describe from a distance. I&rsquo;m an entrepreneur and a creative, and I founded AskBiz to put real business tools in the hands of street vendors and small businesses.
+            Over the last fifteen years he has worked and researched across East Africa and the Middle East, close to the markets, traders, and small shops most reports only describe from a distance. An entrepreneur and a creative, he founded AskBiz to put real business tools in the hands of street vendors and small businesses.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
             The research here comes out of that same work: field-level, evidence-led, and written to be read — not to sit in a drawer.
