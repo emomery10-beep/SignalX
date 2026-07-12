@@ -89,13 +89,16 @@ export default function ResearchClient() {
 
         <div style={{ maxWidth: 660, marginTop: "clamp(24px,3vw,32px)", display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={{ fontSize: 16.5, lineHeight: 1.7, color: C.tx, margin: 0 }}>
-            Idarus Ali builds things, and studies how people actually work. He holds a BSc in Computer Science and an MA in Applied Linguistics — one taught him systems, the other taught him people.
+            Idarus has spent more than fifteen years working across East Africa and the Middle East. Not from an office, but next to the people who actually run the economy: the market traders, the shopkeepers, the street vendors, the small businesses that keep families going.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
-            Over the last fifteen years he has worked and researched across East Africa and the Middle East, close to the markets, traders, and small shops most reports only describe from a distance. An entrepreneur and a creative, he founded AskBiz to put real business tools in the hands of street vendors and small businesses.
+            That closeness changed how he sees the problem. Most of these owners can&rsquo;t afford the software and the accountants that bigger companies take for granted, and for a long time nobody bothered to build anything for them. Idarus never accepted that. Being short of money should not mean being left behind, and the tools that help a business survive should reach the woman selling vegetables just as easily as the company with a finance team.
           </p>
           <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
-            The research here comes out of that same work: field-level, evidence-led, and written to be read — not to sit in a drawer.
+            That is why he founded AskBiz. A business tool that runs from a cheap phone, in the owner&rsquo;s own language, so anyone can see what they made today and know what to do tomorrow. No expensive hardware. No accountant. Just answers a trader can actually use.
+          </p>
+          <p style={{ fontSize: 15.5, lineHeight: 1.75, color: C.tx2, margin: 0 }}>
+            Idarus holds a BSc in Computer Science and an MA in Applied Linguistics. One taught him how systems work. The other taught him how people really talk, and how easily they get left out. The research here comes from that same world, and it is written about the people too often missing from it.
           </p>
         </div>
       </header>
