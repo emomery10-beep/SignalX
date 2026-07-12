@@ -149,7 +149,8 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
         </div>
 
         {/* Fold-card deck */}
-        <div style={{ position: 'relative', height: 'clamp(322px,54vw,344px)', perspective: 1500 }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', height: 'clamp(322px,54vw,344px)', perspective: 1500 }}>
           {SCENES.map((s, k) => (
             <article key={k} style={cardStyle(k)} aria-hidden={k !== i}>
               <div style={{
@@ -186,7 +187,8 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
               </div>
             </article>
           ))}
-          {/* Mama Nia — fades in over the deck, holds, then fades out to reveal her day */}
+          </div>
+          {/* Mama Nia — above the perspective layer so she sizes + stacks reliably */}
           <div className={visible ? 'mama-day mama-day-play' : 'mama-day'} aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 70, pointerEvents: 'none', borderRadius: 18, overflow: 'hidden' }}>
             <img src="/mama-mboga.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 32%' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(26,20,16,.34), transparent 52%)' }} />
@@ -235,8 +237,8 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
         .dil-btn{transition:background .15s,border-color .15s}
         .dil-btn:hover{background:#e8eaed}
         .mama-day{opacity:0}
-        .mama-day.mama-day-play{animation:mamaDay 3600ms ease forwards}
-        @keyframes mamaDay{0%{opacity:0}15%{opacity:1}56%{opacity:1}100%{opacity:0}}
+        .mama-day.mama-day-play{animation:mamaDay 6500ms ease forwards}
+        @keyframes mamaDay{0%{opacity:0}9%{opacity:1}64%{opacity:1}100%{opacity:0}}
         @media(prefers-reduced-motion:reduce){.mama-day{display:none}}
       `}</style>
     </section>
