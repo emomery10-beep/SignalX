@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { ACTIVE_LOCALES, DEFAULT_LOCALE, resolveLocale } from '@/lib/i18n-locale'
+// CSP lives in one place (plain JS so next.config.js can require it too).
+import { CONTENT_SECURITY_POLICY } from '@/lib/security-headers'
 
 // Non-default locales carry a URL prefix (/es, /fr, …); English stays unprefixed
 // so existing indexed URLs and inbound links are untouched.
@@ -135,7 +137,7 @@ export async function middleware(request: NextRequest) {
     res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
     res.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self)')
     if (!res.headers.has('Content-Security-Policy')) {
-      res.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com https://analytics.tiktok.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://js.stripe.com https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://*.vercel-insights.com https://*.vercel-analytics.com https://api.tavily.com https://*.tile.openstreetmap.org https://analytics.tiktok.com https://ads.tiktok.com; frame-src https://js.stripe.com https://hooks.stripe.com https://pos.askbiz.co; object-src 'none'; base-uri 'self'; form-action 'self'")
+      res.headers.set('Content-Security-Policy', CONTENT_SECURITY_POLICY)
     }
     return res
   }

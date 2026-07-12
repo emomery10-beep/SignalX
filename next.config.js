@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { CONTENT_SECURITY_POLICY } = require('./lib/security-headers')
+
 const nextConfig = {
   // TODO: remove once pre-existing TS errors are fixed across the codebase
   typescript: { ignoreBuildErrors: true },
@@ -22,7 +24,7 @@ const nextConfig = {
           { key: 'Referrer-Policy',             value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',          value: 'camera=(self), microphone=(), geolocation=(self)' },
           { key: 'Strict-Transport-Security',    value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'Content-Security-Policy',     value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com https://analytics.tiktok.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://js.stripe.com https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://*.vercel-insights.com https://*.vercel-analytics.com https://api.tavily.com https://*.tile.openstreetmap.org https://analytics.tiktok.com https://ads.tiktok.com; frame-src https://js.stripe.com https://hooks.stripe.com https://pos.askbiz.co; object-src 'none'; base-uri 'self'; form-action 'self'" },
+          { key: 'Content-Security-Policy',     value: CONTENT_SECURITY_POLICY },
         ],
       },
       {
