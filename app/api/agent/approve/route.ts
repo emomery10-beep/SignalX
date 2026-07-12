@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { notifyIndexNow } from '@/lib/indexnow'
 
 export const runtime = 'nodejs'
 
@@ -98,6 +99,7 @@ export async function POST(request: NextRequest) {
     revalidatePath(`/blog/${slug}`)
     revalidatePath('/blog')
     revalidatePath('/sitemap.xml')
+    await notifyIndexNow([`https://askbiz.co/blog/${slug}`])
   }
 
   return NextResponse.json({ success: true, action: 'approved', type: item.type, slug })

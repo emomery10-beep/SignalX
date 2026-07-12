@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import { logUsage } from '@/lib/log-usage'
 import { buildCitableSources, buildArticleContext, citationRulePrompt, findFabricatedCitations, countSectionWords, MIN_WORD_COUNT, generateWithLengthRetry } from '@/lib/scout-citation-guard'
+import { notifyIndexNow } from '@/lib/indexnow'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 800
@@ -219,9 +220,16 @@ async function runMarketingScout() {
       if (error) {
         log.push(`DB error: ${error.message}`)
       } else {
-        const autoPublished = inserts.filter(i => i.status === 'published').length
+        const publishedSlugs = inserts
+          .filter(i => i.status === 'published')
+          .map(i => (i.content as Record<string, unknown>)?.slug as string | undefined)
+          .filter(Boolean) as string[]
+        const autoPublished = publishedSlugs.length
         const pendingReview = inserts.filter(i => i.status === 'pending').length
         log.push(`Saved ${inserts.length} posts — ${autoPublished} auto-published, ${pendingReview} pending review`)
+        if (publishedSlugs.length > 0) {
+          await notifyIndexNow(publishedSlugs.map(slug => `https://askbiz.co/blog/${slug}`))
+        }
       }
     }
 
