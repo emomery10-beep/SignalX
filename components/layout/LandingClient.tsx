@@ -1240,11 +1240,6 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       ) : (
         <PosPoster />
       )}
-      {/* Mama mboga intro — fades in over the widget, holds, then fades out to reveal the dashboard */}
-      <div className="mama-intro" aria-hidden="true" style={{ position:'absolute', inset:0, zIndex:30, pointerEvents:'none', overflow:'hidden' }}>
-        <img src="/mama-mboga.jpg" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 35%' }} />
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(26,20,16,.30), transparent 46%)' }} />
-      </div>
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
         background:`
@@ -1967,7 +1962,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── POINT OF SALE — Eleven-pattern example section ─────────────── */}
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'end', marginBottom:40 }} data-reveal>
+          <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'center', marginBottom:40 }} data-reveal>
             <div>
               <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:T.acc, marginBottom:14 }}>Point of sale</div>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,50px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
