@@ -66,12 +66,25 @@ export const metadata: Metadata = {
       'sw-TZ': 'https://askbiz.co/sw',
     },
   },
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: '48x48' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/apple-touch-icon.png',
+  // Favicon and apple-touch-icon come from the App Router file conventions
+  // (app/icon.svg, app/apple-icon.tsx), driven by the brand mark in lib/brand.ts.
+  // The sitewide social card is /og-image.png → /api/og?mode=brand (branded with
+  // the same mark); individual pages may override with their own image.
+  openGraph: {
+    type: 'website',
+    siteName: 'AskBiz',
+    url: 'https://askbiz.co',
+    locale: 'en_GB',
+    title: 'AskBiz — Sell With Your Phone. Know Your Money Tonight.',
+    description: 'Phone POS and business tracker for market stalls, street vendors, and small businesses. M-Pesa, cash, or card. Any phone, free to start.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBiz — Sell with your phone. Know your money tonight.' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@askbizco',
+    title: 'AskBiz — Sell With Your Phone. Know Your Money Tonight.',
+    description: 'Phone POS and business tracker for market stalls, street vendors, and small businesses. M-Pesa, cash, or card. Any phone, free to start.',
+    images: ['/og-image.png'],
   },
   verification: {
     google: '9kV7FelOm_qspoK5hcdTe0drirWdQdMOyMx-Jje310s',

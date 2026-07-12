@@ -6,7 +6,7 @@
   "scope": "/",
   "display": "standalone",
   "background_color": "#1a1916",
-  "theme_color": "#d08a59",
+  "theme_color": "#C97A44",
   "orientation": "portrait-primary",
   "lang": "en-GB",
   "categories": ["business", "finance", "shopping", "productivity", "utilities"],
@@ -62,13 +62,13 @@
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "screenshots": [

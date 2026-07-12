@@ -105,12 +105,18 @@ const buildBizTypes = (tc: (k: string) => string) => [
 const buildFaqs = (tc: (key: string) => string) =>
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ q: tc('landing.faq_' + i + '_q'), a: tc('landing.faq_' + i + '_a') }))
 
+// AskBiz mark — camera viewfinder + lens dot (the small-size form of the
+// viewfinder→phone→lens system). Rendered in `color` so it sits on the accent tile.
 function Logo({size=12,color='white'}:{size?:number;color?:string}) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <rect x="3" y="22" width="5" height="7" rx="1.5" fill={color} opacity=".5"/>
-      <rect x="11" y="16" width="5" height="13" rx="1.5" fill={color} opacity=".75"/>
-      <rect x="19" y="9" width="5" height="20" rx="1.5" fill={color}/>
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <g fill="none" stroke={color} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 11 V5 H11"/>
+        <path d="M21 5 H27 V11"/>
+        <path d="M5 21 V27 H11"/>
+        <path d="M27 21 V27 H21"/>
+      </g>
+      <circle cx="16" cy="16" r="2.6" fill={color}/>
     </svg>
   )
 }

@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="88" viewBox="0 0 300 88" role="img" aria-label="AskBiz">
   <title>AskBiz</title>
-  <desc>AskBiz logo — a camera viewfinder framing a phone with a lens, beside the AskBiz wordmark.</desc>
   <style>
     .wm { font-family: 'Plus Jakarta Sans','Sora',system-ui,-apple-system,'Segoe UI',sans-serif; font-weight: 800; font-size: 46px; letter-spacing: -1.6px; }
     .ink { fill: #1A1410; }
@@ -8,6 +7,7 @@
     @media (prefers-color-scheme: dark) { .ink { fill: #F5F1EA; } }
   </style>
 
+  <!-- mark on tile -->
   <g transform="translate(8,12)">
     <rect width="64" height="64" rx="14" fill="#C97A44"/>
     <g fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
@@ -21,5 +21,6 @@
     <circle cx="32" cy="33" r="2.4" fill="#C97A44"/>
   </g>
 
+  <!-- wordmark -->
   <text x="90" y="59" class="wm"><tspan class="ink">Ask</tspan><tspan class="acc">Biz</tspan></text>
 </svg>
