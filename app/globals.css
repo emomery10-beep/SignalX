@@ -52,24 +52,6 @@ body {
   text-size-adjust: 100%;
 }
 
-/* Desktop density: render everything at 92% (like a 92% browser zoom).
-   Uniformly scales both rem-based (Tailwind) text and the many inline px
-   fontSize values, which a root font-size change alone can't touch. `zoom`
-   relayouts at the scaled size so text stays crisp. Desktop only (≥769px) —
-   phones keep full size for legibility, matching the site's 768px breakpoint. */
-@media (min-width: 769px) {
-  body { zoom: 0.92; }
-  /* Keep Leaflet's geometry in real pixels so map clicks and markers stay
-     accurate under the body zoom (net scale of the map subtree becomes 1.0).
-     The map lives in an overflow:hidden fixed-height card, so this
-     counter-scale can't disturb the surrounding layout. 1.087 ≈ 1 / 0.92. */
-  .leaflet-container { zoom: 1.087; }
-  /* Full-bleed screens: a 100vh element renders ~8% short under zoom, exposing
-     a strip of body background at the bottom. Fill the viewport in the zoomed
-     coordinate space instead. Opt in with className="fullbleed-fill". */
-  .fullbleed-fill { min-height: calc(100vh / 0.92); }
-}
-
 /* Tap targets — minimum 44px on mobile.
    Opt out with className="no-tap-target" on any element that manages its
    own compact sizing (e.g. a dense form) — otherwise min-height always wins
