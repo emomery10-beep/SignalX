@@ -20,7 +20,16 @@ const WINDOW_MS = 60_000
  * higher-tier account and let every call fire uncapped, since a single
  * oversized request can't be fixed by pacing alone.
  */
+// Bounds a single call's total wait so a busy budget fails fast with a
+// clear error instead of stalling past the route's maxDuration (800s) and
+// getting killed by the platform with no response ever reaching the
+// client — that silent kill is what left the admin UI frozen on "scanning"
+// forever. 150s leaves room for several calls to each wait once and still
+// fit inside the function's time budget.
+const MAX_WAIT_MS = 150_000
+
 export async function waitForGroqBudget(estimatedTokens: number, limit = 5_500): Promise<void> {
+  const start = Date.now()
   for (;;) {
     const now = Date.now()
     // Drop entries outside the rolling window
@@ -32,8 +41,13 @@ export async function waitForGroqBudget(estimatedTokens: number, limit = 5_500):
       return
     }
 
-    // Wait until the oldest entry falls out of the window
-    const waitMs = Math.max(1000, WINDOW_MS - (now - usageLog[0].ts) + 500)
+    if (now - start >= MAX_WAIT_MS) {
+      throw new Error(`Groq rate-limit budget still full after ${Math.round(MAX_WAIT_MS / 1000)}s — giving up instead of stalling past the function timeout`)
+    }
+
+    // Wait until the oldest entry falls out of the window, capped so we
+    // never overshoot MAX_WAIT_MS on the final iteration.
+    const waitMs = Math.max(1000, Math.min(WINDOW_MS - (now - usageLog[0].ts) + 500, MAX_WAIT_MS - (now - start)))
     await new Promise(res => setTimeout(res, waitMs))
   }
 }

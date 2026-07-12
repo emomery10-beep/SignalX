@@ -32,6 +32,28 @@ const VERDICT_STYLE = {
   problem: { bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.3)',  color: '#dc2626', label: '🔴 ACTION NEEDED' },
 }
 
+// Scout routes run maxDuration=800s server-side; give the fetch a little
+// headroom past that so a real (slow but successful) run isn't aborted out
+// from under itself, while still guaranteeing the button can't hang forever
+// if the platform drops the connection instead of returning an error.
+const SCOUT_FETCH_TIMEOUT_MS = 820_000
+
+async function fetchScoutRun(url: string) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), SCOUT_FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    return await res.json()
+  } catch (e: any) {
+    if (e?.name === 'AbortError') {
+      throw new Error('Timed out waiting for a response — the run may still be finishing server-side, check back shortly')
+    }
+    throw e
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export default function AgentAdminPage() {
   const { tc } = useLang()
   const PRESETS = buildPresets(tc)
@@ -380,8 +402,7 @@ export default function AgentAdminPage() {
   const runAliceScout = async () => {
     setAliceRunning(true); setAliceRunLog(['Alice is scanning for today\'s stories...'])
     try {
-      const res = await fetch('/api/agent/blog-scout?secret=dev-test')
-      const data = await res.json()
+      const data = await fetchScoutRun('/api/agent/blog-scout?secret=dev-test')
       setAliceRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
       else if (data.success) { showToast(tc('page_admin_agent.aliceDrafted', { n: data.blogsGenerated })); setAliceLoading(true); setAliceFilter('published'); loadAliceCounts() }
@@ -393,8 +414,7 @@ export default function AgentAdminPage() {
   const runVictorScout = async () => {
     setVictorRunning(true); setVictorRunLog(['Victor is scanning Nigeria, West & South Africa marketing signals...'])
     try {
-      const res  = await fetch('/api/agent/victor-scout?secret=dev-test')
-      const data = await res.json()
+      const data = await fetchScoutRun('/api/agent/victor-scout?secret=dev-test')
       setVictorRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
       else if (data.success) { showToast(tc('page_admin_agent.victorDrafted', { n: data.blogsGenerated })); setVictorLoading(true); setVictorFilter('published'); loadVictorCounts() }
@@ -444,8 +464,7 @@ export default function AgentAdminPage() {
   const runBenScout = async () => {
     setBenRunning(true); setBenRunLog(['Ben is scanning US markets for today\'s stories...'])
     try {
-      const res  = await fetch('/api/agent/ben-scout?secret=dev-test')
-      const data = await res.json()
+      const data = await fetchScoutRun('/api/agent/ben-scout?secret=dev-test')
       setBenRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
       else if (data.success) { showToast(tc('page_admin_agent.benDrafted', { n: data.blogsGenerated })); setBenLoading(true); setBenFilter('published'); loadBenCounts() }
@@ -495,8 +514,7 @@ export default function AgentAdminPage() {
   const runCarolyneScout = async () => {
     setCarolyneRunning(true); setCarolyneRunLog(['Carolyne is scanning East African markets...'])
     try {
-      const res  = await fetch('/api/agent/carolyne-scout?secret=dev-test')
-      const data = await res.json()
+      const data = await fetchScoutRun('/api/agent/carolyne-scout?secret=dev-test')
       setCarolyneRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
       else if (data.success) { showToast(tc('page_admin_agent.carolyneDrafted', { n: data.blogsGenerated })); setCarolyneLoading(true); setCarolyneFilter('published'); loadCarolyneCounts() }
@@ -508,8 +526,7 @@ export default function AgentAdminPage() {
   const runMayaScout = async () => {
     setMayaRunning(true); setMayaRunLog(['Maya is scanning global marketing signals...'])
     try {
-      const res  = await fetch('/api/agent/marketing-scout?secret=dev-test')
-      const data = await res.json()
+      const data = await fetchScoutRun('/api/agent/marketing-scout?secret=dev-test')
       setMayaRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
       else if (data.success) { showToast(tc('page_admin_agent.mayaDrafted', { n: data.blogsGenerated })); setMayaLoading(true); setMayaFilter('published'); loadMayaCounts() }
@@ -559,8 +576,7 @@ export default function AgentAdminPage() {
   const runJaneScout = async () => {
     setJaneRunning(true); setJaneRunLog(['Jane is drafting today\'s community posts...'])
     try {
-      const res  = await fetch('/api/agent/community-scout?secret=dev-test')
-      const data = await res.json()
+      const data = await fetchScoutRun('/api/agent/community-scout?secret=dev-test')
       setJaneRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
       else if (data.success) { showToast(`Jane drafted ${data.blogsGenerated} community post(s)`); setJaneLoading(true); setJaneFilter('pending'); loadJaneItems(); loadJaneCounts() }
