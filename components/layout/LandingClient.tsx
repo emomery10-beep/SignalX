@@ -1905,7 +1905,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── WHERE IT WORKS ── keyword-bearing H2 + quotable definition for
            search and answer engines; links into country hubs and use-case pages ── */}
       <section style={{ background:T.bg,padding:'clamp(44px,5vw,64px) clamp(16px,4vw,40px)' }}>
-        <div className="two-col" style={{ maxWidth:1000,margin:'0 auto' }}>
+        <div className="two-col" style={{ maxWidth:1180,margin:'0 auto' }}>
           {/* Left — keyword H2 + trimmed definition + use-case links */}
           <div data-reveal>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3vw,38px)',fontWeight:400,lineHeight:1.15,letterSpacing:'-.02em',color:T.tx,marginBottom:16 }}>
