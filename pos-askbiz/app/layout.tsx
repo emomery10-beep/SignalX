@@ -5,6 +5,7 @@ import PosConsentBanner from '@/components/PosConsentBanner'
 import PosOfflineBanner from '@/components/PosOfflineBanner'
 import PosSessionGuard from '@/components/PosSessionGuard'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import LanguageToggle from '@/components/LanguageToggle'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import { resolveLocale, isRTL } from '@/lib/i18n-locale'
 import type { Lang } from '@/lib/i18n'
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider initialLang={lang}>
           <PosSessionGuard />
           <PosOfflineBanner />
+          <LanguageToggle />
           {children}
           <PosConsentBanner />
         </LanguageProvider>

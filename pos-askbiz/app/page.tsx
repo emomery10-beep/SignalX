@@ -2,7 +2,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
-import LanguageToggle from '@/components/LanguageToggle'
 import { COUNTRY_DIAL, toE164 } from '@/lib/phone'
 import { markPosSessionStarted } from '@/lib/pos-session'
 
@@ -240,7 +239,6 @@ export default function LoginPage() {
   const { tc } = useLang()
   return (
     <>
-      <LanguageToggle />
       <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('pos_login.loading_login')}</div>}>
         <LoginPageContent />
       </Suspense>

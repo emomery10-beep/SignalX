@@ -24,7 +24,7 @@ export default function RestaurantHub() {
   const router  = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]                   = useState('£')
+  const [sym, setSym]                   = useState('KSh')
   const [kpis, setKpis]                 = useState<KPI[]>([])
   const [tables, setTables]             = useState<TableSummary[]>([])
   const [topDishes, setTopDishes]       = useState<TopDish[]>([])
@@ -156,7 +156,7 @@ export default function RestaurantHub() {
           <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('restaurant.header_title')}</div>
           <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('restaurant.header_subtitle')}</div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, marginRight: 52 }}>
           {pendingOnline.length > 0 && (
             <div style={{ background: '#ef4444', color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 700, animation: 'pulse 1s infinite' }}>
               {tc('restaurant.online_orders_pending_' + (pendingOnline.length === 1 ? 'one' : 'other'), { count: pendingOnline.length })}
