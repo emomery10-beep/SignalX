@@ -533,7 +533,7 @@ export default function SellPage() {
 
   // ── SCAN SCREEN ───────────────────────────────────────────
   if (screen === 'scan') return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
+    <div className="fullbleed-fill" style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { stopCamera(); setScreen('home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{tc('pos_sell.scan_product')}</div>
