@@ -194,5 +194,9 @@
   "copilot_q_upsell": "Upsell tip",
   "copilot_q_lowstock": "Low stock?",
   "offline_banner": "You're offline — cash sales still work. Card & M-Pesa need a connection.",
-  "offline_payment_disabled": "Requires internet"
+  "offline_payment_disabled": "Requires internet",
+  "greeting_morning": "Morning, {name} 👋",
+  "greeting_afternoon": "Afternoon, {name} 👋",
+  "greeting_evening": "Evening, {name} 👋",
+  "powered_by": "Powered by AskBiz POS"
 }

@@ -192,5 +192,9 @@
   "copilot_q_margin": "Marge du panier ?",
   "copilot_q_addon": "Suggérer un extra",
   "copilot_q_upsell": "Conseil de vente",
-  "copilot_q_lowstock": "Stock bas ?"
+  "copilot_q_lowstock": "Stock bas ?",
+  "greeting_morning": "Bonjour, {name} 👋",
+  "greeting_afternoon": "Bon après-midi, {name} 👋",
+  "greeting_evening": "Bonsoir, {name} 👋",
+  "powered_by": "Propulsé par AskBiz POS"
 }

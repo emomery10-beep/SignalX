@@ -194,5 +194,9 @@
   "copilot_q_upsell": "Kidokezo cha upsell",
   "copilot_q_lowstock": "Hisa chache?",
   "offline_banner": "Uko offline — mauzo ya pesa taslimu bado yanafanya kazi. Kadi na M-Pesa zinahitaji connection.",
-  "offline_payment_disabled": "Inahitaji intaneti"
+  "offline_payment_disabled": "Inahitaji intaneti",
+  "greeting_morning": "Habari ya asubuhi, {name} 👋",
+  "greeting_afternoon": "Habari ya mchana, {name} 👋",
+  "greeting_evening": "Habari ya jioni, {name} 👋",
+  "powered_by": "Inaendeshwa na AskBiz POS"
 }

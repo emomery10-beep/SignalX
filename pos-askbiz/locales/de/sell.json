@@ -192,5 +192,9 @@
   "copilot_q_margin": "Warenkorbmarge?",
   "copilot_q_addon": "Zusatz vorschlagen",
   "copilot_q_upsell": "Upsell-Tipp",
-  "copilot_q_lowstock": "Bestand niedrig?"
+  "copilot_q_lowstock": "Bestand niedrig?",
+  "greeting_morning": "Guten Morgen, {name} 👋",
+  "greeting_afternoon": "Guten Tag, {name} 👋",
+  "greeting_evening": "Guten Abend, {name} 👋",
+  "powered_by": "Bereitgestellt von AskBiz POS"
 }

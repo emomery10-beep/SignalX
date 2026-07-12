@@ -730,14 +730,20 @@ export default function SellPage() {
   // ─────────────────────────────────────────────────────────────
   // HOME SCREEN
   // ─────────────────────────────────────────────────────────────
+  // Personalized, time-aware greeting for the header — first name only,
+  // keeps it informal. Business name drops to the secondary line.
+  const firstName = (staff?.name || '').trim().split(/\s+/)[0]
+  const greetHour = new Date().getHours()
+  const greetKey  = greetHour < 12 ? 'sell.greeting_morning' : greetHour < 17 ? 'sell.greeting_afternoon' : 'sell.greeting_evening'
+  const greeting  = firstName ? tc(greetKey, { name: firstName }) : (businessName || tc('sell.app_name'))
   if (screen === 'home') return (<>{copilot}{practiceBanner}
     <div className="pos-screen" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--pos-bg)' }}>
       {/* Header */}
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--pos-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{businessName || tc('sell.app_name')}</div>
-            <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{staff?.name}</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{greeting}</div>
+            {businessName && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{businessName}</div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {staff?.location_id && shiftOpen !== null && (
@@ -880,6 +886,11 @@ export default function SellPage() {
             {tc('sell.continue_heading', { heading: biz.heading, count: cart.length, total: `${sym}${cartTotal.toFixed(2)}` })}
           </button>
         )}
+      </div>
+
+      {/* Powered by AskBiz POS — brand footer */}
+      <div style={{ textAlign: 'center', padding: '0 20px 18px', fontSize: 11, fontWeight: 500, color: 'var(--pos-muted)', opacity: 0.75 }}>
+        {tc('sell.powered_by')}
       </div>
 
       {/* Shift modal */}

@@ -192,5 +192,9 @@
   "copilot_q_margin": "هامش السلة؟",
   "copilot_q_addon": "اقترح إضافة",
   "copilot_q_upsell": "نصيحة بيع",
-  "copilot_q_lowstock": "مخزون منخفض؟"
+  "copilot_q_lowstock": "مخزون منخفض؟",
+  "greeting_morning": "صباح الخير، {name} 👋",
+  "greeting_afternoon": "مساء الخير، {name} 👋",
+  "greeting_evening": "مساء الخير، {name} 👋",
+  "powered_by": "مشغّل بواسطة AskBiz POS"
 }
