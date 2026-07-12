@@ -38,7 +38,9 @@ export async function GET(request: NextRequest) {
   if (secret !== process.env.CRON_SECRET && secret !== 'dev-test' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  return runCommunityScout()
+  const fg = searchParams.get('focus_gate')
+  const focus = fg ? { gate: fg, label: searchParams.get('focus_label') || fg, count: Number(searchParams.get('focus_count')) || 0 } : undefined
+  return runCommunityScout(focus)
 }
 
 export async function POST(request: NextRequest) {
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
   return runCommunityScout()
 }
 
-async function runCommunityScout() {
+async function runCommunityScout(focus?: { gate: string; label: string; count: number }) {
   const runId = `community_${Date.now()}`
   const log: string[] = []
 
@@ -61,6 +63,39 @@ async function runCommunityScout() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    // Admin readiness work-queue hand-off: draft ONE post targeted at vendors
+    // stuck at a specific formality gate. Explicit + on-demand, so it bypasses
+    // the daily-skip guard and the random topic selection below.
+    if (focus) {
+      if (!process.env.TAVILY_API_KEY) {
+        log.push('ERROR: No search key set — add TAVILY_API_KEY to Vercel env vars')
+        return NextResponse.json({ success: false, log }, { status: 200 })
+      }
+      const gateTopics: Record<string, string> = {
+        gate_menu: 'how Kenyan food vendors build a menu with prices to list on Glovo Bolt Uber Eats',
+        gate_id: 'ID and KYC documents Kenyan small food vendors need to join food delivery apps',
+        gate_payout: 'M-Pesa or bank payout setup for Kenyan vendors on food delivery apps',
+        gate_permit: 'single business permit for Kenyan food vendors county requirements and cost',
+        gate_health: 'health certificate for a food business in Kenya from county public health how to get it',
+        gate_food_handler: 'food handler medical certificate Kenya requirements for food vendors',
+      }
+      const query = gateTopics[focus.gate] || `helping Kenyan food vendors clear ${focus.label} to list on delivery apps`
+      log.push(`Jane is drafting a post to help vendors with: ${focus.label}`)
+      const searchResult = await tavilySearch(query, { searchDepth: 'advanced', maxResults: 3, topic: 'news', days: 30 })
+      const input = { query, cluster: 'Restaurant Enablement', pillar: 'Restaurant & Delivery', searchResult: (searchResult ?? { results: [] }) as any }
+      let content: any = null
+      try { content = await writeCommunityPost(input) } catch (e) { log.push(`Draft failed: ${e instanceof Error ? e.message : String(e)}`) }
+      if (!content) return NextResponse.json({ success: false, log, focus: focus.gate }, { status: 200 })
+      const top = searchResult?.results?.[0]
+      const { error: focusErr } = await supabase.from('agent_content').insert([{
+        run_id: runId, type: 'community_post', status: 'pending', content,
+        source_url: top?.url || null, source_title: top?.title || null, source_query: query,
+      }])
+      if (focusErr) { log.push(`DB error: ${focusErr.message}`); return NextResponse.json({ success: false, log }, { status: 200 }) }
+      log.push('Saved 1 targeted community post — pending review')
+      return NextResponse.json({ success: true, runId, blogsGenerated: 1, focus: focus.gate, log })
+    }
 
     // Skip if already ran today — prevents double-posting when the orchestrator
     // cron and a manual "Run Now" both fire on the same day.

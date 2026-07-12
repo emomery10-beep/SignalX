@@ -1082,6 +1082,27 @@ function OverviewPanel({
         />
       </div>
 
+      {/* Get listed on delivery apps (deep-links into the POS enablement wizard) */}
+      <a
+        href="https://pos.askbiz.co/restaurant/get-listed"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          ...cardStyle,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          textDecoration: 'none',
+          color: ACC,
+          fontWeight: 700,
+          fontSize: 12,
+        }}
+      >
+        <span>🛵 {tc('pos_restaurant.getListedLink')}</span>
+        <span>→</span>
+      </a>
+
       {/* Hourly revenue chart */}
       <div style={cardStyle}>
         <SectionTitle>{tc('pos_restaurant.hourlyRevenueSectionTitle')}</SectionTitle>

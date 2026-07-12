@@ -301,10 +301,58 @@ export async function GET(request: NextRequest) {
       if (day) apiUsage.byDay[day] = (apiUsage.byDay[day] || 0) + (r.cost_usd || 0)
     })
 
+    // ── Restaurant "Listability Readiness" funnel (cross-tenant) ──
+    // Degrades gracefully: if the migration hasn't reached this DB yet the table
+    // won't exist and the query errors — we just report an unavailable funnel
+    // rather than 500 the whole admin page (same defensive posture as the
+    // is_suspicious note above).
+    const RGATES = ['gate_menu', 'gate_id', 'gate_payout', 'gate_permit', 'gate_health', 'gate_food_handler'] as const
+    let readiness: any = { available: false, total: 0, listedCount: 0, byGate: {}, stalled: [], stalledCount: 0 }
+    try {
+      const { data: rRows, error: rErr } = await supabase
+        .from('restaurant_vendor_readiness')
+        .select('owner_id, stage, readiness_score, gate_menu, gate_id, gate_payout, gate_permit, gate_health, gate_food_handler, updated_at')
+      if (!rErr && rRows) {
+        const profileMap: Record<string, any> = {}
+        ;(profiles || []).forEach((p: any) => { profileMap[p.id] = p })
+        const byGate: Record<string, { cleared: number; missing: number }> = {}
+        RGATES.forEach(g => { byGate[g] = { cleared: 0, missing: 0 } })
+        const stalled: any[] = []
+        let listedCount = 0
+        rRows.forEach((r: any) => {
+          const score = r.readiness_score ?? 0
+          if (score >= 100) listedCount++
+          RGATES.forEach(g => {
+            if (r[g] === 'confirmed' || r[g] === 'not_applicable') byGate[g].cleared++
+            else byGate[g].missing++
+          })
+          const daysStale = r.updated_at ? (Date.now() - new Date(r.updated_at).getTime()) / 86400000 : 0
+          if (score < 100 && daysStale > 7) {
+            const p = profileMap[r.owner_id] || {}
+            const nextGate = RGATES.find(g => r[g] !== 'confirmed' && r[g] !== 'not_applicable') || null
+            stalled.push({
+              owner_id: r.owner_id,
+              name: p.full_name || null,
+              email: emailMap[r.owner_id] || null,
+              country: p.country_code || null,
+              stage: r.stage,
+              readiness_score: score,
+              next_gate: nextGate,
+              days_stale: Math.floor(daysStale),
+            })
+          }
+        })
+        stalled.sort((a, b) => b.days_stale - a.days_stale)
+        readiness = { available: true, total: rRows.length, listedCount, byGate, stalledCount: stalled.length, stalled: stalled.slice(0, 50) }
+      }
+    } catch (e) {
+      console.error('Readiness aggregation error:', e)
+    }
+
     return NextResponse.json({
       stats, users, candidates, stripe: stripeData,
       xActivity: xActivity || [], agentContent: agentContent || [],
-      apiUsage,
+      apiUsage, readiness,
     })
   } catch (error) {
     console.error('Admin error:', error)

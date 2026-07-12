@@ -16,12 +16,20 @@ const PAYMENT_BADGE: Record<string, React.ReactNode> = {
   trial_expired: <span title="Trial period ended, never converted to paid" style={{marginLeft:5,padding:'1px 6px',borderRadius:9999,fontSize:11,fontWeight:700,background:'#dc262620',color:'#dc2626'}}>EXPIRED</span>,
   manual: <span title="Granted manually via admin panel, no payment on file" style={{marginLeft:5,padding:'1px 6px',borderRadius:9999,fontSize:11,fontWeight:700,background:'#d9770620',color:'#d97706'}}>MANUAL</span>,
 }
-const TABS = ['Overview','Revenue','Users','Activity','Costs','Growth'] as const
+const TABS = ['Overview','Revenue','Users','Readiness','Activity','Costs','Growth'] as const
 type Tab = typeof TABS[number]
 const TAB_KEYS: Record<Tab, string> = {
   Overview: 'tab_overview', Revenue: 'tab_revenue', Users: 'tab_users',
-  Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
+  Readiness: 'tab_readiness', Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
 }
+const RGATE_LABELS: { key: string; label: string }[] = [
+  { key: 'gate_menu', label: 'Menu' },
+  { key: 'gate_id', label: 'ID / KYC' },
+  { key: 'gate_payout', label: 'Payout' },
+  { key: 'gate_permit', label: 'Permit' },
+  { key: 'gate_health', label: 'Health cert' },
+  { key: 'gate_food_handler', label: 'Food handler' },
+]
 
 function KV({ label, value, sub, color, onClick, active }: { label: string; value: any; sub?: string; color?: string; onClick?: () => void; active?: boolean }) {
   const clickable = !!onClick
@@ -136,7 +144,9 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
+  const [readiness, setReadiness] = useState<any>(null)
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
+  const [janeDrafting, setJaneDrafting] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -163,6 +173,7 @@ export default function AdminPage() {
         setXActivity(d.xActivity || [])
         setStripeData(d.stripe || null)
         setApiUsage(d.apiUsage || null)
+        setReadiness(d.readiness || null)
         const days: Record<string, number> = {}
         const now = new Date()
         for (let i = 29; i >= 0; i--) {
@@ -201,6 +212,27 @@ export default function AdminPage() {
     } catch (err: any) {
       setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
       setTimeout(() => setActionMsg(''), 4000)
+    }
+  }
+
+  // Hand a bottleneck gate to Jane Wanjiru: she drafts a Kenya community post
+  // aimed at vendors stuck there. Uses the same trigger the "Run Jane" button
+  // uses; the post lands in agent_content (pending) for review in the Agents tab.
+  const draftJanePost = async (gate: { key: string; label: string; missing: number }) => {
+    setJaneDrafting(gate.key)
+    setActionMsg('')
+    try {
+      const qs = `secret=dev-test&focus_gate=${encodeURIComponent(gate.key)}&focus_label=${encodeURIComponent(gate.label)}&focus_count=${gate.missing}`
+      const res = await fetch(`/api/agent/community-scout?${qs}`)
+      const d = await res.json()
+      setActionMsg(res.ok && d.success
+        ? tc('admin.readiness_jane_done', { gate: gate.label })
+        : tc('admin.readiness_jane_failed'))
+    } catch {
+      setActionMsg(tc('admin.readiness_jane_failed'))
+    } finally {
+      setJaneDrafting(null)
+      setTimeout(() => setActionMsg(''), 5000)
     }
   }
 
@@ -701,6 +733,87 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
+          </>}
+
+          {tab==='Readiness' && <>
+            {!readiness?.available ? (
+              <div style={{padding:'40px 24px',borderRadius:16,border:'1px solid var(--b)',background:'var(--sf)',textAlign:'center'}}>
+                <div style={{fontSize:16,fontWeight:600,color:'var(--tx2)',marginBottom:6}}>{tc('admin.readiness_unavailable_title')}</div>
+                <div style={{fontSize:14,color:'var(--tx3)'}}>{tc('admin.readiness_unavailable_desc')}</div>
+              </div>
+            ) : (() => {
+              const total = readiness.total || 0
+              const listed = readiness.listedCount || 0
+              const listedPct = total > 0 ? Math.round(listed / total * 100) : 0
+              const bottleneck = RGATE_LABELS
+                .map(g => ({ ...g, missing: readiness.byGate?.[g.key]?.missing ?? 0 }))
+                .sort((a, b) => b.missing - a.missing)[0]
+              return (
+                <>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14,marginBottom:28}}>
+                    <KV label={tc('admin.kv_readiness_onboarding')} value={total} sub={tc('admin.kv_readiness_onboarding_sub')} color="#0ea5e9" />
+                    <KV label={tc('admin.kv_readiness_listed')} value={listed} sub={listedPct + '% ' + tc('admin.kv_readiness_listed_sub')} color="#047857" />
+                    <KV label={tc('admin.kv_readiness_stalled')} value={readiness.stalledCount || 0} sub={tc('admin.kv_readiness_stalled_sub')} color="#b45309" />
+                  </div>
+
+                  {/* Gate funnel — how many vendors cleared each formality gate */}
+                  <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+                    <div style={{fontSize:15,fontWeight:600,marginBottom:16}}>{tc('admin.readiness_funnel_title')}</div>
+                    {RGATE_LABELS.map(g => {
+                      const cleared = readiness.byGate?.[g.key]?.cleared ?? 0
+                      const pct = total > 0 ? cleared / total * 100 : 0
+                      return <Bar key={g.key} label={g.label} pct={pct} color="#6366F1" right={cleared + '/' + total} />
+                    })}
+                  </div>
+
+                  {/* Work-queue: stalled vendors + hand-off to Jane */}
+                  <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                    <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,marginBottom:8,flexWrap:'wrap'}}>
+                      <div>
+                        <div style={{fontSize:15,fontWeight:600}}>{tc('admin.readiness_queue_title')}</div>
+                        <div style={{fontSize:14,color:'var(--tx3)',marginTop:2}}>{tc('admin.readiness_queue_desc')}</div>
+                      </div>
+                      {bottleneck && bottleneck.missing > 0 && (
+                        <button onClick={() => draftJanePost(bottleneck)} disabled={!!janeDrafting}
+                          style={{padding:'8px 14px',borderRadius:9999,border:'none',background:janeDrafting?'var(--ev)':'#7c3aed',color:janeDrafting?'var(--tx3)':'#fff',fontSize:14,fontWeight:600,cursor:janeDrafting?'default':'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
+                          {janeDrafting === bottleneck.key ? tc('admin.readiness_jane_drafting') : '✦ ' + tc('admin.readiness_jane_cta', { gate: bottleneck.label })}
+                        </button>
+                      )}
+                    </div>
+                    {actionMsg && <div style={{fontSize:14,color:'#047857',padding:'6px 0'}}>{actionMsg}</div>}
+                    {(!readiness.stalled || readiness.stalled.length === 0) ? (
+                      <EmptyNote text={tc('admin.readiness_queue_empty')} />
+                    ) : (
+                      <div style={{overflowX:'auto',marginTop:8}}>
+                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
+                          <thead>
+                            <tr style={{background:'var(--ev)'}}>
+                              {[tc('admin.readiness_th_vendor'),tc('admin.readiness_th_country'),tc('admin.readiness_th_needs'),tc('admin.readiness_th_progress'),tc('admin.readiness_th_idle')].map(h=>(
+                                <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'var(--tx2)'}}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {readiness.stalled.map((v:any)=>(
+                              <tr key={v.owner_id} style={{borderTop:'1px solid var(--b)'}}>
+                                <td style={{padding:'8px 12px'}}>
+                                  <div style={{fontWeight:600}}>{v.name || tc('admin.default_user')}</div>
+                                  <div style={{fontSize:13,color:'var(--tx3)'}}>{v.email || tc('admin.empty_dash')}</div>
+                                </td>
+                                <td style={{padding:'8px 12px',color:'var(--tx3)'}}>{v.country || tc('admin.empty_dash')}</td>
+                                <td style={{padding:'8px 12px'}}><Chip text={RGATE_LABELS.find(g=>g.key===v.next_gate)?.label || v.next_gate || '—'} color="#b45309" /></td>
+                                <td style={{padding:'8px 12px',fontWeight:600,fontVariantNumeric:'tabular-nums'}}>{v.readiness_score}%</td>
+                                <td style={{padding:'8px 12px',color:'var(--tx3)',whiteSpace:'nowrap'}}>{tc('admin.readiness_days', { n: v.days_stale })}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )
+            })()}
           </>}
 
           {tab==='Activity' && <>

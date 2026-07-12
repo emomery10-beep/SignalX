@@ -18,6 +18,16 @@
 -- that wiring is a separate step, not part of this migration.
 -- ============================================================
 
+-- Idempotent: ensure the shared updated_at trigger fn exists (prior migrations
+-- also define it; create-or-replace makes this migration safe to run alone).
+create or replace function public.update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 -- ---------- 1. Provenance-first raw capture log ----------
 create table if not exists vendor_captures (
   id            uuid primary key default gen_random_uuid(),
