@@ -120,13 +120,20 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                   {section.body}
                 </p>
                 {section.image && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={section.image}
-                    alt={section.heading}
-                    loading="lazy"
-                    style={{ display: "block", width: "100%", maxWidth: 720, height: "auto", borderRadius: 12, margin: "20px 0 0", border: "1px solid #ececf0" }}
-                  />
+                  /* Serve the WebP twin (82% smaller than the PNG source) with a
+                     PNG fallback for any browser without WebP support. Static
+                     files, so this works on any host with no runtime image
+                     optimizer — unlike next/image. */
+                  <picture>
+                    <source srcSet={section.image.replace(/\.(png|jpe?g)$/i, '.webp')} type="image/webp" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={section.image}
+                      alt={section.heading}
+                      loading="lazy"
+                      style={{ display: "block", width: "100%", maxWidth: 720, height: "auto", borderRadius: 12, margin: "20px 0 0", border: "1px solid #ececf0" }}
+                    />
+                  </picture>
                 )}
               </div>
             </div>
