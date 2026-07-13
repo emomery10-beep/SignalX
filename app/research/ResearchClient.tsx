@@ -33,7 +33,7 @@ function Avatar({ src, name, size }: { src: string; name: string; size: number }
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={`${name} — portrait`} width={size} height={size} onError={() => setFailed(true)}
+    <img src={src} alt={`${name} — portrait`} width={size} height={size} loading="lazy" onError={() => setFailed(true)}
       style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", border: `3px solid ${C.sf}`, boxShadow: "0 4px 18px rgba(0,0,0,.14)", flexShrink: 0 }} />
   );
 }
