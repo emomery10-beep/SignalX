@@ -9,6 +9,7 @@ import type { Lang } from '@/lib/i18n'
 export default function LanguageToggle() {
   const { lang, setLang, langNames, langFlags } = useLang()
   const [open, setOpen] = useState(false)
+  const [touched, setTouched] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -19,21 +20,35 @@ export default function LanguageToggle() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // Small, icon-only, and semi-transparent at rest so it reads as a corner
+  // affordance rather than a control competing with each page's own header
+  // buttons (it floats over every screen, and those headers vary a lot).
+  // Full opacity once touched/opened/focused so it's never hard to see or hit.
+  const prominent = open || touched
   return (
-    <div ref={ref} style={{ position: 'fixed', top: 10, right: 12, zIndex: 1000 }}>
+    <div ref={ref} style={{ position: 'fixed', top: 8, right: 8, zIndex: 1000 }}>
       <button
         onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setTouched(true)}
+        onMouseLeave={() => setTouched(false)}
+        onFocus={() => setTouched(true)}
+        onBlur={() => setTouched(false)}
+        onTouchStart={() => setTouched(true)}
         title="Change language"
+        aria-label="Change language"
         style={{
-          display: 'flex', alignItems: 'center', gap: 5, padding: '5px 9px',
-          borderRadius: 9999, border: '1px solid rgba(0,0,0,.12)',
-          background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(8px)',
-          color: '#1a1916', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-          fontFamily: 'inherit', boxShadow: '0 1px 4px rgba(0,0,0,.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 30, height: 30, padding: 0,
+          borderRadius: 9999, border: '1px solid rgba(0,0,0,.1)',
+          background: prominent ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.55)',
+          backdropFilter: 'blur(6px)',
+          opacity: prominent ? 1 : 0.65,
+          color: '#1a1916', fontSize: 15, cursor: 'pointer',
+          fontFamily: 'inherit', boxShadow: prominent ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
+          transition: 'opacity 150ms, background 150ms, box-shadow 150ms',
         }}
       >
-        <span style={{ fontSize: 14 }}>{langFlags[lang as Lang]}</span>
-        <span>{(lang as string).toUpperCase()}</span>
+        <span>{langFlags[lang as Lang]}</span>
       </button>
       {open && (
         <div style={{

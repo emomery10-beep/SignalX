@@ -745,7 +745,7 @@ export default function SellPage() {
             <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{greeting}</div>
             {businessName && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{businessName}</div>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 38 }}>
             {staff?.location_id && shiftOpen !== null && (
               <button
                 onClick={() => { setShiftAction(shiftOpen ? 'close' : 'open'); setCloseError(''); setCloseRequiresReason(false); setCloseVarianceReason(''); setShowShiftModal(true) }}
