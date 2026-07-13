@@ -8,6 +8,13 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 // All copy comes from the `landing.day_*` translation keys.
 
 type Tc = (k: string, vars?: Record<string, string | number>) => string
+type Demo = { compact: (gbp: number) => string }
+
+// SCENES revenue figures below are denominated in KES; dividing by the KES
+// multiplier recovers the GBP-equivalent baseline demo.compact() expects, so
+// the tally renders in whatever currency the visitor's geo resolves to —
+// matching how the rest of the page (HeroBigDemo, PosShowcase) formats money.
+const KES_MULT = 165
 
 const C = {
   bg:   '#f2f3f5',
@@ -49,7 +56,6 @@ const SCENES = [
   { icon: 'moon',     chipIcon: 'moon',     ac: '#E6B17F', rev: 9480, cust: 83, dark: true },
 ] as const
 
-const KSH = (n: number) => 'KSh ' + Math.round(n).toLocaleString('en-US')
 const N = SCENES.length
 const DURATION = 4800
 
@@ -58,7 +64,7 @@ function hexA(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
 }
 
-export default function DayInTheLife({ tc }: { tc: Tc }) {
+export default function DayInTheLife({ tc, demo }: { tc: Tc; demo: Demo }) {
   const [i, setI] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [visible, setVisible] = useState(false)
@@ -225,7 +231,7 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
           <div style={{ display: 'flex', gap: 20 }}>
             <div>
               <div style={{ fontSize: 11, color: C.tx3 }}>{tc('landing.day_tally_sales')}</div>
-              <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: C.tx }}>{KSH(revShown)}</div>
+              <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: C.tx }}>{demo.compact(revShown / KES_MULT)}</div>
             </div>
             <div>
               <div style={{ fontSize: 11, color: C.tx3 }}>{tc('landing.day_tally_customers')}</div>

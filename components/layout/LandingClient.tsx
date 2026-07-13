@@ -1874,6 +1874,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div style={{ marginTop:'clamp(24px,3vw,36px)' }}>
             <HeroBigDemo tc={tc} demo={demo} />
           </div>
+          <p style={{ marginTop:'clamp(18px,2.4vw,28px)',maxWidth:640,fontSize:13,color:T.tx3,lineHeight:1.7 }}>
+            {tc('landing.hero_subtitle_full')}
+          </p>
         </div>
         <div style={{ position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,zIndex:2,opacity:Math.max(0,1-scrollY/250),pointerEvents:'none' }}>
           <span style={{ fontSize:9,color:T.tx3,letterSpacing:'.14em',textTransform:'uppercase' }}>{tc('landing.hero_scroll')}</span>
@@ -1882,7 +1885,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── A DAY IN THE LIFE — narrative fold-card deck ───────────────── */}
-      <DayInTheLife tc={tc} />
+      <DayInTheLife tc={tc} demo={demo} />
 
       {/* ── PROOF STRIP ───────────────────────────────────────────────── */}
       <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'14px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(20px,3vw,48px)',flexWrap:'wrap' }}>
@@ -2093,6 +2096,17 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </div>
         </div>
       </section>
+
+      {/* ── SHOW → TELL LAYER BOUNDARY ── everything above this line requires no
+           reading to understand the product works; everything below is written
+           for a literate buyer doing due diligence (founder note, comparison
+           table, pricing, FAQ). Marks the seam explicitly instead of letting the
+           two audiences blur into one unbroken scroll. ── */}
+      <div style={{ display:'flex',alignItems:'center',gap:16,maxWidth:640,margin:'0 auto',padding:'0 clamp(16px,4vw,40px)' }} data-reveal>
+        <div style={{ flex:1,height:1,background:T.bd }}/>
+        <span style={{ fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:T.tx3,whiteSpace:'nowrap' }}>{tc('landing.tell_layer_label')}</span>
+        <div style={{ flex:1,height:1,background:T.bd }}/>
+      </div>
 
       {/* ── WHY WE BUILT IT ── founder note.
            TODO: replace with 2-3 real customer testimonials (name, business type,
