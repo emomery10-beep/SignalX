@@ -57,8 +57,11 @@ export async function generateMetadata({ params }: { params: { cluster: string }
   const cluster = CLUSTERS.find(c => slugifyCluster(c) === params.cluster)
   if (!cluster) return {}
   const posts = getPostsForCluster(cluster)
-  const title = `${cluster} — Global Trade Intelligence Guide | AskBiz`
-  const description = CLUSTER_INTRO[cluster]
+  const title = `${cluster} — Trade Intelligence Guide | AskBiz`
+  const fullIntro = CLUSTER_INTRO[cluster]
+  const description = fullIntro.length <= 160
+    ? fullIntro
+    : fullIntro.slice(0, fullIntro.slice(0, 157).lastIndexOf(' ')) + '…'
   return {
     title,
     description,

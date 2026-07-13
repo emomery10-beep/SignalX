@@ -160,7 +160,12 @@ function enhanceMetaDescription(post: { title: string; metaDescription: string; 
   }
 
   const suffix = clusterHook[cluster] || 'Practical guide with actionable takeaways.'
-  return `${d} ${suffix}`
+  const combined = `${d} ${suffix}`
+  // Hooks are appended blind to the base description's length, so long posts
+  // can push well past the ~160-char SEO meta description budget — cap it.
+  if (combined.length <= 160) return combined
+  const cut = combined.slice(0, 157)
+  return cut.slice(0, cut.lastIndexOf(' ')) + '…'
 }
 
 const CLUSTER_CTA: Record<string, { headline: string; body: string; cta: string; href: string }> = {
@@ -270,8 +275,13 @@ export async function generateMetadata(
 
   const enhancedDesc = enhanceMetaDescription(post)
 
+  // AI-generated headlines run long; only add the brand suffix when it still
+  // fits the ~60-char SEO title budget, otherwise ship the bare headline.
+  const titleSuffix = ' | AskBiz Blog'
+  const seoTitle = post.title.length + titleSuffix.length <= 62 ? post.title + titleSuffix : post.title
+
   return {
-    title: `${post.title} | AskBiz Blog`,
+    title: seoTitle,
     description: enhancedDesc,
     openGraph: {
       title: post.title,

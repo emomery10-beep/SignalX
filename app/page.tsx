@@ -12,7 +12,7 @@ import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
 const META_BY_LOCALE: Record<string, { title: string; description: string }> = {
   en: {
     title: 'AskBiz — Phone POS with M-Pesa for Kenya, Nigeria & Uganda',
-    description: 'Phone POS and daily sales tracker for market stalls and small shops. Take M-Pesa, MTN, Airtel Money, cash or card. Free to start — see your profit tonight. Also known as Utauza in East & Central Africa.',
+    description: 'Phone POS and daily sales tracker for market stalls and shops. Take M-Pesa, MTN or Airtel Money, cash or card. Free to start. Known as Utauza in East Africa.',
   },
   sw: {
     title: 'Utauza (AskBiz) — Uza kwa Simu Yako, Chukua M-Pesa',

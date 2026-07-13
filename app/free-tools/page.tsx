@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import FreeToolsClient from "./FreeToolsClient";
 
 export const metadata: Metadata = {
-  title: "Free Business Calculators — Profit Margin, Landed Cost & More | AskBiz",
+  title: "Free Business Calculators — Profit & More | AskBiz",
   description:
     "Free profit margin, break-even, landed cost, VAT, and FX risk calculators for small business owners. Works in KES, NGN, GBP and more. No sign-up required.",
   keywords:

@@ -1,7 +1,16 @@
 import Link from 'next/link'
 import { cookies, headers } from 'next/headers'
+import type { Metadata } from 'next'
 import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { LEARNING_PATHS } from '@/lib/learning-paths-content'
+
+// Meta descriptions target 150-160 chars; truncate on a word boundary so it
+// reads as a sentence fragment rather than getting cut mid-word.
+function truncateAtWord(text: string, max: number): string {
+  if (text.length <= max) return text
+  const cut = text.slice(0, max)
+  return cut.slice(0, cut.lastIndexOf(' ')) + '…'
+}
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -17,9 +26,24 @@ export async function generateStaticParams() {
   }))
 }
 
-export const metadata = {
-  title: 'Learning Path | AskBiz Academy',
-  description: 'Structured learning path from AskBiz Academy',
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const path = LEARNING_PATHS.find(p => p.id === params.id)
+  if (!path) return { title: 'Learning Path | AskBiz Academy' }
+
+  // Most path titles are naturally short; append the brand suffix only when
+  // it still fits the ~60-char SEO title budget, otherwise leave it bare.
+  const suffix = ' · AskBiz Academy'
+  const title = path.title.length + suffix.length <= 62 ? path.title + suffix : path.title
+  const description = truncateAtWord(path.description, 157)
+  const url = `https://askbiz.co/academy/learning-paths/${path.id}`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: 'website', url, title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 export default function LearningPathPage({ params }: { params: { id: string } }) {

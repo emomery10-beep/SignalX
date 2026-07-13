@@ -69,7 +69,7 @@ const POS_FAQ_LD = {
 
 export const metadata: Metadata = {
   title: 'AskBiz Phone POS — Take M-Pesa, Scan Items, No Hardware',
-  description: 'AskBiz POS turns your phone into a till. Scan items with your camera, take M-Pesa, MTN, Airtel, cash, or card. Stock updates automatically. From £5/seat/month, no hardware needed.',
+  description: 'AskBiz POS turns your phone into a till. Scan items with your camera, take M-Pesa, MTN, Airtel, cash or card. Stock updates automatically. From £5/seat/month.',
   keywords: 'mobile POS Africa, M-Pesa POS, phone POS, phone till, market stall POS, street vendor POS, small shop POS, kiosk POS, spaza shop POS, duuka POS, barbershop POS, salon POS Africa, restaurant POS Africa, courier POS, delivery business POS, boda boda payment, hawker POS, jua kali POS, camera scan POS, no hardware POS, MTN mobile money POS, Airtel Money POS, M-Pesa receipt, Kenya POS app, Nigeria POS, Nairobi POS, Lagos POS, Kampala POS, Accra POS, Dar es Salaam POS, inventory tracker phone, daily takings, end of day report, track daily sales, stock management phone, till reconciliation, affordable POS Africa, free POS Kenya, unregistered business POS, sole trader POS Africa, Square alternative Africa, SumUp alternative Africa, iZettle alternative, Yoco alternative',
   openGraph: {
     title: 'AskBiz Phone POS — M-Pesa, Camera Scan & No Hardware',
