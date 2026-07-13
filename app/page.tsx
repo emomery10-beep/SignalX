@@ -110,7 +110,7 @@ const PRICING_TIERS: Record<string, { growth: string; business: string; sym: str
   SG:  { growth: 'S$25',      business: 'S$65',      sym: 'S$',  pos: 'S$7'      },
   AE:  { growth: 'AED 69',    business: 'AED 199',   sym: 'AED', pos: 'AED 18'   },
   IN:  { growth: '₹1,499',    business: '₹3,999',    sym: '₹',   pos: '₹400'     },
-  KE:  { growth: 'KSh 1,900', business: 'KSh 4,900', sym: 'KSh', pos: 'KSh 600'  },
+  KE:  { growth: 'KSh 1,900', business: 'KSh 4,900', sym: 'KSh', pos: 'KSh 500'  },
   NG:  { growth: '₦9,900',    business: '₦29,900',   sym: '₦',   pos: '₦2,500'   },
   ZA:  { growth: 'R 290',     business: 'R 890',     sym: 'R',   pos: 'R 90'     },
   GH:  { growth: '₵220',      business: '₵690',      sym: '₵',   pos: '₵25'      },

@@ -27,7 +27,7 @@ const POS_FAQ_LD = {
     {
       '@type': 'Question',
       name: 'How much does AskBiz POS cost?',
-      acceptedAnswer: { '@type': 'Answer', text: 'The POS add-on starts from £5/seat/month (KSh 600, ₦2,500, R90 depending on your country). The base business tracker is free to start with no card required.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'The POS add-on starts from £5/seat/month (KSh 500, ₦2,500, R90 depending on your country). The base business tracker is free to start with no card required.' },
     },
     {
       '@type': 'Question',
