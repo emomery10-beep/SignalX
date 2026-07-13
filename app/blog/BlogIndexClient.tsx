@@ -374,7 +374,7 @@ function BlogContent() {
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
-            <span style={{ fontSize: 9, fontWeight: 500, color: c.text }}>{post.cluster}</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: c.text }}>{post.cluster}</span>
           </div>
           <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
             {post.title}
@@ -387,7 +387,7 @@ function BlogContent() {
           <div style={{ fontSize: 11, color: TX3, whiteSpace: 'nowrap' }}>{tc('blog_index.post_min', { count: post.readTime })}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isRTL ? 'flex-start' : 'flex-end', marginTop: 2 }}>
             {isNew(post.publishDate) && (
-              <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em', lineHeight: 1.4 }}>{tc('blog_index.badge_new')}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em', lineHeight: 1.4 }}>{tc('blog_index.badge_new')}</span>
             )}
             <div style={{ fontSize: 11, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, lang, tc)}</div>
           </div>
@@ -461,7 +461,7 @@ function BlogContent() {
             <div style={{ padding: '0 12px', marginBottom: 4 }}>
               <button className="sb-btn" onClick={goHome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 11, fontWeight: isHome ? 600 : 400 }}>
                 <span>{tc('blog_index.sidebar_all_topics')}</span>
-                <span style={{ fontSize: 9, color: TX3 }}>{posts.length}</span>
+                <span style={{ fontSize: 12, color: TX3 }}>{posts.length}</span>
               </button>
             </div>
 
@@ -480,7 +480,7 @@ function BlogContent() {
                     <button className="sb-btn" onClick={() => selectCluster(cluster)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px 7px 10px', borderRadius: '8px 0 0 8px', color: isActive ? c.text : TX2, fontSize: 11, fontWeight: isActive ? 600 : 400, textAlign: 'left' }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
                       <span style={{ lineHeight: 1.35, flex: 1 }}>{cluster}</span>
-                      <span style={{ fontSize: 9, color: isActive ? c.text : TX3, flexShrink: 0 }}>{count}</span>
+                      <span style={{ fontSize: 12, color: isActive ? c.text : TX3, flexShrink: 0 }}>{count}</span>
                     </button>
                     {pillars.length > 0 && (
                       <button className="sb-btn" onClick={() => toggleExpand(cluster)} aria-label={isExp ? tc('blog_index.sidebar_collapse') : tc('blog_index.sidebar_expand')} style={{ padding: '7px 10px', borderRadius: '0 8px 8px 0', color: isActive ? c.text : TX3, display: 'flex', alignItems: 'center' }}>
@@ -571,7 +571,7 @@ function BlogContent() {
                       <button key={topic.cluster} className="sb-btn" onClick={() => selectCluster(topic.cluster)} style={{ fontSize: 11, color: TX, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36 }}>
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
                         <span style={{ fontWeight: 500 }}>{topic.cluster}</span>
-                        <span style={{ fontSize: 9, color: TX3, fontWeight: 400 }}>{topic.count}</span>
+                        <span style={{ fontSize: 12, color: TX3, fontWeight: 400 }}>{topic.count}</span>
                       </button>
                     )
                   })}
@@ -583,7 +583,7 @@ function BlogContent() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                     <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.popular_this_month')}</h2>
                     {popularThisMonth[0]?.cluster && (
-                      <span style={{ fontSize: 9, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
                         {popularThisMonth[0].cluster}
                       </span>
                     )}
@@ -600,7 +600,7 @@ function BlogContent() {
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                     <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>{tc('blog_index.new_this_month')}</h2>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: SF, background: ACC, borderRadius: 9999, padding: '2px 8px' }}>{tc('blog_index.new_count', { count: newThisMonth.length })}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: SF, background: ACC, borderRadius: 9999, padding: '2px 8px' }}>{tc('blog_index.new_count', { count: newThisMonth.length })}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {newThisMonth.map((post, i) => (
@@ -675,7 +675,7 @@ function BlogContent() {
                     const active = ctFilter === ct
                     return (
                       <button key={ct} onClick={() => { setCtFilter(active ? null : ct); setVisibleCount(PAGE_SIZE) }}
-                        style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? SF : col, background: active ? col : `${col}14`, border: `1px solid ${col}44`, borderRadius: 9999, padding: '4px 12px', cursor: 'pointer', transition: 'all 120ms' }}>
+                        style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? SF : col, background: active ? col : `${col}14`, border: `1px solid ${col}44`, borderRadius: 9999, padding: '4px 12px', cursor: 'pointer', transition: 'all 120ms' }}>
                         {tc('blog_index.' + CTYPE_KEYS[ct])}
                       </button>
                     )
@@ -710,7 +710,7 @@ function BlogContent() {
                   >
                     {tc('blog_index.load_more', { count: Math.min(PAGE_SIZE, filtered.length - visibleCount) })}
                   </button>
-                  <div style={{ fontSize: 9, color: TX3, marginTop: 8 }}>
+                  <div style={{ fontSize: 12, color: TX3, marginTop: 8 }}>
                     {tc('blog_index.showing_count', { shown: visibleRows.length, total: filtered.length })}
                   </div>
                 </div>

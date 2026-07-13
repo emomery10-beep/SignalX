@@ -224,7 +224,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 {icon && <span style={{ fontSize: 12 }}>{icon}</span>}
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>
                   {card.label}

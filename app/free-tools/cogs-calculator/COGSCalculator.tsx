@@ -151,7 +151,7 @@ export default function COGSCalculator() {
                   />
                   {products.length > 1 && (
                     <button onClick={() => removeProduct(p.id)}
-                      style={{ background: "none", border: "1px solid #eee", borderRadius: 8, padding: "4px 10px", fontSize: 10, color: "#999", cursor: "pointer", flexShrink: 0 }}>
+                      style={{ background: "none", border: "1px solid #eee", borderRadius: 8, padding: "4px 10px", fontSize: 13, color: "#999", cursor: "pointer", flexShrink: 0 }}>
                       Remove
                     </button>
                   )}
@@ -194,7 +194,7 @@ export default function COGSCalculator() {
                     ].map((s) => (
                       <div key={s.label}>
                         <div style={{ fontFamily: "Sora, sans-serif", fontSize: 16, fontWeight: 700, color: s.color }}>{s.value}</div>
-                        <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>{s.label}</div>
+                        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -212,7 +212,7 @@ export default function COGSCalculator() {
           {/* Summary */}
           {hasResult && (
             <div className="cogs-result-card" style={{ marginBottom: 24 }}>
-              <div style={{ fontFamily: "Sora, sans-serif", fontSize: 10, fontWeight: 700, color: "#d08a59", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>
+              <div style={{ fontFamily: "Sora, sans-serif", fontSize: 13, fontWeight: 700, color: "#d08a59", marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>
                 Total Summary
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 16, marginBottom: 20 }}>
@@ -224,7 +224,7 @@ export default function COGSCalculator() {
                 ].map((s) => (
                   <div key={s.label}>
                     <div style={{ fontFamily: "Sora, sans-serif", fontSize: 20, fontWeight: 700, color: s.color, marginBottom: 2 }}>{s.value}</div>
-                    <div style={{ fontSize: 10, color: "#888" }}>{s.label}</div>
+                    <div style={{ fontSize: 13, color: "#888" }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -234,7 +234,7 @@ export default function COGSCalculator() {
                   <thead>
                     <tr style={{ borderBottom: "1px solid #eee" }}>
                       {["Product", "COGS", "Sale price", "Gross profit", "Margin", "COGS ratio"].map((h) => (
-                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#888", fontWeight: 500, fontSize: 9, whiteSpace: "nowrap" }}>{h}</th>
+                        <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#888", fontWeight: 500, fontSize: 12, whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>

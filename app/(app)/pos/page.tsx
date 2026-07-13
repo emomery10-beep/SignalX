@@ -1616,7 +1616,7 @@ export default function POSPage() {
               <>
                 {tile.badge ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 12, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span> : null}
                 {tile.comingSoon ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 11, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', borderRadius: 9999, padding: '2px 7px' }}>{tc('pos_app.soon')}</span> : null}
-                <div style={{ fontSize: 24, marginBottom: 8, lineHeight: 1, opacity: tile.comingSoon ? 0.5 : 1 }}>{tile.icon}</div>
+                <div style={{ fontSize: 24, marginBottom: 8, lineHeight: 1, textAlign: 'center', opacity: tile.comingSoon ? 0.5 : 1 }}>{tile.icon}</div>
                 <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 15, lineHeight: 1.3, opacity: tile.comingSoon ? 0.6 : 1 }}>{tile.label}</div>
                 <div style={{ color: 'var(--tx3)', fontSize: 13, marginTop: 4, lineHeight: 1.4 }}>{tile.desc}</div>
               </>
