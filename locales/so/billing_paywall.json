@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "You're getting a lot out of AskBiz",
+    "softWarningBody": "You've used {questionsUsed} of your {questionLimit} monthly questions. You're clearly finding value — unlock more so you never have to stop mid-analysis.",
+    "softWarningCta": "Unlock more questions →",
+    "softWarningSecondary": "View plans",
+    "limitReachedTitle": "You've made the most of your free plan",
+    "limitReachedBody": "You've used all {questionLimit} free questions this month. Upgrade to keep going — your data and conversations are all saved and waiting.",
+    "limitReachedCta": "Continue with Growth — £19/month →",
+    "limitReachedSecondary": "View all plans",
+    "featureLockedTitle": "{feature} is on Growth",
+    "featureLockedBody": "{feature} is available on the Growth plan. Upgrade to unlock expansion intelligence, live sync, alerts, forecasts, and more.",
+    "featureLockedCta": "Unlock Growth — £19/month →",
+    "featureLockedSecondary": "See what else is included",
+    "feature500Questions": "500 AI questions/month",
+    "feature10Uploads": "10 file uploads",
+    "featureExpansion": "Expansion intelligence",
+    "featureLiveSync": "Live data sync",
+    "featureAlerts": "Alerts & forecasts",
+    "featureTrial": "7-day free trial",
+    "footer": "7-day free trial · Cancel anytime · Price locked for early adopters"
+  }
+}

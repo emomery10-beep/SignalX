@@ -1,0 +1,22 @@
+{
+  "empty": "No data available for this period. Connect a data source to see revenue trends.",
+  "title": "Revenue vs Costs",
+  "legendRevenue": "Revenue",
+  "legendCogs": "COGS",
+  "legendFixed": "Fixed",
+  "legendNet": "Net",
+  "tipRev": "Rev",
+  "tipCogs": "COGS",
+  "tipFixed": "Fixed",
+  "tipNet": "Net",
+  "detailedBreakdown": "Detailed Breakdown",
+  "close": "Close",
+  "rowRevenue": "Revenue",
+  "rowCogs": "COGS",
+  "rowFixedCosts": "Fixed Costs",
+  "grossProfit": "Gross Profit",
+  "totalCosts": "Total Costs",
+  "netProfit": "Net Profit",
+  "margin": "{n}% margin",
+  "ofRevenue": "{n}% of revenue"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Cash Flow",
+  "askAi": "Ask AI",
+  "askPrompt": "Analyse my cash flow and runway. What should I do to improve it?",
+  "balanceLabel": "{amount} balance",
+  "revenueTrend": "{pct}% revenue",
+  "addBalanceCta": "Add your cash balance in settings for runway tracking",
+  "dailyRevenue": "Daily revenue",
+  "dailyCosts": "Daily costs",
+  "dailyNet": "Daily net",
+  "weeklyTitle": "Weekly net cash flow",
+  "twelveWeeksAgo": "12w ago",
+  "thisWeek": "This week",
+  "monthlyLabel": "Monthly: {income} in, {expenses} out",
+  "aboveBreakeven": "Earning {amount}/day above breakeven",
+  "belowBreakeven": "Need {amount}/day more to break even"
+}

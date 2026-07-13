@@ -1,0 +1,103 @@
+{
+  "status_delivered": "Delivered",
+  "status_in_transit": "In Transit",
+  "status_out_for_delivery": "Out for Delivery",
+  "status_customs_hold": "Customs Hold",
+  "status_exception": "Exception",
+  "status_pending": "Pending",
+  "status_picked_up": "Picked Up",
+  "status_delayed": "Delayed",
+
+  "plan_free": "Free",
+  "plan_growth": "Growth",
+  "plan_business": "Business",
+
+  "locked_upgrade_arrow": "{plan} →",
+
+  "toast_tracking_required": "Tracking number required",
+  "toast_failed_to_add": "Failed to add",
+  "toast_added": "Shipment added and registered ✓",
+
+  "free_banner_title": "Unlock full shipment intelligence",
+  "free_banner_growth": "🔒 Growth — 5 shipments, total value tracking, delay alerts",
+  "free_banner_business": "🔒 Business — Unlimited shipments, financial impact, customs alerts, supplier scoring, stockout risk, working capital intelligence",
+  "see_plans": "See plans →",
+
+  "growth_nudge": "🔒 Business plan unlocks: financial impact per shipment · customs hold alerts · supplier reliability scoring · stockout risk engine · working capital intelligence",
+  "upgrade_to_business": "Upgrade to Business →",
+
+  "stat_logistics_score": "Logistics Score",
+  "stat_active": "Active",
+  "stat_at_risk": "At Risk",
+  "stat_customs_holds": "Customs Holds",
+  "stat_in_transit_value": "In Transit £",
+  "stat_daily_finance": "Daily Finance",
+
+  "filter_active": "active",
+  "filter_all": "all",
+  "filter_delivered": "delivered",
+
+  "loading": "Loading…",
+  "empty_title": "No shipments yet",
+  "empty_body": "Add your first tracking number to start monitoring your supply chain.",
+  "empty_cta": "Add shipment →",
+
+  "badge_customs_hold": "CUSTOMS HOLD",
+  "from_supplier": "from {supplier}",
+  "qty_suffix": "×{qty}",
+  "financial_impact_suffix": "£{amount} impact",
+  "days_delayed": "{days}d delayed",
+  "eta": "ETA {date}",
+
+  "feature_total_value": "Total value",
+  "feature_financial_impact": "Financial impact",
+
+  "intelligence_locked_title": "🔒 Business plan intelligence",
+  "intelligence_locked_body": "Upgrade to Business to unlock: working capital days · daily financing cost · financial impact · stockout risk alerts · customs hold financial modelling · supplier reliability score",
+
+  "detail_working_capital_days": "Working Capital Days",
+  "detail_working_capital_days_value": "{days}d",
+  "detail_daily_financing": "Daily Financing",
+  "detail_daily_financing_value": "£{amount}/day",
+  "detail_financial_impact": "Financial Impact",
+  "detail_financial_impact_value": "£{amount}",
+
+  "ask_askbiz": "Ask AskBiz →",
+  "view_on_17track": "View on 17Track ↗",
+  "ask_prompt": "Analyse shipment {tracking}{sku}. Status: {status}. {delay} What are my options?",
+  "ask_prompt_sku": " for {sku}",
+  "ask_prompt_delay": "{days} days delayed.",
+
+  "modal_title": "Add Shipment",
+  "modal_slots_free": "1 of 1 slots used · ",
+  "modal_slots_growth": "{count} of 5 slots used · ",
+  "modal_sub_free": "Status tracking only",
+  "modal_sub_growth": "Basic financial data included",
+  "modal_sub_business": "Full intelligence included",
+
+  "label_tracking_number": "Tracking Number *",
+  "placeholder_tracking_number": "e.g. RR123456789CN",
+  "label_shipment_type": "Shipment Type",
+  "type_inbound": "inbound",
+  "type_outbound": "outbound",
+  "type_container": "container",
+  "label_supplier": "Supplier",
+  "placeholder_supplier": "Supplier name",
+  "label_sku": "SKU / Product",
+  "placeholder_sku": "Product name",
+  "label_quantity": "Quantity",
+  "placeholder_quantity": "500",
+  "label_unit_cost": "Unit Cost",
+  "unit_cost_growth_tag": "Growth",
+  "placeholder_unit_cost": "12.50",
+  "label_expected_arrival": "Expected Arrival",
+  "label_po_reference": "PO Reference",
+  "placeholder_po_reference": "PO-2026-0042",
+
+  "value_preview": "💰 Shipment value: ",
+  "value_preview_financing": " · Daily financing: ",
+
+  "btn_registering": "Registering…",
+  "btn_add_track": "Add & Track →",
+  "btn_cancel": "Cancel"
+}

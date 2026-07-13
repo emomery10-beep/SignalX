@@ -1,0 +1,18 @@
+{
+  "title": "Payment Methods",
+  "subtitle": "Configure payment providers and enable customers to pay via Paystack or Stripe",
+  "loadingConfig": "Loading payment configuration...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Cards active",
+  "stripeLoadingLink": "Loading Stripe link…",
+  "stripeCompleteOnboarding": "Click to complete Stripe onboarding",
+  "stripeStatusActive": "● Active",
+  "stripeStatusPending": "Pending KYC",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ Platform splits not active",
+  "splitsNotActiveBody": "Payments are going to the main account without splitting. Fix this to automatically route AskBiz's 2% platform fee on every transaction.",
+  "splitsEnterPhone": "Enter your M-Pesa number to link:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Link",
+  "splitsFixBtn": "Fix Splits Now",
+  "splitsFixingBtn": "Fixing..."
+}

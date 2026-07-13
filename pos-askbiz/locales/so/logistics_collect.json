@@ -1,0 +1,58 @@
+{
+  "loading": "Loading…",
+
+  "err_photo_type": "Use a JPEG/PNG/WebP/HEIC image.",
+  "err_photo_process": "Could not process that photo.",
+  "err_id_read": "Couldn’t read the ID — type it in.",
+  "id_low_confidence": "⚠️ Low confidence — check it matches.",
+  "id_captured": "✓ ID captured — verify it matches.",
+  "err_id_failed": "ID scan failed — type it in.",
+  "err_verify_receiver": "Verify the receiver — scan or type their ID number.",
+  "err_photo_required": "Take a photo of the parcel at handover.",
+  "err_confirm_payment": "This parcel is {status} ({symbol}{amount}). Confirm payment before releasing.",
+  "err_photo_upload_failed": "Photo upload failed — retake.",
+  "err_release_failed": "Could not release parcel.",
+  "err_network_retry": "Network error — try again.",
+
+  "header_title": "Parcel Collection",
+  "header_subtitle": "{name} · hand parcels to customers",
+
+  "tab_outgoing": "📤 Outgoing",
+  "tab_incoming": "📥 Incoming",
+
+  "search_placeholder": "Search tracking #, name, phone…",
+  "empty_state": "No parcels waiting for collection at your branch. They appear here once the handler receives them in.",
+
+  "status_paid": "Paid",
+  "status_unpaid": "unpaid",
+  "card_to_label": "📥 To: {name}",
+  "card_dash": "—",
+  "card_parcel_fallback": "Parcel",
+  "card_from": "from {origin}",
+
+  "sheet_aria": "Release parcel",
+  "sheet_release_title": "Release {tracking}",
+  "sheet_to_line": "To {name} · {phone}",
+
+  "step_payment": "1 · Payment",
+  "already_paid": "✓ Already paid",
+  "collect_on_delivery": "Collect on delivery",
+  "pay_method_cash": "💵 Cash",
+  "pay_method_card": "💳 Card",
+  "pay_method_mobile": "📱 Mobile",
+  "payment_received_full": "Payment received in full",
+
+  "step_verify_id": "2 · Verify receiver ID",
+  "id_placeholder": "National ID / Passport",
+  "scan_reading_id": "⏳ Reading ID…",
+  "scan_id_autofill": "📷 Scan ID to auto-fill",
+
+  "step_photo": "3 · Photo of parcel at handover",
+  "alt_parcel_handover": "Parcel at handover",
+  "photo_retake": "Retake",
+  "photo_processing": "Processing…",
+  "photo_take": "📷 Take parcel photo",
+
+  "releasing": "⏳ Releasing…",
+  "release_button": "✅ Release to customer"
+}

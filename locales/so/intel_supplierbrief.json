@@ -1,0 +1,23 @@
+{
+  "title": "Supplier Brief",
+  "askAi": "Ask AI",
+  "askAiPrompt": "Analyse my supplier relationships and recommend negotiation strategies for better margins.",
+  "negotiationLeverage": "Negotiation Leverage",
+  "monthlySpend": "Monthly spend",
+  "savingTarget": "5% saving target",
+  "annualImpact": "Annual impact",
+  "concentrationRiskLabel": "Concentration risk:",
+  "concentrationRiskSuffix": "— diversify to strengthen negotiation position",
+  "lowMarginLabel": "Low-margin suppliers:",
+  "lowMarginSuffix": "— prioritize for renegotiation",
+  "risingCostsLabel": "Rising costs:",
+  "risingCostsSuffix": "— lock in rates or find alternatives",
+  "saveBadge": "Save ~{amount}/mo",
+  "supplierRowMeta": "{n} products • {spend}/mo • {margin}% margin",
+  "depBadge": "{dep}% dep",
+  "generatingBrief": "Generating brief for {name}...",
+  "negotiationBriefHeader": "Negotiation Brief — {name}",
+  "sectionLeverage": "LEVERAGE",
+  "sectionRisks": "RISKS",
+  "sectionTalkingPoints": "TALKING POINTS"
+}

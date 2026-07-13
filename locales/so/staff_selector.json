@@ -1,0 +1,22 @@
+{
+  "headingFactory": "Set Up Your Factory Team",
+  "headingRestaurant": "Set Up Your Restaurant Team",
+  "headingSubtitle": "Select or customize staff roles for your team. Each role includes pre-configured permissions and responsibilities.",
+  "quickStartTitle": "Recommended for {size} teams",
+  "quickStartSubtitle": "We recommend these {count} roles to get started:",
+  "quickStartButton": "Use Recommended Roles",
+  "allRolesLabel": "All Available Roles",
+  "teamSizeLabel": "Team Size:",
+  "permissionsLabel": "Permissions:",
+  "viewResponsibilities": "View Responsibilities",
+  "responsibilitiesHeading": "Responsibilities",
+  "permissionsHeading": "Permissions",
+  "moreItems": "+ {count} more",
+  "recommendedBadge": "⭐ Recommended",
+  "selectedRoles": "Selected Roles:",
+  "clearButton": "Clear",
+  "confirmRoleSingular": "Confirm {count} Role",
+  "confirmRolePlural": "Confirm {count} Roles",
+  "selectAtLeastOne": "Select at least one role",
+  "tipText": "💡 Tip: You can customize permissions for each role after setup. Team members can be assigned one or more roles."
+}

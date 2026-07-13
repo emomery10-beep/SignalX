@@ -1,0 +1,11 @@
+{
+  "headerLabel": "Competitor Watch",
+  "marketCheapestLabel": "You are the cheapest",
+  "marketCheapestSub": "Room to raise prices — test a 5-10% increase.",
+  "marketCompetitiveLabel": "You are competitively priced",
+  "marketCompetitiveSub": "Good position. Monitor for changes.",
+  "marketPremiumLabel": "You are premium priced",
+  "marketPremiumSub": "Ensure your brand justifies the premium.",
+  "overpricedLabel": "You are above market price",
+  "overpricedSub": "Risk of losing customers. Consider a price adjustment."
+}

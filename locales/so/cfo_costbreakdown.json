@@ -1,0 +1,13 @@
+{
+  "heading": "Cost Structure",
+  "askAi": "Ask AI",
+  "askAiPrompt": "My cost structure: COGS is {cogsPct}% of revenue ({cogsAmt}), fixed costs are {fixedPct}% ({fixedAmt}). What are the top 3 areas I could reduce costs without hurting growth?",
+  "totalCosts": "Total costs",
+  "labelCogs": "Cost of Goods Sold",
+  "labelFixed": "Fixed / Operating Costs",
+  "ofRevenue": "of revenue",
+  "netProfit": "Net Profit",
+  "whereEveryGoes": "Where every {sym}100 goes",
+  "profitSuffix": " profit",
+  "costsExceed": "Costs exceed revenue by {sym}{n} per {sym}100 earned"
+}

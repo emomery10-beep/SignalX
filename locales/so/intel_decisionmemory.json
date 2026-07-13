@@ -1,0 +1,21 @@
+{
+  "heading": "Decision Memory",
+  "subheading": "AskBiz remembers every decision and checks back in 6 weeks",
+  "logDecisionBtn": "+ Log Decision",
+  "logFormTitle": "Log a decision",
+  "titlePlaceholder": "What did you decide? e.g. Raised price on Wireless Earbuds by £1.50",
+  "beforePlaceholder": "Before (e.g. £12.99)",
+  "afterPlaceholder": "After (e.g. £14.49)",
+  "saving": "Saving…",
+  "saveDecision": "Save Decision — AskBiz will check back in 6 weeks",
+  "cancel": "Cancel",
+  "reviewBannerSingular": "🔔 {n} decision ready for review",
+  "reviewBannerPlural": "🔔 {n} decisions ready for review",
+  "askReviewBtn": "Ask AskBiz to review outcomes →",
+  "askReviewPrompt": "Review my recent business decisions and tell me what the outcomes suggest — what worked and what should I learn from?",
+  "noDecisions": "No decisions logged yet. Every business decision you log will be reviewed in 6 weeks.",
+  "checksBack": "AskBiz checks back: {date}",
+  "verdictGoodCall": "✓ Good call",
+  "verdictBadCall": "✗ Didn’t work",
+  "verdictNeutral": "~ Mixed results"
+}

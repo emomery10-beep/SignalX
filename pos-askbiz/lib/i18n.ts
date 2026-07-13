@@ -1,14 +1,14 @@
-export type Lang = 'en' | 'fr' | 'de' | 'es' | 'ar' | 'sw' | 'pt' | 'nl' | 'it' | 'pl'
+export type Lang = 'en' | 'fr' | 'de' | 'es' | 'ar' | 'sw' | 'so' | 'pt' | 'nl' | 'it' | 'pl'
 
 export const LANG_NAMES: Record<Lang, string> = {
   en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español',
-  ar: 'العربية', sw: 'Kiswahili', pt: 'Português', nl: 'Nederlands',
+  ar: 'العربية', sw: 'Kiswahili', so: 'Soomaali', pt: 'Português', nl: 'Nederlands',
   it: 'Italiano', pl: 'Polski',
 }
 
 export const LANG_FLAGS: Record<Lang, string> = {
   en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸',
-  ar: '🇸🇦', sw: '🇰🇪', pt: '🇧🇷', nl: '🇳🇱',
+  ar: '🇸🇦', sw: '🇰🇪', so: '🇸🇴', pt: '🇧🇷', nl: '🇳🇱',
   it: '🇮🇹', pl: '🇵🇱',
 }
 
@@ -19,6 +19,7 @@ export const COUNTRY_TO_LANG: Record<string, Lang> = {
   ES:'es',MX:'es',AR:'es',CO:'es',CL:'es',PE:'es',
   SA:'ar',AE:'ar',EG:'ar',KW:'ar',QA:'ar',JO:'ar',
   KE:'sw',TZ:'sw',
+  SO:'so',DJ:'so',
   PT:'pt',BR:'pt',AO:'pt',MZ:'pt',
   NL:'nl',IT:'it',PL:'pl',
 }

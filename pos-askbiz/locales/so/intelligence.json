@@ -1,0 +1,21 @@
+{
+  "header_title": "Sales Map",
+  "header_subtitle": "Geo-tagged transactions",
+  "back": "← Back",
+  "period_today": "Today",
+  "period_7_days": "7 days",
+  "period_30_days": "30 days",
+  "period_90_days": "90 days",
+  "stat_sales": "Sales",
+  "stat_revenue": "Revenue",
+  "stat_on_map": "On map",
+  "popup_by": "by {name}",
+  "no_location_title": "No location data yet",
+  "no_location_subtitle": "Allow location access on the cashier’s device when making a sale — each sale will appear as a pin here",
+  "loading": "Loading…",
+  "geo_tagged_sale": "{count} geo-tagged sale",
+  "geo_tagged_sale_plural": "{count} geo-tagged sales",
+  "none_geo_tagged_title": "{count} sales — none geo-tagged yet",
+  "none_geo_tagged_subtitle": "The cashier device must allow location access before checking out.",
+  "no_sales_period": "No sales in this period yet — try a different date range."
+}

@@ -1,0 +1,7 @@
+{
+  "title": "Shipment Health",
+  "outOf100": "/100",
+  "active": "on track",
+  "atRisk": "at risk",
+  "customsHold": "customs hold"
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Business Glossary",
+  "subtitle": "{n} business terms explained in plain English — from ARR to working capital. No jargon without explanation.",
+  "search_placeholder": "Search terms — try 'churn', 'EBITDA', 'IR35'...",
+  "filter_label": "Filter by Category",
+  "all_categories": "All Categories",
+  "showing": "Showing",
+  "of_n_terms": "of {n} terms",
+  "clear_filters": "Clear filters",
+  "no_terms": "No terms found for \"{query}\"",
+  "all": "ALL",
+  "term_count": "{n} terms",
+  "cta_heading": "See these metrics for your business",
+  "cta_body": "AskBiz connects to your data and surfaces every metric in this glossary — automatically.",
+  "cta_button": "Start Free Trial",
+  "meta_title": "Business Glossary — 300 Terms Explained | AskBiz",
+  "meta_description": "Free business glossary covering 300 terms across strategy, finance, eCommerce, FX, marketing, HR, tax, retail, and AI — explained in plain English for SME founders."
+}

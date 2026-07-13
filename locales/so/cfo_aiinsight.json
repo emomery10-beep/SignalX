@@ -1,0 +1,10 @@
+{
+  "sectionTitle": "AI Insights",
+  "poweredBy": "powered by Claude",
+  "refreshBtn": "Refresh",
+  "analyzingBtn": "Analyzing...",
+  "analyzingBody": "Analyzing your financials...",
+  "noInsights": "No insights generated. Click Refresh to try again.",
+  "askAi": "Ask AI →",
+  "expandPrompt": "Expand on this CFO insight: “{title}” — {body}. Give me specific next steps."
+}

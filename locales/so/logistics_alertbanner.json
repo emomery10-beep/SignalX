@@ -1,0 +1,17 @@
+{
+  "trackShipmentsTitle": "Track your shipments",
+  "trackShipmentsDesc": "Add tracking numbers to get stockout alerts, customs warnings, and financial impact in real time.",
+  "addShipment": "Add shipment →",
+  "shipmentsAtRiskSingular": "{n} shipment at risk",
+  "shipmentsAtRiskPlural": "{n} shipments at risk",
+  "view": "View →",
+  "shipmentAlertFallback": "Shipment Alert",
+  "financialImpact": "£{amount} impact",
+  "viewShipment": "View shipment →",
+  "askAskBiz": "Ask AskBiz →",
+  "askBizPrompt": "What should I do about shipment {trackingNumber}? What are my options?",
+  "onTrack": "{n} on track",
+  "delayed": "{n} delayed",
+  "customsHold": "{n} customs hold",
+  "viewAll": "View all →"
+}

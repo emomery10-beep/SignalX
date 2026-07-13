@@ -1,0 +1,22 @@
+{
+  "staff_login": "Staff login",
+  "email_label": "Email address",
+  "email_hint": "Enter your work email to continue.",
+  "phone_hint": "Enter your work phone number to continue.",
+  "method_phone": "Phone",
+  "method_email": "Email",
+  "phone_placeholder": "712 345678",
+  "err_email_unrecognised": "Email not recognised",
+  "err_unrecognised": "Not recognised. Ask your manager to add you.",
+  "err_invalid_phone": "Enter a valid phone number.",
+  "err_network": "Network error — please try again",
+  "err_pin_incorrect": "Incorrect PIN",
+  "checking": "Checking…",
+  "continue": "Continue →",
+  "greeting": "Hi {name} 👋",
+  "pin_hint": "Enter your PIN to sign in.",
+  "signing_in": "Signing in…",
+  "sign_in": "Sign in →",
+  "use_different_email": "Use a different email",
+  "loading_login": "Loading login…"
+}

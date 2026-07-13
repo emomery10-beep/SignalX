@@ -1,0 +1,8 @@
+{
+  "titleDefault": "Create a shareable link for this insight",
+  "titleWithUrl": "Share: {url}",
+  "labelIdle": "Share",
+  "labelLoading": "Creating link…",
+  "labelCopied": "Link copied!",
+  "labelError": "Try again"
+}
