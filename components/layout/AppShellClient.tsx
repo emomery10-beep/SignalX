@@ -261,12 +261,7 @@ export default function AppShellClient({ user, conversations, children }: {
         </button>
         <Link href={localePath('/home', lang)} title="Home" aria-label="AskBiz home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="13" height="13" viewBox="0 0 32 32" fill="none">
-              <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
-              <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
-              <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-              <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <svg width="13" height="13" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
           </div>
         </Link>
         <NotificationBell />
@@ -289,12 +284,7 @@ export default function AppShellClient({ user, conversations, children }: {
         <div style={{ padding: '14px 12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <Link href={localePath('/home', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'var(--tx)', minWidth: 0 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
-                <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
-                <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
-                <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-                <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <svg width="15" height="15" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
             </div>
             <span style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, letterSpacing: '-.02em', whiteSpace: 'nowrap' }}>AskBiz</span>
           </Link>

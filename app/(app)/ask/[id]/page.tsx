@@ -216,7 +216,7 @@ export default function ChatConversationPage() {
           {messages.map(msg => (
             <div key={msg.id} style={{ display:'flex', gap:9, padding:'2px 0', flexDirection:msg.role==='user'?'row-reverse':'row', animation:'msgIn .26s cubic-bezier(.16,1,.3,1) both' }}>
               <div style={{ width:26, height:26, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:600, marginTop:3, background:msg.role==='assistant'?'linear-gradient(135deg,#d08a59,#8c6fe0)':'var(--ov)', color:msg.role==='assistant'?'#04080f':'var(--tx2)' }}>
-                {msg.role==='assistant' ? <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> : (user.initials||'U')}
+                {msg.role==='assistant' ? <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg> : (user.initials||'U')}
               </div>
               <div style={{ flex:1, maxWidth:'88%', display:'flex', flexDirection:'column', alignItems:msg.role==='user'?'flex-end':'flex-start' }}>
                 {msg.role==='user' ? (
@@ -232,7 +232,7 @@ export default function ChatConversationPage() {
 
           {isLoading && (
             <div style={{ display:'flex', gap:9, padding:'2px 0' }}>
-              <div style={{ width:26, height:26, borderRadius:'50%', background:'#6366F1', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <div style={{ width:26, height:26, borderRadius:'50%', background:'#6366F1', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
               </div>
               <div style={{ padding:'10px 14px', borderRadius:13, borderBottomLeftRadius:3, background:'var(--ev)', border:'1px solid var(--b)', display:'flex', gap:4, alignItems:'center' }}>
                 <span className="tdot"/><span className="tdot"/><span className="tdot"/>

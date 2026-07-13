@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import { markTileSVG, toDataUri } from "@/lib/brand";
 
 export const runtime = "edge";
 
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
             left: 0,
             right: 0,
             height: "6px",
-            background: "#d08a59",
+            background: "#C97A44",
           }}
         />
 
@@ -56,9 +57,11 @@ export async function GET(req: NextRequest) {
         >
           {/* Top: brand + category */}
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img width="72" height="72" src={toDataUri(markTileSVG(72))} alt="AskBiz" />
             <div
               style={{
-                background: "#d08a59",
+                background: "#C97A44",
                 color: "#fff",
                 fontSize: "12px",
                 fontWeight: 700,
@@ -102,19 +105,19 @@ export async function GET(req: NextRequest) {
             {difficulty && (
               <div
                 style={{
-                  color: "#d08a59",
+                  color: "#C97A44",
                   fontSize: "12px",
                   fontWeight: 600,
                   padding: "4px 12px",
                   borderRadius: "12px",
-                  border: "1px solid #d08a59",
+                  border: "1px solid #C97A44",
                 }}
               >
                 {difficulty}
               </div>
             )}
             {readTime && (
-              <div style={{ color: "#b0b8c8", fontSize: "12px" }}>{readTime} min read</div>
+              <div style={{ color: "#b0b8c8", fontSize: "12px" }}>{`${readTime} min read`}</div>
             )}
           </div>
         </div>

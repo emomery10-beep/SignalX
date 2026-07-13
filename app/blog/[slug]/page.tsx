@@ -473,11 +473,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       <nav style={{ background: SF, borderBottom: `1px solid ${B}`, padding: '0 clamp(16px,4vw,32px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
-              <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
-              <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/>
-              <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-            </svg>
+            <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
@@ -692,8 +688,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '20px 0', borderTop: `1px solid ${B}`, borderBottom: `1px solid ${B}`, marginBottom: 40 }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', background: post.author ? 'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)' : `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'Sora, system-ui' }}>
             {post.author ? post.author.name.split(' ').map(n => n[0]).join('') : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.6"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.8"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
+              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                <g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/>
               </svg>
             )}
           </div>

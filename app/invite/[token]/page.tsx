@@ -132,11 +132,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
         {/* Header */}
         <div style={{ background: '#6366F1', padding: '28px 32px', textAlign: 'center' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: '8px 14px', marginBottom: 12 }}>
-            <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-              <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
-              <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
-              <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-            </svg>
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
             <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>AskBiz</span>
           </div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>{tc('invite.tagline')}</div>

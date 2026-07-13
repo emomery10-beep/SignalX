@@ -89,7 +89,7 @@ export default function ArticlePage({ params }: Props) {
       url: "https://askbiz.co",
       logo: {
         "@type": "ImageObject",
-        url: "https://askbiz.co/favicon.svg",
+        url: "https://askbiz.co/logo.svg",
       },
     },
     articleSection: article.category,

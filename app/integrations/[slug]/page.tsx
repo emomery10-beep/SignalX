@@ -68,11 +68,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
-              <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
-              <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/>
-              <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-            </svg>
+            <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
@@ -89,11 +85,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
             <div style={{ width: 64, height: 64, borderRadius: 16, background: int.color + '15', border: `1px solid ${int.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, flexShrink: 0 }}>{int.icon}</div>
             <div style={{ width: 32, fontSize: 18, color: TX3, textAlign: 'center' }}>+</div>
             <div style={{ width: 64, height: 64, borderRadius: 16, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-                <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
-                <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/>
-                <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-              </svg>
+              <svg width="26" height="26" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
             </div>
           </div>
           <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(22px,4vw,36px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 14 }}>

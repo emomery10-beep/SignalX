@@ -337,12 +337,7 @@ export default function AuthPage() {
       {/* Logo */}
       <Link href="/" className="animate-fade-down" style={{ minHeight: 0, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, textDecoration: 'none', color: 'var(--tx)', flexShrink: 0 }}>
         <div style={{ width: 26, height: 26, borderRadius: 8, background: '#d08a59', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="13" height="13" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
-            <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
-            <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-            <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <svg width="13" height="13" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
         </div>
         <span style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 'clamp(14px,1.6vw,16px)', fontWeight: 700, letterSpacing: '-.02em' }}>AskBiz</span>
       </Link>
