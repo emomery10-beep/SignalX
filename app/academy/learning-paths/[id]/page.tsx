@@ -3,6 +3,12 @@ import { cookies, headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { LEARNING_PATHS } from '@/lib/learning-paths-content'
+import { academyArticles } from '@/lib/academy-content'
+
+// Real per-article metadata keyed by slug — lets the hub page render each
+// module's actual description and read time instead of a generic placeholder,
+// and confirms which modules resolve to a real, linkable article.
+const ARTICLE_BY_SLUG = new Map(academyArticles.map(a => [a.slug, a]))
 
 // Meta descriptions target 150-160 chars; truncate on a word boundary so it
 // reads as a sentence fragment rather than getting cut mid-word.
@@ -133,47 +139,73 @@ export default function LearningPathPage({ params }: { params: { id: string } })
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: TX, marginBottom: 24 }}>Modules ({path.articles.length})</h2>
             <div style={{ display: 'grid', gap: 12 }}>
-              {path.articles.map((article, index) => (
-                <div
-                  key={article.slug}
-                  className="lp-module-card"
-                  style={{
-                    background: SF,
-                    border: `1px solid ${BD}`,
-                    borderRadius: 10,
-                    padding: 20,
-                    display: 'flex',
-                    gap: 16,
-                    alignItems: 'flex-start',
-                  }}
-                >
-                  <div style={{
-                    minWidth: 36,
-                    width: 36,
-                    height: 36,
-                    background: path.color,
-                    color: SF,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    marginTop: 2,
-                  }}>
-                    {index + 1}
+              {path.articles.map((article, index) => {
+                const meta = ARTICLE_BY_SLUG.get(article.slug)
+                // Real article description if the module resolves to a live
+                // academy article; otherwise the generic fallback (keeps the
+                // card meaningful for any not-yet-published module).
+                const blurb = meta?.description || 'Part of this AskBiz Academy learning path.'
+                const readLabel = meta ? `${meta.readTime} min read · ${meta.difficulty}` : 'AskBiz Academy'
+
+                const card = (
+                  <div
+                    className="lp-module-card"
+                    style={{
+                      background: SF,
+                      border: `1px solid ${BD}`,
+                      borderRadius: 10,
+                      padding: 20,
+                      display: 'flex',
+                      gap: 16,
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <div style={{
+                      minWidth: 36,
+                      width: 36,
+                      height: 36,
+                      background: path.color,
+                      color: SF,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      marginTop: 2,
+                    }}>
+                      {index + 1}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: 13, fontWeight: 600, color: TX, margin: '0 0 4px 0' }}>
+                        {article.title}
+                      </h3>
+                      <p style={{ fontSize: 12, color: TX2, margin: '0 0 6px 0', lineHeight: 1.5 }}>
+                        {blurb}
+                      </p>
+                      <p style={{ fontSize: 11, color: TX3, margin: 0 }}>
+                        {readLabel}
+                      </p>
+                    </div>
+                    <div style={{ fontSize: 16, color: meta ? ACC : TX3 }}>→</div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 13, fontWeight: 600, color: TX, margin: '0 0 4px 0' }}>
-                      {article.title}
-                    </h3>
-                    <p style={{ fontSize: 11, color: TX3, margin: 0 }}>
-                      Article from AskBiz Academy
-                    </p>
-                  </div>
-                  <div style={{ fontSize: 16 }}>→</div>
-                </div>
-              ))}
+                )
+
+                // Resolvable modules become real internal links (crawlable,
+                // and the "→" affordance now actually navigates); unresolved
+                // ones stay as static cards rather than dead links.
+                return meta ? (
+                  <Link
+                    key={article.slug}
+                    href={localePath(`/academy/${article.slug}`, lang)}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={article.slug}>{card}</div>
+                )
+              })}
             </div>
           </div>
 
