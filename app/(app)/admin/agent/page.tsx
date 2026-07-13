@@ -373,9 +373,10 @@ export default function AgentAdminPage() {
     } catch {}
   }, [])
 
-  const loadJaneItems = useCallback(async () => {
+  const loadJaneItems = useCallback(async (statusOverride?: string) => {
+    const status = statusOverride ?? janeFilter
     try {
-      const res = await fetch(`/api/agent/community-scout/list?status=${janeFilter}&t=${Date.now()}`, { cache: 'no-store' })
+      const res = await fetch(`/api/agent/community-scout/list?status=${status}&t=${Date.now()}`, { cache: 'no-store' })
       const d   = await res.json()
       setJaneItems(d.items || [])
     } catch { setJaneItems([]) }
@@ -398,9 +399,10 @@ export default function AgentAdminPage() {
     } catch {}
   }, [])
 
-  const loadShiillahItems = useCallback(async () => {
+  const loadShiillahItems = useCallback(async (statusOverride?: string) => {
+    const status = statusOverride ?? shiillahFilter
     try {
-      const res = await fetch(`/api/agent/shiillah-scout/list?status=${shiillahFilter}&t=${Date.now()}`, { cache: 'no-store' })
+      const res = await fetch(`/api/agent/shiillah-scout/list?status=${status}&t=${Date.now()}`, { cache: 'no-store' })
       const d   = await res.json()
       setShiillahItems(d.items || [])
     } catch { setShiillahItems([]) }
@@ -421,7 +423,7 @@ export default function AgentAdminPage() {
       const data = await res.json()
       setShiillahRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
-      else if (data.success) { showToast(`Shiillah drafted ${data.blogsGenerated} Swahili blog post(s)`); setShiillahLoading(true); setShiillahFilter('pending'); loadShiillahItems(); loadShiillahCounts() }
+      else if (data.success) { showToast(`Shiillah drafted ${data.blogsGenerated} Swahili blog post(s)`); setShiillahLoading(true); setShiillahFilter('pending'); loadShiillahItems('pending'); loadShiillahCounts() }
       else showToast('Scout run failed — check the log', false)
     } catch (e) { setShiillahRunLog([`Error: ${String(e)}`]); showToast('Scout run failed', false) }
     finally { setShiillahRunning(false) }
@@ -647,7 +649,7 @@ export default function AgentAdminPage() {
       const data = await res.json()
       setJaneRunLog(data.log || [String(data.error || 'Unknown error')])
       if (data.skipped) { showToast('Already ran today — no duplicates', true) }
-      else if (data.success) { showToast(`Jane drafted ${data.blogsGenerated} community post(s)`); setJaneLoading(true); setJaneFilter('pending'); loadJaneItems(); loadJaneCounts() }
+      else if (data.success) { showToast(`Jane drafted ${data.blogsGenerated} community post(s)`); setJaneLoading(true); setJaneFilter('pending'); loadJaneItems('pending'); loadJaneCounts() }
       else showToast(tc('page_admin_agent.scoutFailedLog'), false)
     } catch (e) { setJaneRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setJaneRunning(false) }
