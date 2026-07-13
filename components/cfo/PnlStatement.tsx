@@ -94,7 +94,7 @@ function SectionBar({ color, label }: { color: string; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, marginTop: 4 }}>
       <div style={{ width: 3, height: 14, borderRadius: 2, background: color }} />
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{label}</span>
     </div>
   )
 }
@@ -333,7 +333,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
 
   /* ---- row helpers ---- */
   const thStyle: React.CSSProperties = {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 600,
     color: 'var(--tx3)',
     textTransform: 'uppercase',
@@ -344,7 +344,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
   }
 
   const tdStyle: React.CSSProperties = {
-    fontSize: 11,
+    fontSize: 13,
     padding: '8px 8px',
     borderBottom: '1px solid var(--b)',
     ...NUM_STYLE,
@@ -383,11 +383,11 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
     const pctOfRev = metric === 'revenue' ? s.pct_of_total : (totals.revenue ? (s.cogs / totals.revenue) * 100 : 0)
     return (
       <tr style={{ background: 'var(--bg)' }}>
-        <td style={{ ...tdStyle, paddingLeft: 32, fontSize: 10, color: 'var(--tx2)' }}>{s.label}</td>
-        <td style={{ ...tdStyle, fontSize: 10 }}>{fmt(val, sym)}</td>
-        <td style={{ ...tdStyle, fontSize: 9, color: 'var(--tx3)' }}>{pctOfRev.toFixed(1)}%</td>
-        <td style={{ ...tdStyle, fontSize: 10, color: 'var(--tx3)' }}>—</td>
-        <td style={{ ...tdStyle, fontSize: 10, color: 'var(--tx3)' }}>—</td>
+        <td style={{ ...tdStyle, paddingLeft: 32, fontSize: 12, color: 'var(--tx2)' }}>{s.label}</td>
+        <td style={{ ...tdStyle, fontSize: 12 }}>{fmt(val, sym)}</td>
+        <td style={{ ...tdStyle, fontSize: 11, color: 'var(--tx3)' }}>{pctOfRev.toFixed(1)}%</td>
+        <td style={{ ...tdStyle, fontSize: 12, color: 'var(--tx3)' }}>—</td>
+        <td style={{ ...tdStyle, fontSize: 12, color: 'var(--tx3)' }}>—</td>
         <td style={tdStyle} />
       </tr>
     )
@@ -401,15 +401,15 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
       <div style={{ ...CARD, paddingBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: 'var(--tx)' }}>{tc('cfo_pnl.header_title')}</h2>
-            <p style={{ fontSize: 9, color: 'var(--tx3)', margin: '4px 0 0' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--tx)' }}>{tc('cfo_pnl.header_title')}</h2>
+            <p style={{ fontSize: 11, color: 'var(--tx3)', margin: '4px 0 0' }}>
               {tc('cfo_pnl.header_subtitle', { sym })}
             </p>
           </div>
           <button
             onClick={() => onAsk(tc('cfo_pnl.ask_ai_prompt'))}
             style={{
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 500,
               color: INDIGO,
               background: 'rgba(99,102,241,0.08)',
@@ -459,7 +459,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
                   {tc('cfo_pnl.row_revenue')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700 }}>{fmt(totals.revenue, sym)}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)' }}>100.0%</td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>100.0%</td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)' }}>{fmt(comparison.revenue, sym)}</td>
                 <ChangeCell pct={revenueChange} />
                 <td style={{ ...tdStyle, textAlign: 'center' }}>
@@ -481,7 +481,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
                   {tc('cfo_pnl.row_cogs')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: ORANGE }}>({fmt(totals.cogs, sym)})</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)' }}>
+                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>
                   {totals.revenue ? ((totals.cogs / totals.revenue) * 100).toFixed(1) : '0.0'}%
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)' }}>({fmt(comparison.cogs, sym)})</td>
@@ -503,7 +503,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: totals.gross_profit >= 0 ? GREEN : RED, borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
                   {fmt(totals.gross_profit, sym)}
                 </td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)', borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
+                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)', borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
                   {totals.gross_margin_pct.toFixed(1)}%
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)', borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
@@ -519,7 +519,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               <tr>
                 <td style={{ ...tdStyle, color: RED }}>{tc('cfo_pnl.row_operating_expenses')}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: RED }}>({fmt(totals.fixed_costs, sym)})</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)' }}>
+                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>
                   {totals.revenue ? ((totals.fixed_costs / totals.revenue) * 100).toFixed(1) : '0.0'}%
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)' }}>—</td>
@@ -529,13 +529,13 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
 
               {/* ---------- NET PROFIT ---------- */}
               <tr style={{ background: totals.net_profit >= 0 ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)' }}>
-                <td style={{ ...tdStyle, fontWeight: 700, fontSize: 12, borderBottom: 'none' }}>
+                <td style={{ ...tdStyle, fontWeight: 700, fontSize: 14, borderBottom: 'none' }}>
                   {tc('cfo_pnl.row_net_profit')}
                 </td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, fontSize: 12, color: totals.net_profit >= 0 ? GREEN : RED, borderBottom: 'none' }}>
+                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, fontSize: 14, color: totals.net_profit >= 0 ? GREEN : RED, borderBottom: 'none' }}>
                   {fmt(totals.net_profit, sym)}
                 </td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)', borderBottom: 'none' }}>
+                <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)', borderBottom: 'none' }}>
                   {totals.net_margin_pct.toFixed(1)}%
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)', borderBottom: 'none' }}>
@@ -577,15 +577,15 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               <tbody>
                 {pnlMonthly.map((m) => (
                   <tr key={m.month}>
-                    <td style={{ ...tdStyle, fontSize: 10, fontWeight: 500 }}>{m.month}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 10 }}>{fmt(m.revenue, sym)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 10, color: ORANGE }}>{fmt(m.cogs, sym)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 10, color: RED }}>{fmt(m.fixed, sym)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 10, fontWeight: 600, color: m.net >= 0 ? GREEN : RED }}>
+                    <td style={{ ...tdStyle, fontSize: 12, fontWeight: 500 }}>{m.month}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 12 }}>{fmt(m.revenue, sym)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 12, color: ORANGE }}>{fmt(m.cogs, sym)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 12, color: RED }}>{fmt(m.fixed, sym)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 12, fontWeight: 600, color: m.net >= 0 ? GREEN : RED }}>
                       {fmt(m.net, sym)}
                     </td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)' }}>{m.gross_margin_pct.toFixed(1)}%</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 9, color: 'var(--tx3)' }}>{m.net_margin_pct.toFixed(1)}%</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{m.gross_margin_pct.toFixed(1)}%</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{m.net_margin_pct.toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>

@@ -48,7 +48,7 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_healthtm.timeMachine')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_healthtm.timeMachine')}</span>
         </div>
         <div style={{ height: 120, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite' }} />
       </div>
@@ -68,12 +68,12 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_healthtm.timeMachine')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_healthtm.timeMachine')}</span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('intel_healthtm.askAiPrompt'))}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >{tc('intel_healthtm.askAi')}</button>
         )}
       </div>
@@ -81,17 +81,17 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
       {/* Journey summary */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{fmtWeek(oldest.week)}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx3)' }}>{oldest.avg_score}</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{oldest.label}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmtWeek(oldest.week)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx3)' }}>{oldest.avg_score}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{oldest.label}</div>
         </div>
-        <div style={{ fontSize: 16, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>
+        <div style={{ fontSize: 18, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>
           {totalChange >= 0 ? '→ ↑' : '→ ↓'}
         </div>
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_healthtm.now')}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>{current.avg_score}</div>
-          <div style={{ fontSize: 9, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_healthtm.now')}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>{current.avg_score}</div>
+          <div style={{ fontSize: 10, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>
             {totalChange >= 0 ? '+' : ''}{tc('intel_healthtm.totalChangePts', { pts: totalChange })}
           </div>
         </div>
@@ -129,30 +129,30 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
 
       {/* AI Analysis */}
       {loadingAnalysis && (
-        <div style={{ padding: 10, borderRadius: 10, background: 'rgba(139,92,246,.04)', border: '1px solid rgba(139,92,246,.12)', fontSize: 10, color: 'var(--tx3)', textAlign: 'center' }}>
+        <div style={{ padding: 10, borderRadius: 10, background: 'rgba(139,92,246,.04)', border: '1px solid rgba(139,92,246,.12)', fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>
           {tc('intel_healthtm.analysingChanges', { date: selectedWeek ? fmtWeek(selectedWeek) : '' })}
         </div>
       )}
 
       {analysis && !loadingAnalysis && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(139,92,246,.04)', border: '1px solid rgba(139,92,246,.12)', marginBottom: milestones.length ? 12 : 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>
             {tc('intel_healthtm.changesSince', { date: selectedWeek ? fmtWeek(selectedWeek) : '' })}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--tx2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{analysis}</div>
+          <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{analysis}</div>
         </div>
       )}
 
       {/* Milestones */}
       {milestones.length > 0 && (
         <div>
-          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6, letterSpacing: '.02em' }}>{tc('intel_healthtm.keyEvents')}</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6, letterSpacing: '.02em' }}>{tc('intel_healthtm.keyEvents')}</div>
           {milestones.slice(0, 4).map((m, i) => {
             const isUp = m.score_after > m.score_before
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 10, color: isUp ? '#10B981' : '#EF4444' }}>{isUp ? '📈' : '📉'}</span>
-                <span style={{ fontSize: 9, color: 'var(--tx2)' }}>
+                <span style={{ fontSize: 12, color: isUp ? '#10B981' : '#EF4444' }}>{isUp ? '📈' : '📉'}</span>
+                <span style={{ fontSize: 11, color: 'var(--tx2)' }}>
                   {fmtWeek(m.date)} — {m.event}
                 </span>
               </div>

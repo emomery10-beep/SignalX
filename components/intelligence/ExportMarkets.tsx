@@ -181,10 +181,10 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
     <div>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 4 }}>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>
           {tc('intel_exportmarkets.heading')}
         </div>
-        <div style={{ fontSize: 11, color: TX2, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6 }}>
           {sectorHints.trim()
             ? tc('intel_exportmarkets.subheadingWithSector').replace('{count}', String(EXPORT_MARKETS.length))
             : tc('intel_exportmarkets.subheading').replace('{count}', String(EXPORT_MARKETS.length))}
@@ -195,11 +195,11 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
       {/* Post-Brexit banner if EU markets visible */}
       {hasBrexit && (
         <div style={{ padding: '11px 14px', background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)', borderRadius: 11, marginBottom: 14, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
-          <div style={{ fontSize: 10, color: TX2, lineHeight: 1.55 }}>
+          <span style={{ fontSize: 16 }}>⚠️</span>
+          <div style={{ fontSize: 12, color: TX2, lineHeight: 1.55 }}>
             <strong style={{ color: '#d97706' }}>{tc('intel_exportmarkets.brexitBannerTitle')}</strong> {tc('intel_exportmarkets.brexitBannerBody')}
             <button onClick={() => onAsk(tc('intel_exportmarkets.brexitBannerAskPrompt'))}
-              style={{ display: 'inline', marginLeft: 8, fontSize: 10, color: '#d97706', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, padding: 0 }}>
+              style={{ display: 'inline', marginLeft: 8, fontSize: 12, color: '#d97706', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, padding: 0 }}>
               {tc('intel_exportmarkets.brexitBannerCta')}
             </button>
           </div>
@@ -215,10 +215,10 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder={tc('intel_exportmarkets.searchPlaceholder')}
-          style={{ width: '100%', padding: '9px 12px 9px 32px', fontSize: 11, background: SF, border: `1px solid ${B2}`, borderRadius: 10, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '9px 12px 9px 32px', fontSize: 13, background: SF, border: `1px solid ${B2}`, borderRadius: 10, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: TX3, fontSize: 14, lineHeight: 1 }}>×</button>
+          <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, lineHeight: 1 }}>×</button>
         )}
       </div>
 
@@ -228,7 +228,7 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           {regions.map(r => (
             <button key={r} onClick={() => setFilterRegion(r)}
-              style={{ fontSize: 9, fontWeight: filterRegion === r ? 600 : 400, color: filterRegion === r ? ACC : TX3, background: filterRegion === r ? 'rgba(208,138,89,.08)' : 'transparent', border: `1px solid ${filterRegion === r ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+              style={{ fontSize: 11, fontWeight: filterRegion === r ? 600 : 400, color: filterRegion === r ? ACC : TX3, background: filterRegion === r ? 'rgba(208,138,89,.08)' : 'transparent', border: `1px solid ${filterRegion === r ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
               {r === 'all' ? tc('intel_exportmarkets.allRegions') : r}
             </button>
           ))}
@@ -238,7 +238,7 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
         <div style={{ display: 'flex', gap: 5 }}>
           {(['all', 1, 2, 3] as const).map(t => (
             <button key={t} onClick={() => setFilterTier(t)}
-              style={{ fontSize: 9, fontWeight: filterTier === t ? 600 : 400, color: filterTier === t ? '#6366F1' : TX3, background: filterTier === t ? 'rgba(99,102,241,.08)' : 'transparent', border: `1px solid ${filterTier === t ? 'rgba(99,102,241,.3)' : B}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+              style={{ fontSize: 11, fontWeight: filterTier === t ? 600 : 400, color: filterTier === t ? '#6366F1' : TX3, background: filterTier === t ? 'rgba(99,102,241,.08)' : 'transparent', border: `1px solid ${filterTier === t ? 'rgba(99,102,241,.3)' : B}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
               {t === 'all' ? tc('intel_exportmarkets.allTiers') : tc('intel_exportmarkets.tierLabel').replace('{n}', String(t))}
             </button>
           ))}
@@ -246,10 +246,10 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
 
         {/* Sort */}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 5, alignItems: 'center' }}>
-          <span style={{ fontSize: 9, color: TX3 }}>{tc('intel_exportmarkets.sortLabel')}</span>
+          <span style={{ fontSize: 11, color: TX3 }}>{tc('intel_exportmarkets.sortLabel')}</span>
           {([['score', tc('intel_exportmarkets.sortScore')], ['growth', tc('intel_exportmarkets.sortGrowth')], ['duty', tc('intel_exportmarkets.sortDuty')], ['logistics', tc('intel_exportmarkets.sortLogistics')], ['premium', tc('intel_exportmarkets.sortPremium')]] as const).map(([s, label]) => (
             <button key={s} onClick={() => setSortBy(s as typeof sortBy)}
-              style={{ fontSize: 9, fontWeight: sortBy === s ? 600 : 400, color: sortBy === s ? ACC : TX3, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 5px', whiteSpace: 'nowrap' }}>
+              style={{ fontSize: 11, fontWeight: sortBy === s ? 600 : 400, color: sortBy === s ? ACC : TX3, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 5px', whiteSpace: 'nowrap' }}>
               {label}
             </button>
           ))}
@@ -258,13 +258,13 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
 
       {/* No product data nudge */}
       {!hasProducts && (
-        <div style={{ padding: '10px 14px', background: 'rgba(208,138,89,.04)', border: '1px solid rgba(208,138,89,.15)', borderRadius: 10, marginBottom: 12, fontSize: 10, color: TX3 }}>
+        <div style={{ padding: '10px 14px', background: 'rgba(208,138,89,.04)', border: '1px solid rgba(208,138,89,.15)', borderRadius: 10, marginBottom: 12, fontSize: 12, color: TX3 }}>
           💡 <strong style={{ color: TX2 }}>{tc('intel_exportmarkets.noProductsNudgeCta')}</strong> {tc('intel_exportmarkets.noProductsNudge')}
         </div>
       )}
 
       {/* Results count */}
-      <div style={{ fontSize: 10, color: TX3, marginBottom: 10 }}>
+      <div style={{ fontSize: 12, color: TX3, marginBottom: 10 }}>
         {filtered.length !== 1
           ? tc('intel_exportmarkets.resultsCountPlural').replace('{n}', String(filtered.length))
           : tc('intel_exportmarkets.resultsCount').replace('{n}', String(filtered.length))}
@@ -276,9 +276,9 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
       {/* Market cards */}
       {filtered.length === 0 ? (
         <div style={{ padding: '32px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 14 }}>
-          <div style={{ fontSize: 11, color: TX3 }}>{tc('intel_exportmarkets.noMarketsMessage')}</div>
+          <div style={{ fontSize: 13, color: TX3 }}>{tc('intel_exportmarkets.noMarketsMessage')}</div>
           <button onClick={() => { setSearchQuery(''); setFilterRegion('all'); setFilterTier('all') }}
-            style={{ marginTop: 10, fontSize: 10, color: ACC, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('intel_exportmarkets.clearFilters')}</button>
+            style={{ marginTop: 10, fontSize: 12, color: ACC, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('intel_exportmarkets.clearFilters')}</button>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -297,15 +297,15 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
 
                   {/* Flag + score */}
                   <div style={{ width: 44, textAlign: 'center', flexShrink: 0 }}>
-                    <div style={{ fontSize: 22, lineHeight: 1 }}>{m.flag}</div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: m.colour, marginTop: 2 }}>{m.score}</div>
+                    <div style={{ fontSize: 24, lineHeight: 1 }}>{m.flag}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: m.colour, marginTop: 2 }}>{m.score}</div>
                   </div>
 
                   {/* Name + metrics */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: TX }}>{m.name}</span>
-                      <span style={{ fontSize: 9, color: TX3 }}>{m.region}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: TX }}>{m.name}</span>
+                      <span style={{ fontSize: 10, color: TX3 }}>{m.region}</span>
                       <span style={{ fontSize: 9, fontWeight: 600, color: m.colour, background: `${m.colour}15`, padding: '1px 7px', borderRadius: 9999 }}>{m.label}</span>
                       <span style={{ fontSize: 9, color: TX3, background: EV, padding: '1px 7px', borderRadius: 9999 }}>{tierLabel}</span>
                       {detail?.post_brexit && <span style={{ fontSize: 9, fontWeight: 600, color: '#d97706', background: 'rgba(245,158,11,.1)', padding: '1px 7px', borderRadius: 9999 }}>{tc('intel_exportmarkets.postBrexitChecks')}</span>}
@@ -320,7 +320,7 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
                       ].map((item, i) => (
                         <div key={i}>
                           <div style={{ fontSize: 9, color: TX3 }}>{item.label}</div>
-                          <div style={{ fontSize: 9, fontWeight: 600, color: item.colour, whiteSpace: 'nowrap' }}>{item.value}</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: item.colour, whiteSpace: 'nowrap' }}>{item.value}</div>
                         </div>
                       ))}
                     </div>
@@ -336,7 +336,7 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
                   <div style={{ borderTop: `1px solid ${B}`, padding: '15px 15px 17px', background: EV }}>
 
                     {/* Overview */}
-                    <div style={{ background: SF, borderRadius: 11, padding: '12px 14px', marginBottom: 13, fontSize: 11, color: TX2, lineHeight: 1.65 }}>
+                    <div style={{ background: SF, borderRadius: 11, padding: '12px 14px', marginBottom: 13, fontSize: 13, color: TX2, lineHeight: 1.65 }}>
                       {detail.notes}
                     </div>
 
@@ -349,8 +349,8 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
                         { label: tc('intel_exportmarkets.detailEntryRoute'), value: detail.entry_route.split(',')[0].split(' or ')[0] },
                       ].map((item, i) => (
                         <div key={i} style={{ background: SF, borderRadius: 9, padding: '9px 11px', border: `1px solid ${B}` }}>
-                          <div style={{ fontSize: 9, color: TX3, marginBottom: 3 }}>{item.label}</div>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: TX }}>{item.value}</div>
+                          <div style={{ fontSize: 10, color: TX3, marginBottom: 3 }}>{item.label}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: TX }}>{item.value}</div>
                         </div>
                       ))}
                     </div>
@@ -358,16 +358,16 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
                     {/* Logistics + barriers */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 13 }}>
                       <div style={{ background: SF, borderRadius: 10, padding: '11px 13px', border: `1px solid ${B}` }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_exportmarkets.sectionLogistics')}</div>
-                        <div style={{ fontSize: 10, color: TX2, lineHeight: 1.55 }}>{detail.logistics_note}</div>
-                        <div style={{ marginTop: 6, fontSize: 10, color: TX2 }}>{tc('intel_exportmarkets.logisticsEntry').replace('{route}', detail.entry_route)}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_exportmarkets.sectionLogistics')}</div>
+                        <div style={{ fontSize: 12, color: TX2, lineHeight: 1.55 }}>{detail.logistics_note}</div>
+                        <div style={{ marginTop: 6, fontSize: 12, color: TX2 }}>{tc('intel_exportmarkets.logisticsEntry').replace('{route}', detail.entry_route)}</div>
                       </div>
                       <div style={{ background: 'rgba(239,68,68,.04)', borderRadius: 10, padding: '11px 13px', border: '1px solid rgba(239,68,68,.15)' }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_exportmarkets.sectionBarriers')}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_exportmarkets.sectionBarriers')}</div>
                         {detail.barriers.map((b, i) => (
                           <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 4, alignItems: 'flex-start' }}>
-                            <span style={{ color: '#dc2626', fontSize: 9, marginTop: 2, flexShrink: 0 }}>▸</span>
-                            <span style={{ fontSize: 10, color: TX2, lineHeight: 1.45 }}>{b}</span>
+                            <span style={{ color: '#dc2626', fontSize: 10, marginTop: 2, flexShrink: 0 }}>▸</span>
+                            <span style={{ fontSize: 12, color: TX2, lineHeight: 1.45 }}>{b}</span>
                           </div>
                         ))}
                       </div>
@@ -375,10 +375,10 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
 
                     {/* Hot categories */}
                     <div style={{ marginBottom: 13 }}>
-                      <div style={{ fontSize: 9, color: TX3, marginBottom: 7, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_exportmarkets.sectionHotCategories').replace('{market}', m.name)}</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 7, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_exportmarkets.sectionHotCategories').replace('{market}', m.name)}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {m.hot_categories.map(c => (
-                          <span key={c} style={{ fontSize: 9, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '2px 10px', textTransform: 'capitalize' }}>
+                          <span key={c} style={{ fontSize: 11, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '2px 10px', textTransform: 'capitalize' }}>
                             {c.replace(/_/g, ' ')}
                           </span>
                         ))}
@@ -389,19 +389,19 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button
                         onClick={() => onAsk(tc('intel_exportmarkets.askStartExportingPrompt').replace('{market}', m.name).replace('{score}', String(m.score)))}
-                        style={{ fontSize: 10, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 12, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {tc('intel_exportmarkets.askStartExportingButton').replace('{market}', m.name)}
                       </button>
                       {detail.post_brexit && (
                         <button
                           onClick={() => onAsk(tc('intel_exportmarkets.brexitGuidePrompt').replace('{market}', m.name))}
-                          style={{ fontSize: 10, color: '#d97706', background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)', borderRadius: 9, padding: '7px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                          style={{ fontSize: 12, color: '#d97706', background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)', borderRadius: 9, padding: '7px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>
                           {tc('intel_exportmarkets.brexitGuideButton')}
                         </button>
                       )}
                       <button
                         onClick={() => onAsk(tc('intel_exportmarkets.dutyRatesPrompt').replace('{market}', m.name))}
-                        style={{ fontSize: 10, color: TX3, background: 'transparent', border: `1px solid ${B2}`, borderRadius: 9, padding: '7px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 12, color: TX3, background: 'transparent', border: `1px solid ${B2}`, borderRadius: 9, padding: '7px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
                         {tc('intel_exportmarkets.dutyRatesButton')}
                       </button>
                     </div>
@@ -414,7 +414,7 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
       )}
 
       {/* Footer */}
-      <div style={{ marginTop: 14, fontSize: 9, color: TX3, textAlign: 'center', lineHeight: 1.6 }}>
+      <div style={{ marginTop: 14, fontSize: 11, color: TX3, textAlign: 'center', lineHeight: 1.6 }}>
         {sectorHints.trim()
           ? tc('intel_exportmarkets.footerWithSector').replace('{count}', String(EXPORT_MARKETS.length))
           : tc('intel_exportmarkets.footer').replace('{count}', String(EXPORT_MARKETS.length))}

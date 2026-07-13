@@ -40,15 +40,15 @@ export default function CfoAlerts({ alerts, onNavigate }: Props) {
               background: s.bg, border: `1px solid ${s.border}`,
             }}
           >
-            <span style={{ fontSize: 10, flexShrink: 0 }}>{s.icon}</span>
-            <span style={{ flex: 1, fontSize: 10, color: 'var(--tx)', fontWeight: 500 }}>
+            <span style={{ fontSize: 12, flexShrink: 0 }}>{s.icon}</span>
+            <span style={{ flex: 1, fontSize: 12, color: 'var(--tx)', fontWeight: 500 }}>
               {alert.message}
             </span>
             {alert.tab && onNavigate && (
               <button
                 onClick={() => onNavigate(alert.tab!)}
                 style={{
-                  fontSize: 9, fontWeight: 600, color: '#6366F1',
+                  fontSize: 10, fontWeight: 600, color: '#6366F1',
                   background: 'rgba(99,102,241,.08)', border: 'none',
                   borderRadius: 6, padding: '3px 8px', cursor: 'pointer',
                   fontFamily: 'inherit', whiteSpace: 'nowrap',
@@ -60,7 +60,7 @@ export default function CfoAlerts({ alerts, onNavigate }: Props) {
             <button
               onClick={() => setDismissed(prev => new Set(prev).add(alert.type))}
               style={{
-                fontSize: 12, color: 'var(--tx3)', background: 'transparent',
+                fontSize: 14, color: 'var(--tx3)', background: 'transparent',
                 border: 'none', cursor: 'pointer', padding: '0 2px',
                 lineHeight: 1, fontFamily: 'inherit',
               }}

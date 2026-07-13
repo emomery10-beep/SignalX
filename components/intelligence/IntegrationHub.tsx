@@ -95,14 +95,14 @@ export default function IntegrationHub() {
       {/* Header stats */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{tc('intel_integrationhub.title')}</div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intel_integrationhub.title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
             <span style={{ fontWeight: 700, color: connectedCount > 0 ? '#22C55E' : 'var(--tx3)' }}>{connectedCount}</span> {tc('intel_integrationhub.sourcesConnectedSuffix', { total: totalCount })}
           </div>
         </div>
         <button
           onClick={() => router.push('/sources')}
-          style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {tc('intel_integrationhub.manageSources')}
         </button>
@@ -119,7 +119,7 @@ export default function IntegrationHub() {
             transition: 'width 600ms ease',
           }} />
         </div>
-        <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 5 }}>
+        <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>
           {connectedCount === 0 && tc('intel_integrationhub.coverageNone')}
           {connectedCount > 0 && connectedCount < 5 && tc('intel_integrationhub.coverageLow', { n: 5 - connectedCount })}
           {connectedCount >= 5 && connectedCount < 10 && tc('intel_integrationhub.coverageMid')}
@@ -131,7 +131,7 @@ export default function IntegrationHub() {
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
         <button
           onClick={() => setActiveCategory(null)}
-          style={{ padding: '5px 12px', borderRadius: 9999, border: `1px solid ${!activeCategory ? '#6366F1' : 'var(--b)'}`, background: !activeCategory ? '#6366F110' : 'transparent', color: !activeCategory ? '#6366F1' : 'var(--tx3)', fontSize: 10, fontWeight: !activeCategory ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ padding: '5px 12px', borderRadius: 9999, border: `1px solid ${!activeCategory ? '#6366F1' : 'var(--b)'}`, background: !activeCategory ? '#6366F110' : 'transparent', color: !activeCategory ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: !activeCategory ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {tc('intel_integrationhub.filterAll')}
         </button>
@@ -143,11 +143,11 @@ export default function IntegrationHub() {
             <button
               key={cat}
               onClick={() => setActiveCategory(isActive ? null : cat)}
-              style={{ padding: '5px 12px', borderRadius: 9999, border: `1px solid ${isActive ? '#6366F1' : 'var(--b)'}`, background: isActive ? '#6366F110' : 'transparent', color: isActive ? '#6366F1' : 'var(--tx3)', fontSize: 10, fontWeight: isActive ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}
+              style={{ padding: '5px 12px', borderRadius: 9999, border: `1px solid ${isActive ? '#6366F1' : 'var(--b)'}`, background: isActive ? '#6366F110' : 'transparent', color: isActive ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: isActive ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 }}
             >
               {cat}
               {catConnected > 0 && (
-                <span style={{ fontSize: 9, fontWeight: 700, background: '#22C55E', color: '#fff', borderRadius: 9999, padding: '1px 5px', lineHeight: 1 }}>{catConnected}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, background: '#22C55E', color: '#fff', borderRadius: 9999, padding: '1px 5px', lineHeight: 1 }}>{catConnected}</span>
               )}
             </button>
           )
@@ -185,7 +185,7 @@ export default function IntegrationHub() {
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 16 }}>{source.icon}</span>
+                  <span style={{ fontSize: 18 }}>{source.icon}</span>
                   {/* Status dot */}
                   <span style={{
                     width: 8, height: 8, borderRadius: '50%', marginTop: 2, flexShrink: 0,
@@ -193,8 +193,8 @@ export default function IntegrationHub() {
                     boxShadow: isConnected && !hasError ? '0 0 0 2px #BBF7D040' : 'none',
                   }} />
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{source.label}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{source.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
                   {isConnected
                     ? (hasError ? tc('intel_integrationhub.statusSyncError') : tc('intel_integrationhub.statusSynced', { time: timeAgo(liveSource?.last_synced_at || null) }))
                     : tc('intel_integrationhub.statusNotConnected')
@@ -203,16 +203,16 @@ export default function IntegrationHub() {
                 {/* Expanded detail */}
                 {isExpanded && isConnected && liveSource && (
                   <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 4 }}>{tc('intel_integrationhub.detailName')} <span style={{ color: 'var(--tx2)' }}>{liveSource.name}</span></div>
-                    {hasError && <div style={{ fontSize: 9, color: '#EF4444' }}>{liveSource.error_message}</div>}
-                    {!hasError && <div style={{ fontSize: 9, color: '#22C55E' }}>{tc('intel_integrationhub.detailActive')}</div>}
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('intel_integrationhub.detailName')} <span style={{ color: 'var(--tx2)' }}>{liveSource.name}</span></div>
+                    {hasError && <div style={{ fontSize: 11, color: '#EF4444' }}>{liveSource.error_message}</div>}
+                    {!hasError && <div style={{ fontSize: 11, color: '#22C55E' }}>{tc('intel_integrationhub.detailActive')}</div>}
                   </div>
                 )}
                 {isExpanded && !isConnected && (
                   <div style={{ marginTop: 10 }}>
                     <button
                       onClick={e => { e.stopPropagation(); router.push('/sources') }}
-                      style={{ width: '100%', padding: '6px 0', borderRadius: 8, border: 'none', background: '#6366F1', color: '#fff', fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ width: '100%', padding: '6px 0', borderRadius: 8, border: 'none', background: '#6366F1', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       {tc('intel_integrationhub.connect')}
                     </button>

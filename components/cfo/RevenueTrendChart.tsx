@@ -35,7 +35,7 @@ export default function RevenueTrendChart({ data, currencySymbol }: Props) {
     return (
       <div style={{
         padding: '20px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)',
-        fontSize: 11, color: 'var(--tx3)', textAlign: 'center',
+        fontSize: 13, color: 'var(--tx3)', textAlign: 'center',
       }}>
         {tc('cfo_revtrend.empty')}
       </div>
@@ -69,9 +69,9 @@ export default function RevenueTrendChart({ data, currencySymbol }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_revtrend.title')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_revtrend.title')}</span>
         </div>
-        <div style={{ display: 'flex', gap: 12, fontSize: 9, color: 'var(--tx3)' }}>
+        <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--tx3)' }}>
           <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#22C55E', marginRight: 4, verticalAlign: 'middle' }} />{tc('cfo_revtrend.legendRevenue')}</span>
           <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#F97316', marginRight: 4, verticalAlign: 'middle' }} />{tc('cfo_revtrend.legendCogs')}</span>
           <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: '#EF4444', marginRight: 4, verticalAlign: 'middle' }} />{tc('cfo_revtrend.legendFixed')}</span>
@@ -83,7 +83,7 @@ export default function RevenueTrendChart({ data, currencySymbol }: Props) {
       {hovered && (
         <div style={{
           display: 'flex', gap: 16, padding: '8px 12px', borderRadius: 8,
-          background: 'var(--ev, #f3f2ef)', marginBottom: 8, fontSize: 9, color: 'var(--tx2)',
+          background: 'var(--ev, #f3f2ef)', marginBottom: 8, fontSize: 11, color: 'var(--tx2)',
         }}>
           <span style={{ fontWeight: 600 }}>{formatDate(hovered.date)}</span>
           <span>{tc('cfo_revtrend.tipRev')}: <strong style={{ color: '#22C55E' }}>{fmt(hovered.revenue, currencySymbol)}</strong></span>
@@ -187,12 +187,12 @@ export default function RevenueTrendChart({ data, currencySymbol }: Props) {
       {selected && (
         <div style={{ marginTop: 12, padding: '14px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>
               {formatDate(selected.date)} — {tc('cfo_revtrend.detailedBreakdown')}
             </div>
             <button
               onClick={() => setSelectedIdx(null)}
-              style={{ fontSize: 9, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ fontSize: 11, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               ✕ {tc('cfo_revtrend.close')}
             </button>
@@ -209,28 +209,28 @@ export default function RevenueTrendChart({ data, currencySymbol }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('cfo_revtrend.grossProfit')}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: (selected.revenue - selected.cogs) >= 0 ? '#22C55E' : '#EF4444' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: (selected.revenue - selected.cogs) >= 0 ? '#22C55E' : '#EF4444' }}>
                 {fmt(selected.revenue - selected.cogs, currencySymbol)}
               </div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
                 {selected.revenue > 0 ? tc('cfo_revtrend.margin', { n: Math.round(((selected.revenue - selected.cogs) / selected.revenue) * 100) }) : '—'}
               </div>
             </div>
             <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)', textAlign: 'center' }}>
               <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('cfo_revtrend.totalCosts')}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#EF4444' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#EF4444' }}>
                 {fmt(selected.cogs + selected.fixed, currencySymbol)}
               </div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
                 {selected.revenue > 0 ? tc('cfo_revtrend.ofRevenue', { n: Math.round(((selected.cogs + selected.fixed) / selected.revenue) * 100) }) : '—'}
               </div>
             </div>
             <div style={{ padding: '8px 10px', borderRadius: 8, background: selected.net >= 0 ? 'rgba(34,197,94,.04)' : 'rgba(239,68,68,.04)', border: `1px solid ${selected.net >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`, textAlign: 'center' }}>
               <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('cfo_revtrend.netProfit')}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: selected.net >= 0 ? '#22C55E' : '#EF4444' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: selected.net >= 0 ? '#22C55E' : '#EF4444' }}>
                 {fmt(selected.net, currencySymbol)}
               </div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
                 {selected.revenue > 0 ? tc('cfo_revtrend.margin', { n: Math.round((selected.net / selected.revenue) * 100) }) : '—'}
               </div>
             </div>
@@ -245,16 +245,16 @@ function DrillRow({ label, amount, pct, color, maxVal, sym }: { label: string; a
   const barPct = maxVal > 0 ? Math.max((amount / maxVal) * 100, 2) : 0
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ width: 70, fontSize: 9, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
+      <div style={{ width: 70, fontSize: 11, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
       <div style={{ flex: 1, height: 22, borderRadius: 5, background: 'var(--sf)', overflow: 'hidden', border: '1px solid var(--b)' }}>
         <div style={{ height: '100%', width: `${barPct}%`, background: color, borderRadius: 5, display: 'flex', alignItems: 'center', paddingLeft: 6, transition: 'width 300ms' }}>
           {barPct > 20 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{fmt(amount, sym)}</span>}
         </div>
       </div>
-      <div style={{ width: 50, fontSize: 9, fontWeight: 600, color, textAlign: 'right', flexShrink: 0 }}>
+      <div style={{ width: 50, fontSize: 11, fontWeight: 600, color, textAlign: 'right', flexShrink: 0 }}>
         {Math.round(pct)}%
       </div>
-      {barPct <= 20 && <span style={{ fontSize: 9, color, fontWeight: 600, flexShrink: 0 }}>{fmt(amount, sym)}</span>}
+      {barPct <= 20 && <span style={{ fontSize: 10, color, fontWeight: 600, flexShrink: 0 }}>{fmt(amount, sym)}</span>}
     </div>
   )
 }

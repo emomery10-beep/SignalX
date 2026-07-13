@@ -127,8 +127,8 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_benchmarks.title')}</span>
-          <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_benchmarks.title')}</span>
+          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
             background: `${overallColor}15`, color: overallColor }}>
             {overallLabel}
           </span>
@@ -148,7 +148,7 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
               ? tc('cfo_benchmarks.askPromptGapSuffix', { gaps: gaps.map(g => g.label).join(', ') })
               : '',
           }))}
-          style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_benchmarks.askAi')}
         </button>
       </div>
@@ -156,9 +156,9 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
       <div style={{ padding: '16px 18px' }}>
         {/* Industry selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)' }}>{tc('cfo_benchmarks.industryLabel')}</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)' }}>{tc('cfo_benchmarks.industryLabel')}</span>
           <select value={selectedIndustry} onChange={e => setSelectedIndustry(e.target.value)}
-            style={{ flex: 1, fontSize: 10, padding: '6px 10px', borderRadius: 7, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontWeight: 500 }}>
+            style={{ flex: 1, fontSize: 12, padding: '6px 10px', borderRadius: 7, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontWeight: 500 }}>
             {INDUSTRIES.map(ind => (
               <option key={ind.id} value={ind.id}>{ind.name}</option>
             ))}
@@ -181,9 +181,9 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
             return (
               <div key={m.key}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{m.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{m.label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
                       {m.userValue.toFixed(m.decimals ?? 0)}{m.suffix}
                     </span>
                     <span style={{ fontSize: 9, color: 'var(--tx3)' }}>
@@ -219,7 +219,7 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
         {/* Gap analysis */}
         {gaps.length > 0 && (
           <>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               {tc('cfo_benchmarks.improvementOpportunities')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
@@ -229,12 +229,12 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
                 return (
                   <div key={g.key} style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${RED}20`, background: `${RED}06` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{g.label}</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: RED }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{g.label}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: RED }}>
                         {g.userValue.toFixed(g.decimals ?? 0)}{g.suffix} → {target.toFixed(g.decimals ?? 0)}{g.suffix}
                       </span>
                     </div>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4 }}>
                       {buildSuggestion(g.key, gap)}
                     </div>
                   </div>
@@ -255,7 +255,7 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
             return (
               <div key={m.key} style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
                 <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{m.label}</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
                   {m.userValue.toFixed(m.decimals ?? 0)}{m.suffix}
                 </div>
                 <div style={{ fontSize: 9, fontWeight: 600, color, marginTop: 2 }}>{icon}</div>

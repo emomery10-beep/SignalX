@@ -474,8 +474,8 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
   if (completedMonths.length === 0) {
     const hasCurrentOnly = currentPartial !== null
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>
-        <div style={{ fontSize: 30, marginBottom: 12 }}>📊</div>
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
         <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.no_data_title')}</div>
         <div>
           {hasCurrentOnly
@@ -494,7 +494,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
 
       {/* ── Limited data warning ─── */}
       {completedMonths.length === 1 && (
-        <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', fontSize: 9, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', fontSize: 11, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>⚠️</span>
           <span>{tc('cfo_forecasts_tab.limited_data_warning')}</span>
         </div>
@@ -502,13 +502,13 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
 
       {/* ── Horizon selector ─── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, marginRight: 4 }}>{tc('cfo_forecasts_tab.horizon_label')}</span>
+        <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginRight: 4 }}>{tc('cfo_forecasts_tab.horizon_label')}</span>
         {horizons.map(h => (
           <button
             key={h.id}
             onClick={() => setHorizon(h.id)}
             style={{
-              padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: 9, fontWeight: 600,
+              padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: 11, fontWeight: 600,
               background: horizon === h.id ? 'rgba(99,102,241,.12)' : 'transparent',
               color: horizon === h.id ? '#6366F1' : 'var(--tx3)',
               cursor: 'pointer', fontFamily: 'inherit',
@@ -548,9 +548,9 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           },
         ].map((kpi, i) => (
           <div key={i} style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 }}>{kpi.label}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: kpi.color, fontFamily: 'var(--font-sora)', letterSpacing: '-.02em' }}>{kpi.value}</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{kpi.sub}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 }}>{kpi.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, fontFamily: 'var(--font-sora)', letterSpacing: '-.02em' }}>{kpi.value}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{kpi.sub}</div>
           </div>
         ))}
       </div>
@@ -560,10 +560,10 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.revenue_forecast_title')}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.revenue_forecast_sub')}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.revenue_forecast_title')}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.revenue_forecast_sub')}</div>
             </div>
-            <div style={{ display: 'flex', gap: 12, fontSize: 9 }}>
+            <div style={{ display: 'flex', gap: 12, fontSize: 10 }}>
               {[
                 { color: COLOURS.actual, label: tc('cfo_forecasts_tab.legend_actual'), dash: false },
                 { color: COLOURS.forecast, label: tc('cfo_forecasts_tab.legend_forecast'), dash: true },
@@ -579,7 +579,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           </div>
           <LineChart data={revChartData} width={700} height={260} />
           {revForecast?.summary && (
-            <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(99,102,241,.04)', borderRadius: 8, fontSize: 9, color: 'var(--tx2)', lineHeight: 1.6 }}>
+            <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(99,102,241,.04)', borderRadius: 8, fontSize: 11, color: 'var(--tx2)', lineHeight: 1.6 }}>
               {revForecast.summary}
             </div>
           )}
@@ -591,15 +591,15 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.cash_runway_title')}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.cash_runway_title')}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
                 {tc('cfo_forecasts_tab.cash_runway_sub')}
                 {runwayMonths != null && (
                   <span style={{ color: runwayColor, fontWeight: 600 }}>{tc('cfo_forecasts_tab.cash_runway_until_zero', { n: runwayMonths })}</span>
                 )}
               </div>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: runwayColor, fontFamily: 'var(--font-sora)' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: runwayColor, fontFamily: 'var(--font-sora)' }}>
               {fmtMoney(cash.balance, sym)}
             </div>
           </div>
@@ -611,29 +611,29 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       {pnlForecast && (
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16, overflowX: 'auto' }}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.pnl_forecast_title')}</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.pnl_forecast_sub', { n: months })}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.pnl_forecast_title')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.pnl_forecast_sub', { n: months })}</div>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--b, #e8e6e1)' }}>
-                <th style={{ textAlign: 'left', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_forecasts_tab.table_line_item')}</th>
+                <th style={{ textAlign: 'left', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_forecasts_tab.table_line_item')}</th>
                 {/* Last 2 completed months + current partial */}
                 {completedMonths.slice(-2).map(m => (
-                  <th key={m.month} style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>
+                  <th key={m.month} style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>
                     {fmtMonthLabel(m.month)}
                     <div style={{ fontSize: 8, color: '#6366F1', fontWeight: 400 }}>{tc('cfo_forecasts_tab.table_tag_actual')}</div>
                   </th>
                 ))}
                 {currentPartial && (
-                  <th style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>
+                  <th style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>
                     {fmtMonthLabel(currentPartial.month)}
                     <div style={{ fontSize: 8, color: '#f59e0b', fontWeight: 400 }}>{tc('cfo_forecasts_tab.table_tag_partial')}</div>
                   </th>
                 )}
                 {/* Forecast months */}
                 {pnlForecast.map(m => (
-                  <th key={m.month} style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>
+                  <th key={m.month} style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>
                     {fmtMonthLabel(m.month)}
                     <div style={{ fontSize: 8, color: '#d08a59', fontWeight: 400 }}>{tc('cfo_forecasts_tab.table_tag_forecast')}</div>
                   </th>
@@ -679,19 +679,19 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
               ))}
               {/* Margin row */}
               <tr>
-                <td style={{ padding: '8px 10px', fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.row_net_margin')}</td>
+                <td style={{ padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.row_net_margin')}</td>
                 {completedMonths.slice(-2).map(m => (
-                  <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 9, color: 'var(--tx3)' }}>
+                  <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>
                     {m.net_margin_pct.toFixed(1)}%
                   </td>
                 ))}
                 {currentPartial && (
-                  <td style={{ textAlign: 'right', padding: '8px 10px', fontSize: 9, color: 'var(--tx3)', opacity: 0.6 }}>
+                  <td style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: 'var(--tx3)', opacity: 0.6 }}>
                     {currentPartial.net_margin_pct.toFixed(1)}%
                   </td>
                 )}
                 {pnlForecast.map(m => (
-                  <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 9, color: m.net_margin_pct < 0 ? '#ef4444' : 'var(--tx3)', background: 'rgba(208,138,89,.03)' }}>
+                  <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: m.net_margin_pct < 0 ? '#ef4444' : 'var(--tx3)', background: 'rgba(208,138,89,.03)' }}>
                     {m.net_margin_pct.toFixed(1)}%
                   </td>
                 ))}
@@ -705,8 +705,8 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       {waterfall && (
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.waterfall_title')}</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.waterfall_sub')}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.waterfall_title')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.waterfall_sub')}</div>
           </div>
           <WaterfallChart items={waterfall} width={700} height={240} sym={sym} />
         </div>
@@ -770,12 +770,12 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.pattern_title')}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.pattern_sub')}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.pattern_title')}</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.pattern_sub')}</div>
               </div>
               {onAsk && (
                 <button onClick={() => onAsk(tc('cfo_forecasts_tab.ask_ai_prompt', { summary: patterns.map(p => `${p.label}: ${p.detail}`).join('. ') }))}
-                  style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}>
+                  style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}>
                   {tc('cfo_forecasts_tab.ask_ai')}
                 </button>
               )}
@@ -783,10 +783,10 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {patterns.map((p, i) => (
                 <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 8, border: `1px solid ${p.color}20`, background: `${p.color}06` }}>
-                  <span style={{ fontSize: 14, flexShrink: 0 }}>{p.icon}</span>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{p.icon}</span>
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{p.label}</div>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4 }}>{p.detail}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{p.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{p.detail}</div>
                   </div>
                 </div>
               ))}

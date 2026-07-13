@@ -54,13 +54,13 @@ export default function SourceBreakdown({ sources, currencySymbol: sym, onAsk }:
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_sourcebreakdown.heading')}</span>
-          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_sourcebreakdown.channels', { n: sources.length })}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_sourcebreakdown.heading')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_sourcebreakdown.channels', { n: sources.length })}</span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('cfo_sourcebreakdown.askAiPrompt', { summary: sources.map(s => `${s.label}: ${fmt(s.revenue, sym)} (${s.margin_pct}% margin)`).join(', ') }))}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_sourcebreakdown.askAi')}
           </button>
@@ -89,7 +89,7 @@ export default function SourceBreakdown({ sources, currencySymbol: sym, onAsk }:
             )
           })}
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8, fontSize: 9, color: 'var(--tx3)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8, fontSize: 10, color: 'var(--tx3)' }}>
           {sources.map(s => (
             <span key={s.source} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: SOURCE_COLORS[s.source] || '#9CA3AF', display: 'inline-block' }} />
@@ -117,14 +117,14 @@ export default function SourceBreakdown({ sources, currencySymbol: sym, onAsk }:
               >
                 <div style={{ width: 10, height: 10, borderRadius: 3, background: color, flexShrink: 0, marginRight: 10 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{s.label}</div>
-                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_sourcebreakdown.transactions', { n: s.orders, pct: s.pct_of_total })}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{s.label}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_sourcebreakdown.transactions', { n: s.orders, pct: s.pct_of_total })}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(s.revenue, sym)}</div>
-                  <div style={{ fontSize: 9, fontWeight: 600, color: s.margin_pct >= 35 ? '#22C55E' : s.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{tc('cfo_sourcebreakdown.marginPct', { n: s.margin_pct })}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(s.revenue, sym)}</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: s.margin_pct >= 35 ? '#22C55E' : s.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{tc('cfo_sourcebreakdown.marginPct', { n: s.margin_pct })}</div>
                 </div>
-                <span style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 8, transition: 'transform 120ms', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>▶</span>
+                <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 8, transition: 'transform 120ms', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>▶</span>
               </div>
               {isExpanded && (
                 <div style={{ padding: '8px 18px 12px 38px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
@@ -145,7 +145,7 @@ function MiniMetric({ label, value, color }: { label: string; value: string; col
   return (
     <div style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color }}>{value}</div>
     </div>
   )
 }

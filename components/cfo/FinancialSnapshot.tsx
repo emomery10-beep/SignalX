@@ -109,7 +109,7 @@ export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNav
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{
-                fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6,
+                fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6,
               }}>
                 {kpi.label}
               </div>
@@ -118,7 +118,7 @@ export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNav
               )}
             </div>
             <div style={{
-              fontSize: 18, fontWeight: 700, color: 'var(--tx)',
+              fontSize: 20, fontWeight: 700, color: 'var(--tx)',
               fontFamily: 'var(--font-sora, inherit)', marginBottom: 3,
               letterSpacing: '-0.02em',
             }}>
@@ -128,14 +128,14 @@ export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNav
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {kpi.change != null && (
                   <span style={{
-                    fontSize: 9, fontWeight: 600,
+                    fontSize: 11, fontWeight: 600,
                     color: kpi.change > 0 ? '#22C55E' : kpi.change < 0 ? '#EF4444' : 'var(--tx3)',
                   }}>
                     {kpi.change > 0 ? '▲' : kpi.change < 0 ? '▼' : '–'} {Math.abs(kpi.change)}%
                   </span>
                 )}
                 {kpi.subValue && (
-                  <span style={{ fontSize: 9, color: 'var(--tx3)' }}>
+                  <span style={{ fontSize: 10, color: 'var(--tx3)' }}>
                     {kpi.subValue}
                   </span>
                 )}

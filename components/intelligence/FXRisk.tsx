@@ -152,7 +152,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
 
   const inp: React.CSSProperties = {
     padding: '8px 11px',
-    fontSize: 11,
+    fontSize: 13,
     background: EV,
     border: `1px solid ${B2}`,
     borderRadius: 9,
@@ -171,24 +171,24 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 4 }}>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>
           {tc('intel_fxrisk.title')}
         </div>
-        <div style={{ fontSize: 11, color: TX2, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6 }}>
           {tc('intel_fxrisk.subtitle')}
         </div>
       </div>
 
       {/* Inputs */}
       <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '18px 20px', marginBottom: 16 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
           {tc('intel_fxrisk.sectionImportExposure')}
         </div>
 
         {/* Currency + total spend */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 10, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelImportCurrency')}</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelImportCurrency')}</div>
             <select
               value={importCurrency}
               onChange={e => { setImportCurrency(e.target.value); setCalculated(false) }}
@@ -200,7 +200,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             </select>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelMonthlySpend', { sym })}</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelMonthlySpend', { sym })}</div>
             <input
               style={inp}
               type="number"
@@ -210,7 +210,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             />
           </div>
           <div>
-            <div style={{ fontSize: 10, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelMinMargin')}</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelMinMargin')}</div>
             <input
               style={inp}
               type="number"
@@ -222,7 +222,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
         </div>
 
         {/* Product lines */}
-        <div style={{ fontSize: 10, color: TX3, marginBottom: 8, fontWeight: 500 }}>
+        <div style={{ fontSize: 12, color: TX3, marginBottom: 8, fontWeight: 500 }}>
           {tc('intel_fxrisk.labelProductLines')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
@@ -242,10 +242,10 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
                   onChange={e => updateLine(line.id, 'margin', e.target.value)}
                   placeholder={tc('intel_fxrisk.placeholderMargin')}
                 />
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, color: TX3 }}>%</span>
+                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: TX3 }}>%</span>
               </div>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, color: TX3 }}>{sym}</span>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: TX3 }}>{sym}</span>
                 <input
                   style={{ ...inp, paddingLeft: 22 }}
                   type="number"
@@ -271,7 +271,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button
             onClick={addLine}
-            style={{ fontSize: 10, color: TX2, background: 'transparent', border: `1px dashed ${B2}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ fontSize: 12, color: TX2, background: 'transparent', border: `1px dashed ${B2}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {tc('intel_fxrisk.btnAddLine')}
           </button>
@@ -279,7 +279,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
           <button
             onClick={calculate}
             disabled={!totalMonthlySpend || parseFloat(totalMonthlySpend) <= 0}
-            style={{ padding: '9px 22px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: !totalMonthlySpend ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !totalMonthlySpend ? .6 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}
+            style={{ padding: '9px 22px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: !totalMonthlySpend ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !totalMonthlySpend ? .6 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}
           >
             {tc('intel_fxrisk.btnModelScenarios')}
           </button>
@@ -294,20 +294,20 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             <div style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 12, padding: '13px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', marginTop: 4, flexShrink: 0 }}/>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 3 }}>
                   {atRiskLines.length > 1
                     ? tc('intel_fxrisk.riskBannerTitlePlural', { n: atRiskLines.length, minMargin })
                     : tc('intel_fxrisk.riskBannerTitle', { n: atRiskLines.length, minMargin })}
                 </div>
-                <div style={{ fontSize: 10, color: TX2, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: TX2, lineHeight: 1.5 }}>
                   {tc('intel_fxrisk.riskBannerBody', { lines: atRiskLines.map(l => l.name).join(', '), amount: formatCurrency(worstCase?.annualImpact || 0, sym), currency: importCurrency })}
                 </div>
               </div>
             </div>
           ) : (
             <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 12, padding: '13px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ fontSize: 18 }}>✅</span>
-              <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}>
+              <span style={{ fontSize: 20 }}>✅</span>
+              <div style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
                 {tc('intel_fxrisk.allSafeMsg', { minMargin })}
               </div>
             </div>
@@ -318,19 +318,19 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             {results.map((s, i) => (
               <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 14, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: s.colour, background: 'rgba(255,255,255,.5)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: s.colour, background: 'rgba(255,255,255,.5)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em' }}>
                     {s.label}
                   </span>
-                  <span style={{ fontSize: 9, color: TX3 }}>{tc('intel_fxrisk.labelGbpFall', { pct: s.pct })}</span>
+                  <span style={{ fontSize: 11, color: TX3 }}>{tc('intel_fxrisk.labelGbpFall', { pct: s.pct })}</span>
                 </div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: s.colour, marginBottom: 2 }}>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: s.colour, marginBottom: 2 }}>
                   {formatCurrency(s.annualImpact, sym)}
                 </div>
-                <div style={{ fontSize: 9, color: TX3, marginBottom: 10 }}>{tc('intel_fxrisk.labelAnnualMarginImpact')}</div>
-                <div style={{ fontSize: 9, color: TX3, marginBottom: 6 }}>{tc('intel_fxrisk.labelExtraCosts', { amount: formatCurrency(s.costIncrease, sym) })}</div>
+                <div style={{ fontSize: 11, color: TX3, marginBottom: 10 }}>{tc('intel_fxrisk.labelAnnualMarginImpact')}</div>
+                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>{tc('intel_fxrisk.labelExtraCosts', { amount: formatCurrency(s.costIncrease, sym) })}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {s.lines.map((l, j) => (
-                    <div key={j} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 9 }}>
+                    <div key={j} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
                       <span style={{ color: TX2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{l.name || tc('intel_fxrisk.fallbackLineName', { n: j + 1 })}</span>
                       <span style={{ fontWeight: 600, color: l.belowMin ? '#dc2626' : '#16a34a', flexShrink: 0 }}>
                         {l.originalMargin.toFixed(0)}% → {l.newMargin.toFixed(1)}%{l.belowMin ? ' ⚠' : ''}
@@ -344,7 +344,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
 
           {/* What to do */}
           <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
               {tc('intel_fxrisk.sectionRecommendedActions')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -356,10 +356,10 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
                 tc('intel_fxrisk.actionSetAlert', { currency: importCurrency }),
               ].filter(Boolean).map((action, i) => (
                 <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: EV, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: ACC, flexShrink: 0, marginTop: 1 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: EV, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: ACC, flexShrink: 0, marginTop: 1 }}>
                     {i + 1}
                   </div>
-                  <div style={{ fontSize: 11, color: TX2, lineHeight: 1.55 }}>{action}</div>
+                  <div style={{ fontSize: 13, color: TX2, lineHeight: 1.55 }}>{action}</div>
                 </div>
               ))}
             </div>
@@ -369,13 +369,13 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={askDeep}
-              style={{ flex: 1, padding: '11px', background: ACC, color: '#fff', border: 'none', borderRadius: 10, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}
+              style={{ flex: 1, padding: '11px', background: ACC, color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}
             >
               {tc('intel_fxrisk.btnAskDeep')}
             </button>
             <button
               onClick={() => { setCalculated(false); setResults(null) }}
-              style={{ padding: '11px 16px', color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 10, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ padding: '11px 16px', color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 10, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               {tc('intel_fxrisk.btnReset')}
             </button>
@@ -386,11 +386,11 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
       {/* Empty state when not yet calculated */}
       {!calculated && !results && parseFloat(totalMonthlySpend) <= 0 && (
         <div style={{ padding: '28px 20px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 14 }}>
-          <div style={{ fontSize: 34, marginBottom: 12 }}>💱</div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 12, fontWeight: 600, color: TX, marginBottom: 6 }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>💱</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, color: TX, marginBottom: 6 }}>
             {tc('intel_fxrisk.emptyTitle')}
           </div>
-          <p style={{ fontSize: 11, color: TX3, lineHeight: 1.65, maxWidth: 400, margin: '0 auto 16px' }}>
+          <p style={{ fontSize: 13, color: TX3, lineHeight: 1.65, maxWidth: 400, margin: '0 auto 16px' }}>
             {tc('intel_fxrisk.emptyBody')}
           </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -402,7 +402,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
               <button
                 key={i}
                 onClick={() => onAsk(p + tc('intel_fxrisk.promptSuffix'))}
-                style={{ fontSize: 10, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ fontSize: 12, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {p}
               </button>

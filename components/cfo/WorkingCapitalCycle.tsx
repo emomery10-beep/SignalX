@@ -45,7 +45,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_workcap.title')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_workcap.title')}</span>
         </div>
         {onAsk && ccc > 0 && (
           <button
@@ -59,7 +59,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
               payables: fmt(payablesTotal, sym),
               smbLabel: region.smbLabel,
             }))}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_workcap.askAi')}
           </button>
@@ -68,73 +68,73 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
 
       {/* CCC Hero */}
       <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--b)', background: ccc <= 0 ? 'rgba(34,197,94,.03)' : ccc <= 30 ? 'rgba(245,158,11,.03)' : 'rgba(239,68,68,.03)' }}>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>
           {tc('cfo_workcap.cccLabel')}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontSize: 26, fontWeight: 800, color: cccColor, fontFamily: 'var(--font-sora, inherit)' }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color: cccColor, fontFamily: 'var(--font-sora, inherit)' }}>
             {ccc}
           </span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: cccColor }}>{tc('cfo_workcap.days')}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: cccColor }}>{tc('cfo_workcap.days')}</span>
         </div>
-        <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{cccStatus}</div>
+        <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>{cccStatus}</div>
       </div>
 
       {/* Formula visual */}
       <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 12 }}>
           {tc('cfo_workcap.formulaLabel')}
         </div>
 
         {/* DIO bar */}
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.dioLabel')}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#F97316' }}>{dio} {tc('cfo_workcap.days')}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.dioLabel')}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#F97316' }}>{dio} {tc('cfo_workcap.days')}</div>
           </div>
           <div style={{ height: 24, borderRadius: 6, background: 'var(--ev, #e5e5e5)', overflow: 'hidden', position: 'relative' }}>
             <div style={{ height: '100%', width: `${barScale(dio)}%`, background: '#F97316', borderRadius: 6, display: 'flex', alignItems: 'center', paddingLeft: 8, transition: 'width 400ms' }}>
               {barScale(dio) > 25 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{tc('cfo_workcap.inventoryInBar', { value: fmt(inventoryValue, sym) })}</span>}
             </div>
           </div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_workcap.dioHint')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_workcap.dioHint')}</div>
         </div>
 
         {/* DSO bar */}
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.dsoLabel')}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1' }}>{dso} {tc('cfo_workcap.days')}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.dsoLabel')}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6366F1' }}>{dso} {tc('cfo_workcap.days')}</div>
           </div>
           <div style={{ height: 24, borderRadius: 6, background: 'var(--ev, #e5e5e5)', overflow: 'hidden', position: 'relative' }}>
             <div style={{ height: '100%', width: `${barScale(dso)}%`, background: '#6366F1', borderRadius: 6, display: 'flex', alignItems: 'center', paddingLeft: 8, transition: 'width 400ms' }}>
               {barScale(dso) > 25 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{tc('cfo_workcap.receivablesInBar', { value: fmt(receivablesTotal, sym) })}</span>}
             </div>
           </div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_workcap.dsoHint')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_workcap.dsoHint')}</div>
         </div>
 
         {/* DPO bar (inverted — higher is better) */}
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.dpoLabel')}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#22C55E' }}>−{dpo} {tc('cfo_workcap.days')}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.dpoLabel')}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#22C55E' }}>−{dpo} {tc('cfo_workcap.days')}</div>
           </div>
           <div style={{ height: 24, borderRadius: 6, background: 'var(--ev, #e5e5e5)', overflow: 'hidden', position: 'relative' }}>
             <div style={{ height: '100%', width: `${barScale(dpo)}%`, background: '#22C55E', borderRadius: 6, display: 'flex', alignItems: 'center', paddingLeft: 8, transition: 'width 400ms' }}>
               {barScale(dpo) > 25 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{tc('cfo_workcap.payablesInBar', { value: fmt(payablesTotal, sym) })}</span>}
             </div>
           </div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_workcap.dpoHint')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_workcap.dpoHint')}</div>
         </div>
 
         {/* CCC result bar */}
         <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: ccc <= 0 ? 'rgba(34,197,94,.06)' : ccc <= 30 ? 'rgba(245,158,11,.06)' : 'rgba(239,68,68,.06)', border: `1px solid ${ccc <= 0 ? 'rgba(34,197,94,.15)' : ccc <= 30 ? 'rgba(245,158,11,.15)' : 'rgba(239,68,68,.15)'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>
               {dio}d + {dso}d − {dpo}d = {ccc} {tc('cfo_workcap.days')}
             </span>
-            <span style={{ fontSize: 9, fontWeight: 600, color: cccColor }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: cccColor }}>
               {ccc <= 0 ? tc('cfo_workcap.cccPositive') : tc('cfo_workcap.cccTiedUp', { ccc })}
             </span>
           </div>
@@ -143,7 +143,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
 
       {/* Quantified Action Suggestions */}
       <div style={{ padding: '14px 18px' }}>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_workcap.actionsTitle')}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_workcap.actionsTitle')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {dio > 15 && (() => {
             const targetDio = Math.max(dio - 10, 10)
@@ -210,10 +210,10 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
             return (
               <div style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(99,102,241,.15)', background: 'rgba(99,102,241,.04)', marginTop: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.totalCashTiedLabel')}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalCashTiedUp, sym)}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_workcap.totalCashTiedLabel')}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalCashTiedUp, sym)}</span>
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
                   {tc('cfo_workcap.cccReductionHint', { amount: fmt(dailyRevenue * 10, sym) })}
                 </div>
               </div>
@@ -229,12 +229,12 @@ function ActionCard({ color, title, impact, actions }: { color: string; title: s
   return (
     <div style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${color}25`, background: `${color}06` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx)' }}>{title}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{title}</span>
       </div>
-      <div style={{ fontSize: 9, fontWeight: 600, color, marginBottom: 6 }}>{impact}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color, marginBottom: 6 }}>{impact}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {actions.map((a, i) => (
-          <div key={i} style={{ display: 'flex', gap: 6, fontSize: 9, color: 'var(--tx2)', lineHeight: 1.4 }}>
+          <div key={i} style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--tx2)', lineHeight: 1.4 }}>
             <span style={{ color: 'var(--tx3)', flexShrink: 0 }}>{i + 1}.</span>
             <span>{a}</span>
           </div>

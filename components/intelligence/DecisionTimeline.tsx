@@ -58,9 +58,9 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
   if (!decisions.length) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)' }}>
-        <div style={{ fontSize: 26, marginBottom: 12 }}>📝</div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('intel_decisiontimeline.emptyTitle')}</div>
-        <div style={{ fontSize: 10, lineHeight: 1.6, maxWidth: 280, margin: '0 auto' }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>📝</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('intel_decisiontimeline.emptyTitle')}</div>
+        <div style={{ fontSize: 12, lineHeight: 1.6, maxWidth: 280, margin: '0 auto' }}>
           {tc('intel_decisiontimeline.emptyDesc')}
         </div>
       </div>
@@ -80,32 +80,32 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
       {/* Stats bar */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20, padding: '12px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{decisions.length}</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statTotal')}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{decisions.length}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statTotal')}</div>
         </div>
         <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{reviewed}</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statReviewed')}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{reviewed}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statReviewed')}</div>
         </div>
         <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#22C55E', fontFamily: 'var(--font-sora)' }}>{goodCalls}</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statGoodCalls')}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#22C55E', fontFamily: 'var(--font-sora)' }}>{goodCalls}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statGoodCalls')}</div>
         </div>
         <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#EF4444', fontFamily: 'var(--font-sora)' }}>{badCalls}</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statMissedCalls')}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#EF4444', fontFamily: 'var(--font-sora)' }}>{badCalls}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statMissedCalls')}</div>
         </div>
         {reviewed > 0 && (
           <>
             <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#6366F1', fontFamily: 'var(--font-sora)' }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#6366F1', fontFamily: 'var(--font-sora)' }}>
                 {Math.round((goodCalls / reviewed) * 100)}%
               </div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statSuccessRate')}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statSuccessRate')}</div>
             </div>
           </>
         )}
@@ -113,8 +113,8 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
           <>
             <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#F59E0B', fontFamily: 'var(--font-sora)' }}>{dueCt}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statDueForReview')}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#F59E0B', fontFamily: 'var(--font-sora)' }}>{dueCt}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statDueForReview')}</div>
             </div>
           </>
         )}
@@ -169,15 +169,15 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
                 >
                   {/* Top row */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>{decision.title}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>{decision.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                       {due && !verdict && (
-                        <span style={{ fontSize: 9, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.12)', padding: '2px 7px', borderRadius: 9999 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.12)', padding: '2px 7px', borderRadius: 9999 }}>
                           {tc('intel_decisiontimeline.badgeReviewDue')}
                         </span>
                       )}
                       {verdict && (
-                        <span style={{ fontSize: 9, fontWeight: 700, color: verdict.color, background: verdict.bg, padding: '2px 7px', borderRadius: 9999 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: verdict.color, background: verdict.bg, padding: '2px 7px', borderRadius: 9999 }}>
                           {verdict.label}
                         </span>
                       )}
@@ -185,46 +185,46 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
                   </div>
                   {/* Meta row */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 9, fontWeight: 600, color: typeCol, background: typeCol + '12', padding: '2px 7px', borderRadius: 9999 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: typeCol, background: typeCol + '12', padding: '2px 7px', borderRadius: 9999 }}>
                       {tc('intel_decisiontimeline.' + (TYPE_LABEL_KEYS[decision.decision_type] || 'typeLabels_strategy'))}
                     </span>
-                    <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{formatDate(decision.created_at)}</span>
-                    {decision.product && <span style={{ fontSize: 9, color: 'var(--tx3)' }}>· {decision.product}</span>}
+                    <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{formatDate(decision.created_at)}</span>
+                    {decision.product && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>· {decision.product}</span>}
                   </div>
 
                   {/* Expanded detail */}
                   {isOpen && (
                     <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--b)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {decision.description && (
-                        <div style={{ fontSize: 10, color: 'var(--tx2)', lineHeight: 1.6 }}>{decision.description}</div>
+                        <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6 }}>{decision.description}</div>
                       )}
                       {(decision.before_value || decision.after_value) && (
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           {decision.before_value && (
-                            <div style={{ fontSize: 9, padding: '4px 10px', borderRadius: 8, background: 'var(--ev)', color: 'var(--tx3)' }}>
+                            <div style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: 'var(--ev)', color: 'var(--tx3)' }}>
                               {tc('intel_decisiontimeline.labelBefore')} <strong style={{ color: 'var(--tx2)' }}>{decision.before_value}</strong>
                             </div>
                           )}
                           {decision.after_value && (
-                            <div style={{ fontSize: 9, padding: '4px 10px', borderRadius: 8, background: 'var(--ev)', color: 'var(--tx3)' }}>
+                            <div style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: 'var(--ev)', color: 'var(--tx3)' }}>
                               {tc('intel_decisiontimeline.labelAfter')} <strong style={{ color: typeCol }}>{decision.after_value}</strong>
                             </div>
                           )}
                         </div>
                       )}
                       {decision.review_at && (
-                        <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
                           {decision.reviewed ? tc('intel_decisiontimeline.reviewedOn', { date: formatDate(decision.review_at) }) : tc('intel_decisiontimeline.reviewScheduled', { date: formatDate(decision.review_at) })}
                         </div>
                       )}
                       {decision.review_result && (
-                        <div style={{ fontSize: 10, color: 'var(--tx2)', padding: '8px 12px', borderRadius: 8, background: 'var(--ev)', lineHeight: 1.55 }}>
+                        <div style={{ fontSize: 12, color: 'var(--tx2)', padding: '8px 12px', borderRadius: 8, background: 'var(--ev)', lineHeight: 1.55 }}>
                           {decision.review_result}
                         </div>
                       )}
                       <button
                         onClick={e => { e.stopPropagation(); onAsk(tc('intel_decisiontimeline.askPrompt', { title: decision.title, description: decision.description || '' })) }}
-                        style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 8, border: 'none', background: typeCol, color: '#fff', fontSize: 9, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 8, border: 'none', background: typeCol, color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         {tc('intel_decisiontimeline.askAskBiz')}
                       </button>

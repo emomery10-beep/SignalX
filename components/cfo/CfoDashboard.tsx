@@ -242,15 +242,15 @@ export default function CfoDashboard({ onAsk }: Props) {
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{tc('cfo_dashboard.title')}</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_dashboard.subtitle')}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{tc('cfo_dashboard.title')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_dashboard.subtitle')}</div>
           </div>
           {!loading && data?.totals && data.totals.revenue > 0 && (
             <button
               onClick={() => changeSubTab('reports')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
-                fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)',
+                fontSize: 11, color: '#6366F1', background: 'rgba(99,102,241,.08)',
                 border: 'none', borderRadius: 7, padding: '6px 12px',
                 cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit',
               }}
@@ -274,7 +274,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                 border: 'none',
                 background: subTab === t.id ? 'rgba(99,102,241,.1)' : 'transparent',
                 color: subTab === t.id ? '#6366F1' : 'var(--tx3)',
-                fontSize: 10, fontWeight: subTab === t.id ? 600 : 400,
+                fontSize: 12, fontWeight: subTab === t.id ? 600 : 400,
                 cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all 120ms', whiteSpace: 'nowrap', flexShrink: 0,
               }}
@@ -310,23 +310,23 @@ export default function CfoDashboard({ onAsk }: Props) {
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 3, height: 14, borderRadius: 2, background: '#22C55E' }} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.pnl_summary')}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.pnl_summary')}</span>
                 </div>
                 <button
                   onClick={() => changeSubTab('pnl')}
-                  style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+                  style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
                 >
                   {tc('cfo_dashboard.view_full_pnl')}
                 </button>
               </div>
               <div style={{ padding: '12px 16px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}></th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_amount')}</th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_pct_rev')}</th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_vs_prior')}</th>
+                      <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}></th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_amount')}</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_pct_rev')}</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_vs_prior')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -357,9 +357,9 @@ export default function CfoDashboard({ onAsk }: Props) {
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.ebitda')}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.ebitda')}</span>
                     {ebitdaVal > 0 && (
-                      <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
                         background: ebitdaMarginVal >= 20 ? 'rgba(34,197,94,.1)' : ebitdaMarginVal >= 10 ? 'rgba(245,158,11,.1)' : 'rgba(239,68,68,.1)',
                         color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444' }}>
                         {tc('cfo_dashboard.margin_badge', { n: ebitdaMarginVal.toFixed(1) })}
@@ -367,29 +367,29 @@ export default function CfoDashboard({ onAsk }: Props) {
                     )}
                   </div>
                   <button onClick={() => changeSubTab('pnl')}
-                    style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+                    style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
                     {tc('cfo_dashboard.full_ebitda_analysis')}
                   </button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)' }}>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.ebitda_label')}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: ebitdaVal >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal)}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.ebitda_label')}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaVal >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal)}</div>
                     {ebitdaChg != null && (
-                      <div style={{ fontSize: 9, fontWeight: 600, color: ebitdaChg > 0 ? '#22C55E' : ebitdaChg < 0 ? '#EF4444' : 'var(--tx3)', marginTop: 2 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: ebitdaChg > 0 ? '#22C55E' : ebitdaChg < 0 ? '#EF4444' : 'var(--tx3)', marginTop: 2 }}>
                         {ebitdaChg > 0 ? '▲' : ebitdaChg < 0 ? '▼' : '–'} {tc('cfo_dashboard.vs_prior_pct', { n: Math.abs(ebitdaChg).toFixed(1) })}
                       </div>
                     )}
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.margin')}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{ebitdaMarginVal.toFixed(1)}%</div>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMarginVal >= 20 ? tc('cfo_dashboard.healthy') : ebitdaMarginVal >= 10 ? tc('cfo_dashboard.moderate') : tc('cfo_dashboard.needs_attention')}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.margin')}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{ebitdaMarginVal.toFixed(1)}%</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMarginVal >= 20 ? tc('cfo_dashboard.healthy') : ebitdaMarginVal >= 10 ? tc('cfo_dashboard.moderate') : tc('cfo_dashboard.needs_attention')}</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.valuation_5x')}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal * 5)}</div>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_dashboard.avg_sme_multiple')}</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.valuation_5x')}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal * 5)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_dashboard.avg_sme_multiple')}</div>
                   </div>
                 </div>
               </div>
@@ -469,9 +469,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               />
             </>
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.loading_pnl')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_pnl')}</div>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.no_data_pnl')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.no_data_pnl')}</div>
           )}
         </div>
       )}
@@ -504,7 +504,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               onConfigSaved={() => fetchData(period)}
             />
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.loading_cashflow')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_cashflow')}</div>
           ) : null}
         </div>
       )}
@@ -523,9 +523,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               onAsk={onAsk}
             />
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.loading_margins')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_margins')}</div>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.no_data_margins')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.no_data_margins')}</div>
           )}
 
           {!loading && data?.margin_by_channel && data.margin_by_channel.length > 0 && (
@@ -620,9 +620,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               onAsk={onAsk}
             />
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.loading')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading')}</div>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>{tc('cfo_dashboard.no_data_budget')}</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.no_data_budget')}</div>
           )}
         </div>
       )}
@@ -656,7 +656,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               />
             </>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
               {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_forecasts')}
             </div>
           )}
@@ -676,7 +676,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               onAsk={onAsk}
             />
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
               {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_tax')}
             </div>
           )}
@@ -706,7 +706,7 @@ export default function CfoDashboard({ onAsk }: Props) {
         <button
           onClick={() => setQuickScanOpen(v => !v)}
           title={tc('cfo_dashboard.scan_a_receipt')}
-          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#6366F1', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,.4)', opacity: 0.6, transition: 'transform 150ms, box-shadow 150ms, opacity 150ms' }}
+          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#6366F1', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,.4)', opacity: 0.6, transition: 'transform 150ms, box-shadow 150ms, opacity 150ms' }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,.5)'; e.currentTarget.style.opacity = '1' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,.4)'; e.currentTarget.style.opacity = '0.6' }}
         >
@@ -764,7 +764,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               />
             </>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 11 }}>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
               {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_reports')}
             </div>
           )}
@@ -793,7 +793,7 @@ function PnlRow({ label, amount, pctRev, change, sym, bold, negative, border, hi
       borderTop: border ? '2px solid var(--b)' : undefined,
       background: highlight ? 'rgba(99,102,241,.03)' : undefined,
     }}>
-      <td style={{ padding: '7px 0', fontWeight: bold ? 700 : 400, color: 'var(--tx)', fontSize: 10 }}>{label}</td>
+      <td style={{ padding: '7px 0', fontWeight: bold ? 700 : 400, color: 'var(--tx)', fontSize: 12 }}>{label}</td>
       <td style={{ padding: '7px 0', textAlign: 'right', fontWeight: bold ? 700 : 400, color: negative ? '#EF4444' : 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtAmt(amount)}
       </td>
@@ -802,7 +802,7 @@ function PnlRow({ label, amount, pctRev, change, sym, bold, negative, border, hi
       </td>
       <td style={{ padding: '7px 0', textAlign: 'right' }}>
         {change != null && (
-          <span style={{ fontSize: 9, fontWeight: 600, color: change > 0 ? '#22C55E' : change < 0 ? '#EF4444' : 'var(--tx3)' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: change > 0 ? '#22C55E' : change < 0 ? '#EF4444' : 'var(--tx3)' }}>
             {change > 0 ? '▲' : change < 0 ? '▼' : '–'} {Math.abs(change)}%
           </span>
         )}
@@ -820,26 +820,26 @@ function PnlFull({ data, sym, fmtCurrency, onAsk, tc }: { data: SnapshotData; sy
     <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_dashboard.pnl_statement_title')}</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_dashboard.pnl_statement_subtitle')}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_dashboard.pnl_statement_title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_dashboard.pnl_statement_subtitle')}</div>
         </div>
         <button
           onClick={() => onAsk(tc('cfo_dashboard.ask_ai_pnl_prompt', { revenue: fmtCurrency(t.revenue), cogs: fmtCurrency(t.cogs), cogsPct: Math.round((t.cogs / t.revenue) * 100), grossMargin: t.gross_margin_pct, netProfit: fmtCurrency(t.net_profit), netMargin: t.net_margin_pct }))}
-          style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+          style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
         >
           {tc('cfo_dashboard.ask_ai_pnl')}
         </button>
       </div>
 
       <div style={{ padding: '14px 18px', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--b)' }}>
-              <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9, width: '35%' }}></th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_current')}</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_pct_of_rev')}</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_prior_period')}</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 9 }}>{tc('cfo_dashboard.col_change')}</th>
+              <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, width: '35%' }}></th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_current')}</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_pct_of_rev')}</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_prior_period')}</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_change')}</th>
             </tr>
           </thead>
           <tbody>
@@ -847,7 +847,7 @@ function PnlFull({ data, sym, fmtCurrency, onAsk, tc }: { data: SnapshotData; sy
             <FullPnlRow label={tc('cfo_dashboard.row_cost_of_goods_sold')} current={-t.cogs} pctRev={t.revenue > 0 ? (t.cogs / t.revenue) * 100 : 0} prior={-c.cogs} change={pct(t.cogs, c.cogs)} sym={sym} negative />
 
             <tr style={{ borderTop: '2px solid var(--b)', background: 'rgba(34,197,94,.03)' }}>
-              <td style={{ padding: '9px 0', fontWeight: 700, fontSize: 11 }}>{tc('cfo_dashboard.row_gross_profit')}</td>
+              <td style={{ padding: '9px 0', fontWeight: 700, fontSize: 13 }}>{tc('cfo_dashboard.row_gross_profit')}</td>
               <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(t.gross_profit)}</td>
               <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, color: t.gross_margin_pct >= 35 ? '#22C55E' : t.gross_margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{t.gross_margin_pct}%</td>
               <td style={{ padding: '9px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(c.gross_profit)}</td>
@@ -857,8 +857,8 @@ function PnlFull({ data, sym, fmtCurrency, onAsk, tc }: { data: SnapshotData; sy
             <FullPnlRow label={tc('cfo_dashboard.row_operating_expenses')} current={-t.fixed_costs} pctRev={t.revenue > 0 ? (t.fixed_costs / t.revenue) * 100 : 0} sym={sym} negative />
 
             <tr style={{ borderTop: '2px solid var(--b)', background: t.net_profit >= 0 ? 'rgba(99,102,241,.04)' : 'rgba(239,68,68,.04)' }}>
-              <td style={{ padding: '10px 0', fontWeight: 800, fontSize: 12 }}>{tc('cfo_dashboard.row_net_profit')}</td>
-              <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 800, fontSize: 12, color: t.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
+              <td style={{ padding: '10px 0', fontWeight: 800, fontSize: 14 }}>{tc('cfo_dashboard.row_net_profit')}</td>
+              <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 800, fontSize: 14, color: t.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
                 {fmtCurrency(t.net_profit)}
               </td>
               <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 700, color: t.net_profit >= 0 ? '#22C55E' : '#EF4444' }}>
@@ -886,7 +886,7 @@ function FullPnlRow({ label, current, pctRev, prior, change, sym, bold, negative
 
   return (
     <tr>
-      <td style={{ padding: '8px 0', fontWeight: bold ? 700 : 400, color: 'var(--tx)', fontSize: 11 }}>{label}</td>
+      <td style={{ padding: '8px 0', fontWeight: bold ? 700 : 400, color: 'var(--tx)', fontSize: 13 }}>{label}</td>
       <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: bold ? 700 : 400, color: negative ? '#EF4444' : 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
         {fmtAmt(current)}
       </td>
@@ -906,7 +906,7 @@ function FullPnlRow({ label, current, pctRev, prior, change, sym, bold, negative
 function renderChange(change: number | null | undefined) {
   if (change == null) return null
   return (
-    <span style={{ fontSize: 9, fontWeight: 600, color: change > 0 ? '#22C55E' : change < 0 ? '#EF4444' : 'var(--tx3)' }}>
+    <span style={{ fontSize: 11, fontWeight: 600, color: change > 0 ? '#22C55E' : change < 0 ? '#EF4444' : 'var(--tx3)' }}>
       {change > 0 ? '▲' : change < 0 ? '▼' : '–'} {Math.abs(change)}%
     </span>
   )
@@ -915,8 +915,8 @@ function renderChange(change: number | null | undefined) {
 function CashMetric({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
-      <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3, fontWeight: 500 }}>{label}</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 3, fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color }}>{value}</div>
     </div>
   )
 }
@@ -936,11 +936,11 @@ function WaterfallChart({ revenue, cogs, fixed, net, sym, fmtCurrency, tc }: {
 
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>{tc('cfo_dashboard.cash_flow_waterfall')}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>{tc('cfo_dashboard.cash_flow_waterfall')}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {items.map(item => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 80, fontSize: 9, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{item.label}</div>
+            <div style={{ width: 80, fontSize: 11, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{item.label}</div>
             <div style={{ flex: 1, height: barH, borderRadius: 6, background: 'var(--ev, #f3f2ef)', overflow: 'hidden', position: 'relative' }}>
               <div style={{
                 height: '100%', width: `${Math.max(item.width, 2)}%`,
@@ -949,14 +949,14 @@ function WaterfallChart({ revenue, cogs, fixed, net, sym, fmtCurrency, tc }: {
                 transition: 'width 400ms ease',
               }}>
                 {item.width > 15 && (
-                  <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>
+                  <span style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>
                     {item.value < 0 ? '−' : ''}{fmtCurrency(Math.abs(item.value))}
                   </span>
                 )}
               </div>
             </div>
             {item.width <= 15 && (
-              <span style={{ fontSize: 9, color: item.color, fontWeight: 600, flexShrink: 0 }}>
+              <span style={{ fontSize: 10, color: item.color, fontWeight: 600, flexShrink: 0 }}>
                 {item.value < 0 ? '−' : ''}{fmtCurrency(Math.abs(item.value))}
               </span>
             )}

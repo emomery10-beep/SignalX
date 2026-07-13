@@ -58,7 +58,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_pricesensitivity.heading')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_pricesensitivity.heading')}</span>
         </div>
         {[1, 2].map(i => (
           <div key={i} style={{ height: 44, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />
@@ -77,13 +77,13 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_pricesensitivity.heading')}</span>
-          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.productsCount', { n: summary?.total_analysed })}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_pricesensitivity.heading')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.productsCount', { n: summary?.total_analysed })}</span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('intel_pricesensitivity.askAiPrompt'))}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >{tc('intel_pricesensitivity.askAi')}</button>
         )}
       </div>
@@ -92,7 +92,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
       {insights.length > 0 && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(249,115,22,.04)', border: '1px solid rgba(249,115,22,.12)', marginBottom: 12 }}>
           {insights.map((ins, i) => (
-            <div key={i} style={{ fontSize: 9, color: 'var(--tx2)', lineHeight: 1.5, marginBottom: i < insights.length - 1 ? 4 : 0 }}>
+            <div key={i} style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5, marginBottom: i < insights.length - 1 ? 4 : 0 }}>
               {ins}
             </div>
           ))}
@@ -110,7 +110,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
               key={key}
               onClick={() => setFilter(isActive ? null : key)}
               style={{
-                fontSize: 9, padding: '3px 8px', borderRadius: 6,
+                fontSize: 10, padding: '3px 8px', borderRadius: 6,
                 background: isActive ? cfg.color + '15' : 'var(--ev, #f3f2ef)',
                 border: `1px solid ${isActive ? cfg.color + '30' : 'transparent'}`,
                 color: isActive ? cfg.color : 'var(--tx3)',
@@ -142,12 +142,12 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 10 }}>{cfg.icon}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{p.name}</span>
+                  <span style={{ fontSize: 12 }}>{cfg.icon}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{p.name}</span>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{sym}{p.current_price.toFixed(2)}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{sym}{p.current_price.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', gap: 12, fontSize: 9, color: 'var(--tx3)', marginBottom: p.opportunity || suggestedPrice ? 4 : 0 }}>
+              <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--tx3)', marginBottom: p.opportunity || suggestedPrice ? 4 : 0 }}>
                 <span>
                   {tc('intel_pricesensitivity.priceLabel')} {p.price_change_pct > 0 ? '↑' : p.price_change_pct < 0 ? '↓' : '→'}
                   <span style={{ color: p.price_change_pct > 0 ? '#EF4444' : p.price_change_pct < 0 ? '#10B981' : 'var(--tx3)' }}>
@@ -163,12 +163,12 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
                 <span>{tc('intel_pricesensitivity.marginLabel')} <span style={{ fontWeight: 600, color: p.margin_pct >= 40 ? '#10B981' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}%</span></span>
               </div>
               {suggestedPrice && (
-                <div style={{ fontSize: 9, color: '#10B981', fontWeight: 600, paddingLeft: 18, marginBottom: p.opportunity ? 2 : 0 }}>
+                <div style={{ fontSize: 10, color: '#10B981', fontWeight: 600, paddingLeft: 18, marginBottom: p.opportunity ? 2 : 0 }}>
                   {tc('intel_pricesensitivity.suggestedPrice', { targetMargin, sym, price: suggestedPrice.toFixed(2), pct: ((suggestedPrice - p.current_price) / p.current_price * 100).toFixed(1) })}
                 </div>
               )}
               {p.opportunity && (
-                <div style={{ fontSize: 9, color: '#6366F1', fontWeight: 600, paddingLeft: 18 }}>
+                <div style={{ fontSize: 10, color: '#6366F1', fontWeight: 600, paddingLeft: 18 }}>
                   💡 {p.opportunity}
                 </div>
               )}
@@ -213,33 +213,33 @@ function PriceImpactSimulator({ products, sym, tc }: { products: Product[]; sym:
   return (
     <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)' }}>{tc('intel_pricesensitivity.simulatorHeading')}</span>
-        <span style={{ fontSize: 9, fontWeight: 700, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('intel_pricesensitivity.simulatorHeading')}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
           {impact.revDelta >= 0 ? '+' : ''}{fmtN(impact.revDelta)}{tc('intel_pricesensitivity.perMonth')}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: 9, color: 'var(--tx3)', flexShrink: 0 }}>{tc('intel_pricesensitivity.priceChangeLabel')}</span>
+        <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>{tc('intel_pricesensitivity.priceChangeLabel')}</span>
         <input type="range" min={-20} max={20} step={1} value={pctChange}
           onChange={e => setPctChange(Number(e.target.value))}
           style={{ flex: 1, accentColor: '#6366F1' }}
         />
-        <span style={{ fontSize: 10, fontWeight: 700, color: pctChange >= 0 ? '#10B981' : '#EF4444', minWidth: 40, textAlign: 'right' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: pctChange >= 0 ? '#10B981' : '#EF4444', minWidth: 40, textAlign: 'right' }}>
           {pctChange > 0 ? '+' : ''}{pctChange}%
         </span>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', fontSize: 9 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', fontSize: 10 }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.totalRevenue)}</div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.totalRevenue)}</div>
           <div style={{ color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.statCurrent')}</div>
         </div>
-        <div style={{ fontSize: 14, color: 'var(--tx3)', alignSelf: 'center' }}>→</div>
+        <div style={{ fontSize: 16, color: 'var(--tx3)', alignSelf: 'center' }}>→</div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 11, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.newRevenue)}</div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.newRevenue)}</div>
           <div style={{ color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.statProjected')}</div>
         </div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 11, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{impact.pctDelta >= 0 ? '+' : ''}{impact.pctDelta.toFixed(1)}%</div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{impact.pctDelta >= 0 ? '+' : ''}{impact.pctDelta.toFixed(1)}%</div>
           <div style={{ color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.statChange')}</div>
         </div>
       </div>

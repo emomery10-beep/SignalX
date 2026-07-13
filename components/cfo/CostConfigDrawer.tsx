@@ -78,7 +78,7 @@ export function sumFixed(config: CostConfig) { return config.fixedCosts.reduce((
 export function sumVariable(config: CostConfig) { return config.variableCosts.reduce((s, c) => s + (Number(c.amount) || 0), 0) }
 
 const INPUT_STYLE: React.CSSProperties = {
-  fontSize: 10, color: 'var(--tx)', background: 'var(--ev)',
+  fontSize: 12, color: 'var(--tx)', background: 'var(--ev)',
   border: '1px solid var(--b)', borderRadius: 6, padding: '6px 8px',
   fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box',
 }
@@ -113,8 +113,8 @@ function CostTable({ lines, setter, total, accent, sym, fmt, labelPlaceholder, a
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: 6, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 8 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{categoryHeader}</span>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', paddingRight: 8 }}>{monthlyHeader}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{categoryHeader}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', paddingRight: 8 }}>{monthlyHeader}</span>
         <span />
       </div>
       {lines.map(line => (
@@ -126,7 +126,7 @@ function CostTable({ lines, setter, total, accent, sym, fmt, labelPlaceholder, a
             style={INPUT_STYLE}
           />
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 9, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
+            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
             <input
               type="text"
               inputMode="decimal"
@@ -138,17 +138,17 @@ function CostTable({ lines, setter, total, accent, sym, fmt, labelPlaceholder, a
           </div>
           <button
             onClick={() => removeLine(line.id)}
-            style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 12, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           >×</button>
         </div>
       ))}
       <button
         onClick={addLine}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', padding: '6px 0', borderRadius: 7, border: `1px dashed ${accent}50`, background: 'transparent', color: accent, fontSize: 9, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', padding: '6px 0', borderRadius: 7, border: `1px dashed ${accent}50`, background: 'transparent', color: accent, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}
       >{addRowLabel}</button>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0 0', borderTop: '2px solid var(--b)', marginTop: 12 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{monthlyTotalLabel}</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>{fmt(total)}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{monthlyTotalLabel}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: accent }}>{fmt(total)}</span>
       </div>
     </div>
   )
@@ -217,16 +217,16 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_costconfig.drawerTitle')}</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_costconfig.drawerSubtitle')}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_costconfig.drawerTitle')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_costconfig.drawerSubtitle')}</div>
           </div>
-          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
         </div>
 
         {/* Tabs */}
         <div style={{ display: 'flex', padding: '10px 20px', gap: 6, borderBottom: '1px solid var(--b)', flexShrink: 0 }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setSection(t.id)} style={{ padding: '5px 10px', borderRadius: 7, border: 'none', fontFamily: 'inherit', background: section === t.id ? `${INDIGO}14` : 'transparent', color: section === t.id ? INDIGO : 'var(--tx3)', fontSize: 9, fontWeight: section === t.id ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button key={t.id} onClick={() => setSection(t.id)} style={{ padding: '5px 10px', borderRadius: 7, border: 'none', fontFamily: 'inherit', background: section === t.id ? `${INDIGO}14` : 'transparent', color: section === t.id ? INDIGO : 'var(--tx3)', fontSize: 11, fontWeight: section === t.id ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               {t.label}
               {t.badge && <span style={{ fontSize: 9, background: section === t.id ? `${INDIGO}20` : 'var(--ev)', color: section === t.id ? INDIGO : 'var(--tx3)', borderRadius: 4, padding: '1px 5px' }}>{t.badge}</span>}
             </button>
@@ -237,25 +237,25 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
         <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
           {section === 'balance' && (
             <div>
-              <p style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
+              <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
                 {tc('cfo_costconfig.balanceDescription')}
               </p>
-              <label style={{ display: 'block', fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('cfo_costconfig.balanceLabel')}</label>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('cfo_costconfig.balanceLabel')}</label>
               <div style={{ position: 'relative', marginBottom: 14 }}>
-                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 18, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
                 <input
                   type="text"
                   inputMode="decimal"
                   value={cashBalance}
                   onChange={e => setCashBalance(e.target.value.replace(/[^0-9.]/g, ''))}
                   placeholder={tc('cfo_costconfig.balancePlaceholder')}
-                  style={{ width: '100%', fontSize: 22, fontWeight: 700, color: 'var(--tx)', background: 'var(--ev)', border: `2px solid ${INDIGO}40`, borderRadius: 10, padding: '12px 14px 12px 36px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', fontSize: 24, fontWeight: 700, color: 'var(--tx)', background: 'var(--ev)', border: `2px solid ${INDIGO}40`, borderRadius: 10, padding: '12px 14px 12px 36px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                   onFocus={e => { e.currentTarget.style.borderColor = INDIGO }}
                   onBlur={e => { e.currentTarget.style.borderColor = `${INDIGO}40` }}
                 />
               </div>
               {Number(cashBalance) > 0 && (
-                <div style={{ padding: '10px 14px', borderRadius: 10, background: `${GREEN}08`, border: `1px solid ${GREEN}20`, fontSize: 10, color: 'var(--tx)', lineHeight: 1.5 }}>
+                <div style={{ padding: '10px 14px', borderRadius: 10, background: `${GREEN}08`, border: `1px solid ${GREEN}20`, fontSize: 12, color: 'var(--tx)', lineHeight: 1.5 }}>
                   💰 {tc('cfo_costconfig.balanceSetMessage')} <strong>{fmt(Number(cashBalance))}</strong>. {tc('cfo_costconfig.balanceSetRunway')}
                 </div>
               )}
@@ -263,7 +263,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           )}
           {section === 'fixed' && (
             <div>
-              <p style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
+              <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
                 {tc('cfo_costconfig.fixedDescription')}
               </p>
               <CostTable lines={fixed} setter={setFixed} total={fixedTotal} accent={RED} sym={sym} fmt={fmt} labelPlaceholder={tc('cfo_costconfig.categoryNamePlaceholder')} addRowLabel={tc('cfo_costconfig.addRow')} categoryHeader={tc('cfo_costconfig.tableHeaderCategory')} monthlyHeader={tc('cfo_costconfig.tableHeaderMonthly')} monthlyTotalLabel={tc('cfo_costconfig.monthlyTotal')} />
@@ -271,7 +271,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           )}
           {section === 'variable' && (
             <div>
-              <p style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
+              <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
                 {tc('cfo_costconfig.variableDescription')}
               </p>
               <CostTable lines={variable} setter={setVariable} total={variableTotal} accent={INDIGO} sym={sym} fmt={fmt} labelPlaceholder={tc('cfo_costconfig.categoryNamePlaceholder')} addRowLabel={tc('cfo_costconfig.addRow')} categoryHeader={tc('cfo_costconfig.tableHeaderCategory')} monthlyHeader={tc('cfo_costconfig.tableHeaderMonthly')} monthlyTotalLabel={tc('cfo_costconfig.monthlyTotal')} />
@@ -281,11 +281,11 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
 
         {/* Footer */}
         <div style={{ padding: '14px 20px', borderTop: '1px solid var(--b)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, background: 'var(--bg)' }}>
-          <div style={{ flex: 1, fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4 }}>
+          <div style={{ flex: 1, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
             {tc('cfo_costconfig.footerFixed')} <strong style={{ color: RED }}>{fmt(fixedTotal)}</strong>/mo · {tc('cfo_costconfig.footerVariable')} <strong style={{ color: INDIGO }}>{fmt(variableTotal)}</strong>/mo
           </div>
-          <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnCancel')}</button>
-          <button onClick={handleSave} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnSave')}</button>
+          <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnCancel')}</button>
+          <button onClick={handleSave} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnSave')}</button>
         </div>
       </div>
       <style>{`@keyframes drawerIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>

@@ -90,12 +90,12 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_costbreakdown.heading')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_costbreakdown.heading')}</span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('cfo_costbreakdown.askAiPrompt', { cogsPct: Math.round((cogs / revenue) * 100), cogsAmt: fmt(cogs, sym), fixedPct: Math.round((fixedCosts / revenue) * 100), fixedAmt: fmt(fixedCosts, sym) }))}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_costbreakdown.askAi')}
           </button>
@@ -121,7 +121,7 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(totalCosts, sym)}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{fmt(totalCosts, sym)}</div>
             <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_costbreakdown.totalCosts')}</div>
           </div>
         </div>
@@ -132,11 +132,11 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx)' }}>{item.label}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{fmt(item.amount, sym)}</div>
+                <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{item.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{fmt(item.amount, sym)}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: item.color }}>{Math.round(item.pctOfRevenue)}%</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: item.color }}>{Math.round(item.pctOfRevenue)}%</div>
                 <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_costbreakdown.ofRevenue')}</div>
               </div>
             </div>
@@ -146,11 +146,11 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
           <div style={{ borderTop: '1px solid var(--b)', paddingTop: 8, marginTop: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 10, height: 10, borderRadius: 3, background: netProfit >= 0 ? '#22C55E' : '#EF4444', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_costbreakdown.netProfit')}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{fmt(netProfit, sym)}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_costbreakdown.netProfit')}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{fmt(netProfit, sym)}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: netProfit >= 0 ? '#22C55E' : '#EF4444' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: netProfit >= 0 ? '#22C55E' : '#EF4444' }}>
                 {revenue > 0 ? `${Math.round((netProfit / revenue) * 100)}%` : '—'}
               </div>
               <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_costbreakdown.ofRevenue')}</div>
@@ -162,7 +162,7 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
       {/* Revenue breakdown bar */}
       {revenue > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('cfo_costbreakdown.whereEveryGoes', { sym })}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('cfo_costbreakdown.whereEveryGoes', { sym })}</div>
           <div style={{ height: 24, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
             {(() => {
               const totalPct = items.reduce((s, i) => s + i.pctOfRevenue, 0)
@@ -187,7 +187,7 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
             })()}
           </div>
           {netProfit < 0 && (
-            <div style={{ fontSize: 9, color: '#EF4444', marginTop: 4, fontWeight: 500 }}>
+            <div style={{ fontSize: 10, color: '#EF4444', marginTop: 4, fontWeight: 500 }}>
               {tc('cfo_costbreakdown.costsExceed', { sym, n: Math.round(Math.abs(netProfit / revenue) * 100) })}
             </div>
           )}

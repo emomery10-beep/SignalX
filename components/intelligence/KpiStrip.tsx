@@ -72,7 +72,7 @@ function TrendBadge({ trend, label }: { trend: 'up' | 'down' | 'flat'; label?: s
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 3,
-      fontSize: 9, fontWeight: 600, color,
+      fontSize: 11, fontWeight: 600, color,
       background: bg, borderRadius: 6, padding: '2px 7px',
     }}>
       {arrow} {label}
@@ -165,7 +165,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               <div style={{
                 position: 'absolute', inset: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 800, color: hero.accentColor || 'var(--tx)',
+                fontSize: 15, fontWeight: 800, color: hero.accentColor || 'var(--tx)',
                 fontFamily: 'var(--font-sora, inherit)',
               }}>
                 {heroNum != null ? animated : hero.value}
@@ -175,14 +175,14 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
             {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>
                   {hero.label}
                 </span>
                 {hero.trend && hero.trendLabel && (
                   <TrendBadge trend={hero.trend} label={hero.trendLabel} />
                 )}
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>
                 {hero.sub}
               </div>
             </div>
@@ -225,8 +225,8 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {icon && <span style={{ fontSize: 10 }}>{icon}</span>}
-                <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx2)' }}>
+                {icon && <span style={{ fontSize: 12 }}>{icon}</span>}
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>
                   {card.label}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                   <span style={{
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: 700,
                     color: card.accentColor || 'var(--tx)',
                     fontFamily: 'var(--font-sora, inherit)',
@@ -251,7 +251,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
                 )}
               </div>
 
-              <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.3 }}>{card.sub}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.3 }}>{card.sub}</div>
             </button>
           )
         })}

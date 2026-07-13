@@ -40,7 +40,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_cashcountdown.title')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_cashcountdown.title')}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2].map(i => (
@@ -69,25 +69,25 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_cashcountdown.title')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_cashcountdown.title')}</span>
         </div>
         {onAsk && (
           <button
             onClick={() => onAsk(tc('intel_cashcountdown.askPrompt'))}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >{tc('intel_cashcountdown.askAi')}</button>
         )}
       </div>
 
       {/* Runway hero */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-        <span style={{ fontSize: 22 }}>{cfg.icon}</span>
+        <span style={{ fontSize: 24 }}>{cfg.icon}</span>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: cfg.color, lineHeight: 1.2 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: cfg.color, lineHeight: 1.2 }}>
             {data.runway.label}
           </div>
           {data.cash.has_balance && (
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
               {tc('intel_cashcountdown.balanceLabel', { amount: fmt(data.cash.balance) })}
               {data.trend.revenue_pct !== 0 && (
                 <span style={{ marginLeft: 6, color: data.trend.revenue_pct > 0 ? '#10B981' : '#EF4444' }}>
@@ -97,7 +97,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
             </div>
           )}
           {!data.cash.has_balance && data.runway.status === 'unknown' && (
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
               {tc('intel_cashcountdown.addBalanceCta')}
             </div>
           )}
@@ -114,7 +114,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       {/* Weekly cash flow sparkline */}
       {weekly.length > 0 && (
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 6, fontWeight: 600 }}>{tc('intel_cashcountdown.weeklyTitle')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 6, fontWeight: 600 }}>{tc('intel_cashcountdown.weeklyTitle')}</div>
           <div style={{ display: 'flex', alignItems: 'end', gap: 2, height: 40 }}>
             {weekly.map((w, i) => {
               const h = Math.max(2, (Math.abs(w.net) / maxAbs) * 36)
@@ -144,7 +144,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '8px 10px', borderRadius: 10,
         border: '1px solid var(--b)', background: 'var(--sf)',
-        fontSize: 9, color: 'var(--tx3)',
+        fontSize: 11, color: 'var(--tx3)',
       }}>
         <span>{tc('intel_cashcountdown.monthlyLabel', { income: fmt(data.monthly.revenue), expenses: fmt(data.monthly.cogs + data.monthly.fixed_costs) })}</span>
         <span style={{ fontWeight: 700, color: data.monthly.net >= 0 ? '#10B981' : '#EF4444' }}>
@@ -154,7 +154,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
 
       {/* Breakeven indicator */}
       {data.daily.breakeven > 0 && (
-        <div style={{ marginTop: 8, fontSize: 9, color: 'var(--tx3)', textAlign: 'center' }}>
+        <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>
           {data.daily.breakeven_gap >= 0
             ? <span>{tc('intel_cashcountdown.aboveBreakeven', { amount: fmt(data.daily.breakeven_gap) + '/day' })}</span>
             : <span>{tc('intel_cashcountdown.belowBreakeven', { amount: fmt(Math.abs(data.daily.breakeven_gap)) + '/day' })}</span>
@@ -168,8 +168,8 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
 function MetricBox({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
-      <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color }}>{value}</div>
     </div>
   )
 }

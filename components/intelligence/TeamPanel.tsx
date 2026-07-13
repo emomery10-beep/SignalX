@@ -200,7 +200,7 @@ export default function TeamPanel() {
       {toast && (
         <div style={{
           position: 'fixed', top: 20, right: 20, zIndex: 9999,
-          padding: '10px 16px', borderRadius: 'var(--r-md)', fontSize: 11,
+          padding: '10px 16px', borderRadius: 'var(--r-md)', fontSize: 13,
           fontFamily: 'var(--font-dm), sans-serif', fontWeight: 500,
           background: toast.type === 'err' ? 'rgba(220,38,38,.08)' : 'rgba(5,150,105,.08)',
           border: `1px solid ${toast.type === 'err' ? 'rgba(220,38,38,.2)' : 'rgba(5,150,105,.2)'}`,
@@ -214,7 +214,7 @@ export default function TeamPanel() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
-          <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--tx)', margin: 0 }}>
+          <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--tx)', margin: 0 }}>
             Your Team
           </h2>
           {callerRole !== 'owner' && (
@@ -222,7 +222,7 @@ export default function TeamPanel() {
               display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px',
               borderRadius: 'var(--r-pill, 9999px)', border: `1px solid ${ROLE_META[callerRole]?.color || '#888'}30`,
               background: ROLE_META[callerRole]?.bg || 'var(--ev)',
-              fontSize: 10, fontWeight: 600, color: ROLE_META[callerRole]?.color,
+              fontSize: 12, fontWeight: 600, color: ROLE_META[callerRole]?.color,
               fontFamily: 'var(--font-dm), sans-serif', flexShrink: 0,
             }}>
               <RoleIcon role={callerRole} size={13} />
@@ -230,7 +230,7 @@ export default function TeamPanel() {
             </span>
           )}
         </div>
-        <p style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.55, margin: 0, maxWidth: 480 }}>
+        <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.55, margin: 0, maxWidth: 480 }}>
           Give your accountant, ops manager, or buyer their own view — filtered to what they need.
         </p>
       </div>
@@ -238,7 +238,7 @@ export default function TeamPanel() {
       {/* Roles section */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
             Roles
           </span>
           <button
@@ -246,7 +246,7 @@ export default function TeamPanel() {
             style={{
               padding: '5px 12px', borderRadius: 'var(--r-pill, 9999px)',
               border: '1px solid var(--b2)', background: showCompare ? 'var(--ev)' : 'transparent',
-              color: 'var(--tx2)', fontSize: 10, fontWeight: 500, cursor: 'pointer',
+              color: 'var(--tx2)', fontSize: 12, fontWeight: 500, cursor: 'pointer',
               fontFamily: 'var(--font-dm), sans-serif', transition: 'background 150ms',
             }}>
             {showCompare ? 'Back to roles' : 'Compare all roles'}
@@ -260,13 +260,13 @@ export default function TeamPanel() {
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
                 <thead>
                   <tr style={{ background: 'var(--ev)' }}>
-                    <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: 10, fontWeight: 600, color: 'var(--tx2)', borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>
+                    <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>
                       Area
                     </th>
                     {ROLES_ORDER.map(r => {
                       const m = ROLE_META[r]
                       return (
-                        <th key={r} style={{ textAlign: 'center', padding: '10px 8px', fontSize: 9, fontWeight: 700, color: m.color, borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>
+                        <th key={r} style={{ textAlign: 'center', padding: '10px 8px', fontSize: 11, fontWeight: 700, color: m.color, borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>
                           {m.label}
                         </th>
                       )
@@ -276,7 +276,7 @@ export default function TeamPanel() {
                 <tbody>
                   {AREAS.map((area, i) => (
                     <tr key={area} style={{ background: i % 2 === 1 ? 'var(--ev)' : 'transparent' }}>
-                      <td style={{ padding: '8px 14px', fontSize: 10, color: 'var(--tx2)', borderBottom: '1px solid var(--b)', fontFamily: 'var(--font-dm), sans-serif', fontWeight: 500 }}>
+                      <td style={{ padding: '8px 14px', fontSize: 12, color: 'var(--tx2)', borderBottom: '1px solid var(--b)', fontFamily: 'var(--font-dm), sans-serif', fontWeight: 500 }}>
                         {area}
                       </td>
                       {ROLES_ORDER.map(r => {
@@ -284,7 +284,7 @@ export default function TeamPanel() {
                         const s = LEVEL_STYLES[lvl]
                         return (
                           <td key={r} style={{ textAlign: 'center', padding: '8px 4px', borderBottom: '1px solid var(--b)' }}>
-                            <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--r-pill, 9999px)', background: s.bg, color: s.fg, fontSize: 9, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif' }}>
+                            <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--r-pill, 9999px)', background: s.bg, color: s.fg, fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif' }}>
                               {s.label}
                             </span>
                           </td>
@@ -329,10 +329,10 @@ export default function TeamPanel() {
                         <polyline points="6 9 12 15 18 9"/>
                       </svg>
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: isExpanded ? meta.color : 'var(--tx)', marginBottom: 3, fontFamily: 'var(--font-dm), sans-serif' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isExpanded ? meta.color : 'var(--tx)', marginBottom: 3, fontFamily: 'var(--font-dm), sans-serif' }}>
                       {meta.label}
                     </div>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.4, fontFamily: 'var(--font-dm), sans-serif' }}>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4, fontFamily: 'var(--font-dm), sans-serif' }}>
                       {meta.short}
                     </div>
                   </button>
@@ -355,8 +355,8 @@ export default function TeamPanel() {
                       <RoleIcon role={expandedRole} size={17} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: meta.color, fontFamily: 'var(--font-dm), sans-serif' }}>{meta.label}</div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{meta.short}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: meta.color, fontFamily: 'var(--font-dm), sans-serif' }}>{meta.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{meta.short}</div>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
@@ -365,8 +365,8 @@ export default function TeamPanel() {
                       const s = LEVEL_STYLES[lvl]
                       return (
                         <div key={area} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', borderRadius: 'var(--r-sm)', background: 'var(--sf)', border: '1px solid var(--b)' }}>
-                          <span style={{ fontSize: 9, color: 'var(--tx2)', fontFamily: 'var(--font-dm), sans-serif' }}>{area}</span>
-                          <span style={{ padding: '1px 6px', borderRadius: 'var(--r-pill, 9999px)', background: s.bg, color: s.fg, fontSize: 9, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif', marginLeft: 6, flexShrink: 0 }}>
+                          <span style={{ fontSize: 11, color: 'var(--tx2)', fontFamily: 'var(--font-dm), sans-serif' }}>{area}</span>
+                          <span style={{ padding: '1px 6px', borderRadius: 'var(--r-pill, 9999px)', background: s.bg, color: s.fg, fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif', marginLeft: 6, flexShrink: 0 }}>
                             {s.label}
                           </span>
                         </div>
@@ -386,7 +386,7 @@ export default function TeamPanel() {
           padding: '18px 20px', borderRadius: 'var(--r-lg)',
           border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 28,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 14 }}>
             Invite a team member
           </div>
 
@@ -400,7 +400,7 @@ export default function TeamPanel() {
               onKeyDown={e => e.key === 'Enter' && invite()}
               style={{
                 padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
-                background: 'var(--ev)', fontSize: 11, fontFamily: 'var(--font-dm), sans-serif',
+                background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
                 color: 'var(--tx)', outline: 'none', width: '100%', boxSizing: 'border-box',
               }}
             />
@@ -411,7 +411,7 @@ export default function TeamPanel() {
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               style={{
                 padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
-                background: 'var(--ev)', fontSize: 11, fontFamily: 'var(--font-dm), sans-serif',
+                background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
                 color: 'var(--tx)', outline: 'none', width: '100%', boxSizing: 'border-box',
               }}
             />
@@ -423,7 +423,7 @@ export default function TeamPanel() {
               onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
               style={{
                 flex: 1, padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
-                background: 'var(--ev)', fontSize: 11, fontFamily: 'var(--font-dm), sans-serif',
+                background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
                 color: 'var(--tx)', outline: 'none',
               }}>
               {ROLES_ORDER
@@ -439,7 +439,7 @@ export default function TeamPanel() {
                 padding: '9px 20px', borderRadius: 'var(--r-md)', border: 'none',
                 background: form.email && !inviting ? 'var(--acc)' : 'var(--ev)',
                 color: form.email && !inviting ? '#fff' : 'var(--tx3)',
-                fontSize: 11, fontWeight: 600, cursor: form.email && !inviting ? 'pointer' : 'not-allowed',
+                fontSize: 13, fontWeight: 600, cursor: form.email && !inviting ? 'pointer' : 'not-allowed',
                 fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap',
                 transition: 'background 150ms, color 150ms',
               }}>
@@ -466,10 +466,10 @@ export default function TeamPanel() {
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 5, fontFamily: 'var(--font-dm), sans-serif' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 5, fontFamily: 'var(--font-dm), sans-serif' }}>
             No team members yet
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif', lineHeight: 1.5 }}>
             {canManage
               ? 'Invite your accountant, ops manager, or co-founder above.'
               : 'Ask your account owner to invite you.'}
@@ -481,7 +481,7 @@ export default function TeamPanel() {
           {/* Active members */}
           {active.length > 0 && (
             <div>
-              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, fontFamily: 'var(--font-dm), sans-serif' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, fontFamily: 'var(--font-dm), sans-serif' }}>
                 Active · {active.length}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -499,16 +499,16 @@ export default function TeamPanel() {
                       <div style={{
                         width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
                         background: meta.bg, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 10, fontWeight: 700,
+                        justifyContent: 'center', fontSize: 12, fontWeight: 700,
                         color: meta.color, fontFamily: 'var(--font-dm), sans-serif',
                       }}>
                         {getInitials(m.name, m.email)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 2 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 2 }}>
                           {m.name || m.email.split('@')[0]}
                         </div>
-                        <div style={{ fontSize: 9, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
                           {m.email}
                         </div>
                       </div>
@@ -521,7 +521,7 @@ export default function TeamPanel() {
                             onBlur={() => setEditingRoleId(null)}
                             style={{
                               padding: '4px 8px', borderRadius: 'var(--r-sm)', border: `1px solid ${meta.color}30`,
-                              background: meta.bg, fontSize: 9, fontFamily: 'var(--font-dm), sans-serif',
+                              background: meta.bg, fontSize: 11, fontFamily: 'var(--font-dm), sans-serif',
                               color: meta.color, fontWeight: 600, cursor: 'pointer', outline: 'none',
                             }}>
                             {ROLES_ORDER
@@ -537,7 +537,7 @@ export default function TeamPanel() {
                             style={{
                               padding: '3px 10px', borderRadius: 'var(--r-pill, 9999px)',
                               border: `1px solid ${meta.color}25`, background: meta.bg,
-                              color: meta.color, fontSize: 9, fontWeight: 600,
+                              color: meta.color, fontSize: 11, fontWeight: 600,
                               cursor: canManage ? 'pointer' : 'default',
                               fontFamily: 'var(--font-dm), sans-serif',
                               display: 'flex', alignItems: 'center', gap: 4,
@@ -553,7 +553,7 @@ export default function TeamPanel() {
                             style={{
                               padding: '4px 10px', borderRadius: 'var(--r-sm)',
                               border: '1px solid var(--b)', background: 'transparent',
-                              fontSize: 9, color: 'var(--tx3)', cursor: 'pointer',
+                              fontSize: 11, color: 'var(--tx3)', cursor: 'pointer',
                               fontFamily: 'var(--font-dm), sans-serif', transition: 'color 120ms',
                             }}>
                             {removingId === m.id ? '…' : 'Remove'}
@@ -570,7 +570,7 @@ export default function TeamPanel() {
           {/* Pending */}
           {pending.length > 0 && (
             <div>
-              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, fontFamily: 'var(--font-dm), sans-serif' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, fontFamily: 'var(--font-dm), sans-serif' }}>
                 Awaiting acceptance · {pending.length}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -587,26 +587,26 @@ export default function TeamPanel() {
                       <div style={{
                         width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
                         background: 'var(--ev)', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 10, fontWeight: 700,
+                        justifyContent: 'center', fontSize: 12, fontWeight: 700,
                         color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif',
                       }}>
                         {getInitials(m.name, m.email)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
                             {m.name || m.email.split('@')[0]}
                           </span>
-                          <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 7px', borderRadius: 'var(--r-pill, 9999px)', background: 'rgba(180,83,9,.08)', color: '#b45309', fontFamily: 'var(--font-dm), sans-serif' }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 'var(--r-pill, 9999px)', background: 'rgba(180,83,9,.08)', color: '#b45309', fontFamily: 'var(--font-dm), sans-serif' }}>
                             Pending
                           </span>
                         </div>
-                        <div style={{ fontSize: 9, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
                           {m.email} · Invited {fmtDate(m.invited_at)}
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <span style={{ padding: '3px 10px', borderRadius: 'var(--r-pill, 9999px)', border: `1px solid ${meta.color}25`, background: meta.bg, color: meta.color, fontSize: 9, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ padding: '3px 10px', borderRadius: 'var(--r-pill, 9999px)', border: `1px solid ${meta.color}25`, background: meta.bg, color: meta.color, fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                           <RoleIcon role={m.role} size={11} />
                           {meta.label}
                         </span>
@@ -618,7 +618,7 @@ export default function TeamPanel() {
                               style={{
                                 padding: '4px 10px', borderRadius: 'var(--r-sm)',
                                 border: '1px solid var(--b2)', background: 'transparent',
-                                fontSize: 9, color: 'var(--tx2)', cursor: 'pointer',
+                                fontSize: 11, color: 'var(--tx2)', cursor: 'pointer',
                                 fontFamily: 'var(--font-dm), sans-serif',
                               }}>
                               {resendingId === m.id ? '…' : 'Resend'}
@@ -629,7 +629,7 @@ export default function TeamPanel() {
                               style={{
                                 padding: '4px 10px', borderRadius: 'var(--r-sm)',
                                 border: '1px solid var(--b)', background: 'transparent',
-                                fontSize: 9, color: 'var(--tx3)', cursor: 'pointer',
+                                fontSize: 11, color: 'var(--tx3)', cursor: 'pointer',
                                 fontFamily: 'var(--font-dm), sans-serif',
                               }}>
                               {removingId === m.id ? '…' : 'Cancel'}

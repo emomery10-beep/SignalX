@@ -114,9 +114,9 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_kpi.title')}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_kpi.title')}</span>
           <span style={{
-            fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+            fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
             background: metCount >= 4 ? 'rgba(34,197,94,.1)' : metCount >= 2 ? 'rgba(245,158,11,.1)' : 'rgba(239,68,68,.1)',
             color: metCount >= 4 ? '#22C55E' : metCount >= 2 ? '#F59E0B' : '#EF4444',
           }}>
@@ -130,7 +130,7 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
               const missedStr = missed.map(k => `${k.label}: ${formatValue(k.actual, k.unit, sym)} (target: ${formatValue(k.target, k.unit, sym)})`).join(', ')
               onAsk(tc('cfo_kpi.askPrompt', { met: metCount, total: kpis.length, missed: missedStr || tc('cfo_kpi.askPromptNone') }))
             }}
-            style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_kpi.askAi')}
           </button>
@@ -139,11 +139,11 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
 
       {/* Header row */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 60px', padding: '8px 18px', borderBottom: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)' }}>{tc('cfo_kpi.colKpi')}</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>{tc('cfo_kpi.colTarget')}</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>{tc('cfo_kpi.colActual')}</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>{tc('cfo_kpi.colStatus')}</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>{tc('cfo_kpi.colTrend')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>{tc('cfo_kpi.colKpi')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>{tc('cfo_kpi.colTarget')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>{tc('cfo_kpi.colActual')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>{tc('cfo_kpi.colStatus')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>{tc('cfo_kpi.colTrend')}</div>
       </div>
 
       {/* KPI rows */}
@@ -162,7 +162,7 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
               background: st.color === '#EF4444' ? 'rgba(239,68,68,.02)' : 'transparent',
             }}
           >
-            <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--tx)' }}>{kpi.label}</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{kpi.label}</div>
 
             {/* Target (editable) */}
             <div style={{ textAlign: 'right' }}>
@@ -175,7 +175,7 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
                   onKeyDown={e => { if (e.key === 'Enter') saveTarget(kpi.key, Number((e.target as HTMLInputElement).value) || kpi.target) }}
                   style={{
                     width: 50, padding: '2px 4px', borderRadius: 4, border: '1px solid #6366F1',
-                    fontSize: 9, textAlign: 'right', fontFamily: 'inherit', outline: 'none',
+                    fontSize: 11, textAlign: 'right', fontFamily: 'inherit', outline: 'none',
                   }}
                 />
               ) : (
@@ -183,7 +183,7 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
                   onClick={() => setEditing(kpi.key)}
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
-                    fontSize: 9, color: 'var(--tx3)', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums',
+                    fontSize: 11, color: 'var(--tx3)', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums',
                     textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '2px',
                   }}
                   title={tc('cfo_kpi.editTargetTitle')}
@@ -194,20 +194,20 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
             </div>
 
             {/* Actual */}
-            <div style={{ textAlign: 'right', fontSize: 11, fontWeight: 600, color: st.color, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 600, color: st.color, fontVariantNumeric: 'tabular-nums' }}>
               {formatValue(kpi.actual, kpi.unit, sym)}
             </div>
 
             {/* Status */}
-            <div style={{ textAlign: 'center', fontSize: 12 }}>{st.icon}</div>
+            <div style={{ textAlign: 'center', fontSize: 14 }}>{st.icon}</div>
 
             {/* Trend */}
-            <div style={{ textAlign: 'center', fontSize: 12, color: tr.color, fontWeight: 600 }}>{tr.arrow}</div>
+            <div style={{ textAlign: 'center', fontSize: 14, color: tr.color, fontWeight: 600 }}>{tr.arrow}</div>
           </div>
         )
       })}
 
-      <div style={{ padding: '10px 18px', background: 'var(--ev, #f9f9f8)', fontSize: 9, color: 'var(--tx3)' }}>
+      <div style={{ padding: '10px 18px', background: 'var(--ev, #f9f9f8)', fontSize: 10, color: 'var(--tx3)' }}>
         {tc('cfo_kpi.footerHint')}
       </div>
     </div>

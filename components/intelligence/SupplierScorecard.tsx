@@ -197,7 +197,7 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
   if (error) {
     return (
       <div style={{ padding: '20px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 14 }}>
-        <div style={{ fontSize: 11, color: TX3 }}>{error}</div>
+        <div style={{ fontSize: 13, color: TX3 }}>{error}</div>
       </div>
     )
   }
@@ -205,16 +205,16 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
   if (suppliers.length === 0) {
     return (
       <div style={{ padding: '32px 20px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 16 }}>
-        <div style={{ fontSize: 34, marginBottom: 12 }}>📦</div>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 12, fontWeight: 600, color: TX, marginBottom: 6 }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>📦</div>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, color: TX, marginBottom: 6 }}>
           {tc('intel_supplierscorecard.noSupplierDataTitle')}
         </div>
-        <p style={{ fontSize: 11, color: TX3, lineHeight: 1.65, maxWidth: 340, margin: '0 auto 16px' }}>
+        <p style={{ fontSize: 13, color: TX3, lineHeight: 1.65, maxWidth: 340, margin: '0 auto 16px' }}>
           {tc('intel_supplierscorecard.noSupplierDataBody')}
         </p>
         <button
           onClick={() => onAsk(tc('intel_supplierscorecard.onAskNoData'))}
-          style={{ fontSize: 11, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '8px 18px', cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ fontSize: 13, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '8px 18px', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {tc('intel_supplierscorecard.howToGetStarted')}
         </button>
@@ -226,10 +226,10 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
     <div>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 4 }}>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>
           {tc('intel_supplierscorecard.headerTitle')}
         </div>
-        <div style={{ fontSize: 11, color: TX2, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: TX2, lineHeight: 1.5 }}>
           {tc('intel_supplierscorecard.headerSubtitle')}
         </div>
       </div>
@@ -243,20 +243,20 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
           { label: tc('intel_supplierscorecard.kpiTotalDelayCost'),   value: totalImpact > 0 ? `${sym}${totalImpact.toFixed(0)}` : `${sym}0`, colour: totalImpact > 500 ? '#dc2626' : TX },
         ].map((k, i) => (
           <div key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 9, color: TX3, marginBottom: 5, fontWeight: 500 }}>{k.label}</div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, color: k.colour }}>{k.value}</div>
+            <div style={{ fontSize: 11, color: TX3, marginBottom: 5, fontWeight: 500 }}>{k.label}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: k.colour }}>{k.value}</div>
           </div>
         ))}
       </div>
 
       {/* Sort controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 10, color: TX3 }}>{tc('intel_supplierscorecard.sortBy')}</span>
+        <span style={{ fontSize: 12, color: TX3 }}>{tc('intel_supplierscorecard.sortBy')}</span>
         {(['score', 'shipments', 'impact'] as const).map(s => (
           <button
             key={s}
             onClick={() => setSortBy(s)}
-            style={{ fontSize: 10, fontWeight: sortBy === s ? 600 : 400, color: sortBy === s ? ACC : TX3, background: sortBy === s ? 'rgba(208,138,89,.08)' : 'transparent', border: `1px solid ${sortBy === s ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 9999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ fontSize: 12, fontWeight: sortBy === s ? 600 : 400, color: sortBy === s ? ACC : TX3, background: sortBy === s ? 'rgba(208,138,89,.08)' : 'transparent', border: `1px solid ${sortBy === s ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 9999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {tc('intel_supplierscorecard.' + (s === 'score' ? 'sortScore' : s === 'shipments' ? 'sortShipments' : 'sortImpact'))}
           </button>
@@ -278,37 +278,37 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
               >
                 {/* Grade badge */}
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: g.bg, border: `1px solid ${g.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 800, color: g.text }}>{supplier.grade}</span>
+                  <span style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 800, color: g.text }}>{supplier.grade}</span>
                 </div>
 
                 {/* Name + metrics */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: TX }}>{supplier.name}</span>
-                    <span style={{ fontSize: 9, color: TX3 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: TX }}>{supplier.name}</span>
+                    <span style={{ fontSize: 11, color: TX3 }}>
                       {tc('intel_supplierscorecard.' + (supplier.shipmentCount === 1 ? 'shipmentSingular' : 'shipmentPlural'), { n: supplier.shipmentCount })}
                     </span>
                     {supplier.customsHoldCount > 0 && (
-                      <span style={{ fontSize: 9, fontWeight: 600, color: '#dc2626', background: 'rgba(220,38,38,.08)', padding: '1px 7px', borderRadius: 9999 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#dc2626', background: 'rgba(220,38,38,.08)', padding: '1px 7px', borderRadius: 9999 }}>
                         {tc('intel_supplierscorecard.' + (supplier.customsHoldCount === 1 ? 'customsHoldSingular' : 'customsHoldPlural'), { n: supplier.customsHoldCount })}
                       </span>
                     )}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, maxWidth: 400 }}>
                     <div>
-                      <div style={{ fontSize: 9, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricOnTimeRate')}</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricOnTimeRate')}</div>
                       <ScoreBar value={supplier.onTimeRate} colour={supplier.onTimeRate >= 80 ? '#16a34a' : supplier.onTimeRate >= 60 ? '#d97706' : '#dc2626'}/>
-                      <div style={{ fontSize: 9, fontWeight: 600, color: supplier.onTimeRate >= 80 ? '#16a34a' : supplier.onTimeRate >= 60 ? '#d97706' : '#dc2626', marginTop: 2 }}>{supplier.onTimeRate.toFixed(0)}%</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: supplier.onTimeRate >= 80 ? '#16a34a' : supplier.onTimeRate >= 60 ? '#d97706' : '#dc2626', marginTop: 2 }}>{supplier.onTimeRate.toFixed(0)}%</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricAvgDelay')}</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricAvgDelay')}</div>
                       <ScoreBar value={Math.max(0, 14 - supplier.avgDelayDays)} max={14} colour={supplier.avgDelayDays <= 2 ? '#16a34a' : supplier.avgDelayDays <= 5 ? '#d97706' : '#dc2626'}/>
-                      <div style={{ fontSize: 9, fontWeight: 600, color: supplier.avgDelayDays <= 2 ? '#16a34a' : supplier.avgDelayDays <= 5 ? '#d97706' : '#dc2626', marginTop: 2 }}>{supplier.avgDelayDays.toFixed(1)}d</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: supplier.avgDelayDays <= 2 ? '#16a34a' : supplier.avgDelayDays <= 5 ? '#d97706' : '#dc2626', marginTop: 2 }}>{supplier.avgDelayDays.toFixed(1)}d</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricCompositeScore')}</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricCompositeScore')}</div>
                       <ScoreBar value={supplier.score} colour={g.text}/>
-                      <div style={{ fontSize: 9, fontWeight: 600, color: g.text, marginTop: 2 }}>{supplier.score}/100</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: g.text, marginTop: 2 }}>{supplier.score}/100</div>
                     </div>
                   </div>
                 </div>
@@ -317,8 +317,8 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   {supplier.totalFinancialImpact > 0 && (
                     <>
-                      <div style={{ fontSize: 9, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.delayCost')}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#dc2626' }}>−{sym}{supplier.totalFinancialImpact.toFixed(0)}</div>
+                      <div style={{ fontSize: 11, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.delayCost')}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#dc2626' }}>−{sym}{supplier.totalFinancialImpact.toFixed(0)}</div>
                     </>
                   )}
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>
@@ -333,8 +333,8 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
 
                   {/* Recommendation */}
                   <div style={{ padding: '10px 13px', borderRadius: 10, background: g.bg, border: `1px solid ${g.border}`, marginBottom: 14 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: g.text, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_supplierscorecard.recommendationLabel')}</div>
-                    <div style={{ fontSize: 11, color: TX2, lineHeight: 1.55 }}>{supplier.recommendation}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: g.text, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_supplierscorecard.recommendationLabel')}</div>
+                    <div style={{ fontSize: 13, color: TX2, lineHeight: 1.55 }}>{supplier.recommendation}</div>
                   </div>
 
                   {/* Detail grid */}
@@ -348,8 +348,8 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                       { label: tc('intel_supplierscorecard.detailFinancialImpact'),  value: supplier.totalFinancialImpact > 0 ? `−${sym}${supplier.totalFinancialImpact.toFixed(0)}` : `${sym}0`, warn: supplier.totalFinancialImpact > 500 },
                     ].map((item, i) => (
                       <div key={i} style={{ background: SF, borderRadius: 9, padding: '9px 11px', border: `1px solid ${B}` }}>
-                        <div style={{ fontSize: 9, color: TX3, marginBottom: 3 }}>{item.label}</div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: item.warn ? '#dc2626' : TX }}>{item.value}</div>
+                        <div style={{ fontSize: 11, color: TX3, marginBottom: 3 }}>{item.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: item.warn ? '#dc2626' : TX }}>{item.value}</div>
                       </div>
                     ))}
                   </div>
@@ -357,10 +357,10 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                   {/* Carriers */}
                   {supplier.carriers.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 9, color: TX3, marginBottom: 6 }}>{tc('intel_supplierscorecard.carriersUsed')}</div>
+                      <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>{tc('intel_supplierscorecard.carriersUsed')}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {supplier.carriers.map(c => (
-                          <span key={c} style={{ fontSize: 10, color: TX2, background: SF, border: `1px solid ${B}`, borderRadius: 9999, padding: '2px 10px' }}>{c}</span>
+                          <span key={c} style={{ fontSize: 12, color: TX2, background: SF, border: `1px solid ${B}`, borderRadius: 9999, padding: '2px 10px' }}>{c}</span>
                         ))}
                       </div>
                     </div>
@@ -370,14 +370,14 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
                       onClick={() => onAsk(tc('intel_supplierscorecard.onAskAnalyse', { supplierName: supplier.name, onTimeRate: supplier.onTimeRate.toFixed(0), avgDelay: supplier.avgDelayDays.toFixed(1), customsHolds: supplier.customsHoldCount, sym, financialImpact: supplier.totalFinancialImpact.toFixed(0) }))}
-                      style={{ fontSize: 10, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ fontSize: 12, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       {tc('intel_supplierscorecard.askAskBiz')}
                     </button>
                     {(supplier.grade === 'D' || supplier.grade === 'F') && (
                       <button
                         onClick={() => onAsk(tc('intel_supplierscorecard.onAskAlternative', { supplierName: supplier.name, carrier: supplier.carriers[0] || tc('intel_supplierscorecard.internationally') }))}
-                        style={{ fontSize: 10, color: '#dc2626', background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ fontSize: 12, color: '#dc2626', background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         {tc('intel_supplierscorecard.findAlternative')}
                       </button>
@@ -391,7 +391,7 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
       </div>
 
       {/* Footer note */}
-      <div style={{ marginTop: 14, fontSize: 9, color: TX3, textAlign: 'center', lineHeight: 1.5 }}>
+      <div style={{ marginTop: 14, fontSize: 11, color: TX3, textAlign: 'center', lineHeight: 1.5 }}>
         {tc('intel_supplierscorecard.' + footerKey, { shipments: shipments.length, suppliers: suppliers.length })}
       </div>
     </div>

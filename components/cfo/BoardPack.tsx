@@ -86,8 +86,8 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_boardpack.boardReportTitle')}</span>
-          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_boardpack.boardReportTitle')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>
             {new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
           </span>
         </div>
@@ -95,7 +95,7 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
           {onAsk && (
             <button
               onClick={() => onAsk('Generate a detailed board-ready executive summary of my business performance this period. Use percentage-first language and highlight the most critical issues and wins.')}
-              style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+              style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
               {tc('cfo_boardpack.aiNarrativeBtn')}
             </button>
@@ -105,7 +105,7 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
             disabled={exporting}
             style={{
               display: 'flex', alignItems: 'center', gap: 4,
-              fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.08)',
+              fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)',
               border: 'none', borderRadius: 6, padding: '4px 10px',
               cursor: exporting ? 'wait' : 'pointer', fontWeight: 600, fontFamily: 'inherit',
             }}
@@ -122,7 +122,7 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
       <div id="board-pack-content" style={{ padding: '18px', background: '#fff' }}>
         {/* Section 1: Executive Summary */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
             {tc('cfo_boardpack.section1Title')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -151,16 +151,16 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
 
         {/* Section 2: Financial Summary */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
             {tc('cfo_boardpack.section2Title')}
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid #e5e5e5' }}>
-                <th style={{ textAlign: 'left', padding: '6px 0', fontSize: 9, color: '#666', fontWeight: 600 }}></th>
-                <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 9, color: '#666', fontWeight: 600 }}>{tc('cfo_boardpack.thCurrent')}</th>
-                <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 9, color: '#666', fontWeight: 600 }}>{tc('cfo_boardpack.thPctRev')}</th>
-                <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 9, color: '#666', fontWeight: 600 }}>{tc('cfo_boardpack.thChange')}</th>
+                <th style={{ textAlign: 'left', padding: '6px 0', fontSize: 10, color: '#666', fontWeight: 600 }}></th>
+                <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 10, color: '#666', fontWeight: 600 }}>{tc('cfo_boardpack.thCurrent')}</th>
+                <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 10, color: '#666', fontWeight: 600 }}>{tc('cfo_boardpack.thPctRev')}</th>
+                <th style={{ textAlign: 'right', padding: '6px 0', fontSize: 10, color: '#666', fontWeight: 600 }}>{tc('cfo_boardpack.thChange')}</th>
               </tr>
             </thead>
             <tbody>
@@ -175,7 +175,7 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
 
         {/* Section 3: Cash Position */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
             {tc('cfo_boardpack.section3Title')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
@@ -188,17 +188,17 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
         {/* Section 4: Key Risks */}
         {hasRisks && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
               {tc('cfo_boardpack.section4Title')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {criticalAlerts.map((a, i) => (
-                <div key={i} style={{ fontSize: 10, color: '#333', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
+                <div key={i} style={{ fontSize: 12, color: '#333', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
                   🔴 <strong>{tc('cfo_boardpack.criticalLabel')}</strong> {a.message}
                 </div>
               ))}
               {warningAlerts.map((a, i) => (
-                <div key={i} style={{ fontSize: 10, color: '#333', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
+                <div key={i} style={{ fontSize: 12, color: '#333', padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
                   🟡 <strong>{tc('cfo_boardpack.warningLabel')}</strong> {a.message}
                 </div>
               ))}
@@ -208,7 +208,7 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
 
         {/* Section 4 or 5: Inventory */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
             {tc('cfo_boardpack.sectionInventoryTitle', { n: inventorySectionNum })}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
@@ -230,7 +230,7 @@ export default function BoardPack({ data, currencySymbol: sym, onAsk }: Props) {
 
 function SummaryLine({ icon, text }: { icon: string; text: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: '#333' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#333' }}>
       <span>{icon}</span>
       <span>{text}</span>
     </div>
@@ -248,10 +248,10 @@ function BoardRow({ label, val, pct, change, sym, bold, border, highlight }: {
 
   return (
     <tr style={{ borderTop: border ? '2px solid #e5e5e5' : undefined, background: highlight ? '#f8f7ff' : undefined }}>
-      <td style={{ padding: '7px 0', fontWeight: bold ? 700 : 400, color: '#333', fontSize: 10 }}>{label}</td>
+      <td style={{ padding: '7px 0', fontWeight: bold ? 700 : 400, color: '#333', fontSize: 12 }}>{label}</td>
       <td style={{ padding: '7px 0', textAlign: 'right', fontWeight: bold ? 700 : 400, color: val < 0 ? '#dc2626' : '#333', fontVariantNumeric: 'tabular-nums' }}>{fmtAmt(val)}</td>
       <td style={{ padding: '7px 0', textAlign: 'right', color: '#999', fontVariantNumeric: 'tabular-nums' }}>{pct > 0 ? `${Math.round(pct)}%` : ''}</td>
-      <td style={{ padding: '7px 0', textAlign: 'right', fontSize: 9, color: change?.includes('▲') ? '#16a34a' : change?.includes('▼') ? '#dc2626' : '#999' }}>{change || ''}</td>
+      <td style={{ padding: '7px 0', textAlign: 'right', fontSize: 11, color: change?.includes('▲') ? '#16a34a' : change?.includes('▼') ? '#dc2626' : '#999' }}>{change || ''}</td>
     </tr>
   )
 }
@@ -260,7 +260,7 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e5e5', textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: '#999', marginBottom: 2, fontWeight: 500, textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#333' }}>{value}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: '#333' }}>{value}</div>
     </div>
   )
 }

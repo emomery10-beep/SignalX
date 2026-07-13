@@ -83,9 +83,9 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
 
   if (products.length === 0) {
     return (
-      <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(34,197,94,.02) 100%)', fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(34,197,94,.02) 100%)', fontSize: 13, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>{tc('intel_topproducts.noData')}</span>
-        <button onClick={() => onAsk(tc('intel_topproducts.noDataAskPrompt'))} style={{ fontSize: 10, color: '#22C55E', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('intel_topproducts.noDataAsk')}</button>
+        <button onClick={() => onAsk(tc('intel_topproducts.noDataAskPrompt'))} style={{ fontSize: 12, color: '#22C55E', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('intel_topproducts.noDataAsk')}</button>
       </div>
     )
   }
@@ -103,12 +103,12 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
             {tc('intel_topproducts.title')}
           </span>
           <span style={{ fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}>30d</span>
         </div>
-        <span style={{ fontSize: 9, fontWeight: 700, color: '#22C55E', fontFamily: 'var(--font-sora, inherit)' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#22C55E', fontFamily: 'var(--font-sora, inherit)' }}>
           {sym}{totalRev.toLocaleString('en', { maximumFractionDigits: 0 })}
         </span>
       </div>
@@ -118,15 +118,15 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginBottom: 12, animation: 'fadeIn 200ms ease' }}>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
             <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_topproducts.kpiProducts')}</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--tx)' }}>{allProducts.length}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{allProducts.length}</div>
           </div>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
             <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_topproducts.kpiAvgMargin')}</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: avgMargin >= 40 ? '#22C55E' : avgMargin >= 20 ? '#F59E0B' : '#EF4444' }}>{avgMargin.toFixed(0)}%</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: avgMargin >= 40 ? '#22C55E' : avgMargin >= 20 ? '#F59E0B' : '#EF4444' }}>{avgMargin.toFixed(0)}%</div>
           </div>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
             <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_topproducts.kpiUnitsSold')}</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--tx)' }}>{Math.round(allProducts.reduce((s, p) => s + p.qty, 0))}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{Math.round(allProducts.reduce((s, p) => s + p.qty, 0))}</div>
           </div>
         </div>
       )}
@@ -153,11 +153,11 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
               onMouseLeave={() => setHovered(null)}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', borderRadius: 4, transition: 'background 100ms', background: isHov ? 'var(--ev)' : 'transparent' }}
             >
-              <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: i < 3 ? '#22C55E' : 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
-              <span style={{ flex: 1, fontSize: 9, fontWeight: i < 3 ? 600 : 400, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-              <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx)', width: 50, textAlign: 'right' }}>{sym}{p.revenue.toLocaleString('en', { maximumFractionDigits: 0 })}</span>
-              <span style={{ fontSize: 9, color: 'var(--tx3)', width: 40, textAlign: 'right' }}>{p.qty}</span>
-              <span style={{ fontSize: 9, fontWeight: 600, color: p.margin >= 40 ? '#22C55E' : p.margin >= 20 ? '#F59E0B' : '#EF4444', width: 40, textAlign: 'right' }}>{p.margin.toFixed(0)}%</span>
+              <span style={{ width: 14, fontSize: 10, fontWeight: 700, color: i < 3 ? '#22C55E' : 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ flex: 1, fontSize: 11, fontWeight: i < 3 ? 600 : 400, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)', width: 50, textAlign: 'right' }}>{sym}{p.revenue.toLocaleString('en', { maximumFractionDigits: 0 })}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)', width: 40, textAlign: 'right' }}>{p.qty}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: p.margin >= 40 ? '#22C55E' : p.margin >= 20 ? '#F59E0B' : '#EF4444', width: 40, textAlign: 'right' }}>{p.margin.toFixed(0)}%</span>
             </div>
           ) : (
             <div
@@ -166,15 +166,15 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
               onMouseLeave={() => setHovered(null)}
               style={{ display: 'flex', alignItems: 'center', gap: 8 }}
             >
-              <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: i === 0 ? '#22C55E' : 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>
+              <span style={{ width: 14, fontSize: 10, fontWeight: 700, color: i === 0 ? '#22C55E' : 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>
                 {i + 1}
               </span>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 9, fontWeight: i === 0 ? 700 : 500, color: isHov ? 'var(--tx)' : 'var(--tx2)', transition: 'color 100ms', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+                  <span style={{ fontSize: 11, fontWeight: i === 0 ? 700 : 500, color: isHov ? 'var(--tx)' : 'var(--tx2)', transition: 'color 100ms', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
                     {p.name}
                   </span>
-                  <div style={{ display: 'flex', gap: 8, fontSize: 9, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: 8, fontSize: 10, flexShrink: 0 }}>
                     <span style={{ color: 'var(--tx3)' }}>{tc('intel_topproducts.qtySold', { n: p.qty })}</span>
                     <span style={{ color: p.margin >= 40 ? '#22C55E' : p.margin >= 20 ? '#F59E0B' : '#EF4444', fontWeight: 600 }}>
                       {p.margin.toFixed(0)}%

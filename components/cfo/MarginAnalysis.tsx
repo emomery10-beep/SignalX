@@ -101,7 +101,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
     <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 3, height: 14, borderRadius: 2, background: color }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{label}</span>
       </div>
       {extra}
     </div>
@@ -117,7 +117,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
         <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_margin.title')}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_margin.title')}</span>
           </div>
           <button
             onClick={() => onAsk(tc('cfo_margin.ask_ai_prompt', {
@@ -126,7 +126,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
               cogs: cogsRatio.toFixed(1),
               delta: (marginDelta >= 0 ? '+' : '') + marginDelta.toFixed(1),
             }))}
-            style={{ fontSize: 9, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             {tc('cfo_margin.ask_ai')}
           </button>
@@ -137,32 +137,32 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
         {/* Gross Margin */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_gross_margin')}</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: marginColor(totals.gross_margin_pct), ...tabNum }}>{totals.gross_margin_pct.toFixed(1)}%</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{tc('cfo_margin.kpi_gross_profit_suffix', { value: fmt(totals.gross_profit) })}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_gross_margin')}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: marginColor(totals.gross_margin_pct), ...tabNum }}>{totals.gross_margin_pct.toFixed(1)}%</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{tc('cfo_margin.kpi_gross_profit_suffix', { value: fmt(totals.gross_profit) })}</div>
         </div>
 
         {/* Net Margin */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_net_margin')}</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: netMarginColor(totals.net_margin_pct), ...tabNum }}>{totals.net_margin_pct.toFixed(1)}%</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{tc('cfo_margin.kpi_net_suffix', { value: fmt(totals.net_profit) })}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_net_margin')}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: netMarginColor(totals.net_margin_pct), ...tabNum }}>{totals.net_margin_pct.toFixed(1)}%</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{tc('cfo_margin.kpi_net_suffix', { value: fmt(totals.net_profit) })}</div>
         </div>
 
         {/* COGS Ratio */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_cogs_ratio')}</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ORANGE, ...tabNum }}>{cogsRatio.toFixed(1)}%</div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{tc('cfo_margin.kpi_cogs_suffix', { value: fmt(totals.cogs) })}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_cogs_ratio')}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: ORANGE, ...tabNum }}>{cogsRatio.toFixed(1)}%</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{tc('cfo_margin.kpi_cogs_suffix', { value: fmt(totals.cogs) })}</div>
         </div>
 
         {/* Margin Change */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_margin_change')}</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: marginDelta >= 0 ? GREEN : RED, ...tabNum }}>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>{tc('cfo_margin.kpi_margin_change')}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: marginDelta >= 0 ? GREEN : RED, ...tabNum }}>
             {marginDelta >= 0 ? '+' : ''}{marginDelta.toFixed(1)}pp
           </div>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{tc('cfo_margin.kpi_vs_prior')}</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>{tc('cfo_margin.kpi_vs_prior')}</div>
         </div>
       </div>
 
@@ -184,7 +184,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                       title={tc('cfo_margin.tooltip_cogs', { pct: cogsRatio.toFixed(1) })}
                       style={{ width: `${cogsW}%`, background: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     >
-                      {cogsW > 8 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600, ...tabNum }}>{tc('cfo_margin.bar_cogs', { pct: cogsRatio.toFixed(0) })}</span>}
+                      {cogsW > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>{tc('cfo_margin.bar_cogs', { pct: cogsRatio.toFixed(0) })}</span>}
                     </div>
                   )}
                   {fixedRatio > 0 && (
@@ -192,7 +192,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                       title={tc('cfo_margin.tooltip_fixed', { pct: fixedRatio.toFixed(1) })}
                       style={{ width: `${fixedW}%`, background: ORANGE, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     >
-                      {fixedW > 8 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600, ...tabNum }}>{tc('cfo_margin.bar_fixed', { pct: fixedRatio.toFixed(0) })}</span>}
+                      {fixedW > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>{tc('cfo_margin.bar_fixed', { pct: fixedRatio.toFixed(0) })}</span>}
                     </div>
                   )}
                   {profitRatio > 0 && (
@@ -200,12 +200,12 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                       title={tc('cfo_margin.tooltip_profit', { pct: profitRatio.toFixed(1) })}
                       style={{ width: `${profitW}%`, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     >
-                      {profitW > 8 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600, ...tabNum }}>{tc('cfo_margin.bar_profit', { pct: profitRatio.toFixed(0) })}</span>}
+                      {profitW > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>{tc('cfo_margin.bar_profit', { pct: profitRatio.toFixed(0) })}</span>}
                     </div>
                   )}
                 </div>
                 {profitRatio < 0 && (
-                  <div style={{ fontSize: 9, color: '#EF4444', marginTop: 4, fontWeight: 500 }}>
+                  <div style={{ fontSize: 10, color: '#EF4444', marginTop: 4, fontWeight: 500 }}>
                     {tc('cfo_margin.loss_warning', { pct: Math.abs(profitRatio).toFixed(1) })}
                   </div>
                 )}
@@ -215,15 +215,15 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
           <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: 2, background: RED }} />
-              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_cogs')}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_cogs')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: 2, background: ORANGE }} />
-              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_fixed_costs')}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_fixed_costs')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: 2, background: GREEN }} />
-              <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_profit')}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_profit')}</span>
             </div>
           </div>
         </div>
@@ -291,11 +291,11 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
               <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <div style={{ width: 12, height: 2, borderRadius: 1, background: GREEN }} />
-                  <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_gross_margin')}</span>
+                  <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_gross_margin')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <div style={{ width: 12, height: 2, borderRadius: 1, background: INDIGO }} />
-                  <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_net_margin')}</span>
+                  <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_margin.legend_net_margin')}</span>
                 </div>
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
       {sortedChannels.length > 0 && (
         <div style={{ ...cardStyle }}>
           {sectionHeader(tc('cfo_margin.margin_by_channel'), INDIGO, (
-            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_margin.channels_count', { n: sortedChannels.length })}</span>
+            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_margin.channels_count', { n: sortedChannels.length })}</span>
           ))}
           <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {sortedChannels.map(ch => {
@@ -316,10 +316,10 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
               return (
                 <div key={ch.source}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{ch.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{ch.label}</span>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 9, color: 'var(--tx3)', ...tabNum }}>{fmt(ch.revenue)}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color, ...tabNum }}>{ch.margin_pct.toFixed(1)}%</span>
+                      <span style={{ fontSize: 11, color: 'var(--tx3)', ...tabNum }}>{fmt(ch.revenue)}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color, ...tabNum }}>{ch.margin_pct.toFixed(1)}%</span>
                     </div>
                   </div>
                   <div style={{ height: 8, borderRadius: 4, background: 'var(--ev, #e5e5e5)', overflow: 'hidden' }}>
@@ -338,7 +338,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
           <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 3, height: 14, borderRadius: 2, background: GREEN }} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_margin.product_margins')}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_margin.product_margins')}</span>
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
               {(['top', 'bottom'] as const).map(view => (
@@ -346,7 +346,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                   key={view}
                   onClick={() => { setProductView(view); setSortKey('margin_pct'); setSortDir(view === 'top' ? 'desc' : 'asc') }}
                   style={{
-                    fontSize: 9, fontWeight: 600, fontFamily: 'inherit', border: 'none', borderRadius: 6,
+                    fontSize: 10, fontWeight: 600, fontFamily: 'inherit', border: 'none', borderRadius: 6,
                     padding: '3px 8px', cursor: 'pointer',
                     background: productView === view ? 'rgba(99,102,241,.12)' : 'transparent',
                     color: productView === view ? INDIGO : 'var(--tx3)',
@@ -358,7 +358,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
             </div>
           </div>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--b)' }}>
                   {buildProductColumns(tc).map(([key, label]) => (
@@ -367,7 +367,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                       onClick={() => handleSort(key)}
                       style={{
                         padding: '10px 12px', textAlign: key === 'name' || key === 'category' ? 'left' : 'right',
-                        fontSize: 9, fontWeight: 600, color: 'var(--tx3)', cursor: 'pointer',
+                        fontSize: 10, fontWeight: 600, color: 'var(--tx3)', cursor: 'pointer',
                         whiteSpace: 'nowrap', userSelect: 'none',
                       }}
                     >
@@ -381,8 +381,8 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                   const mc = marginColor(p.margin_pct, [40, 20])
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid var(--b)' }}>
-                      <td style={{ padding: '8px 12px', fontSize: 10, fontWeight: 500, color: 'var(--tx)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</td>
-                      <td style={{ padding: '8px 12px', fontSize: 9, color: 'var(--tx3)' }}>{p.category}</td>
+                      <td style={{ padding: '8px 12px', fontSize: 12, fontWeight: 500, color: 'var(--tx)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</td>
+                      <td style={{ padding: '8px 12px', fontSize: 11, color: 'var(--tx3)' }}>{p.category}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', ...tabNum, color: 'var(--tx)' }}>{fmt(p.revenue)}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', ...tabNum, color: 'var(--tx3)' }}>{fmt(p.cogs)}</td>
                       <td style={{ padding: '8px 12px', textAlign: 'right' }}>
@@ -390,7 +390,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                           <div style={{ width: 40, height: 6, borderRadius: 3, background: 'var(--ev, #e5e5e5)', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${Math.min(Math.max(p.margin_pct, 0), 100)}%`, borderRadius: 3, background: mc }} />
                           </div>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: mc, ...tabNum }}>{p.margin_pct.toFixed(1)}%</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: mc, ...tabNum }}>{p.margin_pct.toFixed(1)}%</span>
                         </div>
                       </td>
                       <td style={{ padding: '8px 12px', textAlign: 'right', ...tabNum, color: 'var(--tx3)' }}>{p.units.toLocaleString()}</td>

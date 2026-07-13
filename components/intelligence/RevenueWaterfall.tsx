@@ -148,13 +148,13 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
 
   function renderDrillDown(barKey: string) {
     if (!posMetrics) return loadingMetrics ? (
-      <div style={{ padding: 16, textAlign: 'center', fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_revwaterfall.loadingPos')}</div>
+      <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_revwaterfall.loadingPos')}</div>
     ) : null
 
     const m = posMetrics
-    const cardStyle: React.CSSProperties = { padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', fontSize: 10 }
+    const cardStyle: React.CSSProperties = { padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', fontSize: 12 }
     const labelStyle: React.CSSProperties = { fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4, fontWeight: 700 }
-    const valStyle: React.CSSProperties = { fontSize: 16, fontWeight: 800, fontFamily: 'var(--font-sora, inherit)' }
+    const valStyle: React.CSSProperties = { fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-sora, inherit)' }
 
     if (barKey === 'Revenue') return (
       <div style={{ animation: 'fadeIn 200ms ease' }}>
@@ -163,12 +163,12 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillRevenueTransactions')}</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{m.txnCount}</div></div>
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillRevenueAvgSale')}</div><div style={{ ...valStyle, color: '#6366F1' }}>{fmt(m.avgSale)}</div></div>
         </div>
-        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillRevenueTopProducts')}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillRevenueTopProducts')}</div>
         {m.topItems.slice(0, 5).map((it, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--b)' }}>
-            <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: i < 3 ? '#22C55E' : 'var(--tx3)', textAlign: 'right' }}>{i + 1}</span>
-            <span style={{ flex: 1, fontSize: 9, color: 'var(--tx2)' }}>{it.name}</span>
-            <span style={{ fontSize: 9, fontWeight: 600, color: '#22C55E' }}>{fmt(it.revenue)}</span>
+            <span style={{ width: 14, fontSize: 10, fontWeight: 700, color: i < 3 ? '#22C55E' : 'var(--tx3)', textAlign: 'right' }}>{i + 1}</span>
+            <span style={{ flex: 1, fontSize: 11, color: 'var(--tx2)' }}>{it.name}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#22C55E' }}>{fmt(it.revenue)}</span>
           </div>
         ))}
       </div>
@@ -181,12 +181,12 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillCogsCostRatio')}</div><div style={{ ...valStyle, color: m.totalRevenue > 0 ? (m.totalCost / m.totalRevenue > 0.5 ? '#EF4444' : '#F59E0B') : 'var(--tx)' }}>{m.totalRevenue > 0 ? (m.totalCost / m.totalRevenue * 100).toFixed(0) : 0}%</div></div>
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillCogsAvgCostPerSale')}</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{fmt(m.txnCount > 0 ? m.totalCost / m.txnCount : 0)}</div></div>
         </div>
-        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillCogsHighestCost')}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillCogsHighestCost')}</div>
         {m.topItems.sort((a, b) => b.cost - a.cost).slice(0, 5).map((it, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--b)' }}>
-            <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: i < 3 ? '#EF4444' : 'var(--tx3)', textAlign: 'right' }}>{i + 1}</span>
-            <span style={{ flex: 1, fontSize: 9, color: 'var(--tx2)' }}>{it.name}</span>
-            <span style={{ fontSize: 9, fontWeight: 600, color: '#EF4444' }}>{fmt(it.cost)}</span>
+            <span style={{ width: 14, fontSize: 10, fontWeight: 700, color: i < 3 ? '#EF4444' : 'var(--tx3)', textAlign: 'right' }}>{i + 1}</span>
+            <span style={{ flex: 1, fontSize: 11, color: 'var(--tx2)' }}>{it.name}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#EF4444' }}>{fmt(it.cost)}</span>
             <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{it.revenue > 0 ? (it.cost / it.revenue * 100).toFixed(0) : 0}{tc('intel_revwaterfall.drillCogsRatioSuffix')}</span>
           </div>
         ))}
@@ -200,7 +200,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillGrossProfitGrossMargin')}</div><div style={{ ...valStyle, color: m.grossMargin >= 40 ? '#22C55E' : m.grossMargin >= 20 ? '#F59E0B' : '#EF4444' }}>{m.grossMargin.toFixed(1)}%</div></div>
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillGrossProfitRevenue')}</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{fmt(m.totalRevenue)}</div></div>
         </div>
-        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillGrossProfitMarginByProduct')}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillGrossProfitMarginByProduct')}</div>
         {[...m.topItems].sort((a, b) => {
           const mA = a.revenue > 0 ? (a.revenue - a.cost) / a.revenue : 0
           const mB = b.revenue > 0 ? (b.revenue - b.cost) / b.revenue : 0
@@ -209,11 +209,11 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           const margin = it.revenue > 0 ? ((it.revenue - it.cost) / it.revenue * 100) : 0
           return (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--b)' }}>
-              <span style={{ flex: 1, fontSize: 9, color: 'var(--tx2)' }}>{it.name}</span>
+              <span style={{ flex: 1, fontSize: 11, color: 'var(--tx2)' }}>{it.name}</span>
               <div style={{ width: 60, height: 6, background: 'var(--ev)', borderRadius: 3, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${Math.min(margin, 100)}%`, background: margin >= 40 ? '#22C55E' : margin >= 20 ? '#F59E0B' : '#EF4444', borderRadius: 3 }} />
               </div>
-              <span style={{ fontSize: 9, fontWeight: 600, color: margin >= 40 ? '#22C55E' : margin >= 20 ? '#F59E0B' : '#EF4444', width: 35, textAlign: 'right' }}>{margin.toFixed(0)}%</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: margin >= 40 ? '#22C55E' : margin >= 20 ? '#F59E0B' : '#EF4444', width: 35, textAlign: 'right' }}>{margin.toFixed(0)}%</span>
             </div>
           )
         })}
@@ -226,7 +226,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillStockInventoryValue')}</div><div style={{ ...valStyle, color: '#F59E0B' }}>{fmt(m.inventoryValue)}</div></div>
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillStockStockToRevenue')}</div><div style={{ ...valStyle, color: m.totalRevenue > 0 && m.inventoryValue / m.totalRevenue > 0.5 ? '#EF4444' : '#22C55E' }}>{m.totalRevenue > 0 ? (m.inventoryValue / m.totalRevenue * 100).toFixed(0) : 0}%</div></div>
         </div>
-        <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
           {tc('intel_revwaterfall.drillStockHoldingNote')}
         </div>
       </div>
@@ -240,7 +240,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillSummaryTotalCosts')}</div><div style={{ ...valStyle, color: '#EF4444' }}>{fmt(m.totalCost)}</div></div>
           <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillSummaryNetProfit')}</div><div style={{ ...valStyle, color: m.grossProfit >= 0 ? '#6366F1' : '#EF4444' }}>{fmt(m.grossProfit)}</div></div>
         </div>
-        <div style={{ fontSize: 9, color: 'var(--tx3)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
           {barKey === 'Operating' ? tc('intel_revwaterfall.drillOperatingNote') : tc('intel_revwaterfall.drillNetMarginNote').replace('{margin}', m.grossMargin.toFixed(0))}
         </div>
       </div>
@@ -249,9 +249,9 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
 
   if (!hasData) {
     return (
-      <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)', fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)', fontSize: 13, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>{tc('intel_revwaterfall.uploadPrompt')}</span>
-        <button onClick={() => onAsk(tc('intel_revwaterfall.askAskBizPrompt'))} style={{ fontSize: 10, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('intel_revwaterfall.askAskBiz')}</button>
+        <button onClick={() => onAsk(tc('intel_revwaterfall.askAskBizPrompt'))} style={{ fontSize: 12, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('intel_revwaterfall.askAskBiz')}</button>
       </div>
     )
   }
@@ -270,7 +270,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
         onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intel_revwaterfall.miniCardTitle')}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intel_revwaterfall.miniCardTitle')}</span>
           <div style={{ display: 'flex', gap: 8 }}>
             {[['#22C55E', tc('intel_revwaterfall.legendRev')], ['#EF4444', tc('intel_revwaterfall.legendCost')], ['#6366F1', tc('intel_revwaterfall.legendMargin')]].map(([c, l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, color: 'var(--tx3)' }}>
@@ -281,12 +281,12 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
         </div>
         <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
           <div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#22C55E', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{grossProfitVal}%</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#22C55E', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{grossProfitVal}%</span>
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.grossMarginLabel')}</div>
           </div>
           <div style={{ width: 1, background: 'var(--b)' }} />
           <div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{netMarginVal}%</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{netMarginVal}%</span>
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.netMarginLabel')}</div>
           </div>
         </div>
@@ -321,8 +321,8 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 640, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 700 }}>{tc('intel_revwaterfall.modalTitle')}</div>
-                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.modalSubtitle').replace('{dataSource}', posMetrics ? tc('intel_revwaterfall.dataSourcePos') : tc('intel_revwaterfall.dataSourceHealth'))}</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700 }}>{tc('intel_revwaterfall.modalTitle')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.modalSubtitle').replace('{dataSource}', posMetrics ? tc('intel_revwaterfall.dataSourcePos') : tc('intel_revwaterfall.dataSourceHealth'))}</div>
               </div>
               <button onClick={() => { setExpanded(false); setDrillItem(null) }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -336,9 +336,9 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
                 { label: tc('intel_revwaterfall.kpiNetMargin'), value: `${netMarginVal}%`, color: '#6366F1', sub: posMetrics ? fmt(posMetrics.totalRevenue) + tc('intel_revwaterfall.kpiRevSuffix') : undefined },
               ].map(k => (
                 <div key={k.label} style={{ flex: 1, padding: '12px 14px', borderRadius: 12, background: `${k.color}08`, border: `1px solid ${k.color}20` }}>
-                  <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{k.label}</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: k.color, fontFamily: 'var(--font-sora, inherit)' }}>{k.value}</div>
-                  {k.sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{k.sub}</div>}
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{k.label}</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: k.color, fontFamily: 'var(--font-sora, inherit)' }}>{k.value}</div>
+                  {k.sub && <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{k.sub}</div>}
                 </div>
               ))}
             </div>
@@ -357,7 +357,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
                       onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '4px 0', borderRadius: 6, transition: 'background 100ms', background: isDrill ? `${c}08` : 'transparent' }}
                     >
-                      <div style={{ width: 90, fontSize: 10, fontWeight: bar.type === 'total' ? 700 : 400, color: isDrill ? c : 'var(--tx2)', textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                      <div style={{ width: 90, fontSize: 12, fontWeight: bar.type === 'total' ? 700 : 400, color: isDrill ? c : 'var(--tx2)', textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
                         {bar.label}
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isDrill ? c : 'var(--tx3)'} strokeWidth="2" strokeLinecap="round" style={{ transition: 'transform 200ms', transform: isDrill ? 'rotate(90deg)' : 'rotate(0deg)', opacity: 0.5 }}><polyline points="9 18 15 12 9 6"/></svg>
                       </div>
@@ -368,16 +368,16 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
                           borderRadius: 6, transition: 'width 400ms ease, background 100ms',
                           boxShadow: isHov || isDrill ? `0 0 10px ${c}30` : 'none',
                         }} />
-                        {bar.type === 'total' && <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 9, fontWeight: 700, color: 'var(--tx3)' }}>{bar.value > 0 ? '+' : ''}{bar.value.toFixed(0)}%</span>}
+                        {bar.type === 'total' && <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: 'var(--tx3)' }}>{bar.value > 0 ? '+' : ''}{bar.value.toFixed(0)}%</span>}
                       </div>
-                      <div style={{ width: 55, fontSize: 10, fontWeight: bar.type === 'total' ? 700 : 400, color: c, textAlign: 'right', flexShrink: 0 }}>{bar.value > 0 ? '+' : ''}{bar.value.toFixed(0)}%</div>
+                      <div style={{ width: 55, fontSize: 12, fontWeight: bar.type === 'total' ? 700 : 400, color: c, textAlign: 'right', flexShrink: 0 }}>{bar.value > 0 ? '+' : ''}{bar.value.toFixed(0)}%</div>
                     </div>
 
                     {/* Drill-down panel */}
                     {isDrill && (
                       <div style={{ marginLeft: 102, marginTop: 8, marginBottom: 12, padding: 14, borderRadius: 12, border: `1px solid ${c}20`, background: `${c}04` }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: c }}>{tc('intel_revwaterfall.barBreakdownLabel').replace('{label}', bar.label)}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: c }}>{tc('intel_revwaterfall.barBreakdownLabel').replace('{label}', bar.label)}</div>
                           <button onClick={(e) => { e.stopPropagation(); onAsk(DRILL_PROMPTS[bar.key] || tc('intel_revwaterfall.drillPromptFallback').replace('{label}', bar.label.toLowerCase())) }}
                             style={{ fontSize: 9, color: c, fontWeight: 600, background: `${c}10`, border: `1px solid ${c}20`, borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>
                             {tc('intel_revwaterfall.askAi')}
@@ -393,13 +393,13 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
 
             {/* Detail tooltip */}
             {hovered !== null && bars[hovered] && !drillItem && (
-              <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', fontSize: 10, color: 'var(--tx2)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', fontSize: 12, color: 'var(--tx2)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 4, height: 28, borderRadius: 2, background: COLORS[bars[hovered].type], flexShrink: 0 }} />
                 <div><strong>{bars[hovered].label}:</strong> {bars[hovered].detail}</div>
               </div>
             )}
 
-            <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--b)', fontSize: 9, color: 'var(--tx3)' }}>
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--b)', fontSize: 11, color: 'var(--tx3)' }}>
               {posMetrics ? tc('intel_revwaterfall.detailFooterPos').replace('{count}', String(posMetrics.txnCount)) : tc('intel_revwaterfall.detailFooterHealth')}
             </div>
           </div>

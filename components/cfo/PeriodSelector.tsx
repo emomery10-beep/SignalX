@@ -41,7 +41,7 @@ export default function PeriodSelector({ value, onChange }: Props) {
             border: value === p.key ? '1px solid #6366F1' : '1px solid var(--b)',
             background: value === p.key ? 'rgba(99,102,241,.08)' : 'transparent',
             color: value === p.key ? '#6366F1' : 'var(--tx3)',
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: value === p.key ? 600 : 400,
             cursor: 'pointer',
             fontFamily: 'inherit',
