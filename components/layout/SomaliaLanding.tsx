@@ -7,6 +7,7 @@
 // Somalia market lead. All copy is Somali; ⚠ pending native-speaker review.
 import Link from 'next/link'
 import { localePath } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 
 // Brand tokens — mirrored from components/layout/LandingClient.tsx (single accent).
 const T = {
@@ -91,6 +92,7 @@ export default function SomaliaLanding({ lang = 'so' }: { lang?: string }) {
             <span className="so-country-badge" style={{ fontSize: 10, color: T.tx3, fontWeight: 600, border: `1px solid ${T.bd}`, borderRadius: 9999, padding: '2px 8px' }}>Soomaaliya 🇸🇴</span>
           </div>
           <div style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LanguageToggle />
             <Link href={signin} style={{ fontSize: 13, color: T.tx2, textDecoration: 'none', fontWeight: 600 }}>Gal</Link>
             <Link href={signup} style={{ fontSize: 13, fontWeight: 700, color: '#fff', background: T.acc, borderRadius: 9999, padding: '9px 18px', textDecoration: 'none', boxShadow: '0 2px 12px rgba(201,122,68,.3)', whiteSpace: 'nowrap' }}>Isqor bilaash</Link>
           </div>
