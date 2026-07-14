@@ -768,6 +768,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                         width: 28, height: 28, borderRadius: 6, border: `1px solid ${score === s ? INDIGO : 'var(--b)'}`,
                         background: score === s ? INDIGO : score >= s ? 'rgba(99,102,241,.1)' : 'var(--sf)',
                         color: score === s ? '#fff' : 'var(--tx3)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1,
                       }}>
                       {s}
                     </button>
