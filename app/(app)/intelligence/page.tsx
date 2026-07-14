@@ -305,7 +305,7 @@ export default function IntelligencePage() {
                 padding: '8px 12px',
                 border: 'none',
                 background: 'transparent',
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: tab === t.id ? 600 : 400,
                 color: tab === t.id ? '#6366F1' : 'var(--tx3)',
                 borderBottom: tab === t.id ? '2px solid #6366F1' : '2px solid transparent',
@@ -336,19 +336,19 @@ export default function IntelligencePage() {
 
         {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 760 }}>
+          <div className="intel-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* ── Greeting (lightweight, not a card) ── */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1.3 }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1.3 }}>
                   {(() => {
                   if (nowHour === null) return ''
                   const key = nowHour < 12 ? 'intelligence.greeting_morning' : nowHour < 17 ? 'intelligence.greeting_afternoon' : 'intelligence.greeting_evening'
                   return tc(key, { name: greetingName }).trimEnd()
                 })()}
                 </div>
-                <div style={{ fontSize: 16, color: 'var(--tx3)', marginTop: 2 }}>
+                <div style={{ fontSize: 15, color: 'var(--tx3)', marginTop: 2 }}>
                   {nowDateStr}
                 </div>
               </div>
@@ -377,7 +377,7 @@ export default function IntelligencePage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
-                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.financial_summary')}</span>
+                    <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.financial_summary')}</span>
                   </div>
                   <button onClick={() => setTab('cfo')} style={{ fontSize: 15, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
                     {tc('intelligence.open_cfo')}
@@ -433,14 +433,14 @@ export default function IntelligencePage() {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hColor} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
                           </svg>
-                          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.shipments_card_title')}</span>
-                          <span style={{ fontSize: 14, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--r-pill, 9999px)', color: hColor, background: hBg, fontFamily: 'var(--font-dm), sans-serif', marginLeft: 'auto' }}>
+                          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.shipments_card_title')}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--r-pill, 9999px)', color: hColor, background: hBg, fontFamily: 'var(--font-dm), sans-serif', marginLeft: 'auto' }}>
                             {logisticsHealth.label}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
-                          <span style={{ fontSize: 30, fontWeight: 800, color: hColor, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
-                          <span style={{ fontSize: 16, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>/100</span>
+                          <span style={{ fontSize: 28, fontWeight: 800, color: hColor, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
+                          <span style={{ fontSize: 15, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>/100</span>
                         </div>
                         <div style={{ height: 3, borderRadius: 'var(--r-pill, 9999px)', background: 'var(--b2)', overflow: 'hidden', marginBottom: 8 }}>
                           <div style={{ height: '100%', width: `${score}%`, background: hColor, borderRadius: 'var(--r-pill, 9999px)' }} />
@@ -467,16 +467,16 @@ export default function IntelligencePage() {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx2)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
                         </svg>
-                        <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.courier_card_title')}</span>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.courier_card_title')}</span>
                         {courierSummary.stuck > 0 && (
-                          <span style={{ fontSize: 14, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--r-pill, 9999px)', color: '#dc2626', background: 'rgba(239,68,68,.08)', fontFamily: 'var(--font-dm), sans-serif', marginLeft: 'auto' }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--r-pill, 9999px)', color: '#dc2626', background: 'rgba(239,68,68,.08)', fontFamily: 'var(--font-dm), sans-serif', marginLeft: 'auto' }}>
                             {tc('intelligence.courier_stuck', { n: courierSummary.stuck })}
                           </span>
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
-                        <span style={{ fontSize: 30, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{courierSummary.deliveryRate}%</span>
-                        <span style={{ fontSize: 16, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.courier_delivery_rate')}</span>
+                        <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{courierSummary.deliveryRate}%</span>
+                        <span style={{ fontSize: 15, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.courier_delivery_rate')}</span>
                       </div>
                       <div style={{ height: 3, borderRadius: 'var(--r-pill, 9999px)', background: 'var(--b2)', overflow: 'hidden', marginBottom: 8 }}>
                         <div style={{ height: '100%', width: `${Math.min(100, courierSummary.deliveryRate)}%`, background: '#16a34a', borderRadius: 'var(--r-pill, 9999px)' }} />
@@ -510,7 +510,7 @@ export default function IntelligencePage() {
                   </svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', marginBottom: 2, fontFamily: 'var(--font-dm), sans-serif' }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 2, fontFamily: 'var(--font-dm), sans-serif' }}>
                     {tc('intelligence.connect_more_title')}
                   </div>
                   <div style={{ fontSize: 15, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
@@ -531,7 +531,7 @@ export default function IntelligencePage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-                  <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.analytics_title')}</span>
+                  <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.analytics_title')}</span>
                 </div>
                 <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('intelligence.analytics_last_30')}</span>
               </div>
@@ -597,9 +597,9 @@ export default function IntelligencePage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, borderRadius: 2, background: '#EF4444' }} />
-                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.active_alerts')}</span>
+                    <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.active_alerts')}</span>
                     <span style={{
-                      fontSize: 14, fontWeight: 700, color: '#EF4444',
+                      fontSize: 13, fontWeight: 700, color: '#EF4444',
                       background: 'rgba(239,68,68,.1)', borderRadius: 6, padding: '1px 6px',
                     }}>{anomalies.length}</span>
                   </div>
@@ -618,7 +618,7 @@ export default function IntelligencePage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.quick_actions')}</span>
+                <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.quick_actions')}</span>
               </div>
 
               {/* Top row: primary actions (larger) */}
@@ -670,7 +670,7 @@ export default function IntelligencePage() {
                       {card.icon}
                     </div>
                     <div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 3 }}>{card.title}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', marginBottom: 3 }}>{card.title}</div>
                       <div style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.4 }}>{card.sub}</div>
                     </div>
                   </button>
@@ -702,8 +702,8 @@ export default function IntelligencePage() {
                     onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
                   >
                     <div style={{ fontSize: 24, marginBottom: 6 }}>{card.emoji}</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{card.title}</div>
-                    <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{card.sub}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{card.title}</div>
+                    <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{card.sub}</div>
                   </button>
                 ))}
               </div>
@@ -713,14 +713,14 @@ export default function IntelligencePage() {
 
         {/* ─── ALERTS ─── */}
         {/* ─── TEAM ─── */}
-        {tab === 'team' && <div style={{ maxWidth: 720 }}><TeamPanel/></div>}
+        {tab === 'team' && <div className="intel-content"><TeamPanel/></div>}
 
         {/* ─── SHIPMENTS ─── */}
         {/* ─── LOGISTICS (merged Ships + Courier) ─── */}
         {tab === 'logistics' && (
-          <div style={{ maxWidth: 720 }}>
+          <div className="intel-content">
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4, color: 'var(--tx)' }}>{tc('intelligence.logistics_heading')}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4, color: 'var(--tx)' }}>{tc('intelligence.logistics_heading')}</div>
               <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.55 }}>{tc('intelligence.logistics_sub')}</div>
             </div>
 
@@ -773,8 +773,8 @@ export default function IntelligencePage() {
               <div>
                 <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 2, color: 'var(--tx)' }}>{tc('intelligence.shipments_heading')}</div>
-                    <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('intelligence.shipments_sub')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, marginBottom: 2, color: 'var(--tx)' }}>{tc('intelligence.shipments_heading')}</div>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('intelligence.shipments_sub')}</div>
                   </div>
                   <button
                     onClick={() => router.push('/shipments')}
@@ -798,7 +798,7 @@ export default function IntelligencePage() {
                       <button
                         key={i}
                         onClick={item.action}
-                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 16, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
+                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--acc)' }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b2)'; e.currentTarget.style.color = 'var(--tx2)' }}
                       >
@@ -814,8 +814,8 @@ export default function IntelligencePage() {
             {logisticsView === 'incoming' && (
               <div>
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 2, color: 'var(--tx)' }}>{tc('intelligence.courier_heading')}</div>
-                  <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('intelligence.courier_sub')}</div>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, marginBottom: 2, color: 'var(--tx)' }}>{tc('intelligence.courier_heading')}</div>
+                  <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('intelligence.courier_sub')}</div>
                 </div>
                 <CourierPulseCard onAsk={askAskBiz} />
                 <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 'var(--r-md)', background: 'var(--sf)', border: '1px solid var(--b)' }}>
@@ -831,7 +831,7 @@ export default function IntelligencePage() {
                       <button
                         key={i}
                         onClick={item.action}
-                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 16, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
+                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--acc)' }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b2)'; e.currentTarget.style.color = 'var(--tx2)' }}
                       >
@@ -847,13 +847,13 @@ export default function IntelligencePage() {
 
         {/* ─── MARKET ─── */}
         {tab === 'market' && (
-          <div style={{ maxWidth: 720 }}>
+          <div className="intel-content">
             <div style={{ marginBottom: 14 }}>
               <CrossSectorIntel onAsk={askAskBiz} />
             </div>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.market_heading')}</div>
-              <div style={{ fontSize: 16, color: 'var(--tx3)' }}>{tc('intelligence.market_sub')}</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.market_heading')}</div>
+              <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('intelligence.market_sub')}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 20 }}>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -862,7 +862,7 @@ export default function IntelligencePage() {
                   onChange={e => setMktQuery(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && searchMarket()}
                   placeholder={tc('intelligence.market_search_placeholder')}
-                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 18, fontFamily: 'inherit', outline: 'none' }}
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 17, fontFamily: 'inherit', outline: 'none' }}
                 />
                 <button
                   onClick={searchMarket}
@@ -897,8 +897,8 @@ export default function IntelligencePage() {
             </div>
             {mktResult?.locked && (
               <div style={{ padding: '24px 20px', borderRadius: 14, border: '1px solid #d08a59', background: 'rgba(208,138,89,0.07)', textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 10 }}>🌍</div>
-                <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('intelligence.market_locked_title')}</div>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>🌍</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('intelligence.market_locked_title')}</div>
                 <div style={{ fontSize: 17, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>{tc('intelligence.market_locked_desc')}</div>
                 <a href="/billing" style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 9999, background: '#d08a59', color: '#fff', fontSize: 17, fontWeight: 600, textDecoration: 'none' }}>{tc('intelligence.market_upgrade')}</a>
               </div>
@@ -911,7 +911,7 @@ export default function IntelligencePage() {
                 {mktResult.catalogue?.length > 0 && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_merchant_data')}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_merchant_data')}</div>
                       <span style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('intelligence.market_records', { count: mktResult.catalogue.length, plan: mktResult.plan })}</span>
                     </div>
                     <div style={{ overflowX: 'auto' }}>
@@ -949,7 +949,7 @@ export default function IntelligencePage() {
                 {mktResult.routes?.length > 0 && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_route_intel', { region: mktResult.region })}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_route_intel', { region: mktResult.region })}</div>
                     </div>
                     <div style={{ overflowX: 'auto' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 17 }}>
@@ -980,7 +980,7 @@ export default function IntelligencePage() {
                 {mktResult.web && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_web_signals')}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_web_signals')}</div>
                     </div>
                     <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                       {mktResult.web.price_summary && (
@@ -991,7 +991,7 @@ export default function IntelligencePage() {
                             <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
                               {mktResult.web.price_sources.map((s: any, i: number) => (
                                 <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', textDecoration: 'none' }}>
-                                  <span style={{ fontSize: 16, fontWeight: 600, color: '#6366F1' }}>{s.title}</span>
+                                  <span style={{ fontSize: 15, fontWeight: 600, color: '#6366F1' }}>{s.title}</span>
                                   <span style={{ fontSize: 15, color: 'var(--tx3)', lineHeight: 1.5 }}>{s.snippet}</span>
                                 </a>
                               ))}
@@ -1005,7 +1005,7 @@ export default function IntelligencePage() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {mktResult.web.news.map((n: any, i: number) => (
                               <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', textDecoration: 'none' }}>
-                                <span style={{ fontSize: 16, fontWeight: 500, color: '#6366F1', flex: 1 }}>{n.title}</span>
+                                <span style={{ fontSize: 15, fontWeight: 500, color: '#6366F1', flex: 1 }}>{n.title}</span>
                                 {n.date && <span style={{ fontSize: 15, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{n.date?.slice(0,10)}</span>}
                               </a>
                             ))}
@@ -1016,7 +1016,7 @@ export default function IntelligencePage() {
                   </div>
                 )}
                 {mktResult.data_thin && (
-                  <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', fontSize: 16, color: '#d08a59' }}>
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', fontSize: 15, color: '#d08a59' }}>
                     {tc('intelligence.market_data_thin')}
                   </div>
                 )}
@@ -1030,7 +1030,7 @@ export default function IntelligencePage() {
                     onClick={() => { setMktQuery(product); if (region) setMktRegion(region) }}
                     style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    <div style={{ fontSize: 16, color: 'var(--tx3)', marginBottom: 3 }}>{tc('intelligence.market_try_searching')}</div>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 3 }}>{tc('intelligence.market_try_searching')}</div>
                     <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)' }}>{product}{region ? `, ${region}` : ''}</div>
                   </button>
                 ))}
@@ -1041,21 +1041,23 @@ export default function IntelligencePage() {
 
         {/* ─── CFO MODE ─── */}
         {tab === 'cfo' && (
-          <FeatureGate planId={planId} feature="cfo_mode">
-            <CfoDashboard onAsk={askAskBiz} />
-          </FeatureGate>
+          <div className="intel-content">
+            <FeatureGate planId={planId} feature="cfo_mode">
+              <CfoDashboard onAsk={askAskBiz} />
+            </FeatureGate>
+          </div>
         )}
 
         {/* ─── ACTIONS ─── */}
         {tab === 'actions' && (
-          <div style={{ maxWidth: 720 }}>
+          <div className="intel-content">
             <DailyActions onAsk={askAskBiz}/>
           </div>
         )}
 
         {/* ─── ZAKAT ─── */}
         {tab === 'zakat' && (
-          <div style={{ maxWidth: 720 }}>
+          <div className="intel-content">
             <ZakatCalculator/>
           </div>
         )}

@@ -719,6 +719,15 @@ img {
   margin: 0 auto;
 }
 
+/* Intelligence dashboard content column.
+   Fills the available width and centers on wide screens so widgets no
+   longer cling to the left gutter. Consistent across every tab. */
+.intel-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 /* ── RESPONSIVE GRIDS ────────────────────────────────────────── */
 .rgrid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .rgrid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
