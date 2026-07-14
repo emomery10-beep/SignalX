@@ -1,13 +1,13 @@
 {
-  "headingFactory": "🏭 Factory Staff Role Templates",
-  "headingRestaurant": "🍽️ Restaurant Staff Role Templates",
-  "subtitle": "Pre-configured role templates with standard permissions. Use these as a starting point when creating staff members.",
-  "teamSizeLabel": "Team Size",
-  "permissionsLabel": "Permissions",
-  "permissionsHeading": "PERMISSIONS",
-  "responsibilitiesHeading": "RESPONSIBILITIES",
-  "viewResponsibilities": "View responsibilities",
-  "moreResponsibilities": "+{count} more",
-  "useTemplate": "Use This Template",
-  "tipText": "💡 Tip: These templates are starting points. You can customize permissions for any staff member after creation. New permissions or modifications won't affect existing staff."
+  "headingFactory": "🏭 Qaabab Doorka Shaqaalaha Warshadda",
+  "headingRestaurant": "🍽️ Qaabab Doorka Shaqaalaha Maqaayadda",
+  "subtitle": "Qaabab door oo horay loo diyaariyey oo leh rukhsado caadi ah. Isticmaal kuwan bilow marka aad abuurayso shaqaale.",
+  "teamSizeLabel": "Cabbirka Kooxda",
+  "permissionsLabel": "Rukhsado",
+  "permissionsHeading": "RUKHSADO",
+  "responsibilitiesHeading": "MAS'UULIYADAHA",
+  "viewResponsibilities": "Fiiri mas'uuliyadaha",
+  "moreResponsibilities": "+{count} dheeraad ah",
+  "useTemplate": "Isticmaal Qaabkan",
+  "tipText": "💡 Talo: Qaababkani waa meelo bilow ah. Waad habeyn kartaa rukhsadaha shaqaale kasta ka dib abuuritaanka. Rukhsadaha cusub ama isbeddellada saameyn kuma yeelan doonaan shaqaalaha hore."
 }

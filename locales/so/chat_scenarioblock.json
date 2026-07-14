@@ -1,9 +1,9 @@
 {
-  "headerLabel": "⚡ Scenario Analysis",
-  "verdictAct": "✓ Worth doing",
-  "verdictWatch": "~ Marginal — review carefully",
-  "verdictProblem": "✕ Not recommended",
-  "columnCurrent": "Current",
-  "columnAfter": "After Change",
-  "wasBadge": "← was {value}"
+  "headerLabel": "⚡ Falanqaynta Xaaladda",
+  "verdictAct": "✓ Waa mudan in la sameeyo",
+  "verdictWatch": "~ Xadaysan — si taxadar leh u eeg",
+  "verdictProblem": "✕ Lama talinayo",
+  "columnCurrent": "Hadda",
+  "columnAfter": "Isbeddelka Kadib",
+  "wasBadge": "← wuxuu ahaa {value}"
 }

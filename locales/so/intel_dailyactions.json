@@ -1,13 +1,13 @@
 {
-  "title": "Today's Actions",
-  "urgentBadge": "{n} urgent",
-  "actionCount": "{n} action",
-  "actionCountPlural": "{n} actions",
-  "askAi": "Ask AI",
-  "dismiss": "Dismiss",
-  "viewAll": "View all {n} actions →",
-  "priorityNow": "Now",
-  "priorityToday": "Today",
-  "priorityThisWeek": "This week",
-  "askActionPrompt": "Help me with this action: {title}. Context: {why}"
+  "title": "Ficillada Maanta",
+  "urgentBadge": "{n} degdeg ah",
+  "actionCount": "{n} ficil",
+  "actionCountPlural": "{n} ficillo",
+  "askAi": "Weydii AI",
+  "dismiss": "Iska tuur",
+  "viewAll": "Dhammaan eeg {n} ficillo →",
+  "priorityNow": "Hadda",
+  "priorityToday": "Maanta",
+  "priorityThisWeek": "Toddobaadkan",
+  "askActionPrompt": "Iga caawi ficilkan: {title}. Macnaha: {why}"
 }

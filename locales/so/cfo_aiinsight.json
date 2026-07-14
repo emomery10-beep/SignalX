@@ -1,10 +1,10 @@
 {
-  "sectionTitle": "AI Insights",
-  "poweredBy": "powered by Claude",
-  "refreshBtn": "Refresh",
-  "analyzingBtn": "Analyzing...",
-  "analyzingBody": "Analyzing your financials...",
-  "noInsights": "No insights generated. Click Refresh to try again.",
-  "askAi": "Ask AI →",
-  "expandPrompt": "Expand on this CFO insight: “{title}” — {body}. Give me specific next steps."
+  "sectionTitle": "Aragtiyaha AI",
+  "poweredBy": "waxaa xoojiya Claude",
+  "refreshBtn": "Cusboonaysii",
+  "analyzingBtn": "Falanqeynta...",
+  "analyzingBody": "Falanqeynta maaliyaddaada...",
+  "noInsights": "Aragti lama abuurin. Guji Cusboonaysii si aad mar kale u isku daydo.",
+  "askAi": "Weydii AI →",
+  "expandPrompt": "Ii sii faahfaahi aragtidan CFO: “{title}” — {body}. I sii tallaabooyin gaar ah oo xiga."
 }

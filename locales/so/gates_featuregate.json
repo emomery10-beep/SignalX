@@ -1,6 +1,6 @@
 {
-  "featureLabel": "{label} feature",
-  "upgradeTo": "Upgrade to {label} →",
-  "seeAllPlans": "See all plans",
-  "currentPlan": "You're on the {plan} plan"
+  "featureLabel": "Sifada {label}",
+  "upgradeTo": "U korder {label} →",
+  "seeAllPlans": "Eeg dhammaan qorshayaasha",
+  "currentPlan": "Waxaad ku jirtaa qorshaha {plan}"
 }

@@ -1,9 +1,9 @@
 {
-  "back_to_articles": "← All articles",
-  "home": "Home",
+  "back_to_articles": "← Dhammaan maqaallada",
+  "home": "Bogga Hore",
   "blog_label": "Blog",
-  "written_by": "Written by {name}",
-  "key_takeaways": "Key Takeaways",
-  "read_more": "Read more",
-  "continue_reading": "Continue reading"
+  "written_by": "Waxaa qoray {name}",
+  "key_takeaways": "Qodobbada Muhiimka ah",
+  "read_more": "Akhri wax dheeraad ah",
+  "continue_reading": "Sii akhri"
 }

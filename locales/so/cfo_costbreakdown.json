@@ -1,13 +1,13 @@
 {
-  "heading": "Cost Structure",
-  "askAi": "Ask AI",
-  "askAiPrompt": "My cost structure: COGS is {cogsPct}% of revenue ({cogsAmt}), fixed costs are {fixedPct}% ({fixedAmt}). What are the top 3 areas I could reduce costs without hurting growth?",
-  "totalCosts": "Total costs",
-  "labelCogs": "Cost of Goods Sold",
-  "labelFixed": "Fixed / Operating Costs",
-  "ofRevenue": "of revenue",
-  "netProfit": "Net Profit",
-  "whereEveryGoes": "Where every {sym}100 goes",
-  "profitSuffix": " profit",
-  "costsExceed": "Costs exceed revenue by {sym}{n} per {sym}100 earned"
+  "heading": "Qaab-dhismeedka Kharashka",
+  "askAi": "Weydii AI",
+  "askAiPrompt": "Qaab-dhismeedka kharashkaygu: qiimaha alaabta waa {cogsPct}% dakhliga ({cogsAmt}), kharashyada joogtada ah waa {fixedPct}% ({fixedAmt}). Waa maxay saddexda meelood ee ugu weyn ee aan kharashka ka dhimi karo iyada oo aan kobaca la dhaawicin?",
+  "totalCosts": "Kharashka guud",
+  "labelCogs": "Qiimaha Alaabta la Iibiyay",
+  "labelFixed": "Kharashyada Joogtada / Hawlgalka",
+  "ofRevenue": "dakhliga",
+  "netProfit": "Faa'iidada Saafiga ah",
+  "whereEveryGoes": "Halka {sym}100 kasta uu tagayo",
+  "profitSuffix": " faa'iido",
+  "costsExceed": "Kharashku wuxuu ka badan yahay dakhliga {sym}{n} halkii {sym}100 la kasbado"
 }

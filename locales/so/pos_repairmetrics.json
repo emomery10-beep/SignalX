@@ -1,13 +1,13 @@
 {
-  "sectionTitle": "Repair Services",
-  "activeJobsLabel": "Active jobs",
-  "activeJobsSub": "{intake} intake · {inProgress} in progress · {completed} ready",
-  "collectedTodayLabel": "Collected today",
-  "repairRevenueLabel": "Repair revenue",
-  "repairRevenueSub": "today",
-  "avgTurnaroundLabel": "Avg turnaround",
-  "warrantyClaimsLabel": "Warranty claims",
-  "inProgress": "in progress",
-  "intake": "intake",
-  "ready": "ready"
+  "sectionTitle": "Adeegyada Hagaajinta",
+  "activeJobsLabel": "Shaqooyinka firfircoon",
+  "activeJobsSub": "{intake} soo gelin · {inProgress} socda · {completed} diyaar",
+  "collectedTodayLabel": "La ururiyay maanta",
+  "repairRevenueLabel": "Dakhliga hagaajinta",
+  "repairRevenueSub": "maanta",
+  "avgTurnaroundLabel": "Celceliska muddada",
+  "warrantyClaimsLabel": "Sheegashooyinka damaanadda",
+  "inProgress": "socda",
+  "intake": "soo gelin",
+  "ready": "diyaar"
 }

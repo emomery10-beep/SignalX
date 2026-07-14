@@ -1,36 +1,36 @@
 {
   "shell": {
-    "unsubscribe_prompt": "Don't want emails like this?",
-    "unsubscribe_link": "Unsubscribe"
+    "unsubscribe_prompt": "Ma dooneysid emaylo sidan oo kale ah?",
+    "unsubscribe_link": "Ka bax"
   },
-  "fallback_name": "there",
+  "fallback_name": "adiga",
   "plan_upgrade": {
-    "subject": "Welcome to {planName}, {firstName}!",
-    "heading": "Hi {firstName}, welcome to {planName}!",
-    "body": "We're thrilled you've upgraded. Here's what just switched on for you:",
-    "cta": "Go to your dashboard →",
-    "closing": "If anything about {planName} isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.",
-    "signoff": "— Idarus<br/>Founder &amp; CEO of AskBiz"
+    "subject": "Ku soo dhawoow {planName}, {firstName}!",
+    "heading": "Salaan {firstName}, ku soo dhawoow {planName}!",
+    "body": "Aad ayaan ugu faraxsanahay inaad kor u qaadatay. Waa kuwan waxa hadda kuu shaqeeyay:",
+    "cta": "Aad Daashboodhkaaga →",
+    "closing": "Haddii wax ku saabsan {planName} aanu u shaqeynin sidaad u baahan tahay, kaliya uga jawaab emaylkan — anigu shaqsi ahaan waan hubin doonaa in la hagaajiyo.",
+    "signoff": "— Idarus<br/>Aasaasaha &amp; CEO ee AskBiz"
   },
   "pos_welcome": {
-    "subject": "Welcome to AskBiz POS, {firstName}!",
-    "heading": "Hi {firstName}, welcome to AskBiz POS!",
-    "body1": "We're thrilled you've added AskBiz POS — welcome to the family.",
-    "body2": "Your till, your stock tracker, and your end-of-day report are live now, right alongside the rest of your AskBiz account.",
-    "cta": "Open AskBiz POS →",
-    "closing": "If anything isn't working the way you need it to, just reply to this email — I'll personally make sure it's sorted.",
-    "signoff": "— Idarus<br/>Founder &amp; CEO of AskBiz"
+    "subject": "Ku soo dhawoow AskBiz POS, {firstName}!",
+    "heading": "Salaan {firstName}, ku soo dhawoow AskBiz POS!",
+    "body1": "Aad ayaan ugu faraxsanahay inaad ku dartay AskBiz POS — ku soo dhawoow qoyska.",
+    "body2": "Kaash-registerkaaga, la-socodka kaydkaaga, iyo warbixinta dhammaadka maalinta ayaa hadda toos ah, si toos ah oo la barbar ah inta kale ee akoonkaaga AskBiz.",
+    "cta": "Fur AskBiz POS →",
+    "closing": "Haddii wax aanu u shaqeynin sidaad u baahan tahay, kaliya uga jawaab emaylkan — anigu shaqsi ahaan waan hubin doonaa in la hagaajiyo.",
+    "signoff": "— Idarus<br/>Aasaasaha &amp; CEO ee AskBiz"
   },
   "plan_names": {
-    "free": "Free",
-    "growth": "Growth",
-    "business": "Business",
-    "enterprise": "Enterprise"
+    "free": "Bilaash",
+    "growth": "Kobac",
+    "business": "Ganacsi",
+    "enterprise": "Shirkad"
   },
   "plan_features": {
-    "free": ["10 AI questions per month", "1 file upload", "Basic business Q&amp;A", "Dashboard overview", "Email support"],
-    "growth": ["500 AI questions per month", "10 file uploads", "Expansion intelligence", "Alerts &amp; forecasts", "Live data sync (Shopify, Stripe, Sheets)", "Industry templates", "Priority email support"],
-    "business": ["2,000 AI questions per month", "Unlimited file uploads", "5 team members", "API access", "All Growth features", "Dedicated support", "Early adopter pricing — guaranteed forever"],
-    "enterprise": ["Unlimited everything", "Unlimited team members", "Custom integrations", "SSO &amp; advanced security", "SLA guarantee", "Dedicated account manager", "Custom onboarding", "White-label option"]
+    "free": ["10 su'aalood AI bishii", "1 fayl la soo geliyo", "Su'aal & jawaab ganacsi aasaasi ah", "Guudmarka daashboodhka", "Taageero emayl"],
+    "growth": ["500 su'aalood AI bishii", "10 fayl la soo geliyo", "Garaadka ballaarinta", "Digniino &amp; saadaalo", "Isku-xirid xog toos ah (Shopify, Stripe, Sheets)", "Qaabab warshadeed", "Taageero emayl mudnaan leh"],
+    "business": ["2,000 su'aalood AI bishii", "Fayl aan xad lahayn la soo geliyo", "5 xubnood koox", "Gelitaanka API", "Dhammaan sifooyinka Kobaca", "Taageero gaar ah", "Qiimaha qaataha hore — la damaanad qaaday weligeed"],
+    "enterprise": ["Wax kasta oo aan xad lahayn", "Xubnood koox aan xad lahayn", "Isku-xiridyo gaar ah", "SSO &amp; amni sare", "Damaanadda SLA", "Maareeye akoon gaar ah", "Diiwaangelin gaar ah", "Ikhtiyaarka white-label"]
   }
 }

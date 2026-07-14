@@ -1,8 +1,8 @@
 {
-  "titleDefault": "Create a shareable link for this insight",
-  "titleWithUrl": "Share: {url}",
-  "labelIdle": "Share",
-  "labelLoading": "Creating link…",
-  "labelCopied": "Link copied!",
-  "labelError": "Try again"
+  "titleDefault": "Samee link la wadaagi karo aragtidan",
+  "titleWithUrl": "Wadaag: {url}",
+  "labelIdle": "Wadaag",
+  "labelLoading": "Abuurista link…",
+  "labelCopied": "Link-ga waa la koobiyeeyay!",
+  "labelError": "Isku day mar kale"
 }
