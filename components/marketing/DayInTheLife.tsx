@@ -168,8 +168,8 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
                     <Icon name={s.icon} size={23} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: s.ac }}>{tc(`landing.day_s${k}_tod`)}</div>
-                    <div style={{ fontSize: 11.5, fontWeight: 500, letterSpacing: '.05em', textTransform: 'uppercase', color: s.dark ? '#8b8178' : C.tx3 }}>{tc(`landing.day_s${k}_tag`)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: s.ac }}>{tc(`landing.day_s${k}_tod`)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, letterSpacing: '.05em', textTransform: 'uppercase', color: s.dark ? '#8b8178' : C.tx3 }}>{tc(`landing.day_s${k}_tag`)}</div>
                   </div>
                 </div>
 
@@ -180,7 +180,7 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
                   {tc(`landing.day_s${k}_body`)}
                 </p>
 
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 18, padding: '7px 14px', borderRadius: 9999, background: hexA(s.ac, s.dark ? .18 : .12), color: s.ac, fontSize: 13, fontWeight: 600 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 18, padding: '7px 14px', borderRadius: 9999, background: hexA(s.ac, s.dark ? .18 : .12), color: s.ac, fontSize: 14, fontWeight: 600 }}>
                   <Icon name={s.chipIcon} size={15} stroke={1.8} />{tc(`landing.day_s${k}_chip`)}
                 </div>
               </div>
@@ -192,11 +192,11 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 20, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 20 }}>
             <div>
-              <div style={{ fontSize: 11, color: C.tx3 }}>{tc('landing.day_tally_sales')}</div>
+              <div style={{ fontSize: 14, color: C.tx3 }}>{tc('landing.day_tally_sales')}</div>
               <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: C.tx }}>{KSH(revShown)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: C.tx3 }}>{tc('landing.day_tally_customers')}</div>
+              <div style={{ fontSize: 14, color: C.tx3 }}>{tc('landing.day_tally_customers')}</div>
               <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: C.tx }}>{Math.round(custShown)}</div>
             </div>
           </div>

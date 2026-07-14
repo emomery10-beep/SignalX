@@ -72,7 +72,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
           border: '1px solid var(--b2, rgba(255,255,255,.12))',
           background: 'transparent',
           color: 'var(--tx2, rgba(255,255,255,.7))',
-          fontSize: 10, fontWeight: 500,
+          fontSize: 14, fontWeight: 500,
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'all 150ms',
         }}
@@ -116,7 +116,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
                 padding: '7px 10px', borderRadius: 8, border: 'none',
                 background: lang === l ? 'rgba(99,102,241,.15)' : 'transparent',
                 color: lang === l ? '#6366F1' : 'var(--tx, #fff)',
-                fontSize: 10, fontWeight: lang === l ? 600 : 400,
+                fontSize: 14, fontWeight: lang === l ? 600 : 400,
                 cursor: 'pointer', fontFamily: 'inherit',
                 textAlign: 'left', whiteSpace: 'nowrap',
                 transition: 'background 120ms',
@@ -124,7 +124,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
               onMouseEnter={e => { if (lang !== l) e.currentTarget.style.background = 'rgba(255,255,255,.06)' }}
               onMouseLeave={e => { if (lang !== l) e.currentTarget.style.background = 'transparent' }}
             >
-              <span style={{ fontSize: 12 }}>{langFlags[l]}</span>
+              <span style={{ fontSize: 14 }}>{langFlags[l]}</span>
               <span>{langNames[l]}</span>
             </button>
           ))}
