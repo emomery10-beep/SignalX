@@ -1143,12 +1143,16 @@
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .hc-body { flex-direction: column; padding: 0; gap: 0; }
+  /* Content first on mobile — search/article body before the topic list,
+     so users aren't forced to scroll past 50+ topics to reach it. */
+  .hc-main { order: 1; }
   .hc-sidebar {
+    order: 2;
     width: 100%;
     position: static;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid var(--hc-border);
+    border-top: 1px solid var(--hc-border);
     padding: 12px 0;
     max-height: 50vh;
   }
