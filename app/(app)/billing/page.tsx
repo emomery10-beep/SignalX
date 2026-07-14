@@ -126,9 +126,17 @@ export default function BillingPage() {
   const [isKenyan,          setIsKenyan]          = useState(false)
   const [pesapalLoading,    setPesapalLoading]    = useState('')
   const [pesapalSuccess,    setPesapalSuccess]    = useState(false)
+  // Somali user detection + WaafiPay — push-prompt flow (like M-Pesa STK
+  // push), not a redirect: WaafiPay has no hosted checkout page.
+  const [isSomali,          setIsSomali]          = useState(false)
+  const [waafiPhone,        setWaafiPhone]        = useState('')
+  const [waafiPlan,         setWaafiPlan]         = useState<'growth' | 'business' | 'pos' | null>(null)
+  const [waafiStatus,       setWaafiStatus]       = useState<'idle' | 'sending' | 'waiting' | 'completed' | 'failed'>('idle')
+  const [waafiReferenceId,  setWaafiReferenceId]  = useState('')
+  const [waafiError,        setWaafiError]        = useState('')
 
-  const sym      = isKenyan ? 'KSh' : '£'
-  const currency = isKenyan ? 'KES' : 'GBP'
+  const sym      = isKenyan ? 'KSh' : isSomali ? '$' : '£'
+  const currency = isKenyan ? 'KES' : isSomali ? 'USD' : 'GBP'
 
   useEffect(() => {
     const init = async () => {
@@ -156,6 +164,7 @@ export default function BillingPage() {
           if (data.trials) setTrials(data.trials)
           const uc = (data.userCurrency || '').toUpperCase()
           if (uc === 'KES') setIsKenyan(true)
+          if (uc === 'SOS') setIsSomali(true)
         }
         if (window.location.search.includes('pos_success=true')) {
           setPosSuccess(true)
@@ -175,10 +184,14 @@ export default function BillingPage() {
   const PRICES: Record<string, Record<string, number>> = {
     GBP: { growth: 19, business: 39 },
     KES: { growth: 1900, business: 4900 },
+    // Somalia is framed in USD (not SOS) throughout, matching the /so
+    // landing page's existing pricing display — kept in sync with
+    // USD_PLAN_PRICE in app/api/waafipay-billing/route.ts.
+    USD: { growth: 19, business: 49 },
   }
 
   const getPrice = (planId: string) => {
-    const table = PRICES[isKenyan ? 'KES' : 'GBP'] || PRICES.GBP
+    const table = PRICES[isKenyan ? 'KES' : isSomali ? 'USD' : 'GBP'] || PRICES.GBP
     const base = table[planId]
     if (!base) return null
     const fmt = (n: number) => `${sym}${n.toLocaleString()}`
@@ -264,6 +277,82 @@ export default function BillingPage() {
       setCheckoutError(tc('billing.alert_something_wrong_retry'))
     } finally { setPesapalLoading('') }
   }
+
+  // ── WaafiPay push-prompt checkout (Somali users) ────────────
+  // Unlike PesaPal, there's no hosted checkout page — the plan+phone are
+  // submitted, WaafiPay sends a PIN prompt straight to that phone, and we
+  // poll for completion the same way pos-askbiz's PosWaafiPayment.tsx does.
+  const handleWaafiSubmit = async (planOrSeats: 'growth' | 'business' | 'pos') => {
+    if (!waafiPhone.trim()) {
+      setWaafiError(tc('billing.waafipay_error_phone'))
+      return
+    }
+    setWaafiPlan(planOrSeats)
+    setWaafiStatus('sending')
+    setWaafiError('')
+    setCheckoutError('')
+    try {
+      const res = await fetch('/api/waafipay-billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          planOrSeats === 'pos'
+            ? { action: 'submit_order', seats: posSeats, phone: waafiPhone }
+            : { action: 'submit_order', plan: planOrSeats, phone: waafiPhone }
+        ),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        setWaafiStatus('idle')
+        setWaafiError(data.error || tc('billing.alert_something_wrong'))
+        return
+      }
+      setWaafiReferenceId(data.reference_id)
+      setWaafiStatus('waiting')
+    } catch {
+      setWaafiStatus('idle')
+      setWaafiError(tc('billing.alert_something_wrong_retry'))
+    }
+  }
+
+  // Polling fallback — no Realtime channel wired into this page, same
+  // ~2s/90-attempt shape as pos-askbiz/components/PosWaafiPayment.tsx.
+  useEffect(() => {
+    if (waafiStatus !== 'waiting' || !waafiReferenceId) return
+    let attempts = 0
+    const timer = setInterval(async () => {
+      attempts++
+      if (attempts > 90) {
+        clearInterval(timer)
+        setWaafiStatus('failed')
+        setWaafiError(tc('billing.waafipay_timed_out'))
+        return
+      }
+      try {
+        const res = await fetch('/api/waafipay-billing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check_status', reference_id: waafiReferenceId }),
+        })
+        const data = await res.json()
+        if (data.completed) {
+          clearInterval(timer)
+          setWaafiStatus('completed')
+          const refresh = await fetch('/api/billing')
+          if (refresh.ok) {
+            const d = await refresh.json()
+            setCurrentPlan(d.subscription?.plan_id || 'free')
+            if (d.pos) { setPosEnabled(d.pos.enabled); setPosSeatCount(d.pos.seatCount) }
+          }
+        } else if (data.failed) {
+          clearInterval(timer)
+          setWaafiStatus('failed')
+          setWaafiError(tc('billing.waafipay_declined'))
+        }
+      } catch {}
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [waafiStatus, waafiReferenceId])
 
   const handleStartTrial = async (type: 'pos' | 'growth') => {
     setTrialLoading(type)
@@ -571,6 +660,109 @@ export default function BillingPage() {
             <p style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 12, lineHeight: 1.5 }}>
               {tc('billing.mpesa_footnote')}
             </p>
+          </div>
+        )}
+
+        {/* WaafiPay section — Somali users. Push-prompt flow: phone input +
+            "Send prompt" button per plan, then a waiting/completed/failed
+            state — no redirect, since WaafiPay has no hosted checkout page. */}
+        {isSomali && (
+          <div style={{ borderRadius: 18, border: '1px solid rgba(22,163,74,.3)', background: 'rgba(22,163,74,.03)', padding: '22px 24px', marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              </div>
+              <div>
+                <span style={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}>{tc('billing.waafipay_title')}</span>
+                <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('billing.waafipay_subtitle')}</div>
+              </div>
+            </div>
+
+            {waafiStatus === 'idle' || waafiStatus === 'sending' ? (
+              <>
+                <p style={{ fontSize: 15, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.6 }}>
+                  {tc('billing.waafipay_intro')}
+                </p>
+
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
+                    {tc('billing.waafipay_phone_label')}
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+252 61 XXX XXXX"
+                    value={waafiPhone}
+                    onChange={e => setWaafiPhone(e.target.value)}
+                    disabled={waafiStatus === 'sending'}
+                    style={{ width: '100%', maxWidth: 280, padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--b)', fontSize: 15, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                {waafiError && (
+                  <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(220,38,38,.07)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 10, fontSize: 13, color: '#dc2626', fontWeight: 500 }}>
+                    ⚠ {waafiError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {currentPlan !== 'growth' && (
+                    <button
+                      onClick={() => handleWaafiSubmit('growth')}
+                      disabled={waafiStatus === 'sending' || !waafiPhone.trim()}
+                      style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#16a34a', color: '#fff', fontSize: 15, fontWeight: 600, cursor: (waafiStatus === 'sending' || !waafiPhone.trim()) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (waafiStatus === 'sending' || !waafiPhone.trim()) ? .6 : 1, minHeight: 44 }}
+                    >
+                      {waafiStatus === 'sending' && waafiPlan === 'growth' ? tc('billing.waafipay_btn_sending') : tc('billing.waafipay_btn_growth')}
+                    </button>
+                  )}
+                  {currentPlan !== 'business' && (
+                    <button
+                      onClick={() => handleWaafiSubmit('business')}
+                      disabled={waafiStatus === 'sending' || !waafiPhone.trim()}
+                      style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#15803d', color: '#fff', fontSize: 15, fontWeight: 600, cursor: (waafiStatus === 'sending' || !waafiPhone.trim()) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (waafiStatus === 'sending' || !waafiPhone.trim()) ? .6 : 1, minHeight: 44 }}
+                    >
+                      {waafiStatus === 'sending' && waafiPlan === 'business' ? tc('billing.waafipay_btn_sending') : tc('billing.waafipay_btn_business')}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleWaafiSubmit('pos')}
+                    disabled={waafiStatus === 'sending' || !waafiPhone.trim()}
+                    style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(22,163,74,.4)', background: 'transparent', color: '#16a34a', fontSize: 15, fontWeight: 600, cursor: (waafiStatus === 'sending' || !waafiPhone.trim()) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (waafiStatus === 'sending' || !waafiPhone.trim()) ? .6 : 1, minHeight: 44 }}
+                  >
+                    {waafiStatus === 'sending' && waafiPlan === 'pos' ? tc('billing.waafipay_btn_sending') : tc(posSeats === 1 ? 'billing.waafipay_btn_pos_one' : 'billing.waafipay_btn_pos', { seats: posSeats, total: posSeats * 5 })}
+                  </button>
+                </div>
+
+                <p style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 14, lineHeight: 1.5 }}>
+                  {tc('billing.waafipay_footnote')}
+                </p>
+              </>
+            ) : waafiStatus === 'waiting' ? (
+              <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                <div style={{ fontSize: 32, marginBottom: 10 }}>📱</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
+                  {tc('billing.waafipay_check_phone')}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+                  {tc('billing.waafipay_prompt_sent')} <strong>{waafiPhone}</strong>
+                </div>
+              </div>
+            ) : waafiStatus === 'completed' ? (
+              <div role="status" aria-live="polite" style={{ textAlign: 'center', padding: '12px 0' }}>
+                <div style={{ fontSize: 32, marginBottom: 10 }}>✅</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>{tc('billing.waafipay_success')}</div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>❌</div>
+                <div style={{ fontSize: 14, color: '#dc2626', marginBottom: 12 }}>{waafiError || tc('billing.waafipay_declined')}</div>
+                <button
+                  onClick={() => { setWaafiStatus('idle'); setWaafiError(''); setWaafiReferenceId('') }}
+                  style={{ padding: '9px 18px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                >
+                  {tc('billing.waafipay_try_again')}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
