@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { LEARNING_PATHS } from '@/lib/learning-paths-content'
 import { academyArticles } from '@/lib/academy-content'
+import LearningPathModules from './LearningPathModules'
 
 // Real per-article metadata keyed by slug — lets the hub page render each
 // module's actual description and read time instead of a generic placeholder,
@@ -21,9 +22,9 @@ function truncateAtWord(text: string, max: number): string {
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
 const SF  = '#ffffff'
-const TX  = '#1a1916'
-const TX2 = '#6b6760'
-const TX3 = '#a39e97'
+const TX  = '#171512'
+const TX2 = '#5c574f'
+const TX3 = '#6a655c' // darkened from #a39e97 (2.5:1 on SF/BG) to meet 4.5:1 AA
 const BD  = '#e8e6e1'
 
 export async function generateStaticParams() {
@@ -71,29 +72,65 @@ export default function LearningPathPage({ params }: { params: { id: string } })
     )
   }
 
+  const url = `https://askbiz.co/academy/learning-paths/${path.id}`
+
+  // hasPart lists every lesson as its own LearningResource with a real,
+  // crawlable URL — richer for Google's Course rich results and gives AI
+  // answer engines an explicit lesson-by-lesson structure to cite instead of
+  // just a lesson count.
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: path.title,
     description: path.description,
-    url: `https://askbiz.co/academy/learning-paths/${path.id}`,
-    duration: path.duration,
-    courseLevel: path.level,
-    numberOfItems: path.articles.length,
+    url,
+    provider: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'online',
+      courseWorkload: path.duration,
+    },
+    coursePrerequisites: path.level,
+    numberOfCredits: path.articles.length,
+    hasPart: path.articles.map((a, i) => {
+      const meta = ARTICLE_BY_SLUG.get(a.slug)
+      return {
+        '@type': 'LearningResource',
+        position: i + 1,
+        name: a.title,
+        url: meta ? `https://askbiz.co/academy/${a.slug}` : undefined,
+        description: meta?.description,
+      }
+    }),
+  }
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Academy', item: 'https://askbiz.co/academy' },
+      { '@type': 'ListItem', position: 2, name: 'Learning Paths', item: 'https://askbiz.co/academy/learning-paths' },
+      { '@type': 'ListItem', position: 3, name: path.title, item: url },
+    ],
   }
 
   return (
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       <style>{`
         .lp-module-card {
-          transition: all 120ms;
-          cursor: pointer;
+          transition: border-color 120ms, box-shadow 120ms;
         }
         .lp-module-card:hover {
           border-color: ${ACC};
           box-shadow: 0 4px 12px rgba(208, 138, 89, 0.1);
+        }
+        a:focus-visible, button:focus-visible {
+          outline: 2px solid ${ACC};
+          outline-offset: 2px;
+          border-radius: 4px;
         }
       `}</style>
 
@@ -135,79 +172,18 @@ export default function LearningPathPage({ params }: { params: { id: string } })
             </p>
           </div>
 
-          {/* Modules */}
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: TX, marginBottom: 24 }}>Modules ({path.articles.length})</h2>
-            <div style={{ display: 'grid', gap: 12 }}>
-              {path.articles.map((article, index) => {
-                const meta = ARTICLE_BY_SLUG.get(article.slug)
-                // Real article description if the module resolves to a live
-                // academy article; otherwise the generic fallback (keeps the
-                // card meaningful for any not-yet-published module).
-                const blurb = meta?.description || 'Part of this AskBiz Academy learning path.'
-                const readLabel = meta ? `${meta.readTime} min read · ${meta.difficulty}` : 'AskBiz Academy'
-
-                const card = (
-                  <div
-                    className="lp-module-card"
-                    style={{
-                      background: SF,
-                      border: `1px solid ${BD}`,
-                      borderRadius: 10,
-                      padding: 20,
-                      display: 'flex',
-                      gap: 16,
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <div style={{
-                      minWidth: 36,
-                      width: 36,
-                      height: 36,
-                      background: path.color,
-                      color: SF,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      marginTop: 2,
-                    }}>
-                      {index + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: 13, fontWeight: 600, color: TX, margin: '0 0 4px 0' }}>
-                        {article.title}
-                      </h3>
-                      <p style={{ fontSize: 12, color: TX2, margin: '0 0 6px 0', lineHeight: 1.5 }}>
-                        {blurb}
-                      </p>
-                      <p style={{ fontSize: 11, color: TX3, margin: 0 }}>
-                        {readLabel}
-                      </p>
-                    </div>
-                    <div style={{ fontSize: 16, color: meta ? ACC : TX3 }}>→</div>
-                  </div>
-                )
-
-                // Resolvable modules become real internal links (crawlable,
-                // and the "→" affordance now actually navigates); unresolved
-                // ones stay as static cards rather than dead links.
-                return meta ? (
-                  <Link
-                    key={article.slug}
-                    href={localePath(`/academy/${article.slug}`, lang)}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    {card}
-                  </Link>
-                ) : (
-                  <div key={article.slug}>{card}</div>
-                )
-              })}
-            </div>
-          </div>
+          {/* Modules — progress tracking is client-side (localStorage), so it
+              lives in its own 'use client' component; everything else on this
+              page stays server-rendered and crawlable. */}
+          <LearningPathModules
+            path={path}
+            articleMeta={Object.fromEntries(
+              path.articles.map(a => {
+                const meta = ARTICLE_BY_SLUG.get(a.slug)
+                return [a.slug, meta ? { description: meta.description, readTime: meta.readTime, difficulty: meta.difficulty } : undefined]
+              })
+            )}
+          />
 
           {/* CTA */}
           <div style={{ marginTop: 48, background: ACC, color: SF, borderRadius: 12, padding: 32, textAlign: 'center' }}>

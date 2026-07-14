@@ -84,13 +84,20 @@ export default function CategoryPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
       />
-      <main style={{ fontFamily: "DM Sans, sans-serif", background: "#faf9f7", minHeight: "100vh" }}>
+      <main style={{ fontFamily: "DM Sans, sans-serif", background: "#f9f8f6", minHeight: "100vh" }}>
+        <style>{`
+          a:focus-visible, button:focus-visible {
+            outline: 2px solid #d08a59;
+            outline-offset: 2px;
+            border-radius: 4px;
+          }
+        `}</style>
         {/* Breadcrumb */}
         <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 11, color: "#999" }}>
-            <Link href={localePath('/', lang)} style={{ color: "#999", textDecoration: "none" }}>Home</Link>
+          <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 11, color: "#6a655c" }}>
+            <Link href={localePath('/', lang)} style={{ color: "#6a655c", textDecoration: "none" }}>Home</Link>
             {" / "}
-            <Link href={localePath('/academy', lang)} style={{ color: "#999", textDecoration: "none" }}>Academy</Link>
+            <Link href={localePath('/academy', lang)} style={{ color: "#6a655c", textDecoration: "none" }}>Academy</Link>
             {" / "}
             <span style={{ color: "#1a1a2e" }}>{category.title}</span>
           </div>
@@ -106,7 +113,7 @@ export default function CategoryPage({ params }: Props) {
             <p style={{ fontSize: 16, color: "#555", lineHeight: 1.7, maxWidth: 640, margin: "0 0 8px" }}>
               {category.description}
             </p>
-            <p style={{ fontSize: 12, color: "#999" }}>{articles.length} articles</p>
+            <p style={{ fontSize: 12, color: "#6a655c" }}>{articles.length} articles</p>
           </div>
 
           {/* Article Grid */}
@@ -127,7 +134,7 @@ export default function CategoryPage({ params }: Props) {
                 }}
               >
                 <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: "#999", background: "#f5f5f5", padding: "3px 8px", borderRadius: 10 }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: "#6a655c", background: "#f5f5f5", padding: "3px 8px", borderRadius: 10 }}>
                     {article.difficulty}
                   </span>
                   <span style={{ fontSize: 9, color: "#bbb", padding: "3px 0" }}>
@@ -145,7 +152,7 @@ export default function CategoryPage({ params }: Props) {
           </div>
 
           {articles.length === 0 && (
-            <p style={{ color: "#999", textAlign: "center", padding: "60px 0" }}>
+            <p style={{ color: "#6a655c", textAlign: "center", padding: "60px 0" }}>
               No articles in this category yet. Check back soon.
             </p>
           )}

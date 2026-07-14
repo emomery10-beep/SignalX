@@ -1,16 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath } from '@/lib/i18n-locale'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
 const SF  = '#ffffff'
-const TX  = '#1a1916'
-const TX2 = '#6b6760'
-const TX3 = '#a39e97'
+const TX  = '#171512'
+const TX2 = '#5c574f'
+const TX3 = '#6a655c' // darkened from #a39e97 (2.5:1) to meet WCAG AA 4.5:1
 const BD  = '#e8e6e1'
 
 interface ChecklistItem {
@@ -365,10 +365,21 @@ const CHECKLISTS: Checklist[] = [
   },
 ]
 
+const CHECKED_STORAGE_KEY = 'askbiz_academy_checklists_checked'
+
 export default function ChecklistsPageClient() {
   const { lang, tc } = useLang()
   const [active, setActive] = useState<string | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
+
+  // Hydrate saved progress after mount — reading localStorage during the
+  // initial render would mismatch the server-rendered markup.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CHECKED_STORAGE_KEY)
+      if (raw) setChecked(new Set(JSON.parse(raw)))
+    } catch { /* localStorage unavailable — degrade to unchecked */ }
+  }, [])
 
   const activeChecklist = CHECKLISTS.find(c => c.id === active)
 
@@ -376,6 +387,7 @@ export default function ChecklistsPageClient() {
     setChecked(prev => {
       const next = new Set(prev)
       next.has(key) ? next.delete(key) : next.add(key)
+      try { localStorage.setItem(CHECKED_STORAGE_KEY, JSON.stringify([...next])) } catch { /* ignore */ }
       return next
     })
   }
@@ -397,6 +409,11 @@ export default function ChecklistsPageClient() {
         .cl-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid ${BD}; align-items: flex-start; cursor: pointer; }
         .cl-item:last-child { border-bottom: none; }
         .cl-item:hover .cl-check { border-color: ${ACC} !important; }
+        a:focus-visible, button:focus-visible {
+          outline: 2px solid ${ACC};
+          outline-offset: 2px;
+          border-radius: 4px;
+        }
       `}</style>
 
       {/* Nav */}

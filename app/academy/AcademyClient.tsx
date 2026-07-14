@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath } from '@/lib/i18n-locale'
 import { academyCategories, academyArticles } from '@/lib/academy-content'
 import type { AcademyArticle } from '@/lib/academy-types'
+import { getReadArticles } from '@/lib/academy-read-tracking'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
 const SF  = '#ffffff'
-const TX  = '#1a1916'
-const TX2 = '#6b6760'
-const TX3 = '#a39e97'
+const TX  = '#171512'
+const TX2 = '#5c574f'
+const TX3 = '#6a655c' // darkened from #a39e97 (2.5:1) to meet WCAG AA 4.5:1
 const BD  = '#e8e6e1'
 
 const PAGE_SIZE = 20
@@ -35,7 +36,7 @@ const DIFF_COLORS: Record<string, string> = {
   Advanced:     '#e74c3c',
 }
 
-function ArticleRow({ article, index, total }: { article: AcademyArticle; index: number; total: number }) {
+function ArticleRow({ article, index, total, isRead }: { article: AcademyArticle; index: number; total: number; isRead: boolean }) {
   const { lang, tc } = useLang()
   const color = academyCategories.find(c => c.slug === article.categorySlug)?.color || ACC
   return (
@@ -53,8 +54,11 @@ function ArticleRow({ article, index, total }: { article: AcademyArticle; index:
         <span style={{ fontSize: 9, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.04em' }}>
           {article.category}
         </span>
-        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
+        {/* Reddit-style visited dimming — read articles recede so a scanned
+            list shows what's new vs. already seen. */}
+        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: isRead ? TX3 : TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
           {article.title}
+          {isRead && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 500, color: TX3 }}>✓ read</span>}
         </div>
         <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
           {(article.description || '').slice(0, 120)}{(article.description || '').length > 120 ? '…' : ''}
@@ -77,6 +81,9 @@ export default function AcademyClient() {
   const [searchFocused,      setSearchFocused]      = useState(false)
   const [visibleCount,       setVisibleCount]       = useState(PAGE_SIZE)
   const [sidebarOpen,        setSidebarOpen]        = useState(false)
+  const [readSlugs,          setReadSlugs]          = useState<Set<string>>(new Set())
+
+  useEffect(() => { setReadSlugs(getReadArticles()) }, [])
 
   const searchResults = useMemo(() => {
     if (search.trim().length <= 1) return []
@@ -159,6 +166,11 @@ export default function AcademyClient() {
         .ac-more:hover { background: rgba(208,138,89,.12) !important; }
         .ac-search     { outline: none; }
         .ac-search:focus { border-color: ${ACC} !important; box-shadow: 0 0 0 3px rgba(208,138,89,.12); }
+        a:focus-visible, button:focus-visible {
+          outline: 2px solid ${ACC};
+          outline-offset: 2px;
+          border-radius: 4px;
+        }
         .ac-mob-tog    { display: none; cursor: pointer; border: none; background: none; align-items: center; }
         .ac-sb-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
         @media (max-width: 860px) {
@@ -274,7 +286,7 @@ export default function AcademyClient() {
                     className="ac-sb-btn"
                     onClick={() => toggleExpand(cat.slug)}
                     aria-label={isExp ? tc('academy.aria_collapse') : tc('academy.aria_expand')}
-                    style={{ padding: '7px 10px', borderRadius: '0 8px 8px 0', color: isActive ? color : TX3, display: 'flex', alignItems: 'center' }}
+                    style={{ padding: '16px 16px 16px 10px', margin: '-8px -8px -8px 0', borderRadius: '0 8px 8px 0', color: isActive ? color : TX3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     <ChevronIcon expanded={isExp} />
                   </button>
@@ -420,7 +432,7 @@ export default function AcademyClient() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {featuredArticles.map((a, i) => (
-                    <ArticleRow key={a.slug} article={a} index={i} total={featuredArticles.length} />
+                    <ArticleRow key={a.slug} article={a} index={i} total={featuredArticles.length} isRead={readSlugs.has(a.slug)} />
                   ))}
                 </div>
                 <div style={{ marginTop: 20, textAlign: 'center' }}>
@@ -443,7 +455,7 @@ export default function AcademyClient() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 22, fontSize: 11, color: TX2, flexWrap: 'wrap' }}>
                 <button className="ac-crumb" onClick={goHome} style={{ color: ACC, fontSize: 11, fontWeight: 500 }}>{tc('academy.all_categories')}</button>
                 {activeCategory && currentCategory && (
-                  <><span style={{ color: TX3 }}>/</span><button className="ac-crumb" style={{ color: TX, fontWeight: 600, fontSize: 11 }}>{currentCategory.title}</button></>
+                  <><span style={{ color: TX3 }}>/</span><span style={{ color: TX, fontWeight: 600, fontSize: 11 }}>{currentCategory.title}</span></>
                 )}
                 {isSearch && !activeCategory && (
                   <><span style={{ color: TX3 }}>/</span><span style={{ color: TX, fontWeight: 600 }}>“{search}”</span></>
@@ -474,7 +486,7 @@ export default function AcademyClient() {
               {/* Article list */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {visibleRows.map((a, i) => (
-                  <ArticleRow key={a.slug} article={a} index={i} total={visibleRows.length} />
+                  <ArticleRow key={a.slug} article={a} index={i} total={visibleRows.length} isRead={readSlugs.has(a.slug)} />
                 ))}
               </div>
 

@@ -36,7 +36,7 @@ export const LEARNING_PATHS: LearningPath[] = [
       { slug: 'what-is-a-daily-brief',               title: 'What Is a Daily Brief? (How to Know Your Numbers Daily)' },
       { slug: 'what-is-an-anomaly',                  title: 'What Is an Anomaly? (Spot Problems Immediately)' },
       { slug: 'what-is-a-business-pulse',            title: 'What Is a Business Pulse Score?' },
-      { slug: 'what-is-data-driven-decision-making', title: 'Why Data-Driven Founders Outcompete Gut-Feel Founders' },
+      { slug: 'why-data-driven-founders-outcompete', title: 'Why Data-Driven Founders Outcompete Gut-Feel Founders' },
     ],
   },
   {

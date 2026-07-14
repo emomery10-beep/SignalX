@@ -32,22 +32,22 @@ const jsonLd = {
   description: 'Structured learning paths for SME founders covering business intelligence, eCommerce, SaaS, retail, supply chain, manufacturing, legal, sustainability, and more.',
   url: 'https://askbiz.co/academy/learning-paths',
   numberOfItems: PATHS.length,
+  // Each item links to its own crawlable /academy/learning-paths/[id] page —
+  // previously every entry pointed at this same hub URL, which is invalid
+  // structured data (search engines expect one distinct URL per ListItem).
   itemListElement: PATHS.map((p, i) => ({
     '@type': 'ListItem',
     position: i + 1,
     name: p.title,
     description: p.description,
-    url: 'https://askbiz.co/academy/learning-paths',
+    url: `https://askbiz.co/academy/learning-paths/${p.id}`,
   })),
 }
 
 export default function LearningPathsPageClient() {
   const { lang, tc } = useLang()
-  const [activePath, setActivePath]   = useState<string | null>(null)
   const [search, setSearch]           = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const current = PATHS.find(p => p.id === activePath) ?? null
 
   const filteredPaths = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -61,19 +61,12 @@ export default function LearningPathsPageClient() {
     )
   }, [search])
 
-  function selectPath(id: string) {
-    setActivePath(id)
-    setSearch('')
-    setSidebarOpen(false)
-  }
-
   function goHome() {
-    setActivePath(null)
     setSearch('')
     setSidebarOpen(false)
   }
 
-  const isHome = !activePath
+  const isHome = true
 
   return (
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
@@ -82,14 +75,10 @@ export default function LearningPathsPageClient() {
       <style>{`
         .lp-sb-btn       { cursor: pointer; border: none; background: transparent; transition: background 120ms; font-family: DM Sans, system-ui; width: 100%; text-align: left; }
         .lp-sb-btn:hover { background: rgba(0,0,0,0.045) !important; }
-        .lp-card         { cursor: pointer; transition: transform 140ms, box-shadow 140ms; }
+        .lp-card         { transition: transform 140ms, box-shadow 140ms; }
         .lp-card:hover   { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important; }
-        .lp-art-link     { display: flex; align-items: center; gap: 14px; padding: 14px 20px; text-decoration: none; transition: background 100ms; }
-        .lp-art-link:hover { background: rgba(0,0,0,0.03); }
         .lp-search       { outline: none; }
         .lp-search:focus { border-color: ${ACC} !important; box-shadow: 0 0 0 3px rgba(208,138,89,.12); }
-        .lp-back         { background: none; border: none; cursor: pointer; font-family: DM Sans, system-ui; padding: 0; }
-        .lp-back:hover   { text-decoration: underline; }
         .lp-mob-tog      { display: none; cursor: pointer; border: none; background: none; align-items: center; }
         .lp-sb-overlay   { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
         @media (max-width: 860px) {
@@ -135,7 +124,7 @@ export default function LearningPathsPageClient() {
             <button
               className="lp-sb-btn"
               onClick={goHome}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 11, fontWeight: isHome ? 600 : 400 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: 'rgba(208,138,89,.12)', color: ACC, fontSize: 11, fontWeight: 600 }}
             >
               <span>{tc('academy.lp_all_paths')}</span>
               <span style={{ fontSize: 9, color: TX3 }}>{PATHS.length}</span>
@@ -144,22 +133,19 @@ export default function LearningPathsPageClient() {
 
           <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '10px 24px 6px' }}>{tc('academy.lp_browse_tracks')}</div>
 
-          {PATHS.map(path => {
-            const isActive = activePath === path.id
-            return (
-              <div key={path.id} style={{ padding: '0 12px' }}>
-                <button
-                  className="lp-sb-btn"
-                  onClick={() => selectPath(path.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, background: isActive ? `${path.color}14` : 'transparent', color: isActive ? path.color : TX2, fontSize: 11, fontWeight: isActive ? 600 : 400, marginBottom: 1 }}
-                >
-                  <span style={{ fontSize: 12, flexShrink: 0 }}>{path.icon}</span>
-                  <span style={{ lineHeight: 1.35, flex: 1, textAlign: 'left' }}>{path.title}</span>
-                  <span style={{ fontSize: 9, color: isActive ? path.color : TX3, flexShrink: 0 }}>{path.articles.length}</span>
-                </button>
-              </div>
-            )
-          })}
+          {PATHS.map(path => (
+            <div key={path.id} style={{ padding: '0 12px' }}>
+              <Link
+                href={localePath(`/academy/learning-paths/${path.id}`, lang)}
+                onClick={() => setSidebarOpen(false)}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, color: TX2, fontSize: 11, fontWeight: 400, marginBottom: 1, textDecoration: 'none' }}
+              >
+                <span style={{ fontSize: 12, flexShrink: 0 }}>{path.icon}</span>
+                <span style={{ lineHeight: 1.35, flex: 1, textAlign: 'left' }}>{path.title}</span>
+                <span style={{ fontSize: 9, color: TX3, flexShrink: 0 }}>{path.articles.length}</span>
+              </Link>
+            </div>
+          ))}
 
           {/* Footer links */}
           <div style={{ padding: '0 12px', marginTop: 12 }}>
@@ -201,7 +187,7 @@ export default function LearningPathsPageClient() {
                 type="text"
                 placeholder={tc('academy.lp_search_placeholder')}
                 value={search}
-                onChange={e => { setSearch(e.target.value); setActivePath(null) }}
+                onChange={e => setSearch(e.target.value)}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '10px 36px 10px 40px', fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10 }}
               />
               {search && (
@@ -223,7 +209,7 @@ export default function LearningPathsPageClient() {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                  {filteredPaths.map(path => <PathCard key={path.id} path={path} onClick={() => selectPath(path.id)} />)}
+                  {filteredPaths.map(path => <PathCard key={path.id} path={path} lang={lang} />)}
                 </div>
               )}
             </>
@@ -232,87 +218,8 @@ export default function LearningPathsPageClient() {
           {/* Home: grid of all paths */}
           {isHome && !search.trim() && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-              {PATHS.map(path => <PathCard key={path.id} path={path} onClick={() => selectPath(path.id)} />)}
+              {PATHS.map(path => <PathCard key={path.id} path={path} lang={lang} />)}
             </div>
-          )}
-
-          {/* Path detail */}
-          {activePath && current && !search.trim() && (
-            <>
-              <button className="lp-back" onClick={goHome} style={{ fontSize: 11, color: ACC, fontWeight: 600, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                {tc('academy.lp_back_all')}
-              </button>
-
-              <div style={{ maxWidth: 680 }}>
-                {/* Header card */}
-                <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 16, padding: '24px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: current.color }} />
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginTop: 6 }}>
-                    <div style={{ width: 54, height: 54, borderRadius: 14, background: `${current.color}15`, border: `1px solid ${current.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
-                      {current.icon}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                        <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(18px,2.5vw,24px)', fontWeight: 700, color: TX, margin: 0, letterSpacing: '-.02em' }}>{current.title}</h1>
-                        <span style={{ fontSize: 9, color: LEVEL_COLOR[current.level] || TX3, background: `${LEVEL_COLOR[current.level] || TX3}15`, border: `1px solid ${LEVEL_COLOR[current.level] || TX3}30`, padding: '3px 9px', borderRadius: 9999, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                          {current.level}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
-                        <span style={{ fontSize: 10, color: TX3 }}>📖 {current.articles.length} {tc('academy.lp_articles_label')}</span>
-                        <span style={{ fontSize: 10, color: TX3 }}>⏱ {current.duration}</span>
-                      </div>
-                      <p style={{ fontSize: 12, color: TX2, lineHeight: 1.65, margin: 0 }}>{current.description}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Article list */}
-                <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
-                  <div style={{ padding: '12px 20px', borderBottom: `1px solid ${BD}`, background: `${current.color}08`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: current.color, textTransform: 'uppercase', letterSpacing: '.07em' }}>{tc('academy.lp_articles_in_path')}</span>
-                    <span style={{ fontSize: 9, color: TX3 }}>{current.articles.length} {tc('academy.lp_articles_label')}</span>
-                  </div>
-                  {current.articles.map((article, i) => (
-                    <Link
-                      key={article.slug}
-                      href={localePath(`/academy/${article.slug}`, lang)}
-                      className="lp-art-link"
-                      style={{ borderBottom: i < current.articles.length - 1 ? `1px solid ${BD}` : 'none', color: TX }}
-                    >
-                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: `${current.color}15`, border: `1px solid ${current.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9, fontWeight: 700, color: current.color }}>
-                        {i + 1}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 500, flex: 1, lineHeight: 1.4 }}>{article.title}</span>
-                      <span style={{ fontSize: 10, color: ACC, fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
-                        {tc('academy.lp_read_cta')} <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-
-                {/* CTA */}
-                <div style={{ padding: '20px 22px', background: `${current.color}08`, border: `1px solid ${current.color}20`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
-                  <p style={{ fontSize: 12, color: TX2, margin: 0, lineHeight: 1.6 }}>{tc('academy.lp_cta_body')}</p>
-                  <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 700, color: SF, background: current.color, borderRadius: 8, padding: '10px 20px', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {tc('academy.lp_cta_button')}
-                  </Link>
-                </div>
-
-                {/* Other paths */}
-                <div>
-                  <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12 }}>{tc('academy.lp_other_paths')}</h3>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {PATHS.filter(p => p.id !== current.id).map(p => (
-                      <button key={p.id} onClick={() => selectPath(p.id)} style={{ fontSize: 10, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'DM Sans, system-ui', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        {p.icon} {p.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </>
           )}
         </main>
       </div>
@@ -320,13 +227,13 @@ export default function LearningPathsPageClient() {
   )
 }
 
-function PathCard({ path, onClick }: { path: typeof PATHS[0]; onClick: () => void }) {
+function PathCard({ path, lang }: { path: typeof PATHS[0]; lang: string }) {
   const { tc } = useLang()
   return (
-    <div
+    <Link
       className="lp-card"
-      onClick={onClick}
-      style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '22px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
+      href={localePath(`/academy/learning-paths/${path.id}`, lang)}
+      style={{ display: 'block', textDecoration: 'none', background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '22px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', position: 'relative', overflow: 'hidden' }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: path.color }} />
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, marginTop: 4 }}>
@@ -344,6 +251,6 @@ function PathCard({ path, onClick }: { path: typeof PATHS[0]; onClick: () => voi
         <span style={{ fontSize: 9, color: TX3 }}>📖 {path.articles.length} {tc('academy.lp_duration_articles')} · {path.duration}</span>
         <span style={{ fontSize: 10, color: path.color, fontWeight: 700 }}>{tc('academy.lp_start')}</span>
       </div>
-    </div>
+    </Link>
   )
 }
