@@ -29,7 +29,7 @@ export const ACADEMY_POS_SOMALI_ARTICLES: AcademyArticle[] = [
       },
       {
         heading: "Gelitaanka markii ugu horreysay",
-        body: "Fur biraawsarka taleefankaaga (Chrome ama Safari) oo aad pos.askbiz.co. Geli lambarka taleefankaaga, kaddibna geli PIN-ka uu ku siiyay mulkiilaha ganacsiga. PIN-ku waa lambar gaaban — sida PIN-ka EVC Plus — sidaas darteed way fududahay in la xasuusto. Markaad hal mar gasho, taleefankaagu wuu xasuusanayaa: maalinta xigta waad furaysaa oo kaliya. Waxaad sidoo kale ka dhigi kartaa app: taabo 'Add to Home Screen', AskBiz POS-na wuxuu ka muuqan doonaa taleefankaaga sida app caadi ah.",
+        body: "Fur biraawsarka taleefankaaga (Chrome ama Safari) oo aad gasho pos.askbiz.co. Geli lambarka taleefankaaga, kaddibna geli PIN-ka uu ku siiyay mulkiilaha ganacsiga. PIN-ku waa lambar gaaban — sida PIN-ka EVC Plus — sidaas darteed way fududahay in la xasuusto. Markaad hal mar gasho, taleefankaagu wuu xasuusanayaa: maalinta xigta waad furaysaa oo kaliya. Waxaad sidoo kale ka dhigi kartaa app: taabo 'Add to Home Screen', AskBiz POS-na wuxuu ka muuqan doonaa taleefankaaga sida app caadi ah.",
       },
       {
         heading: "Fahamka shaashadda hore",
@@ -41,7 +41,7 @@ export const ACADEMY_POS_SOMALI_ARTICLES: AcademyArticle[] = [
       },
       {
         heading: "Mulkiilayaasha: siinta shaqaalaha PIN-kooda",
-        body: "Haddii adigu tahay mulkiilaha, waxaad shaqaale kasta ku dari kartaa oo aad PIN u gaar ah siin kartaa qaybta Shaqaalaha ee dashboard-kaaga. Iibiye kastaa markuu PIN-kiisa ku galo, iib kastaa wuxuu ku diiwaangashan yahay magaciisa — sidaas darteed dhammaadka maalinta waxaad ogtahay yaa maxay iibiyay, xisaabta lacagta gacantana way caddahay. Qofna ha siin PIN-kaaga mulkiilaha; isaga ha la siiyo PIN shaqo oo u gaar ah.",
+        body: "Haddii adigu tahay mulkiilaha, waxaad shaqaale kasta ku dari kartaa oo aad PIN u gaar ah siin kartaa qaybta Shaqaalaha ee dashboard-kaaga. Iibiye kastaa markuu PIN-kiisa ku galo, iib kastaa wuxuu ku diiwaangashan yahay magaciisa — sidaas darteed dhammaadka maalinta waxaad ogtahay cidda wax iibisay, xisaabta lacagta gacantana way caddahay. Qofna ha siin PIN-kaaga mulkiilaha; isaga ha la siiyo PIN shaqo oo u gaar ah.",
       },
     ],
     relatedSlugs: [
@@ -227,16 +227,16 @@ export const ACADEMY_POS_SOMALI_ARTICLES: AcademyArticle[] = [
   {
     slug: "pos-risiidh-macaamiil-iyo-deyn-soomaali",
     title: "Risiidhyada WhatsApp, Macaamiisha, iyo Iibka Deynta",
-    description: "Sida macmiilka risiidh WhatsApp loogu diro, sida liiska macaamiishaada u dhismo, iyo sida iibka deynta (daynta) loogu maamulo AskBiz POS buug deyn la'aan.",
+    description: "Sida macmiilka risiidh WhatsApp loogu diro, sida liiska macaamiishaada u dhismo, iyo sida iibka deynta loogu maamulo AskBiz POS buug deyn la'aan.",
     category: "POS af-Soomaali",
     categorySlug: "pos-af-soomaali",
     difficulty: "Beginner",
     readTime: 5,
-    keywords: ["risiidh", "WhatsApp", "macaamiil", "deyn", "dayn", "lacag-bixin", "POS", "Soomaali", "AskBiz"],
+    keywords: ["risiidh", "WhatsApp", "macaamiil", "deyn", "lacag-bixin", "POS", "Soomaali", "AskBiz"],
     keyTakeaways: [
       "Geli lambarka macmiilka, wuxuuna WhatsApp ku helayaa risiidh dhammaystiran — warqad iyo mashiin daabacaad midna looma baahna.",
       "Macmiil kasta oo lambar leh waxaa loo dhisayaa taariikh: muxuu gataa, immisa jeer, immisase lagu leeyahay.",
-      "Iibka deyntu nidaamka ayuu ku diiwaangashan yahay — waxaad ogtahay yaa lagu leeyahay maxay, ilaa goorma, lacag-bixin kastana waad diiwaangelinaysaa.",
+      "Iibka deyntu nidaamka ayuu ku diiwaangashan yahay — waxaad ogtahay cidda wax lagu leeyahay iyo intee le'eg, ilaa goorma, lacag-bixin kastana waad diiwaangelinaysaa.",
     ],
     content: [
       {

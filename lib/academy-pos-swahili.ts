@@ -84,7 +84,7 @@ export const ACADEMY_POS_SWAHILI_ARTICLES: AcademyArticle[] = [
       },
       {
         heading: "Hatua kwa hatua: kuongeza bidhaa mpya",
-        body: "Kwenye skrini ya mwanzo, bonyeza Bidhaa, kisha bonyeza kitufe cha kuongeza (+). Kamera itafunguka. Ishike bidhaa vizuri mbele ya kamera — mwanga wa kutosha unasaidia — kisha piga picha. Subiri sekunde moja mbili: AI itapendekeza jina la bidhaa. Kama jina ni sahihi, liache; kama si sahihi, ligusa na ulirekebishe. Kisha weka bei ya kuuzia, bei ya kununulia (ili faida ihesabike), na idadi uliyonayo stoo. Bonyeza Hifadhi — bidhaa iko tayari kuuzwa.",
+        body: "Kwenye skrini ya mwanzo, bonyeza Bidhaa, kisha bonyeza kitufe cha kuongeza (+). Kamera itafunguka. Ishike bidhaa vizuri mbele ya kamera — mwanga wa kutosha unasaidia — kisha piga picha. Subiri sekunde moja au mbili: AI itapendekeza jina la bidhaa. Kama jina ni sahihi, liache; kama si sahihi, ligusa na ulirekebishe. Kisha weka bei ya kuuzia, bei ya kununulia (ili faida ihesabike), na idadi uliyonayo kwenye stoo. Bonyeza Hifadhi — bidhaa iko tayari kuuzwa.",
       },
       {
         heading: "Picha ya bidhaa inakusaidia baadaye",
@@ -142,7 +142,7 @@ export const ACADEMY_POS_SWAHILI_ARTICLES: AcademyArticle[] = [
       },
       {
         heading: "Malipo ya M-Pesa: ombi linamfikia mteja moja kwa moja",
-        body: "Chagua M-Pesa kama njia ya malipo, kisha weka namba ya simu ya mteja (07XX XXX XXX). Bonyeza Tuma Ombi. Mteja atapokea taarifa kwenye simu yake ikimwomba athibitishe malipo kwa PIN yake ya M-Pesa. Akiweka PIN, AskBiz inapokea uthibitisho yenyewe — skrini yako itaonyesha alama ya kijani na sauti ya kufanikiwa. Hauhitaji kumwomba mteja akuonyeshe meseji ya M-Pesa; mfumo unathibitisha wenyewe.",
+        body: "Chagua M-Pesa kama njia ya malipo, kisha weka namba ya simu ya mteja (07XX XXX XXX). Bonyeza Tuma Ombi. Mteja atapokea taarifa kwenye simu yake ikimwomba athibitishe malipo kwa PIN yake ya M-Pesa. Akiweka PIN, AskBiz inapokea uthibitisho yenyewe — skrini yako itaonyesha alama ya kijani, na utasikia sauti ya kufanikiwa. Hauhitaji kumwomba mteja akuonyeshe meseji ya M-Pesa; mfumo unathibitisha wenyewe.",
       },
       {
         heading: "Ombi la M-Pesa lisipofika au mteja akikataa",
@@ -174,12 +174,12 @@ export const ACADEMY_POS_SWAHILI_ARTICLES: AcademyArticle[] = [
   {
     slug: "pos-kusimamia-stoo-kiswahili",
     title: "Kusimamia Stoo: Usiishiwe na Bidhaa Bila Kujua",
-    description: "Jinsi AskBiz POS inavyofuatilia stoo yako yenyewe kila unapouzwa — tahadhari za bidhaa zinazokaribia kuisha, kuongeza stoo mpya, na kuagiza kwa wasambazaji.",
+    description: "Jinsi AskBiz POS inavyofuatilia stoo yako yenyewe kila unapouza — tahadhari za bidhaa zinazokaribia kuisha, kuongeza stoo mpya, na kuagiza kwa wasambazaji.",
     category: "POS kwa Kiswahili",
     categorySlug: "pos-kwa-kiswahili",
     difficulty: "Beginner",
     readTime: 4,
-    keywords: ["stoo", "hisa", "bidhaa", "tahadhari", "kuagiza", "wasambazaji", "POS", "Kiswahili", "AskBiz"],
+    keywords: ["stoo", "bidhaa", "tahadhari", "kuagiza", "wasambazaji", "POS", "Kiswahili", "AskBiz"],
     keyTakeaways: [
       "Kila mauzo yanapunguza stoo yenyewe — hauhitaji kuhesabu tena mwenyewe.",
       "Bidhaa zinazokaribia kuisha zinaonekana kwa rangi ya njano; zilizoisha kabisa kwa nyekundu.",
@@ -289,7 +289,7 @@ export const ACADEMY_POS_SWAHILI_ARTICLES: AcademyArticle[] = [
     readTime: 5,
     keywords: ["kufunga siku", "ripoti", "faida", "pesa taslimu", "hesabu", "mauzo ya siku", "POS", "Kiswahili", "AskBiz"],
     keyTakeaways: [
-      "Mwisho wa siku, AskBiz inakuambia pesa taslimu ngapi zinapaswa kuwepo droo — wewe unahesabu na kulinganisha.",
+      "Mwisho wa siku, AskBiz inakuambia pesa taslimu ngapi zinapaswa kuwepo kwenye droo — wewe unahesabu na kulinganisha.",
       "Ripoti ya siku inaonyesha mauzo yote, njia za malipo, muuzaji bora, na bidhaa zilizouzwa zaidi.",
       "Faida halisi (si mauzo tu) inaonekana kila siku — kwa sababu uliweka bei za kununulia kwenye bidhaa zako.",
     ],
@@ -300,7 +300,7 @@ export const ACADEMY_POS_SWAHILI_ARTICLES: AcademyArticle[] = [
       },
       {
         heading: "Kulinganisha pesa taslimu (till reconciliation)",
-        body: "Muuzaji anapofunga zamu yake, AskBiz inaonyesha jumla ya mauzo ya pesa taslimu yaliyorekodiwa kwenye zamu hiyo — kwa mfano, TSh 145,000. Sasa hesabu pesa halisi zilizopo droo na uweke kiasi ulichokihesabu. Kama vinalingana — safi. Kama kuna tofauti, mfumo unaionyesha wazi: pungufu ya TSh 5,000, au ziada. Tofauti zinarekodiwa kwa zamu na kwa muuzaji, hivyo mtindo wowote wa upotevu unaonekana mapema, si baada ya miezi.",
+        body: "Muuzaji anapofunga zamu yake, AskBiz inaonyesha jumla ya mauzo ya pesa taslimu yaliyorekodiwa kwenye zamu hiyo — kwa mfano, TSh 145,000. Sasa hesabu pesa halisi zilizopo droo na uweke kiasi ulichokihesabu. Kama zinalingana — safi. Kama kuna tofauti, mfumo unaionyesha wazi: pungufu ya TSh 5,000, au ziada. Tofauti zinarekodiwa kwa zamu na kwa muuzaji, hivyo mtindo wowote wa upotevu unaonekana mapema, si baada ya miezi.",
       },
       {
         heading: "Kusoma ripoti ya siku",
