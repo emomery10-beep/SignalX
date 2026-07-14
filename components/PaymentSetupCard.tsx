@@ -15,6 +15,7 @@ const COUNTRY_OPTIONS = [
   { code: 'TZ', name: 'Tanzania', provider: 'paystack', currency: 'TZS', hasMpesa: true },
   { code: 'RW', name: 'Rwanda', provider: 'paystack', currency: 'RWF', hasMpesa: true },
   { code: 'ZA', name: 'South Africa', provider: 'paystack', currency: 'ZAR', hasMpesa: false },
+  { code: 'SO', name: 'Somalia', provider: 'waafipay', currency: 'USD', hasMpesa: false },
   { code: 'GB', name: 'United Kingdom', provider: 'stripe' },
   { code: 'US', name: 'United States', provider: 'stripe' },
   { code: 'IE', name: 'Ireland', provider: 'stripe' },
@@ -73,6 +74,13 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
   const selectedCountryData = COUNTRY_OPTIONS.find(c => c.code === selectedCountry) as any
   const provider = selectedCountryData?.provider || 'none'
   const hasMpesa = selectedCountryData?.hasMpesa || false
+  const isWaafipay = provider === 'waafipay'
+
+  const providerName = (p: string) =>
+    p === 'paystack' ? tc('payment_setupcard.providerPaystack')
+    : p === 'stripe' ? tc('payment_setupcard.providerStripe')
+    : p === 'waafipay' ? tc('payment_setupcard.providerWaafipay')
+    : null
 
   // Load existing config on mount
   useEffect(() => {
@@ -233,19 +241,23 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
     }
   }
 
+  // WaafiPay has no self-serve provisioning API — a submitted config sits
+  // with is_active:false until AskBiz support manually activates it, unlike
+  // Paystack (instant) or Stripe (KYC-pending but self-serve). Surface that
+  // distinctly rather than falling through to the generic "Set Up" state.
+  const waafipayPending = currentConfig?.payment_provider === 'waafipay' && currentConfig?.configured && !currentConfig?.is_active
+
   const statusLabel = currentConfig?.is_active
     ? currentConfig.payment_provider === 'stripe' && !currentConfig.stripe_onboarding_complete
       ? tc('payment_setupcard.statusPendingKyc')
       : tc('payment_setupcard.statusActiveLabel')
-    : currentConfig?.configured === false
-      ? null
-      : null
+    : waafipayPending
+      ? tc('payment_setupcard.statusWaafipayPending')
+      : currentConfig?.configured === false
+        ? null
+        : null
 
-  const providerLabel = currentConfig?.payment_provider === 'paystack'
-    ? tc('payment_setupcard.providerPaystack')
-    : currentConfig?.payment_provider === 'stripe'
-      ? tc('payment_setupcard.providerStripe')
-      : null
+  const providerLabel = providerName(currentConfig?.payment_provider)
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -261,6 +273,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
 
   const canSubmit = selectedCountry && businessName && !loading && (
     provider === 'stripe' ||
+    provider === 'waafipay' ||
     (provider === 'paystack' && (
       (settlementType === 'mpesa' && mpesaPhone) ||
       (settlementType === 'bank' && selectedBank && accountNumber)
@@ -303,7 +316,9 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
               ? tc('payment_setupcard.cardMobilePaymentsActive', { country: currentConfig?.country || '' })
               : statusLabel === tc('payment_setupcard.statusPendingKyc')
                 ? tc('payment_setupcard.stripeVerificationPending')
-                : tc('payment_setupcard.connectStripeOrPaystack')}
+                : waafipayPending
+                  ? tc('payment_setupcard.waafipayPendingSubtitle')
+                  : tc('payment_setupcard.connectStripeOrPaystack')}
           </div>
         </div>
 
@@ -380,7 +395,9 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
             )}
             {success && (
               <div style={{ padding: '8px 12px', backgroundColor: '#d1fae5', borderRadius: 9, border: '1px solid #a7f3d0', marginBottom: 14, color: '#065f46', fontSize: 10 }}>
-                {provider === 'stripe' ? tc('payment_setupcard.successStripe') : tc('payment_setupcard.successPaystack')}
+                {provider === 'stripe' ? tc('payment_setupcard.successStripe')
+                  : provider === 'waafipay' ? tc('payment_setupcard.successWaafipay')
+                  : tc('payment_setupcard.successPaystack')}
               </div>
             )}
 
@@ -406,7 +423,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   <option value="">{tc('payment_setupcard.selectCountry')}</option>
                   {COUNTRY_OPTIONS.map(c => (
                     <option key={c.code} value={c.code}>
-                      {c.name} ({c.provider === 'paystack' ? tc('payment_setupcard.providerPaystack') : tc('payment_setupcard.providerStripe')})
+                      {c.name} ({providerName(c.provider)})
                     </option>
                   ))}
                 </select>
@@ -415,14 +432,16 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
               {selectedCountry && (
                 <div style={{
                   padding: '6px 10px', borderRadius: 8, marginBottom: 12, fontSize: 9,
-                  background: provider === 'paystack' ? 'rgba(245,158,11,.08)' : 'rgba(99,91,255,.08)',
-                  color: provider === 'paystack' ? '#92400e' : '#4338ca',
+                  background: provider === 'paystack' ? 'rgba(245,158,11,.08)' : isWaafipay ? 'rgba(16,163,74,.08)' : 'rgba(99,91,255,.08)',
+                  color: provider === 'paystack' ? '#92400e' : isWaafipay ? '#166534' : '#4338ca',
                 }}>
                   {provider === 'paystack'
                     ? hasMpesa
                       ? tc('payment_setupcard.bannerPaystackMpesa')
                       : tc('payment_setupcard.bannerPaystackBank')
-                    : tc('payment_setupcard.bannerStripe')}
+                    : isWaafipay
+                      ? tc('payment_setupcard.bannerWaafipay')
+                      : tc('payment_setupcard.bannerStripe')}
                 </div>
               )}
 
@@ -570,7 +589,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   disabled={!canSubmit}
                   style={{
                     flex: 1, padding: 11, borderRadius: 10, border: 'none',
-                    background: !canSubmit ? 'var(--b2, #d1d5db)' : provider === 'paystack' ? '#16a34a' : '#635bff',
+                    background: !canSubmit ? 'var(--b2, #d1d5db)' : (provider === 'paystack' || isWaafipay) ? '#16a34a' : '#635bff',
                     color: '#fff', fontSize: 12, fontWeight: 600,
                     cursor: !canSubmit ? 'not-allowed' : 'pointer',
                   }}
@@ -581,7 +600,9 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                       ? tc('payment_setupcard.btnContinueStripe')
                       : provider === 'paystack'
                         ? settlementType === 'mpesa' ? tc('payment_setupcard.btnConnectMpesa') : tc('payment_setupcard.btnConnectBank')
-                        : tc('payment_setupcard.btnSetUpPayments')}
+                        : isWaafipay
+                          ? tc('payment_setupcard.btnRequestWaafipay')
+                          : tc('payment_setupcard.btnSetUpPayments')}
                 </button>
                 <button
                   type="button"
@@ -609,6 +630,8 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                 ) : (
                   <span>{tc('payment_setupcard.hintPaystackBank')}</span>
                 )
+              ) : isWaafipay ? (
+                <span>{tc('payment_setupcard.hintWaafipay')}</span>
               ) : (
                 <span>{tc('payment_setupcard.hintDefault')}</span>
               )}
