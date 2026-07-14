@@ -2,7 +2,6 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
 import LandingClient from '@/components/layout/LandingClient'
-import SomaliaLanding from '@/components/layout/SomaliaLanding'
 import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
@@ -406,6 +405,9 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       { '@type': 'Question', name: 'AskBiz af Soomaali ma ku shaqeeyaa?', acceptedAnswer: { '@type': 'Answer', text: 'Haa — guud ahaan app-ka waa af Soomaali, laga bilaabo isqorista ilaa warbixinta maalinlaha ah.' } },
     ],
   }
+  // Somali (/so) uses the full landing UI like every other locale — same rich
+  // experience as English, rendered in Somali — but swaps the English FAQ schema
+  // for a Somali one so AI answer engines cite Somali text for Somali queries.
   const activeSchemas = lang === 'so' ? [schemas[0], schemas[1], soFaqSchema] : schemas
 
   return (
@@ -413,7 +415,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       {activeSchemas.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}/>
       ))}
-      {lang === 'so' ? <SomaliaLanding lang={lang}/> : <LandingClient geo={geo} lang={lang}/>}
+      <LandingClient geo={geo} lang={lang}/>
     </>
   )
 }
