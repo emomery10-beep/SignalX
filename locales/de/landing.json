@@ -633,6 +633,8 @@
   "pricing_per_month": "pro Monat",
   "pricing_pos_addon": "Zusatzmodul",
   "pricing_pos_cta": "Zu meinem Tarif hinzufügen →",
+  "pricing_pos_cta_standalone": "Nur POS erhalten →",
+  "pricing_pos_standalone_note": "Funktioniert auch mit dem kostenlosen Tarif — kein Basis-Abo nötig.",
   "pricing_pos_name": "Point of Sale",
   "pricing_pos_per_seat": "/Arbeitsplatz/Monat",
   "pricing_pos_pill_0": "Kasse & Checkout",

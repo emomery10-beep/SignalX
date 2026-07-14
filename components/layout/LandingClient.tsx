@@ -2229,9 +2229,15 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   <span style={{ fontFamily:'var(--font-instrument)',fontSize:30,color:T.tx }}>{posPrice}</span>
                   <span style={{ fontSize:FS.sm,color:T.tx3 }}>{tc('landing.pricing_pos_per_seat')}</span>
                 </div>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.sm,fontWeight:700,textDecoration:'none',marginTop:10 }}>
-                  {tc('landing.pricing_pos_cta')}
-                </Link>
+                <div style={{ display:'flex',flexWrap:'wrap',gap:8,marginTop:10 }}>
+                  <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.sm,fontWeight:700,textDecoration:'none' }}>
+                    {tc('landing.pricing_pos_cta')}
+                  </Link>
+                  <Link href={localePath('/signin?mode=signup&intent=pos', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:'transparent',border:`1.5px solid ${T.accBdr}`,color:T.acc,fontSize:FS.sm,fontWeight:700,textDecoration:'none' }}>
+                    {tc('landing.pricing_pos_cta_standalone')}
+                  </Link>
+                </div>
+                <div style={{ fontSize:FS.xs,color:T.tx3,marginTop:6 }}>{tc('landing.pricing_pos_standalone_note')}</div>
               </div>
               <div style={{ display:'flex',flexWrap:'wrap',gap:6,maxWidth:480 }}>
                 {[0,1,2,3,4,5,6,7].map(i=>tc('landing.pricing_pos_pill_'+i)).map((f,i)=>(

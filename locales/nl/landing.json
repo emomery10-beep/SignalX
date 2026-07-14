@@ -633,6 +633,8 @@
   "pricing_per_month": "per maand",
   "pricing_pos_addon": "Add-on",
   "pricing_pos_cta": "Voeg toe aan mijn abonnement →",
+  "pricing_pos_cta_standalone": "Alleen POS krijgen →",
+  "pricing_pos_standalone_note": "Werkt ook met het Gratis abonnement — geen basisabonnement nodig.",
   "pricing_pos_name": "Point of Sale",
   "pricing_pos_per_seat": "/gebruiker/maand",
   "pricing_pos_pill_0": "Kassa & afrekenen",

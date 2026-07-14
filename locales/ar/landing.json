@@ -633,6 +633,8 @@
   "pricing_per_month": "في الشهر",
   "pricing_pos_addon": "إضافة",
   "pricing_pos_cta": "أضف إلى خطتي →",
+  "pricing_pos_cta_standalone": "احصل على نقاط البيع فقط ←",
+  "pricing_pos_standalone_note": "يعمل أيضًا مع الخطة المجانية — لا حاجة لاشتراك أساسي.",
   "pricing_pos_name": "نقطة البيع",
   "pricing_pos_per_seat": "/مستخدم/شهر",
   "pricing_pos_pill_0": "الكاشير والدفع",

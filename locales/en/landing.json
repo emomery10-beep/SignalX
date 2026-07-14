@@ -209,6 +209,8 @@
   "pricing_pos_addon": "Add-on",
   "pricing_pos_per_seat": "/seat/month",
   "pricing_pos_cta": "Add to my plan →",
+  "pricing_pos_cta_standalone": "Get POS only →",
+  "pricing_pos_standalone_note": "Works on the Free plan too — no base subscription required.",
   "pricing_pos_pill_0": "Register & checkout",
   "pricing_pos_pill_1": "Inventory",
   "pricing_pos_pill_2": "Staff & shifts",

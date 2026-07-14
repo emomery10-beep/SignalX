@@ -198,6 +198,8 @@
   "pricing_pos_addon": "Nyongeza",
   "pricing_pos_per_seat": "/kiti/mwezi",
   "pricing_pos_cta": "Ongeza kwenye mpango wangu →",
+  "pricing_pos_cta_standalone": "Pata POS pekee →",
+  "pricing_pos_standalone_note": "Inafanya kazi kwenye mpango wa Bure pia — hakuna usajili wa msingi unaohitajika.",
   "pricing_pos_pill_0": "Rejista na malipo",
   "pricing_pos_pill_1": "Bidhaa",
   "pricing_pos_pill_2": "Wafanyakazi na zamu",

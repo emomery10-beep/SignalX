@@ -209,6 +209,8 @@
   "pricing_pos_addon": "Ku-dar",
   "pricing_pos_per_seat": "/kuraas/bishii",
   "pricing_pos_cta": "Ku dar qorshahayga →",
+  "pricing_pos_cta_standalone": "Hel POS oo keliya →",
+  "pricing_pos_standalone_note": "Wuxuu ku shaqeeyaa qorshaha Bilaashka ah sidoo kale — qorshe aasaasi lama baahna.",
   "pricing_pos_pill_0": "Keesh & bixin",
   "pricing_pos_pill_1": "Kayd",
   "pricing_pos_pill_2": "Shaqaale & shaqo-wareejin",

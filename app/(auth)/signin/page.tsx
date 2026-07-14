@@ -65,6 +65,7 @@ export default function AuthPage() {
   }, [])
 
   const shopifyShop = searchParams.get('ref') === 'shopify' ? searchParams.get('shop') : null
+  const posOnlyIntent = searchParams.get('intent') === 'pos'
 
   const getCallbackUrl = () => {
     const base = `${process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'}/auth/callback`
@@ -417,7 +418,7 @@ export default function AuthPage() {
           {mode === 'signin' ? tc('auth.welcome_back') : tc('auth.get_started')}
         </h1>
         <p className="animate-fade-up stagger-2" style={{ fontSize: 'clamp(15px,1.6vw,16px)', color: 'var(--tx2)', marginBottom: 9, textAlign: 'center', lineHeight: 1.4 }}>
-          {mode === 'signin' ? tc('auth.signin_subtitle') : tc('auth.signup_subtitle')}
+          {mode === 'signin' ? tc('auth.signin_subtitle') : (posOnlyIntent ? tc('auth.signup_subtitle_pos') : tc('auth.signup_subtitle'))}
         </p>
 
         {/* Social sign-in */}

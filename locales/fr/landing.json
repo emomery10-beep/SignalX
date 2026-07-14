@@ -633,6 +633,8 @@
   "pricing_per_month": "par mois",
   "pricing_pos_addon": "Module complémentaire",
   "pricing_pos_cta": "Ajouter à mon plan →",
+  "pricing_pos_cta_standalone": "Obtenir uniquement le POS →",
+  "pricing_pos_standalone_note": "Fonctionne aussi avec le plan Gratuit — aucun abonnement de base requis.",
   "pricing_pos_name": "Point de Sale",
   "pricing_pos_per_seat": "/utilisateur/mois",
   "pricing_pos_pill_0": "Caisse & paiement",
