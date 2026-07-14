@@ -35,13 +35,16 @@ Somali accountant/trader.
   `kharashaad`=expenses, `deyn`=debt/credit, `hadhaaga/baaqi`=balance,
   `saadaal`=forecast, `canshuur`=tax.
 
-## 3. Bespoke Somalia landing page copy — marketing review (medium priority)
-The customer-facing hero/marketing copy on `/so` should sound natural to a Somali reader.
-- `components/layout/SomaliaLanding.tsx` — hero, pain points, features, FAQ (all inline Somali)
-- `locales/so/landing.json` — the translated generic-homepage strings (fallback content)
-- Somalia market facts baked in (verify correctness): mobile-money rails **EVC Plus, Zaad,
-  eDahab**; QR standard **SOMQR**; currency **Shilin Soomaali (SOS) / USD**; stat "70%+ of
-  Somali adults use mobile money."
+## 3. Somalia landing copy — marketing review (medium priority)
+`/so` renders the full landing UI (same as English) in Somali via
+`locales/so/landing.json`, with Somalia-market framing baked in. Check these read
+naturally to a Somali reader:
+- `locales/so/landing.json` — hero, payment bands, "day in the life" story, FAQ, footer.
+- Somalia framing to verify: mobile-money rails **EVC Plus, Zaad, eDahab** lead the
+  marketing copy; QR standard **SOMQR**; currency **Shilin Soomaali (SOS)**; the story
+  follows **Hodan in Muqdisho**. (Genuine integration cards still list M-Pesa/MTN/Airtel —
+  those are real integrations, intentionally kept.)
+- Somali `FAQPage` schema lives inline in `app/page.tsx` (the `soFaqSchema`), used for /so.
 
 ---
 
