@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
 import LandingClient from '@/components/layout/LandingClient'
+import SomaliaLanding from '@/components/layout/SomaliaLanding'
 import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
@@ -391,12 +392,28 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
     },
   ]
 
+  // Somali market page gets its own FAQPage schema in Somali — the highest-value
+  // signal for AI answer engines fielding Somali-language queries.
+  const soFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    inLanguage: 'so',
+    mainEntity: [
+      { '@type': 'Question', name: 'AskBiz ma la isticmaali karaa EVC Plus, Zaad iyo eDahab?', acceptedAnswer: { '@type': 'Answer', text: 'Haa. AskBiz wuxuu raad-raacaa iibka aad ku qaadato EVC Plus, Zaad, eDahab, lacag caddaan, QR (SOMQR), ama kaadh — dhammaan hal meel.' } },
+      { '@type': 'Question', name: 'AskBiz ma bilaash baa?', acceptedAnswer: { '@type': 'Answer', text: 'Haa, waad bilaash ku bilaabi kartaa. Kaadh looma baahna, qalab looma baahna. Waxaad kor u qaadan kartaa markaad diyaar tahay.' } },
+      { '@type': 'Question', name: 'AskBiz ma shaqeeyaa internet la’aan?', acceptedAnswer: { '@type': 'Answer', text: 'Haa. Iibinta lacagta caddaanka ah way sii socotaa signal la’aanteed; app-ku wuxuu safka geliyaa iibka wuxuuna is-cusboonaysiiyaa markaad internetka ku soo laabato.' } },
+      { '@type': 'Question', name: 'Qiimaha AskBiz ma Shilin Soomaali ama Doolar baa?', acceptedAnswer: { '@type': 'Answer', text: 'Labadaba. Waxaad dooran kartaa Shilin Soomaali (SOS) ama Doolar (USD) — sida aad ganacsigaaga ugu isticmaasho.' } },
+      { '@type': 'Question', name: 'AskBiz af Soomaali ma ku shaqeeyaa?', acceptedAnswer: { '@type': 'Answer', text: 'Haa — guud ahaan app-ka waa af Soomaali, laga bilaabo isqorista ilaa warbixinta maalinlaha ah.' } },
+    ],
+  }
+  const activeSchemas = lang === 'so' ? [schemas[0], schemas[1], soFaqSchema] : schemas
+
   return (
     <>
-      {schemas.map((schema, i) => (
+      {activeSchemas.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}/>
       ))}
-      <LandingClient geo={geo} lang={lang}/>
+      {lang === 'so' ? <SomaliaLanding lang={lang}/> : <LandingClient geo={geo} lang={lang}/>}
     </>
   )
 }
