@@ -93,7 +93,9 @@ function futureMonthLabel(lastMonth: string, offset: number): string {
 
 // ── Simple Canvas Chart Component ────────────────────────────
 function LineChart({ data, width, height }: {
-  data: { labels: string[]; series: { values: number[]; color: string; dash?: number[]; label: string }[]; band?: { upper: number[]; lower: number[]; color: string } }
+  // values may contain null gaps (e.g. forecast series before the split point) —
+  // the renderer skips null/non-finite points.
+  data: { labels: string[]; series: { values: (number | null)[]; color: string; dash?: number[]; label: string }[]; band?: { upper: number[]; lower: number[]; color: string } }
   width: number
   height: number
 }) {
@@ -117,7 +119,7 @@ function LineChart({ data, width, height }: {
     const chartH = height - padT - padB
 
     // Find min/max across all series
-    const allVals = data.series.flatMap(s => s.values).concat(data.band?.upper || [], data.band?.lower || []).filter(v => v != null && isFinite(v))
+    const allVals = data.series.flatMap(s => s.values).concat(data.band?.upper || [], data.band?.lower || []).filter((v): v is number => v != null && isFinite(v))
     const minVal = Math.min(...allVals) * 0.9
     const maxVal = Math.max(...allVals) * 1.1
     const range = maxVal - minVal || 1
@@ -335,49 +337,66 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
     () => (pnlMonthly || []).find(m => m.month === currentMonth) ?? null,
     [pnlMonthly, currentMonth]
   )
+  // If we show the partial current month as an actual, the first *future*
+  // forecast month is the one AFTER it — otherwise the forecast collides with
+  // the partial month (duplicate axis label) and "forecasts" a month already underway.
+  const partialOffset = currentPartial ? 1 : 0
 
   // ── Revenue Forecast ─────────────────────────────────────
   const revForecast = useMemo(() => {
     if (completedMonths.length === 0) return null
     const revenueData = completedMonths.map(m => m.revenue)
     try {
-      return forecast(revenueData, months, 'auto', 1.5)
+      return forecast(revenueData, months + partialOffset, 'auto', 1.5)
     } catch { return null }
-  }, [completedMonths, months])
+  }, [completedMonths, months, partialOffset])
 
   // ── P&L Forecast (all lines) ──────────────────────────────
   const pnlForecast = useMemo(() => {
     if (completedMonths.length === 0) return null
     const revData = completedMonths.map(m => m.revenue)
-    const cogsData = completedMonths.map(m => m.cogs)
-    const fixedData = completedMonths.map(m => m.fixed)
     try {
-      const revF = forecast(revData, months, 'auto')
-      const cogsF = forecast(cogsData, months, 'auto')
-      const fixedF = forecast(fixedData, months, 'auto')
+      const revF = forecast(revData, months + partialOffset, 'auto')
 
       const n = completedMonths.length
+      // Driver-based P&L: forecast revenue, then derive COGS as a % of revenue
+      // and fixed costs from the recent run-rate. This keeps the statement
+      // internally consistent — COGS scales WITH revenue instead of being a third
+      // independent trend line that can net out to nonsense (e.g. revenue up 600%
+      // yet "profit" negative because three separate regressions disagreed).
+      const cogsRatios = completedMonths.filter(m => m.revenue > 0).map(m => m.cogs / m.revenue)
+      const avgCogsRatio = cogsRatios.length ? cogsRatios.reduce((a, b) => a + b, 0) / cogsRatios.length : 0
+      const recentFixed = completedMonths.slice(-3).map(m => m.fixed)
+      const avgFixed = recentFixed.length ? recentFixed.reduce((a, b) => a + b, 0) / recentFixed.length : 0
+      const anchor = currentPartial ? currentPartial.month : completedMonths[n - 1].month
+
       const futureMonths: PnlMonth[] = []
       for (let i = 0; i < months; i++) {
-        const rev = Math.max(0, revF.predicted[n + i] || 0)
-        const cog = Math.max(0, cogsF.predicted[n + i] || 0)
-        const fix = Math.max(0, fixedF.predicted[n + i] || 0)
+        const rev = Math.max(0, revF.predicted[n + partialOffset + i] || 0)
+        const cog = Math.max(0, rev * avgCogsRatio)
+        const fix = Math.max(0, avgFixed)
         const net = rev - cog - fix
         const grossMargin = rev > 0 ? ((rev - cog) / rev) * 100 : 0
         const netMargin = rev > 0 ? (net / rev) * 100 : 0
         futureMonths.push({
-          month: futureMonthLabel(completedMonths[n - 1].month, i + 1),
+          month: futureMonthLabel(anchor, i + 1),
           revenue: rev, cogs: cog, fixed: fix, net,
           gross_margin_pct: grossMargin, net_margin_pct: netMargin,
         })
       }
       return futureMonths
     } catch { return null }
-  }, [completedMonths, months])
+  }, [completedMonths, months, partialOffset, currentPartial])
 
   // ── Cash Runway Projection ────────────────────────────────
   const cashRunway = useMemo(() => {
     if (!cash || !pnlForecast) return null
+    // A cash balance of 0 means the user hasn't entered one — NOT that they're
+    // insolvent today. Flag it as unconfigured so the widget shows a prompt
+    // instead of a false "0 months until cash runs out".
+    if (cash.balance <= 0) {
+      return { points: [] as { month: string; balance: number }[], zeroMonth: -1, unconfigured: true }
+    }
     let balance = cash.balance
     const points: { month: string; balance: number }[] = [
       { month: 'Now', balance },
@@ -387,7 +406,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       points.push({ month: fmtMonthLabel(m.month), balance })
     }
     const zeroMonth = points.findIndex(p => p.balance <= 0)
-    return { points, zeroMonth }
+    return { points, zeroMonth, unconfigured: false }
   }, [cash, pnlForecast])
 
   // ── Cash Flow Waterfall (current month) ───────────────────
@@ -409,37 +428,41 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
     const n = completedMonths.length
     // Include current partial month in chart labels/actuals (but NOT in regression)
     const allActual = currentPartial ? [...completedMonths, currentPartial] : completedMonths
+    const forecastOffset = allActual.length
+    // Anchor future labels to the LAST plotted actual (the partial month if present)
+    // so the forecast starts the month after it — no duplicate axis label.
+    const anchor = allActual[allActual.length - 1].month
     const allLabels = [
       ...allActual.map(m => m.month),
-      ...Array.from({ length: months }, (_, i) => futureMonthLabel(completedMonths[n - 1].month, i + 1)),
+      ...Array.from({ length: months }, (_, i) => futureMonthLabel(anchor, i + 1)),
     ]
     const actualValues = [...allActual.map(m => m.revenue), ...Array(months).fill(null)]
-    const forecastOffset = allActual.length
+    const lastActualRev = allActual[allActual.length - 1].revenue
     const forecastValues: (number | null)[] = Array(forecastOffset).fill(null)
-    // Connect forecast line from the last completed month
-    forecastValues[n - 1] = completedMonths[n - 1].revenue
+    // Connect forecast line from the last plotted actual (partial month if present)
+    forecastValues[forecastOffset - 1] = lastActualRev
     for (let i = 0; i < months; i++) {
-      forecastValues.push(Math.max(0, revForecast.predicted[n + i] || 0))
+      forecastValues.push(Math.max(0, revForecast.predicted[n + partialOffset + i] || 0))
     }
 
-    // Scenarios based on completed months trend
-    const lastRev = completedMonths[n - 1].revenue
-    const baseGrowth = n > 1 ? (completedMonths[n - 1].revenue / completedMonths[0].revenue) ** (1 / (n - 1)) - 1 : 0
-    const bestValues: (number | null)[] = [...Array(forecastOffset).fill(null) as null[]]
-    const worstValues: (number | null)[] = [...Array(forecastOffset).fill(null) as null[]]
-    bestValues[n - 1] = lastRev
-    worstValues[n - 1] = lastRev
-    for (let i = 0; i < months; i++) {
-      bestValues.push(Math.max(0, lastRev * (1 + baseGrowth * 1.5) ** (i + 1)))
-      worstValues.push(Math.max(0, lastRev * Math.max(0.5, (1 + baseGrowth * 0.3)) ** (i + 1)))
-    }
-
-    // Confidence band
+    // Uncertainty: single source of truth = the engine's confidence bounds.
+    // Best/Worst lines and the shaded band are the SAME upper/lower bounds, so
+    // the chart tells one coherent uncertainty story (previously best/worst used
+    // an unrelated CAGR ± multiplier that disagreed with the band).
     const fullBandUpper: (number | null)[] = [...Array(forecastOffset).fill(null)]
     const fullBandLower: (number | null)[] = [...Array(forecastOffset).fill(null)]
+    const bestValues: (number | null)[] = [...Array(forecastOffset).fill(null)]
+    const worstValues: (number | null)[] = [...Array(forecastOffset).fill(null)]
+    bestValues[forecastOffset - 1] = lastActualRev
+    worstValues[forecastOffset - 1] = lastActualRev
     for (let i = 0; i < months; i++) {
-      fullBandUpper.push(Math.max(0, revForecast.upperBound[n + i] ?? revForecast.predicted[n + i] ?? 0))
-      fullBandLower.push(Math.max(0, revForecast.lowerBound[n + i] ?? revForecast.predicted[n + i] ?? 0))
+      const idx = n + partialOffset + i
+      const up = Math.max(0, revForecast.upperBound[idx] ?? revForecast.predicted[idx] ?? 0)
+      const lo = Math.max(0, revForecast.lowerBound[idx] ?? revForecast.predicted[idx] ?? 0)
+      fullBandUpper.push(up)
+      fullBandLower.push(lo)
+      bestValues.push(up)
+      worstValues.push(lo)
     }
 
     return {
@@ -456,11 +479,11 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
         color: COLOURS.band,
       },
     }
-  }, [revForecast, completedMonths, currentPartial, months])
+  }, [revForecast, completedMonths, currentPartial, months, partialOffset])
 
   // ── Cash Runway Chart Data ─────────────────────────────────
   const cashChartData = useMemo(() => {
-    if (!cashRunway) return null
+    if (!cashRunway || cashRunway.unconfigured || cashRunway.points.length === 0) return null
     return {
       labels: cashRunway.points.map(p => p.month),
       series: [
@@ -486,17 +509,31 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
     )
   }
 
-  const runwayMonths = cashRunway?.zeroMonth === -1 ? null : cashRunway?.zeroMonth
-  const runwayColor = runwayMonths != null ? (runwayMonths <= 3 ? '#ef4444' : runwayMonths <= 6 ? '#f59e0b' : '#22c55e') : '#22c55e'
+  const cashUnconfigured = cashRunway?.unconfigured ?? false
+  const runwayMonths = cashUnconfigured ? null : (cashRunway?.zeroMonth === -1 ? null : cashRunway?.zeroMonth)
+  const runwayColor = cashUnconfigured
+    ? 'var(--tx3)'
+    : (runwayMonths != null ? (runwayMonths <= 3 ? '#ef4444' : runwayMonths <= 6 ? '#f59e0b' : '#22c55e') : '#22c55e')
+
+  // Forecast accuracy: in-sample fit is meaningless on tiny histories — a straight
+  // line always fits ~2 points at 100%. Only surface a held-out backtest, and only
+  // once there's enough history (≥6 months) to compute one; otherwise say N/A.
+  const accuracyKpi = (() => {
+    if (!revForecast) return { value: '-', sub: tc('cfo_forecasts_tab.kpi_accuracy_na') }
+    if (completedMonths.length < 6) return { value: tc('cfo_forecasts_tab.kpi_accuracy_na'), sub: tc('cfo_forecasts_tab.kpi_accuracy_need_history') }
+    const bt = revForecast.backtest
+    const acc = bt ? Math.max(0, Math.min(100, 100 - bt.mape)) : revForecast.accuracy
+    return { value: `${acc.toFixed(0)}%`, sub: revForecast.method }
+  })()
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Limited data warning ─── */}
-      {completedMonths.length === 1 && (
+      {completedMonths.length < 6 && (
         <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', fontSize: 11, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>⚠️</span>
-          <span>{tc('cfo_forecasts_tab.limited_data_warning')}</span>
+          <span>{tc('cfo_forecasts_tab.limited_data_warning', { n: completedMonths.length })}</span>
         </div>
       )}
 
@@ -536,14 +573,18 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           },
           {
             label: tc('cfo_forecasts_tab.kpi_cash_runway'),
-            value: runwayMonths != null ? tc('cfo_forecasts_tab.kpi_runway_value', { n: runwayMonths }) : tc('cfo_forecasts_tab.kpi_runway_sustainable'),
-            sub: runwayMonths != null ? tc('cfo_forecasts_tab.kpi_runway_until_zero') : tc('cfo_forecasts_tab.kpi_runway_cash_positive'),
+            value: cashUnconfigured
+              ? tc('cfo_forecasts_tab.kpi_runway_not_set')
+              : (runwayMonths != null ? tc('cfo_forecasts_tab.kpi_runway_value', { n: runwayMonths }) : tc('cfo_forecasts_tab.kpi_runway_sustainable')),
+            sub: cashUnconfigured
+              ? tc('cfo_forecasts_tab.kpi_runway_add_balance')
+              : (runwayMonths != null ? tc('cfo_forecasts_tab.kpi_runway_until_zero') : tc('cfo_forecasts_tab.kpi_runway_cash_positive')),
             color: runwayColor,
           },
           {
             label: tc('cfo_forecasts_tab.kpi_forecast_accuracy'),
-            value: revForecast ? `${revForecast.accuracy.toFixed(0)}%` : '-',
-            sub: revForecast ? revForecast.method : tc('cfo_forecasts_tab.kpi_accuracy_na'),
+            value: accuracyKpi.value,
+            sub: accuracyKpi.sub,
             color: '#d08a59',
           },
         ].map((kpi, i) => (
