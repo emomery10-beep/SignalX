@@ -1590,6 +1590,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       title: tc('landing.footer_col_product'),
       links: [
         { href: '/point-of-sale', label: tc('landing.nav_point_of_sale') },
+        { href: '/free-mpesa-pos', label: 'Free M-Pesa POS' },
+        { href: '/pos-for-market-vendors', label: 'POS for market vendors' },
+        { href: '/utauza', label: 'Utauza (East Africa)' },
+        // Swahili-content landing page — only surface it on the Swahili site.
+        ...(lang === 'sw' ? [{ href: '/app-ya-duka', label: 'App ya kuuza duka' }] : []),
         { href: '/pricing', label: tc('landing.nav_pricing') },
         { href: '/compare', label: tc('landing.footer_compare') },
         { href: '/integrations', label: tc('landing.footer_integrations') },

@@ -35,9 +35,9 @@ export async function GET() {
   xmlns:content="http://purl.org/rss/1.0/modules/content/"
   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>AskBiz Blog — Business Intelligence for SMEs</title>
+    <title>AskBiz Blog — Selling, Money & Growth for Small Businesses</title>
     <link>${BASE}/blog</link>
-    <description>AI-powered insights on eCommerce, finance, trade, and SME strategy. ${posts.length} articles across business intelligence topics.</description>
+    <description>Practical guides on selling, mobile money, stock, and growth for market stalls, shops and small businesses. ${posts.length} articles.</description>
     <language>en-gb</language>
     <managingEditor>hello@askbiz.co (AskBiz)</managingEditor>
     <webMaster>hello@askbiz.co (AskBiz)</webMaster>
