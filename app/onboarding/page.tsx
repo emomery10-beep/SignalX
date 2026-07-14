@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
-import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES } from '@/lib/geo'
+import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES, CURRENCIES as CURRENCY_TABLE } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
@@ -133,7 +133,7 @@ export default function OnboardingPage() {
 
   const BIZ_TYPES = buildBizTypes(tc)
   const SECTORS = buildSectors(tc)
-  const CURRENCIES = buildCurrencies(tc)
+  const BASE_CURRENCIES = buildCurrencies(tc)
   const EXPORT_MARKETS = buildExportMarkets(tc)
 
   const [step,         setStep]         = useState<Step>('business')
@@ -143,6 +143,14 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('')
   const [bizType,      setBizType]      = useState('')
   const [currency,     setCurrency]     = useState('GBP')
+
+  // Uniform for every country: the picker always includes the detected/selected
+  // currency, sourced from the comprehensive lib/geo table when it isn't in the
+  // curated shortlist — so a phone-detected UGX/TZS/ETB/etc. shows and saves
+  // correctly instead of silently falling back to £.
+  const CURRENCIES = BASE_CURRENCIES.some(c => c.code === currency)
+    ? BASE_CURRENCIES
+    : [{ code: currency, symbol: CURRENCY_TABLE[currency]?.sym || currency, label: CURRENCY_TABLE[currency]?.name || currency }, ...BASE_CURRENCIES]
   const [region,       setRegion]       = useState('')
   const [showCountrySuggestions, setShowCountrySuggestions] = useState(false)
   const [countryActiveIdx, setCountryActiveIdx] = useState(0)
@@ -182,7 +190,7 @@ export default function OnboardingPage() {
         // ISO country code → flag emoji (regional indicator symbols).
         const flag = cc.replace(/[A-Za-z]/g, c => String.fromCodePoint(127397 + c.toUpperCase().charCodeAt(0)))
         if (!cancelled) {
-          setGeo({ countryCode: cc, country: name, currency, currencySymbol: CURRENCY_SYMBOLS[currency] || '£', region: name, flag })
+          setGeo({ countryCode: cc, country: name, currency, currencySymbol: (CURRENCY_SYMBOLS[currency] || CURRENCY_TABLE[currency]?.sym || '£'), region: name, flag })
           setCurrency(currency)
           setRegion(name)
           setGeoLoading(false)
@@ -283,7 +291,7 @@ export default function OnboardingPage() {
         business_name:       resolvedBusinessName(),
         business_type:       bizType,
         currency:            currency,
-        currency_symbol:     CURRENCY_SYMBOLS[currency] || '£',
+        currency_symbol:     (CURRENCY_SYMBOLS[currency] || CURRENCY_TABLE[currency]?.sym || '£'),
         region:              region,
         sector_hints:        sectors.join(', '),
         export_markets:      exportMkts.join(','),
