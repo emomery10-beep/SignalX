@@ -82,6 +82,9 @@ export default function AcademyClient() {
   const [visibleCount,       setVisibleCount]       = useState(PAGE_SIZE)
   const [sidebarOpen,        setSidebarOpen]        = useState(false)
   const [readSlugs,          setReadSlugs]          = useState<Set<string>>(new Set())
+  const [difficultyFilter,   setDifficultyFilter]   = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All')
+  const [hideRead,           setHideRead]           = useState(false)
+  const [sortBy,             setSortBy]             = useState<'default' | 'quickest'>('default')
 
   useEffect(() => { setReadSlugs(getReadArticles()) }, [])
 
@@ -112,7 +115,19 @@ export default function AcademyClient() {
 
   const isHome      = !activeCategory && !search.trim()
   const isSearch    = search.trim().length > 1
-  const displayList = isSearch ? searchResults : categoryArticles
+  const baseList    = isSearch ? searchResults : categoryArticles
+
+  // Reddit-style flair filter + hide-read + read-time sort. All three run on
+  // real data fields (difficulty, the localStorage read set, readTime) — no
+  // fabricated "newest/popular" ordering.
+  const displayList = useMemo(() => {
+    let list = baseList
+    if (difficultyFilter !== 'All') list = list.filter(a => a.difficulty === difficultyFilter)
+    if (hideRead)                   list = list.filter(a => !readSlugs.has(a.slug))
+    if (sortBy === 'quickest')      list = [...list].sort((a, b) => a.readTime - b.readTime)
+    return list
+  }, [baseList, difficultyFilter, hideRead, sortBy, readSlugs])
+
   const visibleRows = displayList.slice(0, visibleCount)
   const hasMore     = displayList.length > visibleCount
 
@@ -124,6 +139,12 @@ export default function AcademyClient() {
     })
   }
 
+  function resetFilters() {
+    setDifficultyFilter('All')
+    setHideRead(false)
+    setSortBy('default')
+  }
+
   function selectCategory(slug: string) {
     if (activeCategory === slug) {
       setActiveCategory(null)
@@ -131,6 +152,7 @@ export default function AcademyClient() {
       setActiveCategory(slug)
       setSearch('')
       setVisibleCount(PAGE_SIZE)
+      resetFilters()
       if (!expandedCategories.has(slug))
         setExpandedCategories(prev => new Set([...prev, slug]))
     }
@@ -473,15 +495,93 @@ export default function AcademyClient() {
                 </p>
               </div>
 
-              {/* No results */}
-              {displayList.length === 0 && (
-                <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <div style={{ fontSize: 12, color: TX2, marginBottom: 16 }}>{tc('academy.no_articles_found')}{isSearch ? ' ' + tc('academy.no_articles_found_for_prefix') + ' “' + search + '”' : ''}.</div>
-                  <button onClick={goHome} style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}>
-                    {tc('academy.back_to_all_categories')}
+              {/* Filter bar — Reddit-style flair chips + hide-read + sort, all
+                  on real data (difficulty, read set, readTime). Shown whenever
+                  there's a list to narrow. */}
+              {baseList.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 20, paddingBottom: 16, borderBottom: `1px solid ${BD}` }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('academy.filter_label')}</span>
+                  {([
+                    ['All',          tc('academy.filter_all')],
+                    ['Beginner',     tc('academy.filter_beginner')],
+                    ['Intermediate', tc('academy.filter_intermediate')],
+                    ['Advanced',     tc('academy.filter_advanced')],
+                  ] as const).map(([level, label]) => {
+                    const on = difficultyFilter === level
+                    const c  = level === 'All' ? ACC : (DIFF_COLORS[level] || ACC)
+                    return (
+                      <button
+                        key={level}
+                        onClick={() => { setDifficultyFilter(level); setVisibleCount(PAGE_SIZE) }}
+                        aria-pressed={on}
+                        style={{
+                          fontSize: 11, fontWeight: on ? 700 : 500, cursor: 'pointer',
+                          padding: '5px 12px', borderRadius: 9999,
+                          border: `1px solid ${on ? c : BD}`,
+                          background: on ? `${c}14` : SF,
+                          color: on ? c : TX2,
+                          fontFamily: 'var(--font-dm), system-ui',
+                          transition: 'border-color 120ms, background 120ms, color 120ms',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+
+                  <span style={{ flex: 1 }} />
+
+                  <button
+                    onClick={() => { setHideRead(v => !v); setVisibleCount(PAGE_SIZE) }}
+                    aria-pressed={hideRead}
+                    style={{
+                      fontSize: 11, fontWeight: hideRead ? 700 : 500, cursor: 'pointer',
+                      padding: '5px 12px', borderRadius: 9999,
+                      border: `1px solid ${hideRead ? ACC : BD}`,
+                      background: hideRead ? `${ACC}14` : SF,
+                      color: hideRead ? ACC : TX2,
+                      fontFamily: 'var(--font-dm), system-ui', display: 'inline-flex', alignItems: 'center', gap: 5,
+                    }}
+                  >
+                    {hideRead && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>}
+                    {tc('academy.hide_read')}
+                  </button>
+
+                  <button
+                    onClick={() => { setSortBy(v => v === 'default' ? 'quickest' : 'default'); setVisibleCount(PAGE_SIZE) }}
+                    aria-pressed={sortBy === 'quickest'}
+                    style={{
+                      fontSize: 11, fontWeight: sortBy === 'quickest' ? 700 : 500, cursor: 'pointer',
+                      padding: '5px 12px', borderRadius: 9999,
+                      border: `1px solid ${sortBy === 'quickest' ? ACC : BD}`,
+                      background: sortBy === 'quickest' ? `${ACC}14` : SF,
+                      color: sortBy === 'quickest' ? ACC : TX2,
+                      fontFamily: 'var(--font-dm), system-ui',
+                    }}
+                  >
+                    {sortBy === 'quickest' ? tc('academy.sort_quickest') : tc('academy.sort_default')}
                   </button>
                 </div>
               )}
+
+              {/* No results */}
+              {displayList.length === 0 && (() => {
+                // Distinguish "no matches for this filter" from "no articles at
+                // all" — if the underlying list has rows but filters emptied it,
+                // offer to clear the filters instead of leaving home.
+                const filtersActive = baseList.length > 0 && (difficultyFilter !== 'All' || hideRead)
+                return (
+                  <div style={{ padding: '48px 0', textAlign: 'center' }}>
+                    <div style={{ fontSize: 12, color: TX2, marginBottom: 16 }}>{tc('academy.no_articles_found')}{isSearch ? ' ' + tc('academy.no_articles_found_for_prefix') + ' “' + search + '”' : ''}.</div>
+                    <button
+                      onClick={() => { filtersActive ? resetFilters() : goHome() }}
+                      style={{ fontSize: 11, color: ACC, background: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      {filtersActive ? tc('academy.filter_all') : tc('academy.back_to_all_categories')}
+                    </button>
+                  </div>
+                )
+              })()}
 
               {/* Article list */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>

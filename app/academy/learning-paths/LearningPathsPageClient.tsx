@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react'
 import { LEARNING_PATHS, totalArticles } from '@/lib/learning-paths-content'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath } from '@/lib/i18n-locale'
+import ContinueLearning from './ContinueLearning'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -215,11 +216,14 @@ export default function LearningPathsPageClient() {
             </>
           )}
 
-          {/* Home: grid of all paths */}
+          {/* Home: resume band + grid of all paths */}
           {isHome && !search.trim() && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-              {PATHS.map(path => <PathCard key={path.id} path={path} lang={lang} />)}
-            </div>
+            <>
+              <ContinueLearning />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                {PATHS.map(path => <PathCard key={path.id} path={path} lang={lang} />)}
+              </div>
+            </>
           )}
         </main>
       </div>

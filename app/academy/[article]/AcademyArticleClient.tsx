@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AcademyArticle } from "@/lib/academy-types";
 import { academyArticles } from "@/lib/academy-content";
 import { useLang } from '@/components/LanguageProvider'
@@ -26,6 +26,28 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
   // Reddit-style visited tracking — any real visit counts as "read", not just
   // a click from the Academy hub (covers search-engine and direct visits too).
   useEffect(() => { markArticleRead(article.slug) }, [article.slug])
+
+  // Scroll-spy for the sidebar TOC — highlights the section currently in view,
+  // matching the Help Centre article reader. Purely additive: the TOC links
+  // still work as plain anchors with JS disabled.
+  const [activeSection, setActiveSection] = useState(0);
+  useEffect(() => {
+    const headings = article.content.map((_, i) => document.getElementById(`section-${i}`)).filter(Boolean) as HTMLElement[];
+    if (headings.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) {
+          const idx = Number((visible[0].target as HTMLElement).id.replace('section-', ''));
+          if (!Number.isNaN(idx)) setActiveSection(idx);
+        }
+      },
+      { rootMargin: '-72px 0px -60% 0px', threshold: 0 }
+    );
+    headings.forEach(h => observer.observe(h));
+    return () => observer.disconnect();
+  }, [article.slug, article.content.length]);
+
   const related = academyArticles.filter((a) => article.relatedSlugs.includes(a.slug));
 
   const diffColor =
@@ -229,23 +251,31 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               {tc('academy.art_toc_heading')}
             </h3>
             <nav>
-              {article.content.map((section, i) => (
-                <a
-                  key={i}
-                  href={`#section-${i}`}
-                  style={{
-                    display: "block",
-                    fontSize: 11,
-                    color: "#555",
-                    textDecoration: "none",
-                    padding: "6px 0",
-                    borderBottom: i < article.content.length - 1 ? "1px solid #f5f5f5" : "none",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {section.heading}
-                </a>
-              ))}
+              {article.content.map((section, i) => {
+                const active = i === activeSection;
+                return (
+                  <a
+                    key={i}
+                    href={`#section-${i}`}
+                    aria-current={active ? 'true' : undefined}
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      color: active ? "#95592b" : "#555",
+                      fontWeight: active ? 700 : 400,
+                      textDecoration: "none",
+                      padding: "6px 0 6px 10px",
+                      borderLeft: `2px solid ${active ? "#d08a59" : "transparent"}`,
+                      marginLeft: -10,
+                      borderBottom: i < article.content.length - 1 ? "1px solid #f5f5f5" : "none",
+                      lineHeight: 1.4,
+                      transition: "color 120ms, border-color 120ms",
+                    }}
+                  >
+                    {section.heading}
+                  </a>
+                );
+              })}
             </nav>
           </div>
 

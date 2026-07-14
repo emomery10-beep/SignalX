@@ -45,7 +45,6 @@
   "aria_toggle_categories": "Toggle categories",
   "aria_collapse": "Collapse",
   "aria_expand": "Expand",
-
   "lp_aria_toggle": "Toggle paths",
   "lp_all_paths": "All learning paths",
   "lp_browse_tracks": "Browse tracks",
@@ -72,7 +71,6 @@
   "lp_back_all": "All learning paths",
   "lp_try_free": "Try free →",
   "lp_duration_articles": "articles",
-
   "cl_back_academy": "← Academy",
   "cl_try_free": "Try free →",
   "cl_page_title": "Business Checklists",
@@ -89,7 +87,6 @@
   "cl_footer_academy": "Academy",
   "cl_footer_help": "Help",
   "cl_footer_blog": "Blog",
-
   "lab_try_free": "Try free →",
   "lab_breadcrumb_home": "Home",
   "lab_breadcrumb_academy": "Academy",
@@ -109,7 +106,6 @@
   "lab_footer_checklists": "Checklists",
   "lab_footer_free_tools": "Free Tools",
   "lab_footer_pricing": "Pricing",
-
   "art_breadcrumb_home": "Home",
   "art_breadcrumb_academy": "Academy",
   "art_min_read": "min read",
@@ -121,5 +117,16 @@
   "art_cta_heading": "See this data for your own business",
   "art_cta_body": "AskBiz connects to your existing tools and tracks metrics like these automatically — no spreadsheets needed.",
   "art_cta_button": "Start for free →",
-  "art_cta_pricing": "See pricing & integrations"
+  "art_cta_pricing": "See pricing & integrations",
+  "filter_label": "Filter",
+  "filter_all": "All levels",
+  "filter_beginner": "Beginner",
+  "filter_intermediate": "Intermediate",
+  "filter_advanced": "Advanced",
+  "sort_default": "Default order",
+  "sort_quickest": "Quickest first",
+  "hide_read": "Hide read",
+  "showing_filtered": "shown",
+  "lp_continue_learning": "Continue learning",
+  "lp_continue_cta": "Continue"
 }
