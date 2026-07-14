@@ -39,6 +39,8 @@
   "currency_usd_label": "US Dollar",
   "currency_eur_label": "Euro",
   "currency_kes_label": "Kenyan Shilling",
+  "currency_sos_label": "Somali Shilling",
+  "currency_djf_label": "Djiboutian Franc",
   "currency_ngn_label": "Nigerian Naira",
   "currency_ghs_label": "Ghanaian Cedi",
   "currency_zar_label": "South African Rand",

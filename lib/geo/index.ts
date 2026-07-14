@@ -105,6 +105,8 @@ export const COUNTRY_DIAL: { code: string; dial: string; flag: string }[] = [
   { code: 'RW', dial: '+250', flag: '🇷🇼' },
   { code: 'ZM', dial: '+260', flag: '🇿🇲' },
   { code: 'ET', dial: '+251', flag: '🇪🇹' },
+  { code: 'SO', dial: '+252', flag: '🇸🇴' },
+  { code: 'DJ', dial: '+253', flag: '🇩🇯' },
   { code: 'ZW', dial: '+263', flag: '🇿🇼' },
   { code: 'MW', dial: '+265', flag: '🇲🇼' },
   { code: 'MZ', dial: '+258', flag: '🇲🇿' },

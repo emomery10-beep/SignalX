@@ -84,6 +84,8 @@ const buildCurrencies = (tc: TC) => [
   { code: 'USD', symbol: '$', label: tc('onboarding.currency_usd_label') },
   { code: 'EUR', symbol: '€', label: tc('onboarding.currency_eur_label') },
   { code: 'KES', symbol: 'KSh', label: tc('onboarding.currency_kes_label') },
+  { code: 'SOS', symbol: 'Sh', label: tc('onboarding.currency_sos_label') },
+  { code: 'DJF', symbol: 'Fdj', label: tc('onboarding.currency_djf_label') },
   { code: 'NGN', symbol: '₦', label: tc('onboarding.currency_ngn_label') },
   { code: 'GHS', symbol: '₵', label: tc('onboarding.currency_ghs_label') },
   { code: 'ZAR', symbol: 'R', label: tc('onboarding.currency_zar_label') },
@@ -95,7 +97,7 @@ const buildCurrencies = (tc: TC) => [
 ]
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
-  GBP: '£', USD: '$', EUR: '€', KES: 'KSh', NGN: '₦', GHS: '₵',
+  GBP: '£', USD: '$', EUR: '€', KES: 'KSh', SOS: 'Sh', DJF: 'Fdj', NGN: '₦', GHS: '₵',
   ZAR: 'R', AED: 'د.إ', INR: '₹', AUD: 'A$', CAD: 'C$', SGD: 'S$',
 }
 
