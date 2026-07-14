@@ -1966,10 +1966,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           {/* Bento feature grid — custom line icons, single accent, no emoji */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }} className="rep-4col">
             {[
-              { icon:'camera', title:'Camera scan', desc:'No barcode gun — point and sell.' },
-              { icon:'wallet', title:'M-Pesa built in', desc:'Mobile money and cash, no setup.' },
-              { icon:'branch', title:'Multi-branch', desc:'One view across every location.' },
-              { icon:'cloud-off', title:'Works offline', desc:'Cash sales keep going, no signal.' },
+              { icon:'camera', title:tc('landing.pos_grid_camera_title'), desc:tc('landing.pos_grid_camera_desc') },
+              { icon:'wallet', title:tc('landing.pos_grid_mpesa_title'), desc:tc('landing.pos_grid_mpesa_desc') },
+              { icon:'branch', title:tc('landing.pos_grid_branch_title'), desc:tc('landing.pos_grid_branch_desc') },
+              { icon:'cloud-off', title:tc('landing.pos_grid_offline_title'), desc:tc('landing.pos_grid_offline_desc') },
             ].map(f=>(
               <div key={f.title} style={{ border:`1px solid ${T.bd}`, borderRadius:14, padding:'20px 18px', background:T.card }}>
                 <div style={{ marginBottom:14 }}>

@@ -18,6 +18,10 @@ const META_BY_LOCALE: Record<string, { title: string; description: string }> = {
     title: 'Utauza (AskBiz) — Uza kwa Simu Yako, Chukua M-Pesa',
     description: 'Utauza ni POS ya simu na kifuatiliaji cha mauzo ya kila siku kwa bustani za soko, kiosk, na maduka madogo. Chukua M-Pesa, MTN, Airtel Money, taslimu au kadi. Bure kuanza — ona faida yako leo.',
   },
+  so: {
+    title: 'AskBiz — Ku Iibi Taleefankaaga, Qaado EVC Plus & Zaad',
+    description: 'AskBiz waa POS taleefan iyo la-socodka iibka maalinlaha ah ee dukaannada, suuqyada iyo ganacsatada yaryar ee Soomaaliya. Qaado EVC Plus, Zaad, eDahab, lacag caddaan ama kaadh. Bilaash ku bilow — ogow faa’iidadaada caawa.',
+  },
   es: {
     title: 'AskBiz — Vende con tu teléfono. TPV y ventas del día',
     description: 'TPV móvil y control diario de ventas para puestos, kioscos y tiendas pequeñas. Cobra en efectivo, tarjeta o dinero móvil. Gratis para empezar.',
@@ -49,6 +53,7 @@ const HREFLANG_LANGUAGES = {
   'nl': 'https://askbiz.co/nl',
   'ar': 'https://askbiz.co/ar',
   'sw': 'https://askbiz.co/sw',
+  'so': 'https://askbiz.co/so',
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -262,11 +267,14 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         { '@type': 'Country', name: 'Ethiopia' },
         { '@type': 'Country', name: 'Ivory Coast' },
         { '@type': 'Country', name: 'United Kingdom' },
+        { '@type': 'Country', name: 'Somalia' },
+        { '@type': 'Country', name: 'Djibouti' },
         { '@type': 'City', name: 'Nairobi' },
         { '@type': 'City', name: 'Lagos' },
         { '@type': 'City', name: 'Kampala' },
         { '@type': 'City', name: 'Accra' },
         { '@type': 'City', name: 'Dar es Salaam' },
+        { '@type': 'City', name: 'Mogadishu' },
         { '@type': 'City', name: 'Abuja' },
         { '@type': 'City', name: 'Abidjan' },
         { '@type': 'City', name: 'Lusaka' },
