@@ -84,7 +84,6 @@ const buildCurrencies = (tc: TC) => [
   { code: 'USD', symbol: '$', label: tc('onboarding.currency_usd_label') },
   { code: 'EUR', symbol: '€', label: tc('onboarding.currency_eur_label') },
   { code: 'KES', symbol: 'KSh', label: tc('onboarding.currency_kes_label') },
-  { code: 'SOS', symbol: 'Sh', label: tc('onboarding.currency_sos_label') },
   { code: 'DJF', symbol: 'Fdj', label: tc('onboarding.currency_djf_label') },
   { code: 'NGN', symbol: '₦', label: tc('onboarding.currency_ngn_label') },
   { code: 'GHS', symbol: '₵', label: tc('onboarding.currency_ghs_label') },

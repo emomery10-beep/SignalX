@@ -74,7 +74,7 @@ export const CURRENCIES: Record<string, { sym: string; name: string; flag: strin
 // ── Country → currency ────────────────────────────────────────
 export const COUNTRY_CURRENCY: Record<string, string> = {
   // East Africa
-  KE: 'KES', UG: 'UGX', TZ: 'TZS', ET: 'ETB', RW: 'RWF', SO: 'SOS', DJ: 'DJF', ER: 'ERN',
+  KE: 'KES', UG: 'UGX', TZ: 'TZS', ET: 'ETB', RW: 'RWF', SO: 'USD', DJ: 'DJF', ER: 'ERN',
   // West Africa
   NG: 'NGN', GH: 'GHS', SN: 'XOF', CI: 'XOF', ML: 'XOF', BF: 'XOF', NE: 'XOF', TG: 'XOF',
   BJ: 'XOF', GW: 'XOF', GN: 'GNF', SL: 'SLE', LR: 'LRD',

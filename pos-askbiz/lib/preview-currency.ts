@@ -48,7 +48,7 @@ export const DEFAULT_CURRENCY = 'KES'
 // markets the demo cares about; unknowns fall back to DEFAULT_CURRENCY).
 export const COUNTRY_CURRENCY: Record<string, string> = {
   KE: 'KES', NG: 'NGN', UG: 'UGX', TZ: 'TZS', GH: 'GHS', ZA: 'ZAR',
-  ET: 'ETB', RW: 'RWF', ZM: 'ZMW', SO: 'SOS',
+  ET: 'ETB', RW: 'RWF', ZM: 'ZMW', SO: 'USD',
   US: 'USD', GB: 'GBP', AE: 'AED', IN: 'INR',
   DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR',
   PT: 'EUR', AT: 'EUR', IE: 'EUR', FI: 'EUR',
@@ -68,7 +68,7 @@ const TZ_CURRENCY: Record<string, string> = {
 // Markets offered in the demo's currency selector, Africa-first to match the
 // primary audience. Everything here must be a key of CURRENCY_META.
 export const MARKETS: { code: string; currency: string; label: string }[] = [
-  { code: 'SO', currency: 'SOS', label: 'Somalia' },
+  { code: 'SO', currency: 'USD', label: 'Somalia' },
   { code: 'KE', currency: 'KES', label: 'Kenya' },
   { code: 'NG', currency: 'NGN', label: 'Nigeria' },
   { code: 'UG', currency: 'UGX', label: 'Uganda' },
