@@ -49,7 +49,15 @@ const SCENES = [
   { icon: 'moon',     chipIcon: 'moon',     ac: '#E6B17F', rev: 9480, cust: 83, dark: true },
 ] as const
 
-const KSH = (n: number) => 'KSh ' + Math.round(n).toLocaleString('en-US')
+// SCENES rev values are KES-magnitude sample takings. `fx` (from the landing's
+// geo) converts them to the visitor's display currency so the tally isn't stuck
+// on "KSh" for every locale (e.g. the Somali page shows $).
+const KES_MULT = 165
+type Fx = { sym: string; mult: number; dec?: boolean }
+const money = (kesAmount: number, fx?: Fx) => {
+  const amt = fx ? (kesAmount / KES_MULT) * fx.mult : kesAmount
+  return (fx?.sym ?? 'KSh ') + Math.round(amt).toLocaleString('en-US')
+}
 const N = SCENES.length
 const DURATION = 4800
 
@@ -58,7 +66,7 @@ function hexA(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
 }
 
-export default function DayInTheLife({ tc }: { tc: Tc }) {
+export default function DayInTheLife({ tc, fx }: { tc: Tc; fx?: Fx }) {
   const [i, setI] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [visible, setVisible] = useState(false)
@@ -193,7 +201,7 @@ export default function DayInTheLife({ tc }: { tc: Tc }) {
           <div style={{ display: 'flex', gap: 20 }}>
             <div>
               <div style={{ fontSize: 14, color: C.tx3 }}>{tc('landing.day_tally_sales')}</div>
-              <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: C.tx }}>{KSH(revShown)}</div>
+              <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-.01em', color: C.tx }}>{money(revShown, fx)}</div>
             </div>
             <div>
               <div style={{ fontSize: 14, color: C.tx3 }}>{tc('landing.day_tally_customers')}</div>
