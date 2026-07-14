@@ -120,6 +120,19 @@ type Geo = { countryCode: string; country: string; currency: string; currencySym
 
 const COUNTRY_LIST = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }))
 
+// Somali country names for the supported markets — Chrome's Intl has no 'so'
+// region data (returns English), so the primary audience needs these by hand.
+const SO_REGION: Record<string, string> = {
+  SO: 'Soomaaliya', DJ: 'Jabuuti', KE: 'Kenya', ET: 'Itoobiya', UG: 'Uganda',
+  TZ: 'Tansaaniya', GH: 'Gaana', ZA: 'Koonfur Afrika', NG: 'Nayjeeriya', RW: 'Ruwanda',
+  ZM: 'Sambiya', ZW: 'Simbaabwe', MW: 'Malaawi', MZ: 'Musambiig',
+  US: 'Maraykanka', CA: 'Kanada', GB: 'Boqortooyada Midowday', IE: 'Ayrlaan',
+  DE: 'Jarmalka', FR: 'Faransiiska', ES: 'Isbaanishka', IT: 'Talyaaniga', NL: 'Nederland',
+  BE: 'Beljiyam', PT: 'Bortuqaal', AT: 'Awstoriya', FI: 'Finland',
+  AE: 'Imaaraadka Carabta', IN: 'Hindiya', SG: 'Singabuur', AU: 'Awstaraaliya',
+  MX: 'Meksiko', BR: 'Braasiil',
+}
+
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 13px', fontSize: 12,
   background: EV, border: `1.5px solid ${B2}`, borderRadius: 10,
@@ -129,7 +142,7 @@ const inp: React.CSSProperties = {
 export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClient()
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
 
   const BIZ_TYPES = buildBizTypes(tc)
   const SECTORS = buildSectors(tc)
@@ -148,9 +161,26 @@ export default function OnboardingPage() {
   // currency, sourced from the comprehensive lib/geo table when it isn't in the
   // curated shortlist — so a phone-detected UGX/TZS/ETB/etc. shows and saves
   // correctly instead of silently falling back to £.
+  // Curated currencies keep their hand-localised tc labels — the ONLY reliable
+  // localisation for Somali (Chrome's Intl has no 'so' currency data and returns
+  // English). A detected currency outside the shortlist gets an Intl-localised
+  // name where the browser supports the locale, English-named where it doesn't.
+  const ccyNames = (() => { try { return new Intl.DisplayNames([lang], { type: 'currency' }) } catch { return null } })()
+  const localiseCcy = (code: string, fb: string) => { try { const n = ccyNames?.of(code); return (n && n !== code) ? n : fb } catch { return fb } }
   const CURRENCIES = BASE_CURRENCIES.some(c => c.code === currency)
     ? BASE_CURRENCIES
-    : [{ code: currency, symbol: CURRENCY_TABLE[currency]?.sym || currency, label: CURRENCY_TABLE[currency]?.name || currency }, ...BASE_CURRENCIES]
+    : [{ code: currency, symbol: CURRENCY_TABLE[currency]?.sym || currency, label: localiseCcy(currency, CURRENCY_TABLE[currency]?.name || currency) }, ...BASE_CURRENCIES]
+
+  // Localise COUNTRY names into the user's language too (so: "Soomaaliya",
+  // ar: "الصومال"). Used for the detected-location display and the manual
+  // country picker so a Somali/Swahili/etc. speaker sees + can search their
+  // country in their own language.
+  const regionDisp = (() => { try { return new Intl.DisplayNames([lang], { type: 'region' }) } catch { return null } })()
+  const regionName = (code: string, fallback: string) => {
+    if (lang === 'so' && SO_REGION[code]) return SO_REGION[code]
+    try { const n = regionDisp?.of(code); return n && n !== code ? n : fallback } catch { return fallback }
+  }
+  const COUNTRIES = COUNTRY_LIST.map(c => ({ ...c, localName: regionName(c.code, c.name) }))
   const [region,       setRegion]       = useState('')
   const [showCountrySuggestions, setShowCountrySuggestions] = useState(false)
   const [countryActiveIdx, setCountryActiveIdx] = useState(0)
@@ -442,7 +472,7 @@ export default function OnboardingPage() {
                 <div>
                   <div style={{ padding: '24px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, textAlign: 'center', marginBottom: 20 }}>
                     <div style={{ fontSize: 38, marginBottom: 10 }} aria-hidden>{geo.flag}</div>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: TX, marginBottom: 4 }}>{geo.country}</div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: TX, marginBottom: 4 }}>{regionName(geo.countryCode, geo.country)}</div>
                     <div style={{ fontSize: 12, color: TX2 }}>{geo.currencySymbol} · {geo.currency}</div>
                     <div style={{ fontSize: 11, color: TX3, marginTop: 10 }}>{tc('onboarding.location_confirm_question')}</div>
                   </div>
@@ -471,9 +501,9 @@ export default function OnboardingPage() {
                     <label style={{ fontSize: 11, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
                     {(() => {
                       const q = region.trim().toLowerCase()
-                      const matches = q ? COUNTRY_LIST.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8) : []
-                      const selectCountry = (c: { code: string; name: string }) => {
-                        setRegion(c.name)
+                      const matches = q ? COUNTRIES.filter(c => c.name.toLowerCase().includes(q) || c.localName.toLowerCase().includes(q)).slice(0, 8) : []
+                      const selectCountry = (c: { code: string; name: string; localName: string }) => {
+                        setRegion(c.localName)
                         if (COUNTRY_CURRENCY[c.code]) setCurrency(COUNTRY_CURRENCY[c.code]!)
                         setShowCountrySuggestions(false)
                       }
@@ -510,7 +540,7 @@ export default function OnboardingPage() {
                                   onMouseDown={() => selectCountry(c)}
                                   style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '9px 13px', background: i === countryActiveIdx ? EV : 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, color: TX }}
                                 >
-                                  {c.name}
+                                  {c.localName}
                                 </button>
                               ))}
                             </div>
