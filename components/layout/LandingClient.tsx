@@ -1953,7 +1953,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── A DAY IN THE LIFE — narrative fold-card deck ───────────────── */}
-      <DayInTheLife tc={tc} />
+      <DayInTheLife tc={tc} fx={DEMO_FX[liveGeo?.currency || 'GBP'] || DEMO_FX.GBP} />
 
       {/* ── POINT OF SALE — Eleven-pattern example section ─────────────── */}
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
