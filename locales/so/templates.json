@@ -1,0 +1,22 @@
+{
+  "page_title": "Qaabab Warshadeed",
+  "feature_name": "Qaabab Warshadeed",
+  "loading": "Soo raraya…",
+  "count_suffix_one": "qaab — guji su'aal kasta si aad u isticmaasho",
+  "count_suffix_other": "qaabab — guji su'aal kasta si aad u isticmaasho",
+  "search_placeholder": "Raadi qaabab ama su'aalo…",
+  "filter_all": "Dhammaan",
+  "filter_retail": "Tafaariiq",
+  "filter_ecommerce": "Ganacsi elektaroonig ah",
+  "filter_distributor": "Qeybiye",
+  "filter_exporter": "Dhoofiye",
+  "questions_count": "su'aalo",
+  "use_arrow": "Isticmaal →",
+  "hide_questions": "↑ Qari",
+  "see_all_prefix": "↓ Fiiri dhammaan",
+  "see_all_suffix": "su'aalo",
+  "use": "Isticmaal",
+  "use_first_in_chat": "Isticmaal su'aasha koowaad ee sheekada →",
+  "empty_title": "Qaabab lama helin",
+  "empty_desc": "Isku day raadin kale ama shaandhaynta nooca ganacsiga"
+}

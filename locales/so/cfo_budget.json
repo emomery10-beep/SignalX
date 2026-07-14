@@ -1,0 +1,44 @@
+{
+  "card_title": "Miisaaniyad vs Dhab",
+  "no_budget_badge": "Miisaaniyad lama dejin",
+  "use_actuals_btn": "Isticmaal tirooyinka dhabta ah sida miisaaniyad",
+  "ask_ai": "Weydii AI",
+
+  "col_line_item": "Shay Xariiq",
+  "col_budget": "Miisaaniyad",
+  "col_actual": "Dhab",
+  "col_variance": "Kala-duwanaansho",
+  "col_pct_var": "% Kala-duwan",
+
+  "row_revenue": "Dakhli",
+  "row_cogs": "Qiimaha Alaabta",
+  "row_gross_profit": "Faa'iidada Guud",
+  "row_operating_expenses": "Kharashyada Hawlgalka",
+  "row_net_profit": "Faa'iidada Saafiga",
+
+  "set_budget_hint": "Guji unug kasta oo Miisaaniyad ah oo kor ku qoran si aad u dejiso yoolashaada, ama guji “Isticmaal tirooyinka dhabta ah sida miisaaniyad” si aad uga bilowdo tirooyinka muddadan.",
+  "set_label": "+ Deji",
+
+  "attainment_title": "Gaadhista Miisaaniyada",
+  "pct_of_budget": "{n}% miisaaniyada",
+  "actual_suffix": "{v} dhab",
+  "budget_suffix": "{v} miisaaniyad",
+
+  "monthly_trend_title": "Isbeddelka Bishii vs Miisaaniyad",
+  "click_month_hint": "Guji bil si aad u faahfaahiso",
+  "col_month": "Bil",
+  "col_bgt_rev": "Miis Dakh",
+  "col_gm": "FG%",
+  "col_net": "Saafi",
+  "col_bgt_net": "Miis Saafi",
+
+  "detail_suffix": "Faahfaahin",
+  "detail_revenue": "Dakhli",
+  "detail_cogs": "Qiimaha alaabta",
+  "detail_gross_profit": "Faa'iidada Guud",
+  "detail_fixed_costs": "Kharashyada Go'an",
+  "detail_net_profit": "Faa'iidada Saafiga",
+  "budget_inline": "miisaaniyad: {v}",
+
+  "ask_prompt": "Miisaaniyaddayda vs dhabta muddadan: Dakhliga dhabta ah {revActual} vs miisaaniyad {revBudget} ({revVar}). Faa'iidada saafiga ah dhabta ah {netActual} vs miisaaniyad {netBudget} ({netVar}). Maxaa keenaya kala-duwanaanshaha oo maxaan diirad saarayaa?"
+}

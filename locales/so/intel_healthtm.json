@@ -1,0 +1,12 @@
+{
+  "timeMachine": "Mashiinka Waqtiga",
+  "askAi": "Weydii AI",
+  "askAiPrompt": "Sidee ayaa caafimaadka ganacsigaygu isu beddelay muddadii? Waa maxay isbeddellada muhiimka ah oo maxaan diiradda saaraa?",
+  "now": "Hadda",
+  "clickBarToCompare": "Guji bar si aad u barbardhigto",
+  "analysingChanges": "Falanqeynta isbeddellada tan iyo {date}...",
+  "changesSince": "Isbeddellada tan iyo {date}",
+  "keyEvents": "DHACDOOYINKA MUHIIMKA AH",
+  "barTooltip": "{date}: {score}/100",
+  "totalChangePts": "{pts} dhibcood"
+}

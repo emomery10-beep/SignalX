@@ -1,0 +1,11 @@
+{
+  "heading": "Dakhliga iyada oo loo eegayo Isha",
+  "channels": "({n} kanaal)",
+  "askAi": "Weydii AI",
+  "askAiPrompt": "Dakhliga iyada oo loo eegayo isha: {summary}. Kanaalada kee ah ee aan diiradda saaro koritaankooda iyo kuwee ah kuwa liita?",
+  "transactions": "{n} macaamil · {pct}% dakhliga",
+  "marginPct": "{n}% faa'iido",
+  "metricRevenue": "Dakhli",
+  "metricCogs": "Qiimaha Alaabta",
+  "metricGrossProfit": "Faa'iidada Guud"
+}

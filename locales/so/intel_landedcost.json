@@ -1,0 +1,82 @@
+{
+  "title": "Xisaabiyaha Kharashka Soo-gaadhka",
+  "subtitle": "Xisaabi kharashkaaga dhabta ah ee halkii oo ay ku jiraan shixnadda, canshuurta, VAT, iyo sarrifka — kadibna arag faa'iidadaada dhabta ah.",
+
+  "sectionProduct": "Faahfaahinta badeecada",
+  "labelOrigin": "Asal",
+  "labelQuantity": "Tiro",
+  "placeholderQuantity": "tusaale 500",
+  "labelSupplierPrice": "Qiimaha alaab-qeybiyaha / halkii ({sym})",
+  "placeholderSupplierPrice": "tusaale 8.50",
+  "labelSellingPrice": "Qiimaha iibka / halkii ({sym})",
+  "placeholderSellingPrice": "tusaale 24.99",
+  "labelFxBuffer": "Dheeli sarrif (%)",
+  "placeholderFxBuffer": "2",
+  "labelDutyCategory": "Qaybta canshuurta",
+  "labelCustomDutyRate": "Heerka canshuurta kastamka (%)",
+  "placeholderCustomDutyRate": "tusaale 6.5",
+
+  "sectionShipping": "Shixnadda & maaraynta",
+  "placeholderCostDescription": "Sharraxaadda kharashka",
+
+  "btnCalculate": "Xisaabi →",
+
+  "alertOverEstimatingTitle": "Waxaad ku qiyaasi jirtay faa'iido ka badan {gap}",
+  "alertOverEstimatingBody": "Faa'iido fudud: {naive} → Faa'iido dhab ah: {true}",
+
+  "statLandedCostPerUnit": "Kharashka soo-gaadhka / halkii",
+  "statActualMargin": "Faa'iidada dhabta ah",
+  "statBreakEvenPrice": "Qiimaha isku-dheelitirka",
+
+  "importDutyLabel": "Canshuurta soo dejinta ({rate})",
+  "supplierCostLabel": "Kharashka alaab-qeybiyaha (oo ay ku jirto dheeli sarrif)",
+  "costFallbackLabel": "Kharash {n}",
+
+  "importVatLabel": "VAT-ka soo dejinta:",
+  "importVatRecoverable": "{amount} (dib loo heli karo haddaad VAT diiwaangashan tahay)",
+  "vatToggleHide": "Qari",
+  "vatToggleShow": "Waa maxay tan?",
+  "vatExplanation": "VAT-ka soo dejinta waxaa lagu bixiyaa xudduudda laakiin dib ayaa loo heli karaa soo-celintaada VAT ee xigta haddaad VAT diiwaangashan tahay. Waa kharash socodka lacagta — sida caadiga ah 30-60 maalmood — maaha kharash joogto ah.",
+
+  "btnAskAskBiz": "Weydii AskBiz inuu tan falanqeeyo →",
+  "btnReset": "Dib u deji",
+
+  "askPrompt": "Waa maxay kharashkayga soo-gaadhka dhabta ah iyo faa'iidadu? Waxaan ka soo dejiyaa {origin} {sym}{unitCost}/halkii, waxaan ku iibiyaa {sym}{sellingPrice}, heerka canshuurta {dutyRate}%.",
+
+  "emptyHeading": "Ogow faa'iidadaada dhabta ah ka hor intaadan iibsan",
+  "emptyBody": "Kor ku geli faahfaahinta badeecadaada. Shixnadda, canshuurta, iyo sarrifku sida caadiga ah waxay ku daraan 15-30% kharashkaaga dhabta ah ee halkii.",
+
+  "dutySelectCategory": "Dooro qayb…",
+  "dutyElectronics": "Elektaroonig & qaybo",
+  "dutyClothing": "Dhar & dharka la xiro",
+  "dutyFootwear": "Kabo",
+  "dutyFurniture": "Alaab guri & qalab guri",
+  "dutyToys": "Alaab ciyaareed & ciyaaro",
+  "dutyFood": "Cunto & cabbitaan",
+  "dutyBeauty": "Quruxda & daryeelka shakhsiga",
+  "dutyMachinery": "Mashiinno & qalab",
+  "dutyPlastics": "Balaastik & alaab caag ah",
+  "dutyMetals": "Bir & alaab bir ah",
+  "dutyTextiles": "Dhar-farsamo (maaha dhar)",
+  "dutyBags": "Boorso & shandad",
+  "dutySports": "Qalab ciyaareed",
+  "dutyCustomRate": "Heer gaar ah",
+
+  "originCN": "🇨🇳 Shiinaha",
+  "originIN": "🇮🇳 Hindiya",
+  "originTR": "🇹🇷 Turki",
+  "originBD": "🇧🇩 Bangaaladheesh",
+  "originVN": "🇻🇳 Fiyetnaam",
+  "originPK": "🇵🇰 Bakistaan",
+  "originEU": "🇪🇺 Midowga Yurub",
+  "originUS": "🇺🇸 Maraykanka",
+  "originNG": "🇳🇬 Nayjeeriya",
+  "originGH": "🇬🇭 Gaana",
+  "originOT": "🌍 Kale",
+
+  "extraSeaFreight": "Shixnad badeed/hawo",
+  "extraFreightInsurance": "Caymiska shixnadda",
+  "extraPortHandling": "Kharashaadka dekedda & maaraynta",
+  "extraCustomsBroker": "Kharashka dilaalka kastamka",
+  "extraLastMile": "Gaarsiinta meel-u-dambaysa"
+}

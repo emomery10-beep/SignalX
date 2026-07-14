@@ -1,0 +1,103 @@
+{
+  "status_delivered": "La Gaarsiiyay",
+  "status_in_transit": "Socod ku",
+  "status_out_for_delivery": "Loo Baxay Gaarsiin",
+  "status_customs_hold": "Hakad Kastam",
+  "status_exception": "Ka-reeb",
+  "status_pending": "Sugaya",
+  "status_picked_up": "La Qaaday",
+  "status_delayed": "La Dib-dhigay",
+
+  "plan_free": "Bilaash",
+  "plan_growth": "Korriin",
+  "plan_business": "Ganacsi",
+
+  "locked_upgrade_arrow": "{plan} →",
+
+  "toast_tracking_required": "Lambarka raadraaca waa loo baahan yahay",
+  "toast_failed_to_add": "Way ku guuldarraysatay in la daro",
+  "toast_added": "Shixnadda waa la daray oo la diiwaangeliyay ✓",
+
+  "free_banner_title": "Fur sirdoonka shixnadda oo dhammaystiran",
+  "free_banner_growth": "🔒 Korriin — 5 shixnadood, raadraaca qiimaha guud, digniinaha dib-dhaca",
+  "free_banner_business": "🔒 Ganacsi — Shixnado aan xad lahayn, saameyn maaliyadeed, digniinaha kastamka, dhibcaynta alaab-qeybiyaha, khatarta kayd-dhamaadka, sirdoonka raasumaalka shaqada",
+  "see_plans": "Eeg qorshayaasha →",
+
+  "growth_nudge": "🔒 Qorshaha Ganacsigu wuxuu furaa: saameyn maaliyadeed shixnad kasta · digniinaha hakadka kastamka · dhibcaynta kalsoonida alaab-qeybiyaha · matoorka khatarta kayd-dhamaadka · sirdoonka raasumaalka shaqada",
+  "upgrade_to_business": "U kordhi Ganacsi →",
+
+  "stat_logistics_score": "Dhibcaha Saadka",
+  "stat_active": "Firfircoon",
+  "stat_at_risk": "Khatar ku jira",
+  "stat_customs_holds": "Hakadyada Kastamka",
+  "stat_in_transit_value": "Socod ku £",
+  "stat_daily_finance": "Maaliyadda Maalinlaha ah",
+
+  "filter_active": "firfircoon",
+  "filter_all": "dhammaan",
+  "filter_delivered": "la gaarsiiyay",
+
+  "loading": "Soo raraya…",
+  "empty_title": "Weli shixnado ma jiraan",
+  "empty_body": "Ku dar lambarkaaga raadraaca ugu horreeya si aad u bilowdo la socoshada silsiladdaada saadka.",
+  "empty_cta": "Ku dar shixnad →",
+
+  "badge_customs_hold": "HAKAD KASTAM",
+  "from_supplier": "ka timid {supplier}",
+  "qty_suffix": "×{qty}",
+  "financial_impact_suffix": "£{amount} saameyn",
+  "days_delayed": "{days}c dib-dhac",
+  "eta": "ETA {date}",
+
+  "feature_total_value": "Qiimaha guud",
+  "feature_financial_impact": "Saameynta maaliyadeed",
+
+  "intelligence_locked_title": "🔒 Sirdoonka qorshaha Ganacsiga",
+  "intelligence_locked_body": "U kordhi Ganacsi si aad u furto: maalmaha raasumaalka shaqada · kharashka maaliyadeynta maalinlaha ah · saameyn maaliyadeed · digniinaha khatarta kayd-dhamaadka · qiyaasidda maaliyadeed ee hakadka kastamka · dhibcaha kalsoonida alaab-qeybiyaha",
+
+  "detail_working_capital_days": "Maalmaha Raasumaalka Shaqada",
+  "detail_working_capital_days_value": "{days}c",
+  "detail_daily_financing": "Maaliyaddeynta Maalinlaha ah",
+  "detail_daily_financing_value": "£{amount}/maalin",
+  "detail_financial_impact": "Saameynta Maaliyadeed",
+  "detail_financial_impact_value": "£{amount}",
+
+  "ask_askbiz": "Weydii AskBiz →",
+  "view_on_17track": "Ku eeg 17Track ↗",
+  "ask_prompt": "Falanqee shixnadda {tracking}{sku}. Xaaladda: {status}. {delay} Waa maxay ikhtiyaaradaydu?",
+  "ask_prompt_sku": " ee {sku}",
+  "ask_prompt_delay": "{days} maalmood dib-dhac.",
+
+  "modal_title": "Ku dar Shixnad",
+  "modal_slots_free": "1 ka mid ah 1 booskii la isticmaalay · ",
+  "modal_slots_growth": "{count} ka mid ah 5 booskii la isticmaalay · ",
+  "modal_sub_free": "Raadraaca xaaladda oo keliya",
+  "modal_sub_growth": "Xog maaliyadeed aasaasi ah oo ku jirta",
+  "modal_sub_business": "Sirdoon buuxa oo ku jira",
+
+  "label_tracking_number": "Lambarka Raadraaca *",
+  "placeholder_tracking_number": "tusaale RR123456789CN",
+  "label_shipment_type": "Nooca Shixnadda",
+  "type_inbound": "soo galaya",
+  "type_outbound": "baxaya",
+  "type_container": "kontineyn",
+  "label_supplier": "Alaab-qeybiye",
+  "placeholder_supplier": "Magaca alaab-qeybiyaha",
+  "label_sku": "SKU / Badeeco",
+  "placeholder_sku": "Magaca badeecada",
+  "label_quantity": "Tiro",
+  "placeholder_quantity": "500",
+  "label_unit_cost": "Kharashka Halkii",
+  "unit_cost_growth_tag": "Korriin",
+  "placeholder_unit_cost": "12.50",
+  "label_expected_arrival": "Imaanshaha la Filayo",
+  "label_po_reference": "Tixraaca PO",
+  "placeholder_po_reference": "PO-2026-0042",
+
+  "value_preview": "💰 Qiimaha shixnadda: ",
+  "value_preview_financing": " · Maaliyaddeynta maalinlaha ah: ",
+
+  "btn_registering": "Diiwaangelinaya…",
+  "btn_add_track": "Ku dar & Raadraac →",
+  "btn_cancel": "Jooji"
+}

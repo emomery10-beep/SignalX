@@ -1,0 +1,21 @@
+{
+  "heading": "Xasuusta Go'aannada",
+  "subheading": "AskBiz waxay xasuusataa go'aan kasta oo aad qaadato, waxayna dib u eegtaa 6 toddobaad gudahood",
+  "logDecisionBtn": "+ Diiwaan geli Go'aan",
+  "logFormTitle": "Diiwaan geli go'aan",
+  "titlePlaceholder": "Maxaad go'aansatay? tusaale, Qiimaha Wireless Earbuds ku kordhiyay £1.50",
+  "beforePlaceholder": "Ka hor (tusaale £12.99)",
+  "afterPlaceholder": "Ka dib (tusaale £14.49)",
+  "saving": "Waa la kaydinayaa…",
+  "saveDecision": "Kaydi Go'aanka — AskBiz waxay dib u eegi doontaa 6 toddobaad gudahood",
+  "cancel": "Jooji",
+  "reviewBannerSingular": "🔔 {n} go'aan ayaa diyaar u ah dib-u-eegis",
+  "reviewBannerPlural": "🔔 {n} go'aan ayaa diyaar u ah dib-u-eegis",
+  "askReviewBtn": "Weydii AskBiz inuu dib u eego natiijooyinka →",
+  "askReviewPrompt": "Dib u eeg go'aannadaydii ganacsi ee dhawaan, oo ii sheeg waxa natiijooyinku muujinayaan — waxa shaqeeyay iyo waxa aan ka baran karo.",
+  "noDecisions": "Wali go'aan lama diiwaan gelin. Go'aan kasta oo ganacsi oo aad diiwaan gelisid ayaa dib loo eegi doonaa 6 toddobaad gudahood.",
+  "checksBack": "AskBiz waxay dib u eegi doontaa: {date}",
+  "verdictGoodCall": "✓ Go'aan wanaagsan",
+  "verdictBadCall": "✗ Ma shaqeynin",
+  "verdictNeutral": "~ Natiijo isku dhafan"
+}

@@ -1,0 +1,21 @@
+{
+  "heading": "Dareenka Qiimaha",
+  "productsCount": "{n} badeeco",
+  "askAi": "Weydii AI",
+  "askAiPrompt": "Falanqee dareenka qiimaha badeecadayda. Badeecooyinka kee ah ayaan si ammaan ah qiimaha ugu kordhin karaa?",
+  "sensitivityElastic": "Qiime-Dareen leh",
+  "sensitivityInelastic": "Qiime-Adkeysi leh",
+  "sensitivityUnitElastic": "Dheelitiran",
+  "sensitivityInverse": "Saameyn Heersare",
+  "sensitivityStable": "Deggan",
+  "priceLabel": "Qiime",
+  "volumeLabel": "Tiro",
+  "marginLabel": "Faa'iido:",
+  "suggestedPrice": "💰 Qiime la soo jeediyay oo faa'iido {targetMargin}% ah: {sym}{price} (+{pct}%)",
+  "simulatorHeading": "Jaan-goynta Saameynta P&L",
+  "priceChangeLabel": "Isbeddelka qiimaha:",
+  "perMonth": "/bishii",
+  "statCurrent": "Hadda",
+  "statProjected": "La saadaaliyay",
+  "statChange": "Isbeddel"
+}

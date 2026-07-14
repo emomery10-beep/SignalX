@@ -1,0 +1,47 @@
+{
+  "drawerTitle": "Habaynta Kharashka",
+  "drawerSubtitle": "Deji hal mar · Wuxuu cusbooneysiiyaa xisaabaadka muddada iyo gubashada",
+
+  "tabCashBalance": "Hadhaaga Lacagta",
+  "tabFixedCosts": "Kharashaadka Go'an",
+  "tabVariableCosts": "Kharashaadka Isbeddelaya",
+
+  "tableHeaderCategory": "Qayb",
+  "tableHeaderMonthly": "Bishii",
+
+  "categoryNamePlaceholder": "Magaca qaybta",
+  "addRow": "+ Ku dar saf",
+  "monthlyTotal": "Wadarta Bishii",
+
+  "balanceDescription": "Lacagta aad hadda gacanta ku haysato — akoonnada bangiga, kaydinta, lacag yar. Tani waxay wadaa xisaabinta muddadaada.",
+  "balanceLabel": "Hadhaaga Lacagta Hadda",
+  "balancePlaceholder": "tusaale 50000",
+  "balanceSetMessage": "Hadhaaga waxaa loo dejiyay",
+  "balanceSetRunway": "Muddadaada waxaa dib loogu xisaabin doonaa qiimahan.",
+
+  "fixedDescription": "Kharashaadka bil kasta isku mid ah iyadoo aan loo eegin dakhliga. Kuwan waxaa laga jaraa faa'iidada guud si loo xisaabiyo faa'iidada saafiga ah iyo heerka gubashada maalinlaha ah.",
+  "variableDescription": "Kharashaadka la kordha tirooyinkaaga — komishannada, rarista, kharashka xayeysiinta. Kuwan waxaa loo isticmaalaa falanqaynta faa'iidada wax-ku-darka.",
+
+  "fixedRent": "Kiro / Ijaar",
+  "fixedSalaries": "Mushaharrada & Ujuuradaha",
+  "fixedHealthInsurance": "Caymiska Caafimaadka",
+  "fixedBizInsurance": "Caymiska Ganacsiga",
+  "fixedSoftware": "Rukumaadka Software-ka",
+  "fixedEquipment": "Ijaarka Qalabka",
+  "fixedLoans": "Bixinta Amaahda / Deynta",
+  "fixedPhone": "Telefoon & Internet",
+  "fixedAccounting": "Xisaabaad / Sharci",
+
+  "varCommissions": "Komishannada Iibka",
+  "varShipping": "Rarista & Fulinta",
+  "varAdSpend": "Suuqgeynta Bixinta / Kharashka Xayeysiinta",
+  "varProcessing": "Khidmadaha Habaynta Lacag-bixinta",
+  "varPackaging": "Xirxirka",
+  "varContract": "Shaqaale Qandaraas",
+
+  "footerFixed": "Go'an",
+  "footerVariable": "Isbeddelaya",
+
+  "btnCancel": "Jooji",
+  "btnSave": "Kaydi"
+}

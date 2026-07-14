@@ -1,0 +1,58 @@
+{
+  "loading": "Soo raraya…",
+
+  "err_photo_type": "Isticmaal sawir JPEG/PNG/WebP/HEIC ah.",
+  "err_photo_process": "Sawirkaas lama habayn karin.",
+  "err_id_read": "Aqoonsiga lama akhrin karin — gali gacanta.",
+  "id_low_confidence": "⚠️ Hubaal yar — hubi inuu waafaqsan yahay.",
+  "id_captured": "✓ Aqoonsiga waa la qaaday — hubi inuu waafaqsan yahay.",
+  "err_id_failed": "Sikaanka aqoonsiga wuu fashilmay — gali gacanta.",
+  "err_verify_receiver": "Xaqiiji qofka qaadanaya — sikaan ama gali lambarka aqoonsigiisa.",
+  "err_photo_required": "Sawir ka qaad xirmada marka la gudbinayo.",
+  "err_confirm_payment": "Xirmadan waa {status} ({symbol}{amount}). Xaqiiji lacag-bixinta ka hor inta aan la sii dayn.",
+  "err_photo_upload_failed": "Soo geynta sawirka way fashilantay — mar kale qaad.",
+  "err_release_failed": "Xirmada lama sii dayn karin.",
+  "err_network_retry": "Khalad shabakadeed — isku day mar kale.",
+
+  "header_title": "Qaadashada Xirmada",
+  "header_subtitle": "{name} · xirmooyinka macaamiisha u dhiib",
+
+  "tab_outgoing": "📤 Dirista",
+  "tab_incoming": "📥 Soo socda",
+
+  "search_placeholder": "Raadi lambarka la-socodka, magaca, telefoonka…",
+  "empty_state": "Ma jiraan xirmooyin sugaya in laga qaado laantaada. Halkan way ka soo muuqan doonaan marka qofka wax qaata uu helo.",
+
+  "status_paid": "La bixiyay",
+  "status_unpaid": "aan la bixin",
+  "card_to_label": "📥 Loo dirayo: {name}",
+  "card_dash": "—",
+  "card_parcel_fallback": "Xirmo",
+  "card_from": "ka timid {origin}",
+
+  "sheet_aria": "Sii dayn xirmada",
+  "sheet_release_title": "Sii dayn {tracking}",
+  "sheet_to_line": "Loo dirayo {name} · {phone}",
+
+  "step_payment": "1 · Lacag-bixinta",
+  "already_paid": "✓ Horey ayaa loo bixiyay",
+  "collect_on_delivery": "Lacagta marka la gaarsiinayo qaado",
+  "pay_method_cash": "💵 Lacag caddaan",
+  "pay_method_card": "💳 Kaarka",
+  "pay_method_mobile": "📱 Mobiil",
+  "payment_received_full": "Lacagta si buuxda ayaa loo helay",
+
+  "step_verify_id": "2 · Xaqiiji aqoonsiga qofka qaadanaya",
+  "id_placeholder": "Aqoonsiga Qaranka / Baasaboorka",
+  "scan_reading_id": "⏳ Akhrinta aqoonsiga…",
+  "scan_id_autofill": "📷 Sikaan aqoonsiga si loo si-buuxiyo",
+
+  "step_photo": "3 · Sawirka xirmada marka la gudbinayo",
+  "alt_parcel_handover": "Xirmada marka la gudbinayo",
+  "photo_retake": "Mar kale qaad",
+  "photo_processing": "Habaynaya…",
+  "photo_take": "📷 Sawir ka qaad xirmada",
+
+  "releasing": "⏳ La sii daynayaa…",
+  "release_button": "✅ U dhiib macmiilka"
+}

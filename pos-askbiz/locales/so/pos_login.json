@@ -1,0 +1,22 @@
+{
+  "staff_login": "Galitaanka shaqaalaha",
+  "email_label": "Cinwaanka iimaylka",
+  "email_hint": "Geli iimaylkaaga shaqada si aad u sii wadato.",
+  "phone_hint": "Geli lambarka taleefankaaga shaqada si aad u sii wadato.",
+  "method_phone": "Taleefan",
+  "method_email": "Iimayl",
+  "phone_placeholder": "61 234 5678",
+  "err_email_unrecognised": "Iimaylka lama aqoonsan",
+  "err_unrecognised": "Lama aqoonsan. Weydiiso maareeyahaaga inuu ku daro.",
+  "err_invalid_phone": "Geli lambar taleefan sax ah.",
+  "err_network": "Khalad shabakadeed — fadlan isku day mar kale",
+  "err_pin_incorrect": "PIN-ku waa khaldan yahay",
+  "checking": "Hubinta…",
+  "continue": "Sii wad →",
+  "greeting": "Salaan {name} 👋",
+  "pin_hint": "Geli PIN-kaaga si aad u gasho.",
+  "signing_in": "Gelitaanka…",
+  "sign_in": "Gal →",
+  "use_different_email": "Isticmaal iimayl kale",
+  "loading_login": "Soo raraya galitaanka…"
+}

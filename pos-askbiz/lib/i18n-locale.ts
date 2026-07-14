@@ -2,9 +2,9 @@
 // public/SEO pages), so locale is COOKIE/preference-driven — no URL prefixing.
 import { LANG_NAMES, LANG_FLAGS, COUNTRY_TO_LANG, isRTL as isRtlLang, type Lang } from './i18n'
 
-export type Locale = 'en' | 'es' | 'fr' | 'de' | 'nl' | 'ar' | 'sw'
+export type Locale = 'en' | 'es' | 'fr' | 'de' | 'nl' | 'ar' | 'sw' | 'so'
 
-export const ACTIVE_LOCALES: Locale[] = ['en', 'es', 'fr', 'de', 'nl', 'ar', 'sw']
+export const ACTIVE_LOCALES: Locale[] = ['en', 'es', 'fr', 'de', 'nl', 'ar', 'sw', 'so']
 export const DEFAULT_LOCALE: Locale = 'en'
 
 export function isActiveLocale(x: unknown): x is Locale {

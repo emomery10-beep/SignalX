@@ -1,0 +1,18 @@
+{
+  "title": "Habka Lacag-bixinta",
+  "subtitle": "Deji bixiyeyaasha lacag-bixinta oo u ogolow macaamiisha inay ku bixiyaan Paystack ama Stripe",
+  "loadingConfig": "Waa la soo raraya dejinta lacag-bixinta...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Kaadhadhka waa shaqeynayaan",
+  "stripeLoadingLink": "Waa la soo raraya xidhiidhka Stripe…",
+  "stripeCompleteOnboarding": "Guji si aad u dhammaystirto dejinta Stripe",
+  "stripeStatusActive": "● Firfircoon",
+  "stripeStatusPending": "KYC sugaya",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ Qaybinta lacagaha ma shaqeynayo",
+  "splitsNotActiveBody": "Lacag-bixinada waxaa loo diraa akoonka guud iyada oo aan la qaybin. Tan hagaaji si si toos ah loogu maro lacag-qaadka 2% ee AskBiz ee dhaqdhaqaaq kasta.",
+  "splitsEnterPhone": "Geli lambarkaaga M-Pesa si aad u xidho:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Xidh",
+  "splitsFixBtn": "Hagaaji Qaybinta Hadda",
+  "splitsFixingBtn": "Waa la hagaajinayaa..."
+}

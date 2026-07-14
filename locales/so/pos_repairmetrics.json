@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "Adeegyada Hagaajinta",
+  "activeJobsLabel": "Shaqooyinka firfircoon",
+  "activeJobsSub": "{intake} soo gelin · {inProgress} socda · {completed} diyaar",
+  "collectedTodayLabel": "La ururiyay maanta",
+  "repairRevenueLabel": "Dakhliga hagaajinta",
+  "repairRevenueSub": "maanta",
+  "avgTurnaroundLabel": "Celceliska muddada",
+  "warrantyClaimsLabel": "Sheegashooyinka damaanadda",
+  "inProgress": "socda",
+  "intake": "soo gelin",
+  "ready": "diyaar"
+}

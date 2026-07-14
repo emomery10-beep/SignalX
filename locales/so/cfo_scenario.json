@@ -1,0 +1,36 @@
+{
+  "title": "Qorsheeyaha Xaaladaha",
+  "subtitle": "Maxaa dhici doona haddii...? Beddel qalabka wax-badiyaha si aad u tijaabiso xaalado kala duwan.",
+
+  "quickScenariosLabel": "Xaalado Degdeg ah",
+  "adjustAssumptionsLabel": "Hagaaji Malaha",
+  "projectedMonthlyLabel": "Bishii La Saadaaliyay",
+
+  "presetLose20Revenue": "Luminta 20% dakhliga",
+  "presetHireEmployee": "Shaqaale cusub shaqaaleysii",
+  "presetSupplierCosts": "Alaab-qeybiyaha kharashkiisu +15% kordhay",
+  "presetOpen2ndLocation": "Fur meel labaad",
+  "presetRaisePrices": "Qiimaha kor u qaad 10%",
+  "presetSeasonalDip": "Hoos u dhac xilliyeed 30%",
+
+  "sliderRevenue": "Isbeddelka dakhliga",
+  "sliderCogs": "Isbeddelka qiimaha alaabta",
+  "sliderNewMonthly": "Kharash bishii cusub ah",
+  "sliderOneTime": "Kharash mar keliya ah",
+
+  "rowRevenue": "Dakhli",
+  "rowCogs": "Qiimaha Alaabta",
+  "rowFixedCosts": "Kharashaadka Go'an",
+  "rowNetProfit": "Faa'iidada Saafiga ah",
+  "rowNetMargin": "Heerka Faa'iidada Saafiga",
+
+  "cashRunwayLabel": "Waqtiga Lacagtu Kaa Filan Tahay",
+  "runwayMonths": "{n} bilood",
+  "runwayCashPositive": "Lacagtu waa togan tahay",
+  "runwaySetBalance": "Deji baaqiga lacagta",
+  "runwayComparison": "Hadda: {base} bilood → Xaaladda: {scenario} bilood",
+  "runwayChangeSuffix": "{delta} bilood",
+
+  "aboveBreakEven": "{amount}/bishii ka sarreysa heerka la-simanaanta",
+  "belowBreakEven": "{amount}/bishii ka hooseysa heerka la-simanaanta — waxaa loo baahan yahay in dakhliga la kordhiyo ama kharashka la yareeyo"
+}

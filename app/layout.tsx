@@ -64,6 +64,10 @@ export const metadata: Metadata = {
       'sw': 'https://askbiz.co/sw',
       'sw-KE': 'https://askbiz.co/sw',
       'sw-TZ': 'https://askbiz.co/sw',
+      // Somali — Somalia/Djibouti default; tells search engines a so version exists
+      'so': 'https://askbiz.co/so',
+      'so-SO': 'https://askbiz.co/so',
+      'so-DJ': 'https://askbiz.co/so',
     },
   },
   // Favicon and apple-touch-icon come from the App Router file conventions

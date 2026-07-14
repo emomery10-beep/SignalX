@@ -1,0 +1,18 @@
+{
+  "noData": "Wali xog iib ma jirto",
+  "noDataAsk": "Weydii AskBiz →",
+  "noDataAskPrompt": "Badeecooyinkee ayaan diiradda saaraa iibkooda?",
+  "title": "Badeecooyinka Ugu Sarreeya",
+  "kpiProducts": "Badeecooyin",
+  "kpiAvgMargin": "Celceliska faa'iidada",
+  "kpiUnitsSold": "Xaddiga la iibiyay",
+  "colRank": "#",
+  "colProduct": "Badeeco",
+  "colRevenue": "Dakhli",
+  "colQty": "Tiro",
+  "colMargin": "Faa'iido",
+  "qtySold": "{n} la iibiyay",
+  "footnote": "Dakhliga ayaa lagu kala saaray · xogta POS",
+  "collapse": "← Laab",
+  "tapToAnalyse": "Taabo si aad u falanqeyso →"
+}

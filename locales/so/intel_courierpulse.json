@@ -1,0 +1,17 @@
+{
+  "courierOperations": "🚛 Hawlgallada Gaarsiiyaha",
+  "scoreOutOf": "/100",
+  "labelHealthy": "Caafimaad qaba",
+  "labelAtRisk": "Khatar ku jira",
+  "labelCritical": "Halis",
+  "today": "maanta",
+  "inTransit": "socodka ku jira",
+  "atBranch": "laanta jooga",
+  "failed": "fashilmay",
+  "deliveryRate": "{rate}% heerka gaarsiinta",
+  "stuckOver48h": "{n} istaagay >48s",
+  "unpaidRevenue": "KES {amount} aan la bixin",
+  "fleetAvailable": "Diyaar",
+  "fleetInTransit": "Socodka ku jira",
+  "fleetMaintenance": "Dayactir"
+}

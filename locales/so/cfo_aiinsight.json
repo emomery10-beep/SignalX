@@ -1,0 +1,10 @@
+{
+  "sectionTitle": "Aragtiyaha AI",
+  "poweredBy": "waxaa xoojiya Claude",
+  "refreshBtn": "Cusboonaysii",
+  "analyzingBtn": "Falanqeynta...",
+  "analyzingBody": "Falanqeynta maaliyaddaada...",
+  "noInsights": "Aragti lama abuurin. Guji Cusboonaysii si aad mar kale u isku daydo.",
+  "askAi": "Weydii AI →",
+  "expandPrompt": "Ii sii faahfaahi aragtidan CFO: “{title}” — {body}. I sii tallaabooyin gaar ah oo xiga."
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Xiriirinta Xogta",
+  "sourcesConnected": "{connected} ka mid ah {total} isha ayaa la xiriiriyay",
+  "sourcesConnectedSuffix": "ka mid ah {total} isha ayaa la xiriiriyay",
+  "manageSources": "Maamul ilaha →",
+  "coverageNone": "Xiriiri il si aad u bilowdo helitaanka aragtiyo dhab ah",
+  "coverageLow": "{n} xiriirin dheeraad ah ayaa lagula talinayaa si aad u hesho daboolid buuxda",
+  "coverageMid": "Daboolid wanaagsan — xiriirin badan ayaa horumarisa saxnaanta xogta",
+  "coverageHigh": "Daboolid xog aad u wanaagsan oo ganacsigaaga oo dhan ah",
+  "filterAll": "Dhammaan",
+  "statusNotConnected": "Lama xiriirin",
+  "statusSyncError": "⚠ Khalad isu-dubbaridka",
+  "statusSynced": "La isu-dubbariday {time}",
+  "detailName": "Magaca:",
+  "detailActive": "Firfircoon · isu-dubbaridaya",
+  "connect": "Xiriiri →"
+}

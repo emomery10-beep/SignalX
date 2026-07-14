@@ -1,0 +1,70 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Ma dooneysid emaylo sida kan oo kale ah?",
+    "unsubscribe_link": "Ka bax"
+  },
+  "fallback_name": "aan",
+  "welcome": {
+    "subject": "Ku soo dhawoow AskBiz — iibkaaga koowaad wuxuu qaadanayaa 2 daqiiqo",
+    "heading": "Salaan {firstName}, waad gashay.",
+    "body": "AskBiz waa keeshkaaga, la-socodka kaydkaaga, iyo warbixinta dhammaadka maalinta — oo ku jira taleefanka horeba jeebkaaga ugu jira. Waa kaas waxa kaliya loo baahan yahay:",
+    "step1": "U jeedi kamaraddaada badeeco — bilaa qori barkoodh, bilaa habayn.",
+    "step2": "Qaado EVC Plus, Zaad, lacagta mobiilka, lacag caddaan ama kaadh.",
+    "step3": "Caawa, arag si sax ah waxa aad samaysay iyo waxa dhammaanaya.",
+    "cta": "Samee iibkaaga koowaad →",
+    "closing": "Wax kugu adkaaday? Ka jawaab emaylkan — qof dhab ah ayaa akhriya."
+  },
+  "reengage_7": {
+    "subject": "Salaan {firstName} — hubin degdeg ah oo ka timid AskBiz",
+    "heading": "Waan ku hubinayaa.",
+    "body1": "Salaan {firstName} — waxaan hadda ogaaday inay tahay ku dhawaad toddobaad. Cadaadis ma jiro, ganacsi wadidu waa shaqo mashquul badan.",
+    "body2": "Wax walba waxay ku yaalliin meeshii aad ka tagtay: xogtaada, daashboodhkaaga, qorshahaaga bilaashka ah. Haddii wax kugu adkaaday, ka jawaab oo waan si toos ah kaa caawin doonaa.",
+    "cta": "Ka sii wad meeshii aad ka tagtay →",
+    "closing": "Akoonkaaga iyo qorshaha bilaashka ah waxay ku yaalliin sidii aad uga tagtay."
+  },
+  "reengage_14": {
+    "subject": "Xaggee baad joogtay, {firstName}? Tirooyinkaaga way ku xiiseeyaan",
+    "heading": "Muddo ayaa la joogaa.",
+    "body1": "Salaan {firstName} — waxaan ogaanay inaadan soo gelin dhawaanahan. Cambaareyn ma jirto. Kaliya xasuusin waxa ku sugaya:",
+    "body2": "Iib walba oo lagu diiwaangeliyay taleefankaaga. Kayd kaa digaya inta uusan dhammaan. Iyo dhammaadka maalinta, hal tiro oo muhiim ah: <strong>waxa aad dhab ahaan samaysay.</strong>",
+    "cta": "Ka sii wad meeshii aad ka tagtay →",
+    "closing": "Akoonkaaga iyo qorshaha bilaashka ah waxay ku yaalliin sidii aad uga tagtay. Haddii wax aanu kuu shaqeynin, ka jawaab oo noo sheeg — mid kastaba waan akhrinaa."
+  },
+  "reengage_30": {
+    "subject": "Wax walba waan kuu hayney, {firstName}",
+    "heading": "Bil ayaa la joogaa.",
+    "body1": "Salaan {firstName} — bil ayaa la joogaa, sidaas darteed waxaan rabay inaan aniga qudhaydu ku hubiyo intii aan arrintan aamusnaan u dhaafi lahaa.",
+    "body2": "Akoonkaaga, xogtaada, qorshahaaga bilaashka ah — midna meelna ma tagin. Haddii AskBiz uusan ku habboonayn, runtii waxaan jeclaan lahaa inaan ogaado sababta — ka jawaab oo ii sheeg, xanaaq ma jiro. Haddii aad kaliya mashquul noqotay, iibkaaga koowaad weli waa 2 daqiiqo markasta oo aad diyaar tahay.",
+    "cta": "Ku soo laabo AskBiz →",
+    "signoff": "— Idarus, Aasaasaha &amp; CEO-ga AskBiz"
+  },
+  "plan_upgrade": {
+    "subject": "Ku soo dhawoow {planName}, {firstName}!",
+    "heading": "Salaan {firstName}, ku soo dhawoow {planName}!",
+    "body": "Aad ayaan ugu faraxsan nahay inaad kor u qaadday. Waa kan waxa hadda kuu shidmay:",
+    "cta": "Aad daashboodhkaaga →",
+    "closing": "Haddii wax ku saabsan {planName} uusan u shaqeynin sidaad u baahan tahay, kaliya ka jawaab emaylkan — waxaan shakhsi ahaan hubin doonaa in la hagaajiyo.",
+    "signoff": "— Idarus<br/>Aasaasaha &amp; CEO-ga AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Ku soo dhawoow AskBiz POS, {firstName}!",
+    "heading": "Salaan {firstName}, ku soo dhawoow AskBiz POS!",
+    "body1": "Aad ayaan ugu faraxsan nahay inaad ku dartay AskBiz POS — ku soo dhawoow qoyska.",
+    "body2": "Keeshkaaga, la-socodka kaydkaaga, iyo warbixinta dhammaadka maalinta ayaa hadda firfircoon, si toos ah oo la socda inta kale ee akoonkaaga AskBiz.",
+    "cta": "Fur AskBiz POS →",
+    "closing": "Haddii wax uusan u shaqeynin sidaad u baahan tahay, kaliya ka jawaab emaylkan — waxaan shakhsi ahaan hubin doonaa in la hagaajiyo.",
+    "signoff": "— Idarus<br/>Aasaasaha &amp; CEO-ga AskBiz"
+  },
+  "plan_names": {
+    "free": "Bilaash",
+    "growth": "Koritaan",
+    "business": "Ganacsi",
+    "enterprise": "Shirkad"
+  },
+  "plan_features": {
+    "free": ["10 su'aalood oo AI ah bishii", "1 fayl oo la soo geliyo", "Su'aalo &amp; jawaabo ganacsi aasaasi ah", "Guudmarka daashboodhka", "Taageero emayl"],
+    "growth": ["500 su'aalood oo AI ah bishii", "10 faylal oo la soo geliyo", "Xogaha balaarinta", "Digniinno &amp; saadaalo", "Isku-xir xog toos ah (Shopify, Stripe, Sheets)", "Qaalibyada warshadaha", "Taageero emayl mudnaan leh"],
+    "business": ["2,000 su'aalood oo AI ah bishii", "Faylal aan xad lahayn oo la soo geliyo", "5 xubnood oo koox ah", "Gelitaan API", "Dhammaan sifooyinka Koritaanka", "Taageero gaar ah", "Qiimaha isticmaale-hore — dammaanad ah weligeed"],
+    "enterprise": ["Wax kasta oo aan xad lahayn", "Xubno koox ah oo aan xad lahayn", "Isku-dhafyo gaar ah", "SSO &amp; amni sare", "Dammaanad SLA", "Maareeye akoon oo gaar ah", "Habayn gaar ah", "Ikhtiyaarka white-label"]
+  }
+}

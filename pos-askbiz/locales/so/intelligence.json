@@ -1,0 +1,21 @@
+{
+  "header_title": "Khariidadda Iibka",
+  "header_subtitle": "Macaamil goobo-calaamadeysan",
+  "back": "← Dib u noqo",
+  "period_today": "Maanta",
+  "period_7_days": "7 maalmood",
+  "period_30_days": "30 maalmood",
+  "period_90_days": "90 maalmood",
+  "stat_sales": "Iib",
+  "stat_revenue": "Dakhli",
+  "stat_on_map": "Khariidadda saaran",
+  "popup_by": "{name} ayaa sameeyay",
+  "no_location_title": "Weli xog goobeed ma jirto",
+  "no_location_subtitle": "U ogolow gelitaanka goobta qalabka keeshiyaha marka la iibinayo — iib kastaa wuxuu halkan ugu muuqan doonaa calaamad ahaan",
+  "loading": "Soo raraya…",
+  "geo_tagged_sale": "{count} iib oo goobo-calaamadeysan",
+  "geo_tagged_sale_plural": "{count} iib oo goobo-calaamadeysan",
+  "none_geo_tagged_title": "{count} iib — weli midna lama goobo-calaamadeyn",
+  "none_geo_tagged_subtitle": "Qalabka keeshiyaha waa inuu u ogolaadaa gelitaanka goobta ka hor bixinta.",
+  "no_sales_period": "Weli muddadan iib ma jiro — isku day muddo taariikh oo kale."
+}

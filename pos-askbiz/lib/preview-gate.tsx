@@ -9,10 +9,25 @@
 // project's env vars — it exists only to let a *staging* deploy intentionally
 // expose the preview (e.g. to demo to a client without running `next dev`).
 // ─────────────────────────────────────────────────────────────────────────────
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { useLang } from '@/components/LanguageProvider'
+import { isActiveLocale } from '@/lib/i18n-locale'
+import type { Lang } from '@/lib/i18n'
 
 export const PREVIEW_ENABLED =
   process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENABLE_STAFF_PREVIEW === '1'
+
+// When the preview is embedded as an iframe (e.g. the askbiz.co landing hero),
+// the host passes ?lang=<locale> so the demo renders in the visitor's language —
+// the shared askbiz_lang cookie is unreliable inside a cross-origin iframe.
+function PreviewLocaleSync() {
+  const { lang, setLang } = useLang()
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('lang')
+    if (q && q !== lang && isActiveLocale(q)) setLang(q as Lang)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  return null
+}
 
 export function PreviewGate({ children }: { children: ReactNode }) {
   if (!PREVIEW_ENABLED) {
@@ -28,7 +43,7 @@ export function PreviewGate({ children }: { children: ReactNode }) {
       </div>
     )
   }
-  return <>{children}</>
+  return <><PreviewLocaleSync />{children}</>
 }
 
 /** Matches the PREVIEW MODE banner style used by the root app's app/pos-preview/page.tsx. */

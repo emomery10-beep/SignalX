@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Soo raraya biilinta…",
+  "title": "💳 Qorshayaal & Biilin",
+  "sign_out": "Ka bax",
+  "upgrade_success": "✅ Kor-u-qaadku waa guuleystay! Kuraastaada cusub hadda way shaqeynayaan.",
+  "upgrade_cancelled": "❌ Kor-u-qaadka waa la joojiyay. Wax lacag ah lagama qaadin.",
+  "seats_title": "Kuraasta Point of Sale",
+  "seats_active_one": "Firfircoon — {count} kursi",
+  "seats_active_other": "Firfircoon — {count} kursi",
+  "loading_seat_info": "Soo raraya macluumaadka kursiga…",
+  "seats_blurb_1": "Ku dar shaqaale keeshiye iyo kayd dukaankaaga £5/kursi/bishii. Kursi kastaa wuxuu u ogolaanayaa hal shaqaale inuu galo ",
+  "seats_blurb_2": " iyada oo loo maro iimayl ama WhatsApp OTP taleefankooda gaarka ah. Daashboodhka milkiiluhu had iyo jeer waa ku jiraa — kuraastu waxay u yihiin shaqaale dheeraad ah oo keliya.",
+  "bullet_roles": "✓ Doorarka keeshiye & kayd",
+  "bullet_login": "✓ Galitaan iimayl ama WhatsApp OTP",
+  "bullet_receipts": "✓ Rasiidyada WhatsApp ee macaamiisha",
+  "bullet_vat": "✓ Soo-saarid VAT oo la jaanqaadi karta MTD",
+  "bullet_cancel": "✓ Joojin waqti kasta"
+}

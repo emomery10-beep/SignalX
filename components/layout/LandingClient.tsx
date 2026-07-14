@@ -27,6 +27,11 @@ const T = {
   nav:    'rgba(242,243,245,.92)',  /* matches bg */
 }
 
+// Marketing-copy type scale — every fontSize on the page (outside the
+// decorative device-mockup replicas) should resolve to one of these, so
+// the page reads as one coherent hierarchy instead of ~20 magic numbers.
+const FS = { xs: 12, sm: 14, md: 15, base: 16, lg: 18, xl: 22, xxl: 28 }
+
 interface Geo {
   country: string; countryCode: string; city: string
   currency: string; currencySymbol: string; currencyName: string; flag: string
@@ -1183,6 +1188,7 @@ function PosPoster() {
 }
 
 function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
+  const { lang } = useLang()
   const HERO_TABS = [
     {id:'ops' as const, label:'Business Intelligence', icon:'chart'},
     {id:'cashier' as const, label:'PoS', icon:'camera'},
@@ -1238,7 +1244,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         <PosShowcase tc={tc} demo={demo} />
       ) : posLoaded ? (
         <iframe
-          src="https://pos.askbiz.co/preview/cashier"
+          src={`https://pos.askbiz.co/preview/cashier?lang=${lang}`}
           title="AskBiz cashier — live demo"
           loading="lazy"
           style={{ width:'100%', height:640, border:'none', display:'block' }}
@@ -1415,18 +1421,18 @@ function NavDropdown({ label, items, lang, featured, open, onToggle, onClose }: 
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transform:open?'rotate(180deg)':'none',transition:'transform 180ms' }}><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div style={{ position:'absolute',top:'calc(100% + 4px)',left:'50%',transform:'translateX(-50%)',background:T.card,borderRadius:14,boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:`1px solid ${T.bd}`,zIndex:100,padding:'14px 10px',minWidth:520 }}>
+        <div style={{ position:'absolute',top:'calc(100% + 4px)',left:'50%',transform:'translateX(-50%)',background:T.card,borderRadius:14,boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:`1px solid ${T.bd}`,zIndex:100,padding:'16px 12px',minWidth:600 }}>
           <div style={{ display:'flex',gap:0 }}>
             {items.map((grp, gi) => (
-              <div key={gi} style={{ flex:1,padding:'0 8px' }}>
-                <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase',padding:'4px 8px 8px' }}>{grp.group}</div>
+              <div key={gi} style={{ flex:1,padding:'0 10px' }}>
+                <div style={{ fontSize:FS.xs,fontWeight:700,color:T.acc,letterSpacing:'.1em',textTransform:'uppercase',padding:'4px 8px 10px' }}>{grp.group}</div>
                 {grp.links.map(lnk => (
                   <Link key={lnk.href} href={localePath(lnk.href, lang)} onClick={onClose}
-                    style={{ display:'block',padding:'7px 8px',borderRadius:8,textDecoration:'none' }}
+                    style={{ display:'block',padding:'9px 8px',borderRadius:8,textDecoration:'none' }}
                     className="nav-drop-item"
                   >
-                    <div style={{ fontSize:10,fontWeight:600,color:T.tx,marginBottom:lnk.desc?1:0 }}>{lnk.label}</div>
-                    {lnk.desc && <div style={{ fontSize:9,color:T.tx3,lineHeight:1.3 }}>{lnk.desc}</div>}
+                    <div style={{ fontSize:FS.md,fontWeight:600,color:T.tx,marginBottom:lnk.desc?2:0 }}>{lnk.label}</div>
+                    {lnk.desc && <div style={{ fontSize:FS.sm,color:T.tx3,lineHeight:1.4 }}>{lnk.desc}</div>}
                   </Link>
                 ))}
               </div>
@@ -1434,16 +1440,16 @@ function NavDropdown({ label, items, lang, featured, open, onToggle, onClose }: 
           </div>
           {featured && (
             <Link href={localePath(featured.href, lang)} onClick={onClose}
-              style={{ display:'flex',alignItems:'center',gap:10,marginTop:10,paddingTop:12,borderTop:`1px solid ${T.bd}`,textDecoration:'none' }}
+              style={{ display:'flex',alignItems:'center',gap:12,marginTop:12,paddingTop:14,borderTop:`1px solid ${T.bd}`,textDecoration:'none' }}
               className="nav-drop-item"
             >
-              <div style={{ width:32,height:32,borderRadius:8,background:T.accBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:T.acc }}>
-                {featured.icon==='globe' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>}
-                {featured.icon==='phone' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>}
+              <div style={{ width:36,height:36,borderRadius:8,background:T.accBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:T.acc }}>
+                {featured.icon==='globe' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>}
+                {featured.icon==='phone' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>}
               </div>
               <div>
-                <div style={{ fontSize:10,fontWeight:600,color:T.tx }}>{featured.title}</div>
-                <div style={{ fontSize:9,color:T.tx3 }}>{featured.desc}</div>
+                <div style={{ fontSize:FS.md,fontWeight:600,color:T.tx }}>{featured.title}</div>
+                <div style={{ fontSize:FS.sm,color:T.tx3 }}>{featured.desc}</div>
               </div>
             </Link>
           )}
@@ -1796,10 +1802,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </Link>
           ) : (
             <>
-              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
+              <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link nav-auth-link" style={{ fontSize:FS.base,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
                 {tc('landing.nav_sign_in')}
               </Link>
-              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:12,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
+              <Link href={localePath('/signin?mode=signup', lang as Locale)} className="nav-auth-cta" style={{ fontSize:FS.base,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
                 {tc('landing.nav_get_started')}
               </Link>
             </>
@@ -1816,6 +1822,15 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </nav>
 
+      {/* Scrim — dims page content behind an open mega-menu so the dropdown's
+          edges never leave slivers of hero text peeking out around it */}
+      {openNavMenu && (
+        <div
+          onClick={() => setOpenNavMenu(null)}
+          style={{ position:'fixed',top:56,left:0,right:0,bottom:0,background:'rgba(26,20,16,.28)',backdropFilter:'blur(2px)',zIndex:40,transition:'opacity 150ms' }}
+        />
+      )}
+
       {/* Mobile menu */}
       {menuOpen&&(
         <div style={{ display:'flex',flexDirection:'column',position:'fixed',top:56,left:0,right:0,bottom:0,background:T.bg,zIndex:49,overflowY:'auto',padding:'8px 20px 32px' }}>
@@ -1828,12 +1843,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ['/academy',tc('landing.nav_academy_label')],
             ['/blog',tc('landing.nav_blog_label')],
           ].map(([href,label])=>(
-            <a key={href} href={href.startsWith('#') ? href : localePath(href, lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 12px',fontSize:13,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
+            <a key={href} href={href.startsWith('#') ? href : localePath(href, lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 12px',fontSize:FS.base,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
           ))}
           <div style={{ marginTop:20,display:'flex',flexDirection:'column',gap:10 }}>
             {authUser ? (
-              <Link href={localePath('/home', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center' }}>
-                <span style={{ width:26,height:26,borderRadius:'50%',background:'rgba(255,255,255,.25)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:10 }}>
+              <Link href={localePath('/home', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.base,fontWeight:700,textDecoration:'none',textAlign:'center' }}>
+                <span style={{ width:26,height:26,borderRadius:'50%',background:'rgba(255,255,255,.25)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:11 }}>
                   {authUser.initials || (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -1844,8 +1859,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </Link>
             ) : (
               <>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.nav_get_started')}</Link>
-                <Link href={localePath('/signin', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:12,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.base,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.nav_get_started')}</Link>
+                <Link href={localePath('/signin', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:FS.md,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
               </>
             )}
           </div>
@@ -1876,7 +1891,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </div>
         </div>
         <div style={{ position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,zIndex:2,opacity:Math.max(0,1-scrollY/250),pointerEvents:'none' }}>
-          <span style={{ fontSize:9,color:T.tx3,letterSpacing:'.14em',textTransform:'uppercase' }}>{tc('landing.hero_scroll')}</span>
+          <span style={{ fontSize:FS.xs,color:T.tx3,letterSpacing:'.14em',textTransform:'uppercase' }}>{tc('landing.hero_scroll')}</span>
           <div style={{ width:1,height:28,background:`linear-gradient(to bottom,${T.bd},transparent)` }}/>
         </div>
       </section>
@@ -1892,7 +1907,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         ].map((s,i)=>(
           <div key={i} style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize:10,color:T.tx2,lineHeight:1.4 }}>
+            <span style={{ fontSize:FS.sm,color:T.tx2,lineHeight:1.4 }}>
               <strong style={{ color:T.tx,fontWeight:600 }}>{s.after}</strong>{' '}{s.before}
             </span>
           </div>
@@ -1918,7 +1933,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               ['/business-intelligence/tanzania',tc('landing.where_country_4')],
               ['/business-intelligence/south-africa',tc('landing.where_country_5')],
             ].map(([href,label])=>(
-              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'7px 15px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:10,color:T.tx2,fontWeight:600,textDecoration:'none' }}>
+              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'7px 15px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:FS.sm,color:T.tx2,fontWeight:600,textDecoration:'none' }}>
                 {label}
               </Link>
             ))}
@@ -1929,7 +1944,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               ['/for/hardware-store-owners',tc('landing.where_seg_1')],
               ['/for/mini-supermarket-owners',tc('landing.where_seg_2')],
             ].map(([href,label])=>(
-              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'6px 13px',borderRadius:9999,border:`1px solid ${T.accBdr}`,background:T.accBg,fontSize:10,color:T.acc,fontWeight:600,textDecoration:'none' }}>
+              <Link key={href} href={localePath(href, lang as Locale)} style={{ padding:'6px 13px',borderRadius:9999,border:`1px solid ${T.accBdr}`,background:T.accBg,fontSize:FS.sm,color:T.acc,fontWeight:600,textDecoration:'none' }}>
                 {label}
               </Link>
             ))}
@@ -1945,15 +1960,15 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
           <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'end', marginBottom:40 }} data-reveal>
             <div>
-              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:T.acc, marginBottom:14 }}>Point of sale</div>
+              <div style={{ fontSize:FS.sm, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:T.acc, marginBottom:14 }}>Point of sale</div>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,50px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
                 {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
               </h2>
               <div style={{ display:'flex',gap:12,flexWrap:'wrap' }}>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:12,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:FS.base,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
                   {tc('landing.pos_cta')}
                 </Link>
-                <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:12,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
+                <Link href="/demo" style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:FS.base,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
                   {tc('landing.pos_demo_cta')}
                 </Link>
               </div>
@@ -1966,10 +1981,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           {/* Bento feature grid — custom line icons, single accent, no emoji */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }} className="rep-4col">
             {[
-              { icon:'camera', title:'Camera scan', desc:'No barcode gun — point and sell.' },
-              { icon:'wallet', title:'M-Pesa built in', desc:'Mobile money and cash, no setup.' },
-              { icon:'branch', title:'Multi-branch', desc:'One view across every location.' },
-              { icon:'cloud-off', title:'Works offline', desc:'Cash sales keep going, no signal.' },
+              { icon:'camera', title:tc('landing.pos_grid_camera_title'), desc:tc('landing.pos_grid_camera_desc') },
+              { icon:'wallet', title:tc('landing.pos_grid_mpesa_title'), desc:tc('landing.pos_grid_mpesa_desc') },
+              { icon:'branch', title:tc('landing.pos_grid_branch_title'), desc:tc('landing.pos_grid_branch_desc') },
+              { icon:'cloud-off', title:tc('landing.pos_grid_offline_title'), desc:tc('landing.pos_grid_offline_desc') },
             ].map(f=>(
               <div key={f.title} style={{ border:`1px solid ${T.bd}`, borderRadius:14, padding:'20px 18px', background:T.card }}>
                 <div style={{ marginBottom:14 }}>
@@ -1978,8 +1993,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   {f.icon==='branch' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="1.4"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M6 8.4V13a4 4 0 0 0 4 4M18 8.4V13a4 4 0 0 1-4 4"/></svg>}
                   {f.icon==='cloud-off' && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.tx2} strokeWidth="1.4"><path d="M17 18H7a4 4 0 0 1-1-7.87A5.5 5.5 0 0 1 16.9 8.1 4 4 0 0 1 17 18z"/><path d="M3 3l18 18" strokeLinecap="round"/></svg>}
                 </div>
-                <div style={{ fontSize:12, fontWeight:700, color:T.tx, marginBottom:5 }}>{f.title}</div>
-                <div style={{ fontSize:10.5, color:T.tx3, lineHeight:1.5 }}>{f.desc}</div>
+                <div style={{ fontSize:FS.md, fontWeight:700, color:T.tx, marginBottom:5 }}>{f.title}</div>
+                <div style={{ fontSize:FS.sm, color:T.tx3, lineHeight:1.5 }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -2004,7 +2019,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   {icon:'bulb',label:tc('landing.monitor_feat_2')},
                   {icon:'clock',label:tc('landing.monitor_feat_3')},
                 ].map((f,i)=>(
-                  <div key={i} style={{ display:'flex',gap:9,alignItems:'flex-start',fontSize:11,color:T.tx2 }}>
+                  <div key={i} style={{ display:'flex',gap:9,alignItems:'flex-start',fontSize:FS.md,color:T.tx2 }}>
                     <Ic n={f.icon} size={15} color={T.acc} style={{marginTop:1}}/><span>{f.label}</span>
                   </div>
                 ))}
@@ -2033,7 +2048,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
                 {[0,1,2,3].map(i=>tc('landing.sources_feat_'+i)).map((f,i)=>(
-                  <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:11,color:T.tx2 }}>
+                  <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:FS.md,color:T.tx2 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>{f}
                   </div>
                 ))}
@@ -2060,12 +2075,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
                 {[0,1,2,3].map(i=>tc('landing.demo_feat_'+i)).map((f,i)=>(
-                  <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:11,color:T.tx2 }}>
+                  <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:FS.md,color:T.tx2 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>{f}
                   </div>
                 ))}
               </div>
-              <a href="https://pos.askbiz.co/preview" target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,marginTop:22,padding:'11px 22px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:11,fontWeight:700,textDecoration:'none' }}>
+              <a href="https://pos.askbiz.co/preview" target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,marginTop:22,padding:'11px 22px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.md,fontWeight:700,textDecoration:'none' }}>
                 {tc('landing.demo_cta')} →
               </a>
             </div>
@@ -2078,7 +2093,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
            city, photo) as soon as the first traders agree to be quoted. ── */}
       <section style={{ background:T.card,borderTop:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,80px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:640,margin:'0 auto',textAlign:'center' }} data-reveal>
-          <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.proof_note_label')}</div>
+          <div style={{ fontSize:FS.xs,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.proof_note_label')}</div>
           <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:400,lineHeight:1.1,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
             {tc('landing.proof_note_title')}
           </h2>
@@ -2088,12 +2103,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:12,marginBottom:26 }}>
             <FounderAvatar src="/images/founder.jpg" name={tc('landing.proof_note_name')} />
             <div style={{ textAlign:'left' }}>
-              <div style={{ fontSize:12,fontWeight:700,color:T.tx }}>{tc('landing.proof_note_name')}</div>
-              <div style={{ fontSize:10,color:T.tx3 }}>{tc('landing.proof_note_title_role')}</div>
+              <div style={{ fontSize:FS.md,fontWeight:700,color:T.tx }}>{tc('landing.proof_note_name')}</div>
+              <div style={{ fontSize:FS.sm,color:T.tx3 }}>{tc('landing.proof_note_title_role')}</div>
             </div>
           </div>
           <p style={{ fontSize:14,color:T.tx2,marginBottom:18 }}>{tc('landing.proof_note_join')}</p>
-          <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,padding:'12px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none' }}>
+          <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,padding:'12px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.base,fontWeight:700,textDecoration:'none' }}>
             {tc('landing.proof_note_cta')}
           </Link>
         </div>
@@ -2156,29 +2171,29 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               },
             ].map((tool,i)=>(
               <div key={i} style={{ background:tool.highlight?T.acc:'transparent',borderRadius:14,border:`1px solid ${tool.highlight?'transparent':T.bd}`,padding:'24px',display:'flex',flexDirection:'column',gap:0,position:'relative' }}>
-                {tool.highlight && <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:T.acc,border:`2px solid ${T.bg}`,borderRadius:9999,padding:'2px 12px',fontSize:9,fontWeight:700,color:'#fff',whiteSpace:'nowrap',letterSpacing:'.06em' }}>{tc('landing.compare_recommended')}</div>}
+                {tool.highlight && <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:T.acc,border:`2px solid ${T.bg}`,borderRadius:9999,padding:'2px 12px',fontSize:FS.xs,fontWeight:700,color:'#fff',whiteSpace:'nowrap',letterSpacing:'.06em' }}>{tc('landing.compare_recommended')}</div>}
                 <div style={{ marginBottom:16 }}>
                   <div style={{ fontSize:14,fontWeight:700,color:tool.highlight?'#fff':T.tx,marginBottom:3 }}>{tool.name}</div>
-                  <div style={{ fontSize:9,color:tool.highlight?'rgba(255,255,255,.7)':T.tx3,marginBottom:8 }}>{tool.role}</div>
-                  <div style={{ fontSize:11,fontWeight:700,color:tool.highlight?'#fff':T.acc }}>{tool.price}</div>
+                  <div style={{ fontSize:FS.xs,color:tool.highlight?'rgba(255,255,255,.7)':T.tx3,marginBottom:8 }}>{tool.role}</div>
+                  <div style={{ fontSize:FS.md,fontWeight:700,color:tool.highlight?'#fff':T.acc }}>{tool.price}</div>
                 </div>
                 <div style={{ flex:1,display:'flex',flexDirection:'column',gap:12 }}>
                   <div>
                     {tool.pros.map((p,j)=>(
-                      <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:10,color:tool.highlight?'rgba(255,255,255,.9)':T.tx2,marginBottom:5 }}>
+                      <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:FS.sm,color:tool.highlight?'rgba(255,255,255,.9)':T.tx2,marginBottom:5 }}>
                         <span style={{ color:tool.highlight?'#fff':'#16a34a',flexShrink:0,marginTop:1 }}>✓</span>{p}
                       </div>
                     ))}
                   </div>
                   <div>
                     {tool.cons.map((c,j)=>(
-                      <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:10,color:tool.highlight?'rgba(255,255,255,.6)':T.tx3,marginBottom:5 }}>
+                      <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:FS.sm,color:tool.highlight?'rgba(255,255,255,.6)':T.tx3,marginBottom:5 }}>
                         <span style={{ flexShrink:0,marginTop:1 }}>–</span>{c}
                       </div>
                     ))}
                   </div>
                 </div>
-                <div style={{ marginTop:16,paddingTop:14,borderTop:`1px solid ${tool.highlight?'rgba(255,255,255,.2)':T.bd}`,fontSize:10,color:tool.highlight?'rgba(255,255,255,.8)':T.tx2,lineHeight:1.55,fontStyle:'italic' }}>
+                <div style={{ marginTop:16,paddingTop:14,borderTop:`1px solid ${tool.highlight?'rgba(255,255,255,.2)':T.bd}`,fontSize:FS.sm,color:tool.highlight?'rgba(255,255,255,.8)':T.tx2,lineHeight:1.55,fontStyle:'italic' }}>
                   {tool.verdict}
                 </div>
               </div>
@@ -2186,7 +2201,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </div>
 
           <div style={{ textAlign:'center' }}>
-            <Link href={localePath('/compare', lang as Locale)} style={{ fontSize:11,color:T.tx3,textDecoration:'none',borderBottom:`1px solid ${T.bd}`,paddingBottom:1 }}>
+            <Link href={localePath('/compare', lang as Locale)} style={{ fontSize:FS.md,color:T.tx3,textDecoration:'none',borderBottom:`1px solid ${T.bd}`,paddingBottom:1 }}>
               {tc('landing.compare_full_link')}
             </Link>
           </div>
@@ -2200,7 +2215,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.8vw,48px)',fontWeight:400,lineHeight:1.08,letterSpacing:'-.02em',marginBottom:10,color:T.tx }}>
               {tc('landing.pricing_title')}
             </h2>
-            <p style={{ fontSize:11,color:T.tx2 }}>{tc('landing.pricing_subtitle')}</p>
+            <p style={{ fontSize:FS.md,color:T.tx2 }}>{tc('landing.pricing_subtitle')}</p>
           </div>
           {/* POS add-on */}
           <div data-reveal style={{ borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20 }}>
@@ -2208,31 +2223,31 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <div>
                 <div style={{ display:'inline-flex',alignItems:'center',gap:8,marginBottom:9 }}>
                   <span style={{ fontFamily:'var(--font-instrument)',fontSize:18,color:T.acc }}>{tc('landing.pricing_pos_name')}</span>
-                  <span style={{ fontSize:9,fontWeight:700,color:'#fff',background:T.acc,padding:'2px 7px',borderRadius:9999,textTransform:'uppercase' }}>{tc('landing.pricing_pos_addon')}</span>
+                  <span style={{ fontSize:FS.xs,fontWeight:700,color:'#fff',background:T.acc,padding:'2px 7px',borderRadius:9999,textTransform:'uppercase' }}>{tc('landing.pricing_pos_addon')}</span>
                 </div>
                 <div style={{ display:'flex',alignItems:'baseline',gap:4,marginBottom:5 }}>
                   <span style={{ fontFamily:'var(--font-instrument)',fontSize:30,color:T.tx }}>{posPrice}</span>
-                  <span style={{ fontSize:10,color:T.tx3 }}>{tc('landing.pricing_pos_per_seat')}</span>
+                  <span style={{ fontSize:FS.sm,color:T.tx3 }}>{tc('landing.pricing_pos_per_seat')}</span>
                 </div>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:10,fontWeight:700,textDecoration:'none',marginTop:10 }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.sm,fontWeight:700,textDecoration:'none',marginTop:10 }}>
                   {tc('landing.pricing_pos_cta')}
                 </Link>
               </div>
               <div style={{ display:'flex',flexWrap:'wrap',gap:6,maxWidth:480 }}>
                 {[0,1,2,3,4,5,6,7].map(i=>tc('landing.pricing_pos_pill_'+i)).map((f,i)=>(
-                  <span key={i} style={{ padding:'5px 11px',borderRadius:9999,background:T.accBg,border:`1px solid ${T.accBdr}`,fontSize:9,color:T.tx2 }}>{f}</span>
+                  <span key={i} style={{ padding:'5px 11px',borderRadius:9999,background:T.accBg,border:`1px solid ${T.accBdr}`,fontSize:FS.xs,color:T.tx2 }}>{f}</span>
                 ))}
               </div>
             </div>
           </div>
           {/* Annual toggle */}
           <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:16 }}>
-            <span style={{ fontSize:10,color:annual?T.tx3:T.tx,fontWeight:annual?400:600 }}>{tc('landing.pricing_toggle_monthly')}</span>
+            <span style={{ fontSize:FS.sm,color:annual?T.tx3:T.tx,fontWeight:annual?400:600 }}>{tc('landing.pricing_toggle_monthly')}</span>
             <button role="switch" aria-checked={annual} onClick={()=>setAnnual(v=>!v)} style={{ width:44,height:23,borderRadius:12,background:annual?T.acc:T.bd2,border:'none',cursor:'pointer',position:'relative',transition:'background 200ms',outline:'none' }}>
               <div style={{ width:17,height:17,borderRadius:'50%',background:'#fff',position:'absolute',top:3,left:annual?24:3,transition:'left 200ms',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }}/>
             </button>
-            <span style={{ fontSize:10,color:annual?T.tx:T.tx3,fontWeight:annual?600:400 }}>
-              {tc('landing.pricing_toggle_annual')} <span style={{ fontSize:9,fontWeight:700,color:'#16a34a',background:'rgba(22,163,74,.08)',borderRadius:9999,padding:'1px 6px',marginLeft:3 }}>{tc('landing.pricing_toggle_save')}</span>
+            <span style={{ fontSize:FS.sm,color:annual?T.tx:T.tx3,fontWeight:annual?600:400 }}>
+              {tc('landing.pricing_toggle_annual')} <span style={{ fontSize:FS.xs,fontWeight:700,color:'#16a34a',background:'rgba(22,163,74,.08)',borderRadius:9999,padding:'1px 6px',marginLeft:3 }}>{tc('landing.pricing_toggle_save')}</span>
             </span>
           </div>
           {/* Tiers */}
@@ -2247,7 +2262,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ].map((plan,i)=>(
               <div key={i} data-reveal style={{ borderRadius:16,border:plan.popular?`1px solid ${T.accBdr}`:`1px solid ${T.bd}`,background:plan.popular?`rgba(201,122,68,.03)`:T.card,padding:'20px 16px',position:'relative',display:'flex',flexDirection:'column',transitionDelay:`${i*60}ms` }}>
                 {plan.popular&&(
-                  <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',padding:'2px 12px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:9,fontWeight:700,whiteSpace:'nowrap',textTransform:'uppercase',letterSpacing:'.06em' }}>
+                  <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',padding:'2px 12px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.xs,fontWeight:700,whiteSpace:'nowrap',textTransform:'uppercase',letterSpacing:'.06em' }}>
                     {tc('landing.plan_most_popular')}
                   </div>
                 )}
@@ -2255,17 +2270,17 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   <div style={{ fontFamily:'var(--font-instrument)',fontSize:15,color:plan.colour,marginBottom:9 }}>{plan.name}</div>
                   <div style={{ display:'flex',alignItems:'baseline',gap:4,marginBottom:4 }}>
                     <span style={{ fontFamily:'var(--font-instrument)',fontSize:28,color:T.tx }}>{plan.price}</span>
-                    {plan.id!=='free'&&<span style={{ fontSize:9,color:T.tx3 }}>{plan.sub}{annual?tc('landing.pricing_annual_suffix'):''}</span>}
+                    {plan.id!=='free'&&<span style={{ fontSize:FS.xs,color:T.tx3 }}>{plan.sub}{annual?tc('landing.pricing_annual_suffix'):''}</span>}
                   </div>
                 </div>
                 <div style={{ flex:1,marginBottom:14 }}>
                   {plan.features.map((f,j)=>(
-                    <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:10,color:T.tx2,marginBottom:7 }}>
+                    <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:FS.sm,color:T.tx2,marginBottom:7 }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={plan.colour} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,marginTop:2 }}><path d="M20 6L9 17l-5-5"/></svg>{f}
                     </div>
                   ))}
                 </div>
-                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:10,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:FS.sm,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
                   {plan.id==='free'?tc('landing.plan_free_cta'):plan.id==='growth'?tc('landing.plan_growth_cta'):tc('landing.plan_business_cta')}
                 </Link>
               </div>
@@ -2282,10 +2297,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         {FAQS.map((faq,i)=>(
           <details key={i} data-reveal className="faq-item" style={{ borderBottom:`1px solid ${T.bd}` }} open={i===0?true:undefined}>
             <summary style={{ padding:'15px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,cursor:'pointer',listStyle:'none' }}>
-              <h3 style={{ fontSize:11,fontWeight:600,color:T.tx,margin:0 }}>{faq.q}</h3>
+              <h3 style={{ fontSize:FS.md,fontWeight:600,color:T.tx,margin:0 }}>{faq.q}</h3>
               <svg className="faq-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.tx3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0,transition:'transform 200ms' }}><path d="M6 9l6 6 6-6"/></svg>
             </summary>
-            <p style={{ fontSize:11,color:T.tx2,lineHeight:1.75,margin:0,padding:'0 10px 16px' }}>{faq.a}</p>
+            <p style={{ fontSize:FS.md,color:T.tx2,lineHeight:1.75,margin:0,padding:'0 10px 16px' }}>{faq.a}</p>
           </details>
         ))}
       </section>
@@ -2297,17 +2312,17 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             {tc('landing.closing_title')}
           </h2>
           <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:24 }}>{tc('landing.closing_sub')}</p>
-          <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:8,padding:'14px 32px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:13,fontWeight:700,textDecoration:'none',boxShadow:'0 4px 24px rgba(201,122,68,.3)' }}>
+          <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:8,padding:'14px 32px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:FS.base,fontWeight:700,textDecoration:'none',boxShadow:'0 4px 24px rgba(201,122,68,.3)' }}>
             {tc('landing.closing_cta')}
           </Link>
-          <p style={{ fontSize:10,color:T.tx3,marginTop:14 }}>{tc('landing.hero_trust_free')}</p>
-          <p style={{ fontSize:10,color:T.tx3,marginTop:4 }}>{tc('landing.hero_trust_secure')}</p>
+          <p style={{ fontSize:FS.sm,color:T.tx3,marginTop:14 }}>{tc('landing.hero_trust_free')}</p>
+          <p style={{ fontSize:FS.sm,color:T.tx3,marginTop:4 }}>{tc('landing.hero_trust_secure')}</p>
 
           {/* ── Lightweight lead capture — for visitors not ready to sign up yet ── */}
           <div style={{ marginTop:36,paddingTop:28,borderTop:`1px solid ${T.bd}` }}>
-            <p style={{ fontSize:11,color:T.tx2,marginBottom:12 }}>{tc('landing.lead_capture_title')}</p>
+            <p style={{ fontSize:FS.md,color:T.tx2,marginBottom:12 }}>{tc('landing.lead_capture_title')}</p>
             {leadStatus === 'sent' ? (
-              <p style={{ fontSize:11,color:T.acc,fontWeight:600 }}>{tc('landing.lead_capture_success')}</p>
+              <p style={{ fontSize:FS.md,color:T.acc,fontWeight:600 }}>{tc('landing.lead_capture_success')}</p>
             ) : (
               <form onSubmit={submitLead} style={{ display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap' }}>
                 <input
@@ -2316,19 +2331,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   value={leadEmail}
                   onChange={e=>setLeadEmail(e.target.value)}
                   placeholder={tc('landing.lead_capture_placeholder')}
-                  style={{ padding:'11px 16px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,color:T.tx,fontSize:11,minWidth:220,flex:'1 1 220px',maxWidth:280 }}
+                  style={{ padding:'11px 16px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,color:T.tx,fontSize:FS.md,minWidth:220,flex:'1 1 220px',maxWidth:280 }}
                 />
                 <button
                   type="submit"
                   disabled={leadStatus==='sending'}
-                  style={{ padding:'11px 22px',borderRadius:9999,border:'none',background:T.tx,color:'#fff',fontSize:11,fontWeight:700,cursor:leadStatus==='sending'?'default':'pointer',opacity:leadStatus==='sending'?0.6:1 }}
+                  style={{ padding:'11px 22px',borderRadius:9999,border:'none',background:T.tx,color:'#fff',fontSize:FS.md,fontWeight:700,cursor:leadStatus==='sending'?'default':'pointer',opacity:leadStatus==='sending'?0.6:1 }}
                 >
                   {tc('landing.lead_capture_cta')}
                 </button>
               </form>
             )}
             {leadStatus === 'error' && (
-              <p style={{ fontSize:10,color:'#b45309',marginTop:8 }}>{tc('landing.lead_capture_error')}</p>
+              <p style={{ fontSize:FS.sm,color:'#b45309',marginTop:8 }}>{tc('landing.lead_capture_error')}</p>
             )}
           </div>
         </div>
@@ -2337,12 +2352,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
       <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'48px clamp(16px,4vw,40px) 24px' }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
-          <p style={{ fontSize:11,color:T.tx2,lineHeight:1.7,maxWidth:720,marginBottom:36 }}>{tc('landing.footer_intro')}</p>
+          <p style={{ fontSize:FS.md,color:T.tx2,lineHeight:1.7,maxWidth:720,marginBottom:36 }}>{tc('landing.footer_intro')}</p>
 
           <nav aria-label="Footer navigation" className="footer-grid" style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'28px 24px',paddingBottom:32,borderBottom:`1px solid ${T.bd}` }}>
             {footerColumns.map(col => (
               <div key={col.title}>
-                <div style={{ fontSize:9,fontWeight:700,color:T.tx,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:14 }}>{col.title}</div>
+                <div style={{ fontSize:FS.xs,fontWeight:700,color:T.tx,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:14 }}>{col.title}</div>
                 <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:11 }}>
                   {col.links.map(l => {
                     const isExternal = l.href.startsWith('mailto:') || l.href.startsWith('http')
@@ -2351,7 +2366,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                         <a
                           href={isExternal ? l.href : localePath(l.href, lang as Locale)}
                           className="nav-link"
-                          style={{ fontSize:11,color:T.tx2,textDecoration:'none',transition:'color 150ms',display:'inline-block',padding:'2px 0' }}
+                          style={{ fontSize:FS.md,color:T.tx2,textDecoration:'none',transition:'color 150ms',display:'inline-block',padding:'2px 0' }}
                           {...(l.href.startsWith('http') ? { target:'_blank', rel:'noopener noreferrer' } : {})}
                         >{l.label}</a>
                       </li>
@@ -2359,7 +2374,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   })}
                   {col.seeAll && (
                     <li>
-                      <a href={localePath(col.seeAll.href, lang as Locale)} className="nav-link" style={{ fontSize:11,color:T.acc,fontWeight:600,textDecoration:'none',display:'inline-block',padding:'2px 0' }}>{col.seeAll.label}</a>
+                      <a href={localePath(col.seeAll.href, lang as Locale)} className="nav-link" style={{ fontSize:FS.md,color:T.acc,fontWeight:600,textDecoration:'none',display:'inline-block',padding:'2px 0' }}>{col.seeAll.label}</a>
                     </li>
                   )}
                 </ul>
@@ -2370,11 +2385,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,paddingTop:20 }}>
             <div style={{ display:'flex',alignItems:'center',gap:7 }}>
               <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
-              <span style={{ fontFamily:'var(--font-instrument)',fontSize:12,color:T.tx }}>AskBiz</span>
-              <span style={{ fontSize:10,color:T.tx3 }}>· {tc('landing.footer_utauza')}</span>
-              <span style={{ fontSize:10,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
+              <span style={{ fontFamily:'var(--font-instrument)',fontSize:FS.sm,color:T.tx }}>AskBiz</span>
+              <span style={{ fontSize:FS.sm,color:T.tx3 }}>· {tc('landing.footer_utauza')}</span>
+              <span style={{ fontSize:FS.sm,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
             </div>
-            <p style={{ fontSize:9,color:T.tx3,opacity:0.8,margin:0 }}>{tc('landing.footer_tagline')} · {tc('landing.footer_countries')}</p>
+            <p style={{ fontSize:FS.xs,color:T.tx3,opacity:0.8,margin:0 }}>{tc('landing.footer_tagline')} · {tc('landing.footer_countries')}</p>
           </div>
         </div>
       </footer>

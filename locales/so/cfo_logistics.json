@@ -1,0 +1,18 @@
+{
+  "title": "Gaarsiinta & Shixnadaha",
+  "provider": "Track17",
+  "emptyState": "Wax shixnado ah oo firfircoon lama la socon. Ku dar shixnadaha adigoo isticmaalaya isku-xirka Track17 si aad u aragto saameynta gaarsiinta ee lacagta shaqada.",
+  "askAi": "Weydii AI",
+  "askPrompt": "Shixnadahayga: {inTransitCount} ayaa jidka ku sugan oo qiimahoodu yahay {inTransitValue}, {delayedCount} ayaa daahay ({delayedValue} halis ku jira), kharashka maalgelinta {financingCost}, celceliska gaarsiinta {avgDays} maalmood. Sideen ku yareyn karaa kharashaadka gaarsiinta iyo lacagta shaqada ee jidka ku xayiran?",
+  "metricInTransit": "Jidka Ku Sugan",
+  "metricDelayed": "Daahay",
+  "metricAvgDelivery": "Celceliska Gaarsiinta",
+  "metricFinanceCost": "Kharashka Maalgelinta",
+  "workingCapitalDays": "maalmaha lacagta shaqada",
+  "capitalTiedUp": "lacagta xayirnaan",
+  "shipmentHealth": "Caafimaadka Shixnadaha",
+  "onTime": "{n} waqtigooda ayay yimaadeen",
+  "delayedCount": "{n} way daaheen",
+  "atRiskWarning": "{n} shixnad ayaa lagu calaamadeeyay khatar — waxay sababi kartaa alaab-la'aan ama luminta dakhli haddii ay sii daahdo.",
+  "inTransitSummary": "{value} oo alaab ah ayaa hadda jidka ku sugan. Lacagtan waxay xayiran tahay celceliskeeda {days} maalmood ilaa alaabtu timaado oo la iibin karo."
+}

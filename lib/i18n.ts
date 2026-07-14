@@ -1,11 +1,11 @@
 import langEnglishNames from './i18n-languages.json'
 
-export type Lang = 'en' | 'fr' | 'de' | 'es' | 'ar' | 'sw' | 'pt' | 'nl' | 'it' | 'pl'
+export type Lang = 'en' | 'fr' | 'de' | 'es' | 'ar' | 'sw' | 'so' | 'pt' | 'nl' | 'it' | 'pl'
 
 // Native names (shown in the language switcher).
 export const LANG_NAMES: Record<Lang, string> = {
   en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español',
-  ar: 'العربية', sw: 'Kiswahili', pt: 'Português', nl: 'Nederlands',
+  ar: 'العربية', sw: 'Kiswahili', so: 'Soomaali', pt: 'Português', nl: 'Nederlands',
   it: 'Italiano', pl: 'Polski',
 }
 
@@ -15,7 +15,7 @@ export const LANG_ENGLISH_NAMES: Record<Lang, string> = langEnglishNames
 
 export const LANG_FLAGS: Record<Lang, string> = {
   en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸',
-  ar: '🇸🇦', sw: '🇰🇪', pt: '🇧🇷', nl: '🇳🇱',
+  ar: '🇸🇦', sw: '🇰🇪', so: '🇸🇴', pt: '🇧🇷', nl: '🇳🇱',
   it: '🇮🇹', pl: '🇵🇱',
 }
 
@@ -26,6 +26,7 @@ export const COUNTRY_TO_LANG: Record<string, Lang> = {
   ES:'es',MX:'es',AR:'es',CO:'es',CL:'es',PE:'es',
   SA:'ar',AE:'ar',EG:'ar',KW:'ar',QA:'ar',JO:'ar',
   KE:'sw',TZ:'sw',
+  SO:'so',DJ:'so',
   PT:'pt',BR:'pt',AO:'pt',MZ:'pt',
   NL:'nl',IT:'it',PL:'pl',
 }
@@ -576,7 +577,11 @@ const pl: T = { ...en,
   'geo.prices_in': 'Ceny w {sym} dla {country}',
 }
 
-export const TRANSLATIONS: Record<Lang, T> = { en, fr, de, es, ar, sw, pt, nl, it, pl }
+// Somali (so) — legacy inline map. Overrides filled during the so translation
+// pass (locked glossary); English fallback keeps every key graceful until then.
+const so: T = { ...en }
+
+export const TRANSLATIONS: Record<Lang, T> = { en, fr, de, es, ar, sw, so, pt, nl, it, pl }
 
 export function t(lang: Lang, key: TranslationKey, vars?: Record<string,string>): string {
   let str = TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['en'][key] ?? key

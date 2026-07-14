@@ -1,0 +1,11 @@
+{
+  "title": "Soo Kabashada Lacag-bixinta",
+  "askAi": "Weydii AI",
+  "askPrompt": "Waxaan haynaa {failedCount} lacag-bixin oo fashilmay oo wadar ahaan ah {totalAmount}. Waxaan soo kabsanay {recoveredAmount} ({recoveryRate}% heer). {pendingRetry} lacag-bixin ayaa sugaya isku day kale. Sidee ayaan u wanaajin karnaa heerka soo kabashadeena?",
+  "atRisk": "Khatar ku jira",
+  "recovered": "La soo kabsaday",
+  "recoveryRate": "Heerka Soo Kabashada",
+  "failedPayments": "{n} lacag-bixin oo fashilmay",
+  "payments": "{n} lacag-bixinno",
+  "pending": "{n} sugaya"
+}

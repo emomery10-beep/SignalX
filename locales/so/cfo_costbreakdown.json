@@ -1,0 +1,13 @@
+{
+  "heading": "Qaab-dhismeedka Kharashka",
+  "askAi": "Weydii AI",
+  "askAiPrompt": "Qaab-dhismeedka kharashkaygu: qiimaha alaabta waa {cogsPct}% dakhliga ({cogsAmt}), kharashyada joogtada ah waa {fixedPct}% ({fixedAmt}). Waa maxay saddexda meelood ee ugu weyn ee aan kharashka ka dhimi karo iyada oo aan kobaca la dhaawicin?",
+  "totalCosts": "Kharashka guud",
+  "labelCogs": "Qiimaha Alaabta la Iibiyay",
+  "labelFixed": "Kharashyada Joogtada / Hawlgalka",
+  "ofRevenue": "dakhliga",
+  "netProfit": "Faa'iidada Saafiga ah",
+  "whereEveryGoes": "Halka {sym}100 kasta uu tagayo",
+  "profitSuffix": " faa'iido",
+  "costsExceed": "Kharashku wuxuu ka badan yahay dakhliga {sym}{n} halkii {sym}100 la kasbado"
+}

@@ -1,0 +1,56 @@
+{
+  "loading": "Soo raraya…",
+
+  "status_received": "La helay",
+  "status_at_branch": "Laanta ku yaal",
+  "status_assigned": "La qoondeeyay",
+  "status_loaded": "La raray",
+  "status_in_transit": "Socod ku jira",
+  "status_at_destination": "Goobta gaadhay",
+  "status_out_for_delivery": "Loo baxay gaarsiin",
+  "status_delivered": "La gaarsiiyay",
+  "status_collected": "La qaatay",
+  "status_failed_delivery": "Guuldarraystay",
+  "status_returned": "La soo celiyay",
+
+  "time_just_now": "hadda",
+  "time_minutes_ago": "{minutes}daq ka hor",
+  "time_hours_ago": "{hours}saac ka hor",
+
+  "tab_pending": "Sugaya",
+  "tab_assigned": "La qoondeeyay",
+  "tab_transit": "Socod",
+  "tab_arrived": "Yimid",
+
+  "header_title": "🚛 Dirista",
+  "header_subtitle": "{name} · {count} wadar xirmooyin",
+  "refresh": "↻ Cusboonaysii",
+
+  "search_placeholder": "Raadi raadraac, magac, magaalo…",
+
+  "bulk_cancel": "✕ Jooji",
+  "bulk_assign": "☐ Wadar u qoondee",
+  "bulk_selected": "{count} la doortay",
+
+  "loading_parcels": "Soo raraya xirmooyinka…",
+  "empty_category": "Weli xirmo qeybtan kuma jirto",
+
+  "no_description": "Sharraxaad ma leh",
+  "dash": "—",
+
+  "assign_arrow": "Qoondee →",
+  "mark_loaded": "Calaamadee La raray",
+  "dispatch_check": "Dir ✓",
+
+  "bulk_assign_count": "Qoondee {count} xirmo",
+  "select_truck": "Dooro gaari…",
+  "select_driver": "Dooro darawal…",
+  "select_route_optional": "Dooro waddo (ikhtiyaari)…",
+  "assigning": "Qoondaynta…",
+
+  "assign_title": "Qoondee {tracking}",
+  "label_truck_required": "Gaari *",
+  "label_driver_required": "Darawal *",
+  "label_route": "Waddo",
+  "assign_parcel": "Qoondee Xirmada"
+}

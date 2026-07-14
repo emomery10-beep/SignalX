@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "Wax badan ayaad ka faa'iidaysanaysaa AskBiz",
+    "softWarningBody": "Waxaad isticmaashay {questionsUsed} oo ka mid ah {questionLimit} su'aalood ee bishii. Si cad ayaad qiime u heshay — fur wax badan si aadan waligaa u joojin badhtamaha falanqaynta.",
+    "softWarningCta": "Fur su'aalo dheeraad ah →",
+    "softWarningSecondary": "Fiiri qorshayaasha",
+    "limitReachedTitle": "Waxaad si buuxda uga faa'iidaysatay qorshahaaga bilaashka ah",
+    "limitReachedBody": "Waxaad isticmaashay dhammaan {questionLimit} su'aalood ee bilaashka ah ee bishaan. Kor u qaad si aad u sii wadato — xogtaada iyo wada-hadalladaada dhammaan waa la kaydiyay oo way sugayaan.",
+    "limitReachedCta": "Sii wad Growth — £19/bishii →",
+    "limitReachedSecondary": "Fiiri dhammaan qorshayaasha",
+    "featureLockedTitle": "{feature} wuxuu ku jiraa Growth",
+    "featureLockedBody": "{feature} wuxuu ku jiraa qorshaha Growth. Kor u qaad si aad u furto sirdoonka balaadhinta, isku-xirka tooska ah, digniinaha, saadaasha, iyo wax badan.",
+    "featureLockedCta": "Fur Growth — £19/bishii →",
+    "featureLockedSecondary": "Arag waxa kale ee lagu daray",
+    "feature500Questions": "500 su'aalood AI bishii",
+    "feature10Uploads": "10 faayl soo-gelin",
+    "featureExpansion": "Sirdoonka balaadhinta",
+    "featureLiveSync": "Isku-xirka xogta tooska ah",
+    "featureAlerts": "Digniino & saadaal",
+    "featureTrial": "Tijaabo bilaash ah 7-maalmood",
+    "footer": "Tijaabo bilaash ah 7-maalmood · Jooji goor kasta · Qiimaha waa la xayiray dadka hore u qaata"
+  }
+}

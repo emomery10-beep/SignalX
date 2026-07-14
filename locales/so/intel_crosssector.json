@@ -1,0 +1,20 @@
+{
+  "title": "Aragti Qeybaha Kala Duwan",
+  "askAi": "Weydii AI",
+  "askAiPrompt": "Sidee cabbirradaydu ula simmi karaan qeybo kale? Xagee ayaan ka liitaa oo maxaan ka baran karaa qeybaha ugu wanaagsan?",
+  "compareWithSectors": "Ku barbardhig qeybaha",
+  "youBadge": "ADIGA",
+  "businesses": "{n} ganacsi",
+  "sectorRetail": "Tafaariiq",
+  "sectorEcommerce": "Ganacsi elektaroonig ah",
+  "sectorRestaurant": "Maqaayad",
+  "sectorFoodBev": "Cunto & Cabbitaan",
+  "sectorImportExport": "Soo dejin/Dhoofin",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Adeegyo",
+  "sectorFashion": "Moodo",
+  "sectorHealthBeauty": "Caafimaad & Quruxsanaan",
+  "sectorSalon": "Saloon",
+  "sectorRepair": "Hagaajin",
+  "sectorFactory": "Warshad"
+}

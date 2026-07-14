@@ -1,0 +1,36 @@
+{
+  "shell": {
+    "unsubscribe_prompt": "Ma dooneysid emaylo sidan oo kale ah?",
+    "unsubscribe_link": "Ka bax"
+  },
+  "fallback_name": "adiga",
+  "plan_upgrade": {
+    "subject": "Ku soo dhawoow {planName}, {firstName}!",
+    "heading": "Salaan {firstName}, ku soo dhawoow {planName}!",
+    "body": "Aad ayaan ugu faraxsanahay inaad kor u qaadatay. Waa kuwan waxa hadda kuu shaqeeyay:",
+    "cta": "Aad Daashboodhkaaga →",
+    "closing": "Haddii wax ku saabsan {planName} aanu u shaqeynin sidaad u baahan tahay, kaliya uga jawaab emaylkan — anigu shaqsi ahaan waan hubin doonaa in la hagaajiyo.",
+    "signoff": "— Idarus<br/>Aasaasaha &amp; CEO ee AskBiz"
+  },
+  "pos_welcome": {
+    "subject": "Ku soo dhawoow AskBiz POS, {firstName}!",
+    "heading": "Salaan {firstName}, ku soo dhawoow AskBiz POS!",
+    "body1": "Aad ayaan ugu faraxsanahay inaad ku dartay AskBiz POS — ku soo dhawoow qoyska.",
+    "body2": "Kaash-registerkaaga, la-socodka kaydkaaga, iyo warbixinta dhammaadka maalinta ayaa hadda toos ah, si toos ah oo la barbar ah inta kale ee akoonkaaga AskBiz.",
+    "cta": "Fur AskBiz POS →",
+    "closing": "Haddii wax aanu u shaqeynin sidaad u baahan tahay, kaliya uga jawaab emaylkan — anigu shaqsi ahaan waan hubin doonaa in la hagaajiyo.",
+    "signoff": "— Idarus<br/>Aasaasaha &amp; CEO ee AskBiz"
+  },
+  "plan_names": {
+    "free": "Bilaash",
+    "growth": "Kobac",
+    "business": "Ganacsi",
+    "enterprise": "Shirkad"
+  },
+  "plan_features": {
+    "free": ["10 su'aalood AI bishii", "1 fayl la soo geliyo", "Su'aal & jawaab ganacsi aasaasi ah", "Guudmarka daashboodhka", "Taageero emayl"],
+    "growth": ["500 su'aalood AI bishii", "10 fayl la soo geliyo", "Garaadka ballaarinta", "Digniino &amp; saadaalo", "Isku-xirid xog toos ah (Shopify, Stripe, Sheets)", "Qaabab warshadeed", "Taageero emayl mudnaan leh"],
+    "business": ["2,000 su'aalood AI bishii", "Fayl aan xad lahayn la soo geliyo", "5 xubnood koox", "Gelitaanka API", "Dhammaan sifooyinka Kobaca", "Taageero gaar ah", "Qiimaha qaataha hore — la damaanad qaaday weligeed"],
+    "enterprise": ["Wax kasta oo aan xad lahayn", "Xubnood koox aan xad lahayn", "Isku-xiridyo gaar ah", "SSO &amp; amni sare", "Damaanadda SLA", "Maareeye akoon gaar ah", "Diiwaangelin gaar ah", "Ikhtiyaarka white-label"]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Socodka Lacagta",
+  "askAi": "Weydii AI",
+  "askPrompt": "Falanqee socodka lacagtayda iyo muddada lacagta. Maxaan sameeyaa si aan u horumariyo?",
+  "balanceLabel": "{amount} hadhaag",
+  "revenueTrend": "{pct}% dakhli",
+  "addBalanceCta": "Ku dar hadhaaga lacagtaada dejinta si aad u raad-raacdo muddada lacagta",
+  "dailyRevenue": "Dakhliga maalinlaha ah",
+  "dailyCosts": "Kharashka maalinlaha ah",
+  "dailyNet": "Saafiga maalinlaha ah",
+  "weeklyTitle": "Socodka lacagta saafiga ah ee toddobaadlaha ah",
+  "twelveWeeksAgo": "12 toddobaad ka hor",
+  "thisWeek": "Toddobaadkan",
+  "monthlyLabel": "Bishii: {income} soo galay, {expenses} baxay",
+  "aboveBreakeven": "Waxaad kasbanaysaa {amount}/maalintii heerka is-dheellitirka ka sarreysa",
+  "belowBreakeven": "Waxaad u baahan tahay {amount}/maalintii oo dheeraad ah si aad u gaarto is-dheellitirka"
+}

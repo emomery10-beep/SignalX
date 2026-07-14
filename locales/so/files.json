@@ -1,0 +1,20 @@
+{
+  "heading": "Faylasha",
+  "subheading": "Soo geli oo maamul xogtaada CSV iyo XLSX",
+  "upload_button": "Soo geli fayl",
+  "uploading_button": "Waa la soo gelinayaa…",
+  "uploading_status": "Waa la soo gelinayaa {name}…",
+  "upload_success": "✓ {name} waa la soo geliyay — {count} saf ayaa diyaar ah",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Soo gelinta fayl way fashilantay",
+  "dropzone_uploading": "Faylkaaga ayaa la soo gelinayaa…",
+  "dropzone_idle": "Halkan ku tuur faylkaaga ama taabo si aad u doorato",
+  "dropzone_hint": "CSV ama XLSX · Ilaa 50 MB · Xogtaadu waa gaar ah",
+  "empty_state": "Wali fayl lama soo gelin. Ku tuur CSV ama Excel kore si aad u bilowdo.",
+  "meta_rows": "{count} saf",
+  "meta_columns": "{count} tiir",
+  "meta_size": "{size} KB",
+  "status_ready": "✓ Diyaar",
+  "ask_about_this": "Wax ka weydii tan →",
+  "delete": "Tirtir"
+}

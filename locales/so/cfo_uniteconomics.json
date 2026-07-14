@@ -1,0 +1,45 @@
+{
+  "title": "Dhaqaalaha Halka",
+  "ltv_cac_badge": "LTV:CAC {ratio}x · {label}",
+  "ask_ai": "Weydii AI",
+
+  "health_healthy": "Fayow",
+  "health_borderline": "Xadka Dhexe",
+  "health_unprofitable": "Faa'iido Darro",
+
+  "section_per_unit": "Kala Jarka Hal-Hal",
+  "label_revenue": "Dakhli",
+  "label_cogs": "Qiimaha Alaabta",
+  "label_contribution": "Wax-ku-biirinta",
+  "label_net_profit": "Faa'iidada Saafiga ah",
+
+  "section_customer_value": "Qiimaha Macmiilka",
+  "cac_label": "CAC {sym}",
+  "ltv_months_label": "Bilaha LTV",
+  "ltv_with_months": "LTV ({months}bil)",
+  "ltv_cac_ratio": "Isbarbardhigga LTV:CAC",
+  "cac_payback": "Soo-celinta CAC",
+  "bar_target": "3x+ (bartilmaameedka)",
+
+  "section_top_performers": "Kuwa Ugu Fiican",
+  "section_underperformers": "Kuwa Hoos u Socda",
+  "product_margin_contribution": "{margin}% heerka faa'iidada · {contribution}",
+
+  "section_contribution_by_category": "Wax-ku-biirinta Qayb Kasta",
+  "category_with_count": "{category} ({count})",
+  "category_value_margin": "{contribution} · {margin}%",
+  "uncategorized": "Aan Qayb Lahayn",
+
+  "section_product_detail": "Faahfaahinta Badeecada",
+  "sort_contribution": "Wax-ku-biirinta",
+  "sort_margin": "Heerka Faa'iidada",
+  "sort_revenue": "Dakhli",
+  "col_product": "Badeeco",
+  "col_revenue": "Dakhli",
+  "col_margin": "Heerka Faa'iidada",
+  "col_contribution": "Wax-ku-biir.",
+
+  "ask_prompt": "Dhaqaalahayga halka: Celceliska dakhliga/halka {revPerUnit}, qiimaha alaabta/halka {cogsPerUnit}, wax-ku-biirinta/halka {contribPerUnit}, faa'iidada/halka {profitPerUnit}. Isbarbardhigga LTV:CAC {ratio}x, soo-celinta {payback} bilood. {heroes}{zeros}Sideen u hagaajin karaa isku-darka badeecadayda si faa'iido badan hal-hal loo helo?",
+  "ask_prompt_heroes": "Badeecooyinka ugu sarreeya: {names}. ",
+  "ask_prompt_zeros": "Heerka faa'iidada hooseeya: {names}. "
+}

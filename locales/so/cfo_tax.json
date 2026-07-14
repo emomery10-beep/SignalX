@@ -1,0 +1,47 @@
+{
+  "header_title": "Canshuur & U-hoggaansanaan",
+  "ask_ai": "Weydii AI",
+  "ask_prompt": "Dakhligeyga bishii waa {revenue}, faa'iidada saafiga ah {netProfit}. Canshuurta la qiyaasay ee la keydiyo waa {setAside} ({pct}% dakhliga). Ma keydinayaa wax ku filan? Waa maxay hagaajinnada canshuur ee la heli karo {smbLabel}s?",
+
+  "set_aside_this_month": "Keydi Bishan",
+  "pct_of_revenue": "({pct}% dakhliga)",
+
+  "income_tax": "Canshuurta Dakhliga",
+  "turnover_tax": "Canshuurta Wareegga ({rate}%)",
+  "vat_with_rate": "{name} ({rate}%)",
+  "vat_detail": "{rate}% badeecadaha la canshuuro",
+  "turnover_detail": "{rate}% wareegga guud",
+
+  "bracket_covered_by_turnover": "Waxaa daboolay canshuurta wareegga",
+  "bracket_corporate_rate": "{rate}% heerka shirkadeed",
+  "bracket_smb_rate": "{rate}% heerka SMB",
+
+  "compliance_title": "U-hoggaansanaanta {system}",
+  "hide_details": "Qari faahfaahinta",
+  "learn_more": "Wax badan baro",
+  "what_you_need": "Waxaad u baahan tahay:",
+  "tip_prefix": "Talo: {tip}",
+
+  "opportunities_title": "Fursadaha Canshuur-badbaadinta",
+  "tip_pension_title": "Wax-ku-biirinta Hawlgabka",
+  "tip_pension_desc": "Wax-ku-biirinta {pension} waxay yaraysaa dakhliga la canshuuro. Ilaa {pct}% faa'iidada ayaa badanaa laga jari karaa.",
+  "default_pension_scheme": "qorshaha hawlgabka",
+  "tip_capital_title": "Ogolaanshaha Raasumaalka",
+  "tip_capital_desc": "Qalabka, kombiyuutarrada, iyo gawaadhida loo iibsaday isticmaalka ganacsiga ayaa yarayn kara faa'iidada la canshuuro iyagoo maraya ogolaanshaha raasumaalka.",
+  "tip_input_credits_title": "Dalbo Deynta Gelinta {name}",
+  "tip_input_credits_desc": "Hubi in dhammaan iibsiga ganacsiga ay leeyihiin rasiidyo {name} sax ah. SMB badan ayaa seega 2-5% deynta gelinta {name} ee la dalban karo.",
+  "tip_opt_income_title": "Tixgeli Doorashada Canshuurta Dakhliga",
+  "tip_opt_income_desc": "Iyadoo faa'iidada saafiga ah tahay {margin}%, canshuurta dakhliga caadiga ah ee faa'iidada ayaa laga yaabaa inay ka hooseyso canshuurta wareegga {rate}%.",
+  "tip_timing_title": "Waqtiga Kharashaadka ka hor Dhammaadka Sanadka",
+  "tip_timing_desc": "Soo hor marinta iibsiga la qorsheeyay (kayd, qalab, suuqgeyn) xilliga hadda waxay yaraysaa biilka canshuurta sanadkan.",
+
+  "upcoming_deadlines": "Waqtiyada Soo Socda",
+  "vat_return": "Soo-celinta {name}",
+  "annual_return": "Soo-celinta Sannadlaha ah",
+
+  "due_date": "Waqtiga {date}",
+  "overdue": "WAQTIGII WUU DHAAFAY",
+  "days_until": "{days} maalmood",
+  "days_short": "{days}m",
+  "save_approx": "Badbaadi ~{amount}"
+}

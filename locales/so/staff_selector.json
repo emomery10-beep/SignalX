@@ -1,0 +1,22 @@
+{
+  "headingFactory": "Deji Kooxda Warshaddaada",
+  "headingRestaurant": "Deji Kooxda Makhaayaddaada",
+  "headingSubtitle": "Dooro ama u habee doorka shaqaalaha kooxdaada. Door kastaa wuxuu leeyahay ogolaanshaho iyo mas'uuliyado horay loo dejiyay.",
+  "quickStartTitle": "Waxaa loo talinayaa kooxaha {size}",
+  "quickStartSubtitle": "Waxaan kula talineynaa {count} doorarkan si aad u bilowdo:",
+  "quickStartButton": "Isticmaal Doorarka La Talinayo",
+  "allRolesLabel": "Dhammaan Doorarka La Heli Karo",
+  "teamSizeLabel": "Cabbirka Kooxda:",
+  "permissionsLabel": "Ogolaanshaho:",
+  "viewResponsibilities": "Fiiri Mas'uuliyadaha",
+  "responsibilitiesHeading": "Mas'uuliyadaha",
+  "permissionsHeading": "Ogolaanshaho",
+  "moreItems": "+ {count} kale",
+  "recommendedBadge": "⭐ Waa lagula talinayaa",
+  "selectedRoles": "Doorarka La Doortay:",
+  "clearButton": "Nadiifi",
+  "confirmRoleSingular": "Xaqiiji {count} Door",
+  "confirmRolePlural": "Xaqiiji {count} Doorar",
+  "selectAtLeastOne": "Dooro ugu yaraan hal door",
+  "tipText": "💡 Talo: Waxaad wax ka beddeli kartaa ogolaanshaha door kasta dejinta ka dib. Xubnaha kooxdu waxay yeelan karaan hal door ama in ka badan."
+}

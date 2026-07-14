@@ -1,0 +1,20 @@
+{
+  "mPesaPayment": "Lacag-bixinta M-Pesa",
+  "askCustomerForNumber": "Macmiilka ka weydii lambarkiisa M-Pesa",
+  "phonePlaceholder": "07XX XXX XXX",
+  "sendMpesaPrompt": "📲 Dir baaqa M-Pesa",
+  "customerWillGetPopup": "Macmiilka wuxuu ka heli doonaa taleefankiisa fariin uu ku xaqiijinayo lacag-bixinta",
+  "sendingTo": "Waxaa loo diraayaa {phone}...",
+  "justAMoment": "Daqiiqad kaliya",
+  "waitingForCustomer": "Waa la sugayaa macmiilka",
+  "checkTheirPhone": "Hubi taleefankooda",
+  "mpesaPromptSentTo": "Baaqa M-Pesa waxaa loo diray",
+  "askThemToEnterPin": "Ka codso inay geliyaan PIN-kooda M-Pesa si ay u xaqiijiyaan",
+  "waitingForPinConfirmation": "⏳ Waxaa la sugayaa xaqiijinta PIN-ka...",
+  "updatesAutomatically": "Si toos ah ayey u cusboonaataa marka la bixiyo",
+  "wrongNumberSendAgain": "Lambar khalad ah? Mar kale dir",
+  "mpesaPaymentReceived": "Lacag-bixinta M-Pesa waa la helay!",
+  "amountFrom": "{currencySymbol}{amount} laga helay {phone}",
+  "paymentFailedOrTimedOut": "Lacag-bixintu way fashilantay ama waqtigii way dhaafay",
+  "tryAgain": "Isku day mar kale"
+}
