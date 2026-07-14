@@ -7,6 +7,7 @@ import PosMobilePayment from '@/components/PosMobilePayment'
 import PosWaafiPayment, { WaafiWallet } from '@/components/PosWaafiPayment'
 import { getRoleHomeRoute } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
 import { bulkUpsertFromApi, isCacheStale, decrementLocalStock } from '@/lib/pos-inventory-cache'
@@ -755,6 +756,7 @@ export default function SellPage() {
             {businessName && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{businessName}</div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <LanguageToggle inline />
             {staff?.location_id && shiftOpen !== null && (
               <button
                 onClick={() => { setShiftAction(shiftOpen ? 'close' : 'open'); setCloseError(''); setCloseRequiresReason(false); setCloseVarianceReason(''); setShowShiftModal(true) }}

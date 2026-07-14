@@ -6,7 +6,11 @@ import type { Lang } from '@/lib/i18n'
 
 // Compact language switcher for the POS app. The POS app is cookie-driven
 // (no URL prefix), so switching just calls setLang (cookie + re-render).
-export default function LanguageToggle() {
+//
+// `inline` renders it as a normal flex-row control (for a screen header's button
+// cluster) instead of a fixed top-right overlay — the overlay collided with the
+// header controls on the working screens.
+export default function LanguageToggle({ inline = false }: { inline?: boolean } = {}) {
   const { lang, setLang, langNames, langFlags } = useLang()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -20,7 +24,7 @@ export default function LanguageToggle() {
   }, [])
 
   return (
-    <div ref={ref} style={{ position: 'fixed', top: 10, right: 12, zIndex: 1000 }}>
+    <div ref={ref} style={inline ? { position: 'relative', zIndex: 50 } : { position: 'fixed', top: 10, right: 12, zIndex: 1000 }}>
       <button
         onClick={() => setOpen(o => !o)}
         title="Change language"
