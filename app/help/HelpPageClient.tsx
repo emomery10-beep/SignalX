@@ -170,8 +170,9 @@ export default function HelpPageClient() {
                     aria-label={isExp ? tc('help.collapse') : tc('help.expand')}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
-                      padding: '8px 12px 8px 4px', color: 'var(--hc-muted)',
-                      display: 'flex', alignItems: 'center',
+                      padding: '16px 16px 16px 8px', margin: '-8px -8px -8px 0',
+                      color: 'var(--hc-muted)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                   >
                     <span className={`hc-nav-chevron ${isExp ? 'hc-nav-chevron--open' : ''}`}>
