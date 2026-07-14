@@ -92,7 +92,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const COUNTRY_NAMES: Record<string, string> = {
   KE: 'Kenya', NG: 'Nigeria', ZA: 'South Africa', UG: 'Uganda',
-  TZ: 'Tanzania', GH: 'Ghana', ET: 'Ethiopia', RW: 'Rwanda',
+  TZ: 'Tanzania', GH: 'Ghana', ET: 'Ethiopia', RW: 'Rwanda', SO: 'Somalia',
   ZM: 'Zambia', ZW: 'Zimbabwe', US: 'United States', GB: 'United Kingdom',
   AE: 'UAE', IN: 'India', SG: 'Singapore', CA: 'Canada', AU: 'Australia',
   DE: 'Germany', FR: 'France', IT: 'Italy', ES: 'Spain', NL: 'Netherlands',
@@ -134,17 +134,23 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
   if (searchParams.ref === 'shopify' && searchParams.shop) redirect(`/signin?ref=shopify&shop=${searchParams.shop}&status=${searchParams.status || 'install'}`)
 
   const headersList = headers()
-  const countryCode = headersList.get('x-vercel-ip-country') || 'US'
   // Middleware resolves the locale (URL prefix → cookie → geo) and constrains
   // it to the ACTIVE set. Reading COUNTRY_TO_LANG directly here used to leak
   // inactive locales (KE → 'sw'), making every internal link a /sw/* redirect.
   const lang = headersList.get('x-locale') || 'en'
   const city = headersList.get('x-vercel-ip-city') || ''
 
+  // The Somali page is pinned to the Somalia market, priced in USD (Somalia is
+  // USD-denominated), so pricing + demo currency don't follow the visitor's own
+  // geo (a Somali-speaker browsing from Kenya should still see the Somalia offer,
+  // not KSh). Every other locale stays geo-driven.
+  const geoCountry = headersList.get('x-vercel-ip-country') || 'US'
+  const countryCode = lang === 'so' ? 'SO' : geoCountry
+
   const country = COUNTRY_NAMES[countryCode] || countryCode
-  const currency = COUNTRY_CURRENCY[countryCode] || 'USD'
+  const currency = lang === 'so' ? 'USD' : (COUNTRY_CURRENCY[countryCode] || 'USD')
   const currencyInfo = CURRENCIES[currency] || CURRENCIES.USD
-  const pricing = PRICING_TIERS[countryCode] || PRICING_TIERS.DEFAULT
+  const pricing = lang === 'so' ? PRICING_TIERS.DEFAULT : (PRICING_TIERS[countryCode] || PRICING_TIERS.DEFAULT)
 
   const geo = {
     country,

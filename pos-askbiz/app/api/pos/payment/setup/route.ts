@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const service = createServiceClient()
   const { data: config } = await service
     .from('merchant_payment_config')
-    .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, stripe_onboarding_complete, is_active, country, settlement_account')
+    .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, stripe_onboarding_complete, is_active, country, settlement_account, waafipay_merchant_uid')
     .eq('owner_id', ownerId)
     .maybeSingle()
 
@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     has_subaccount: !!config.paystack_subaccount_id,
     stripe_onboarding_complete: !!config.stripe_onboarding_complete,
     has_stripe: !!config.stripe_connected_account_id,
+    has_waafipay: !!config.waafipay_merchant_uid,
   })
 }
 
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
     // Determine payment provider based on country
     const PAYSTACK_COUNTRIES = ['KE', 'NG', 'GH', 'UG', 'TZ', 'RW', 'ZA']
     const STRIPE_COUNTRIES = ['GB', 'US', 'IE', 'DE', 'FR', 'NL', 'BE', 'AT', 'SE', 'NO', 'DK', 'FI', 'ES', 'IT', 'PT', 'CZ', 'PL', 'AU', 'NZ', 'CA', 'SG', 'HK', 'JP', 'MY']
+    const WAAFIPAY_COUNTRIES = ['SO']
 
     let paymentProvider = 'none'
     let subaccountId: string | null = null
@@ -118,6 +120,41 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         )
       }
+    } else if (WAAFIPAY_COUNTRIES.includes(country)) {
+      // Somalia → WaafiPay (EVC Plus / WAAFI / Zaad / Sahal)
+      // Unlike Paystack/Stripe, WaafiPay has no self-serve provisioning API —
+      // credentials require a business relationship with WAAFI HQ or a partner
+      // branch (Telesom, Zaad, Golis). This branch registers the merchant's
+      // intent but cannot auto-activate payments.
+      paymentProvider = 'waafipay'
+
+      const { error: configError } = await service
+        .from('merchant_payment_config')
+        .upsert(
+          {
+            owner_id: ownerId,
+            country,
+            payment_provider: paymentProvider,
+            settlement_account: settlement_account || null,
+            is_active: false,
+          },
+          { onConflict: 'owner_id' }
+        )
+
+      if (configError) {
+        console.error('[payment/setup] DB error:', configError)
+        return NextResponse.json({ error: 'Failed to save payment config' }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        success: true,
+        payment_provider: paymentProvider,
+        country,
+        business_name,
+        is_active: false,
+        requires_manual_setup: true,
+        message: 'WaafiPay requires a merchant agreement with WAAFI HQ or a partner branch (Telesom/Zaad/Golis). Contact AskBiz support to complete setup.',
+      })
     } else {
       // Country not supported
       return NextResponse.json(

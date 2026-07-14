@@ -1244,7 +1244,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         <PosShowcase tc={tc} demo={demo} />
       ) : posLoaded ? (
         <iframe
-          src={`https://pos.askbiz.co/preview/cashier?lang=${lang}`}
+          src={`https://pos.askbiz.co/preview/cashier?lang=${lang}${lang==='so'?'&currency=USD':''}`}
           title="AskBiz cashier — live demo"
           loading="lazy"
           style={{ width:'100%', height:640, border:'none', display:'block' }}

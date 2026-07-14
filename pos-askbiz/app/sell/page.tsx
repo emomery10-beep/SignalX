@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import CashierCopilot from '@/components/CashierCopilot'
 import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
+import PosWaafiPayment, { WaafiWallet } from '@/components/PosWaafiPayment'
 import { getRoleHomeRoute } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
@@ -157,6 +158,9 @@ export default function SellPage() {
   // null = unknown (fetch failed / still loading) — only nag or block when we know for sure
   const [paymentConfigured, setPaymentConfigured] = useState<boolean | null>(null)
   const [productCount, setProductCount] = useState<number | null>(null)
+  const [merchantCountry, setMerchantCountry] = useState<string | null>(null)
+  const [merchantPaymentProvider, setMerchantPaymentProvider] = useState<string | null>(null)
+  const [waafiWallet, setWaafiWallet] = useState<WaafiWallet | null>(null)
 
   // Practice mode — fully on-device guided run-through: demo products,
   // simulated scan, checkout never calls the API. Nothing is recorded.
@@ -225,6 +229,8 @@ export default function SellPage() {
     }).then(r => r.json()).then(cfg => {
       if (cfg.stripe_onboarding_complete) setStripeVerified(true)
       if (typeof cfg.configured === 'boolean') setPaymentConfigured(cfg.configured && cfg.is_active !== false)
+      if (cfg.country) setMerchantCountry(cfg.country)
+      if (cfg.payment_provider) setMerchantPaymentProvider(cfg.payment_provider)
     }).catch(() => {})
 
     // Product count — a brand-new business with zero products gets pointed
@@ -422,6 +428,9 @@ export default function SellPage() {
   const cartTotal  = Math.max(0, subtotal - discountAmt)
   const tendered   = parseFloat(amountTendered) || 0
   const changeDue  = paymentType === 'cash' && tendered > cartTotal ? tendered - cartTotal : 0
+  // Somali merchants see WaafiPay wallets (EVC Plus/WAAFI/Zaad/Sahal) instead of M-Pesa
+  // under the same "Mobile Money" slot — mirrors the Card Paystack/Stripe sub-selector.
+  const isWaafiMerchant = merchantCountry === 'SO' || merchantPaymentProvider === 'waafipay'
 
   // ── Camera (native capture — reliable on iOS / incognito) ──────
   const openProductCamera = () => {
@@ -577,7 +586,7 @@ export default function SellPage() {
       }
       const txBody = {
         items:           cart,
-        payment_type:    paymentType === 'mobile' ? 'mpesa' : paymentType,
+        payment_type:    paymentType === 'mobile' ? (isWaafiMerchant ? 'mobile_pay' : 'mpesa') : paymentType,
         cashier_id:      staff.id,
         customer_phone:  paymentType === 'mobile' ? (mpesaPhone || customerPhone || null) : (customerPhone || null),
         discount_amount:          discountAmt || null,
@@ -1224,7 +1233,7 @@ export default function SellPage() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>{tc('sell.payment_method')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {([['cash', tc('sell.pay_cash')], ['card', tc('sell.pay_card')], ['mobile', tc('sell.pay_mobile')]] as const)
+            {([['cash', tc('sell.pay_cash')], ['card', tc('sell.pay_card')], ['mobile', isWaafiMerchant ? tc('sell.pay_mobile_money') : tc('sell.pay_mobile')]] as const)
               .filter(([type]) => !practice || type === 'cash') // practice is cash-only: card/M-Pesa would hit real payment providers
               .map(([type, label]) => {
                 const requiresNetwork = type !== 'cash' && !online
@@ -1232,7 +1241,7 @@ export default function SellPage() {
                   <button
                     key={type}
                     disabled={requiresNetwork}
-                    onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); setCardProvider(null); }}
+                    onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); setCardProvider(null); setWaafiWallet(null); }}
                     className="pos-tab"
                     style={{
                       padding: '13px 8px', borderRadius: 12,
@@ -1284,11 +1293,31 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* M-Pesa phone input — shows immediately when Mobile selected */}
-        {paymentType === 'mobile' && !lastTxId && (
+        {/* Wallet sub-selector — Somali merchants pick EVC Plus/WAAFI/Zaad/Sahal, mirrors the Card sub-selector */}
+        {paymentType === 'mobile' && isWaafiMerchant && !lastTxId && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('sell.how_customer_wants_to_pay')}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {([['evc_plus', tc('sell.evc_payment')], ['waafi', tc('sell.waafi_payment')], ['zaad', tc('sell.zaad_payment')], ['sahal', tc('sell.sahal_payment')]] as const)
+                .map(([w, label]) => (
+                  <button
+                    key={w}
+                    onClick={() => setWaafiWallet(w)}
+                    style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${waafiWallet === w ? ACC : 'var(--pos-border)'}`, background: waafiWallet === w ? 'var(--pos-accent-pale)' : '#fff', cursor: 'pointer', textAlign: 'center' }}
+                  >
+                    <div style={{ fontSize: 22, marginBottom: 4 }}>📲</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{label}</div>
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile money phone input — shows immediately when Mobile selected */}
+        {paymentType === 'mobile' && !lastTxId && (!isWaafiMerchant || waafiWallet) && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 6 }}>{tc('sell.mpesa_number_label')}</div>
-            <input type="tel" placeholder={tc('sell.mpesa_number_placeholder')} value={mpesaPhone} onChange={e => setMpesaPhone(e.target.value)}
+            <input type="tel" placeholder={isWaafiMerchant ? '+252 61 XXX XXXX' : tc('sell.mpesa_number_placeholder')} value={mpesaPhone} onChange={e => setMpesaPhone(e.target.value)}
               style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }} />
           </div>
         )}
@@ -1320,8 +1349,32 @@ export default function SellPage() {
         )}
 
         {/* M-Pesa STK push — shows after transaction created, auto-sends prompt */}
-        {paymentType === 'mobile' && lastTxId && (
+        {paymentType === 'mobile' && lastTxId && !isWaafiMerchant && (
           <PosMobilePayment transactionId={lastTxId} amount={cartTotal} currencySymbol={sym} ownerId={staff.owner_id} staffId={staff.id}
+            customerPhone={mpesaPhone} autoSend={!!mpesaPhone}
+            onPaymentComplete={() => {
+              fetch(`${API}/api/pos/transactions`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+                body: JSON.stringify({ transaction_id: lastTxId, status: 'paid' }),
+              }).catch(() => {})
+              setTodaySales(s => s + 1); setTodayRevenue(r => r + cartTotal); setScreen('receipt')
+            }}
+            onPaymentFailed={(e) => {
+              fetch(`${API}/api/pos/transactions`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+                body: JSON.stringify({ transaction_id: lastTxId, status: 'failed' }),
+              }).catch(() => {})
+              setLastTxId('')
+              setPaymentError(e)
+            }} />
+        )}
+
+        {/* WaafiPay wallet payment — shows after transaction created, auto-sends prompt */}
+        {paymentType === 'mobile' && lastTxId && isWaafiMerchant && (
+          <PosWaafiPayment transactionId={lastTxId} amount={cartTotal} currencySymbol={sym} ownerId={staff.owner_id} staffId={staff.id}
+            wallet={waafiWallet || 'evc_plus'}
             customerPhone={mpesaPhone} autoSend={!!mpesaPhone}
             onPaymentComplete={() => {
               fetch(`${API}/api/pos/transactions`, {
@@ -1427,11 +1480,12 @@ export default function SellPage() {
         {!lastTxId && (
           <button
             onClick={handleCheckout}
-            disabled={processing || (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) || (paymentType === 'card' && stripeVerified && !cardProvider) || (paymentType !== 'cash' && paymentConfigured === false) || (paymentType !== 'cash' && !online)}
+            disabled={processing || (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) || (paymentType === 'card' && stripeVerified && !cardProvider) || (paymentType === 'mobile' && isWaafiMerchant && !waafiWallet) || (paymentType !== 'cash' && paymentConfigured === false) || (paymentType !== 'cash' && !online)}
             className="pos-btn-primary"
             style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) ? 0.5 : 1 }}
           >
             {processing ? tc('sell.processing') :
+              paymentType === 'mobile' && isWaafiMerchant && !waafiWallet ? tc('sell.select_how_to_pay') :
               paymentType === 'mobile' ? tc('sell.send_mpesa', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
               paymentType === 'card' && stripeVerified && cardProvider === 'stripe' ? tc('sell.charge_apple_google_pay', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
               paymentType === 'card' && stripeVerified && cardProvider === 'paystack' ? tc('sell.charge_card_amount', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
