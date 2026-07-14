@@ -2219,6 +2219,44 @@ export const LEARNING_PATHS: LearningPath[] = [
       { slug: 'pos-margin-improvement',        title: 'Margin Improvement: Five Levers Beyond Price' },
     ],
   },
+
+  // ── Local-language POS tracks (native content, not translations) ──────────
+  {
+    id: 'anza-na-askbiz-pos',
+    title: 'Anza na AskBiz POS (kwa Kiswahili)',
+    subtitle: 'Jifunze kutumia POS hatua kwa hatua — kuingia hadi kufunga siku',
+    icon: '🛒',
+    color: '#16a34a',
+    duration: '~30 dakika',
+    level: 'Beginner',
+    description: 'Kozi kamili ya AskBiz POS kwa Kiswahili. Utajifunza kuingia kwa PIN yako, kuongeza bidhaa kwa kupiga picha tu, kufanya mauzo ya pesa taslimu na M-Pesa, kusimamia stoo yako, kutuma risiti kwa WhatsApp na kusimamia madeni, na mwishowe kufunga siku kwa kuhesabu pesa na kusoma ripoti zako. Kila somo ni fupi na la vitendo — mwisho wa kozi utaweza kuendesha duka lako lote kwenye AskBiz POS.',
+    articles: [
+      { slug: 'pos-kuanza-na-askbiz-kiswahili',            title: 'Kuanza na AskBiz POS: Kuingia na PIN Yako' },
+      { slug: 'pos-kuongeza-bidhaa-kwa-kamera-kiswahili',  title: 'Kuongeza Bidhaa kwa Kamera: Piga Picha, Maliza' },
+      { slug: 'pos-kufanya-mauzo-kiswahili',               title: 'Kufanya Mauzo: Pesa Taslimu na M-Pesa' },
+      { slug: 'pos-kusimamia-stoo-kiswahili',              title: 'Kusimamia Stoo: Usiishiwe na Bidhaa Bila Kujua' },
+      { slug: 'pos-risiti-wateja-na-mikopo-kiswahili',     title: 'Risiti za WhatsApp, Wateja, na Mauzo ya Mkopo (Deni)' },
+      { slug: 'pos-kufunga-siku-na-ripoti-kiswahili',      title: 'Kufunga Siku: Kuhesabu Pesa na Kusoma Ripoti Zako' },
+    ],
+  },
+  {
+    id: 'ku-bilow-askbiz-pos',
+    title: 'Ku Bilow AskBiz POS (af-Soomaali)',
+    subtitle: 'Baro isticmaalka POS tallaabo tallaabo — gelitaanka ilaa maalin-xiridda',
+    icon: '📱',
+    color: '#0e7490',
+    duration: '~30 daqiiqo',
+    level: 'Beginner',
+    description: 'Koorso dhammaystiran oo AskBiz POS ah oo af-Soomaali ah. Waxaad baran doontaa gelitaanka PIN-kaaga, alaab ku darista sawir kaliya, iibka lacagta gacanta iyo EVC Plus/WAAFI, maamulka bakhaarkaaga, risiidhyada WhatsApp iyo maamulka deynta, ugu dambayntana maalin-xiridda adigoo lacagta tirinaya oo warbixintaada akhrinaya. Cashar kastaa waa gaaban yahay oo waxqabad ah — dhammaadka koorsada waxaad awoodi doontaa inaad dukaankaaga oo dhan ku maamusho AskBiz POS.',
+    articles: [
+      { slug: 'pos-ku-bilow-askbiz-soomaali',              title: 'Ku Bilow AskBiz POS: Gelitaanka PIN-kaaga' },
+      { slug: 'pos-alaab-ku-dar-kamerada-soomaali',        title: 'Alaab Ku Dar Kamerada: Sawir Qaad, Dhammee' },
+      { slug: 'pos-iib-samee-soomaali',                    title: 'Iib Samee: Lacag Gacanta, EVC Plus iyo WAAFI' },
+      { slug: 'pos-maamul-alaabta-soomaali',               title: 'Maamul Alaabtaada: Yaanay Kaa Dhammaan Adigoon Ogayn' },
+      { slug: 'pos-risiidh-macaamiil-iyo-deyn-soomaali',   title: 'Risiidhyada WhatsApp, Macaamiisha, iyo Iibka Deynta' },
+      { slug: 'pos-xir-maalinta-warbixinta-soomaali',      title: 'Xir Maalinta: Tiri Lacagta oo Akhri Warbixintaada' },
+    ],
+  },
 ]
 
 // ── BI Market Learning Paths (Kenya · Nigeria · UK · EU · Grassroots) ────────

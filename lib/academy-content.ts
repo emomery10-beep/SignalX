@@ -9,6 +9,8 @@ import { ASKBIZ_POS_LOGISTICS_ARTICLES } from './askbiz-pos-logistics-articles';
 import { ASKBIZ_POS_TILL_ARTICLES } from './askbiz-pos-till-articles';
 import { ASKBIZ_POS_HACKS_ARTICLES } from './askbiz-pos-hacks-articles';
 import { ASKBIZ_POS_REPORTS_ARTICLES } from './askbiz-pos-reports-articles';
+import { ACADEMY_POS_SWAHILI_ARTICLES } from './academy-pos-swahili';
+import { ACADEMY_POS_SOMALI_ARTICLES } from './academy-pos-somali';
 // ─── CFO Dashboard Training (100 articles) ───────────────────────────────────
 // NOTE: CFO batch files temporarily disabled for build — will be re-enabled when files are committed
 // import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
@@ -405,6 +407,8 @@ export const academyCategories: AcademyCategory[] = [
   { slug: "legal-and-contracts", title: "Legal & Contracts for SMEs", description: "Shareholders agreements, NDAs, GDPR, director liability, and the legal essentials every UK founder needs to know.", icon: "⚖️", color: "#2c3e50", articleCount: 20 },
   { slug: "sustainability-and-esg", title: "Sustainability & ESG", description: "Carbon footprints, net zero, ESG reporting, and the sustainability metrics that matter for modern SMEs.", icon: "🌱", color: "#27ae60", articleCount: 20 },
   { slug: "point-of-sale", title: "Point of Sale & Retail", description: "Everything about running a modern POS — scanning, selling, inventory, staff, receipts, and reporting.", icon: "💳", color: "#e67e22", articleCount: 33 },
+  { slug: "pos-kwa-kiswahili", title: "POS kwa Kiswahili", description: "Jifunze kutumia AskBiz POS hatua kwa hatua, kwa Kiswahili — kuingia, kuongeza bidhaa kwa kamera, mauzo ya M-Pesa, stoo, madeni, na ripoti.", icon: "🛒", color: "#16a34a", articleCount: 6 },
+  { slug: "pos-af-soomaali", title: "POS af-Soomaali", description: "Baro sida loo isticmaalo AskBiz POS tallaabo tallaabo, af-Soomaali — gelitaan, alaab ku darid kamerada, iibka EVC Plus iyo WAAFI, bakhaar, deyn, iyo warbixino.", icon: "📱", color: "#0e7490", articleCount: 6 },
 ];
 
 export const academyArticles: AcademyArticle[] = [
@@ -15423,6 +15427,8 @@ academyArticles.push(...ASKBIZ_POS_LOGISTICS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_TILL_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_HACKS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_REPORTS_ARTICLES);
+academyArticles.push(...ACADEMY_POS_SWAHILI_ARTICLES);
+academyArticles.push(...ACADEMY_POS_SOMALI_ARTICLES);
 
 // ─── MERGE SAAS CFO TRAINING ARTICLES (BATCHES 50-90) ──────────────────────
 // NOTE: Batches 50-90 exist locally but not yet committed to git.
