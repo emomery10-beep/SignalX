@@ -6,9 +6,7 @@ import { TRANSLATIONS, LANG_NAMES, LANG_FLAGS, RTL_LANGS, t as tFn } from '@/lib
 import { tFrom, type LocaleDict } from '@/lib/i18n-catalog-core'
 import { primeLocale, getCachedLocale, loadLocale } from '@/lib/catalog-client'
 import { formatCurrency, formatNumber, formatDate, formatDateTime, formatPercent } from '@/lib/i18n-format'
-
-// Non-default locale prefixes that appear in the URL
-const URL_PREFIXED_LOCALES = ['es', 'fr', 'de', 'nl', 'ar'] as const
+import { PREFIXED_LOCALES } from '@/lib/i18n-locale'
 
 interface LangContextType {
   lang: Lang
@@ -73,7 +71,7 @@ export function LanguageProvider({
   // because the root layout doesn't re-mount across navigations.
   useEffect(() => {
     const seg = pathname.split('/')[1]
-    if ((URL_PREFIXED_LOCALES as readonly string[]).includes(seg) && seg !== lang) {
+    if ((PREFIXED_LOCALES as readonly string[]).includes(seg) && seg !== lang) {
       setLangState(seg as Lang)
     }
   }, [pathname])

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import { useMotion } from '@/hooks/useMotion'
 import HelpWidget from '@/components/help/HelpWidget'
 import NotificationBell from '@/components/layout/NotificationBell'
@@ -42,7 +42,7 @@ function ConvItem({ conv, active }: { conv: { id: string; title?: string }; acti
   const { lang } = useLang()
   return (
     <Link
-      href={localePath('/ask/' + conv.id, lang)}
+      href={localePath('/ask/' + conv.id, toLocale(lang))}
       style={{
         display: 'block',
         padding: '6px 9px',
@@ -170,8 +170,8 @@ function ProfilePanel({ user, onClose, onSignOut }: {
             Sign out
           </button>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, paddingTop: 4 }}>
-            <a href={localePath('/privacy', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none' }}>Privacy</a>
-            <a href={localePath('/terms', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none' }}>Terms</a>
+            <a href={localePath('/privacy', toLocale(lang))} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none' }}>Privacy</a>
+            <a href={localePath('/terms', toLocale(lang))} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none' }}>Terms</a>
           </div>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function AppShellClient({ user, conversations, children }: {
   const router = useRouter()
   const supabase = createClient()
   const { setUser, updateSettings } = useStore()
-  const { tc, lang } = useLang()
+  const { tc, lang, isRTL } = useLang()
   const [profileOpen, setProfileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -215,6 +215,20 @@ export default function AppShellClient({ user, conversations, children }: {
     setUser({ id: user.id, name: user.name, email: user.email, plan: user.plan as any, initials })
     updateSettings({ bizType: user.bizType as any })
   }, [user, setUser, updateSettings, initials])
+
+  // The root layout's own LanguageProvider also sets document.documentElement's
+  // lang/dir (always to English/ltr — it no longer knows the signed-in user's
+  // locale). React fires effects bottom-up, so on a full page load that root
+  // effect runs AFTER this one and would clobber it back to English/ltr. Defer
+  // to a macrotask so this — the actually-correct value for a signed-in user —
+  // applies last.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      document.documentElement.lang = lang
+      document.documentElement.dir = isRTL ? 'rtl' : 'ltr'
+    }, 0)
+    return () => clearTimeout(id)
+  }, [lang, isRTL])
 
   useEffect(() => {
     fetch('/api/alerts').then(r => r.json()).then(d => setAlertCount(Array.isArray(d) ? d.filter((a: { is_active: boolean }) => a.is_active).length : 0)).catch(() => {})
@@ -259,7 +273,7 @@ export default function AppShellClient({ user, conversations, children }: {
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <Link href={localePath('/home', lang)} title="Home" aria-label="AskBiz home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+        <Link href={localePath('/home', toLocale(lang))} title="Home" aria-label="AskBiz home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="13" height="13" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
           </div>
@@ -282,7 +296,7 @@ export default function AppShellClient({ user, conversations, children }: {
       >
         {/* Logo row */}
         <div style={{ padding: '14px 12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <Link href={localePath('/home', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'var(--tx)', minWidth: 0 }}>
+          <Link href={localePath('/home', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'var(--tx)', minWidth: 0 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="15" height="15" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
             </div>
@@ -313,7 +327,7 @@ export default function AppShellClient({ user, conversations, children }: {
             return (
               <Link
                 key={n.id}
-                href={localePath(n.href, lang)}
+                href={localePath(n.href, toLocale(lang))}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   padding: '7px 4px', borderRadius: 8,
@@ -356,7 +370,7 @@ export default function AppShellClient({ user, conversations, children }: {
             return (
               <Link
                 key={n.id}
-                href={localePath(n.href, lang)}
+                href={localePath(n.href, toLocale(lang))}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 9,
                   padding: '9px 10px', borderRadius: 10,
@@ -399,7 +413,7 @@ export default function AppShellClient({ user, conversations, children }: {
               return (
                 <Link
                   key={n.id}
-                  href={localePath(n.href, lang)}
+                  href={localePath(n.href, toLocale(lang))}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9,
                     padding: '8px 10px', borderRadius: 8,
@@ -419,7 +433,7 @@ export default function AppShellClient({ user, conversations, children }: {
               )
             })}
             {isAdmin && (
-              <Link href={localePath('/admin', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 14, color: 'var(--tx3)', marginBottom: 1 }}>
+              <Link href={localePath('/admin', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 14, color: 'var(--tx3)', marginBottom: 1 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
                 {tc('appnav.admin')}
               </Link>
@@ -553,7 +567,7 @@ export default function AppShellClient({ user, conversations, children }: {
           return (
             <Link
               key={n.id}
-              href={localePath(n.href, lang)}
+              href={localePath(n.href, toLocale(lang))}
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 justifyContent: 'center', gap: 3, textDecoration: 'none',

@@ -1,13 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
-import { ACTIVE_LOCALES, DEFAULT_LOCALE, resolveLocale } from '@/lib/i18n-locale'
+import { DEFAULT_LOCALE, PREFIXED_LOCALES, resolveLocale } from '@/lib/i18n-locale'
 // CSP lives in one place (plain JS so next.config.js can require it too).
 import { CONTENT_SECURITY_POLICY } from '@/lib/security-headers'
-
-// Non-default locales carry a URL prefix (/es, /fr, …); English stays unprefixed
-// so existing indexed URLs and inbound links are untouched.
-const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 
 // Inactive locale codes that once had URL prefixes — redirect to strip them.
 // Prevents 404s for users with /sw/..., /pt/..., etc. in their browser history.
@@ -156,6 +152,29 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = authRoutes.some(r => logicalPath.startsWith(r))
   if (isAuthRoute && user) {
     return applySecurityHeaders(NextResponse.redirect(new URL(`${localePrefix}/home`, request.url)))
+  }
+
+  // ── First-visit locale redirect ────────────────────────────────────────────
+  // app/layout.tsx no longer reads cookies()/headers() (needed so most public
+  // pages can be statically cached), so unprefixed URLs can no longer render a
+  // visitor's non-default locale invisibly. Without this, a first-time visitor
+  // whose cookie/geo resolves to e.g. 'sw' would silently see English chrome on
+  // these pages. Redirecting to the prefixed URL preserves "Kenya -> Swahili,
+  // Somalia -> Somali" as an outcome. Only fires with no cookie yet (first
+  // touch) — a returning visitor with an existing non-default cookie who
+  // follows an unprefixed link to one of these pages is a known, accepted gap
+  // (see the locale rendering fix plan) closed by a later real per-locale
+  // static-page migration, not by this redirect.
+  const LOCALE_REDIRECT_PREFIXES = ['/blog', '/academy', '/help', '/privacy', '/signin', '/signup']
+  const needsLocaleRedirect =
+    !hasLocalePrefix &&
+    !existingLang &&
+    locale !== DEFAULT_LOCALE &&
+    LOCALE_REDIRECT_PREFIXES.some(p => logicalPath === p || logicalPath.startsWith(p + '/'))
+  if (needsLocaleRedirect) {
+    const target = new URL(`/${locale}${logicalPath}`, request.url)
+    target.search = request.nextUrl.search
+    return applySecurityHeaders(NextResponse.redirect(target, 307))
   }
 
   // ── Rewrite locale-prefixed URLs onto the flat route tree ──────────────────

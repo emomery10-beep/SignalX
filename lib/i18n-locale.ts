@@ -17,6 +17,12 @@ export function isActiveLocale(x: unknown): x is Locale {
   return typeof x === 'string' && (ACTIVE_LOCALES as string[]).includes(x)
 }
 
+// Narrow any Lang to an active Locale — languages we can detect/redirect from
+// but haven't launched UI translations for (pt/it/pl) fall back to the default.
+export function toLocale(lang: Lang): Locale {
+  return isActiveLocale(lang) ? lang : DEFAULT_LOCALE
+}
+
 // Authenticated app routes (the signed-in shell). These render in the user's
 // CHOSEN language from the cookie/profile — not the URL — because they're
 // per-user and not SEO-indexed, so they need no locale prefix. Public/marketing
@@ -72,7 +78,7 @@ export function resolveLocale(sources: {
   )
 }
 
-const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
+export const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 
 // Build the URL for the same page in another locale: strips any existing locale
 // prefix, then adds the target's prefix (English stays unprefixed). Preserves any

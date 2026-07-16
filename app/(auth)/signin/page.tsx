@@ -1,14 +1,13 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import PasskeyNudge from '@/components/PasskeyNudge'
 import { COUNTRY_DIAL, countryFromCurrency, detectGeoFromTimezone, toE164 } from '@/lib/geo'
 import { phoneToSyntheticEmail } from '@/lib/phone-auth'
-
-const PASSKEY_NUDGE_DISMISSED_KEY = 'askbiz_passkey_nudge_dismissed'
 
 type Mode = 'signin' | 'signup'
 type Method = 'email' | 'phone'
@@ -16,7 +15,14 @@ type Method = 'email' | 'phone'
 // Version of the legal documents the user is consenting to. Bump when Terms/Privacy change.
 const CONSENT_VERSION = '2026-06-16'
 
-export default function AuthPage() {
+// This page was always rendered dynamically before for other reasons, so its
+// useSearchParams() call never needed a Suspense boundary — static prerendering
+// wasn't attempted. Now that the root layout no longer forces the whole site
+// dynamic, Next.js does attempt to prerender this page and requires the
+// boundary; see the default export below.
+export const dynamic = 'force-dynamic'
+
+function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -39,11 +45,13 @@ export default function AuthPage() {
   const [pin, setPin] = useState('')
   const [pinConfirm, setPinConfirm] = useState('')
 
-  // Passkey nudge — shown once after a successful login/signup if the user
-  // has no passkey yet and hasn't dismissed it for good.
-  const [passkeyNudge, setPasskeyNudge] = useState<{ show: boolean; destination: string }>({ show: false, destination: '' })
-  const [nudgeDontRemind, setNudgeDontRemind] = useState(false)
-  const [nudgeBusy, setNudgeBusy] = useState(false)
+  // Passkey nudge — shown once after a successful SIGN-IN via the shared
+  // <PasskeyNudge> component, which owns the "already has one" / "dismissed
+  // forever" checks itself. Setting this swaps the card's content from the
+  // sign-in form to the nudge. Signup does NOT use this — it routes through
+  // onboarding first and shows the nudge there instead (see finish()/skip()
+  // in app/onboarding/page.tsx).
+  const [pendingNudge, setPendingNudge] = useState<string | null>(null)
 
   // Prefill the dial-code country from geo; fall back to timezone-derived
   // currency when /api/geo is unreachable (e.g. local dev).
@@ -76,51 +84,11 @@ export default function AuthPage() {
 
   const getPostAuthRedirect = () => shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/pos'
 
-  // Runs after any successful email/password or phone+PIN auth — nudges the
-  // user to add a passkey (skipped if they already have one, or dismissed
-  // the nudge for good). Does not apply to OAuth (redirects off-page) or
-  // passkey sign-in itself (they're already using one).
-  const proceedAfterAuth = async (destination: string) => {
-    try {
-      if (typeof window !== 'undefined' && localStorage.getItem(PASSKEY_NUDGE_DISMISSED_KEY)) {
-        router.push(destination); return
-      }
-      const auth = supabase.auth as any
-      const listFn = auth.passkey?.list || auth.listPasskeys
-      if (typeof listFn === 'function') {
-        const res = await listFn.call(auth)
-        const passkeys = res?.data?.passkeys || res?.data || []
-        if (Array.isArray(passkeys) && passkeys.length > 0) {
-          router.push(destination); return
-        }
-      }
-      setPasskeyNudge({ show: true, destination })
-    } catch {
-      router.push(destination)
-    }
-  }
-
-  const dismissPasskeyNudge = () => {
-    if (nudgeDontRemind && typeof window !== 'undefined') localStorage.setItem(PASSKEY_NUDGE_DISMISSED_KEY, '1')
-    router.push(passkeyNudge.destination)
-  }
-
-  const addPasskeyFromNudge = async () => {
-    setNudgeBusy(true)
-    try {
-      const auth = supabase.auth as any
-      if (typeof auth.registerPasskey === 'function') {
-        const result = await auth.registerPasskey()
-        if (result?.error) throw result.error
-      }
-    } catch {
-      // Cancelled or failed enrollment shouldn't block navigation — they can
-      // add a passkey later from settings.
-    } finally {
-      setNudgeBusy(false)
-      router.push(passkeyNudge.destination)
-    }
-  }
+  // Runs after a successful sign-in (email/password or phone+PIN) — mounts
+  // <PasskeyNudge>, which itself decides whether to show the nudge or
+  // navigate straight to `destination`. Does not apply to OAuth (redirects
+  // off-page) or passkey sign-in itself (they're already using one).
+  const proceedAfterAuth = (destination: string) => setPendingNudge(destination)
 
   const executeAuth = async (action: 'email' | 'google' | 'apple' | 'azure') => {
     setError(''); setSuccess(''); setLoading(true)
@@ -163,7 +131,12 @@ export default function AuthPage() {
           throw new Error(tc('auth.err_email_exists'))
         }
 
-        if (data.session) { proceedAfterAuth(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
+        // Signup bypasses proceedAfterAuth/the passkey nudge on purpose — it
+        // routes straight to onboarding, and the nudge is shown once *after*
+        // onboarding completes instead (see finish()/skip() in
+        // app/onboarding/page.tsx), so a brand-new user isn't asked to set up
+        // a passkey before they've even named their business.
+        if (data.session) { router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
         else { setSuccess(tc('auth.ok_check_inbox', { email })) }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -245,7 +218,9 @@ export default function AuthPage() {
         // user just chose to establish the real client session.
         const { error } = await supabase.auth.signInWithPassword({ email: phoneToSyntheticEmail(e164), password: pin })
         if (error) throw error
-        proceedAfterAuth(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding')
+        // Bypasses the passkey nudge — see the matching comment on the email
+        // signup path above.
+        router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding')
       } else {
         const res = await fetch('/api/auth/phone-pin', {
           method: 'POST',
@@ -367,31 +342,8 @@ export default function AuthPage() {
             : { transition: 'transform .4s ease-out' }),
         }}>
 
-        {passkeyNudge.show ? (
-          <div className="animate-fade-up" style={{ textAlign: 'center', padding: '5px 0' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(208,138,89,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <circle cx="12" cy="16" r="1"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 'clamp(14px,1.8vw,16px)', fontWeight: 700, marginBottom: 5 }}>{tc('auth.passkey_nudge_title')}</h1>
-            <p style={{ fontSize: 'clamp(15px,1.4vw,16px)', color: 'var(--tx2)', marginBottom: 14, lineHeight: 1.5 }}>{tc('auth.passkey_nudge_body')}</p>
-            <button onClick={addPasskeyFromNudge} disabled={nudgeBusy}
-              style={{ width: '100%', minHeight: 0, padding: '8px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 'clamp(16px,1.4vw,17px)', fontWeight: 600, cursor: nudgeBusy ? 'wait' : 'pointer', opacity: nudgeBusy ? .7 : 1, marginBottom: 7 }}>
-              {nudgeBusy ? tc('auth.please_wait') : tc('auth.passkey_nudge_cta')}
-            </button>
-            <button onClick={dismissPasskeyNudge} disabled={nudgeBusy}
-              style={{ width: '100%', minHeight: 0, padding: '7px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 'clamp(15px,1.3vw,16px)', cursor: nudgeBusy ? 'not-allowed' : 'pointer', marginBottom: 10 }}>
-              {tc('auth.passkey_nudge_skip')}
-            </button>
-            <label style={{ minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer' }}>
-              <input type="checkbox" checked={nudgeDontRemind} onChange={e => setNudgeDontRemind(e.target.checked)}
-                style={{ width: 12, height: 12, accentColor: 'var(--acc)', cursor: 'pointer' }}/>
-              <span style={{ fontSize: 'clamp(13px,1.1vw,14px)', color: 'var(--tx3)' }}>{tc('auth.passkey_nudge_dont_remind')}</span>
-            </label>
-          </div>
+        {pendingNudge !== null ? (
+          <PasskeyNudge destination={pendingNudge} />
         ) : (<>
 
         {/* Mode tabs */}
@@ -664,5 +616,13 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPage />
+    </Suspense>
   )
 }

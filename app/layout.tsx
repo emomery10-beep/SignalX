@@ -1,14 +1,12 @@
 import type { Metadata } from 'next'
 import { Sora, Instrument_Sans, JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google'
-import { cookies, headers } from 'next/headers'
 import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import CookieConsent from '@/components/CookieConsent'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import TikTokPixel from '@/components/TikTokPixel'
-import type { Lang } from '@/lib/i18n'
-import { getCatalog, CATALOG_EN } from '@/lib/i18n-catalog'
-import { resolveLocale, isRTL } from '@/lib/i18n-locale'
+import { CATALOG_EN } from '@/lib/i18n-catalog'
+import { DEFAULT_LOCALE } from '@/lib/i18n-locale'
 import { ThemeProvider } from 'next-themes'
 
 const sora = Sora({
@@ -96,28 +94,22 @@ export const metadata: Metadata = {
   },
 }
 
+// This layout wraps every route, so reading cookies()/headers() here (as it used
+// to, to resolve per-visitor locale) forced the entire site into dynamic SSR —
+// no static generation or ISR anywhere. Locale is now hardcoded to the default
+// (English) here; pages that need the visitor's actual locale get it from a URL
+// segment or, for authenticated routes, from (app)/layout.tsx (already dynamic
+// for auth reasons, so reading the cookie there is free). Anonymous non-English
+// visitors are corrected client-side via LanguageProvider's pathname-sync effect
+// (prefixed URLs) or the middleware first-visit redirect (unprefixed URLs).
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies()
-  const hdrs = headers()
-  // x-locale is set by middleware from the URL prefix (the authoritative content
-  // locale). Cookie/geo are fallbacks only when there's no prefix (English).
-  const lang = resolveLocale({
-    urlLocale: hdrs.get('x-locale'),
-    cookie: cookieStore.get('askbiz_lang')?.value,
-    country: hdrs.get('x-vercel-ip-country'),
-  }) as Lang
-
   return (
-    <html lang={lang} dir={isRTL(lang) ? 'rtl' : 'ltr'} suppressHydrationWarning>
+    <html lang={DEFAULT_LOCALE} dir="ltr" suppressHydrationWarning>
       <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
         <TikTokPixel pixelId="D8UAH7JC77UER4V7P7PG" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <LanguageProvider
-            initialLang={lang}
-            initialCatalog={getCatalog(lang)}
-            enCatalog={lang !== 'en' ? CATALOG_EN : undefined}
-          >
+          <LanguageProvider initialLang={DEFAULT_LOCALE} initialCatalog={CATALOG_EN}>
             {children}
             <CookieConsent />
           </LanguageProvider>
