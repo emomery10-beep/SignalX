@@ -6,7 +6,6 @@
     { "path": "/api/cron/benchmarks",           "schedule": "0 2 * * *" },
     { "path": "/api/cron/market-intelligence", "schedule": "0 3 * * *" },
     { "path": "/api/admin/security-audit?action=cron", "schedule": "0 6 1 * *" },
-    { "path": "/api/cron/agent-orchestrator",         "schedule": "30 2 * * 1" },
     { "path": "/api/cron/source-sync",               "schedule": "0 5 * * *" },
     { "path": "/api/cron/daily-brief",               "schedule": "0 7 * * *" },
     { "path": "/api/cron/stale-content",             "schedule": "0 5 * * 0" },

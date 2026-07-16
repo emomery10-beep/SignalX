@@ -930,6 +930,7 @@ export default function AgentAdminPage() {
                 agentTab === 'carolyne' ? tc('page_admin_agent.subtitleCarolyne') :
                 agentTab === 'ben'      ? tc('page_admin_agent.subtitleBen') :
                 agentTab === 'jane'     ? 'Short WhatsApp and Facebook posts for Kenya community groups — copy-paste ready after approval.' :
+                agentTab === 'shiillah' ? tc('page_admin_agent.subtitleShiillah') :
                                           tc('page_admin_agent.subtitleMaya')
               ) : mainTab === 'automation' ? tc('page_admin_agent.subtitleAutomation') :
                   mainTab === 'security'  ? tc('page_admin_agent.subtitleSecurity') :
