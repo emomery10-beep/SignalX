@@ -11,27 +11,15 @@ function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
 }
 
-// ── In-memory rate limiter for PIN attempts ───────────────────
-// keyed by identifier ("email:x" / "phone:y")
-const pinAttempts = new Map<string, { count: number; resetAt: number }>()
+// ── DB-backed rate limiter for PIN attempts ───────────────────
+// Durable across cold starts and shared across serverless instances
+// (unlike the old in-memory Map this replaced). Keyed by staff_id in
+// pos_staff_pin_attempts — see supabase/migrations/20260716000001_pos_staff_pin_attempts.sql
+// and the mirrored pattern in the root app's phone_pin_attempts.
 const MAX_ATTEMPTS = 5
-const WINDOW_MS = 5 * 60 * 1000 // 5-minute window
+const LOCKOUT_MS = 15 * 60 * 1000 // 15 minutes
 
-function checkPinRateLimit(key: string): { allowed: boolean; remaining: number } {
-  const now = Date.now()
-  const rec = pinAttempts.get(key)
-  if (!rec || now > rec.resetAt) {
-    pinAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS })
-    return { allowed: true, remaining: MAX_ATTEMPTS - 1 }
-  }
-  rec.count += 1
-  if (rec.count > MAX_ATTEMPTS) return { allowed: false, remaining: 0 }
-  return { allowed: true, remaining: MAX_ATTEMPTS - rec.count }
-}
-
-function clearPinRateLimit(key: string) {
-  pinAttempts.delete(key)
-}
+const RESET_CONTACT_MSG = 'Contact customer@askbiz.co or WhatsApp 0713826241 to reset your PIN.'
 
 // Owners add/edit staff phone numbers through a plain text field with no
 // country code or E.164 normalisation — numbers end up stored however they
@@ -97,10 +85,6 @@ export async function POST(req: NextRequest) {
   if (action === 'verify_pin') {
     if (!pin) return json({ error: 'PIN required' }, 400)
 
-    // Rate limit: max 5 attempts per 5 minutes per identifier
-    const limit = checkPinRateLimit(id.key)
-    if (!limit.allowed) return json({ error: 'Too many PIN attempts. Please wait 5 minutes.' }, 429)
-
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active, pin_hash, location_id')
@@ -111,10 +95,32 @@ export async function POST(req: NextRequest) {
     if (!staff) return json({ error: 'Staff account not found or deactivated' }, 404)
     if (!staff.pin_hash) return json({ error: 'No PIN set — ask your manager to set your PIN in the dashboard.' }, 403)
 
-    if (!verifyPin(String(pin), staff.pin_hash, staff.id)) return json({ error: 'Incorrect PIN' }, 401)
+    const { data: attempt } = await supabase
+      .from('pos_staff_pin_attempts')
+      .select('*')
+      .eq('staff_id', staff.id)
+      .maybeSingle()
 
-    // Clear rate limit on successful auth
-    clearPinRateLimit(id.key)
+    if (attempt?.locked_until && new Date(attempt.locked_until) > new Date()) {
+      const retryMins = Math.ceil((new Date(attempt.locked_until).getTime() - Date.now()) / 60000)
+      return json({ error: `Too many attempts. Try again in ${retryMins} minute${retryMins === 1 ? '' : 's'}. ${RESET_CONTACT_MSG}` }, 429)
+    }
+
+    if (!verifyPin(String(pin), staff.pin_hash, staff.id)) {
+      const failedCount = (attempt?.failed_count || 0) + 1
+      const locked = failedCount >= MAX_ATTEMPTS
+      await supabase.from('pos_staff_pin_attempts').upsert({
+        staff_id: staff.id,
+        failed_count: locked ? 0 : failedCount,
+        locked_until: locked ? new Date(Date.now() + LOCKOUT_MS).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      })
+      if (locked) return json({ error: `Too many attempts. Try again in 15 minutes. ${RESET_CONTACT_MSG}` }, 429)
+      return json({ error: 'Incorrect PIN', attemptsRemaining: MAX_ATTEMPTS - failedCount }, 401)
+    }
+
+    // Clear failed-attempt record on successful auth
+    if (attempt) await supabase.from('pos_staff_pin_attempts').delete().eq('staff_id', staff.id)
 
     // Transparently upgrade legacy (SHA-256) hashes to scrypt on successful login.
     // Best-effort — never fail login if the upgrade write errors.

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { phoneToSyntheticEmail, isValidPin, PHONE_PIN_MAX_ATTEMPTS, PHONE_PIN_LOCKOUT_MS } from '@/lib/phone-auth'
 
+const RESET_CONTACT_MSG = 'Contact customer@askbiz.co or WhatsApp 0713826241 to reset your PIN.'
+
 // Service-role client — creates users and reads/writes the attempts table
 // (which has RLS blocking direct anon/authenticated access).
 const admin = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
     const { data: attempt } = await db.from('phone_pin_attempts').select('*').eq('phone', phone).maybeSingle()
     if (attempt?.locked_until && new Date(attempt.locked_until) > new Date()) {
       const retryMins = Math.ceil((new Date(attempt.locked_until).getTime() - Date.now()) / 60000)
-      return NextResponse.json({ error: `Too many attempts. Try again in ${retryMins} minute${retryMins === 1 ? '' : 's'}.` }, { status: 429 })
+      return NextResponse.json({ error: `Too many attempts. Try again in ${retryMins} minute${retryMins === 1 ? '' : 's'}. ${RESET_CONTACT_MSG}` }, { status: 429 })
     }
 
     const { data, error } = await anon().auth.signInWithPassword({ email, password: pin })
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
         locked_until: locked ? new Date(Date.now() + PHONE_PIN_LOCKOUT_MS).toISOString() : null,
         updated_at: new Date().toISOString(),
       })
-      if (locked) return NextResponse.json({ error: 'Too many attempts. Try again in 15 minutes.' }, { status: 429 })
+      if (locked) return NextResponse.json({ error: `Too many attempts. Try again in 15 minutes. ${RESET_CONTACT_MSG}` }, { status: 429 })
       return NextResponse.json({ error: 'Incorrect PIN', attemptsRemaining: PHONE_PIN_MAX_ATTEMPTS - failedCount }, { status: 401 })
     }
 
