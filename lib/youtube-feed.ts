@@ -53,6 +53,17 @@ export async function getLatestAskBizVideos(limit = 15): Promise<YoutubeVideo[]>
   }
 }
 
+/** Accepts a full YouTube URL (youtube.com/watch?v=ID, youtu.be/ID) or a bare
+ * video ID (as stored on AcademyArticle.videoUrl) and returns the ID. */
+export function parseYoutubeId(raw: string): string {
+  try {
+    const u = new URL(raw);
+    return u.searchParams.get("v") || u.pathname.split("/").filter(Boolean).pop() || raw;
+  } catch {
+    return raw; // bare ID passed — use as-is
+  }
+}
+
 function decodeXmlEntities(s: string): string {
   return s
     .replace(/&amp;/g, "&")

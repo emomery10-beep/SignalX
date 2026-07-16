@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { academyArticles } from "@/lib/academy-content";
 import { getAllPosts } from "@/lib/blog-content";
+import { parseYoutubeId } from "@/lib/youtube-feed";
 import AcademyArticleClient from "./AcademyArticleClient";
 
 interface Props {
@@ -145,6 +146,48 @@ export default function ArticlePage({ params }: Props) {
         }
       : null;
 
+  // VideoObject schema — lets Google/AI answer engines surface and cite the
+  // embedded walkthrough directly (video rich results, AI Overviews).
+  const videoSchema = article.videoUrl
+    ? (() => {
+        const videoId = parseYoutubeId(article.videoUrl!);
+        return {
+          "@context": "https://schema.org",
+          "@type": "VideoObject",
+          name: article.title,
+          description: article.description,
+          thumbnailUrl: [`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`],
+          embedUrl: `https://www.youtube.com/embed/${videoId}`,
+          contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
+          publisher: {
+            "@type": "Organization",
+            name: "AskBiz",
+            logo: { "@type": "ImageObject", url: "https://askbiz.co/logo.svg" },
+          },
+        };
+      })()
+    : null;
+
+  // HowTo schema — many Academy articles already write their sections as
+  // "Step 1 — ...", "Step 2 — ..."; surface that existing structure as
+  // schema.org HowTo so step-by-step content is directly citable by AI
+  // answer engines and eligible for how-to rich results.
+  const stepSections = article.content.filter((s) => /^step\s+\d+/i.test(s.heading));
+  const howToSchema =
+    stepSections.length >= 2
+      ? {
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          name: article.title,
+          description: article.description,
+          step: stepSections.map((s) => ({
+            "@type": "HowToStep",
+            name: s.heading.replace(/^step\s+\d+\s*[—-]\s*/i, ""),
+            text: s.body,
+          })),
+        }
+      : null;
+
   // Cross-link to blog articles: find blog posts relevant to this academy topic
   const _academyWords = (article.title + ' ' + article.description + ' ' + article.keywords.join(' ')).toLowerCase()
   const allPosts = getAllPosts()
@@ -170,6 +213,18 @@ export default function ArticlePage({ params }: Props) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      {videoSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }}
+        />
+      )}
+      {howToSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
       <AcademyArticleClient article={article} blogCrossLinks={blogCrossLinks} />

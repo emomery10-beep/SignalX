@@ -7,6 +7,7 @@ import { academyArticles } from "@/lib/academy-content";
 import { useLang } from '@/components/LanguageProvider'
 import { localePath } from '@/lib/i18n-locale'
 import { markArticleRead } from '@/lib/academy-read-tracking'
+import { parseYoutubeId } from '@/lib/youtube-feed'
 
 interface BlogCrossLink {
   slug: string;
@@ -106,26 +107,17 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           </p>
 
           {/* Video embed — shown when article has a YouTube videoUrl */}
-          {article.videoUrl && (() => {
-            const raw = article.videoUrl!
-            // Accept full URLs (youtube.com/watch?v=ID, youtu.be/ID) or bare IDs
-            let videoId = raw
-            try {
-              const u = new URL(raw)
-              videoId = u.searchParams.get('v') || u.pathname.split('/').filter(Boolean).pop() || raw
-            } catch { /* bare ID passed — use as-is */ }
-            return (
-              <div style={{ marginBottom: 40, borderRadius: 14, overflow: 'hidden', border: '1px solid #eee', background: '#000', aspectRatio: '16/9', position: 'relative' }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
-                  title={article.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-                />
-              </div>
-            )
-          })()}
+          {article.videoUrl && (
+            <div style={{ marginBottom: 40, borderRadius: 14, overflow: 'hidden', border: '1px solid #eee', background: '#000', aspectRatio: '16/9', position: 'relative' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${parseYoutubeId(article.videoUrl)}?rel=0&modestbranding=1`}
+                title={article.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
+          )}
 
           {/* Key Takeaways */}
           <div style={{ background: "#fff8f3", border: "1px solid #f0e0cc", borderRadius: 12, padding: 24, marginBottom: 40 }}>
