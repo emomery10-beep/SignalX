@@ -312,7 +312,7 @@ export default function AuthPage() {
       <div className="signin-form-col" style={{
         minWidth: 0, position: 'relative',
         display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
+        alignItems: 'center', justifyContent: 'flex-start',
         padding: '14px 12px', overflowY: 'auto',
       }}>
 
