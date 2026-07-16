@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import { ASKBIZ_TRAINING_ARTICLES } from '@/lib/askbiz-training-articles'
 import { ASKBIZ_POS_TRAINING_ARTICLES } from '@/lib/askbiz-pos-training-articles'
 import { ASKBIZ_POS_RETAIL_ARTICLES } from '@/lib/askbiz-pos-retail-articles'
@@ -66,21 +66,21 @@ export default function LearningAskBizPageClient() {
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+          <Link href={localePath('/', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
             <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
             </div>
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
+        <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
       </nav>
 
       {/* Breadcrumbs */}
       <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '10px clamp(16px,4vw,48px)', fontSize: 11, color: TX3 }}>
-        <Link href={localePath('/', lang)} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_home')}</Link>
+        <Link href={localePath('/', toLocale(lang))} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_home')}</Link>
         {' / '}
-        <Link href={localePath('/academy', lang)} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_academy')}</Link>
+        <Link href={localePath('/academy', toLocale(lang))} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_academy')}</Link>
         {' / '}
         <span style={{ color: TX }}>{tc('academy.lab_hero_title')}</span>
       </div>
@@ -133,7 +133,7 @@ export default function LearningAskBizPageClient() {
               {articles.map((article, i) => (
                 <Link
                   key={article.slug}
-                  href={localePath(`/academy/${article.slug}`, lang)}
+                  href={localePath(`/academy/${article.slug}`, toLocale(lang))}
                   className="lab-card"
                   style={{ background: SF, border: `1.5px solid ${BD}`, borderRadius: 14, padding: 0, overflow: 'hidden' }}
                 >
@@ -190,7 +190,7 @@ export default function LearningAskBizPageClient() {
           <p style={{ fontSize: 12, color: TX3, marginBottom: 20, maxWidth: 460, margin: '0 auto 20px' }}>
             {tc('academy.lab_cta_body')}
           </p>
-          <Link href={localePath('/signin', lang)} style={{
+          <Link href={localePath('/signin', toLocale(lang))} style={{
             display: 'inline-block', fontSize: 12, fontWeight: 600, color: TX,
             background: ACC, borderRadius: 9999, padding: '12px 28px', textDecoration: 'none'
           }}>
@@ -207,7 +207,7 @@ export default function LearningAskBizPageClient() {
             [tc('academy.lab_footer_free_tools'), '/free-tools'],
             [tc('academy.lab_footer_pricing'), '/pricing'],
           ] as [string, string][]).map(([label, href]) => (
-            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, toLocale(lang))} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </main>

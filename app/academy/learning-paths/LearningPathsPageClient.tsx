@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { LEARNING_PATHS, totalArticles } from '@/lib/learning-paths-content'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import ContinueLearning from './ContinueLearning'
 
 const ACC = '#d08a59'
@@ -101,14 +101,14 @@ export default function LearningPathsPageClient() {
                 : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
             </svg>
           </button>
-          <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+          <Link href={localePath('/', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
             <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
             </div>
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lp_try_free')}</Link>
+        <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lp_try_free')}</Link>
       </nav>
 
       {/* Mobile overlay */}
@@ -137,7 +137,7 @@ export default function LearningPathsPageClient() {
           {PATHS.map(path => (
             <div key={path.id} style={{ padding: '0 12px' }}>
               <Link
-                href={localePath(`/academy/learning-paths/${path.id}`, lang)}
+                href={localePath(`/academy/learning-paths/${path.id}`, toLocale(lang))}
                 onClick={() => setSidebarOpen(false)}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, color: TX2, fontSize: 11, fontWeight: 400, marginBottom: 1, textDecoration: 'none' }}
               >
@@ -153,11 +153,11 @@ export default function LearningPathsPageClient() {
             <div style={{ height: 1, background: BD, margin: '8px 0 12px' }} />
             <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '4px 10px 6px' }}>{tc('academy.lp_also_in_academy')}</div>
             {([[tc('academy.lp_all_articles'), '/academy'], [tc('academy.lp_checklists'), '/academy/checklists']] as [string,string][]).map(([label, href]) => (
-              <Link key={href} href={localePath(href, lang)} style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>{label}</Link>
+              <Link key={href} href={localePath(href, toLocale(lang))} style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>{label}</Link>
             ))}
             <div style={{ height: 1, background: BD, margin: '8px 0 8px' }} />
             {([[tc('academy.lp_help_centre'), '/help'], [tc('academy.lp_blog'), '/blog'], [tc('academy.lp_free_tools'), '/free-tools']] as [string,string][]).map(([label, href]) => (
-              <Link key={href} href={localePath(href, lang)} style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>{label}</Link>
+              <Link key={href} href={localePath(href, toLocale(lang))} style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>{label}</Link>
             ))}
           </div>
         </div>
@@ -236,7 +236,7 @@ function PathCard({ path, lang }: { path: typeof PATHS[0]; lang: string }) {
   return (
     <Link
       className="lp-card"
-      href={localePath(`/academy/learning-paths/${path.id}`, lang)}
+      href={localePath(`/academy/learning-paths/${path.id}`, toLocale(lang))}
       style={{ display: 'block', textDecoration: 'none', background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '22px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', position: 'relative', overflow: 'hidden' }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: path.color }} />

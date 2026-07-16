@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import type { LearningPath } from '@/lib/learning-paths-content'
 
 const ACC = '#95592b' // AA-compliant text variant of the brand amber (see Help Centre --hc-accent-dark)
@@ -128,7 +128,7 @@ export default function LearningPathModules({
             return meta ? (
               <Link
                 key={article.slug}
-                href={localePath(`/academy/${article.slug}`, lang)}
+                href={localePath(`/academy/${article.slug}`, toLocale(lang))}
                 style={{ textDecoration: 'none' }}
                 onClick={() => {
                   // Reading an article counts as progress even if the reader

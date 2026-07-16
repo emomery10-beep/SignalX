@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import { LEARNING_PATHS } from '@/lib/learning-paths-content'
 
 const ACC = '#95592b' // AA-compliant amber text
@@ -59,7 +59,7 @@ export default function ContinueLearning() {
         {inProgress.map(r => (
           <Link
             key={r.id}
-            href={localePath(`/academy/learning-paths/${r.id}`, lang)}
+            href={localePath(`/academy/learning-paths/${r.id}`, toLocale(lang))}
             style={{ display: 'block', textDecoration: 'none', background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '16px 18px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>

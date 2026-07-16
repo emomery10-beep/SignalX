@@ -5,7 +5,7 @@ import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
 import PosStaffLockScreen from '@/components/PosStaffLockScreen'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
 import {
   savePosStaffSession, clearPosStaffSession, isPosStaffLocked,
@@ -82,7 +82,7 @@ export default function SellPage() {
     if (session) {
       try {
         const s = JSON.parse(session) as StaffSession
-        if (s.role === 'inventory') { router.push(localePath('/inventory', lang)); return }
+        if (s.role === 'inventory') { router.push(localePath('/inventory', toLocale(lang))); return }
         setStaff(s)
         setCurrencySymbol(s.currency_symbol || '£')
         setScreen('home')
@@ -154,7 +154,7 @@ export default function SellPage() {
       if (data.verified && data.staff) {
         const s = data.staff as StaffSession
         savePosStaffSession(s, id as PosStaffIdentifier)
-        if (s.role === 'inventory') { router.push(localePath('/inventory', lang)); return }
+        if (s.role === 'inventory') { router.push(localePath('/inventory', toLocale(lang))); return }
         setStaff(s)
         setCurrencySymbol(s.currency_symbol || '£')
         setScreen('home')

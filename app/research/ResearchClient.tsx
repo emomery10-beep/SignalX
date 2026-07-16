@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
-import { localePath } from "@/lib/i18n-locale";
+import { localePath, toLocale } from "@/lib/i18n-locale";
 import { RESEARCH_PAPERS } from "@/lib/research-papers";
 
 // Homepage tokens ("Founder's Terminal" — cool shell, single amber accent).
@@ -46,7 +46,7 @@ export default function ResearchClient() {
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.tx }}>
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(242,243,245,.92)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.b}`, padding: "0 clamp(16px,4vw,32px)", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href={localePath("/", lang)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
+        <Link href={localePath("/", toLocale(lang))} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="7" width="4" height="14" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></svg>
           </div>
@@ -54,11 +54,11 @@ export default function ResearchClient() {
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span className="nav-desktop-links" style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link href={localePath("/blog", lang)} style={navLink}>Blog</Link>
-            <Link href={localePath("/academy", lang)} style={navLink}>Academy</Link>
-            <Link href={localePath("/pricing", lang)} style={navLink}>Pricing</Link>
+            <Link href={localePath("/blog", toLocale(lang))} style={navLink}>Blog</Link>
+            <Link href={localePath("/academy", toLocale(lang))} style={navLink}>Academy</Link>
+            <Link href={localePath("/pricing", toLocale(lang))} style={navLink}>Pricing</Link>
           </span>
-          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Try free</Link>
+          <Link href={localePath("/signin", toLocale(lang))} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Try free</Link>
         </div>
       </nav>
 
@@ -107,7 +107,7 @@ export default function ResearchClient() {
           {RESEARCH_PAPERS.map((p) => (
             <Link
               key={p.slug}
-              href={localePath(`/research/${p.slug}`, lang)}
+              href={localePath(`/research/${p.slug}`, toLocale(lang))}
               style={{ display: "block", background: C.sf, border: `1px solid ${C.b}`, borderRadius: 16, padding: "clamp(20px,3vw,30px)", textDecoration: "none", color: C.tx, transition: "box-shadow .2s ease, border-color .2s ease" }}
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,.09)"; e.currentTarget.style.borderColor = C.accBdr; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = C.b; }}
@@ -145,7 +145,7 @@ export default function ResearchClient() {
         <span style={{ fontSize: 10, color: C.tx3 }}>AskBiz · Utauza © 2026</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {([["/", "Home"], ["/blog", "Blog"], ["/academy", "Academy"], ["/help", "Help"], ["/privacy", "Privacy"], ["/terms", "Terms"]] as [string, string][]).map(([href, label]) => (
-            <a key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
+            <a key={href} href={localePath(href, toLocale(lang))} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

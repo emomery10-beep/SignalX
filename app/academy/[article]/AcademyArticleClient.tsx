@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { AcademyArticle } from "@/lib/academy-types";
 import { academyArticles } from "@/lib/academy-content";
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import { markArticleRead } from '@/lib/academy-read-tracking'
 import { parseYoutubeId } from '@/lib/youtube-feed'
 
@@ -70,11 +70,11 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
       {/* Breadcrumb */}
       <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 11, color: "#6a655c" }}>
-          <Link href={localePath('/', lang)} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_home')}</Link>
+          <Link href={localePath('/', toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_home')}</Link>
           {" / "}
-          <Link href={localePath('/academy', lang)} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_academy')}</Link>
+          <Link href={localePath('/academy', toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_academy')}</Link>
           {" / "}
-          <Link href={localePath(`/academy/category/${article.categorySlug}`, lang)} style={{ color: "#6a655c", textDecoration: "none" }}>
+          <Link href={localePath(`/academy/category/${article.categorySlug}`, toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>
             {article.category}
           </Link>
           {" / "}
@@ -176,7 +176,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 {related.map((rel) => (
                   <Link
                     key={rel.slug}
-                    href={localePath(`/academy/${rel.slug}`, lang)}
+                    href={localePath(`/academy/${rel.slug}`, toLocale(lang))}
                     style={{
                       display: "block",
                       padding: "14px 16px",
@@ -209,7 +209,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 {blogCrossLinks.map((post) => (
                   <Link
                     key={post.slug}
-                    href={localePath(`/blog/${post.slug}`, lang)}
+                    href={localePath(`/blog/${post.slug}`, toLocale(lang))}
                     style={{
                       display: "block",
                       padding: "14px 16px",
@@ -283,7 +283,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               {tc('academy.art_cta_body')}
             </p>
             <Link
-              href={localePath('/signin', lang)}
+              href={localePath('/signin', toLocale(lang))}
               style={{
                 display: "block",
                 background: "#d08a59",
@@ -300,7 +300,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               {tc('academy.art_cta_button')}
             </Link>
             <Link
-              href={localePath('/pricing', lang)}
+              href={localePath('/pricing', toLocale(lang))}
               style={{
                 display: "block",
                 color: "#b0b8c8",

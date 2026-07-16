@@ -2,7 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -40,13 +40,13 @@ export default function DpaPage() {
         {lang !== 'en' && (
           <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
-            <Link href={localePath('/dpa', lang)} style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
+            <Link href={localePath('/dpa', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
           </div>
         )}
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <Link href={localePath('/privacy', lang)} style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('dpa.back_to_privacy')}</Link>
+          <Link href={localePath('/privacy', toLocale(lang))} style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('dpa.back_to_privacy')}</Link>
           <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('dpa.title')}</h1>
           <p style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('dpa.meta')}</p>
         </div>
@@ -54,7 +54,7 @@ export default function DpaPage() {
         <Section title={tc('dpa.s1_title')}>
           <P>{tc('dpa.s1_p1')}</P>
           <P>{tc('dpa.s1_p2_pre')}<strong>{tc('dpa.s1_p2_b1')}</strong>{tc('dpa.s1_p2_mid')}<strong>{tc('dpa.s1_p2_b2')}</strong>{tc('dpa.s1_p2_post')}</P>
-          <P>{tc('dpa.s1_p3_pre')}<Link href={localePath('/privacy', lang)} style={{ color: 'var(--ac, #d08a59)' }}>{tc('dpa.s1_p3_link')}</Link>{tc('dpa.s1_p3_post')}</P>
+          <P>{tc('dpa.s1_p3_pre')}<Link href={localePath('/privacy', toLocale(lang))} style={{ color: 'var(--ac, #d08a59)' }}>{tc('dpa.s1_p3_link')}</Link>{tc('dpa.s1_p3_post')}</P>
         </Section>
 
         <Section title={tc('dpa.s2_title')}>

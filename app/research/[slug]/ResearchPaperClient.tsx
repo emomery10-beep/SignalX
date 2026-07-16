@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLang } from "@/components/LanguageProvider";
-import { localePath } from "@/lib/i18n-locale";
+import { localePath, toLocale } from "@/lib/i18n-locale";
 import { AUTHOR, type ResearchPaper } from "@/lib/research-papers";
 
 const C = {
@@ -40,17 +40,17 @@ export default function ResearchPaperClient({ paper }: { paper: ResearchPaper })
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.tx }}>
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(242,243,245,.92)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.b}`, padding: "0 clamp(16px,4vw,32px)", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href={localePath("/", lang)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
+        <Link href={localePath("/", toLocale(lang))} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="7" width="4" height="14" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></svg>
           </div>
           <span style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700 }}>AskBiz</span>
         </Link>
-        <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Try free</Link>
+        <Link href={localePath("/signin", toLocale(lang))} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Try free</Link>
       </nav>
 
       <article style={{ maxWidth: 760, margin: "0 auto", padding: "clamp(28px,5vw,52px) clamp(16px,4vw,40px) clamp(48px,7vw,80px)" }}>
-        <Link href={localePath("/research", lang)} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: C.tx3, textDecoration: "none", marginBottom: 26 }}>
+        <Link href={localePath("/research", toLocale(lang))} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: C.tx3, textDecoration: "none", marginBottom: 26 }}>
           ← Research
         </Link>
 
@@ -113,7 +113,7 @@ export default function ResearchPaperClient({ paper }: { paper: ResearchPaper })
         <span style={{ fontSize: 10, color: C.tx3 }}>AskBiz · Utauza © 2026</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {([["/research", "Research"], ["/", "Home"], ["/blog", "Blog"], ["/privacy", "Privacy"], ["/terms", "Terms"]] as [string, string][]).map(([href, label]) => (
-            <a key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
+            <a key={href} href={localePath(href, toLocale(lang))} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

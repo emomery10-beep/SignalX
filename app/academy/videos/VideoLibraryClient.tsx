@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 import { VideoCard } from '@/components/marketing/VideoReel'
 import type { YoutubeVideo } from '@/lib/youtube-feed'
 
@@ -29,7 +29,7 @@ export default function VideoLibraryClient({ videos }: { videos: YoutubeVideo[] 
     <div style={{ background: BG, minHeight: '100vh' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 12px' }}>
         <div style={{ display: 'flex', gap: 6, fontSize: 12, color: TX2, marginBottom: 20 }}>
-          <Link href={localePath('/academy', lang)} className="vl-crumb" style={{ color: TX2, textDecoration: 'none' }}>Academy</Link>
+          <Link href={localePath('/academy', toLocale(lang))} className="vl-crumb" style={{ color: TX2, textDecoration: 'none' }}>Academy</Link>
           <span>/</span>
           <span style={{ color: TX }}>Video Library</span>
         </div>

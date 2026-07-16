@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { getCaseStudy, getAllCaseStudies } from "@/lib/case-studies-content";
 import { useLang } from "@/components/LanguageProvider";
-import { localePath } from "@/lib/i18n-locale";
+import { localePath, toLocale } from "@/lib/i18n-locale";
 
 const C = {
   bg: "#f9f8f6", sf: "#ffffff", el: "#f3f2ef",
@@ -22,25 +22,25 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.tx }}>
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(249,248,246,.96)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.b}`, padding: "0 clamp(16px,4vw,32px)", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href={localePath("/", lang)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
+        <Link href={localePath("/", toLocale(lang))} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
           </div>
           <span style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700 }}>AskBiz</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href={localePath("/case-studies", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_all_case_studies")}</Link>
-          <Link href={localePath("/pricing", lang)} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_pricing")}</Link>
-          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>{tc("case_studies.nav_try_free")}</Link>
+          <Link href={localePath("/case-studies", toLocale(lang))} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_all_case_studies")}</Link>
+          <Link href={localePath("/pricing", toLocale(lang))} style={{ fontSize: 11, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_pricing")}</Link>
+          <Link href={localePath("/signin", toLocale(lang))} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>{tc("case_studies.nav_try_free")}</Link>
         </div>
       </nav>
 
       <article style={{ maxWidth: 760, margin: "0 auto", padding: "clamp(32px,5vw,56px) clamp(16px,4vw,40px)" }}>
         {/* Breadcrumb */}
         <nav style={{ fontSize: 11, color: C.tx3, marginBottom: 24, display: "flex", gap: 6, alignItems: "center" }}>
-          <Link href={localePath("/", lang)} style={{ color: C.tx3, textDecoration: "none" }}>{tc("case_studies.breadcrumb_home")}</Link>
+          <Link href={localePath("/", toLocale(lang))} style={{ color: C.tx3, textDecoration: "none" }}>{tc("case_studies.breadcrumb_home")}</Link>
           <span>›</span>
-          <Link href={localePath("/case-studies", lang)} style={{ color: C.tx3, textDecoration: "none" }}>{tc("case_studies.breadcrumb_case_studies")}</Link>
+          <Link href={localePath("/case-studies", toLocale(lang))} style={{ color: C.tx3, textDecoration: "none" }}>{tc("case_studies.breadcrumb_case_studies")}</Link>
           <span>›</span>
           <span style={{ color: C.tx2 }}>{cs.company}</span>
         </nav>
@@ -107,7 +107,7 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
           <p style={{ fontSize: 12, color: "rgba(255,255,255,.72)", margin: "0 0 20px", lineHeight: 1.6 }}>
             {tc("case_studies.article_cta_body")}
           </p>
-          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "12px 26px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+          <Link href={localePath("/signin", toLocale(lang))} style={{ display: "inline-flex", padding: "12px 26px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
             {tc("case_studies.article_cta_button")}
           </Link>
         </div>
@@ -120,7 +120,7 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
               {related.map((r) => (
                 <Link
                   key={r.slug}
-                  href={localePath(`/case-studies/${r.slug}`, lang)}
+                  href={localePath(`/case-studies/${r.slug}`, toLocale(lang))}
                   style={{ background: C.sf, border: `1.5px solid ${C.b}`, borderRadius: 12, padding: 20, textDecoration: "none", color: C.tx, transition: "border-color .2s" }}
                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accBdr; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.b; }}
@@ -142,7 +142,7 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
         <span style={{ fontSize: 10, color: C.tx3 }}>{tc("case_studies.footer_copyright")}</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {([["/", tc("case_studies.footer_home")], ["/case-studies", tc("case_studies.footer_case_studies")], ["/blog", tc("case_studies.nav_blog")], ["/free-tools", tc("case_studies.nav_free_tools")], ["/pricing", tc("case_studies.nav_pricing")], ["/privacy", tc("case_studies.footer_privacy")], ["/terms", tc("case_studies.footer_terms")]] as [string, string][]).map(([href, label]) => (
-            <a key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
+            <a key={href} href={localePath(href, toLocale(lang))} style={{ fontSize: 10, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { withUtm } from "@/lib/utm";
 import { useLang } from "@/components/LanguageProvider";
-import { localePath } from "@/lib/i18n-locale";
+import { localePath, toLocale } from "@/lib/i18n-locale";
 import type { TransparencyArticle, TransparencySection } from "@/lib/transparency-content";
 
 function renderBody(body: string): React.ReactNode {
@@ -63,11 +63,11 @@ export default function TransparencyArticleClient({ article, section, sectionArt
       {/* Breadcrumb */}
       <nav className="ta-breadcrumb" aria-label="Breadcrumb">
         <ol className="ta-breadcrumb-list">
-          <li><Link href={localePath('/help', lang)} className="ta-bc-link">Help Center</Link></li>
+          <li><Link href={localePath('/help', toLocale(lang))} className="ta-bc-link">Help Center</Link></li>
           <li aria-hidden><span className="ta-sep">›</span></li>
-          <li><Link href={localePath('/transparency', lang)} className="ta-bc-link">Transparency</Link></li>
+          <li><Link href={localePath('/transparency', toLocale(lang))} className="ta-bc-link">Transparency</Link></li>
           <li aria-hidden><span className="ta-sep">›</span></li>
-          <li><Link href={localePath(`/transparency#${article.sectionSlug}`, lang)} className="ta-bc-link">{article.sectionTitle}</Link></li>
+          <li><Link href={localePath(`/transparency#${article.sectionSlug}`, toLocale(lang))} className="ta-bc-link">{article.sectionTitle}</Link></li>
           <li aria-hidden><span className="ta-sep">›</span></li>
           <li className="ta-bc-current" aria-current="page">{article.title}</li>
         </ol>
@@ -79,7 +79,7 @@ export default function TransparencyArticleClient({ article, section, sectionArt
           <div className="ta-sidebar-inner">
             <div className="ta-sidebar-section">
               <span className="ta-sidebar-section-icon" aria-hidden>{section?.icon}</span>
-              <Link href={localePath(`/transparency#${article.sectionSlug}`, lang)} className="ta-sidebar-section-title">
+              <Link href={localePath(`/transparency#${article.sectionSlug}`, toLocale(lang))} className="ta-sidebar-section-title">
                 {article.sectionTitle}
               </Link>
             </div>
@@ -88,7 +88,7 @@ export default function TransparencyArticleClient({ article, section, sectionArt
                 {sectionArticles.map((a) => (
                   <li key={a.slug}>
                     <Link
-                      href={localePath(`/transparency/${a.slug}`, lang)}
+                      href={localePath(`/transparency/${a.slug}`, toLocale(lang))}
                       className={`ta-sidebar-link ${a.slug === article.slug ? "ta-sidebar-link--active" : ""}`}
                       aria-current={a.slug === article.slug ? "page" : undefined}
                     >
@@ -100,8 +100,8 @@ export default function TransparencyArticleClient({ article, section, sectionArt
               </ul>
             </nav>
             <div className="ta-sidebar-divider" />
-            <Link href={localePath('/transparency', lang)} className="ta-sidebar-back">← All topics</Link>
-            <Link href={localePath('/help', lang)} className="ta-sidebar-back" style={{ marginTop: "6px" }}>← Help Center</Link>
+            <Link href={localePath('/transparency', toLocale(lang))} className="ta-sidebar-back">← All topics</Link>
+            <Link href={localePath('/help', toLocale(lang))} className="ta-sidebar-back" style={{ marginTop: "6px" }}>← Help Center</Link>
           </div>
         </aside>
 
@@ -180,7 +180,7 @@ export default function TransparencyArticleClient({ article, section, sectionArt
                   const rel = getArticleBySlug(slug);
                   if (!rel) return null;
                   return (
-                    <Link key={slug} href={localePath(`/transparency/${slug}`, lang)} className="ta-related-card">
+                    <Link key={slug} href={localePath(`/transparency/${slug}`, toLocale(lang))} className="ta-related-card">
                       <span className="ta-related-section">{rel.sectionTitle}</span>
                       <span className="ta-related-card-title">{rel.title}</span>
                       <span className="ta-related-arrow">Read →</span>

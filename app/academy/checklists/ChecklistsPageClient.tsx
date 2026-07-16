@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
-import { localePath } from '@/lib/i18n-locale'
+import { localePath, toLocale } from '@/lib/i18n-locale'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -418,15 +418,15 @@ export default function ChecklistsPageClient() {
 
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+        <Link href={localePath('/', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link href={localePath('/academy', lang)} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{tc('academy.cl_back_academy')}</Link>
-          <Link href={localePath('/signin', lang)} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.cl_try_free')}</Link>
+          <Link href={localePath('/academy', toLocale(lang))} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{tc('academy.cl_back_academy')}</Link>
+          <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.cl_try_free')}</Link>
         </div>
       </nav>
 
@@ -562,7 +562,7 @@ export default function ChecklistsPageClient() {
         <span style={{ fontSize: 10, color: TX3 }}>{tc('academy.cl_footer_copyright')}</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {([['/', tc('academy.cl_footer_home')], ['/academy', tc('academy.cl_footer_academy')], ['/help', tc('academy.cl_footer_help')], ['/blog', tc('academy.cl_footer_blog')]] as [string,string][]).map(([href, label]) => (
-            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, toLocale(lang))} style={{ fontSize: 10, color: TX3, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>
