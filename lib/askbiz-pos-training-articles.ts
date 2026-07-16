@@ -8,6 +8,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "gs-PnuAU_sM",
     readTime: 5,
     keywords: ["POS", "point of sale", "dashboard", "revenue", "sales", "gross profit", "margin", "overview", "AskBiz"],
     keyTakeaways: [
@@ -430,6 +431,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "sJtbkkknZ84",
     readTime: 5,
     keywords: ["staff", "cashier", "PIN", "permissions", "POS", "AskBiz", "seats", "roles", "team"],
     keyTakeaways: [

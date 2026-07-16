@@ -8,6 +8,7 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { localePath } from '@/lib/i18n-locale'
 import type { Locale } from '@/lib/i18n-locale'
 import DayInTheLife from '@/components/marketing/DayInTheLife'
+import VideoReel from '@/components/marketing/VideoReel'
 import { createClient } from '@/lib/supabase/client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
 
@@ -2118,6 +2119,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </Link>
         </div>
       </section>
+
+      {/* ── LATEST VIDEOS ── auto-synced from the AskBiz YouTube channel, no
+           manual wiring needed when new clips are uploaded. ── */}
+      <VideoReel label="See it in action" title="Latest from AskBiz" />
 
       {/* ── COMPARE ───────────────────────────────────────────────────── */}
       <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>

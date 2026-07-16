@@ -331,7 +331,7 @@ export default function AcademyClient() {
           <div style={{ padding: '0 12px', marginTop: 12 }}>
             <div style={{ height: 1, background: BD, margin: '8px 0 12px' }} />
             <div style={{ fontSize: 9, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '4px 10px 6px' }}>{tc('academy.tools')}</div>
-            {([[tc('academy.tool_learning_paths'), '/academy/learning-paths'], [tc('academy.tool_checklists'), '/academy/checklists']] as [string,string][]).map(([label, href]) => (
+            {([[tc('academy.tool_learning_paths'), '/academy/learning-paths'], [tc('academy.tool_checklists'), '/academy/checklists'], ['Video Library', '/academy/videos']] as [string,string][]).map(([label, href]) => (
               <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 11, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
                 {label}
               </Link>

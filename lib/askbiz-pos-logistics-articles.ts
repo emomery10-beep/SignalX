@@ -143,6 +143,7 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "vutqXH2zZBs",
     readTime: 4,
     keywords: ["parcel tracking", "delivery status", "tracking", "logistics", "POS", "AskBiz", "real-time"],
     keyTakeaways: [

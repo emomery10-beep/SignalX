@@ -14285,6 +14285,7 @@ export const academyArticles: AcademyArticle[] = [
     category: "Point of Sale & Retail",
     categorySlug: "point-of-sale",
     difficulty: "Beginner",
+    videoUrl: "j-a6WC6B8Qo",
     readTime: 4,
     keywords: ["process a sale POS", "POS checkout flow", "scan to receipt", "AskBiz sale process", "retail checkout speed", "POS transaction steps"],
     keyTakeaways: [
