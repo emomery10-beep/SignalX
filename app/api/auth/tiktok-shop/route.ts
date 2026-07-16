@@ -16,7 +16,9 @@ export async function GET() {
 
   const state       = Buffer.from(JSON.stringify({ userId: user.id, ts: Date.now() })).toString('base64url')
   const redirectUri = `${APP_URL}/api/auth/tiktok-shop/callback`
-  const authUrl     = `https://services.tiktokshop.com/open/authorize?service_id=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
+  // TikTok Shop's authorize link takes the app key under `app_key`, not `service_id` —
+  // the previous param name caused TikTok to reject the link as "This service does not exist".
+  const authUrl     = `https://services.tiktokshop.com/open/authorize?app_key=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
 
   return NextResponse.json({ auth_url: authUrl, state })
 }
