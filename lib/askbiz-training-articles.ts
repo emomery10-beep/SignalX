@@ -48,6 +48,7 @@ export const ASKBIZ_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "Getting Started",
     categorySlug: "getting-started",
     difficulty: "Beginner",
+    videoUrl: "AGITS9O9wls",
     readTime: 5,
     keywords: ["camera-first", "point camera", "AI", "recognition", "product identification", "AskBiz"],
     keyTakeaways: [

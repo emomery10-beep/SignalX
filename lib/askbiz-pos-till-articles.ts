@@ -8,6 +8,7 @@ export const ASKBIZ_POS_TILL_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "d2iPhRgygCU",
     readTime: 5,
     keywords: ["payment methods", "M-Pesa", "cash", "card payment", "mobile money", "POS", "integrations", "AskBiz"],
     keyTakeaways: [

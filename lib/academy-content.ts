@@ -2122,6 +2122,25 @@ export const academyArticles: AcademyArticle[] = [
     relatedSlugs: ["what-is-landed-cost", "what-is-import-duty", "how-to-use-fx-risk-modeller"],
   },
   {
+    slug: "how-to-use-profit-margin-calculator",
+    title: "How to Use the Profit Margin Calculator",
+    description: "Step-by-step guide to calculating your true profit margin — after shipping, fees, and other costs, not just cost price vs selling price.",
+    category: "AskBiz Tutorials",
+    categorySlug: "askbiz-tutorials",
+    difficulty: "Beginner",
+    videoUrl: "MFlbrjmeqvU",
+    readTime: 3,
+    keywords: ["Profit Margin Calculator", "AskBiz", "margin", "markup", "true margin", "tutorial"],
+    keyTakeaways: ["The Profit Margin Calculator is free and requires no login.", "It shows your true margin (after shipping, fees, and other costs) next to your naive margin (cost price vs selling price only) — the gap between the two is usually bigger than people expect.", "Batch mode lets you compare several products at once and see which are quietly loss-making."],
+    content: [
+      { heading: "Accessing the tool", body: "The Profit Margin Calculator is at askbiz.co/free-tools/profit-margin-calculator — free, no account needed. Choose Single Product mode to check one item, or Batch mode to enter several products and compare them side by side." },
+      { heading: "Step 1: Pick your currency", body: "Select your currency from the dropdown — 12 currencies are supported, including GBP, USD, EUR, KES, NGN, and ZAR. All figures on the results screen use this currency." },
+      { heading: "Step 2: Enter every cost, not just the cost price", body: "For each product, enter: cost price, selling price, shipping cost, platform fees, any other costs, and the quantity you sell per month. Most sellers only ever compare cost price to selling price in their head — the extra fields are the whole point of the tool, because shipping and fees are exactly what gets forgotten." },
+      { heading: "Step 3: Read your true margin, not your naive one", body: "The results show two different margin figures side by side: your naive margin (selling price minus cost price only — the number most people calculate without thinking) and your true margin (after shipping, fees, and other costs are subtracted too). The gap between them is how much you were overestimating your profitability by. You'll also see markup (profit as a percentage of your cost) alongside margin (profit as a percentage of your selling price) — the two are often confused but are different numbers. Each product gets a health label, from Healthy down to Loss-making, so a quick glance tells you which items are actually worth selling." },
+    ],
+    relatedSlugs: ["what-is-net-profit-margin", "how-to-use-landed-cost-calculator", "what-is-a-profit-and-loss-account"],
+  },
+  {
     slug: "how-to-set-up-anomaly-alerts",
     title: "How to Set Up Anomaly Alerts in AskBiz",
     description: "Anomaly alerts notify you when a key metric deviates from its expected range. Here's how to configure them for your business.",
@@ -2557,6 +2576,7 @@ export const academyArticles: AcademyArticle[] = [
     category: "Financial Intelligence",
     categorySlug: "financial-intelligence",
     difficulty: "Beginner",
+    videoUrl: "kn0izKyrbDQ",
     readTime: 4,
     keywords: ["profit and loss", "P&L", "income statement", "revenue", "operating profit"],
     keyTakeaways: [
@@ -15019,6 +15039,7 @@ export const academyArticles: AcademyArticle[] = [
     category: "Point of Sale & Retail",
     categorySlug: "point-of-sale",
     difficulty: "Beginner",
+    videoUrl: "Vr-sISFbZNc",
     readTime: 12,
     keywords: ["repair workflow", "service intake", "repair status", "repair shop management", "POS repair", "service tracking", "repair stages", "collection process"],
     keyTakeaways: [

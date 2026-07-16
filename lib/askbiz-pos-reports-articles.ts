@@ -60,6 +60,7 @@ export const ASKBIZ_POS_REPORTS_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "vm6Npj-i5CM",
     readTime: 5,
     keywords: ["gross profit", "COGS", "cost of goods", "margin", "profitability", "AskBiz reports", "POS analytics", "business health"],
     keyTakeaways: [
@@ -410,6 +411,7 @@ export const ASKBIZ_POS_REPORTS_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "_EglS9GIx9Y",
     readTime: 5,
     keywords: ["category performance", "product category", "sector analysis", "margin by category", "AskBiz reports", "retail analytics", "product mix", "profitability by category"],
     keyTakeaways: [
