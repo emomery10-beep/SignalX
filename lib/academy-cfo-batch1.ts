@@ -120,7 +120,7 @@ export const ACADEMY_CFO_BATCH1 = [
         a: "A blank screen usually means you haven't configured your costs yet. Open the Cost Configuration Drawer by tapping the settings icon on the dashboard and enter your cash balance and cost figures.",
       },
     ],
-    videoUrl: '',
+    videoUrl: 'ehJ4r7uCN0Y',
   },
   {
     slug: 'how-to-open-cost-config-drawer',
