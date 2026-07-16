@@ -15,9 +15,18 @@ export async function getLatestAskBizVideos(limit = 15): Promise<YoutubeVideo[]>
   try {
     const res = await fetch(
       `https://www.youtube.com/feeds/videos.xml?playlist_id=${UPLOADS_PLAYLIST_ID}`,
-      { next: { revalidate: 3600 } }
+      {
+        next: { revalidate: 3600 },
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        },
+      }
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`[youtube-feed] fetch failed: ${res.status} ${res.statusText}`);
+      return [];
+    }
     const xml = await res.text();
 
     const videos: YoutubeVideo[] = [];
@@ -38,7 +47,8 @@ export async function getLatestAskBizVideos(limit = 15): Promise<YoutubeVideo[]>
       });
     }
     return videos;
-  } catch {
+  } catch (err) {
+    console.error("[youtube-feed] fetch threw:", err);
     return [];
   }
 }
