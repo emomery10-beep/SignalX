@@ -263,6 +263,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "K2oZfP9DNnM",
     readTime: 5,
     keywords: ["promotions", "discounts", "coupons", "deals", "POS", "AskBiz", "offers", "sale"],
     keyTakeaways: [
@@ -473,6 +474,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "7sG3iLMwvMM",
     readTime: 5,
     keywords: ["branches", "locations", "multi-site", "POS", "AskBiz", "stock transfer", "branch performance"],
     keyTakeaways: [
@@ -719,6 +721,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "_zzAzxKdzR0",
     readTime: 5,
     keywords: ["integrations", "Xero", "payments", "POS", "AskBiz", "accounting", "payment terminal", "connect"],
     keyTakeaways: [
@@ -760,6 +763,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "CDbd1QEaBms",
     readTime: 5,
     keywords: ["AI", "chat", "POS", "AskBiz", "questions", "analytics", "sales analysis", "AI chat", "business intelligence"],
     keyTakeaways: [

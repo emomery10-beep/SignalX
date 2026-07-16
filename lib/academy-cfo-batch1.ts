@@ -64,7 +64,7 @@ export const ACADEMY_CFO_BATCH1 = [
         a: 'Navigate to askbiz.co, click the Intelligence tab in the main navigation, then select the Cash Flow sub-tab. The four metric cards appear at the top of that screen.',
       },
     ],
-    videoUrl: '',
+    videoUrl: 'htmjY0IjPpE',
   },
   {
     slug: 'how-to-navigate-cfo-dashboard',

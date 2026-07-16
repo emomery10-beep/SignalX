@@ -8,6 +8,7 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "uXg8IEIxnd0",
     readTime: 5,
     keywords: ["logistics", "dashboard", "deliveries", "parcels", "fleet", "POS", "AskBiz", "overview"],
     keyTakeaways: [

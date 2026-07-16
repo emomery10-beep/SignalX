@@ -12,11 +12,10 @@ import { ASKBIZ_POS_REPORTS_ARTICLES } from './askbiz-pos-reports-articles';
 import { ACADEMY_POS_SWAHILI_ARTICLES } from './academy-pos-swahili';
 import { ACADEMY_POS_SOMALI_ARTICLES } from './academy-pos-somali';
 // ─── CFO Dashboard Training (100 articles) ───────────────────────────────────
-// NOTE: CFO batch files temporarily disabled for build — will be re-enabled when files are committed
-// import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
-// import { ACADEMY_CFO_BATCH_2 } from './academy-cfo-batch2';
-// import { ACADEMY_CFO_BATCH_3 } from './academy-cfo-batch3';
-// import { ACADEMY_CFO_BATCH_4 } from './academy-cfo-batch4';
+import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
+import { ACADEMY_CFO_BATCH_2 } from './academy-cfo-batch2';
+import { ACADEMY_CFO_BATCH_3 } from './academy-cfo-batch3';
+import { ACADEMY_CFO_BATCH_4 } from './academy-cfo-batch4';
 
 // ─── SaaS CFO Training (1000 articles) — BATCHES 50-67 (297 articles active) ──
 // NOTE: Batches 31-49 created locally, need to be structured/integrated next
@@ -15790,11 +15789,10 @@ academyArticles.push(...batch399Articles);
 academyArticles.push(...batch400Articles);
 
 // ─── MERGE CFO DASHBOARD TRAINING (100 articles) ─────────────────────────────
-// NOTE: CFO batch files temporarily disabled for build
-// academyArticles.push(...(ACADEMY_CFO_BATCH1 as AcademyArticle[]));
-// academyArticles.push(...(ACADEMY_CFO_BATCH_2 as AcademyArticle[]));
-// academyArticles.push(...(ACADEMY_CFO_BATCH_3 as AcademyArticle[]));
-// academyArticles.push(...(ACADEMY_CFO_BATCH_4 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH1 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH_2 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH_3 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH_4 as AcademyArticle[]));
 
 // ─── MERGE SAAS CFO TRAINING (1000 articles in batches of 10) ─────────────────
 // academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 as AcademyArticle[]));

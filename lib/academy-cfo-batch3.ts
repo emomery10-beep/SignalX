@@ -61,7 +61,7 @@ export const ACADEMY_CFO_BATCH_3: AcademyArticle[] = [
         a: "Yes. Tap the expense row in the list to open the edit form, adjust any field, and save again.",
       },
     ],
-    videoUrl: "",
+    videoUrl: "QToJkcdFBi8",
   },
 
   // ─── Article 52 ───────────────────────────────────────────────────────────
