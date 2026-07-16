@@ -729,7 +729,11 @@ export default function PosSetupPage() {
             <canvas ref={canvasRef} style={{ display: 'none' }} />
 
             {!photo ? (
-              <button style={{ ...bigBtn, marginBottom: 20 }} onClick={takePhoto}>
+              <button style={{ ...bigBtn, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={takePhoto}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                  <circle cx="12" cy="13" r="3"/>
+                </svg>
                 {tc('pos_setup.take_photo')}
               </button>
             ) : (
@@ -765,9 +769,15 @@ export default function PosSetupPage() {
               style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 20 }}
             />
 
-            {error && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16 }}>{error}</div>}
+            {error && (
+              <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+                <span>{error}</span>
+              </div>
+            )}
 
-            <button style={{ ...bigBtn, marginBottom: 10, opacity: saving ? .7 : 1 }} onClick={saveItem} disabled={saving}>
+            <button style={{ ...bigBtn, marginBottom: 10, opacity: saving ? .7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={saveItem} disabled={saving}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
               {saving ? tc('pos_setup.saving') : tc('pos_setup.save_item')}
             </button>
             <button style={ghostBtn} onClick={() => { stopCamera(); setScreen('list') }} disabled={saving}>
@@ -801,9 +811,18 @@ export default function PosSetupPage() {
                 </div>
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-                {importError && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16 }}>{importError}</div>}
+                {importError && (
+                  <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+                    <span>{importError}</span>
+                  </div>
+                )}
 
-                <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? .7 : 1 }} onClick={captureListPhoto} disabled={importBusy}>
+                <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? .7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={captureListPhoto} disabled={importBusy}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                  </svg>
                   {importBusy ? tc('pos_setup.import_reading') : tc('pos_setup.import_snap')}
                 </button>
                 <button style={{ ...ghostBtn, marginBottom: 10 }} onClick={() => fileInputRef.current?.click()} disabled={importBusy}>
@@ -852,9 +871,15 @@ export default function PosSetupPage() {
                   ))}
                 </div>
 
-                {importError && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16 }}>{importError}</div>}
+                {importError && (
+                  <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+                    <span>{importError}</span>
+                  </div>
+                )}
 
-                <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? .7 : 1 }} onClick={commitImport} disabled={importBusy}>
+                <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? .7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={commitImport} disabled={importBusy}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                   {importBusy ? tc('pos_setup.saving') : (importItems.length === 1 ? tc('pos_setup.import_save_one') : tc('pos_setup.import_save', { count: importItems.filter(it => it.name.trim()).length }))}
                 </button>
                 <button style={ghostBtn} onClick={openImport} disabled={importBusy}>
@@ -986,9 +1011,15 @@ export default function PosSetupPage() {
               placeholder="••••" style={{ width: '100%', padding: '13px 15px', fontSize: 24, letterSpacing: memberPin ? '.4em' : 'normal', textAlign: 'center', background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8 }} />
             <p style={{ fontSize: 14, color: TX3, marginBottom: 16, lineHeight: 1.5 }}>{tc('pos_setup.team_pin_hint')}</p>
 
-            {teamError && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16 }}>{teamError}</div>}
+            {teamError && (
+              <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+                <span>{teamError}</span>
+              </div>
+            )}
 
-            <button style={{ ...bigBtn, marginBottom: 10, opacity: teamSaving ? .7 : 1 }} onClick={saveMember} disabled={teamSaving}>
+            <button style={{ ...bigBtn, marginBottom: 10, opacity: teamSaving ? .7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={saveMember} disabled={teamSaving}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
               {teamSaving ? tc('pos_setup.saving') : tc('pos_setup.team_save_member')}
             </button>
             <button style={ghostBtn} onClick={() => setScreen('team')} disabled={teamSaving}>{tc('pos_setup.cancel')}</button>
@@ -1007,7 +1038,8 @@ export default function PosSetupPage() {
             <p style={{ fontSize: 17, color: TX2, lineHeight: 1.6, marginBottom: 28 }}>
               {items.length === 1 ? tc('pos_setup.ready_subtitle_one') : tc('pos_setup.ready_subtitle', { count: items.length })}
             </p>
-            <button style={{ ...bigBtn, marginBottom: 10 }} onClick={() => router.push('/pos/activate')}>
+            <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={() => router.push('/pos/activate')}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               {tc('pos_setup.ready_cta')}
             </button>
             <button style={ghostBtn} onClick={() => setScreen('list')}>

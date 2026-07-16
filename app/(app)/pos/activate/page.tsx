@@ -183,7 +183,12 @@ export default function PosActivatePage() {
               )}
             </div>
 
-            {error && <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16 }}>{error}</div>}
+            {error && (
+              <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+                <span>{error}</span>
+              </div>
+            )}
 
             {phase === 'redirecting' ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 16, color: TX2, fontSize: 17 }}>
@@ -193,11 +198,26 @@ export default function PosActivatePage() {
               <>
                 {isKenyan ? (
                   <>
-                    <button style={{ ...bigBtn, marginBottom: 10 }} onClick={payMpesa}>{tc('pos_setup.activate_pay_mpesa')}</button>
-                    <button style={{ ...ghostBtn, marginBottom: 10 }} onClick={payCard}>{tc('pos_setup.activate_pay_card')}</button>
+                    <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payMpesa}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="6" y="2" width="10" height="18" rx="2"/><path d="M10 17h2"/><circle cx="18" cy="16" r="4.5"/><path d="M18 13.5v5M16.3 15.3h3.4M16.3 16.7h3.4"/>
+                      </svg>
+                      {tc('pos_setup.activate_pay_mpesa')}
+                    </button>
+                    <button style={{ ...ghostBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>
+                      </svg>
+                      {tc('pos_setup.activate_pay_card')}
+                    </button>
                   </>
                 ) : (
-                  <button style={{ ...bigBtn, marginBottom: 10 }} onClick={payCard}>{tc('pos_setup.activate_pay_card')}</button>
+                  <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>
+                    </svg>
+                    {tc('pos_setup.activate_pay_card')}
+                  </button>
                 )}
                 <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 16, cursor: 'pointer', padding: '10px 0', fontFamily: 'inherit' }} onClick={() => router.push('/pos/setup')}>
                   {tc('pos_setup.activate_back_items')}

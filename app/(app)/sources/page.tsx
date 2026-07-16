@@ -157,6 +157,25 @@ export default function SourcesPage() {
     return () => { if (tiktokPollRef.current) clearInterval(tiktokPollRef.current) }
   }, [])
 
+  // Deep link from onboarding's connect step (e.g. /sources?open=quickbooks) —
+  // auto-opens that connector's own flow instead of dropping the user on the
+  // generic list to hunt for it themselves. Explicit allowlist, not "any valid
+  // SOURCES id": openModal() special-cases a couple of ids to skip the review
+  // modal and act immediately (askbiz_pos fires a real connect POST with no
+  // confirmation step), and loading a URL must never trigger a state-changing
+  // action on its own. Only ids that open an inert review modal belong here.
+  const AUTO_OPENABLE_SOURCE_IDS = ['quickbooks', 'stripe', 'amazon_fba', 'google_sheets', 'tiktok_shop']
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const open = url.searchParams.get('open')
+    if (open && AUTO_OPENABLE_SOURCE_IDS.includes(open)) {
+      openModal(open)
+      // Strip it so a refresh or reshared link doesn't reopen the modal.
+      url.searchParams.delete('open')
+      window.history.replaceState(null, '', url.pathname + url.search)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const showToast = (msg: string, ok: boolean) => {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 4000)

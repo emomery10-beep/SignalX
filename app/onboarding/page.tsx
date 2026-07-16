@@ -1,10 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES, CURRENCIES as CURRENCY_TABLE } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
+import PasskeyNudge from '@/components/PasskeyNudge'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
 
@@ -55,6 +55,29 @@ const bizIcon = (id: string) => {
   }
 }
 
+// Sector icon set — same stroke style as bizIcon. One simple recognizable
+// glyph per product category; ids match the literal SECTOR_IDS strings below
+// (stored as-is in profiles.sector_hints, so they stay language-independent).
+const sectorIcon = (id: string) => {
+  const p = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  switch (id) {
+    case 'Fashion & Apparel': return <svg {...p}><circle cx="12" cy="5" r="1.4"/><path d="M12 6.4v2"/><path d="M3 18.5 12 12l9 6.5"/><path d="M3 18.5h18"/></svg>
+    case 'Beauty & Personal Care': return <svg {...p}><path d="M12 2.5 13.6 8.4 20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6Z"/></svg>
+    case 'Health & Wellness': return <svg {...p}><path d="M12 20s-7-4.4-9.3-8.8A5.2 5.2 0 0 1 12 5.4a5.2 5.2 0 0 1 9.3 5.8C18.9 15.6 12 20 12 20Z"/><path d="M4 12h3l1.6-3 2 4.5 1.4-2.5h4.9"/></svg>
+    case 'Food & Beverage': return <svg {...p}><path d="M6.5 3v5.5a1.8 1.8 0 0 0 3.6 0V3"/><path d="M8.3 8.5V21"/><path d="M15 3c-1.4 0-2.5 1.6-2.5 3.6S13.6 10 15 10s2.5-1.4 2.5-3.4S16.4 3 15 3Z"/><path d="M15 10v11"/></svg>
+    case 'Home & Garden': return <svg {...p}><path d="M3 11 12 4l9 7"/><path d="M5.5 10v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-9"/><path d="M12 20v-5a2 2 0 0 1 4 0"/></svg>
+    case 'Electronics & Tech': return <svg {...p}><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg>
+    case 'Sports & Outdoor': return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/><path d="M3 12h18"/><path d="M5.8 5.8c3.4 3.4 9 3.4 12.4 0M5.8 18.2c3.4-3.4 9-3.4 12.4 0"/></svg>
+    case 'Luxury & Premium': return <svg {...p}><path d="M3 8.5 9 3h6l6 5.5-9 12.5Z"/><path d="M3 8.5h18M9 3 7 8.5l5 12.5 5-12.5-2-5.5"/></svg>
+    case 'Kids & Toys': return <svg {...p}><rect x="3.5" y="10.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="10.5" width="7" height="7" rx="1.2"/><rect x="8.5" y="3.5" width="7" height="7" rx="1.2"/></svg>
+    case 'Pet Products': return <svg {...p}><circle cx="12" cy="15.2" r="3.3"/><circle cx="5.8" cy="9" r="1.8"/><circle cx="10.4" cy="5.6" r="1.8"/><circle cx="13.6" cy="5.6" r="1.8"/><circle cx="18.2" cy="9" r="1.8"/></svg>
+    case 'Arts & Crafts': return <svg {...p}><path d="m18 2 4 4-9.5 9.5-4.3 1.1 1.1-4.3Z"/><path d="M3.2 20.8c-.3-2 1-4 3-4s3.2 1.1 3.2 3-2.1 2.2-3.2 2.2-2.7-.4-3-1.2Z"/></svg>
+    case 'Automotive': return <svg {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2"/><path d="M12 5.3v4.5"/><path d="M6.5 15.5 10.3 13"/><path d="M17.5 15.5 13.7 13"/></svg>
+    case 'B2B / Industrial': return <svg {...p}><rect x="2.5" y="7" width="19" height="13" rx="2"/><path d="M8.5 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2"/><path d="M2.5 13h19"/></svg>
+    default: return <svg {...p}><circle cx="7" cy="7" r="1.3"/><circle cx="12" cy="7" r="1.3"/><circle cx="17" cy="7" r="1.3"/><circle cx="7" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="17" cy="12" r="1.3"/><circle cx="7" cy="17" r="1.3"/><circle cx="12" cy="17" r="1.3"/><circle cx="17" cy="17" r="1.3"/></svg>
+  }
+}
+
 const buildBizTypes = (tc: TC) => [
   { id: 'market_stall', label: tc('onboarding.biz_market_stall_label'), desc: tc('onboarding.biz_market_stall_desc') },
   { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     desc: tc('onboarding.biz_food_bev_desc') },
@@ -78,6 +101,21 @@ const SECTOR_IDS = [
 
 const buildSectors = (tc: TC) =>
   SECTOR_IDS.map((id, i) => ({ id, label: tc('onboarding.sector_' + i) }))
+
+// Connect-step tiles — deep link straight into that connector's own flow on
+// /sources (same emoji + source ids as the SOURCES array in
+// app/(app)/sources/page.tsx, so the icon the user taps here is the same
+// icon they land on).
+// Shopify deliberately excluded — /sources itself shows a "Coming Soon" badge
+// for it instead of a working Connect button (not launched yet), so this deep
+// link must not offer a shortcut around that gate.
+const CONNECT_SOURCES: { id: string; sourceId: string; icon: string; labelKey: string }[] = [
+  { id: 'quickbooks', sourceId: 'quickbooks',    icon: '📒', labelKey: 'connect_source_quickbooks' },
+  { id: 'stripe',     sourceId: 'stripe',        icon: '💳', labelKey: 'connect_source_stripe' },
+  { id: 'amazon',     sourceId: 'amazon_fba',    icon: '📦', labelKey: 'connect_source_amazon' },
+  { id: 'sheets',     sourceId: 'google_sheets', icon: '📊', labelKey: 'connect_source_sheets' },
+  { id: 'tiktok',     sourceId: 'tiktok_shop',   icon: '🎵', labelKey: 'connect_source_tiktok' },
+]
 
 const buildCurrencies = (tc: TC) => [
   { code: 'GBP', symbol: '£', label: tc('onboarding.currency_gbp_label') },
@@ -139,7 +177,6 @@ const inp: React.CSSProperties = {
 }
 
 export default function OnboardingPage() {
-  const router = useRouter()
   const supabase = createClient()
   const { tc, lang } = useLang()
 
@@ -151,6 +188,11 @@ export default function OnboardingPage() {
   const [step,         setStep]         = useState<Step>('business')
   const [saving,       setSaving]       = useState(false)
   const [saveError,    setSaveError]    = useState('')
+  // Signup passkey nudge — shown once after onboarding actually completes
+  // (finish() or the top-level skip()), not before it starts. Setting this
+  // swaps the whole step content for <PasskeyNudge>, which itself decides
+  // whether to show the nudge or navigate straight to the destination.
+  const [pendingNudge, setPendingNudge] = useState<string | null>(null)
   const [firstName,    setFirstName]    = useState('')
   const [businessName, setBusinessName] = useState('')
   const [bizType,      setBizType]      = useState('')
@@ -296,7 +338,7 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
-      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home')
+      setPendingNudge(POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home')
     } catch (e) { console.error(e) } finally { setSaving(false) }
   }
 
@@ -308,12 +350,19 @@ export default function OnboardingPage() {
     return firstName ? `${firstName}'s ${label}` : (label || 'My Business')
   }
 
-  const finish = async () => {
+  // Accepts an optional destination override (used by the connect-step tiles,
+  // which need to land on a specific /sources?open=... URL instead of the
+  // usual post-onboarding destination). Returns whether the save succeeded —
+  // callers must check this before navigating themselves; pendingNudge is the
+  // only thing that navigates on success, so a save failure never leaves a
+  // caller free to force-navigate anyway (that previously bounced the user to
+  // a blank onboarding with everything they'd entered silently discarded).
+  const finish = async (dest?: string): Promise<boolean> => {
     setSaving(true)
     setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) return false
 
       const { error } = await supabase.from('profiles').update({
         first_name:          firstName,
@@ -332,13 +381,17 @@ export default function OnboardingPage() {
       // failure here previously meant an update was dropped (e.g. a check
       // constraint violation) while the user was bounced back to
       // onboarding on their next visit with no explanation.
-      if (error) { setSaveError(error.message); return }
+      if (error) { setSaveError(error.message); return false }
 
       // POS personas go to the pre-payment setup flow (build the stall, then
-      // pay), not straight to the paywalled dashboard.
-      router.push(POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home')
+      // pay), not straight to the paywalled dashboard. Show the passkey nudge
+      // once here, now that onboarding is actually done, instead of before
+      // signup even started.
+      setPendingNudge(dest ?? (POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home'))
+      return true
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Something went wrong — please try again.')
+      return false
     } finally {
       setSaving(false)
     }
@@ -404,6 +457,9 @@ export default function OnboardingPage() {
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 16px 40px' }}>
         <div style={{ width: '100%', maxWidth: 560 }}>
+        {pendingNudge !== null ? (
+          <PasskeyNudge destination={pendingNudge} />
+        ) : (<>
 
           {/* ── Business type (first step — one tap) ── */}
           {step === 'business' && (
@@ -586,14 +642,19 @@ export default function OnboardingPage() {
               <p style={{ fontSize: 12, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
                 {tc('onboarding.sector_subtitle')}
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 8, marginBottom: 28 }}>
                 {SECTORS.map(s => (
                   <button
                     key={s.id}
                     onClick={() => toggleSector(s.id)}
-                    style={sectors.includes(s.id) ? { ...chipActive, padding: '7px 14px' } : { ...chipBase, padding: '7px 14px' }}
+                    style={{
+                      ...(sectors.includes(s.id) ? chipActive : chipBase),
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                      minHeight: 56,
+                    }}
                   >
-                    {s.label}
+                    <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: sectors.includes(s.id) ? ACC : EV, color: sectors.includes(s.id) ? '#fff' : TX }}>{sectorIcon(s.id)}</span>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: sectors.includes(s.id) ? ACC : TX, textAlign: 'left' }}>{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -668,23 +729,33 @@ export default function OnboardingPage() {
               <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
                 {tc('onboarding.connect_subtitle')}
               </p>
+              {/* Real, individually-tappable connectors — each deep-links straight
+                  into that source's own connect flow on /sources instead of the
+                  generic list. The bottom buttons stay as a fallback/escape hatch.
+                  Navigation only happens once finish() actually succeeds — a save
+                  failure keeps the user on this screen with the error visible
+                  instead of silently bouncing them away with nothing saved. */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
-                {[
-                  { label: tc('onboarding.connect_source_shopify') },
-                  { label: tc('onboarding.connect_source_quickbooks') },
-                  { label: tc('onboarding.connect_source_stripe') },
-                  { label: tc('onboarding.connect_source_amazon') },
-                  { label: tc('onboarding.connect_source_sheets') },
-                  { label: tc('onboarding.connect_source_tiktok') },
-                ].map(s => (
-                  <div key={s.label} style={{ padding: '14px 10px', borderRadius: 12, border: `1px solid ${B}`, background: SF, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: TX2, fontWeight: 500 }}>{s.label}</div>
-                  </div>
+                {CONNECT_SOURCES.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => finish('/sources?open=' + s.sourceId)}
+                    disabled={saving}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 8px', borderRadius: 12, border: `1.5px solid ${B2}`, background: SF, cursor: saving ? 'wait' : 'pointer', opacity: saving ? .7 : 1, fontFamily: 'inherit', transition: 'all 150ms' }}
+                  >
+                    <span style={{ width: 40, height: 40, borderRadius: 11, background: EV, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }} aria-hidden>{s.icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: TX }}>{tc('onboarding.' + s.labelKey)}</span>
+                  </button>
                 ))}
               </div>
+              {saveError && (
+                <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 11, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
+                  {saveError}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button style={btn} onClick={() => { finish(); setTimeout(() => router.push('/sources'), 500) }}>
-                  {tc('onboarding.connect_cta')}
+                <button style={{ ...btn, opacity: saving ? .7 : 1 }} onClick={() => finish('/sources')} disabled={saving}>
+                  {saving ? tc('onboarding.done_saving') : tc('onboarding.connect_cta')}
                 </button>
                 <button style={{ ...btn, background: 'transparent', color: TX3, boxShadow: 'none', border: `1px solid ${B}` }} onClick={next}>
                   {tc('onboarding.connect_skip')}
@@ -710,13 +781,14 @@ export default function OnboardingPage() {
                 </div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-                <button style={btn} onClick={finish} disabled={saving}>
+                <button style={btn} onClick={() => finish()} disabled={saving}>
                   {saving ? tc('onboarding.done_saving') : (isPosPersona ? tc('onboarding.done_cta_pos') : tc('onboarding.done_cta'))}
                 </button>
               </div>
             </div>
           )}
 
+        </>)}
         </div>
       </div>
     </div>
