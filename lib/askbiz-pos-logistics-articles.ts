@@ -415,6 +415,7 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Beginner",
+    videoUrl: "o2vAPM97Sso",
     readTime: 4,
     keywords: ["proof of delivery", "POD", "signature", "photo", "logistics", "POS", "AskBiz", "delivery confirmation"],
     keyTakeaways: [

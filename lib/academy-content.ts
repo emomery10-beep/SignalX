@@ -14258,6 +14258,7 @@ export const academyArticles: AcademyArticle[] = [
     category: "Point of Sale & Retail",
     categorySlug: "point-of-sale",
     difficulty: "Beginner",
+    videoUrl: "3oicHqEY3BM",
     readTime: 4,
     keywords: ["barcode scanning", "camera scanning POS", "phone barcode scanner", "AskBiz barcode", "EAN barcode", "UPC scanning", "retail barcode reader"],
     keyTakeaways: [

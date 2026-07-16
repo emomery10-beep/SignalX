@@ -516,6 +516,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "KFgPpIqWvdo",
     readTime: 4,
     keywords: ["map", "geo-tagged", "location", "POS", "AskBiz", "geography", "sales map"],
     keyTakeaways: [
@@ -557,6 +558,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
+    videoUrl: "OkRgwi7s_4I",
     readTime: 5,
     keywords: ["audit log", "audit trail", "transactions", "POS", "AskBiz", "accountability", "discrepancy", "investigation"],
     keyTakeaways: [
@@ -845,6 +847,46 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       { q: "What if I forget to close the till before the next day?", a: "AskBiz will prompt you to close the previous session when you try to open a new one. You can still close the previous session retroactively — the transaction data is preserved accurately, though the session timestamp will show the actual close time rather than end-of-trading." },
       { q: "Can I close the till remotely as a manager without being at the POS?", a: "Managers with appropriate permissions can view session summaries and Audit log entries remotely via AskBiz. However, the physical cash count must be performed by someone at the location — the system cannot count physical cash for you." },
       { q: "How long are closing reports kept?", a: "Session closing reports are retained indefinitely in AskBiz Reports > Sessions. For HMRC purposes, you must keep records for at least six years, and AskBiz's digital records satisfy this requirement." }
+    ]
+  },
+  {
+    slug: "pos-live-dashboard-sync-askbiz",
+    title: "How AskBiz POS Sales Feed Your Business Dashboard",
+    description: "What actually happens between a till sale and your My Business dashboard — what updates instantly, what needs a refresh, and why there's no separate connection step.",
+    category: "AskBiz Tutorials",
+    categorySlug: "askbiz-tutorials",
+    difficulty: "Beginner",
+    videoUrl: "SThcwk6izXU",
+    readTime: 4,
+    keywords: ["real-time sync", "live dashboard", "POS to dashboard", "My Business", "AskBiz", "sales data", "connected"],
+    keyTakeaways: [
+      "Every sale is saved to your account the instant it completes — cash sales immediately, card and mobile money sales once payment is confirmed.",
+      "On the till itself, new sales appear instantly with no refresh needed. On your My Business dashboard, a sale is included the moment you open or reload the page — it does not push live to a screen you're already viewing.",
+      "There is no separate 'connect' step between AskBiz POS and your dashboard — they run on the same account, so any staff member signed in to the till is already feeding your numbers."
+    ],
+    content: [
+      {
+        heading: "What happens the moment you take a sale",
+        body: "When a cashier completes a sale at the till, AskBiz saves it straight away. Cash sales are marked complete the instant they're recorded — there's nothing to wait for. Card and mobile money sales are saved as pending the moment the transaction starts, then flip to completed as soon as payment is confirmed. Either way, the sale exists in your account within a second or two of the customer paying — there's no overnight batch, no manual export, and no 'sync' button to press."
+      },
+      {
+        heading: "Where you'll actually see it update",
+        body: "This is worth being precise about, because 'real time' means different things in different places. On the POS till screen itself, a new sale appears the instant it's made — you'll see a brief 'New sale' notification and the running total for that session updates with no action from you. On your My Business dashboard (reached from the main AskBiz navigation, not the POS app), the same sale is fully included the moment you open the page or hit refresh — revenue, sales count, and every report already reflect it. What it does not do is silently update a dashboard screen you're already sitting on without you reloading it. In practice this rarely matters: most owners check My Business a few times a day rather than watching it continuously, and by the time you look, the numbers are already accurate."
+      },
+      {
+        heading: "Why there's no separate connection step",
+        body: "Unlike Shopify, Amazon, or other third-party integrations in AskBiz — which do need you to click Connect and authorise access — POS doesn't require any linking. Your POS till and your main AskBiz account are the same account. If a staff member signs in to the till with their PIN, they're operating under your business's account, so every sale they process lands directly in your data. The only setting that matters is whether POS is active on your plan — once it is, this connection is automatic and permanent, not something you configure once and hope keeps working."
+      },
+      {
+        heading: "Getting the most out of it day to day",
+        body: "Because there's no manual step between selling and seeing the numbers, the most useful habit is simply checking My Business at natural points in your day — first thing in the morning, after a busy lunch service, or at close — rather than treating it like a live ticker. For anything you genuinely want to watch update in real time as it happens, that's the POS till view itself, which is built for exactly that. Between the two, you get an accurate picture without ever touching a spreadsheet or waiting for an end-of-day export."
+      }
+    ],
+    relatedSlugs: ["pos-overview-dashboard-askbiz", "pos-processing-a-sale", "pos-integrations-askbiz"],
+    faq: [
+      { q: "Will my dashboard update on its own while I'm looking at it?", a: "Not on the My Business dashboard — reload the page to pull in the newest sales. The POS till screen is the exception: it updates instantly without any refresh." },
+      { q: "Do I need to connect my POS to my dashboard separately, like I would with Shopify?", a: "No. POS and your main AskBiz account are the same account — there's no OAuth step or 'Connect' button. As long as POS is active on your plan, every sale is already flowing through." },
+      { q: "A customer's card payment is still processing — does it show up yet?", a: "It's saved as a pending transaction as soon as the sale starts, then automatically updates to completed once the payment confirms. It won't count toward your revenue totals until it's completed." }
     ]
   }
 ];

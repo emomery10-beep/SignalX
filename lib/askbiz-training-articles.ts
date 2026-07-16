@@ -88,6 +88,7 @@ export const ASKBIZ_TRAINING_ARTICLES: AcademyArticle[] = [
     category: "Getting Started",
     categorySlug: "getting-started",
     difficulty: "Beginner",
+    videoUrl: "oiNvz15ONlM",
     readTime: 5,
     keywords: ["settings", "team", "roles", "permissions", "admin", "staff", "AskBiz"],
     keyTakeaways: [
