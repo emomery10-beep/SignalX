@@ -1112,57 +1112,75 @@ async function syncTikTokShop(
   }
 }
 
-// ── Instagram sync ────────────────────────────────────────────
+// ── Instagram Shopping sync ─────────────────────────────────────
+// credentials holds only the Meta access token (issued via OAuth in
+// app/api/auth/instagram-shopping) — ig_user_id and commerce_merchant_settings_id
+// are discovered at connect time and live in config, matching how the
+// connect UI splits fields (password → credentials, everything else → config).
+const GRAPH_API_VERSION = 'v19.0'
+
 async function syncInstagram(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
   userId: string,
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<{ records: UnifiedRecord[]; signals: SocialSignalRecord[]; error?: string }> {
-  const { access_token, ig_user_id } = source.credentials
-  if (!access_token || !ig_user_id) return { records: [], signals: [], error: 'Missing Instagram access token or user ID' }
+  const { access_token } = source.credentials
+  const { ig_user_id, commerce_merchant_settings_id } = source.config
+  if (!access_token || (!ig_user_id && !commerce_merchant_settings_id)) {
+    return { records: [], signals: [], error: 'Missing Instagram access token or account ID — reconnect Instagram Shopping' }
+  }
 
   const token = String(access_token)
-  const igId  = String(ig_user_id)
+  const igId  = ig_user_id ? String(ig_user_id) : ''
+  const cmsId = commerce_merchant_settings_id ? String(commerce_merchant_settings_id) : ''
 
   try {
-    // Fetch recent media with insights
-    const mediaRes = await fetch(
-      `https://graph.facebook.com/v18.0/${igId}/media?fields=id,media_type,timestamp,like_count,comments_count&limit=50&access_token=${token}`
-    )
-
+    // Fetch recent media with insights (requires instagram_basic — best-effort, skipped if unauthorized)
     let posts: Record<string, unknown>[] = []
-    if (mediaRes.ok) {
-      const data = await mediaRes.json()
-      const items = (data?.data || []) as Record<string, unknown>[]
+    if (igId) {
+      const mediaRes = await fetch(
+        `https://graph.facebook.com/${GRAPH_API_VERSION}/${igId}/media?fields=id,media_type,timestamp,like_count,comments_count&limit=50&access_token=${token}`
+      )
 
-      // Fetch insights for each post (batch up to 20)
-      const sample = items.slice(0, 20)
-      posts = await Promise.all(sample.map(async post => {
-        try {
-          const insightRes = await fetch(
-            `https://graph.facebook.com/v18.0/${post.id}/insights?metric=reach,impressions,saved,profile_visits,website_clicks&access_token=${token}`
-          )
-          if (!insightRes.ok) return post
-          const { data: metrics } = await insightRes.json()
-          const merged: Record<string, unknown> = { ...post }
-          for (const m of (metrics as Record<string, unknown>[])) {
-            merged[String(m.name)] = (m.values as any)?.[0]?.value || 0
-          }
-          return merged
-        } catch { return post }
-      }))
+      if (mediaRes.ok) {
+        const data = await mediaRes.json()
+        const items = (data?.data || []) as Record<string, unknown>[]
+
+        // Fetch insights for each post (batch up to 20)
+        const sample = items.slice(0, 20)
+        posts = await Promise.all(sample.map(async post => {
+          try {
+            const insightRes = await fetch(
+              `https://graph.facebook.com/${GRAPH_API_VERSION}/${post.id}/insights?metric=reach,impressions,saved,profile_visits,website_clicks&access_token=${token}`
+            )
+            if (!insightRes.ok) return post
+            const { data: metrics } = await insightRes.json()
+            const merged: Record<string, unknown> = { ...post }
+            for (const m of (metrics as Record<string, unknown>[])) {
+              merged[String(m.name)] = (m.values as any)?.[0]?.value || 0
+            }
+            return merged
+          } catch { return post }
+        }))
+      }
     }
 
-    // Fetch commerce orders if catalog_id is set
+    // Fetch commerce orders via the Commerce Platform Order API (requires
+    // commerce_account_read_orders — the shop's Commerce Merchant Settings ID,
+    // not the IG user ID or catalog ID, is what scopes order data).
     let orders: Record<string, unknown>[] = []
-    const catalogId = source.credentials.catalog_id
-    if (catalogId) {
+    if (cmsId) {
+      const fields = 'id,created,channel,order_status,items{id,product_id,retailer_id,quantity,price_per_unit,product_name},estimated_payment_details'
       const ordersRes = await fetch(
-        `https://graph.facebook.com/v18.0/${igId}/orders?access_token=${token}`
+        `https://graph.facebook.com/${GRAPH_API_VERSION}/${cmsId}/commerce_orders?fields=${fields}&access_token=${token}`
       )
       if (ordersRes.ok) {
         const data = await ordersRes.json()
         orders = (data?.data || []) as Record<string, unknown>[]
+      } else if (!igId) {
+        // No IG media fallback either — surface the failure instead of silently returning nothing.
+        const err = await ordersRes.text().catch(() => ordersRes.statusText)
+        return { records: [], signals: [], error: `Instagram Shopping orders fetch failed ${ordersRes.status}: ${err.slice(0, 200)}` }
       }
     }
 

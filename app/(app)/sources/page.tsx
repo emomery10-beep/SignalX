@@ -49,7 +49,7 @@ const SOURCES: SourceDef[] = [
 
   // ── Social Commerce ───────────────────────────────────────────────────────
   { id: 'tiktok_shop', label: 'TikTok Shop',        category: 'Social Commerce', desc: 'Orders, video analytics, product performance',        icon: '🎵', accent: '#010101', color: 'rgba(1,1,1,.06)',      oauthFlow: true,  hint: 'Scan the QR code with your TikTok app to connect your shop', fields: [] },
-  { id: 'instagram',   label: 'Instagram Shopping', category: 'Social Commerce', desc: 'Post insights, product clicks, shopping orders',       icon: '📸', accent: '#E1306C', color: 'rgba(225,48,108,.06)', oauthFlow: false, hint: 'Paste your Meta Graph API token from Meta Business Suite › Apps', fields: [{ key: 'access_token', label: 'Access Token', placeholder: 'EAAxxxxxxxxxxxx', type: 'password', required: true }, { key: 'ig_user_id', label: 'Instagram User ID', placeholder: '17xxxxxxxxxxxxxxxxx', type: 'text', required: true }, { key: 'catalog_id', label: 'Catalog ID (optional)', placeholder: '10xxxxxxxxxx', type: 'text', required: false }] },
+  { id: 'instagram',   label: 'Instagram Shopping', category: 'Social Commerce', desc: 'Post insights, product clicks, shopping orders',       icon: '📸', accent: '#E1306C', color: 'rgba(225,48,108,.06)', oauthFlow: true,  hint: 'Redirects to Meta — grants read access to your Instagram Shop and catalog', fields: [] },
   { id: 'pinterest',   label: 'Pinterest',          category: 'Social Commerce', desc: 'Pin analytics, saves, product catalog performance',    icon: '📌', accent: '#E60023', color: 'rgba(230,0,35,.06)',   oauthFlow: false, hint: 'Paste your access token from Pinterest Business › Apps', fields: [{ key: 'access_token', label: 'Access Token', placeholder: 'pina_xxxxxxxxxxxx', type: 'password', required: true }] },
 
   // ── Inventory & Logistics ─────────────────────────────────────────────────
@@ -88,6 +88,7 @@ const OAUTH_URL: Record<string, (f: Record<string, string>) => string> = {
   linnworks:        ()  => '/api/auth/linnworks',
   // Social Commerce
   tiktok_shop:      ()  => '/api/auth/tiktok-shop',
+  instagram:        ()  => '/api/auth/instagram-shopping',
   // Data
   google_sheets:    (f) => `/api/auth/google?spreadsheet_id=${encodeURIComponent(f.spreadsheet_id || '')}`,
 }

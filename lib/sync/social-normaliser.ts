@@ -157,6 +157,9 @@ export function normaliseTikTokAnalytics(
 
 // ── Instagram ─────────────────────────────────────────────────
 
+// Field names match Meta's Commerce Platform Order API (GET /{commerce_merchant_settings_id}/commerce_orders):
+// order.created, order.channel, order.order_status.state, order.items[].{retailer_id,product_id,quantity,price_per_unit,product_name},
+// order.estimated_payment_details.{subtotal,tax,total_amount}
 export function normaliseInstagramOrders(
   orders: Record<string, unknown>[]
 ): UnifiedRecord[] {
@@ -164,18 +167,20 @@ export function normaliseInstagramOrders(
   for (const order of orders) {
     const items = (order.items as Record<string, unknown>[]) || []
     const payment = order.estimated_payment_details as Record<string, unknown> || {}
+    const status = (order.order_status as Record<string, unknown>)?.state
 
     for (const item of items) {
       const qty     = safeNum(item.quantity)
-      const price   = safeNum((item.price_per_unit as any)?.amount) || safeNum(item.retailer_price)
-      const name    = safeStr(item.product_name) || safeStr(item.retailer_product_id)
+      const priceObj = item.price_per_unit as Record<string, unknown> | undefined
+      const price   = safeNum(priceObj?.amount)
+      const name    = safeStr(item.product_name) || safeStr(item.retailer_id)
 
       records.push({
-        record_date:      safeDate(order.created_time),
-        sku:              safeStr(item.retailer_id),
+        record_date:      safeDate(order.created),
+        sku:              safeStr(item.retailer_id) || safeStr(item.product_id),
         product_name:     name,
         category:         '',
-        variant:          safeStr(item.selected_option),
+        variant:          '',
         supplier:         '',
         units_sold:       qty,
         selling_price:    price,
@@ -183,28 +188,28 @@ export function normaliseInstagramOrders(
         gross_revenue:    qty * price,
         net_revenue:      qty * price,
         cost_price:       0,
-        shipping_cost:    safeNum(payment.shipping_amount),
+        shipping_cost:    0,
         packaging_cost:   0,
-        marketplace_fee:  qty * price * 0.05,  // Instagram takes ~5%
-        tax:              safeNum(payment.tax_amount),
-        total_cost:       safeNum(payment.shipping_amount),
+        marketplace_fee:  qty * price * 0.05,  // Instagram/Facebook Shops takes ~5%
+        tax:              safeNum(payment.tax),
+        total_cost:       safeNum(payment.tax),
         gross_margin:     0,
         net_margin:       0,
         stock_level:      0,
         stock_movement:   -qty,
         low_stock_flag:   false,
         damaged_stock:    0,
-        channel:          'instagram_shopping',
+        channel:          safeStr(order.channel) === 'facebook' ? 'facebook_shop' : 'instagram_shopping',
         customer_region:  '',
-        currency:         safeStr((item.price_per_unit as any)?.currency) || 'GBP',
+        currency:         safeStr(priceObj?.currency) || 'GBP',
         ad_spend:         0,
         campaign:         '',
         coupon_code:      '',
         coupon_discount:  0,
-        payment_status:   safeStr(order.order_status) || 'paid',
+        payment_status:   safeStr(status) || 'paid',
         refund_amount:    0,
-        payout_amount:    qty * price,
-        source_record_id: `instagram_order_${safeStr(order.id)}_${safeStr(item.retailer_id)}`,
+        payout_amount:    safeNum(payment.total_amount) || qty * price,
+        source_record_id: `instagram_order_${safeStr(order.id)}_${safeStr(item.id) || safeStr(item.retailer_id)}`,
         source_type:      'instagram',
         raw_data:         { order, item },
       })

@@ -1,21 +1,11 @@
 // ============================================================
 // /api/social — Social Commerce Intelligence API
 // GET: fetch aggregated social signals for the user
-// POST: trigger a manual sync of social data
+// (Syncing itself happens in lib/sync/engine.ts runSync — the sole sync path
+// for all connected sources, triggered on connect and via the sync cron.)
 // ============================================================
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import {
-  fetchTikTokShopOrders, fetchTikTokShopAnalytics,
-  fetchInstagramInsights, fetchInstagramShoppingOrders,
-  fetchPinterestPinAnalytics,
-} from '@/lib/connectors/social'
-import {
-  normaliseTikTokOrders, normaliseTikTokAnalytics,
-  normaliseInstagramOrders, normaliseInstagramInsights,
-  normalisePinterestAnalytics,
-  type SocialSignalRecord,
-} from '@/lib/sync/social-normaliser'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -149,128 +139,4 @@ export async function GET() {
     demand_signals,
     platform_breakdown,
   })
-}
-
-// ── POST — trigger social data sync ──────────────────────────
-export async function POST() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  // Get connected social sources
-  const { data: sources } = await supabase
-    .from('connected_sources')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('source_type', ['tiktok_shop', 'instagram', 'pinterest'])
-    .eq('status', 'active')
-
-  if (!sources?.length) {
-    return NextResponse.json({ success: false, message: 'No social sources connected' })
-  }
-
-  const results: { source: string; records: number; error?: string }[] = []
-
-  for (const source of sources) {
-    const creds  = source.credentials as Record<string, string> || {}
-    const config = source.config as Record<string, string> || {}
-    const signals: SocialSignalRecord[] = []
-    const unifiedRecords: any[] = []
-
-    try {
-      if (source.source_type === 'tiktok_shop') {
-        const token  = creds.access_token
-        const shopId = config.shop_id || ''
-        const [orders, analytics] = await Promise.all([
-          fetchTikTokShopOrders(token, shopId),
-          fetchTikTokShopAnalytics(token),
-        ])
-        unifiedRecords.push(...normaliseTikTokOrders(orders))
-        signals.push(...normaliseTikTokAnalytics(analytics))
-      }
-
-      if (source.source_type === 'instagram') {
-        const token    = creds.access_token
-        const igUserId = config.ig_user_id || ''
-        const catalogId = config.catalog_id || ''
-        const [posts, orders] = await Promise.all([
-          fetchInstagramInsights(token, igUserId),
-          fetchInstagramShoppingOrders(token, catalogId),
-        ])
-        unifiedRecords.push(...normaliseInstagramOrders(orders))
-        signals.push(...normaliseInstagramInsights(posts))
-      }
-
-      if (source.source_type === 'pinterest') {
-        const token = creds.access_token
-        const pins  = await fetchPinterestPinAnalytics(token)
-        signals.push(...normalisePinterestAnalytics(pins))
-      }
-
-      // Upsert social signals
-      if (signals.length > 0) {
-        const signalRows = signals.map(s => ({
-          ...s,
-          user_id:    user.id,
-          updated_at: new Date().toISOString(),
-        }))
-
-        for (let i = 0; i < signalRows.length; i += 50) {
-          await supabase.from('social_signals').upsert(
-            signalRows.slice(i, i + 50),
-            { onConflict: 'user_id,source_type,content_id,record_date' }
-          )
-        }
-      }
-
-      // Upsert unified records (sales data)
-      if (unifiedRecords.length > 0) {
-        const rows = unifiedRecords.map(r => ({
-          ...r,
-          user_id:    user.id,
-          source_id:  source.id,
-          updated_at: new Date().toISOString(),
-        }))
-        for (let i = 0; i < rows.length; i += 100) {
-          await supabase.from('unified_data').upsert(
-            rows.slice(i, i + 100),
-            { onConflict: 'user_id,source_type,source_record_id' }
-          )
-        }
-      }
-
-      // Check for demand signal alerts — products with high saves, no orders
-      const highSaveSignals = signals.filter(s => (s.saves || 0) > 50 && s.orders === 0)
-      if (highSaveSignals.length > 0) {
-        const top = highSaveSignals[0]
-        await supabase.from('alerts').upsert({
-          user_id:   user.id,
-          type:      'social_demand_signal',
-          title:     `${top.saves} saves on ${top.platform} — demand signal detected`,
-          message:   `"${top.product_name || 'A product'}" has ${top.saves} saves but no orders. This is strong purchase intent. Check your stock level and ensure it\'s easy to buy.`,
-          is_active: true,
-          metadata:  { platform: top.platform, saves: top.saves, product: top.product_name },
-        }, { onConflict: 'user_id,type' })
-      }
-
-      // Update last synced
-      await supabase.from('connected_sources').update({
-        last_synced_at: new Date().toISOString(),
-        status: 'active',
-        error_message: null,
-      }).eq('id', source.id)
-
-      results.push({ source: source.source_type, records: signals.length + unifiedRecords.length })
-
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sync failed'
-      await supabase.from('connected_sources').update({
-        status: 'error',
-        error_message: msg,
-      }).eq('id', source.id)
-      results.push({ source: source.source_type, records: 0, error: msg })
-    }
-  }
-
-  return NextResponse.json({ success: true, results })
 }

@@ -110,6 +110,48 @@ export async function GET(request: NextRequest) {
   const errors: string[] = []
 
   for (const source of sources) {
+    // Meta issues no refresh_token for user access tokens — instead, a still-valid
+    // long-lived token can be re-exchanged for a fresh 60-day token indefinitely.
+    // Only do this once the current token is within 10 days of expiry.
+    if (source.source_type === 'instagram') {
+      const creds = decryptCredentials(source.credentials as Record<string, unknown>)
+      const expiresAt = creds.expires_at ? new Date(String(creds.expires_at)).getTime() : 0
+      const tenDaysMs = 10 * 24 * 60 * 60 * 1000
+      if (!creds.access_token || !expiresAt || expiresAt - Date.now() > tenDaysMs) continue
+
+      try {
+        const res = await fetch('https://graph.facebook.com/v19.0/oauth/access_token?' + new URLSearchParams({
+          grant_type: 'fb_exchange_token',
+          client_id: process.env.META_APP_ID || '',
+          client_secret: process.env.META_APP_SECRET || '',
+          fb_exchange_token: String(creds.access_token),
+        }))
+        if (!res.ok) {
+          const errText = await res.text().catch(() => res.statusText)
+          errors.push(`instagram(${source.id.slice(0, 8)}): ${res.status} ${errText.slice(0, 100)}`)
+          failed++
+          continue
+        }
+        const data = await res.json() as { access_token: string; expires_in: number }
+        await supabase
+          .from('connected_sources')
+          .update({
+            credentials: encryptCredentials({
+              access_token: data.access_token,
+              expires_at: new Date(Date.now() + (data.expires_in || 60 * 24 * 60 * 60) * 1000).toISOString(),
+            }),
+            status: 'active',
+            error_message: null,
+          })
+          .eq('id', source.id)
+        refreshed++
+      } catch (e) {
+        errors.push(`instagram(${source.id.slice(0, 8)}): ${e instanceof Error ? e.message : String(e)}`)
+        failed++
+      }
+      continue
+    }
+
     const refreshConfig = REFRESH_CONFIGS[source.source_type]
     if (!refreshConfig) continue
 
