@@ -970,3 +970,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* ── Auth page split layout ──────────────────────────────────
+   Single column (form only) below 900px so it always fits the
+   viewport with no scroll; a brand panel joins on the right above
+   that width, with the form pinned to the left half. */
+.signin-form-col { flex: 1; }
+.signin-visual-col { display: none; }
+@media (min-width: 900px) {
+  .signin-form-col { flex: 0 0 min(48vw, 560px); }
+  .signin-visual-col {
+    display: flex; flex: 1; min-width: 0;
+    align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #d08a59 0%, #b96f42 100%);
+  }
+}
