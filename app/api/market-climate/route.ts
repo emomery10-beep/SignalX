@@ -368,6 +368,15 @@ export async function GET(request: NextRequest) {
 
   const params = new URL(request.url).searchParams
   const { currencySymbol: sym, countryCode: profileCountry } = await getUserLocale(supabase, user.id)
+  // Business type, fetched separately from getUserLocale (used by other routes that don't
+  // need it) — feeds detectSector() below so brand-new accounts with zero sales history
+  // still get a sector-specific climate instead of always falling back to General Retail.
+  const { data: bizProfile } = await supabase
+    .from('profiles')
+    .select('business_type')
+    .eq('id', user.id)
+    .single()
+  const businessType = bizProfile?.business_type || ''
 
   // Location: profile country first, then Vercel IP geo header, then default.
   const ipCountry = request.headers.get('x-vercel-ip-country')
@@ -435,7 +444,10 @@ export async function GET(request: NextRequest) {
   const rows = records || []
   const posItems = posRecords || []
 
-  const categories = Array.from(new Set(rows.map(r => r.category || r.product_name || '').filter(Boolean)))
+  // business_type is included so brand-new accounts with no sales history yet (categories
+  // empty) still resolve to a real sector via detectSector()'s keyword matching instead of
+  // always defaulting to General Retail — see fetch above.
+  const categories = Array.from(new Set([...rows.map(r => r.category || r.product_name || '').filter(Boolean), businessType].filter(Boolean)))
   const sector = detectSector(categories)
 
   // Build revenue-ranked product list from unified_data (all connected sources: Shopify, POS, Amazon, etc.)
