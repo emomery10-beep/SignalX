@@ -235,6 +235,7 @@ export default function OnboardingPage() {
   const [geo,            setGeo]            = useState<Geo | null>(null)
   const [geoLoading,     setGeoLoading]     = useState(true)
   const [manualLocation, setManualLocation] = useState(false)
+  const [countryCode,    setCountryCode]    = useState('')
 
   // One pass on mount: pull the first name from signup, then set the default
   // location. Location prefers the SIGNUP PHONE's country — reliable for
@@ -371,6 +372,7 @@ export default function OnboardingPage() {
         currency:            currency,
         currency_symbol:     (CURRENCY_SYMBOLS[currency] || CURRENCY_TABLE[currency]?.sym || '£'),
         region:              region,
+        country_code:        countryCode || null,
         sector_hints:        sectors.join(', '),
         export_markets:      exportMkts.join(','),
         wants_export:        wantsExport,
@@ -532,7 +534,7 @@ export default function OnboardingPage() {
                     <div style={{ fontSize: 11, color: TX3, marginTop: 10 }}>{tc('onboarding.location_confirm_question')}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button style={btn} onClick={() => { setCurrency(geo.currency); setRegion(geo.region); next() }}>
+                    <button style={btn} onClick={() => { setCurrency(geo.currency); setRegion(geo.region); setCountryCode(geo.countryCode); next() }}>
                       {tc('onboarding.location_confirm_yes')}
                     </button>
                     <button style={ghostBtn} onClick={() => setManualLocation(true)}>
@@ -560,6 +562,7 @@ export default function OnboardingPage() {
                       const selectCountry = (c: { code: string; name: string; localName: string }) => {
                         setRegion(c.localName)
                         if (COUNTRY_CURRENCY[c.code]) setCurrency(COUNTRY_CURRENCY[c.code]!)
+                        setCountryCode(c.code)
                         setShowCountrySuggestions(false)
                       }
                       return (

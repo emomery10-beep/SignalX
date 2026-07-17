@@ -362,9 +362,11 @@ export default function SourcesPage() {
 
   return (
     <div className="page-shell">
+      {/* On mobile the app shell floats a menu button top-left; clear it so
+          the page heading isn't overlapped. No effect on desktop. */}
+      <style>{`@media (max-width: 768px) { .sources-shell-body { padding-top: 56px !important; } }`}</style>
 
-
-      <div className="page-shell-body">
+      <div className="page-shell-body sources-shell-body">
 
         {toast && (
           <div style={{ padding: '12px 16px', borderRadius: 12, marginBottom: 20, background: toast.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`, fontSize: 15, color: toast.ok ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
