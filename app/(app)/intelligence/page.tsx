@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
@@ -25,6 +25,34 @@ import GettingStartedChecklist from '@/components/onboarding/GettingStartedCheck
 // restricts page.tsx to a fixed set of named exports (default, metadata,
 // etc.) and fails `tsc --noEmit` on anything else. See that file and
 // lib/voiceDiscovery.ts for the convention.
+
+// One icon per top-level tab — code-owned (not baked into translation
+// strings) so every locale gets the same consistent icon set, and so the
+// mobile tab bar can go icon-only without needing a separate translation key.
+const TAB_ICON_PROPS = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+const TAB_ICONS: Record<string, ReactNode> = {
+  overview: (
+    <svg {...TAB_ICON_PROPS}><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+  ),
+  cfo: (
+    <svg {...TAB_ICON_PROPS}><path d="M12 2 3 7v2h18V7Z"/><path d="M5 9v9M9 9v9M15 9v9M19 9v9"/><path d="M3 20h18"/></svg>
+  ),
+  team: (
+    <svg {...TAB_ICON_PROPS}><circle cx="9" cy="8" r="3"/><path d="M2 21v-1a6 6 0 0 1 12 0v1"/><circle cx="17.5" cy="9.5" r="2.5"/><path d="M15 21v-1a4.5 4.5 0 0 1 7 3.75"/></svg>
+  ),
+  logistics: (
+    <svg {...TAB_ICON_PROPS}><rect x="1" y="6" width="14" height="11" rx="1.5"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.75"/><circle cx="18" cy="19" r="1.75"/></svg>
+  ),
+  market: (
+    <svg {...TAB_ICON_PROPS}><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></svg>
+  ),
+  actions: (
+    <svg {...TAB_ICON_PROPS}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  ),
+  zakat: (
+    <svg {...TAB_ICON_PROPS}><path d="M12 21s-7-4.6-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.4-9.5 9-9.5 9Z"/></svg>
+  ),
+}
 
 export default function IntelligencePage() {
   const router = useRouter()
@@ -214,13 +242,13 @@ export default function IntelligencePage() {
   // same tabs (English-only, module-level literal; see that file and
   // lib/voiceDiscovery.ts for why it can't live inside this page.tsx).
   const tabs = [
-    { id: 'overview',     label: tc('intelligence.tab_overview') },
-    { id: 'cfo',          label: tc('intelligence.tab_cfo'),       locked: !canCfo },
-    { id: 'team',         label: tc('intelligence.tab_team') },
-    { id: 'logistics',    label: tc('intelligence.tab_logistics') },
-    { id: 'market',       label: tc('intelligence.tab_market') },
-    { id: 'actions',      label: tc('intelligence.tab_actions') },
-    { id: 'zakat',        label: tc('intelligence.tab_zakat') },
+    { id: 'overview',     label: tc('intelligence.tab_overview'),   icon: TAB_ICONS.overview },
+    { id: 'cfo',          label: tc('intelligence.tab_cfo'),        icon: TAB_ICONS.cfo,        locked: !canCfo },
+    { id: 'team',         label: tc('intelligence.tab_team'),       icon: TAB_ICONS.team },
+    { id: 'logistics',    label: tc('intelligence.tab_logistics'),  icon: TAB_ICONS.logistics },
+    { id: 'market',       label: tc('intelligence.tab_market'),     icon: TAB_ICONS.market },
+    { id: 'actions',      label: tc('intelligence.tab_actions'),    icon: TAB_ICONS.actions },
+    { id: 'zakat',        label: tc('intelligence.tab_zakat'),      icon: TAB_ICONS.zakat },
   ]
 
   // Sparkline data from score history
@@ -301,8 +329,10 @@ export default function IntelligencePage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              title={isMobile ? t.label : undefined}
+              aria-label={isMobile ? t.label : undefined}
               style={{
-                padding: '8px 12px',
+                padding: isMobile ? '8px 10px' : '8px 12px',
                 border: 'none',
                 background: 'transparent',
                 fontSize: 15,
@@ -320,7 +350,7 @@ export default function IntelligencePage() {
                 flexShrink: 0,
               }}
             >
-              {t.label}
+              {isMobile ? t.icon : t.label}
               {t.locked && !planLoading && (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>

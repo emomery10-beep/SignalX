@@ -29,6 +29,49 @@ const buildSectorOptions = (tc: (key: string) => string) => [
   { id: 'logistics', label: '🚛 ' + tc('pos_app.sector_logistics') },
 ]
 
+// One icon per top-level tab — code-owned (not baked into translation
+// strings or hardcoded emoji) so every tab gets a consistent icon set, and
+// so the mobile tab bar can go icon-only without a separate translation key.
+const TAB_ICON_PROPS = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+const TAB_ICONS: Record<string, JSX.Element> = {
+  overview: (
+    <svg {...TAB_ICON_PROPS}><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+  ),
+  staff: (
+    <svg {...TAB_ICON_PROPS}><circle cx="9" cy="8" r="3"/><path d="M2 21v-1a6 6 0 0 1 12 0v1"/><circle cx="17.5" cy="9.5" r="2.5"/><path d="M15 21v-1a4.5 4.5 0 0 1 7 3.75"/></svg>
+  ),
+  branches: (
+    <svg {...TAB_ICON_PROPS}><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg>
+  ),
+  audit: (
+    <svg {...TAB_ICON_PROPS}><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M9 11l2 2 4-4"/></svg>
+  ),
+  payments: (
+    <svg {...TAB_ICON_PROPS}><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+  ),
+  map: (
+    <svg {...TAB_ICON_PROPS}><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+  ),
+  logistics: (
+    <svg {...TAB_ICON_PROPS}><rect x="1" y="6" width="14" height="11" rx="1.5"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.75"/><circle cx="18" cy="19" r="1.75"/></svg>
+  ),
+  restaurant: (
+    <svg {...TAB_ICON_PROPS}><path d="M6 2v7a2 2 0 0 0 4 0V2M8 9v13"/><path d="M17 2c-1.7 0-3 2-3 4.5S15.3 11 17 11s3-2 3-4.5S18.7 2 17 2Z"/><path d="M17 11v11"/></svg>
+  ),
+  repair: (
+    <svg {...TAB_ICON_PROPS}><path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-2.6 2.6-2-2Z"/></svg>
+  ),
+  salon: (
+    <svg {...TAB_ICON_PROPS}><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.5 15.5M20 20 4 4"/></svg>
+  ),
+  retail: (
+    <svg {...TAB_ICON_PROPS}><path d="M21 8 19 3H5L3 8"/><path d="M3 8h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"/><path d="M9 12a3 3 0 0 0 6 0"/></svg>
+  ),
+  factory: (
+    <svg {...TAB_ICON_PROPS}><path d="M3 21V10l5 3v-3l5 3v-3l5 3v8Z"/><path d="M3 21h18"/><path d="M6 10V6"/></svg>
+  ),
+}
+
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
 const ACC_BORDER = 'rgba(208,138,89,.2)'
@@ -137,6 +180,15 @@ export default function POSPage() {
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string>('all')
   const [selectedSector, setSelectedSector] = useState<string>('all')
+
+  // Tab bar: icon-only on mobile (no room for full labels), text-only on desktop
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Reorder suggestions from stock replenishment agent
   const [reorderSuggestions, setReorderSuggestions] = useState<any[]>([])
@@ -1053,48 +1105,54 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs + action icons in one flush row */}
         <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, alignItems: 'stretch' }}>
-          {(['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[]).filter(Boolean).map(t => (
-            <button key={t} onClick={() => handleSetTab(t)} style={{
-              padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
-              background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
-              fontSize: 15, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
-              borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
-              flexShrink: 0,
-            }}>
-              {t === 'map' ? '🗺️ ' + tc('pos_app.tab_map') : t === 'services' ? (() => {
-                const bt = (businessType || '').toLowerCase()
-                const d = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
-                  : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
-                  : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon' : 'retail'
-                const s = sectorOverride || d
-                return s === 'restaurant' ? '🍴 ' + tc('pos_app.tab_services_restaurant') : s === 'repair' ? '🔧 ' + tc('pos_app.tab_services_repair') : s === 'salon' ? '💇 ' + tc('pos_app.tab_services_salon') : '📦 ' + tc('pos_app.tab_services_operations')
-              })() : tc('pos_app.tab_' + t)}
-              {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
-            </button>
-          ))}
+          {(['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[]).filter(Boolean).map(t => {
+            const bt = (businessType || '').toLowerCase()
+            const d = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
+              : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
+              : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon' : 'retail'
+            const s = sectorOverride || d
+            const serviceLabel = s === 'restaurant' ? tc('pos_app.tab_services_restaurant') : s === 'repair' ? tc('pos_app.tab_services_repair') : s === 'salon' ? tc('pos_app.tab_services_salon') : tc('pos_app.tab_services_operations')
+            const label = t === 'services' ? serviceLabel : tc('pos_app.tab_' + t)
+            const icon = t === 'services' ? TAB_ICONS[s] : TAB_ICONS[t]
+            return (
+              <button key={t} onClick={() => handleSetTab(t)} title={isMobile ? label : undefined} aria-label={isMobile ? label : undefined} style={{
+                padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+                background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
+                fontSize: 15, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+                borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
+                display: 'flex', alignItems: 'center', gap: 5,
+                flexShrink: 0,
+              }}>
+                {isMobile ? icon : label}
+                {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
+              </button>
+            )
+          })}
           {(selectedSector === 'all' || selectedSector === 'logistics') && (
-            <button onClick={() => handleSetTab('logistics')} style={{
-              padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+            <button onClick={() => handleSetTab('logistics')} title={isMobile ? tc('pos_app.tab_logistics') : undefined} aria-label={isMobile ? tc('pos_app.tab_logistics') : undefined} style={{
+              padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
               fontSize: 15, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === 'logistics' ? '2px solid #0891b2' : '2px solid transparent',
+              display: 'flex', alignItems: 'center', gap: 5,
               flexShrink: 0,
-            }}>🚛 {tc('pos_app.tab_logistics')}</button>
+            }}>{isMobile ? TAB_ICONS.logistics : tc('pos_app.tab_logistics')}</button>
           )}
           {([
-            { id: 'restaurant' as Tab, label: '🍴 ' + tc('pos_app.sector_restaurant'), color: '#d08a59' },
-            { id: 'repair' as Tab,     label: '🔧 ' + tc('pos_app.sector_repair'),     color: '#6366f1' },
-            { id: 'salon' as Tab,      label: '💇 ' + tc('pos_app.sector_salon'),      color: '#ec4899' },
-            { id: 'retail' as Tab,     label: '📦 ' + tc('pos_app.sector_retail'),     color: '#22c55e' },
-            { id: 'factory' as Tab,    label: '🏭 ' + tc('pos_app.sector_factory'),    color: '#f59e0b' },
+            { id: 'restaurant' as Tab, label: tc('pos_app.sector_restaurant'), color: '#d08a59' },
+            { id: 'repair' as Tab,     label: tc('pos_app.sector_repair'),     color: '#6366f1' },
+            { id: 'salon' as Tab,      label: tc('pos_app.sector_salon'),      color: '#ec4899' },
+            { id: 'retail' as Tab,     label: tc('pos_app.sector_retail'),     color: '#22c55e' },
+            { id: 'factory' as Tab,    label: tc('pos_app.sector_factory'),    color: '#f59e0b' },
           ]).filter(s => selectedSector === s.id).map(s => (
-            <button key={s.id} onClick={() => handleSetTab(s.id)} style={{
-              padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+            <button key={s.id} onClick={() => handleSetTab(s.id)} title={isMobile ? s.label : undefined} aria-label={isMobile ? s.label : undefined} style={{
+              padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === s.id ? 'var(--sf)' : 'transparent', color: tab === s.id ? s.color : 'var(--tx3)',
               fontSize: 15, fontWeight: tab === s.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === s.id ? `2px solid ${s.color}` : '2px solid transparent',
+              display: 'flex', alignItems: 'center', gap: 5,
               flexShrink: 0,
-            }}>{s.label}</button>
+            }}>{isMobile ? TAB_ICONS[s.id] : s.label}</button>
           ))}
           {/* Push action icons to the far right of the tab strip */}
           <div style={{ flex: 1 }} />

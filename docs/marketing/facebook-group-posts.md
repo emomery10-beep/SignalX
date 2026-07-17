@@ -256,6 +256,82 @@ Jaribu uone mwenyewe 👉 askbiz.co
 
 ---
 
+## WEEK 3 (extra angles)
+
+### Before vs after
+**Zamani vs Sasa 🔄**
+
+**Zamani:**
+Mwisho wa mwezi… "doo imeenda wapi?" 🤯
+Kitabu kimejaa, hesabu haieleweki, na haujui kama umepata faida ama umefanya kazi bure.
+
+**Sasa na AskBiz:**
+Scan sale → doo imehesabika → stock imeupdate. Kila jioni unajua exactly umepata ngapi. 😎
+
+Biz yako clear kama maji. Hakuna kuguess, hakuna kushtuka.
+
+Anza *free* leo 👉 askbiz.co
+
+---
+
+### Not techy (objection killer)
+**"Mimi si mtu wa tech" — hakuna shida 🙅‍♂️**
+
+Kama unajua ku-piga picha na simu, unajua kutumia AskBiz. Ni rahisi hivyo.
+
+📸 Piga picha ya bidhaa
+💰 Pokea doo
+✅ Imeisha — sale imerekodi yenyewe
+
+Hakuna training, hakuna manual ndefu, hakuna maneno magumu. Fungua na uanze kuuza dakika mbili.
+
+Kama simu unaimudu, biz yako unaimudu. 👉 askbiz.co
+
+---
+
+### Testimonial style
+**Story ya mfanyabiashara 🗣️**
+
+"Nilikuwa nauza vizuri lakini sikujua faida yangu halisi. Kila mwezi doo inaisha sijui wapi.
+
+Nikaanza kutumia AskBiz. Wiki ya kwanza tu nikagundua bidhaa mbili nilikuwa nauza kwa hasara bila kujua! 😳
+
+Sasa najua exactly kila kitu kinaleta ngapi. Biz imekua sababu naamua kwa facts, sio kuguess."
+
+Wewe unajua faida yako halisi? 🤔
+
+Anza free 👉 askbiz.co
+
+---
+
+### Growth / aspiration
+**Kutoka duka moja hadi biz kubwa 📈**
+
+Kila biz kubwa ilianza ndogo. Tofauti ni nani ali-track na nani aliguess.
+
+Ukijua namba zako — uliuza nini, faida gani, nini inasonga — unaweza:
+✅ Kujua wakati wa kuongeza stock
+✅ Kujua bidhaa ya kuachana nayo
+✅ Kujua kama uko ready kufungua branch ya pili
+
+AskBiz inakupa hizo namba kila siku. Ndoto ni kubwa — anza kwa kutrack. 👉 askbiz.co
+
+---
+
+### Close-up / time saved
+**Funga duka bila stress ⏰**
+
+Zamani, kufunga jioni ilikuwa kazi: hesabu pesa, angalia kitabu, jaribu kukumbuka uliuza nini… saa moja imeenda.
+
+Na AskBiz? Kila sale ilishrekodiwa mchana. Jioni unafungua simu, report iko tayari:
+💰 Doo ya leo
+📊 Faida
+📉 Nini iko chini
+
+Funga duka, enda nyumbani. Biz iko sorted. 👉 askbiz.co
+
+---
+
 ## POSTING CHECKLIST
 - [ ] 2 posts/day — 1 morning (~8am), 1 evening (~7pm)
 - [ ] Pin the Day 1 launch post

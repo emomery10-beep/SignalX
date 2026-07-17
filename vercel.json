@@ -1,5 +1,11 @@
 {
   "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)pos-askbiz' ':(exclude)developers-askbiz'",
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "main": true
+    }
+  },
   "crons": [
     { "path": "/api/cron/proactive-check", "schedule": "0 8 * * *" },
     { "path": "/api/churn-scan/cron",      "schedule": "0 6 1 * *" },
