@@ -194,6 +194,15 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
+// Pure static assets that never vary by locale or auth state — excluding them
+// saves a wasted Supabase auth call + locale detection per request. Verified
+// against protectedRoutes/authRoutes/LOCALE_REDIRECT_PREFIXES/
+// INACTIVE_LOCALE_PREFIXES above: no overlap. next.config.js's headers()
+// still applies its own (superset, includes HSTS) security headers to all of
+// these unconditionally, since middleware never touches them to begin with.
+// favicon.svg doesn't exist as a file (only app/icon.svg does) but is kept
+// here since real traffic still requests it and would otherwise pay the full
+// middleware cost just to 404.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|sitemap).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|favicon.svg|api/|sitemap|robots.txt|images/|brand/|\\.well-known/|textures/|research/|content/|icons/|manifest.json|logo.svg|ai-plugin.json|llms.txt).*)'],
 }
