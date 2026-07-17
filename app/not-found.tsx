@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { getLocale, getT } from '@/lib/i18n-server'
-import { localePath } from '@/lib/i18n-locale'
+import { t as catalogT } from '@/lib/i18n-catalog'
+import { DEFAULT_LOCALE, localePath } from '@/lib/i18n-locale'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -20,8 +20,19 @@ const QUICK_LINKS = [
 ]
 
 export default function NotFound() {
-  const locale = getLocale()
-  const t = getT()
+  // Next.js renders the root not-found.tsx eagerly on EVERY request (it's the
+  // NotFoundBoundary's fallback prop, ready in case a deeper notFound() ever
+  // fires) — not just on actual 404s. So a headers()/cookies() call here
+  // (getLocale()/getT() used to wrap headers()) marks EVERY route in the app
+  // as having used a dynamic API. That's invisible for fully static/prerendered
+  // routes, but for a route using on-demand ISR fallback (dynamicParams=true
+  // with generateStaticParams() not covering every path — e.g. blog/[slug])
+  // it contradicts that route's build-time static classification and Next
+  // hard-crashes with "Page changed from static to dynamic at runtime, reason:
+  // headers" on every request that isn't already cached. Locale is hardcoded
+  // for the same reason app/layout.tsx hardcodes it (see that file's comment).
+  const locale = DEFAULT_LOCALE
+  const t = (key: string, vars?: Record<string, string | number>) => catalogT(locale, key, vars)
   return (
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

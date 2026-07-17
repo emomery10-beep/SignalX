@@ -7,16 +7,21 @@ import { TRADE_NEWS_REDIRECTS } from '@/lib/trade-news-redirects'
 import BlogPostView from './BlogPostView'
 
 export const dynamicParams = true
-// ISR (`revalidate`) does not work here: with generateStaticParams() forced
-// empty below (~3,000+ posts would OOM the build otherwise), every request is
-// an on-demand static *generation*, not a cache hit — and Next 14.2's on-demand
-// generation path throws "changed from static to dynamic at runtime, reason:
-// headers" for this route even though nothing here calls headers()/cookies()
-// directly (reproduced locally: identical code succeeds when the same slug is
-// pre-rendered via generateStaticParams, and fails only via the on-demand path
-// — root cause not yet isolated, tracked as a follow-up). force-dynamic avoids
-// the crash; it does forgo the caching win this route was the main target for.
-export const dynamic = 'force-dynamic'
+// ISR: with generateStaticParams() forced empty below (~3,000+ posts would OOM
+// the build otherwise), every first-touch request goes through Next's on-demand
+// static-generation fallback and is then cached per `revalidate`. This used to
+// crash every such request with "Page changed from static to dynamic at runtime,
+// reason: headers" even though nothing here calls headers()/cookies(). Root
+// cause: app/not-found.tsx (the root 404 boundary) called headers() indirectly
+// via getLocale()/getT(), and Next.js renders the root not-found.tsx on *every*
+// request — not just 404s — because it's passed as the NotFoundBoundary's
+// fallback prop, which a Client Component can't lazily invoke a Server Component
+// to produce on demand. That made every route in the app look like it used a
+// dynamic API; it only hard-crashed here because this route's on-demand fallback
+// is the one path that actually compares runtime behaviour against the route's
+// static/ISR classification. Fixed by hardcoding not-found.tsx's locale instead
+// of reading it from headers() (see that file's comment).
+export const revalidate = 3600
 
 async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
   const staticPost = getPost(slug)
