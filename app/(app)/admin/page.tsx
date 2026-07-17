@@ -137,6 +137,7 @@ export default function AdminPage() {
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
+  const [resettingPinFor, setResettingPinFor] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -224,6 +225,34 @@ export default function AdminPage() {
       setTimeout(() => setActionMsg(''), 4000)
     } finally {
       setSendingEmailFor(null)
+    }
+  }
+
+  const resetPin = async (userId: string, name: string) => {
+    if (!window.confirm(`Reset the PIN for ${name || 'this user'}?\n\nOnly do this after you've confirmed their identity — you'll need to relay the new temporary PIN to them yourself (e.g. by phone).`)) return
+    setResettingPinFor(userId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ action: 'reset_pin', userId }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        window.prompt(`Temporary PIN for ${name || 'this user'} (they must set a new one on next login) — copy and relay it to them:`, d.tempPin)
+      } else {
+        setActionMsg(tc('admin.error_prefix', { error: d.error || res.statusText }))
+        setTimeout(() => setActionMsg(''), 4000)
+      }
+    } catch (err: any) {
+      setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
+      setTimeout(() => setActionMsg(''), 4000)
+    } finally {
+      setResettingPinFor(null)
     }
   }
 
@@ -694,6 +723,13 @@ export default function AdminPage() {
                             <option value="plan_upgrade">Plan upgrade welcome</option>
                             <option value="pos_seats_welcome">POS seats welcome</option>
                           </select>
+                          <button
+                            onClick={() => resetPin(u.id, u.full_name)}
+                            disabled={resettingPinFor===u.id}
+                            style={{padding:'3px 8px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer',marginLeft:6}}
+                          >
+                            {resettingPinFor===u.id ? tc('admin.sending') : 'Reset PIN'}
+                          </button>
                         </td>
                       </tr>
                     ))}
