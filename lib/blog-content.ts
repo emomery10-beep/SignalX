@@ -51,6 +51,15 @@ import { AFRICA_INFORMAL_MALI } from './africa-informal-batch-mali'
 import { AFRICA_INFORMAL_BURKINA_FASO } from './africa-informal-batch-burkina-faso'
 import { AFRICA_INFORMAL_MADAGASCAR } from './africa-informal-batch-madagascar'
 
+// Africa Blogs — FMCG, electronics, exports, and sector-specific SEO content (100 articles)
+import { AFRICA_BLOGS_BATCH1 } from './africa-blogs-batch1'
+import { AFRICA_BLOGS_BATCH2 } from './africa-blogs-batch2'
+import { AFRICA_BLOGS_BATCH3 } from './africa-blogs-batch3'
+import { AFRICA_BLOGS_BATCH4 } from './africa-blogs-batch4'
+
+// AskBiz BI Market Blog Integration — Kenya, Nigeria, UK/EU, Cross-market (58 articles)
+import { BI_MARKET_BLOG_POSTS } from './bi-blogs-integration'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -95,6 +104,10 @@ const ALL_POSTS = [
   ...AFRICA_INFORMAL_ZIMBABWE, ...AFRICA_INFORMAL_BOTSWANA, ...AFRICA_INFORMAL_NAMIBIA, ...AFRICA_INFORMAL_EGYPT, ...AFRICA_INFORMAL_MOROCCO,
   ...AFRICA_INFORMAL_ALGERIA, ...AFRICA_INFORMAL_TUNISIA, ...AFRICA_INFORMAL_DR_CONGO, ...AFRICA_INFORMAL_SIERRA_LEONE, ...AFRICA_INFORMAL_BENIN,
   ...AFRICA_INFORMAL_TOGO, ...AFRICA_INFORMAL_ANGOLA, ...AFRICA_INFORMAL_MALI, ...AFRICA_INFORMAL_BURKINA_FASO, ...AFRICA_INFORMAL_MADAGASCAR,
+  // Africa Blogs — FMCG, electronics, exports, sector-specific SEO content
+  ...AFRICA_BLOGS_BATCH1, ...AFRICA_BLOGS_BATCH2, ...AFRICA_BLOGS_BATCH3, ...AFRICA_BLOGS_BATCH4,
+  // AskBiz BI Market Blog Integration — Kenya, Nigeria, UK/EU, Cross-market
+  ...BI_MARKET_BLOG_POSTS,
   // Global Trade Intelligence — 63 canonical articles (consolidated 2026-07-03,
   // see lib/trade-news-content.ts for the full history of why)
   ...TRADE_NEWS_ARTICLES,
