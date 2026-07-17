@@ -352,5 +352,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
+  if (action === 'reset_pin') {
+    // Confirm the target account exists before minting a credential for it.
+    const { data: target, error: targetError } = await supabase.auth.admin.getUserById(userId)
+    if (targetError || !target?.user) return NextResponse.json({ success: false, error: 'User not found' })
+
+    const tempPin = String(Math.floor(Math.random() * 10000)).padStart(4, '0')
+
+    const { error: authError } = await supabase.auth.admin.updateUserById(userId, { password: tempPin })
+    if (authError) return NextResponse.json({ success: false, error: authError.message })
+
+    const { error: profileError } = await supabase.from('profiles').update({ must_change_pin: true }).eq('id', userId)
+    if (profileError) return NextResponse.json({ success: false, error: profileError.message })
+
+    return NextResponse.json({ success: true, tempPin })
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }

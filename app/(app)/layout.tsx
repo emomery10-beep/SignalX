@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, business_type, currency, currency_symbol, plan, region, sector_hints, onboarded')
+    .select('full_name, business_type, currency, currency_symbol, plan, region, sector_hints, onboarded, must_change_pin')
     .eq('id', user.id)
     .single()
 
@@ -22,6 +22,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // so this redirect does not loop back through this layout).
   if (profile && !profile.onboarded) {
     redirect('/onboarding')
+  }
+
+  // Admin-issued temporary PIN — force a real replacement before the app is usable.
+  // /change-pin lives outside this route group so this redirect does not loop.
+  if (profile?.must_change_pin) {
+    redirect('/change-pin')
   }
 
   const { data: conversations } = await supabase
