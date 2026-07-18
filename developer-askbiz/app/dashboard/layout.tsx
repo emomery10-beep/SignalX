@@ -6,10 +6,12 @@ import { createClient } from '@/lib/supabase/client'
 
 const NAV = [
   { href: '/dashboard', label: 'Keys', icon: KeyIcon },
+  { href: '/dashboard/apps', label: 'Apps', icon: AppIcon },
   { href: '/dashboard/usage', label: 'Usage', icon: ChartIcon },
   { href: '/dashboard/webhooks', label: 'Webhooks', icon: BoltIcon },
   { href: '/dashboard/charges', label: 'Charges', icon: CardIcon },
   { href: '/dashboard/connections', label: 'Connections', icon: LinkIcon },
+  { href: '/dashboard/console', label: 'Console', icon: ConsoleIcon },
   { href: '/dashboard/docs', label: 'Docs', icon: DocIcon },
 ]
 
@@ -121,6 +123,12 @@ function iconProps(className?: string) {
 }
 function KeyIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><circle cx="8" cy="15" r="4" /><path d="M10.5 12.5L20 3M17 6l3 3M14 9l2 2" /></svg>
+}
+function AppIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg>
+}
+function ConsoleIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9l3 3-3 3M13 15h4" /></svg>
 }
 function ChartIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><path d="M4 20V10M12 20V4M20 20v-7" /></svg>

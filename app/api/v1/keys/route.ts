@@ -24,7 +24,7 @@ export async function GET() {
 
   const { data: keys, error } = await supabase
     .from('api_keys')
-    .select('id, name, key, mode, plan, is_active, requests_month, request_limit_month, credit_balance_cents, last_used_at, created_at')
+    .select('id, name, key, mode, plan, is_active, requests_month, request_limit_month, credit_balance_cents, last_used_at, created_at, app_id')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -46,13 +46,26 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name = 'My API Key', mode = 'generic' } = body
+  const { name = 'My API Key', mode = 'generic', app_id = null } = body
+
+  // Optional app grouping — if given, must be an app the caller actually owns.
+  // Grouping is opt-in: omitting app_id keeps a key exactly as it works today.
+  if (app_id) {
+    const { data: app } = await supabase.from('developer_apps').select('id').eq('id', app_id).eq('user_id', user.id).maybeSingle()
+    if (!app) return NextResponse.json({ error: 'app_id not found, or not owned by you' }, { status: 400 })
+  }
 
   // The key's plan comes from the user's actual subscription — never the request
   // body — so a free user can't mint a higher-tier (e.g. unlimited) key. The
   // entry tier and any unknown value map to 'free'.
-  const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single()
-  const plan = profile?.plan && PLAN_LIMITS[profile.plan] ? profile.plan : 'free'
+  // Reads plan_id, not the legacy `plan` column — plan_id is the one column
+  // every payment path (Stripe self-serve, admin, M-Pesa) actually keeps in
+  // sync; `plan` silently freezes at signup for self-serve Stripe upgrades
+  // (see memory: profiles-plan-column-drift-bug). `plan` is read as a
+  // fallback only for accounts that predate plan_id.
+  const { data: profile } = await supabase.from('profiles').select('plan, plan_id').eq('id', user.id).single()
+  const resolvedPlan = profile?.plan_id || profile?.plan
+  const plan = resolvedPlan && PLAN_LIMITS[resolvedPlan] ? resolvedPlan : 'free'
 
   // Max 5 keys per user
   const { count } = await supabase
@@ -78,6 +91,7 @@ export async function POST(request: NextRequest) {
       name,
       mode,
       plan,
+      app_id,
       request_limit_month:  limits.month,
       request_limit_minute: limits.minute,
     })
@@ -104,13 +118,19 @@ export async function PATCH(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { id, name, is_active } = body
+  const { id, name, is_active, app_id } = body
 
   if (!id) return NextResponse.json({ error: 'Key id required' }, { status: 400 })
+
+  if (app_id) {
+    const { data: app } = await supabase.from('developer_apps').select('id').eq('id', app_id).eq('user_id', user.id).maybeSingle()
+    if (!app) return NextResponse.json({ error: 'app_id not found, or not owned by you' }, { status: 400 })
+  }
 
   const update: Record<string, unknown> = {}
   if (name      !== undefined) update.name      = name
   if (is_active !== undefined) update.is_active = is_active
+  if (app_id    !== undefined) update.app_id    = app_id
 
   const { data, error } = await supabase
     .from('api_keys')

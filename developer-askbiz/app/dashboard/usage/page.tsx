@@ -7,9 +7,12 @@ type ApiKey = {
   credit_balance_cents?: number
 }
 
+type Transaction = { type: string; amount_cents: number; endpoint: string | null; created_at: string }
+
 type UsageData = {
-  summary: { total_requests_month: number; avg_latency_ms: number; error_rate_pct: number; active_keys: number }
+  summary: { total_requests_month: number; avg_latency_ms: number; error_rate_pct: number; active_keys: number; total_spent_cents: number }
   recent: { created_at: string; status: number; latency_ms: number; question?: string }[]
+  recent_transactions: Transaction[]
 }
 
 const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
@@ -61,8 +64,9 @@ export default function UsagePage() {
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
       {usage && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
           <Stat label="Requests this month" value={String(usage.summary.total_requests_month)} />
+          <Stat label="Spent (30 days)" value={`£${((usage.summary.total_spent_cents || 0) / 100).toFixed(2)}`} />
           <Stat label="Avg latency" value={`${usage.summary.avg_latency_ms}ms`} />
           <Stat label="Error rate" value={`${usage.summary.error_rate_pct}%`} />
           <Stat label="Active keys" value={String(usage.summary.active_keys)} />
@@ -112,6 +116,35 @@ export default function UsagePage() {
                   <td className="px-4 py-2 text-ink-200">{new Date(r.created_at).toLocaleString()}</td>
                   <td className={`px-4 py-2 ${r.status >= 400 ? 'text-red-400' : 'text-signal-300'}`}>{r.status}</td>
                   <td className="px-4 py-2 text-ink-200">{r.latency_ms}ms</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2 className="font-display text-lg font-bold mb-3 mt-8">Billing history</h2>
+      {usage && (usage.recent_transactions || []).length === 0 && <p className="text-ink-300 text-sm">No charges in the last 30 days.</p>}
+      {usage && (usage.recent_transactions || []).length > 0 && (
+        <div className="border border-ink-700 rounded-xl overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-ink-700 text-ink-300 text-left">
+                <th className="px-4 py-2 font-medium">Time</th>
+                <th className="px-4 py-2 font-medium">Type</th>
+                <th className="px-4 py-2 font-medium">Endpoint</th>
+                <th className="px-4 py-2 font-medium">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(usage.recent_transactions || []).map((t, i) => (
+                <tr key={i} className="border-b border-ink-800 last:border-0">
+                  <td className="px-4 py-2 text-ink-200">{new Date(t.created_at).toLocaleString()}</td>
+                  <td className="px-4 py-2 text-ink-200 capitalize">{t.type}</td>
+                  <td className="px-4 py-2 text-ink-300">{t.endpoint || '—'}</td>
+                  <td className={`px-4 py-2 ${t.amount_cents < 0 ? 'text-red-400' : 'text-signal-300'}`}>
+                    {t.amount_cents < 0 ? '-' : '+'}£{(Math.abs(t.amount_cents) / 100).toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -6,7 +6,13 @@ type Connection = {
   id: string
   merchant_email: string
   status: string
+  scopes: string[]
+  app_id: string | null
   created_at: string
+}
+
+const SCOPE_LABELS: Record<string, string> = {
+  read_inventory: 'Read inventory',
 }
 
 // Read-only, same RLS-direct pattern as the Charges page. Note: only the
@@ -18,17 +24,23 @@ type Connection = {
 export default function ConnectionsPage() {
   const supabase = createClient()
   const [connections, setConnections] = useState<Connection[] | null>(null)
+  const [appNames, setAppNames] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
 
   useEffect(() => {
     supabase
       .from('developer_connections')
-      .select('id, merchant_email, status, created_at')
+      .select('id, merchant_email, status, scopes, app_id, created_at')
       .order('created_at', { ascending: false })
       .limit(100)
       .then(({ data, error: fetchError }) => {
-        if (fetchError) setError(fetchError.message)
-        else setConnections(data)
+        if (fetchError) { setError(fetchError.message); return }
+        setConnections(data)
+        // One batched lookup of the developer's own apps (RLS-owned, so this
+        // is cheap and always allowed) rather than a query per connection row.
+        supabase.from('developer_apps').select('id, name').then(({ data: apps }) => {
+          if (apps) setAppNames(Object.fromEntries(apps.map(a => [a.id, a.name])))
+        })
       })
   }, [supabase])
 
@@ -52,7 +64,13 @@ export default function ConnectionsPage() {
         <div className="space-y-3">
           {connections.map(c => (
             <div key={c.id} className="border border-ink-700 rounded-xl p-4 bg-ink-900 flex items-center justify-between flex-wrap gap-2">
-              <span className="text-sm">{c.merchant_email}</span>
+              <div>
+                <span className="text-sm block mb-1">{c.merchant_email}</span>
+                <span className="text-ink-400 text-xs">{(c.scopes || []).map(s => SCOPE_LABELS[s] || s).join(', ') || 'No scopes granted'}</span>
+                {c.app_id && appNames[c.app_id] && (
+                  <span className="block text-signal-300 text-xs mt-0.5">via {appNames[c.app_id]}</span>
+                )}
+              </div>
               <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-signal-600/20 text-signal-300' : 'bg-ink-800 text-ink-200'}`}>
                 {c.status}
               </span>

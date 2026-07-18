@@ -30,9 +30,9 @@
       "autoPort": false
     },
     {
-      "name": "developers-dev",
+      "name": "developer-askbiz",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "developers-askbiz", "run", "dev"],
+      "runtimeArgs": ["--prefix", "developer-askbiz", "run", "dev"],
       "port": 3002,
       "autoPort": true
     }

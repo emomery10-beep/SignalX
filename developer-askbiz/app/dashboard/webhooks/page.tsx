@@ -9,6 +9,22 @@ type Webhook = {
   created_at: string
 }
 
+type Delivery = {
+  id: string
+  event_type: string
+  status: string
+  attempts: number
+  last_attempted_at: string | null
+  created_at: string
+}
+
+const statusColor: Record<string, string> = {
+  pending: 'bg-ink-800 text-ink-200',
+  delivered: 'bg-signal-600/20 text-signal-300',
+  failed: 'bg-amber-600/20 text-amber-300',
+  dead: 'bg-red-600/20 text-red-300',
+}
+
 const EVENT_TYPES = ['sale.created', 'purchase_order.received', 'stock.low'] as const
 
 const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
@@ -25,6 +41,9 @@ export default function WebhooksPage() {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([])
   const [creating, setCreating] = useState(false)
   const [revealedSecret, setRevealedSecret] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [deliveries, setDeliveries] = useState<Record<string, Delivery[]>>({})
+  const [testingId, setTestingId] = useState<string | null>(null)
 
   const load = async () => {
     const res = await fetch('/api/dashboard-webhooks')
@@ -81,6 +100,41 @@ export default function WebhooksPage() {
     })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Could not delete webhook'); return }
     await load()
+  }
+
+  const loadDeliveries = async (id: string) => {
+    try {
+      const res = await fetch(`/api/dashboard-webhooks/${id}/deliveries`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not load deliveries')
+      setDeliveries(cur => ({ ...cur, [id]: data.deliveries }))
+    } catch {
+      setDeliveries(cur => ({ ...cur, [id]: [] }))
+      setError('Could not load deliveries — try again in a moment.')
+    }
+  }
+
+  const handleToggleExpand = async (id: string) => {
+    if (expandedId === id) { setExpandedId(null); return }
+    setExpandedId(id)
+    await loadDeliveries(id)
+  }
+
+  const handleTest = async (id: string) => {
+    setTestingId(id); setError('')
+    try {
+      const res = await fetch(`/api/dashboard-webhooks/${id}/test`, { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Could not send test event')
+      }
+      if (expandedId !== id) { setExpandedId(id) }
+      await loadDeliveries(id)
+    } catch (e: any) {
+      setError(e.message || 'Could not send test event')
+    } finally {
+      setTestingId(null)
+    }
   }
 
   return (
@@ -155,14 +209,43 @@ export default function WebhooksPage() {
                 </span>
               </div>
               <p className="text-ink-300 text-xs mb-3">{w.event_types.join(', ')}</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button onClick={() => handleToggle(w.id, w.is_active)} className={ghostBtnCls}>
                   {w.is_active ? 'Disable' : 'Enable'}
+                </button>
+                <button onClick={() => handleTest(w.id)} disabled={testingId === w.id} className={ghostBtnCls}>
+                  {testingId === w.id ? 'Sending…' : 'Send test event'}
+                </button>
+                <button onClick={() => handleToggleExpand(w.id)} className={ghostBtnCls}>
+                  {expandedId === w.id ? 'Hide deliveries' : 'View deliveries'}
                 </button>
                 <button onClick={() => handleDelete(w.id)} className={ghostBtnCls}>
                   Delete
                 </button>
               </div>
+
+              {expandedId === w.id && (
+                <div className="mt-4 pt-4 border-t border-ink-800">
+                  {!deliveries[w.id] && <p className="text-ink-300 text-xs">Loading deliveries…</p>}
+                  {deliveries[w.id] && deliveries[w.id].length === 0 && (
+                    <p className="text-ink-300 text-xs">No deliveries yet. Send a test event to see one here.</p>
+                  )}
+                  {deliveries[w.id] && deliveries[w.id].length > 0 && (
+                    <div className="space-y-1.5">
+                      {deliveries[w.id].map(d => (
+                        <div key={d.id} className="flex items-center justify-between gap-2 text-xs">
+                          <span className="text-ink-200">{d.event_type}</span>
+                          <span className="text-ink-400">{d.attempts} attempt{d.attempts === 1 ? '' : 's'}</span>
+                          <span className="text-ink-400">{new Date(d.created_at).toLocaleString()}</span>
+                          <span className={`px-2 py-0.5 rounded-full flex-shrink-0 ${statusColor[d.status] || 'bg-ink-800 text-ink-200'}`}>
+                            {d.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
-import { authenticateApiKey, recordRequest, debitCredits, insufficientCreditsResponse, CORS } from '@/lib/api-v1-auth'
+import { authenticateApiKey, recordRequest, debitCredits, checkIdempotency, insufficientCreditsResponse, CORS } from '@/lib/api-v1-auth'
 import { API_PRICE_CENTS } from '@/lib/api-pricing'
 
 export const runtime = 'nodejs'
@@ -34,18 +34,28 @@ export async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(request)
   if (!auth.ok) return auth.response
   const { key, supabase } = auth
+  const headers = { ...CORS, ...auth.rateLimitHeaders }
 
   const price = API_PRICE_CENTS['/api/v1/scan']
   if (key.credit_balance_cents < price) return insufficientCreditsResponse(price)
+
+  // Check for a prior identical request BEFORE doing any billable work —
+  // this is what actually prevents a duplicate Groq call on a client retry,
+  // not just a duplicate debit (see checkIdempotency's own comment).
+  const idempotencyKey = request.headers.get('idempotency-key') || undefined
+  if (idempotencyKey) {
+    const prior = await checkIdempotency(supabase, key.id, idempotencyKey)
+    if (prior) return NextResponse.json(prior.body, { status: prior.status, headers })
+  }
 
   let body: { image?: string; merchant_id?: string }
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: CORS })
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers })
   }
   if (!body.image) {
-    return NextResponse.json({ error: '"image" (base64 JPEG) is required' }, { status: 400, headers: CORS })
+    return NextResponse.json({ error: '"image" (base64 JPEG) is required' }, { status: 400, headers })
   }
 
   // Resolve which account's catalog (if any) to scope this scan to:
@@ -55,13 +65,16 @@ export async function POST(request: NextRequest) {
   if (body.merchant_id) {
     const { data: connection } = await supabase
       .from('developer_connections')
-      .select('id')
+      .select('id, scopes')
       .eq('key_id', key.id)
       .eq('merchant_user_id', body.merchant_id)
       .eq('status', 'active')
       .maybeSingle()
     if (!connection) {
-      return NextResponse.json({ error: 'No active connection to this merchant_id — see /api/v1/connections' }, { status: 403, headers: CORS })
+      return NextResponse.json({ error: 'No active connection to this merchant_id — see /api/v1/connections' }, { status: 403, headers })
+    }
+    if (!connection.scopes?.includes('read_inventory')) {
+      return NextResponse.json({ error: 'This connection does not grant the "read_inventory" scope — the merchant approved it without inventory access' }, { status: 403, headers })
     }
     effectiveOwnerId = body.merchant_id
   } else if (key.mode === 'account') {
@@ -118,27 +131,27 @@ Reply ONLY with valid JSON: {"name":"product name","price":null}`,
   })
 
   if (!groqRes.ok) {
-    return NextResponse.json({ error: 'Vision recognition failed — please retry' }, { status: 502, headers: CORS })
+    return NextResponse.json({ error: 'Vision recognition failed — please retry' }, { status: 502, headers })
   }
 
   const groqData = await groqRes.json()
   const text = (groqData.choices?.[0]?.message?.content || '').trim()
   const jsonMatch = text.match(/\{[\s\S]*?\}/)
   if (!jsonMatch) {
-    return NextResponse.json({ error: 'Could not identify product' }, { status: 422, headers: CORS })
+    return NextResponse.json({ error: 'Could not identify product' }, { status: 422, headers })
   }
 
   let parsed: { name?: string; price?: number | null }
   try {
     parsed = JSON.parse(jsonMatch[0])
   } catch {
-    return NextResponse.json({ error: 'Could not parse recognition result' }, { status: 422, headers: CORS })
+    return NextResponse.json({ error: 'Could not parse recognition result' }, { status: 422, headers })
   }
 
   const productName = (parsed.name || '').trim()
   const tagPrice = typeof parsed.price === 'number' ? parsed.price : null
   if (!productName) {
-    return NextResponse.json({ error: 'Could not identify product' }, { status: 422, headers: CORS })
+    return NextResponse.json({ error: 'Could not identify product' }, { status: 422, headers })
   }
 
   let match = inventoryList.find(p => p.name.toLowerCase() === productName.toLowerCase())
@@ -152,12 +165,23 @@ Reply ONLY with valid JSON: {"name":"product name","price":null}`,
   }
 
   const requestId = randomUUID()
+
+  const responseBody = match
+    ? {
+        found: true, inventory_id: match.id, name: match.name, price: match.sale_price,
+        cost_price: match.cost_price, stock_qty: match.stock_qty, unit: match.unit,
+      }
+    : { found: false, inventory_id: null, name: productName, price: tagPrice, stock_qty: null, unit: null }
+
   // Debit only now that recognition succeeded (debit-on-success — a failed
   // Groq call or unparseable result costs the caller nothing). The upstream
   // Groq call itself is still spent either way; the balance check above is a
   // fast-fail optimization, not the real guard — debit_api_credits' atomic
   // UPDATE...WHERE is the actual enforcement against concurrent overdraw.
-  const debited = await debitCredits(supabase, key.id, price, '/api/v1/scan', requestId)
+  const debited = await debitCredits(
+    supabase, key.id, price, '/api/v1/scan', requestId,
+    idempotencyKey, { status: 200, body: responseBody }
+  )
   if (!debited) return insufficientCreditsResponse(price)
 
   await recordRequest(supabase, key, '/api/v1/scan', 200, Date.now() - start)
@@ -171,14 +195,11 @@ Reply ONLY with valid JSON: {"name":"product name","price":null}`,
       owner_id: effectiveOwnerId || key.user_id, inventory_id: match.id, recognized_name: productName,
       is_match: true, confirmed: true, source: 'api',
     }).then(({ error }: { error: unknown }) => { if (error) console.error('[api/v1/scan] recognition log failed:', error) })
-
-    return NextResponse.json({
-      found: true, inventory_id: match.id, name: match.name, price: match.sale_price,
-      cost_price: match.cost_price, stock_qty: match.stock_qty, unit: match.unit,
-    }, { headers: CORS })
   }
 
-  return NextResponse.json({
-    found: false, inventory_id: null, name: productName, price: tagPrice, stock_qty: null, unit: null,
-  }, { headers: CORS })
+  const lowBalance = debited.credit_balance_cents < debited.low_balance_threshold_cents
+  return NextResponse.json(
+    lowBalance ? { ...responseBody, low_balance_warning: true, balance_cents: debited.credit_balance_cents } : responseBody,
+    { headers }
+  )
 }

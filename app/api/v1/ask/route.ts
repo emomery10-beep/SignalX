@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { askOnce, buildSystemPrompt } from '@/lib/ai'
+import { checkRateLimit, rateLimitHeaders } from '@/lib/api-v1-auth'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -11,21 +12,6 @@ const PLAN_LIMITS: Record<string, { month: number; minute: number }> = {
   free:     { month: 100,   minute: 5   },
   growth:   { month: 10000, minute: 60  },
   business: { month: -1,    minute: 120 },
-}
-
-// ── Rate limit store (in-memory per-minute, resets automatically) ─────────────
-const minuteStore = new Map<string, { count: number; reset: number }>()
-
-function checkMinuteLimit(keyId: string, limit: number): boolean {
-  const now = Date.now()
-  const entry = minuteStore.get(keyId)
-  if (!entry || now > entry.reset) {
-    minuteStore.set(keyId, { count: 1, reset: now + 60_000 })
-    return true
-  }
-  if (entry.count >= limit) return false
-  entry.count++
-  return true
 }
 
 // ── CORS headers for public API ───────────────────────────────────────────────
@@ -51,7 +37,7 @@ export async function POST(request: NextRequest) {
   const apiKey = request.headers.get('x-api-key')
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'Missing x-api-key header', docs: 'https://askbiz.co/developers' },
+      { error: 'Missing x-api-key header', docs: 'https://developer.askbiz.co/docs' },
       { status: 401, headers: CORS }
     )
   }
@@ -65,7 +51,7 @@ export async function POST(request: NextRequest) {
 
   if (keyError || !keyData) {
     return NextResponse.json(
-      { error: 'Invalid API key', docs: 'https://askbiz.co/developers' },
+      { error: 'Invalid API key', docs: 'https://developer.askbiz.co/docs' },
       { status: 401, headers: CORS }
     )
   }
@@ -87,23 +73,26 @@ export async function POST(request: NextRequest) {
         limit: keyData.request_limit_month,
         used: keyData.requests_month,
         resets: 'First of next month',
-        upgrade: 'https://askbiz.co/developers#pricing',
+        upgrade: 'https://developer.askbiz.co/docs/api-reference/pricing',
       },
       { status: 429, headers: CORS }
     )
   }
 
-  // 4. Per-minute rate limit
-  if (!checkMinuteLimit(keyData.id, keyData.request_limit_minute)) {
+  // 4. Per-minute rate limit — DB-backed (see lib/api-v1-auth.ts checkRateLimit),
+  // not an in-process Map, so this is actually enforced across serverless instances.
+  const minuteCheck = await checkRateLimit(supabase, keyData.id, keyData.request_limit_minute)
+  if (!minuteCheck.allowed) {
     return NextResponse.json(
       {
         error: 'Rate limit exceeded — too many requests per minute',
         limit: keyData.request_limit_minute,
         retry_after: '60 seconds',
       },
-      { status: 429, headers: CORS }
+      { status: 429, headers: { ...CORS, ...rateLimitHeaders(keyData.request_limit_minute, 0) } }
     )
   }
+  const headers = { ...CORS, ...rateLimitHeaders(keyData.request_limit_minute, minuteCheck.remaining) }
 
   // 5. Parse request body
   let body: {
@@ -130,21 +119,21 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { error: 'Invalid JSON body' },
-      { status: 400, headers: CORS }
+      { status: 400, headers }
     )
   }
 
   if (!body.question || typeof body.question !== 'string') {
     return NextResponse.json(
       { error: '"question" field is required and must be a string' },
-      { status: 400, headers: CORS }
+      { status: 400, headers }
     )
   }
 
   if (body.question.length > 2000) {
     return NextResponse.json(
       { error: '"question" must be under 2000 characters' },
-      { status: 400, headers: CORS }
+      { status: 400, headers }
     )
   }
 
@@ -233,7 +222,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     return NextResponse.json(
       { error: 'AI request failed — please try again' },
-      { status: 500, headers: CORS }
+      { status: 500, headers }
     )
   }
 
@@ -287,6 +276,6 @@ export async function POST(request: NextRequest) {
           : keyData.request_limit_month - keyData.requests_month - 1,
       },
     },
-    { status: 200, headers: CORS }
+    { status: 200, headers }
   )
 }

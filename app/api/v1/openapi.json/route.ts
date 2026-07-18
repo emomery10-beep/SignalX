@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
+import { API_PRICE_CENTS } from '@/lib/api-pricing'
 
 export const runtime = 'nodejs'
+
+const IDEMPOTENCY_HEADER = {
+  name: 'Idempotency-Key',
+  in: 'header',
+  required: false,
+  description: 'Optional client-generated key. Retrying the same request with the same key returns the original response instead of re-running (and re-billing) it — same convention as Stripe.',
+  schema: { type: 'string' },
+} as const
 
 // Static OpenAPI 3.0 spec for the real, live /api/v1/ask endpoint.
 // Referenced by /ai-plugin.json (ChatGPT), and usable directly by any
@@ -44,8 +53,9 @@ const SPEC = {
       post: {
         operationId: 'scanProductImage',
         summary: 'Identify a product from a photo',
-        description: 'Vision recognition (Groq Llama-4-Scout multimodal) for a product photo — brand, size, and type. Keys in "account" mode get results matched against the caller\'s own AskBiz inventory; "generic" keys get raw identification only. Billed from the credit wallet per call.',
+        description: `Vision recognition (Groq Llama-4-Scout multimodal) for a product photo — brand, size, and type. Keys in "account" mode get results matched against the caller's own AskBiz inventory; "generic" keys get raw identification only. Costs ${API_PRICE_CENTS['/api/v1/scan']} credits (~$${(API_PRICE_CENTS['/api/v1/scan'] / 100).toFixed(2)}) per successful call — failed/rejected calls are never billed. See /api/v1/pricing for live pricing.`,
         security: [{ ApiKeyAuth: [] }],
+        parameters: [IDEMPOTENCY_HEADER],
         requestBody: {
           required: true,
           content: {
@@ -71,8 +81,9 @@ const SPEC = {
       post: {
         operationId: 'sendWhatsAppMessage',
         summary: 'Send a receipt or purchase order over WhatsApp',
-        description: 'Sends a pre-approved Meta Business API template (receipt or purchase_order) to a phone number. Requires an "account" mode key. Billed from the credit wallet per message.',
+        description: `Sends a pre-approved Meta Business API template (receipt or purchase_order) to a phone number. Requires an "account" mode key. Costs ${API_PRICE_CENTS['/api/v1/whatsapp/send']} credits (~$${(API_PRICE_CENTS['/api/v1/whatsapp/send'] / 100).toFixed(2)}) per successful send — failed sends are never billed. See /api/v1/pricing for live pricing.`,
         security: [{ ApiKeyAuth: [] }],
+        parameters: [IDEMPOTENCY_HEADER],
         requestBody: {
           required: true,
           content: {
