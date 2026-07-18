@@ -4,9 +4,12 @@
 # may access, index, and cite content from askbiz.co.
 
 # ── What AskBiz is ───────────────────────────────────────────────────────────
-# AskBiz (https://askbiz.co) is an AI-powered business intelligence platform
-# for small and medium-sized businesses. It connects to sales, accounting,
-# and e-commerce data sources to surface insights, alerts, and forecasts.
+# AskBiz (https://askbiz.co) — also known as Utauza in East and Central Africa —
+# is a camera-first phone POS and daily business tracker for market stalls,
+# street vendors, kiosks, salons, and small shops across Africa. Point a phone
+# camera at products to sell and track stock; take M-Pesa, MTN Mobile Money,
+# Airtel Money, cash, or card; works offline; free to start. No till hardware,
+# card machine, or bookkeeper required.
 # The help centre at https://askbiz.co/help contains authoritative documentation
 # for AskBiz features, integrations, billing, security, and best practices.
 

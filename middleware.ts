@@ -177,12 +177,40 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(NextResponse.redirect(target, 307))
   }
 
+  // ── Homepage auth-callback / Shopify-install redirects ──────────────────────
+  // app/page.tsx (bare `/`) used to read these off `searchParams` itself, but
+  // reading searchParams in a server component forces that route into dynamic
+  // rendering — defeating the point of making `/` statically generated. Handle
+  // them here instead, before the rewrite below, so app/page.tsx never has to.
+  if (!hasLocalePrefix && logicalPath === '/') {
+    const qp = request.nextUrl.searchParams
+    const code = qp.get('code')
+    const tokenHash = qp.get('token_hash')
+    const type = qp.get('type')
+    const ref = qp.get('ref')
+    const shop = qp.get('shop')
+    const status = qp.get('status')
+    if (code) {
+      return applySecurityHeaders(NextResponse.redirect(new URL(`/auth/callback?code=${code}`, request.url)))
+    }
+    if (tokenHash && type) {
+      return applySecurityHeaders(NextResponse.redirect(new URL(`/auth/callback?token_hash=${tokenHash}&type=${type}`, request.url)))
+    }
+    if (ref === 'shopify' && shop) {
+      return applySecurityHeaders(NextResponse.redirect(new URL(`/signin?ref=shopify&shop=${shop}&status=${status || 'install'}`, request.url)))
+    }
+  }
+
   // ── Rewrite locale-prefixed URLs onto the flat route tree ──────────────────
   // /es/blog/x stays in the address bar but renders the /blog/x route with
-  // x-locale=es. English (unprefixed) falls through untouched.
+  // x-locale=es. English (unprefixed) falls through untouched. The homepage
+  // itself (logicalPath === '/') is special-cased onto /home-i18n instead of
+  // '/' — the flat '/' route (app/page.tsx) is kept static/English-only, so
+  // reusing it as the rewrite target would force it back into dynamic
+  // rendering for every visitor, not just locale-prefixed ones.
   if (hasLocalePrefix) {
     const rewriteUrl = request.nextUrl.clone()
-    rewriteUrl.pathname = logicalPath
+    rewriteUrl.pathname = logicalPath === '/' ? '/home-i18n' : logicalPath
     const rewritten = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
     response.cookies.getAll().forEach(c => rewritten.cookies.set(c))
     return applySecurityHeaders(rewritten)
