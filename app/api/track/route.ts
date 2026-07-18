@@ -46,7 +46,8 @@ async function getUserAndPlan() {
     .select('plan, plan_id')
     .eq('id', user.id)
     .single()
-  const plan = profile?.plan || profile?.plan_id || 'free'
+  // plan_id first — see memory: profiles-plan-column-drift-bug.
+  const plan = profile?.plan_id || profile?.plan || 'free'
   return { supabase, user, plan }
 }
 

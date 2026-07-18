@@ -20,7 +20,9 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: profile } = await supabase.from('profiles').select('plan, plan_id').eq('id', user.id).single()
-    const plan = profile?.plan || profile?.plan_id || 'free'
+    // plan_id first — see memory: profiles-plan-column-drift-bug (`plan` goes
+    // stale on self-serve Stripe upgrades, plan_id doesn't).
+    const plan = profile?.plan_id || profile?.plan || 'free'
     const isGrowthPlus = ['growth', 'business', 'enterprise'].includes(plan)
     const isBusinessPlus = ['business', 'enterprise'].includes(plan)
 

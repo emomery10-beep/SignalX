@@ -49,11 +49,12 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan, currency_symbol, sector_hints')
+    .select('plan, plan_id, currency_symbol, sector_hints')
     .eq('id', user.id)
     .single()
 
-  const plan      = profile?.plan || 'free'
+  // plan_id first — see memory: profiles-plan-column-drift-bug.
+  const plan      = profile?.plan_id || profile?.plan || 'free'
   const userTier  = PLAN_TIERS[plan] ?? 0
 
   if (userTier < 1) {

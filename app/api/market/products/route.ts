@@ -22,11 +22,12 @@ export async function GET(req: NextRequest) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan, market_intelligence_opt_in')
+    .select('plan, plan_id, market_intelligence_opt_in')
     .eq('id', user.id)
     .single()
 
-  const plan      = profile?.plan || 'free'
+  // plan_id first — see memory: profiles-plan-column-drift-bug.
+  const plan      = profile?.plan_id || profile?.plan || 'free'
   const userTier  = tier(plan)
 
   if (userTier < 1) {

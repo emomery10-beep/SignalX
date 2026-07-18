@@ -18,7 +18,8 @@ async function getUserAndPlan() {
   if (!user) return { supabase, user: null, plan: 'free' }
   const { data: profile } = await supabase
     .from('profiles').select('plan, plan_id').eq('id', user.id).single()
-  return { supabase, user, plan: profile?.plan || profile?.plan_id || 'free' }
+  // plan_id first — see memory: profiles-plan-column-drift-bug.
+  return { supabase, user, plan: profile?.plan_id || profile?.plan || 'free' }
 }
 
 function isBusiness(plan: string) {

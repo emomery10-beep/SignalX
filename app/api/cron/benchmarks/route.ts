@@ -32,9 +32,11 @@ export async function GET(req: NextRequest) {
   const monthEnd   = new Date(new Date(monthStart).setMonth(new Date(monthStart).getMonth() + 1)).toISOString().slice(0, 10)
 
   // Pull all opted-in profiles
+  // Selects plan_id alongside the legacy plan column — see memory:
+  // profiles-plan-column-drift-bug. plan_id is used at every read below.
   const { data: profiles, error: profileErr } = await supabase
     .from('profiles')
-    .select('id, region, business_type, sector_hints, pos_seat_count, plan')
+    .select('id, region, business_type, sector_hints, pos_seat_count, plan, plan_id')
     .eq('collective_opt_in', true)
 
   if (profileErr || !profiles?.length) {
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest) {
   for (const profile of profiles) {
     const sector = profile.sector_hints?.split(',')[0]?.trim() || profile.business_type || 'retail'
     const region = profile.region || 'United Kingdom'
-    const size   = businessSize(profile.pos_seat_count || 0, profile.plan || 'free')
+    const size   = businessSize(profile.pos_seat_count || 0, profile.plan_id || profile.plan || 'free')
     const key    = `${sector}|${region}|${size}`
 
     if (!buckets.has(key)) {
@@ -105,7 +107,7 @@ export async function GET(req: NextRequest) {
     const sampleSize = profiles.filter(p => {
       const sector = p.sector_hints?.split(',')[0]?.trim() || p.business_type || 'retail'
       const region = p.region || 'United Kingdom'
-      const size   = businessSize(p.pos_seat_count || 0, p.plan || 'free')
+      const size   = businessSize(p.pos_seat_count || 0, p.plan_id || p.plan || 'free')
       return `${sector}|${region}|${size}` === `${b.sector}|${b.region}|${b.size}`
     }).length
 

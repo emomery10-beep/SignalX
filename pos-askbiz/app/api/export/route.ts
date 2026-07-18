@@ -23,7 +23,10 @@ export async function GET() {
       { data: anomalies },
       { data: consent },
     ] = await Promise.all([
-      supabase.from('profiles').select('full_name, business_type, currency, region, plan, created_at').eq('id', user.id).single(),
+      // Includes both plan and plan_id — see memory: profiles-plan-column-drift-bug.
+      // plan_id is the accurate one for self-serve subscribers; both are exported
+      // verbatim rather than picking a winner, since this is a raw data dump.
+      supabase.from('profiles').select('full_name, business_type, currency, region, plan, plan_id, created_at').eq('id', user.id).single(),
       supabase.from('conversations').select('id, title, created_at, updated_at').eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.from('messages').select('conversation_id, role, content, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1000),
       supabase.from('uploads').select('filename, row_count, created_at').eq('user_id', user.id),
