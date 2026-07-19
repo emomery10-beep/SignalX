@@ -280,6 +280,43 @@ export const POS_SEAT_PRICE_DISPLAY: Record<string, string> = {
   UGX: 'USh 18,000', TZS: 'TSh 12,000', ETB: 'Br 250', DEFAULT: '£5',
 }
 
+// ── Developer API wallet top-up bundles, per profile currency ─
+// Three tiers per currency (mirrors app/api/v1/wallet/topup/route.ts's
+// TOPUP_BUNDLES = [500, 2000, 10000] pence, i.e. £5/£20/£100), in major
+// units. Values are POS_SEAT's approved "~£5" reference point scaled ×4/×20
+// — deliberately PPP-discounted local price points, NOT FX conversion (e.g.
+// NGN here is roughly a third of raw FX-equivalent). This is a confirmed
+// pricing decision, not an oversight: API usage itself debits flat
+// GBP-pence everywhere regardless of currency (lib/api-pricing.ts), so a
+// developer topping up in a discounted currency gets more real-terms API
+// credit per unit of local cash — consistent with growth being prioritised
+// over revenue optimisation right now, and with how POS_SEAT already prices.
+//
+// Every entry is charged via `unit_amount = amount * 100` (standard
+// 2-decimal handling — confirmed correct for all 15, including UGX, which
+// Stripe special-cases as "conceptually zero-decimal but still represented
+// ×100 with a forced .00"). Do NOT add a currency here without checking
+// it isn't one of Stripe's true zero-decimal currencies (BIF, CLP, DJF,
+// GNF, JPY, KMF, KRW, MGA, PYG, RWF, VND, VUV, XAF, XOF, XPF) — those need a
+// different multiplier, or ×100 silently overcharges 100x.
+export const WALLET_TOPUP_BUNDLES: Record<string, [number, number, number]> = {
+  GBP: [5, 20, 100],
+  USD: [5, 20, 100],
+  EUR: [5, 20, 100],
+  KES: [500, 2000, 10000],
+  NGN: [2500, 10000, 50000],
+  GHS: [25, 100, 500],
+  ZAR: [90, 360, 1800],
+  AED: [18, 72, 360],
+  INR: [400, 1600, 8000],
+  AUD: [8, 32, 160],
+  CAD: [7, 28, 140],
+  SGD: [7, 28, 140],
+  UGX: [18000, 72000, 360000],
+  TZS: [12000, 48000, 240000],
+  ETB: [250, 1000, 5000],
+}
+
 // ── Timezone → currency fallback ─────────────────────────────
 const TZ_CURRENCY: Record<string, string> = {
   'Africa/Nairobi': 'KES', 'Africa/Lagos': 'NGN', 'Africa/Johannesburg': 'ZAR',

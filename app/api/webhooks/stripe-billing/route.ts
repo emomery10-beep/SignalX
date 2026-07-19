@@ -167,7 +167,13 @@ export async function POST(request: NextRequest) {
         // charges-style status-column guard doesn't apply to top-ups.
         if (session.metadata?.type === 'wallet_topup') {
           const keyId = session.metadata?.key_id
-          const amountCents = parseInt(session.metadata?.amount_cents || '0', 10)
+          // credit_cents is always the GBP-pence tier requested — the
+          // wallet-topup route may have actually charged the card in a
+          // different currency/amount (metadata.charged_currency /
+          // charged_amount_cents, audit-only). Falling back to the legacy
+          // amount_cents key covers a Checkout Session created just before
+          // this deploy and completed just after.
+          const amountCents = parseInt(session.metadata?.credit_cents || session.metadata?.amount_cents || '0', 10)
           if (!keyId || !amountCents) break
           await supabase.rpc('topup_api_credits', {
             p_key_id: keyId,

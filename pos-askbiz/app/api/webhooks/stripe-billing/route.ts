@@ -157,7 +157,12 @@ export async function POST(request: NextRequest) {
         // see that copy for the idempotency reasoning.
         if (session.metadata?.type === 'wallet_topup') {
           const keyId = session.metadata?.key_id
-          const amountCents = parseInt(session.metadata?.amount_cents || '0', 10)
+          // credit_cents is always the GBP-pence tier requested, decoupled
+          // from whatever currency/amount the card was actually charged in
+          // (metadata.charged_currency / charged_amount_cents, audit-only).
+          // Falls back to the legacy amount_cents key for a Checkout
+          // Session created just before this deploy and completed after.
+          const amountCents = parseInt(session.metadata?.credit_cents || session.metadata?.amount_cents || '0', 10)
           if (!keyId || !amountCents) break
           await supabase.rpc('topup_api_credits', {
             p_key_id: keyId,
