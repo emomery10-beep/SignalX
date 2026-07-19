@@ -743,22 +743,22 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       <div style={{display:'flex',alignItems:'center',background:'#fff',borderBottom:'1px solid #F0F0F0',minHeight:44}}>
         <div style={{width:180,borderRight:'1px solid #F0F0F0',height:44,display:'flex',alignItems:'center',padding:'0 14px',gap:8,background:'#FAFAFA',flexShrink:0}}>
           <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={9}/></div>
-          <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
-          <span style={{marginLeft:'auto',fontSize:8,padding:'1px 6px',borderRadius:9999,background:'#FDEEE0',color:'#C97A44',fontWeight:700}}>POS</span>
+          <span style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
+          <span style={{marginLeft:'auto',fontSize:11,padding:'1px 6px',borderRadius:9999,background:'#FDEEE0',color:'#C97A44',fontWeight:700}}>POS</span>
         </div>
         <div className="pos-tabs-wrap" style={{flex:1,overflow:'hidden'}}>
           <div className="pos-tabs" style={{display:'flex',overflowX:'auto'}}>
             {TABS.map(t=>(
               <button key={t.id} onClick={()=>setTab(t.id)}
-                style={{padding:'0 13px',height:44,fontSize:9.5,fontWeight:tab===t.id?700:400,color:tab===t.id?'#1A1410':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
+                style={{padding:'0 13px',height:44,fontSize:13,fontWeight:tab===t.id?700:400,color:tab===t.id?'#1A1410':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
                 {t.label}
               </button>
             ))}
           </div>
         </div>
         <div style={{display:'flex',gap:5,padding:'0 10px',flexShrink:0}}>
-          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>{tc('landing.pos_all_branches')}</span>
-          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>{tc('landing.pos_all_sectors')}</span>
+          <span style={{fontSize:11,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>{tc('landing.pos_all_branches')}</span>
+          <span style={{fontSize:11,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>{tc('landing.pos_all_sectors')}</span>
         </div>
       </div>
 
@@ -769,7 +769,7 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           {/* Date filters */}
           <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
             {[tc('landing.pos_date_today'),tc('landing.pos_date_yesterday'),tc('landing.pos_date_7days'),tc('landing.pos_date_30days')].map((d,i)=>(
-              <span key={d} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.08)':'#fff',color:i===0?'#C97A44':'#888',cursor:'pointer',fontWeight:i===0?700:400}}>{d}</span>
+              <span key={d} style={{fontSize:12.5,padding:'4px 10px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.08)':'#fff',color:i===0?'#C97A44':'#888',cursor:'pointer',fontWeight:i===0?700:400}}>{d}</span>
             ))}
           </div>
           {/* Top row: 4 KPI cards */}
@@ -785,9 +785,9 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
                 onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setDrill({mkey:k.mkey,label:k.label,value:String(k.value),color:k.color})}}}
                 style={{position:'relative',padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',animationDelay:`${150+i*560}ms`}}>
                 <span className="kpi-more" aria-hidden="true" style={{position:'absolute',top:8,right:9,color:'#C97A44'}}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-                <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
-                <div style={{fontSize:16,fontWeight:800,color:k.color,marginBottom:3}}><AnimatedNumber value={k.value} duration={620} delay={150+i*560} /></div>
-                <div style={{fontSize:8,color:'#AAA'}}>{k.sub}</div>
+                <div style={{fontSize:12.5,color:'#AAA',marginBottom:5}}>{k.label}</div>
+                <div style={{fontSize:19,fontWeight:800,color:k.color,marginBottom:3}}><AnimatedNumber value={k.value} duration={620} delay={150+i*560} /></div>
+                <div style={{fontSize:11,color:'#AAA'}}>{k.sub}</div>
               </div>
             ))}
           </div>
@@ -803,30 +803,30 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
                 onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setDrill({mkey:k.mkey,label:k.label,value:String(k.value),color:k.color})}}}
                 style={{position:'relative',padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',animationDelay:`${150+(i+4)*560}ms`}}>
                 <span className="kpi-more" aria-hidden="true" style={{position:'absolute',top:8,right:9,color:'#C97A44'}}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
-                <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
-                <div style={{fontSize:14,fontWeight:800,color:k.color}}><AnimatedNumber value={k.value} duration={620} delay={150+(i+4)*560} /></div>
+                <div style={{fontSize:12.5,color:'#AAA',marginBottom:5}}>{k.label}</div>
+                <div style={{fontSize:16,fontWeight:800,color:k.color}}><AnimatedNumber value={k.value} duration={620} delay={150+(i+4)*560} /></div>
               </div>
             ))}
           </div>
           {/* Quick action pills */}
           <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
             {[tc('landing.pos_qa_analyse'),tc('landing.pos_qa_top_products'),tc('landing.pos_qa_staff_ranking'),tc('landing.pos_qa_stock_alerts')].map(a=>(
-              <span key={a} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#fff',cursor:'pointer'}}>{a}</span>
+              <span key={a} style={{fontSize:12.5,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#fff',cursor:'pointer'}}>{a}</span>
             ))}
           </div>
           {/* Staff performance */}
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'10px 12px'}}>
-            <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:8}}>{tc('landing.pos_staff_perf')} <span style={{color:'#C97A44',fontWeight:400,cursor:'pointer'}}>{tc('landing.pos_view_all')}</span></div>
+            <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410',marginBottom:8}}>{tc('landing.pos_staff_perf')} <span style={{color:'#C97A44',fontWeight:400,cursor:'pointer'}}>{tc('landing.pos_view_all')}</span></div>
             {[{name:'Phidisia',role:tc('landing.pos_role_cashier_retail'),sales:demo.compact(11),tx:6},{name:'James',role:tc('landing.pos_role_inventory_retail'),sales:demo.compact(2.9),tx:2}].map((s,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'6px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
-                <div style={{width:24,height:24,borderRadius:'50%',background:'#F0F0F0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#555',flexShrink:0}}>{s.name[0]}</div>
+                <div style={{width:24,height:24,borderRadius:'50%',background:'#F0F0F0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12.5,fontWeight:700,color:'#555',flexShrink:0}}>{s.name[0]}</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{s.name}</div>
-                  <div style={{fontSize:8,color:'#AAA'}}>{s.role}</div>
+                  <div style={{fontSize:12.5,fontWeight:600,color:'#1A1410'}}>{s.name}</div>
+                  <div style={{fontSize:11,color:'#AAA'}}>{s.role}</div>
                 </div>
                 <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:9,fontWeight:700,color:'#16a34a'}}><AnimatedNumber value={s.sales} duration={620} delay={150+(i+7)*560} /></div>
-                  <div style={{fontSize:8,color:'#AAA'}}>{s.tx} {tc('landing.pos_transactions')}</div>
+                  <div style={{fontSize:12.5,fontWeight:700,color:'#16a34a'}}><AnimatedNumber value={s.sales} duration={620} delay={150+(i+7)*560} /></div>
+                  <div style={{fontSize:11,color:'#AAA'}}>{s.tx} {tc('landing.pos_transactions')}</div>
                 </div>
               </div>
             ))}
@@ -839,13 +839,13 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           {/* Sector tabs */}
           <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
             {[{icon:'utensils',label:tc('landing.pos_sector_restaurant')},{icon:'wrench',label:tc('landing.pos_sector_repair')},{icon:'scissors',label:tc('landing.pos_sector_salon')},{icon:'package',label:tc('landing.pos_sector_retail'),active:true},{icon:'factory',label:tc('landing.pos_sector_factory')},{icon:'truck',label:tc('landing.pos_sector_logistics')}].map(s=>(
-              <span key={s.label} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${s.active?'#C97A44':'#E5E5E5'}`,background:s.active?'rgba(201,122,68,.08)':'#fff',color:s.active?'#C97A44':'#888',cursor:'pointer',fontWeight:s.active?700:400,display:'flex',alignItems:'center',gap:3}}>
+              <span key={s.label} style={{fontSize:12.5,padding:'4px 10px',borderRadius:5,border:`1px solid ${s.active?'#C97A44':'#E5E5E5'}`,background:s.active?'rgba(201,122,68,.08)':'#fff',color:s.active?'#C97A44':'#888',cursor:'pointer',fontWeight:s.active?700:400,display:'flex',alignItems:'center',gap:3}}>
                 <Ic n={s.icon} size={10} color="currentColor"/>{s.label}
               </span>
             ))}
           </div>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.pos_ops_header')}</div>
-          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>{tc('landing.pos_ops_sub')}</div>
+          <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.pos_ops_header')}</div>
+          <div style={{fontSize:12.5,color:'#AAA',marginBottom:12}}>{tc('landing.pos_ops_sub')}</div>
           <div className="rep-5col" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:7}}>
             {[
               {icon:'package',label:tc('landing.pos_mod_inventory'),desc:tc('landing.pos_mod_inventory_desc'),badge:'37',bdgColor:'#ef4444'},
@@ -864,11 +864,11 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
               {icon:'search',label:tc('landing.pos_mod_audit'),desc:tc('landing.pos_mod_audit_desc')},
             ].map((m,i)=>(
               <div key={i} style={{padding:'10px 10px',borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',cursor:'pointer',position:'relative'}}>
-                {m.badge&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#ef4444',color:'#fff',borderRadius:9999,padding:'1px 5px'}}>{m.badge}</span>}
-                {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>{tc('landing.pos_soon')}</span>}
+                {m.badge&&<span style={{position:'absolute',top:6,right:6,fontSize:10,fontWeight:700,background:'#ef4444',color:'#fff',borderRadius:9999,padding:'1px 5px'}}>{m.badge}</span>}
+                {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:10,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>{tc('landing.pos_soon')}</span>}
                 <div style={{marginBottom:6}}><Ic n={m.icon} size={15}/></div>
-                <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:2}}>{m.label}</div>
-                <div style={{fontSize:7,color:'#AAA',lineHeight:1.3}}>{m.desc}</div>
+                <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410',marginBottom:2}}>{m.label}</div>
+                <div style={{fontSize:10,color:'#AAA',lineHeight:1.3}}>{m.desc}</div>
               </div>
             ))}
           </div>
@@ -878,69 +878,69 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {tab==='staff' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-            <div style={{fontSize:9,color:'#888'}}>{tc('landing.pos_staff_seats')} · <span style={{color:'#C97A44',fontWeight:600,cursor:'pointer'}}>{tc('landing.pos_add_seats')}</span></div>
-            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.pos_add_staff')}</span>
+            <div style={{fontSize:12.5,color:'#888'}}>{tc('landing.pos_staff_seats')} · <span style={{color:'#C97A44',fontWeight:600,cursor:'pointer'}}>{tc('landing.pos_add_seats')}</span></div>
+            <span style={{fontSize:12.5,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.pos_add_staff')}</span>
           </div>
           {[
             {name:'Phidisia',role:tc('landing.pos_role_cashier'),sector:tc('landing.pos_sector_retail_lc'),branch:'town',phone:'0797446343',pin:true,last:'13/06/2026'},
             {name:'James',role:tc('landing.pos_role_inventory'),sector:tc('landing.pos_sector_retail_lc'),branch:'town',phone:'—',pin:true,last:'10/06/2026'},
           ].map((s,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:6}}>
-              <div style={{width:32,height:32,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#C97A44',flexShrink:0}}>{s.name[0]}</div>
+              <div style={{width:32,height:32,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#C97A44',flexShrink:0}}>{s.name[0]}</div>
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
-                  <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{s.name}</span>
-                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{s.sector}</span>
+                  <span style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{s.name}</span>
+                  <span style={{fontSize:11,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{s.sector}</span>
                 </div>
-                <div style={{fontSize:9,color:'#AAA'}}>{s.role} · {s.branch}{s.phone!=='—'?` · ${s.phone}`:''} · {tc('landing.pos_pin')} {s.pin?tc('landing.pos_pin_set'):tc('landing.pos_pin_not_set')} · {tc('landing.pos_last_login')} {s.last}</div>
+                <div style={{fontSize:12.5,color:'#AAA'}}>{s.role} · {s.branch}{s.phone!=='—'?` · ${s.phone}`:''} · {tc('landing.pos_pin')} {s.pin?tc('landing.pos_pin_set'):tc('landing.pos_pin_not_set')} · {tc('landing.pos_last_login')} {s.last}</div>
               </div>
               <div style={{display:'flex',gap:5}}>
-                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',cursor:'pointer'}}>{tc('landing.pos_edit')}</span>
-                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #fca5a5',color:'#ef4444',cursor:'pointer'}}>{tc('landing.pos_deactivate')}</span>
+                <span style={{fontSize:12.5,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',cursor:'pointer'}}>{tc('landing.pos_edit')}</span>
+                <span style={{fontSize:12.5,padding:'4px 10px',borderRadius:5,border:'1px solid #fca5a5',color:'#ef4444',cursor:'pointer'}}>{tc('landing.pos_deactivate')}</span>
               </div>
             </div>
           ))}
           <div style={{marginTop:12,padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
-            <div style={{fontSize:9,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.pos_staff_footer_title')}</div>
-            <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.pos_staff_footer_sub')}</div>
+            <div style={{fontSize:12.5,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.pos_staff_footer_title')}</div>
+            <div style={{fontSize:12.5,color:'#AAA'}}>{tc('landing.pos_staff_footer_sub')}</div>
           </div>
         </div>
       )}
 
       {tab==='payments' && (
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.pos_pay_header')}</div>
-          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>{tc('landing.pos_pay_sub')}</div>
+          <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.pos_pay_header')}</div>
+          <div style={{fontSize:12.5,color:'#AAA',marginBottom:12}}>{tc('landing.pos_pay_sub')}</div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
             {[
               {name:'Paystack',desc:tc('landing.pos_pay_paystack_desc'),color:'#059669',bg:'rgba(5,150,105,.05)',bd:'rgba(5,150,105,.2)'},
               {name:'Stripe',desc:tc('landing.pos_pay_stripe_desc'),color:'#6366f1',bg:'rgba(99,102,241,.05)',bd:'rgba(99,102,241,.2)'},
             ].map((p,i)=>(
               <div key={i} style={{padding:'10px 13px',borderRadius:9,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',gap:9}}>
-                <div style={{width:28,height:28,borderRadius:6,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>
+                <div style={{width:28,height:28,borderRadius:6,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>
                   <Ic n="card" size={14} color={p.color}/>
                 </div>
                 <div style={{flex:1}}>
                   <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:2}}>
-                    <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{p.name}</span>
+                    <span style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{p.name}</span>
                     <span style={{width:5,height:5,borderRadius:'50%',background:p.color,display:'inline-block'}}/>
-                    <span style={{fontSize:8,color:p.color,fontWeight:600}}>{tc('landing.pos_pay_active')}</span>
+                    <span style={{fontSize:11,color:p.color,fontWeight:600}}>{tc('landing.pos_pay_active')}</span>
                   </div>
-                  <div style={{fontSize:8,color:'#AAA'}}>{p.desc}</div>
+                  <div style={{fontSize:11,color:'#AAA'}}>{p.desc}</div>
                 </div>
               </div>
             ))}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-            <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_received_payments')}</span>
-            <span style={{fontSize:8,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_received_summary')}</span>
+            <span style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_received_payments')}</span>
+            <span style={{fontSize:11,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_received_summary')}</span>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7,marginBottom:12}}>
             {[{label:tc('landing.pos_pay_stat_received'),value:'6',sub:tc('landing.pos_pay_stat_payments')},{label:tc('landing.pos_pay_stat_total'),value:demo.compact(12.2),sub:tc('landing.pos_pay_stat_collected')},{label:tc('landing.pos_pay_stat_avg'),value:demo.compact(2.04),sub:tc('landing.pos_pay_stat_per_payment')}].map((k,i)=>(
               <div key={i} style={{padding:'8px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
-                <div style={{fontSize:7,color:'#AAA',letterSpacing:'.08em',marginBottom:3}}>{k.label}</div>
-                <div style={{fontSize:11,fontWeight:800,color:'#16a34a'}}>{k.value}</div>
-                <div style={{fontSize:7,color:'#AAA'}}>{k.sub}</div>
+                <div style={{fontSize:10,color:'#AAA',letterSpacing:'.08em',marginBottom:3}}>{k.label}</div>
+                <div style={{fontSize:14,fontWeight:800,color:'#16a34a'}}>{k.value}</div>
+                <div style={{fontSize:10,color:'#AAA'}}>{k.sub}</div>
               </div>
             ))}
           </div>
@@ -952,41 +952,41 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:'1px solid #F5F5F5'}}>
               <div style={{width:22,height:22,borderRadius:5,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n="phone" size={11}/></div>
               <div style={{flex:1}}>
-                <div style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{t.name}</div>
-                <div style={{fontSize:8,color:'#AAA'}}>{t.method} · {t.time}{t.ref?` · ${t.ref}`:''}</div>
+                <div style={{fontSize:12.5,fontWeight:600,color:'#1A1410'}}>{t.name}</div>
+                <div style={{fontSize:11,color:'#AAA'}}>{t.method} · {t.time}{t.ref?` · ${t.ref}`:''}</div>
               </div>
-              <span style={{fontSize:9,fontWeight:700,color:'#16a34a'}}>{t.amount}</span>
-              <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_status_received')}</span>
+              <span style={{fontSize:12.5,fontWeight:700,color:'#16a34a'}}>{t.amount}</span>
+              <span style={{fontSize:10,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_status_received')}</span>
             </div>
           ))}
           {/* Payment Recovery */}
           <div style={{marginTop:16,borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',overflow:'hidden'}}>
             <div style={{padding:'10px 14px',borderBottom:'1px solid #F5F5F5',display:'flex',alignItems:'center',gap:8}}>
               <div style={{width:3,height:14,borderRadius:9999,background:'#C97A44'}}/>
-              <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_recovery')}</span>
+              <span style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_recovery')}</span>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0}}>
               {[{label:tc('landing.pos_pay_rec_failed'),value:'0',sub:demo.compact(0),color:'#ef4444'},{label:tc('landing.pos_pay_rec_recovered'),value:'0',sub:demo.compact(0),color:'#16a34a'},{label:tc('landing.pos_pay_rec_rate'),value:'0%',sub:tc('landing.pos_pay_rec_rate_sub'),color:'#888'},{label:tc('landing.pos_pay_rec_pending'),value:'0',sub:tc('landing.pos_pay_rec_pending_sub'),color:'#f59e0b'}].map((k,i)=>(
                 <div key={i} style={{padding:'10px 0',textAlign:'center',borderRight:i<3?'1px solid #F5F5F5':'none'}}>
-                  <div style={{fontSize:7,color:'#AAA',letterSpacing:'.06em',marginBottom:4}}>{k.label}</div>
-                  <div style={{fontSize:14,fontWeight:800,color:k.color}}>{k.value}</div>
-                  <div style={{fontSize:7,color:'#AAA'}}>{k.sub}</div>
+                  <div style={{fontSize:10,color:'#AAA',letterSpacing:'.06em',marginBottom:4}}>{k.label}</div>
+                  <div style={{fontSize:16,fontWeight:800,color:k.color}}>{k.value}</div>
+                  <div style={{fontSize:10,color:'#AAA'}}>{k.sub}</div>
                 </div>
               ))}
             </div>
             <div style={{padding:'8px 14px',borderTop:'1px solid #F5F5F5',display:'flex',alignItems:'center',gap:8}}>
-              <span style={{fontSize:8,color:'#888'}}>{tc('landing.pos_pay_auto_retry')}</span>
-              <span style={{fontSize:8,padding:'2px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#FAFAFA'}}>{tc('landing.pos_pay_auto_retry_value')}</span>
+              <span style={{fontSize:11,color:'#888'}}>{tc('landing.pos_pay_auto_retry')}</span>
+              <span style={{fontSize:11,padding:'2px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#FAFAFA'}}>{tc('landing.pos_pay_auto_retry_value')}</span>
             </div>
             <div style={{padding:'8px 14px 10px',borderTop:'1px solid #F5F5F5',display:'flex',gap:5,flexWrap:'wrap'}}>
               {[tc('landing.pos_pay_filter_all'),tc('landing.pos_pay_filter_failed'),tc('landing.pos_pay_filter_retrying'),tc('landing.pos_pay_filter_recovered'),tc('landing.pos_pay_filter_abandoned')].map((f,i)=>(
-                <span key={f} style={{fontSize:8,padding:'3px 9px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.06)':'transparent',color:i===0?'#C97A44':'#888',cursor:'pointer'}}>{f}</span>
+                <span key={f} style={{fontSize:11,padding:'3px 9px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.06)':'transparent',color:i===0?'#C97A44':'#888',cursor:'pointer'}}>{f}</span>
               ))}
             </div>
             <div style={{padding:'24px 14px',textAlign:'center',borderTop:'1px solid #F5F5F5'}}>
-              <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(34,197,94,.1)',border:'2px solid #16a34a',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',fontSize:12}}>✓</div>
-              <div style={{fontSize:9,fontWeight:700,color:'#16a34a',marginBottom:3}}>{tc('landing.pos_pay_no_failed')}</div>
-              <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.pos_pay_no_failed_sub')}</div>
+              <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(34,197,94,.1)',border:'2px solid #16a34a',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',fontSize:14}}>✓</div>
+              <div style={{fontSize:12.5,fontWeight:700,color:'#16a34a',marginBottom:3}}>{tc('landing.pos_pay_no_failed')}</div>
+              <div style={{fontSize:12.5,color:'#AAA'}}>{tc('landing.pos_pay_no_failed_sub')}</div>
             </div>
           </div>
         </div>
@@ -995,37 +995,37 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {tab==='branches' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-            <div style={{fontSize:9,color:'#888'}}>{tc('landing.pos_branch_active_count')}</div>
-            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.pos_add_branch')}</span>
+            <div style={{fontSize:12.5,color:'#888'}}>{tc('landing.pos_branch_active_count')}</div>
+            <span style={{fontSize:12.5,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.pos_add_branch')}</span>
           </div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'12px 14px',marginBottom:8}}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
               <div style={{width:32,height:32,borderRadius:7,background:'rgba(201,122,68,.08)',border:'1px solid rgba(201,122,68,.2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n="store" size={15} color="#C97A44"/></div>
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
-                  <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>Town Branch</span>
-                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{tc('landing.pos_branch_active')}</span>
-                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(201,122,68,.08)',color:'#C97A44',fontWeight:600}}>{tc('landing.pos_branch_main')}</span>
+                  <span style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>Town Branch</span>
+                  <span style={{fontSize:11,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{tc('landing.pos_branch_active')}</span>
+                  <span style={{fontSize:11,padding:'1px 6px',borderRadius:9999,background:'rgba(201,122,68,.08)',color:'#C97A44',fontWeight:600}}>{tc('landing.pos_branch_main')}</span>
                 </div>
-                <div style={{fontSize:9,color:'#AAA'}}>Nairobi, Kenya · {tc('landing.pos_branch_meta')}</div>
+                <div style={{fontSize:12.5,color:'#AAA'}}>Nairobi, Kenya · {tc('landing.pos_branch_meta')}</div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div style={{fontSize:9,fontWeight:700,color:'#16a34a'}}>{demo.compact(12.2)}</div>
-                <div style={{fontSize:8,color:'#AAA'}}>{tc('landing.pos_branch_revenue_today')}</div>
+                <div style={{fontSize:12.5,fontWeight:700,color:'#16a34a'}}>{demo.compact(12.2)}</div>
+                <div style={{fontSize:11,color:'#AAA'}}>{tc('landing.pos_branch_revenue_today')}</div>
               </div>
             </div>
             <div style={{marginTop:10,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
               {[{label:tc('landing.pos_branch_sales_today'),value:'6'},{label:tc('landing.pos_branch_low_stock'),value:'37',color:'#ef4444'},{label:tc('landing.pos_branch_avg_sale'),value:demo.compact(2.04)}].map((s,i)=>(
                 <div key={i} style={{padding:'6px 8px',background:'#FAFAFA',borderRadius:6,textAlign:'center'}}>
-                  <div style={{fontSize:7,color:'#AAA',marginBottom:2}}>{s.label}</div>
-                  <div style={{fontSize:9,fontWeight:700,color:s.color||'#1A1410'}}>{s.value}</div>
+                  <div style={{fontSize:10,color:'#AAA',marginBottom:2}}>{s.label}</div>
+                  <div style={{fontSize:12.5,fontWeight:700,color:s.color||'#1A1410'}}>{s.value}</div>
                 </div>
               ))}
             </div>
           </div>
           <div style={{padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
-            <div style={{fontSize:9,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.pos_branch_footer_title')}</div>
-            <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.pos_branch_footer_sub')}</div>
+            <div style={{fontSize:12.5,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.pos_branch_footer_title')}</div>
+            <div style={{fontSize:12.5,color:'#AAA'}}>{tc('landing.pos_branch_footer_sub')}</div>
           </div>
         </div>
       )}
@@ -1033,10 +1033,10 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {tab==='map' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <div style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_map_header')}</div>
+            <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_map_header')}</div>
             <div style={{display:'flex',gap:5}}>
-              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',cursor:'pointer'}}>{tc('landing.pos_map_satellite')}</span>
-              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #C97A44',borderRadius:5,color:'#C97A44',background:'rgba(201,122,68,.06)',cursor:'pointer'}}>{tc('landing.pos_map_map')}</span>
+              <span style={{fontSize:11,padding:'3px 8px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',cursor:'pointer'}}>{tc('landing.pos_map_satellite')}</span>
+              <span style={{fontSize:11,padding:'3px 8px',border:'1px solid #C97A44',borderRadius:5,color:'#C97A44',background:'rgba(201,122,68,.06)',cursor:'pointer'}}>{tc('landing.pos_map_map')}</span>
             </div>
           </div>
           {/* Map placeholder */}
@@ -1060,14 +1060,14 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             </div>
             {/* Tooltip */}
             <div style={{position:'absolute',top:'18%',left:'44%',background:'#fff',borderRadius:7,padding:'5px 9px',boxShadow:'0 4px 12px rgba(0,0,0,.12)',border:'1px solid #F0F0F0',minWidth:110}}>
-              <div style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>Town Branch</div>
-              <div style={{fontSize:8,color:'#AAA'}}>Nairobi, Kenya</div>
-              <div style={{fontSize:8,color:'#16a34a',fontWeight:600,marginTop:2}}>{tc('landing.pos_map_tooltip_status')}</div>
+              <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>Town Branch</div>
+              <div style={{fontSize:11,color:'#AAA'}}>Nairobi, Kenya</div>
+              <div style={{fontSize:11,color:'#16a34a',fontWeight:600,marginTop:2}}>{tc('landing.pos_map_tooltip_status')}</div>
             </div>
           </div>
           <div style={{marginTop:10,display:'flex',gap:8,flexWrap:'wrap'}}>
-            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>{tc('landing.pos_map_legend_active')}</span>
-            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#E5E5E5',display:'inline-block'}}/>{tc('landing.pos_map_legend_inactive')}</span>
+            <span style={{fontSize:12.5,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>{tc('landing.pos_map_legend_active')}</span>
+            <span style={{fontSize:12.5,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#E5E5E5',display:'inline-block'}}/>{tc('landing.pos_map_legend_inactive')}</span>
           </div>
         </div>
       )}
@@ -1075,10 +1075,10 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {tab==='audit' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <div style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_audit_header')}</div>
+            <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_audit_header')}</div>
             <div style={{display:'flex',gap:5}}>
               {[tc('landing.pos_audit_filter_all'),tc('landing.pos_audit_filter_sales'),tc('landing.pos_audit_filter_stock'),tc('landing.pos_audit_filter_staff'),tc('landing.pos_audit_filter_settings')].map((f,i)=>(
-                <span key={f} style={{fontSize:8,padding:'3px 8px',border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,borderRadius:5,color:i===0?'#C97A44':'#888',background:i===0?'rgba(201,122,68,.06)':'transparent',cursor:'pointer'}}>{f}</span>
+                <span key={f} style={{fontSize:11,padding:'3px 8px',border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,borderRadius:5,color:i===0?'#C97A44':'#888',background:i===0?'rgba(201,122,68,.06)':'transparent',cursor:'pointer'}}>{f}</span>
               ))}
             </div>
           </div>
@@ -1094,30 +1094,30 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
               <div style={{width:24,height:24,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}><Ic n={e.icon} size={12}/></div>
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:1}}>
-                  <span style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{e.action}</span>
-                  <span style={{fontSize:7,padding:'1px 5px',borderRadius:4,background:'#F5F5F5',color:'#888'}}>{e.branch}</span>
+                  <span style={{fontSize:12.5,fontWeight:600,color:'#1A1410'}}>{e.action}</span>
+                  <span style={{fontSize:10,padding:'1px 5px',borderRadius:4,background:'#F5F5F5',color:'#888'}}>{e.branch}</span>
                 </div>
-                <div style={{fontSize:8,color:'#AAA'}}>{e.detail} · by {e.user}</div>
+                <div style={{fontSize:11,color:'#AAA'}}>{e.detail} · by {e.user}</div>
               </div>
-              <span style={{fontSize:8,color:'#AAA',flexShrink:0,whiteSpace:'nowrap'}}>{e.time}</span>
+              <span style={{fontSize:11,color:'#AAA',flexShrink:0,whiteSpace:'nowrap'}}>{e.time}</span>
             </div>
           ))}
           <div style={{marginTop:8,textAlign:'center'}}>
-            <span style={{fontSize:9,color:'#C97A44',cursor:'pointer',fontWeight:600}}>{tc('landing.pos_audit_load_more')}</span>
+            <span style={{fontSize:12.5,color:'#C97A44',cursor:'pointer',fontWeight:600}}>{tc('landing.pos_audit_load_more')}</span>
           </div>
         </div>
       )}
 
       {tab==='logistics' && (
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:3,display:'flex',alignItems:'center',gap:5}}><Ic n="truck" size={12}/>{tc('landing.pos_log_header')}</div>
-          <div style={{fontSize:9,color:'#AAA',marginBottom:14}}>{tc('landing.pos_log_sub')}</div>
+          <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410',marginBottom:3,display:'flex',alignItems:'center',gap:5}}><Ic n="truck" size={12}/>{tc('landing.pos_log_header')}</div>
+          <div style={{fontSize:12.5,color:'#AAA',marginBottom:14}}>{tc('landing.pos_log_sub')}</div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
             {[{label:tc('landing.pos_log_active_deliveries'),value:'0',icon:'truck',color:'#C97A44'},{label:tc('landing.pos_log_pending_pos'),value:'0',icon:'clipboard',color:'#6366f1'},{label:tc('landing.pos_log_stock_transfers'),value:'0',icon:'swap',color:'#16a34a'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{marginBottom:5,display:'flex',justifyContent:'center'}}><Ic n={k.icon} size={16} color={k.color}/></div>
-                <div style={{fontSize:14,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
-                <div style={{fontSize:8,color:'#AAA'}}>{k.label}</div>
+                <div style={{fontSize:16,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
+                <div style={{fontSize:11,color:'#AAA'}}>{k.label}</div>
               </div>
             ))}
           </div>
@@ -1129,10 +1129,10 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
               {icon:'pin',title:tc('landing.pos_log_driver_title'),desc:tc('landing.pos_log_driver_desc'),badge:tc('landing.pos_soon')},
             ].map((m,i)=>(
               <div key={i} style={{padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',position:'relative'}}>
-                <span style={{position:'absolute',top:8,right:8,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 6px'}}>{m.badge}</span>
+                <span style={{position:'absolute',top:8,right:8,fontSize:10,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 6px'}}>{m.badge}</span>
                 <div style={{marginBottom:7}}><Ic n={m.icon} size={16}/></div>
-                <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:3}}>{m.title}</div>
-                <div style={{fontSize:8,color:'#AAA',lineHeight:1.4}}>{m.desc}</div>
+                <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410',marginBottom:3}}>{m.title}</div>
+                <div style={{fontSize:11,color:'#AAA',lineHeight:1.4}}>{m.desc}</div>
               </div>
             ))}
           </div>
@@ -1230,7 +1230,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
               position:'relative', flex:1, padding:'11px 24px', fontSize:15, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
               display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', gap:8,
               background:'none', border:'none', borderRadius:9, zIndex:1,
-              color: heroTab===t.id ? '#1A1410' : '#8A8A8A', transition:'color 200ms',
+              color: heroTab===t.id ? '#1A1410' : '#6B6055', transition:'color 200ms',
             }}>
               {t.icon==='chart' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 20V10M12 20V4M20 20v-6"/></svg>}
               {t.icon==='camera' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>}
