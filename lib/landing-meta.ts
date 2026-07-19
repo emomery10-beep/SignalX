@@ -1,10 +1,9 @@
 // Shared metadata/schema builders for the AskBiz homepage.
 //
 // Split out of app/page.tsx so the same content can be rendered from two
-// route files: the static English `/` (app/page.tsx, no dynamic APIs, so it
-// can be statically generated/cached) and the dynamic locale-prefixed
-// rewrite target (app/home-i18n/page.tsx, reads x-locale from middleware).
-// Keeping this logic in one place avoids the two routes drifting apart.
+// route files, both statically generated: the English `/` (app/page.tsx) and
+// the per-locale homepages /es …/so (app/[locale]/page.tsx, whose locale comes
+// from the URL segment). Keeping this logic in one place avoids drift.
 import { Metadata } from 'next'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────

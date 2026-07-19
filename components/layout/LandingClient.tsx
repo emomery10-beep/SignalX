@@ -8,6 +8,16 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { localePath } from '@/lib/i18n-locale'
 import type { Locale } from '@/lib/i18n-locale'
 import DayInTheLife from '@/components/marketing/DayInTheLife'
+import CameraFirstMoat from '@/components/marketing/CameraFirstMoat'
+import PriceProof from '@/components/marketing/PriceProof'
+import OfflineProof from '@/components/marketing/OfflineProof'
+import AnyPhoneProof from '@/components/marketing/AnyPhoneProof'
+import MultiBranchProof from '@/components/marketing/MultiBranchProof'
+import ZakatProof from '@/components/marketing/ZakatProof'
+import ForecastProof from '@/components/marketing/ForecastProof'
+import VerticalsProof from '@/components/marketing/VerticalsProof'
+import MultiLangProof from '@/components/marketing/MultiLangProof'
+import InteractivePosDemo from '@/components/marketing/InteractivePosDemo'
 import VideoReel from '@/components/marketing/VideoReel'
 import { createClient } from '@/lib/supabase/client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
@@ -1195,21 +1205,9 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
     {id:'cashier' as const, label:'PoS', icon:'camera'},
   ]
   const [heroTab,setHeroTab] = useState<'ops'|'cashier'>('cashier')
-  const [posLoaded,setPosLoaded] = useState(false)
+  // The PoS tab is now a self-contained, in-page demo (HeroPosDemo) — no iframe,
+  // no deferred mount, no skeleton. It paints instantly and is crawlable.
   const rootRef = useRef<HTMLDivElement>(null)
-  // Land on PoS, but never let the live cashier iframe block first paint:
-  // mount it only once the hero is on screen and the browser is idle.
-  useEffect(()=>{
-    const el = rootRef.current; if(!el) return
-    const io = new IntersectionObserver(es=>{
-      if(es.some(e=>e.isIntersecting)){
-        const ric = (window as unknown as {requestIdleCallback?:(cb:()=>void)=>void}).requestIdleCallback || ((cb:()=>void)=>window.setTimeout(cb,900))
-        ric(()=>setPosLoaded(true)); io.disconnect()
-      }
-    },{threshold:0.2})
-    io.observe(el)
-    return ()=>io.disconnect()
-  },[])
   const activeIdx = HERO_TABS.findIndex(t=>t.id===heroTab)
   return (
     <div ref={rootRef} style={{ position:'relative', borderRadius:22, background:'#fff', boxShadow:'0 1px 2px rgba(0,0,0,.03), 0 8px 24px rgba(0,0,0,.04), 0 40px 100px rgba(0,0,0,.09), 0 90px 160px -40px rgba(0,0,0,.12)', overflow:'hidden', minHeight:640 }}>
@@ -1228,7 +1226,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             transition:'transform 480ms cubic-bezier(0.65,0,0.35,1)',
           }}/>
           {HERO_TABS.map(t=>(
-            <button key={t.id} className="hero-tab-btn" onClick={()=>{ setHeroTab(t.id); if(t.id==='cashier') setPosLoaded(true) }} style={{
+            <button key={t.id} className="hero-tab-btn" onClick={()=>setHeroTab(t.id)} style={{
               position:'relative', flex:1, padding:'11px 24px', fontSize:15, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
               display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', gap:8,
               background:'none', border:'none', borderRadius:9, zIndex:1,
@@ -1243,15 +1241,8 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       </div>
       {heroTab==='ops' ? (
         <PosShowcase tc={tc} demo={demo} />
-      ) : posLoaded ? (
-        <iframe
-          src={`https://pos.askbiz.co/preview/cashier?lang=${lang}${lang==='so'?'&currency=USD':''}`}
-          title="AskBiz cashier — live demo"
-          loading="lazy"
-          style={{ width:'100%', height:640, border:'none', display:'block' }}
-        />
       ) : (
-        <PosPoster />
+        <InteractivePosDemo tc={tc} lang={lang} />
       )}
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
@@ -1901,6 +1892,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div style={{ width:1,height:28,background:`linear-gradient(to bottom,${T.bd},transparent)` }}/>
         </div>
       </section>
+
+      {/* ── CAMERA-FIRST MOAT — the core differentiator, right below the hero ── */}
+      <CameraFirstMoat tc={tc} />
+
+      {/* ── SHOW-AND-TELL PROOF SECTIONS ──────────────────────────────── */}
+      <PriceProof tc={tc} />
+      <OfflineProof tc={tc} />
+      <AnyPhoneProof tc={tc} />
+      <MultiBranchProof tc={tc} />
+      <ZakatProof tc={tc} />
+      <ForecastProof tc={tc} />
+      <VerticalsProof tc={tc} />
+      <MultiLangProof tc={tc} />
 
       {/* ── PROOF STRIP ───────────────────────────────────────────────── */}
       <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'14px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(20px,3vw,48px)',flexWrap:'wrap' }}>

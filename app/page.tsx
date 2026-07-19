@@ -7,9 +7,10 @@ import { buildLandingMetadata, activeLandingSchemas } from '@/lib/landing-meta'
 // so Next.js can statically generate + cache it — the overwhelming majority of
 // real traffic (and all AI-crawler traffic) hits this exact URL. Locale is
 // always 'en' here: middleware only reaches this file for unprefixed requests,
-// and locale-prefixed requests (/es, /sw, …) are rewritten to
-// app/home-i18n/page.tsx instead (see middleware.ts), which keeps the
-// x-locale/geo-header-driven dynamic rendering those variants still need.
+// and locale-prefixed requests (/es, /sw, …) route to the sibling
+// app/[locale]/page.tsx instead — itself statically generated per locale (its
+// locale comes from the URL segment, not headers), so those variants are
+// cacheable exactly like this one.
 //
 // `force-static` is explicit, not just aspirational: without it Next still
 // marked this route dynamic (ƒ) at build time even though nothing here reads

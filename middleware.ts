@@ -178,11 +178,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Homepage auth-callback / Shopify-install redirects ──────────────────────
-  // app/page.tsx (bare `/`) used to read these off `searchParams` itself, but
-  // reading searchParams in a server component forces that route into dynamic
-  // rendering — defeating the point of making `/` statically generated. Handle
-  // them here instead, before the rewrite below, so app/page.tsx never has to.
-  if (!hasLocalePrefix && logicalPath === '/') {
+  // The homepage routes (bare `/` → app/page.tsx, and /es …/so → app/[locale])
+  // are both statically generated, so neither can read these off `searchParams`
+  // itself — reading searchParams in a server component forces the route into
+  // dynamic rendering. Handle them here instead, before the rewrite/pass-through
+  // below, for every homepage regardless of locale prefix (this replaces the
+  // searchParams handling app/home-i18n/page.tsx used to do for /es …/so).
+  if (logicalPath === '/') {
     const qp = request.nextUrl.searchParams
     const code = qp.get('code')
     const tokenHash = qp.get('token_hash')
@@ -203,14 +205,16 @@ export async function middleware(request: NextRequest) {
 
   // ── Rewrite locale-prefixed URLs onto the flat route tree ──────────────────
   // /es/blog/x stays in the address bar but renders the /blog/x route with
-  // x-locale=es. English (unprefixed) falls through untouched. The homepage
-  // itself (logicalPath === '/') is special-cased onto /home-i18n instead of
-  // '/' — the flat '/' route (app/page.tsx) is kept static/English-only, so
-  // reusing it as the rewrite target would force it back into dynamic
-  // rendering for every visitor, not just locale-prefixed ones.
-  if (hasLocalePrefix) {
+  // x-locale=es. English (unprefixed) falls through untouched.
+  //
+  // The homepage itself (logicalPath === '/') is deliberately NOT rewritten: the
+  // URL is already /es …/so, which maps to the statically-generated per-locale
+  // route app/[locale]/page.tsx. Letting it pass through (like the English `/`)
+  // keeps that render static and CDN-cacheable — rewriting it to a header-driven
+  // route would force it back into dynamic rendering for every visitor.
+  if (hasLocalePrefix && logicalPath !== '/') {
     const rewriteUrl = request.nextUrl.clone()
-    rewriteUrl.pathname = logicalPath === '/' ? '/home-i18n' : logicalPath
+    rewriteUrl.pathname = logicalPath
     const rewritten = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
     response.cookies.getAll().forEach(c => rewritten.cookies.set(c))
     return applySecurityHeaders(rewritten)
