@@ -65,7 +65,8 @@ export default function ConsolePage() {
       </p>
       <p className="text-ink-400 text-xs mb-8 max-w-lg">
         Your key is only ever sent from this browser to askbiz.co for this one request — we never store, log, or
-        re-display it, same as every key and webhook secret in this product. Paste it fresh each time.
+        re-display it, same as every key and webhook secret in this product. Paste it fresh each time.{' '}
+        <a href="/docs/guides/use-the-api-console" className="text-signal-300 underline underline-offset-2">Full guide →</a>
       </p>
 
       <div className="grid lg:grid-cols-2 gap-6">
