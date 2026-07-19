@@ -25,6 +25,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(target, { status: 301 })
   }
 
+  // ── Geo-route the mobile-POS landing to the visitor's market ────────────────
+  // A visitor whose IP is in Somalia gets the Somali Somalia page (localised:
+  // USD, EVC Plus/Zaad) instead of the Kenya page. Temporary (307) + geo-based,
+  // so search engines still crawl and index both pages independently; only this
+  // one path is affected.
+  if (
+    request.headers.get('x-vercel-ip-country') === 'SO' &&
+    request.nextUrl.pathname === '/mobile-pos-kenya'
+  ) {
+    return NextResponse.redirect(new URL('/mobile-pos-somalia', request.url), { status: 307 })
+  }
+
   const hasLocalePrefix = (PREFIXED_LOCALES as string[]).includes(maybePrefix)
   const logicalPath = hasLocalePrefix ? '/' + segments.slice(2).join('/') : request.nextUrl.pathname
 

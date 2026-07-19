@@ -99,6 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // SEO landing pages
     { url: `${base}/free-mpesa-pos`,                             lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/mobile-pos-kenya`,                           lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/mobile-pos-somalia`,                         lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-pos-nigeria`,                           lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-pos-uganda`,                            lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-pos-ghana`,                             lastModified: now, changeFrequency: "monthly", priority: 0.9 },
