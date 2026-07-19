@@ -101,6 +101,38 @@ export function howTo(opts: {
   }
 }
 
+/** Generic WebPage schema for content that isn't an article, guide, or FAQ —
+ * legal pages (Terms, Privacy) and the human-readable sitemap. Mirrors the
+ * WebPage type used by askbiz.co's app/rules/[policy]/page.tsx. For Terms
+ * specifically: there's no schema.org "TermsOfService" type — WebPage +
+ * dateModified is the correct, widely-supported choice search engines
+ * actually key off for legal-content freshness. */
+export function webPage(opts: {
+  url: string
+  name: string
+  description: string
+  dateModified: string
+  breadcrumb: { name: string; url: string }[]
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${opts.url}#webpage`,
+        name: opts.name,
+        description: opts.description,
+        url: opts.url,
+        inLanguage: 'en',
+        dateModified: opts.dateModified,
+        isPartOf: { '@id': `${SITE}#website` },
+        publisher: { '@id': `${ORG_URL}#organization` },
+      },
+      breadcrumbs(opts.breadcrumb),
+    ],
+  }
+}
+
 /** For any page with real Q&A content — AEO's highest-leverage schema,
  * increases citation likelihood in AI answer engines even with 2-3 questions. */
 export function faqPage(questions: { question: string; answer: string }[]) {

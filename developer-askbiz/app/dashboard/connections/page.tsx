@@ -48,7 +48,8 @@ export default function ConnectionsPage() {
     <div>
       <h1 className="font-display text-2xl font-bold mb-1">Connections</h1>
       <p className="text-ink-300 text-sm mb-8 max-w-lg">
-        Merchants who&rsquo;ve granted your key access via the API (POST /api/v1/connections). Only the merchant can revoke access — this is a read-only view.
+        Merchants who&rsquo;ve granted your key access via the API (POST /api/v1/connections). Only the merchant can revoke access — this is a read-only view.{' '}
+        <a href="/docs/guides/connect-to-a-merchant" className="text-signal-300 underline underline-offset-2">Full guide →</a>
       </p>
 
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}

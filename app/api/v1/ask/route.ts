@@ -2,17 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { askOnce, buildSystemPrompt } from '@/lib/ai'
 import { checkRateLimit, rateLimitHeaders } from '@/lib/api-v1-auth'
+import { API_PLAN_LIMITS as PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
-
-// ── Plan limits ───────────────────────────────────────────────────────────────
-// Tiers mirror lib/plans.ts (free | growth | business). -1 = unlimited.
-const PLAN_LIMITS: Record<string, { month: number; minute: number }> = {
-  free:     { month: 100,   minute: 5   },
-  growth:   { month: 10000, minute: 60  },
-  business: { month: -1,    minute: 120 },
-}
 
 // ── CORS headers for public API ───────────────────────────────────────────────
 const CORS = {
@@ -64,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Monthly limit check
-  const planLimits = PLAN_LIMITS[keyData.plan] || PLAN_LIMITS.free
+  const planLimits = isApiPlan(keyData.plan) ? PLAN_LIMITS[keyData.plan] : PLAN_LIMITS.free
   if (planLimits.month !== -1 && keyData.requests_month >= keyData.request_limit_month) {
     return NextResponse.json(
       {

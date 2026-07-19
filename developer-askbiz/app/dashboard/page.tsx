@@ -90,7 +90,8 @@ export default function DashboardKeysPage() {
         <div>
           <h1 className="font-display text-2xl font-bold mb-1">API keys</h1>
           <p className="text-ink-300 text-sm max-w-lg">
-            Manage keys for the AskBiz API — vision recognition, WhatsApp send, inventory, and purchase orders.
+            Manage keys for the AskBiz API — vision recognition, WhatsApp send, inventory, and purchase orders.{' '}
+            <a href="/docs/authentication" className="text-signal-300 underline underline-offset-2">How authentication works →</a>
           </p>
         </div>
         <button onClick={() => setShowCreate(s => !s)} className={primaryBtnCls}>

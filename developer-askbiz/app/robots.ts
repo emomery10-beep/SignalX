@@ -4,8 +4,8 @@ import { MetadataRoute } from 'next'
 // page and /docs are crawlable here; everything else on developer.askbiz.co
 // is an authenticated app or a merchant-facing one-time confirmation link,
 // neither of which should be crawled or indexed.
-const PUBLIC_PATHS = ['/', '/docs', '/docs/']
-const PRIVATE_PATHS = ['/dashboard', '/signin', '/connect', '/charges', '/api/', '/auth']
+const PUBLIC_PATHS = ['/', '/pricing', '/docs', '/docs/']
+const PRIVATE_PATHS = ['/dashboard', '/admin', '/signin', '/connect', '/charges', '/api/', '/auth']
 
 const AI_BOTS = ['GPTBot', 'ClaudeBot', 'anthropic-ai', 'PerplexityBot', 'Google-Extended', 'Meta-ExternalAgent', 'CCBot', 'Bytespider']
 

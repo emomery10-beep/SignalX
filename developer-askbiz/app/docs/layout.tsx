@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import JsonLd from '@/components/docs/JsonLd'
+import Logo from '@/components/Logo'
 import { organizationAndWebsite } from '@/lib/schema'
 
 const NAV = [
@@ -10,6 +11,7 @@ const NAV = [
   { href: '/docs/guides', label: 'Guides' },
   { href: '/docs/faq', label: 'FAQ' },
   { href: '/docs/changelog', label: 'Changelog' },
+  { href: '/pricing', label: 'Pricing' },
 ]
 
 const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
@@ -26,7 +28,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <header className="border-b border-ink-800 sticky top-0 z-20 bg-ink-950/95 backdrop-blur">
         <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/docs" className="flex items-center gap-2 no-underline text-ink-50">
-            <div className="w-7 h-7 rounded-md bg-signal-500 flex items-center justify-center text-ink-950 font-bold text-sm flex-shrink-0">A</div>
+            <Logo size={28} />
             <span className="font-display font-bold text-sm tracking-tight whitespace-nowrap">AskBiz Developers</span>
           </Link>
           <nav aria-label="Documentation" className="hidden md:flex items-center gap-1 overflow-x-auto">
@@ -59,10 +61,11 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <span>&copy; {new Date().getFullYear()} AskBiz Ltd.</span>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <a href="https://askbiz.co" className="hover:text-signal-300 transition-colors">askbiz.co</a>
+            <Link href="/docs/sitemap" className="hover:text-signal-300 transition-colors">Sitemap</Link>
             <a href="https://askbiz.co/rules/acceptable-use-policy" className="hover:text-signal-300 transition-colors">Acceptable use</a>
             <a href="https://askbiz.co/rules/prohibited-activities" className="hover:text-signal-300 transition-colors">Prohibited activities</a>
-            <a href="https://askbiz.co/terms" className="hover:text-signal-300 transition-colors">Terms</a>
-            <a href="https://askbiz.co/privacy" className="hover:text-signal-300 transition-colors">Privacy</a>
+            <Link href="/docs/terms" className="hover:text-signal-300 transition-colors">Terms</Link>
+            <Link href="/docs/privacy" className="hover:text-signal-300 transition-colors">Privacy</Link>
             <a href="https://askbiz.co/api/v1/openapi.json" className="hover:text-signal-300 transition-colors">openapi.json</a>
             <a href="mailto:hello@askbiz.co" className="hover:text-signal-300 transition-colors">Support: hello@askbiz.co</a>
           </div>

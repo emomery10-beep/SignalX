@@ -54,6 +54,18 @@ export const GUIDES: Guide[] = [
     summary: 'The exact error shapes every endpoint returns, and how to use Idempotency-Key so a network retry never double-charges or double-sends.',
     relatedEndpoints: ['scan', 'whatsapp-send'],
   },
+  {
+    slug: 'organize-keys-with-apps',
+    title: 'Organize keys with Apps',
+    summary: 'Group your API keys under a named, brandable App so merchants see who’s asking on the consent screen instead of an unbranded request.',
+    relatedEndpoints: ['apps', 'connections'],
+  },
+  {
+    slug: 'use-the-api-console',
+    title: 'Test the API from the interactive console',
+    summary: 'Fire a real request at any core endpoint with your own key from the dashboard and see the actual response before writing any code.',
+    relatedEndpoints: ['ask', 'scan', 'whatsapp-send', 'connections', 'charges'],
+  },
 ]
 
 export function getGuide(slug: string) {

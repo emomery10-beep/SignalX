@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, planUpgradeEmail, posSeatsWelcomeEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
 import { resolveLocale, type Lang } from '@/lib/i18n-locale'
+import { API_PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
@@ -42,6 +43,20 @@ export async function POST(request: NextRequest) {
     return data?.user_id || null
   }
 
+  // Billing-fairness gap #6 fix — mirrors root app's identical addition, see
+  // that file for the full comment. Both apps can receive the same Stripe
+  // event (see claimAndSend below), so this needs to be in both copies to
+  // reliably resync regardless of which endpoint Stripe actually calls.
+  const resyncApiKeyLimits = async (userId: string, planId: string) => {
+    if (!isApiPlan(planId)) return
+    const limits = API_PLAN_LIMITS[planId]
+    await supabase.from('api_keys').update({
+      plan: planId,
+      request_limit_month: limits.month,
+      request_limit_minute: limits.minute,
+    }).eq('user_id', userId)
+  }
+
   const updatePlan = async (userId: string, planId: string, subData: Partial<{
     stripe_subscription_id: string
     stripe_price_id: string
@@ -57,6 +72,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       }).eq('user_id', userId),
       supabase.from('profiles').update({ plan_id: planId }).eq('id', userId),
+      resyncApiKeyLimits(userId, planId),
     ])
   }
 

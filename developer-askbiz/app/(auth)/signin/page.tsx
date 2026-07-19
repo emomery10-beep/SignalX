@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { phoneToSyntheticEmail, isValidPin } from '@/lib/phone-auth'
+import Logo from '@/components/Logo'
 
 // Same account system as askbiz.co — a developer signs in with the exact
 // same Google/Microsoft/email/phone+PIN credentials as their AskBiz
@@ -155,7 +156,7 @@ function DeveloperSignInForm() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10">
       <Link href="https://askbiz.co" className="flex items-center gap-2 mb-8 no-underline text-ink-50">
-        <div className="w-7 h-7 rounded-lg bg-signal-500 flex items-center justify-center text-ink-950 font-bold text-sm">A</div>
+        <Logo size={28} />
         <span className="font-display font-bold text-lg tracking-tight">AskBiz Developers</span>
       </Link>
 

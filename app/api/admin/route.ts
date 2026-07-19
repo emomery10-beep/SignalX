@@ -1,32 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getAdminUser } from '@/lib/admin-auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' as any })
-
-const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
-
-async function getAdminUser(request: NextRequest, supabase: any) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
-    if (user && ADMIN_EMAILS.includes(user.email || '')) return user
-  }
-  const accessToken = request.cookies.get('sb-access-token')?.value
-    || request.cookies.get(`sb-${(process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace('https://','').split('.')[0]}-auth-token`)?.value
-  if (accessToken) {
-    try {
-      const parsed = JSON.parse(accessToken)
-      const token = Array.isArray(parsed) ? parsed[0] : parsed
-      const { data: { user } } = await supabase.auth.getUser(token)
-      if (user && ADMIN_EMAILS.includes(user.email || '')) return user
-    } catch {
-      const { data: { user } } = await supabase.auth.getUser(accessToken)
-      if (user && ADMIN_EMAILS.includes(user.email || '')) return user
-    }
-  }
-  return null
-}
 
 export async function GET(request: NextRequest) {
   const supabase = createServiceClient()

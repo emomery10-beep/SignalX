@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { API_PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
 
 // Shared API-key validation + rate limiting for /api/v1/* routes. Extracted
 // from app/api/v1/ask/route.ts (the first v1 endpoint) so /api/v1/scan and
 // /api/v1/whatsapp/send don't each reimplement the same key lookup,
 // is_active check, and per-minute limiter with their own subtly different bugs.
 
-export const PLAN_LIMITS: Record<string, { month: number; minute: number }> = {
-  free:     { month: 100,   minute: 5   },
-  growth:   { month: 10000, minute: 60  },
-  business: { month: -1,    minute: 120 },
-}
+// Re-exported under this file's original name — app/api/v1/pricing/route.ts
+// and others already import PLAN_LIMITS from here. lib/api-plan-limits.ts is
+// the actual source of truth (also read by the stripe-billing webhook's
+// resync-on-plan-change fix); keeping both names avoids a wider rename.
+export const PLAN_LIMITS = API_PLAN_LIMITS
 
 /**
  * DB-backed, atomic per-minute limiter (check_and_increment_rate_limit,
@@ -97,7 +98,7 @@ export async function authenticateApiKey(request: Request): Promise<AuthResult> 
     ) }
   }
 
-  const planLimits = PLAN_LIMITS[key.plan] || PLAN_LIMITS.free
+  const planLimits = isApiPlan(key.plan) ? PLAN_LIMITS[key.plan] : PLAN_LIMITS.free
   if (planLimits.month !== -1 && key.requests_month >= key.request_limit_month) {
     return { ok: false, response: NextResponse.json(
       { error: 'Monthly request limit reached', plan: key.plan, limit: key.request_limit_month, used: key.requests_month },

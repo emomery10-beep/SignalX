@@ -85,6 +85,14 @@ export const ENDPOINTS: Endpoint[] = [
     category: 'account',
     summary: 'Manage webhook subscriptions for sale.created, purchase_order.received, and stock.low events — an account-settings action, managed from the dashboard.',
   },
+  {
+    method: 'GET/POST/PATCH/DELETE',
+    path: '/api/v1/apps',
+    slug: 'apps',
+    authType: 'session',
+    category: 'account',
+    summary: 'Create and manage named Apps (name, logo, redirect URI) to group your API keys under — an account-settings action, managed from the dashboard, not called with an x-api-key.',
+  },
 ]
 
 export function getEndpoint(slug: string) {

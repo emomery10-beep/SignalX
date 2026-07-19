@@ -25,6 +25,11 @@ const entries: Entry[] = [
     date: '2026-07-17',
   },
   {
+    summary: 'Interactive API console in the dashboard',
+    detail: 'A new Console page lets you fire a real request at any core endpoint (ask, scan, whatsapp/send, connections, charges) using your own key, directly from developer.askbiz.co/dashboard/console — no terminal or client code required to see an actual response, with live status, latency, and rate-limit-remaining shown alongside it. Your key is sent through for that one request only and is never stored, logged, or re-displayed. There’s no sandbox mode yet, so every call through the console is a real, live call.',
+    date: '2026-07-17',
+  },
+  {
     summary: 'Durable, cross-instance rate limiting on every endpoint',
     detail: 'The per-minute limiter now uses a shared, atomic database counter instead of an in-memory count local to whichever server handled the request — the previous version could under-enforce your plan’s per-minute limit under real concurrent traffic. POST /api/v1/ask also now returns X-RateLimit-Limit and X-RateLimit-Remaining headers, matching /scan and /whatsapp/send.',
     date: '2026-07-17',

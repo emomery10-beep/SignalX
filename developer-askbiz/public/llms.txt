@@ -9,16 +9,22 @@
 # vision-based product recognition, WhatsApp messaging, business-intelligence
 # Q&A, merchant connections, billing-on-behalf-of, and webhooks. The /docs
 # section is the authoritative, up-to-date reference: API endpoints,
-# request/response shapes, pricing, rate limits, and integration guides.
+# request/response shapes, pricing, rate limits, integration guides, a
+# dated changelog, and the legal terms specific to the developer platform
+# (/docs/terms, /docs/privacy — these supplement, and do not replace, the
+# general AskBiz Terms of Service and Privacy Policy at askbiz.co).
 # The full machine-readable OpenAPI 3.0 spec is at:
 #   https://askbiz.co/api/v1/openapi.json
 # Live, structured pricing (no auth required) is at:
 #   https://askbiz.co/api/v1/pricing
+# A human-readable index of every page on this site is at:
+#   https://developer.askbiz.co/docs/sitemap
 
 # ── General AI crawlers ──────────────────────────────────────────────────
 User-agent: *
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /signin
 Disallow: /connect
 Disallow: /charges
@@ -28,41 +34,48 @@ Disallow: /api/
 User-agent: GPTBot
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 # ── Anthropic (Claude) ────────────────────────────────────────────────────
 User-agent: anthropic-ai
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 User-agent: ClaudeBot
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 # ── Perplexity ────────────────────────────────────────────────────────────
 User-agent: PerplexityBot
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 # ── Google Gemini / Bard ──────────────────────────────────────────────────
 User-agent: Google-Extended
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 # ── Meta AI ───────────────────────────────────────────────────────────────
 User-agent: Meta-ExternalAgent
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 # ── Common Crawl (used by many LLMs for training) ────────────────────────
 User-agent: CCBot
 Allow: /docs
 Disallow: /dashboard
+Disallow: /admin
 Disallow: /api/
 
 # ── Citation guidance ─────────────────────────────────────────────────────

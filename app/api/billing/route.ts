@@ -1,43 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
+import { getOrCreateStripeCustomer } from '@/lib/stripe-customer'
+import { resolvePriceId as resolvePriceIdShared } from '@/lib/stripe-pricing'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
 
-// Cache product → default-price resolutions so we only hit Stripe once per cold start.
-const productPriceCache = new Map<string, string>()
-
-// Resolve a Stripe price ID for a plan + interval.
-// Lookup chain: STRIPE_PRICE_<PLAN>_<INTERVAL> → STRIPE_PRICE_<PLAN> (legacy monthly).
-// Accepts either a price ID (`price_...`) or a product ID (`prod_...`); product IDs
-// are resolved to their default price on first use. Annual env vars are optional —
-// if missing, annual silently falls back to monthly.
-async function resolvePriceId(plan: string, annual: boolean): Promise<string> {
-  const PLAN = plan.toUpperCase()
-  const interval = annual ? 'ANNUAL' : 'MONTHLY'
-  const raw = (
-    process.env[`STRIPE_PRICE_${PLAN}_${interval}`] ||
-    process.env[`STRIPE_PRICE_${PLAN}_MONTHLY`] ||
-    process.env[`STRIPE_PRICE_${PLAN}`] ||
-    ''
-  ).trim()
-
-  if (!raw) return ''
-  if (raw.startsWith('price_')) return raw
-  if (raw.startsWith('prod_')) {
-    const cached = productPriceCache.get(raw)
-    if (cached) return cached
-    const product = await stripe.products.retrieve(raw)
-    const defaultPrice = typeof product.default_price === 'string'
-      ? product.default_price
-      : product.default_price?.id
-    if (!defaultPrice) throw new Error(`Product ${raw} has no default price set in Stripe`)
-    productPriceCache.set(raw, defaultPrice)
-    return defaultPrice
-  }
-  return raw
-}
+// Thin wrapper preserving this file's existing (plan, annual) call shape —
+// see lib/stripe-pricing.ts for the shared implementation, also used by
+// app/api/v1/keys/subscription/route.ts against its own env var prefix.
+const resolvePriceId = (plan: string, annual: boolean) => resolvePriceIdShared(stripe, 'STRIPE_PRICE', plan, annual)
 
 // ── GET — current plan, usage, limits, soft control state ────
 export async function GET() {
@@ -249,27 +222,16 @@ async function handlePost(request: NextRequest) {
     return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString() })
   }
 
-  // Get or create Stripe customer
+  // Get or create Stripe customer — shared across main plan, POS seats, and
+  // the developer API (lib/stripe-customer.ts), one customer per human.
   const { data: sub } = await supabase
     .from('subscriptions')
-    .select('stripe_customer_id')
+    .select('stripe_customer_id, stripe_subscription_id')
     .eq('user_id', user.id)
     .single()
 
-  let customerId = (sub as { stripe_customer_id?: string } | null)?.stripe_customer_id
-
-  if (!customerId) {
-    const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
-    const customer = await stripe.customers.create({
-      email: user.email!,
-      name: (profile as { full_name?: string } | null)?.full_name || user.email!,
-      metadata: { supabase_user_id: user.id },
-    })
-    customerId = customer.id
-    await supabase.from('subscriptions').upsert({
-      user_id: user.id, stripe_customer_id: customerId, plan_id: 'free', status: 'active',
-    }, { onConflict: 'user_id' })
-  }
+  const isFirstUpgrade = !(sub as { stripe_customer_id?: string } | null)?.stripe_customer_id
+  const customerId = await getOrCreateStripeCustomer(stripe, supabase, user)
 
   // Billing portal
   if (action === 'portal') {
@@ -291,8 +253,6 @@ async function handlePost(request: NextRequest) {
     }
     if (!priceId) return NextResponse.json({ error: 'Plan not configured' }, { status: 400 })
 
-    const isFirstUpgrade = !(sub as { stripe_customer_id?: string } | null)?.stripe_customer_id
-
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -309,6 +269,64 @@ async function handlePost(request: NextRequest) {
       billing_address_collection: 'auto',
     })
     return NextResponse.json({ url: session.url })
+  }
+
+  // Embedded-card-form variant of `checkout` above — same plan/subscription
+  // concept (there is only ever one subscription per user; api_access is a
+  // feature flag within it, see lib/plans.ts, not a separate developer-API
+  // product), but confirmed inline with Stripe Elements (developer.askbiz.co's
+  // upgrade modal) instead of a hosted-page redirect. Returns a client_secret
+  // for stripe.confirmPayment() rather than a redirect url.
+  if (action === 'checkout_embedded' && plan) {
+    let priceId = ''
+    try {
+      priceId = await resolvePriceId(plan, annual)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('[billing] price resolution failed:', msg)
+      return NextResponse.json({ error: msg }, { status: 500 })
+    }
+    if (!priceId) return NextResponse.json({ error: 'Plan not configured' }, { status: 400 })
+
+    const existingSubId = (sub as { stripe_subscription_id?: string } | null)?.stripe_subscription_id
+    const metadata = { supabase_user_id: user.id, plan, interval: annual ? 'annual' : 'monthly' }
+
+    let subscription: Stripe.Subscription
+    if (existingSubId) {
+      // Upgrade/downgrade an existing subscription — swap its single item's price.
+      const current = await stripe.subscriptions.retrieve(existingSubId)
+      const itemId = current.items.data[0]?.id
+      if (!itemId) return NextResponse.json({ error: 'Existing subscription has no item to update' }, { status: 500 })
+      subscription = await stripe.subscriptions.update(existingSubId, {
+        items: [{ id: itemId, price: priceId }],
+        payment_behavior: 'default_incomplete',
+        proration_behavior: 'create_prorations',
+        expand: ['latest_invoice.payment_intent'],
+        metadata,
+      })
+    } else {
+      subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: priceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        trial_period_days: isFirstUpgrade ? 7 : undefined,
+        expand: ['latest_invoice.payment_intent'],
+        metadata,
+      })
+    }
+
+    const invoice = subscription.latest_invoice as Stripe.Invoice | null
+    const paymentIntent = invoice?.payment_intent as Stripe.PaymentIntent | null
+
+    // A trial, a $0 proration, or an already-paid invoice means no payment
+    // is due right now — nothing for Elements to confirm. The webhook still
+    // does the actual plan write; the client just doesn't need a card step.
+    if (!paymentIntent || paymentIntent.status === 'succeeded') {
+      return NextResponse.json({ success: true, requires_payment: false })
+    }
+
+    return NextResponse.json({ success: true, requires_payment: true, client_secret: paymentIntent.client_secret })
   }
 
   // POS seat checkout — separate recurring subscription at £5/seat/month

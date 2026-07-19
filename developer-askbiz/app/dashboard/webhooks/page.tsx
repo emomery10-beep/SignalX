@@ -143,7 +143,8 @@ export default function WebhooksPage() {
         <div>
           <h1 className="font-display text-2xl font-bold mb-1">Webhooks</h1>
           <p className="text-ink-300 text-sm max-w-lg">
-            Get notified when a connected merchant&rsquo;s sale, purchase order, or stock level changes. Delivered within ~5 minutes, signed with your webhook secret.
+            Get notified when a connected merchant&rsquo;s sale, purchase order, or stock level changes. Delivered within ~5 minutes, signed with your webhook secret.{' '}
+            <a href="/docs/guides/webhooks" className="text-signal-300 underline underline-offset-2">Full guide →</a>
           </p>
         </div>
         <button onClick={() => setShowCreate(s => !s)} className={primaryBtnCls}>

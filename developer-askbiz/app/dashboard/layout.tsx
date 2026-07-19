@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import Logo from '@/components/Logo'
 
 const NAV = [
   { href: '/dashboard', label: 'Keys', icon: KeyIcon },
@@ -13,6 +14,7 @@ const NAV = [
   { href: '/dashboard/connections', label: 'Connections', icon: LinkIcon },
   { href: '/dashboard/console', label: 'Console', icon: ConsoleIcon },
   { href: '/dashboard/docs', label: 'Docs', icon: DocIcon },
+  { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
 ]
 
 const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
@@ -72,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           (not fluid) responsive guidance. */}
       <div className="md:hidden fixed top-0 inset-x-0 z-30 h-14 border-b border-ink-700 bg-ink-900 flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2 no-underline text-ink-50">
-          <div className="w-6 h-6 rounded-md bg-signal-500 flex items-center justify-center text-ink-950 font-bold text-xs">A</div>
+          <Logo size={24} />
           <span className="font-display font-bold text-sm tracking-tight">AskBiz Developers</span>
         </Link>
         <button onClick={() => setMobileOpen(o => !o)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen}
@@ -91,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         style={{ width: SIDEBAR_WIDTH }}>
         <div className="h-14 flex items-center px-4 border-b border-ink-700 flex-shrink-0 md:flex hidden">
           <Link href="/dashboard" className="flex items-center gap-2 no-underline text-ink-50">
-            <div className="w-6 h-6 rounded-md bg-signal-500 flex items-center justify-center text-ink-950 font-bold text-xs">A</div>
+            <Logo size={24} />
             <span className="font-display font-bold text-sm tracking-tight">AskBiz Developers</span>
           </Link>
         </div>
@@ -144,6 +146,9 @@ function LinkIcon({ className }: { className?: string }) {
 }
 function DocIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>
+}
+function SettingsIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
 }
 function SignOutIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></svg>

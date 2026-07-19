@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { randomBytes } from 'crypto'
+import { API_PLAN_LIMITS as PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
 
 export const runtime = 'nodejs'
-
-// Tiers mirror lib/plans.ts (free | growth | business). -1 = unlimited.
-const PLAN_LIMITS: Record<string, { month: number; minute: number }> = {
-  free:     { month: 100,   minute: 5   },
-  growth:   { month: 10000, minute: 60  },
-  business: { month: -1,    minute: 120 },
-}
 
 function generateKey(): string {
   const rand = randomBytes(24).toString('hex')
@@ -65,7 +59,7 @@ export async function POST(request: NextRequest) {
   // fallback only for accounts that predate plan_id.
   const { data: profile } = await supabase.from('profiles').select('plan, plan_id').eq('id', user.id).single()
   const resolvedPlan = profile?.plan_id || profile?.plan
-  const plan = resolvedPlan && PLAN_LIMITS[resolvedPlan] ? resolvedPlan : 'free'
+  const plan = resolvedPlan && isApiPlan(resolvedPlan) ? resolvedPlan : 'free'
 
   // Max 5 keys per user
   const { count } = await supabase

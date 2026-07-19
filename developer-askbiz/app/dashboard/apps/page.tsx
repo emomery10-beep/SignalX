@@ -90,7 +90,8 @@ export default function AppsPage() {
           <h1 className="font-display text-2xl font-bold mb-1">Apps</h1>
           <p className="text-ink-300 text-sm max-w-lg">
             Group your keys under a named, brandable integration — merchants see this name (not a bare key) when
-            approving a connection. Optional — a key works fine with no app assigned.
+            approving a connection. Optional — a key works fine with no app assigned.{' '}
+            <a href="/docs/guides/organize-keys-with-apps" className="text-signal-300 underline underline-offset-2">Full guide →</a>
           </p>
         </div>
         <button onClick={() => setShowCreate(s => !s)} className={primaryBtnCls}>

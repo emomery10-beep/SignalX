@@ -38,7 +38,8 @@ export default function ChargesPage() {
     <div>
       <h1 className="font-display text-2xl font-bold mb-1">Charges</h1>
       <p className="text-ink-300 text-sm mb-8 max-w-lg">
-        Billing-on-behalf-of requests you&rsquo;ve created via the API (POST /api/v1/charges). Create new charges from your app — this is a read-only view.
+        Billing-on-behalf-of requests you&rsquo;ve created via the API (POST /api/v1/charges). Create new charges from your app — this is a read-only view.{' '}
+        <a href="/docs/guides/bill-a-merchant" className="text-signal-300 underline underline-offset-2">Full guide →</a>
       </p>
 
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}

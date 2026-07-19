@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { provisionStaffDrafts } from '@/lib/pos-staff-provision'
 import { sendEmail, planUpgradeEmail, posSeatsWelcomeEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
 import { resolveLocale, type Lang } from '@/lib/i18n-locale'
+import { API_PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
@@ -43,6 +44,24 @@ export async function POST(request: NextRequest) {
     return data?.user_id || null
   }
 
+  // Billing-fairness gap #6: an api_keys row snapshots its rate/quota limits
+  // from API_PLAN_LIMITS at creation time only (app/api/v1/keys/route.ts) —
+  // nothing previously resynced an EXISTING key after its owner's plan
+  // changed, so a free-tier key stayed rate-limited at free-tier numbers
+  // even after the account upgraded. 'enterprise' has no api_plan_limits
+  // mapping (it's not one of the three developer-API tiers) — leave those
+  // keys' existing limits alone rather than guessing or silently
+  // downgrading a paying enterprise customer's keys to free-tier numbers.
+  const resyncApiKeyLimits = async (userId: string, planId: string) => {
+    if (!isApiPlan(planId)) return
+    const limits = API_PLAN_LIMITS[planId]
+    await supabase.from('api_keys').update({
+      plan: planId,
+      request_limit_month: limits.month,
+      request_limit_minute: limits.minute,
+    }).eq('user_id', userId)
+  }
+
   const updatePlan = async (userId: string, planId: string, subData: Partial<{
     stripe_subscription_id: string
     stripe_price_id: string
@@ -58,6 +77,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       }).eq('user_id', userId),
       supabase.from('profiles').update({ plan_id: planId }).eq('id', userId),
+      resyncApiKeyLimits(userId, planId),
     ])
   }
 

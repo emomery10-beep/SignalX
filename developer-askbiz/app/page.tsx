@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import JsonLd from '@/components/docs/JsonLd'
+import Logo from '@/components/Logo'
 import { organizationAndWebsite, SITE } from '@/lib/schema'
 import { CORE_ENDPOINTS } from '@/lib/endpoints'
 
@@ -58,12 +59,15 @@ export default async function DeveloperHome() {
       <header className="border-b border-ink-800">
         <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-ink-50">
-            <div className="w-7 h-7 rounded-md bg-signal-500 flex items-center justify-center text-ink-950 font-bold text-sm flex-shrink-0">A</div>
+            <Logo size={28} />
             <span className="font-display font-bold text-sm tracking-tight whitespace-nowrap">AskBiz Developers</span>
           </div>
           <nav className="flex items-center gap-2">
             <Link href="/docs" className={`px-3 py-2 rounded-md text-sm font-medium text-ink-300 hover:text-ink-50 hover:bg-ink-800 transition-colors ${focusRing}`}>
               Docs
+            </Link>
+            <Link href="/pricing" className={`px-3 py-2 rounded-md text-sm font-medium text-ink-300 hover:text-ink-50 hover:bg-ink-800 transition-colors ${focusRing}`}>
+              Pricing
             </Link>
             <Link href="/signin" className={`px-4 py-2 rounded-md bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors ${focusRing}`}>
               Sign in
@@ -176,8 +180,10 @@ export default async function DeveloperHome() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <a href="https://askbiz.co" className="hover:text-signal-300 transition-colors">askbiz.co</a>
             <Link href="/docs" className="hover:text-signal-300 transition-colors">Docs</Link>
-            <a href="https://askbiz.co/terms" className="hover:text-signal-300 transition-colors">Terms</a>
-            <a href="https://askbiz.co/privacy" className="hover:text-signal-300 transition-colors">Privacy</a>
+            <Link href="/docs/changelog" className="hover:text-signal-300 transition-colors">Changelog</Link>
+            <Link href="/docs/sitemap" className="hover:text-signal-300 transition-colors">Sitemap</Link>
+            <Link href="/docs/terms" className="hover:text-signal-300 transition-colors">Terms</Link>
+            <Link href="/docs/privacy" className="hover:text-signal-300 transition-colors">Privacy</Link>
             <a href="mailto:hello@askbiz.co" className="hover:text-signal-300 transition-colors">hello@askbiz.co</a>
           </div>
         </div>
