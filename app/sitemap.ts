@@ -98,6 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...RESEARCH_PAPERS.map(p => ({ url: `${base}/research/${p.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
     // SEO landing pages
     { url: `${base}/free-mpesa-pos`,                             lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/mobile-pos-kenya`,                           lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-pos-nigeria`,                           lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-pos-uganda`,                            lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-pos-ghana`,                             lastModified: now, changeFrequency: "monthly", priority: 0.9 },
