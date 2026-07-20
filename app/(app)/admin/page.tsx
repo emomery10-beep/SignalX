@@ -554,6 +554,7 @@ export default function AdminPage() {
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
           <a href="/admin/agent" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #6366F1',background:'rgba(99,102,241,.08)',color:'#6366F1',fontSize:14,fontWeight:600,textDecoration:'none'}}>⚡ {tc('admin.growth_agent')}</a>
+          <a href="/admin/spotlight" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--acc)',background:'rgba(208,138,89,.08)',color:'var(--acc)',fontSize:14,fontWeight:600,textDecoration:'none'}}>📣 {tc('admin.spotlight_nav')}</a>
           <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>↻ {tc('admin.refresh')}</button>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { ACTIVE_LOCALES } from '@/lib/i18n-locale'
 import type { Lang } from '@/lib/i18n'
 import { CURRENCIES } from '@/lib/geo'
 import { PLAN_FEATURES, getPlanFeatures } from '@/lib/plans'
+import { compressLogoToDataUrl } from '@/lib/image-compress'
 import ApiKeys from '@/components/settings/ApiKeys'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -52,7 +53,7 @@ interface ConnectedSource {
   created_at: string
 }
 
-type Section = 'profile' | 'team' | 'localisation' | 'address' | 'integrations' | 'ai' | 'notifications' | 'api' | 'privacy' | 'compliance' | 'account'
+type Section = 'profile' | 'team' | 'localisation' | 'address' | 'spotlight' | 'integrations' | 'ai' | 'notifications' | 'api' | 'privacy' | 'compliance' | 'account'
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ const NAV: { id: Section; label: string; icon: string }[] = [
   { id: 'team',         label: 'Team',              icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75' },
   { id: 'localisation', label: 'Localisation',      icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' },
   { id: 'address',      label: 'Business address',  icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10' },
+  { id: 'spotlight',    label: 'Get featured',      icon: 'M3 11l18-5v12L3 13v-2z M3 11v6a2 2 0 0 0 2 2h1' },
   { id: 'integrations', label: 'Integrations',      icon: 'M12 2c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5z M3 12c0 2.76 4.03 5 9 5s9-2.24 9-5 M3 17c0 2.76 4.03 5 9 5s9-2.24 9-5 M3 7v10' },
   { id: 'ai',            label: 'AI preferences',    icon: 'M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5' },
   { id: 'notifications', label: 'Notifications',     icon: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0' },
@@ -686,6 +688,168 @@ function AddressPanel() {
           </div>
         </Card>
       )}
+    </div>
+  )
+}
+
+interface SpotlightState {
+  id: string
+  business_name: string
+  tagline: string
+  link_url: string | null
+  logo_url: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  is_active: boolean
+  rejected_reason: string | null
+}
+
+function SpotlightPanel() {
+  const { tc } = useLang()
+  const [spotlight, setSpotlight] = useState<SpotlightState | null>(null)
+  const [loaded, setLoaded]     = useState(false)
+  const [businessName, setBusinessName] = useState('')
+  const [tagline, setTagline]     = useState('')
+  const [linkUrl, setLinkUrl]     = useState('')
+  const [logoPreview, setLogoPreview] = useState('')
+  const [logoError, setLogoError] = useState('')
+  const [saving, setSaving]   = useState(false)
+  const [saved, setSaved]     = useState(false)
+  const [error, setError]     = useState('')
+  const [togglingActive, setTogglingActive] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/spotlight').then(r => r.json()).then(d => {
+      if (d?.spotlight) {
+        const s = d.spotlight as SpotlightState
+        setSpotlight(s)
+        setBusinessName(s.business_name || '')
+        setTagline(s.tagline || '')
+        setLinkUrl(s.link_url || '')
+        setLogoPreview(s.logo_url || '')
+      } else {
+        // No submission yet — prefill from the business profile to cut typing.
+        fetch('/api/profile').then(r => r.json()).then(p => {
+          if (p && !p.error && p.business_name) setBusinessName(p.business_name)
+        }).catch(() => {})
+      }
+      setLoaded(true)
+    }).catch(() => setLoaded(true))
+  }, [])
+
+  const onLogoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoError('')
+    try {
+      setLogoPreview(await compressLogoToDataUrl(file))
+    } catch {
+      setLogoError(tc('settings.spotlight_logo_error'))
+    }
+  }
+
+  const submit = async () => {
+    setError('')
+    if (!businessName.trim() || !tagline.trim()) { setError(tc('settings.spotlight_required')); return }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/spotlight', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ business_name: businessName, tagline, link_url: linkUrl, logo: logoPreview || undefined }),
+      })
+      const d = await res.json()
+      if (res.ok) { setSpotlight(d.spotlight); setSaved(true); setTimeout(() => setSaved(false), 2500) }
+      else setError(d.error || 'Failed to submit')
+    } catch { setError('Network error — please try again') }
+    finally { setSaving(false) }
+  }
+
+  const toggleActive = async () => {
+    if (!spotlight) return
+    setTogglingActive(true)
+    try {
+      const res = await fetch('/api/spotlight', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !spotlight.is_active }),
+      })
+      const d = await res.json()
+      if (res.ok) setSpotlight(d.spotlight)
+    } finally { setTogglingActive(false) }
+  }
+
+  const badge = (() => {
+    if (!spotlight) return null
+    const map: Record<string, { text: string; fg: string; bg: string }> = {
+      pending:  { text: tc('settings.spotlight_badge_pending'),  fg: '#b45309', bg: 'rgba(180,83,9,.1)' },
+      rejected: { text: tc('settings.spotlight_badge_rejected'), fg: '#dc2626', bg: 'rgba(220,38,38,.08)' },
+      live:     { text: tc('settings.spotlight_badge_live'),     fg: '#16a34a', bg: 'rgba(22,163,74,.1)' },
+      paused:   { text: tc('settings.spotlight_badge_paused'),   fg: 'var(--tx3)', bg: 'var(--ev)' },
+    }
+    const key = spotlight.status === 'approved' ? (spotlight.is_active ? 'live' : 'paused') : spotlight.status
+    const b = map[key]
+    return <span style={{ padding: '4px 10px', borderRadius: 'var(--rf)', fontSize: 13, fontWeight: 600, color: b.fg, background: b.bg, whiteSpace: 'nowrap' as const }}>{b.text}</span>
+  })()
+
+  return (
+    <div>
+      <PanelHeader title={tc('settings.spotlight_title')} description={tc('settings.spotlight_desc')}/>
+
+      {loaded && spotlight && (
+        <Card>
+          <CardHeader title={tc('settings.spotlight_status')}/>
+          <SettingRow
+            label={spotlight.status === 'approved' ? tc('settings.spotlight_live_label') : (spotlight.status === 'pending' ? tc('settings.spotlight_pending_label') : tc('settings.spotlight_rejected_label'))}
+            description={spotlight.status === 'rejected' && spotlight.rejected_reason ? `${tc('settings.spotlight_rejected_prefix')} ${spotlight.rejected_reason}` : undefined}
+            border={spotlight.status === 'approved'}
+            top={!!(spotlight.status === 'rejected' && spotlight.rejected_reason)}
+            right={badge}
+          />
+          {spotlight.status === 'approved' && (
+            <SettingRow
+              label={tc('settings.spotlight_show')} description={tc('settings.spotlight_show_desc')} border={false}
+              right={<Toggle value={spotlight.is_active} onChange={toggleActive} disabled={togglingActive}/>}
+            />
+          )}
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader title={tc('settings.spotlight_form_title')}/>
+        <div style={{ padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+          <div style={{ flexShrink: 0, textAlign: 'center' as const }}>
+            <div style={{ width: 64, height: 64, borderRadius: 14, background: 'var(--ev)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--b2)' }}>
+              {logoPreview
+                ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>}
+            </div>
+            <label style={{ display: 'block', marginTop: 8, fontSize: 13, fontWeight: 600, color: 'var(--acc)', cursor: 'pointer' }}>
+              {tc('settings.spotlight_logo_upload')}
+              <input type="file" accept="image/*" onChange={onLogoPick} style={{ display: 'none' }}/>
+            </label>
+            {logoError && <div style={{ fontSize: 12, color: '#dc2626', marginTop: 4, maxWidth: 90 }}>{logoError}</div>}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.spotlight_name_label')}</label>
+              <input style={inp} value={businessName} maxLength={60} onChange={e => setBusinessName(e.target.value)} placeholder={tc('settings.spotlight_name_placeholder')}/>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>
+                <span>{tc('settings.spotlight_tagline_label')}</span>
+                <span style={{ fontWeight: 400, color: 'var(--tx3)' }}>{tagline.length}/90</span>
+              </label>
+              <input style={inp} value={tagline} maxLength={90} onChange={e => setTagline(e.target.value)} placeholder={tc('settings.spotlight_tagline_placeholder')}/>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.spotlight_link_label')}</label>
+              <input style={inp} value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://wa.me/2547..."/>
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: '0 20px 16px' }}>
+          <SaveRow onClick={submit} saving={saving} saved={saved} label={spotlight ? tc('settings.spotlight_resubmit') : tc('settings.spotlight_submit')}/>
+          {error && <div style={{ fontSize: 14, color: '#dc2626', marginTop: 8 }}>{error}</div>}
+        </div>
+      </Card>
     </div>
   )
 }
@@ -1624,6 +1788,7 @@ export default function SettingsPage() {
             {active === 'team'         && <TeamPanel/>}
             {active === 'localisation' && <LocalisationPanel/>}
             {active === 'address'      && <AddressPanel/>}
+            {active === 'spotlight'    && <SpotlightPanel/>}
             {active === 'integrations' && <IntegrationsPanel/>}
             {active === 'ai'            && <AIPanel/>}
             {active === 'notifications' && <NotificationsPanel/>}

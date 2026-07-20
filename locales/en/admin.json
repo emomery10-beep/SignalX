@@ -2,6 +2,7 @@
   "title": "AskBiz Admin",
   "subtitle": "Full webapp oversight",
   "growth_agent": "Growth Agent",
+  "spotlight_nav": "Spotlights",
   "refresh": "Refresh",
   "loading": "Loading…",
   "tab_overview": "Overview",
@@ -131,5 +132,19 @@
   "kv_rejected_sub": "Declined",
   "open_x_agent": "Open X Agent →",
   "recent_activity": "Recent Activity",
-  "no_x_activity": "No X activity yet."
+  "no_x_activity": "No X activity yet.",
+  "spotlight_title": "Business spotlights",
+  "spotlight_desc": "Approve or reject merchant submissions for the signin page carousel.",
+  "spotlight_filter_pending": "Pending",
+  "spotlight_filter_approved": "Approved",
+  "spotlight_filter_rejected": "Rejected",
+  "spotlight_filter_all": "All",
+  "spotlight_empty": "Nothing here.",
+  "spotlight_submitted": "Submitted",
+  "spotlight_reason_prefix": "Reason:",
+  "spotlight_reason_placeholder": "Why is this being rejected? (shown to the merchant)",
+  "spotlight_confirm_reject": "Confirm reject",
+  "spotlight_cancel": "Cancel",
+  "spotlight_approve": "Approve",
+  "spotlight_reject": "Reject"
 }

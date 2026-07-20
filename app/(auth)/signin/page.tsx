@@ -8,6 +8,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import PasskeyNudge from '@/components/PasskeyNudge'
 import { COUNTRY_DIAL, countryFromCurrency, detectGeoFromTimezone, toE164 } from '@/lib/geo'
 import { phoneToSyntheticEmail } from '@/lib/phone-auth'
+import SpotlightCarousel from '@/components/SpotlightCarousel'
 
 type Mode = 'signin' | 'signup'
 type Method = 'email' | 'phone'
@@ -70,6 +71,19 @@ function AuthPage() {
         if (cc && COUNTRY_DIAL.some(c => c.code === cc)) setPhoneCountry(cc)
       })
     return () => { cancelled = true }
+  }, [])
+
+  // Surface a failed OAuth/magic-link round trip (redirected here from
+  // /auth/callback?error=auth_failed) — otherwise the user lands back on a
+  // blank form with no indication anything went wrong. Strip the param after
+  // showing it so a later refresh doesn't keep re-displaying a stale error.
+  useEffect(() => {
+    if (searchParams.get('error') === 'auth_failed') {
+      setError(tc('auth.err_auth_failed'))
+      const cleanUrl = new URL(window.location.href)
+      cleanUrl.searchParams.delete('error')
+      router.replace(`${cleanUrl.pathname}${cleanUrl.search}`)
+    }
   }, [])
 
   const shopifyShop = searchParams.get('ref') === 'shopify' ? searchParams.get('shop') : null
@@ -603,17 +617,7 @@ function AuthPage() {
       {/* Visual column — brand panel, desktop only (>=900px, see globals.css) */}
       <div className="signin-visual-col">
         <div style={{ position: 'absolute', inset: 0, opacity: .12, backgroundImage: 'radial-gradient(circle, #fff 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}/>
-        <div style={{ position: 'relative', textAlign: 'center', padding: '0 48px', maxWidth: 420 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
-          </div>
-          <div style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-.02em', marginBottom: 12 }}>
-            AskBiz
-          </div>
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,.9)', lineHeight: 1.5 }}>
-            {tc('auth.signup_subtitle')}
-          </p>
-        </div>
+        <SpotlightCarousel/>
       </div>
     </div>
   )
