@@ -79,6 +79,11 @@ const response402 = `{
   "required_cents": 2
 }`
 
+const responseTestMode = `{
+  "success": true,
+  "test_mode": true
+}`
+
 export default function WhatsappSendReferencePage() {
   return (
     <ArticleShell
@@ -137,6 +142,15 @@ export default function WhatsappSendReferencePage() {
       <CodeTabs samples={[{ label: '200 — sent, low balance', lang: 'json', code: responseLowBalance }]} />
       <p>If your balance can&rsquo;t cover the 2¢ send before it&rsquo;s even attempted:</p>
       <CodeTabs samples={[{ label: '402 — insufficient credits', lang: 'json', code: response402 }]} />
+      <p>
+        On a test key (<code>abz_test_&hellip;</code>), no message ever reaches Meta and your wallet is never
+        touched — you get this instead, every time:
+      </p>
+      <CodeTabs samples={[{ label: '200 — test key', lang: 'json', code: responseTestMode }]} />
+      <p>
+        See <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a> for the full test/live picture
+        across every endpoint.
+      </p>
 
       <h2>Errors</h2>
       <table>
@@ -175,6 +189,10 @@ export default function WhatsappSendReferencePage() {
           {
             question: 'What happens if my network call times out and I don’t know if the message went out?',
             answer: 'Retry the exact same request with the same Idempotency-Key header. If the first attempt already succeeded server-side, you get back that original result instead of a second message being sent and a second 2¢ debit.',
+          },
+          {
+            question: 'Can I test this endpoint without sending a real WhatsApp message?',
+            answer: 'Yes — use a test key (abz_test_…). It skips Meta entirely and never touches your wallet, always returning { success: true, test_mode: true }. See Build safely with a sandbox key.',
           },
         ]}
       />

@@ -41,6 +41,7 @@ export default function SitemapPage() {
         { href: '/docs', label: 'Documentation overview' },
         { href: '/docs/quickstart', label: 'Quickstart' },
         { href: '/docs/authentication', label: 'Authentication' },
+        { href: '/docs/starters', label: 'Starters', note: 'working example requests' },
       ]} />
 
       <h2>API reference</h2>
@@ -94,7 +95,7 @@ export default function SitemapPage() {
         url: URL,
         name: 'Sitemap — AskBiz Developers',
         description: 'Every page on developer.askbiz.co in one place.',
-        dateModified: '2026-07-19',
+        dateModified: '2026-07-20',
         breadcrumb: [
           { name: 'Docs', url: `${SITE}/docs` },
           { name: 'Sitemap', url: URL },

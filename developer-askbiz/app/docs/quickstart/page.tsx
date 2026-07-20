@@ -56,7 +56,7 @@ const steps = [
   },
   {
     name: 'Create an API key',
-    text: 'Open the Keys page in the dashboard and create a key. You’ll choose a mode: an account-mode key is tied to your own AskBiz business and automatically reads your real profile, currency, and uploaded data — use this if you’re building on your own AskBiz account. A generic-mode key has no AskBiz account behind it, so you supply all context yourself in each request — use this if you’re integrating AskBiz into someone else’s product. Copy the key now; treat it like a password.',
+    text: 'Open the Keys page in the dashboard and create a key. It defaults to a test key (abz_test_…) — safe to experiment with, since /scan, /whatsapp/send, and /charges all return realistic canned responses on a test key with nothing real happening. Switch to live when you’re ready to ship. You’ll also choose a mode: an account-mode key is tied to your own AskBiz business and automatically reads your real profile, currency, and uploaded data — use this if you’re building on your own AskBiz account. A generic-mode key has no AskBiz account behind it, so you supply all context yourself in each request — use this if you’re integrating AskBiz into someone else’s product. Copy the key now; treat it like a password.',
   },
   {
     name: 'Make your first call',
@@ -155,6 +155,10 @@ export default function QuickstartPage() {
           {
             question: 'Why does my first /api/v1/ask call not show a wallet charge on the Usage page?',
             answer: '/api/v1/ask isn’t credit-billed — it’s covered by your monthly plan quota instead. You’ll see it counted against your request quota on the Usage page, but no cents are debited from your wallet for it.',
+          },
+          {
+            question: 'What’s the difference between a test key and a live key?',
+            answer: 'A test key (abz_test_…) is the default for a new key — it’s safe to experiment with, since /scan, /whatsapp/send, and /charges all return realistic canned responses with nothing real happening. A live key (abz_live_…) is the real thing: real wallet debits, real WhatsApp messages, real charges. Create a live key from the same Keys page when you’re ready to ship. See Build safely with a sandbox key.',
           },
         ]}
       />

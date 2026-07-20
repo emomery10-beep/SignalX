@@ -139,6 +139,13 @@ export default function ConnectionsReferencePage() {
         ID as <code>merchant_id</code> on{' '}
         <a href="/docs/api-reference/scan">POST /api/v1/scan</a> to read their inventory instead of your own.
       </p>
+      <p>
+        This is the one core endpoint <strong>not</strong> available on a test key (<code>abz_test_&hellip;</code>):
+        <code>POST</code> reaches a real merchant&rsquo;s real inbox and consent screen, and there&rsquo;s no safe
+        way to simulate that without a fixture merchant, which doesn&rsquo;t exist yet — every <code>POST</code> call
+        with a test key gets a 403 instead. See{' '}
+        <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a>.
+      </p>
 
       <h2>Request</h2>
 
@@ -215,6 +222,7 @@ export default function ConnectionsReferencePage() {
         <tbody>
           <tr><td>400</td><td>Invalid <code>merchant_email</code>, or <code>scopes</code> isn&rsquo;t a valid array of recognized scope names. (<code>POST</code> only.)</td></tr>
           <tr><td>401</td><td>Missing or invalid <code>x-api-key</code>.</td></tr>
+          <tr><td>403</td><td>The key is a test key (<code>abz_test_&hellip;</code>) — sandbox connections aren&rsquo;t available yet. Use a live key. (<code>POST</code> only.)</td></tr>
           <tr><td>409</td><td>An active connection to that <code>merchant_email</code> already exists for this key. (<code>POST</code> only.)</td></tr>
         </tbody>
       </table>
@@ -241,6 +249,10 @@ export default function ConnectionsReferencePage() {
           {
             question: 'What can I actually do once a connection is approved?',
             answer: 'With an approved read_inventory connection, pass the merchant’s ID as merchant_id on POST /api/v1/scan to read their inventory instead of your own account’s.',
+          },
+          {
+            question: 'Can I test this endpoint with a sandbox key?',
+            answer: 'Not yet. POST /api/v1/connections always returns a 403 for a test key — it reaches a real merchant’s real consent screen, and there’s no fixture merchant to test against today. Use a live key for this one endpoint.',
           },
         ]}
       />

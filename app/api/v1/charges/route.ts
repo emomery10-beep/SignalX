@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
   const { data: charges, error } = await supabase
     .from('developer_charges')
-    .select('id, merchant_email, amount_cents, currency, description, status, created_at, approved_at, expires_at')
+    .select('id, merchant_email, amount_cents, currency, description, status, created_at, approved_at, expires_at, key_env')
     .eq('key_id', key.id)
     .order('created_at', { ascending: false })
     .limit(100)

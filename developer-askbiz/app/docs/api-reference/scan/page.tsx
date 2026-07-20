@@ -73,6 +73,17 @@ const responseNotFound = `{
   "unit": null
 }`
 
+const responseTestMode = `{
+  "found": true,
+  "inventory_id": null,
+  "name": "Coca-Cola 500ml",
+  "price": 80,
+  "cost_price": 60,
+  "stock_qty": 24,
+  "unit": "bottle",
+  "test_mode": true
+}`
+
 export default function ScanReferencePage() {
   return (
     <ArticleShell
@@ -123,6 +134,15 @@ export default function ScanReferencePage() {
         also includes <code>low_balance_warning: true</code> and the new <code>balance_cents</code> — in-band, at the
         moment it happens, not just when you hit a 402.
       </p>
+      <p>
+        On a test key (<code>abz_test_&hellip;</code>), the vision model is never called and your wallet is never
+        touched — every call returns this exact same canned match, tagged <code>test_mode: true</code>:
+      </p>
+      <CodeTabs samples={[{ label: '200 — test key', lang: 'json', code: responseTestMode }]} />
+      <p>
+        See <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a> for the full test/live picture
+        across every endpoint.
+      </p>
 
       <h2>Errors</h2>
       <table>
@@ -156,6 +176,10 @@ export default function ScanReferencePage() {
           {
             question: 'Can I scan on behalf of a merchant who isn’t my own account?',
             answer: 'Yes, with an active connection to that merchant that grants the read_inventory scope — pass their user ID as merchant_id. See the guide on connecting to a merchant.',
+          },
+          {
+            question: 'Can I test this endpoint without spending real credits?',
+            answer: 'Yes — use a test key (abz_test_…). It skips the vision model and your real inventory entirely, and always returns the same safe example match with test_mode: true. See Build safely with a sandbox key.',
           },
         ]}
       />

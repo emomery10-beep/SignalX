@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: 'API Reference — AskBiz Developers',
   description: 'Every AskBiz API endpoint: authentication, request and response shapes, pricing, rate limits, and idempotency. Full OpenAPI 3.0 spec included.',
   alternates: { canonical: `${SITE}/docs/api-reference` },
+  openGraph: { title: 'API Reference — AskBiz Developers', description: 'Every AskBiz API endpoint, request/response shapes, pricing, and the full OpenAPI 3.0 spec.', url: `${SITE}/docs/api-reference`, type: 'website' },
 }
 
 export default function ApiReferenceIndex() {
@@ -49,10 +50,16 @@ export default function ApiReferenceIndex() {
         ))}
       </div>
 
+      <p>
+        Not sure where to start? <a href="/docs/starters">Starters</a> has four working requests already filled
+        in — no blank endpoint picker, no request body to write from scratch.
+      </p>
+
       <h2>Machine-readable spec</h2>
       <p>
-        The full OpenAPI 3.0 document is generated directly from the live route implementations — it cannot drift
-        out of sync the way hand-maintained docs can. Feed it to an AI coding agent, import it into Postman, or
+        The full OpenAPI 3.0 document is hand-maintained to mirror the live endpoints, reviewed alongside these
+        reference pages on every endpoint change. If the two ever disagree, treat this page and the individual
+        endpoint pages below as authoritative. Feed the spec to an AI coding agent, import it into Postman, or
         generate a typed client: <a href="https://askbiz.co/api/v1/openapi.json">askbiz.co/api/v1/openapi.json</a>.
       </p>
     </ArticleShell>

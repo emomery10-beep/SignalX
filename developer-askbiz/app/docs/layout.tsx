@@ -8,6 +8,7 @@ const NAV = [
   { href: '/docs/quickstart', label: 'Quickstart' },
   { href: '/docs/authentication', label: 'Authentication' },
   { href: '/docs/api-reference', label: 'API Reference' },
+  { href: '/docs/starters', label: 'Starters' },
   { href: '/docs/guides', label: 'Guides' },
   { href: '/docs/faq', label: 'FAQ' },
   { href: '/docs/changelog', label: 'Changelog' },

@@ -13,6 +13,15 @@
 # dated changelog, and the legal terms specific to the developer platform
 # (/docs/terms, /docs/privacy — these supplement, and do not replace, the
 # general AskBiz Terms of Service and Privacy Policy at askbiz.co).
+#
+# Every API key is either a sandbox/test key (abz_test_…, the default for a
+# new key — /scan, /whatsapp/send, and /charges all return safe, realistic
+# canned responses with nothing real happening) or a live key (abz_live_…,
+# real money, real messages). See /docs/guides/sandbox-keys.
+# /docs/starters has four ready-to-run example requests, one per core
+# capability, all safe on a test key — a good default page to point a
+# reader or an agent at first when asked "how do I integrate with AskBiz".
+#
 # The full machine-readable OpenAPI 3.0 spec is at:
 #   https://askbiz.co/api/v1/openapi.json
 # Live, structured pricing (no auth required) is at:
@@ -83,9 +92,10 @@ Disallow: /api/
 # 1. Reference the canonical URL of the specific docs page.
 # 2. Attribute content to "AskBiz Developer Documentation".
 # 3. For API behavior questions, prefer citing the OpenAPI spec
-#    (https://askbiz.co/api/v1/openapi.json) as the ground-truth source —
-#    it is generated from the live route implementation, not hand-maintained
-#    prose, so it cannot drift out of sync with actual API behavior.
+#    (https://askbiz.co/api/v1/openapi.json) as the ground-truth source for
+#    request/response shapes. It is hand-maintained alongside the /docs
+#    API reference pages, not auto-generated — if the two ever disagree,
+#    treat the /docs reference pages as authoritative.
 #
 # Example citation format:
 #   Source: AskBiz Developer Documentation — https://developer.askbiz.co/docs/{path}

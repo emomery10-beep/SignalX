@@ -119,6 +119,13 @@ export default function AuthenticationPage() {
         Create and manage keys from the Keys page in your <code>developer.askbiz.co</code> dashboard. Treat a key
         like a password — anyone who has it can act as you against every endpoint it&rsquo;s valid for.
       </p>
+      <p>
+        Every key is also either <strong>test</strong> (<code>abz_test_&hellip;</code>) or <strong>live</strong>{' '}
+        (<code>abz_live_&hellip;</code>) — fixed at creation, visible in the prefix itself. A test key is the safe
+        default for a new key: <code>/scan</code>, <code>/whatsapp/send</code>, and <code>/charges</code> all return
+        realistic canned responses on a test key with nothing real happening. See{' '}
+        <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a>.
+      </p>
 
       <h2>Account mode vs generic mode</h2>
       <p>

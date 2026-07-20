@@ -69,6 +69,7 @@ const createResponse = `{
     "amount_cents": 250000,
     "currency": "gbp",
     "description": "Invoice #1042 — website retainer, July",
+    "key_env": "live",
     "created_at": "2026-07-17T09:12:00Z",
     "expires_at": "2026-07-24T09:12:00Z"
   },
@@ -102,6 +103,7 @@ const listResponse = `{
       "currency": "gbp",
       "description": "Invoice #1042 — website retainer, July",
       "status": "approved",
+      "key_env": "live",
       "created_at": "2026-07-17T09:12:00Z",
       "approved_at": "2026-07-17T09:41:22Z",
       "expires_at": "2026-07-24T09:12:00Z"
@@ -113,6 +115,7 @@ const listResponse = `{
       "currency": "gbp",
       "description": "Setup fee",
       "status": "pending",
+      "key_env": "test",
       "created_at": "2026-07-16T14:03:11Z",
       "approved_at": null,
       "expires_at": "2026-07-23T14:03:11Z"
@@ -139,9 +142,12 @@ export default function ChargesReferencePage() {
         Lets your integration collect money from a merchant without ever touching their card details. You create a
         charge with an amount and a description; AskBiz creates a <code>pending</code> charge and a confirmation
         link at <code>https://developer.askbiz.co/charges/{'{token}'}</code>. The merchant opens that link and, on
-        approval, is redirected to a real Stripe Checkout session to actually pay. A charge is only ever marked{' '}
-        <code>approved</code> by a Stripe webhook confirming the payment went through — never by the confirmation
-        page itself — so there&rsquo;s no way to mark a charge paid without a real Stripe transaction behind it.
+        approval, is redirected to a real Stripe Checkout session to actually pay. On a <strong>live</strong> key, a
+        charge is only ever marked <code>approved</code> by a Stripe webhook confirming the payment went through —
+        never by the confirmation page itself — so there&rsquo;s no way to mark a live charge paid without a real
+        Stripe transaction behind it. On a <strong>test</strong> key, there is no Stripe transaction at all: the
+        confirmation page shows a &ldquo;Simulate approve/decline&rdquo; control instead, and clicking it flips the
+        status directly — see <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a>.
       </p>
       <p>
         Creating and listing charges is free — this endpoint is not credit-billed, unlike{' '}
@@ -176,8 +182,10 @@ export default function ChargesReferencePage() {
       <p>
         Send <code>confirmation_url</code> to the merchant however you&rsquo;d normally reach them — it&rsquo;s not
         emailed automatically. <code>charge.status</code> starts as <code>pending</code> and becomes{' '}
-        <code>approved</code> once Stripe confirms payment; see the guide on{' '}
-        <a href="/docs/guides/bill-a-merchant">billing a merchant on your behalf</a> for the full flow end to end.
+        <code>approved</code> once Stripe confirms payment (or, on a test key, once the merchant clicks &ldquo;Simulate
+        approve&rdquo;); see the guide on <a href="/docs/guides/bill-a-merchant">billing a merchant on your behalf</a>{' '}
+        for the full flow end to end. <code>key_env</code> reflects whichever key created the charge and never
+        changes afterward — use it to tell a real charge apart from a test one when listing them.
       </p>
 
       <h2>List charges</h2>
@@ -233,7 +241,7 @@ export default function ChargesReferencePage() {
           },
           {
             question: 'Can a merchant, or I, mark a charge as approved without actually paying?',
-            answer: 'No. A charge only moves from pending to approved when a Stripe webhook confirms the payment succeeded — the confirmation page itself never flips the status, so there’s no way to fake an approval.',
+            answer: 'Not on a live charge — it only moves from pending to approved when a Stripe webhook confirms the payment succeeded, the confirmation page itself never flips the status. A test-key charge is different by design: its confirmation page has a "Simulate approve" control specifically so you can exercise the full lifecycle without a real payment.',
           },
           {
             question: 'What currency are charges billed in?',
@@ -246,6 +254,10 @@ export default function ChargesReferencePage() {
           {
             question: 'Can I retry a create request safely if it times out?',
             answer: 'This endpoint doesn’t support an Idempotency-Key header. If you’re unsure whether a create request landed, call GET /api/v1/charges first and check for an existing charge to that merchant_email before creating a duplicate.',
+          },
+          {
+            question: 'Can I test the full charge lifecycle without a real Stripe payment?',
+            answer: 'Yes — use a test key (abz_test_…). The charge is created exactly as normal, but its confirmation page shows a "Simulate approve/decline" control instead of a real Stripe Checkout redirect, and no card is ever charged. See Build safely with a sandbox key.',
           },
         ]}
       />

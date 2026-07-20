@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: 'Guides — How to use the AskBiz API',
   description: 'Task-oriented walkthroughs for building on AskBiz: scanning products, sending WhatsApp messages, connecting to merchants, billing on their behalf, webhooks, and safe retries.',
   alternates: { canonical: `${SITE}/docs/guides` },
+  openGraph: { title: 'Guides — How to use the AskBiz API', description: 'Task-oriented walkthroughs for building on AskBiz.', url: `${SITE}/docs/guides`, type: 'website' },
 }
 
 export default function GuidesIndex() {
