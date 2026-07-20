@@ -1,6 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { CORE_ENDPOINTS } from '@/lib/endpoints'
+import { getStarter } from '@/lib/starters'
 
 const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
 const inputCls = `w-full px-3 py-3 rounded-lg border border-ink-600 bg-ink-950 text-ink-50 text-sm transition-colors font-mono ${focusRing}`
@@ -22,13 +25,40 @@ const EXAMPLE_BODIES: Record<string, string> = {
 
 type Result = { status: number; latency_ms: number; rate_limit_remaining: string | null; response: unknown }
 
+// useSearchParams() opts the tree into client-side rendering and requires a
+// Suspense boundary for Next's static prerender pass, or `next build` fails
+// on this page — same mechanic as app/(auth)/signin/page.tsx. The boundary
+// lives here; the real page is the inner component.
 export default function ConsolePage() {
-  const [path, setPath] = useState(CONSOLE_ENDPOINTS[0].path)
+  return (
+    <Suspense fallback={null}>
+      <ConsoleForm />
+    </Suspense>
+  )
+}
+
+function ConsoleForm() {
+  const searchParams = useSearchParams()
+
+  // A starter (/dashboard/starters) deep-links here with ?path=...&starter=...
+  // so the endpoint and request body arrive pre-filled instead of defaulting
+  // to CONSOLE_ENDPOINTS[0]. This only sets the INITIAL state — once loaded,
+  // the console behaves exactly as it always has, fully editable.
+  const rawPathParam = searchParams.get('path')
+  const starterSlug = searchParams.get('starter')
+  const starter = starterSlug ? getStarter(starterSlug) : undefined
+  const initialPath = rawPathParam && CONSOLE_ENDPOINTS.some(e => e.path === rawPathParam)
+    ? rawPathParam
+    : CONSOLE_ENDPOINTS[0].path
+  const initialBody = starter && starter.path === initialPath ? starter.body : (EXAMPLE_BODIES[initialPath] || '')
+
+  const [path, setPath] = useState(initialPath)
   const [apiKey, setApiKey] = useState('')
-  const [requestBody, setRequestBody] = useState(EXAMPLE_BODIES[CONSOLE_ENDPOINTS[0].path] || '')
+  const [requestBody, setRequestBody] = useState(initialBody)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [error, setError] = useState('')
+  const [showStarterChip, setShowStarterChip] = useState(!!(starter && starter.path === initialPath))
 
   const endpoint = CONSOLE_ENDPOINTS.find(e => e.path === path)!
 
@@ -53,6 +83,7 @@ export default function ConsolePage() {
     setPath(newPath)
     setRequestBody(EXAMPLE_BODIES[newPath] || '')
     setResult(null)
+    setShowStarterChip(false)
   }
 
   const handleSend = async () => {
@@ -88,6 +119,16 @@ export default function ConsolePage() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="space-y-4">
+          {showStarterChip && starter && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-ink-600 bg-ink-800 px-3 py-2 text-xs">
+              <span className="text-ink-200">From starter: <span className="font-semibold text-ink-50">{starter.title}</span></span>
+              <span className="flex items-center gap-3 shrink-0">
+                <Link href="/dashboard/starters" className="text-signal-300 underline underline-offset-2">Browse other starters</Link>
+                <button type="button" onClick={() => setShowStarterChip(false)} className={`text-ink-400 hover:text-ink-200 ${focusRing}`} aria-label="Dismiss">✕</button>
+              </span>
+            </div>
+          )}
+
           <div>
             <label htmlFor="console-endpoint" className={labelCls}>Endpoint</label>
             <select id="console-endpoint" value={path} onChange={e => handleEndpointChange(e.target.value)} className={inputCls}>

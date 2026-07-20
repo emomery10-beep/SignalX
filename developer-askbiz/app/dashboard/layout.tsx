@@ -7,6 +7,7 @@ import Logo from '@/components/Logo'
 
 const NAV = [
   { href: '/dashboard', label: 'Keys', icon: KeyIcon },
+  { href: '/dashboard/starters', label: 'Starters', icon: StarterIcon },
   { href: '/dashboard/apps', label: 'Apps', icon: AppIcon },
   { href: '/dashboard/usage', label: 'Usage', icon: ChartIcon },
   { href: '/dashboard/webhooks', label: 'Webhooks', icon: BoltIcon },
@@ -125,6 +126,9 @@ function iconProps(className?: string) {
 }
 function KeyIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><circle cx="8" cy="15" r="4" /><path d="M10.5 12.5L20 3M17 6l3 3M14 9l2 2" /></svg>
+}
+function StarterIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><path d="M12 2v6M9 3.5h6M9 8L5 18a2 2 0 002 3h10a2 2 0 002-3L15 8" /></svg>
 }
 function AppIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg>

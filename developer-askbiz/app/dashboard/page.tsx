@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 type ApiKey = {
   id: string
@@ -115,10 +116,15 @@ export default function DashboardKeysPage() {
                 : 'Live key — copy it now, it will not be shown again.'}
             </p>
             <code className="text-ink-50 text-sm break-all">{revealedKey}</code>
-            <div className="mt-3">
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
               <button onClick={() => { navigator.clipboard.writeText(revealedKey); setRevealedKey(null) }} className={ghostBtnCls}>
                 Copy &amp; dismiss
               </button>
+              {isTest && (
+                <Link href="/dashboard/starters" className="text-pulse-200 text-xs font-medium underline underline-offset-2">
+                  Try a starter next →
+                </Link>
+              )}
             </div>
           </div>
         )
