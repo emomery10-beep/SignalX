@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, type CSSProperties, type FormEvent } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import type { Lang } from '@/lib/i18n'
@@ -8,19 +9,25 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { localePath } from '@/lib/i18n-locale'
 import type { Locale } from '@/lib/i18n-locale'
 import DayInTheLife from '@/components/marketing/DayInTheLife'
-import CameraFirstMoat from '@/components/marketing/CameraFirstMoat'
-import PriceProof from '@/components/marketing/PriceProof'
-import OfflineProof from '@/components/marketing/OfflineProof'
-import AnyPhoneProof from '@/components/marketing/AnyPhoneProof'
-import MultiBranchProof from '@/components/marketing/MultiBranchProof'
-import ZakatProof from '@/components/marketing/ZakatProof'
-import ForecastProof from '@/components/marketing/ForecastProof'
-import VerticalsProof from '@/components/marketing/VerticalsProof'
-import MultiLangProof from '@/components/marketing/MultiLangProof'
-import InteractivePosDemo from '@/components/marketing/InteractivePosDemo'
 import VideoReel from '@/components/marketing/VideoReel'
 import { createClient } from '@/lib/supabase/client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
+
+// Below-the-fold "show and tell" sections + the hero PoS demo are code-split out of
+// the main bundle (each was a static import, all bundled/hydrated eagerly before any
+// paint could happen). `ssr: true` (the default) is kept so the content stays
+// crawlable — this only moves the JS into separate chunks instead of blocking the
+// initial hydration pass.
+const CameraFirstMoat = dynamic(() => import('@/components/marketing/CameraFirstMoat'))
+const PriceProof = dynamic(() => import('@/components/marketing/PriceProof'))
+const OfflineProof = dynamic(() => import('@/components/marketing/OfflineProof'))
+const AnyPhoneProof = dynamic(() => import('@/components/marketing/AnyPhoneProof'))
+const MultiBranchProof = dynamic(() => import('@/components/marketing/MultiBranchProof'))
+const ZakatProof = dynamic(() => import('@/components/marketing/ZakatProof'))
+const ForecastProof = dynamic(() => import('@/components/marketing/ForecastProof'))
+const VerticalsProof = dynamic(() => import('@/components/marketing/VerticalsProof'))
+const MultiLangProof = dynamic(() => import('@/components/marketing/MultiLangProof'))
+const InteractivePosDemo = dynamic(() => import('@/components/marketing/InteractivePosDemo'))
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
