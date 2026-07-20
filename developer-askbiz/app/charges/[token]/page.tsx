@@ -86,7 +86,16 @@ export default function ChargeConfirmationPage({ params }: { params: { token: st
       <div className="w-full max-w-sm bg-ink-900 border border-ink-700 rounded-2xl p-6">
         {loading && <p className="text-ink-300 text-sm">Loading…</p>}
 
-        {!loading && error && <p className="text-red-400 text-sm">{error}</p>}
+        {!loading && error && (
+          <>
+            <p className="text-red-400 text-sm">{error}</p>
+            {!charge && (
+              <p className="text-ink-400 text-xs mt-2">
+                Check the link is complete and hasn’t been shortened or split across two lines — or ask whoever sent it to send it again.
+              </p>
+            )}
+          </>
+        )}
 
         {!loading && charge && charge.key_env === 'test' && (
           <div className="mb-4 rounded-lg border border-pulse-500 bg-pulse-700/20 px-3 py-2 text-xs font-semibold text-pulse-200">
@@ -116,7 +125,17 @@ export default function ChargeConfirmationPage({ params }: { params: { token: st
         )}
 
         {!loading && charge && charge.status !== 'pending' && (
-          <p className="text-ink-300 text-sm">This charge is {charge.status}.</p>
+          <>
+            <h1 className="font-display text-lg font-bold mb-1">
+              {charge.status === 'approved' ? 'Approved' : charge.status === 'declined' ? 'Declined' : 'Charge closed'}
+            </h1>
+            <p className="text-ink-300 text-sm">
+              {charge.status === 'approved' && charge.key_env === 'test' && 'Simulated — no real payment was collected.'}
+              {charge.status === 'approved' && charge.key_env === 'live' && 'Payment collected. You can close this page.'}
+              {charge.status === 'declined' && 'You declined this charge — nothing was collected.'}
+              {charge.status !== 'approved' && charge.status !== 'declined' && `This charge is ${charge.status}.`}
+            </p>
+          </>
         )}
       </div>
     </div>

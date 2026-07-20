@@ -38,7 +38,16 @@ export default function ConsolePage() {
   // guessing.
   const keyEnv: 'live' | 'test' | null =
     apiKey.startsWith('abz_test_') ? 'test' : apiKey.startsWith('abz_live_') ? 'live' : null
-  const isRiskyEndpoint = path === '/api/v1/charges' || path === '/api/v1/whatsapp/send'
+
+  // What sending this endpoint for real actually does — used to tailor the
+  // live-key warning below. Only the endpoints with a real external or
+  // financial effect get one; /api/v1/ask is free and read-only in both
+  // modes, so it's deliberately excluded (see /docs/guides/sandbox-keys).
+  const realEffect: Record<string, string> = {
+    '/api/v1/scan': 'call the vision model and debit your wallet',
+    '/api/v1/whatsapp/send': 'send a real WhatsApp message',
+    '/api/v1/charges': 'create a real charge a real merchant can pay',
+  }
 
   const handleEndpointChange = (newPath: string) => {
     setPath(newPath)
@@ -95,14 +104,19 @@ export default function ConsolePage() {
               autoComplete="off" className={inputCls} />
           </div>
 
-          {keyEnv === 'test' && (
+          {keyEnv === 'test' && path === '/api/v1/connections' && (
             <div className="rounded-lg border border-pulse-500 bg-pulse-700/20 px-3 py-2 text-xs font-semibold text-pulse-200">
-              Sandbox key — no real money moves and no real messages send, on any endpoint.
+              Sandbox connections aren’t available yet — this will fail with a 403. Paste a live key to try this endpoint.
             </div>
           )}
-          {keyEnv === 'live' && isRiskyEndpoint && (
+          {keyEnv === 'test' && path !== '/api/v1/connections' && (
+            <div className="rounded-lg border border-pulse-500 bg-pulse-700/20 px-3 py-2 text-xs font-semibold text-pulse-200">
+              Sandbox key — no real money moves and no real messages sent, on any endpoint.
+            </div>
+          )}
+          {keyEnv === 'live' && realEffect[path] && (
             <div className="rounded-lg border border-amber-500 bg-amber-600/10 px-3 py-2 text-xs font-semibold text-amber-300">
-              Live key — sending this will {path === '/api/v1/charges' ? 'create a real charge a real merchant can pay' : 'send a real WhatsApp message'}.
+              Live key — sending this will {realEffect[path]}.
             </div>
           )}
 

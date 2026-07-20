@@ -105,17 +105,24 @@ export default function DashboardKeysPage() {
         </button>
       </div>
 
-      {revealedKey && (
-        <div className="border border-signal-600 bg-signal-600/10 rounded-xl p-4 mb-6">
-          <p className="text-signal-300 text-xs font-medium mb-2">Copy this key now — it will not be shown again.</p>
-          <code className="text-ink-50 text-sm break-all">{revealedKey}</code>
-          <div className="mt-3">
-            <button onClick={() => { navigator.clipboard.writeText(revealedKey); setRevealedKey(null) }} className={ghostBtnCls}>
-              Copy &amp; dismiss
-            </button>
+      {revealedKey && (() => {
+        const isTest = revealedKey.startsWith('abz_test_')
+        return (
+          <div className={`border rounded-xl p-4 mb-6 ${isTest ? 'border-pulse-500 bg-pulse-600/10' : 'border-signal-600 bg-signal-600/10'}`}>
+            <p className={`text-xs font-medium mb-2 ${isTest ? 'text-pulse-200' : 'text-signal-300'}`}>
+              {isTest
+                ? 'Test key — copy it now, it will not be shown again. Safe to experiment with: nothing real happens.'
+                : 'Live key — copy it now, it will not be shown again.'}
+            </p>
+            <code className="text-ink-50 text-sm break-all">{revealedKey}</code>
+            <div className="mt-3">
+              <button onClick={() => { navigator.clipboard.writeText(revealedKey); setRevealedKey(null) }} className={ghostBtnCls}>
+                Copy &amp; dismiss
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {showCreate && (
         <div className="border border-ink-700 rounded-xl p-5 mb-6 bg-ink-900">
@@ -126,13 +133,31 @@ export default function DashboardKeysPage() {
             </div>
             <fieldset>
               <legend className={labelCls}>Environment</legend>
-              <div className="flex rounded-lg border border-ink-600 p-1 gap-1" role="radiogroup" aria-label="Key environment">
-                <button type="button" role="radio" aria-checked={newKeyEnv === 'test'} onClick={() => setNewKeyEnv('test')}
-                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors ${focusRing} ${newKeyEnv === 'test' ? 'bg-pulse-600 text-white' : 'text-ink-300 hover:bg-ink-800'}`}>
+              {/* Styled as a segmented toggle, not native radios like Mode below —
+                  deliberate, not drift: this is the safety-critical choice (per
+                  PRODUCT.md's "legible at a glance" principle), so it gets more
+                  visual weight than the technical Mode choice underneath it.
+                  Full roving-tabindex + arrow-key support, matching the ARIA
+                  radiogroup pattern real keyboard/screen-reader users expect —
+                  Tab lands on the group once, arrows move the selection. */}
+              <div
+                className="flex rounded-lg border border-ink-600 p-1 gap-1"
+                role="radiogroup"
+                aria-label="Key environment"
+                onKeyDown={e => {
+                  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+                  e.preventDefault()
+                  setNewKeyEnv(v => (v === 'test' ? 'live' : 'test'))
+                }}
+              >
+                <button type="button" role="radio" aria-checked={newKeyEnv === 'test'} tabIndex={newKeyEnv === 'test' ? 0 : -1}
+                  onClick={() => setNewKeyEnv('test')}
+                  className={`flex-1 py-3 rounded-md text-sm font-semibold transition-colors ${focusRing} ${newKeyEnv === 'test' ? 'bg-pulse-600 text-white' : 'text-ink-300 hover:bg-ink-800'}`}>
                   Test — safe, nothing real happens
                 </button>
-                <button type="button" role="radio" aria-checked={newKeyEnv === 'live'} onClick={() => setNewKeyEnv('live')}
-                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors ${focusRing} ${newKeyEnv === 'live' ? 'bg-signal-500 text-ink-950' : 'text-ink-300 hover:bg-ink-800'}`}>
+                <button type="button" role="radio" aria-checked={newKeyEnv === 'live'} tabIndex={newKeyEnv === 'live' ? 0 : -1}
+                  onClick={() => setNewKeyEnv('live')}
+                  className={`flex-1 py-3 rounded-md text-sm font-semibold transition-colors ${focusRing} ${newKeyEnv === 'live' ? 'bg-signal-500 text-ink-950' : 'text-ink-300 hover:bg-ink-800'}`}>
                   Live — real money, real messages
                 </button>
               </div>
@@ -150,10 +175,10 @@ export default function DashboardKeysPage() {
                   Account — acts on my own AskBiz data
                 </label>
               </div>
-              <div className="flex items-center gap-2 mt-2 text-sm text-ink-200">
-                <input type="radio" name="mode" checked={newKeyMode === 'generic'} onChange={() => setNewKeyMode('generic')} />
-                <label>Generic — no catalog access, raw API only</label>
-              </div>
+              <label htmlFor="mode-generic" className="flex items-center gap-2 mt-2 text-sm text-ink-200">
+                <input id="mode-generic" type="radio" name="mode" checked={newKeyMode === 'generic'} onChange={() => setNewKeyMode('generic')} />
+                Generic — no catalog access, raw API only
+              </label>
             </fieldset>
             <button onClick={handleCreate} disabled={creating} className={primaryBtnCls}>
               {creating ? 'Creating…' : 'Create key'}
@@ -179,7 +204,7 @@ export default function DashboardKeysPage() {
               <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                 <span className="flex items-center gap-2">
                   <span className="font-medium text-sm">{k.name}</span>
-                  <span className={`text-[11px] font-bold tracking-wide px-1.5 py-0.5 rounded ${k.key_env === 'test' ? 'bg-pulse-700/30 text-pulse-200' : 'bg-signal-600/20 text-signal-300'}`}>
+                  <span className={`text-xs font-bold tracking-wide px-1.5 py-0.5 rounded ${k.key_env === 'test' ? 'bg-pulse-700/30 text-pulse-200' : 'bg-signal-600/20 text-signal-300'}`}>
                     {k.key_env === 'test' ? 'TEST' : 'LIVE'}
                   </span>
                 </span>
