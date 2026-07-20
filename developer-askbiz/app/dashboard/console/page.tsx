@@ -32,6 +32,14 @@ export default function ConsolePage() {
 
   const endpoint = CONSOLE_ENDPOINTS.find(e => e.path === path)!
 
+  // Detected purely from the prefix the moment it's pasted — the console
+  // never stores the key, so this is the only signal available client-side.
+  // null (unrecognized prefix) intentionally renders no banner rather than
+  // guessing.
+  const keyEnv: 'live' | 'test' | null =
+    apiKey.startsWith('abz_test_') ? 'test' : apiKey.startsWith('abz_live_') ? 'live' : null
+  const isRiskyEndpoint = path === '/api/v1/charges' || path === '/api/v1/whatsapp/send'
+
   const handleEndpointChange = (newPath: string) => {
     setPath(newPath)
     setRequestBody(EXAMPLE_BODIES[newPath] || '')
@@ -83,9 +91,20 @@ export default function ConsolePage() {
 
           <div>
             <label htmlFor="console-key" className={labelCls}>API key</label>
-            <input id="console-key" type="password" placeholder="abz_live_..." value={apiKey} onChange={e => setApiKey(e.target.value)}
+            <input id="console-key" type="password" placeholder="abz_test_... or abz_live_..." value={apiKey} onChange={e => setApiKey(e.target.value)}
               autoComplete="off" className={inputCls} />
           </div>
+
+          {keyEnv === 'test' && (
+            <div className="rounded-lg border border-pulse-500 bg-pulse-700/20 px-3 py-2 text-xs font-semibold text-pulse-200">
+              Sandbox key — no real money moves and no real messages send, on any endpoint.
+            </div>
+          )}
+          {keyEnv === 'live' && isRiskyEndpoint && (
+            <div className="rounded-lg border border-amber-500 bg-amber-600/10 px-3 py-2 text-xs font-semibold text-amber-300">
+              Live key — sending this will {path === '/api/v1/charges' ? 'create a real charge a real merchant can pay' : 'send a real WhatsApp message'}.
+            </div>
+          )}
 
           {endpoint.method !== 'GET' && (
             <div>

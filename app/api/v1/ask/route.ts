@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
 import { askOnce, buildSystemPrompt } from '@/lib/ai'
-import { checkRateLimit, rateLimitHeaders } from '@/lib/api-v1-auth'
+import { authenticateApiKey, CORS } from '@/lib/api-v1-auth'
 import { API_PLAN_LIMITS as PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
-
-// ── CORS headers for public API ───────────────────────────────────────────────
-const CORS = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
-}
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS })
@@ -21,71 +13,25 @@ export async function OPTIONS() {
 // ── POST /api/v1/ask ──────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const start = Date.now()
-  // Service client: callers authenticate with an API key (no session), so RLS
-  // can't scope by auth.uid(). The route validates the key and scopes every
-  // query manually by the key's user_id.
-  const supabase = createServiceClient()
 
-  // 1. Extract API key
-  const apiKey = request.headers.get('x-api-key')
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'Missing x-api-key header', docs: 'https://developer.askbiz.co/docs' },
-      { status: 401, headers: CORS }
-    )
-  }
+  // Auth, is_active, monthly quota, per-minute rate limit — shared with
+  // scan/whatsapp/send/charges/connections (lib/api-v1-auth.ts). This route
+  // used to hand-roll its own copy of this exact logic (it predates the
+  // extraction — the comment in api-v1-auth.ts says as much) which meant
+  // any change made there, including the key_env sandbox-mode field this
+  // route now needs, silently never applied here. No behavior change
+  // intended from this migration beyond that.
+  const auth = await authenticateApiKey(request)
+  if (!auth.ok) return auth.response
+  const { key: keyData, supabase, rateLimitHeaders: headers } = auth
 
-  // 2. Validate key
-  const { data: keyData, error: keyError } = await supabase
-    .from('api_keys')
-    .select('id, user_id, mode, plan, is_active, requests_month, request_limit_month, request_limit_minute')
-    .eq('key', apiKey)
-    .single()
-
-  if (keyError || !keyData) {
-    return NextResponse.json(
-      { error: 'Invalid API key', docs: 'https://developer.askbiz.co/docs' },
-      { status: 401, headers: CORS }
-    )
-  }
-
-  if (!keyData.is_active) {
-    return NextResponse.json(
-      { error: 'API key is disabled — go to askbiz.co/settings to re-enable it' },
-      { status: 403, headers: CORS }
-    )
-  }
-
-  // 3. Monthly limit check
+  // Unlike scan/whatsapp/send/charges, /ask has no test-mode branch: it's
+  // quota-limited only (never wallet-billed, never calls Meta or Stripe),
+  // and account-mode /ask only ever reads the key owner's own data — no
+  // real-money or cross-tenant risk to guard against. A canned test
+  // response would just make the sandbox answer real business questions
+  // with fiction, which is worse than answering for real in both modes.
   const planLimits = isApiPlan(keyData.plan) ? PLAN_LIMITS[keyData.plan] : PLAN_LIMITS.free
-  if (planLimits.month !== -1 && keyData.requests_month >= keyData.request_limit_month) {
-    return NextResponse.json(
-      {
-        error: 'Monthly request limit reached',
-        plan: keyData.plan,
-        limit: keyData.request_limit_month,
-        used: keyData.requests_month,
-        resets: 'First of next month',
-        upgrade: 'https://developer.askbiz.co/docs/api-reference/pricing',
-      },
-      { status: 429, headers: CORS }
-    )
-  }
-
-  // 4. Per-minute rate limit — DB-backed (see lib/api-v1-auth.ts checkRateLimit),
-  // not an in-process Map, so this is actually enforced across serverless instances.
-  const minuteCheck = await checkRateLimit(supabase, keyData.id, keyData.request_limit_minute)
-  if (!minuteCheck.allowed) {
-    return NextResponse.json(
-      {
-        error: 'Rate limit exceeded — too many requests per minute',
-        limit: keyData.request_limit_minute,
-        retry_after: '60 seconds',
-      },
-      { status: 429, headers: { ...CORS, ...rateLimitHeaders(keyData.request_limit_minute, 0) } }
-    )
-  }
-  const headers = { ...CORS, ...rateLimitHeaders(keyData.request_limit_minute, minuteCheck.remaining) }
 
   // 5. Parse request body
   let body: {

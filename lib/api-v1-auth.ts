@@ -53,6 +53,7 @@ export type ApiKeyRow = {
   id: string
   user_id: string
   mode: 'generic' | 'account'
+  key_env: 'live' | 'test'
   plan: string
   is_active: boolean
   requests_month: number
@@ -80,7 +81,7 @@ export async function authenticateApiKey(request: Request): Promise<AuthResult> 
 
   const { data: key, error } = await supabase
     .from('api_keys')
-    .select('id, user_id, mode, plan, is_active, requests_month, request_limit_month, request_limit_minute, credit_balance_cents, app_id')
+    .select('id, user_id, mode, key_env, plan, is_active, requests_month, request_limit_month, request_limit_minute, credit_balance_cents, app_id')
     .eq('key', apiKey)
     .single()
 

@@ -12,6 +12,7 @@ type Charge = {
   currency: string
   description: string
   status: string
+  key_env: 'live' | 'test'
 }
 
 // Merchant-facing confirmation screen for the Phase 3 billing-on-behalf-of
@@ -35,7 +36,7 @@ export default function ChargeConfirmationPage({ params }: { params: { token: st
 
       const { data, error: fetchError } = await supabase
         .from('developer_charges')
-        .select('id, merchant_email, amount_cents, currency, description, status')
+        .select('id, merchant_email, amount_cents, currency, description, status, key_env')
         .eq('confirmation_token', params.token)
         .single()
 
@@ -54,6 +55,14 @@ export default function ChargeConfirmationPage({ params }: { params: { token: st
       const res = await fetch(`/api/charges/${params.token}/approve`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Could not start checkout')
+      if (data.simulated) {
+        // Test-mode charge — the approve route never touched Stripe and
+        // there's no checkout_url to redirect to. Reflect the now-approved
+        // status in place instead of navigating away.
+        setCharge(c => c ? { ...c, status: data.status } : c)
+        setBusy(false)
+        return
+      }
       window.location.href = data.checkout_url
     } catch (e: any) {
       setError(e.message || 'Something went wrong')
@@ -79,6 +88,12 @@ export default function ChargeConfirmationPage({ params }: { params: { token: st
 
         {!loading && error && <p className="text-red-400 text-sm">{error}</p>}
 
+        {!loading && charge && charge.key_env === 'test' && (
+          <div className="mb-4 rounded-lg border border-pulse-500 bg-pulse-700/20 px-3 py-2 text-xs font-semibold text-pulse-200">
+            TEST CHARGE — no real payment will be collected
+          </div>
+        )}
+
         {!loading && charge && charge.status === 'pending' && (
           <>
             <h1 className="font-display text-lg font-bold mb-1">Approve this charge?</h1>
@@ -91,11 +106,11 @@ export default function ChargeConfirmationPage({ params }: { params: { token: st
                 weak/default-only focus indication. */}
             <button onClick={handleApprove} disabled={busy}
               className={`w-full mb-2 py-3 rounded-lg bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors disabled:opacity-50 ${focusRing}`}>
-              {busy ? 'Please wait…' : 'Approve & pay'}
+              {busy ? 'Please wait…' : charge.key_env === 'test' ? 'Simulate approve' : 'Approve & pay'}
             </button>
             <button onClick={handleDecline} disabled={busy}
               className={`w-full py-3 rounded-lg border border-ink-600 text-ink-300 text-sm font-medium hover:bg-ink-800 transition-colors disabled:opacity-50 ${focusRing}`}>
-              Decline
+              {charge.key_env === 'test' ? 'Simulate decline' : 'Decline'}
             </button>
           </>
         )}

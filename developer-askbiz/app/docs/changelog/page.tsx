@@ -20,13 +20,18 @@ type Entry = {
 
 const entries: Entry[] = [
   {
+    summary: 'Sandbox (test-mode) API keys',
+    detail: 'Create a test key (abz_test_…) from the Keys page, or toggle Test when creating a new one — it’s the default for a first key. On /api/v1/scan, /api/v1/whatsapp/send, and /api/v1/charges, a test key always returns a realistic canned response and never debits your balance, sends a real WhatsApp message, or creates a real Stripe charge. /api/v1/ask answers for real on both test and live keys, since it’s never billed and only reads your own data. /api/v1/connections isn’t sandboxed yet — it still requires a live key. Test keys are immutable once created — start a new key if you need a different environment.',
+    date: '2026-07-20',
+  },
+  {
     summary: 'Apps — optional named grouping for your keys',
     detail: 'Create an app from the dashboard Apps page (name, logo, redirect URI) and assign your keys to it. Purely additive — a key with no app keeps working exactly as before. Once a key that created a connection is grouped under an app, the merchant sees that app’s name and logo on the /connect consent screen instead of an unbranded request.',
     date: '2026-07-17',
   },
   {
     summary: 'Interactive API console in the dashboard',
-    detail: 'A new Console page lets you fire a real request at any core endpoint (ask, scan, whatsapp/send, connections, charges) using your own key, directly from developer.askbiz.co/dashboard/console — no terminal or client code required to see an actual response, with live status, latency, and rate-limit-remaining shown alongside it. Your key is sent through for that one request only and is never stored, logged, or re-displayed. There’s no sandbox mode yet, so every call through the console is a real, live call.',
+    detail: 'A new Console page lets you fire a real request at any core endpoint (ask, scan, whatsapp/send, connections, charges) using your own key, directly from developer.askbiz.co/dashboard/console — no terminal or client code required to see an actual response, with live status, latency, and rate-limit-remaining shown alongside it. Your key is sent through for that one request only and is never stored, logged, or re-displayed. Paste a test key to try it with no real side effects (see the sandbox-keys entry above), or a live key for the real thing.',
     date: '2026-07-17',
   },
   {

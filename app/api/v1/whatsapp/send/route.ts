@@ -39,9 +39,6 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const price = API_PRICE_CENTS['/api/v1/whatsapp/send']
-  if (key.credit_balance_cents < price) return insufficientCreditsResponse(price)
-
   // Check for a prior identical request BEFORE sending anything — this is
   // what actually prevents a duplicate real WhatsApp message on a client
   // retry, not just a duplicate debit.
@@ -68,6 +65,20 @@ export async function POST(request: NextRequest) {
   if (!text || typeof text !== 'string' || text.length > 1024) {
     return NextResponse.json({ error: '"text" is required and must be under 1024 characters' }, { status: 400, headers })
   }
+
+  // Sandbox key: never call Meta. This has to sit here — after basic body
+  // validation (so a test key sees the same 400s a live key would) but
+  // strictly before the balance check and before sendReceipt/
+  // sendPurchaseOrder — Meta doesn't support unsend, so the real send call
+  // below must be textually unreachable for a test key, not just skipped
+  // by a later branch.
+  if (key.key_env === 'test') {
+    await recordRequest(supabase, key, '/api/v1/whatsapp/send', 200, Date.now() - start)
+    return NextResponse.json({ success: true, test_mode: true }, { headers })
+  }
+
+  const price = API_PRICE_CENTS['/api/v1/whatsapp/send']
+  if (key.credit_balance_cents < price) return insufficientCreditsResponse(price)
 
   const result = template === 'receipt'
     ? await sendReceipt(phone, text)

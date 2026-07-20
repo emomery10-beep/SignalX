@@ -66,6 +66,12 @@ export const GUIDES: Guide[] = [
     summary: 'Fire a real request at any core endpoint with your own key from the dashboard and see the actual response before writing any code.',
     relatedEndpoints: ['ask', 'scan', 'whatsapp-send', 'connections', 'charges'],
   },
+  {
+    slug: 'sandbox-keys',
+    title: 'Build safely with a sandbox (test-mode) key',
+    summary: 'Create a test key and get realistic responses from scan, whatsapp/send, and charges with no real debit, message, or charge — then switch to a live key when you’re ready.',
+    relatedEndpoints: ['scan', 'whatsapp-send', 'charges'],
+  },
 ]
 
 export function getGuide(slug: string) {

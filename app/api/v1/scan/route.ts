@@ -36,9 +36,6 @@ export async function POST(request: NextRequest) {
   const { key, supabase } = auth
   const headers = { ...CORS, ...auth.rateLimitHeaders }
 
-  const price = API_PRICE_CENTS['/api/v1/scan']
-  if (key.credit_balance_cents < price) return insufficientCreditsResponse(price)
-
   // Check for a prior identical request BEFORE doing any billable work —
   // this is what actually prevents a duplicate Groq call on a client retry,
   // not just a duplicate debit (see checkIdempotency's own comment).
@@ -57,6 +54,33 @@ export async function POST(request: NextRequest) {
   if (!body.image) {
     return NextResponse.json({ error: '"image" (base64 JPEG) is required' }, { status: 400, headers })
   }
+
+  // Sandbox key: return a fixed, canned recognition result and stop here —
+  // before the balance check below (a fresh key defaults to a 0 balance,
+  // so a test key would 402 before ever reaching a check placed after it)
+  // and before any real data is touched. This has to be a hard early
+  // return, not a scattered set of "skip this one side effect" checks
+  // further down: the catalogue text built into the Groq prompt below
+  // would leak real inventory into the request even if only the Groq
+  // *response* were stubbed out, so real inventory can never be read for
+  // a test call in the first place.
+  if (key.key_env === 'test') {
+    const testResponse = {
+      found: true,
+      inventory_id: null,
+      name: 'Coca-Cola 500ml',
+      price: 80,
+      cost_price: 60,
+      stock_qty: 24,
+      unit: 'bottle',
+      test_mode: true,
+    }
+    await recordRequest(supabase, key, '/api/v1/scan', 200, Date.now() - start)
+    return NextResponse.json(testResponse, { headers })
+  }
+
+  const price = API_PRICE_CENTS['/api/v1/scan']
+  if (key.credit_balance_cents < price) return insufficientCreditsResponse(price)
 
   // Resolve which account's catalog (if any) to scope this scan to:
   // an explicit connected merchant takes priority over the key's own

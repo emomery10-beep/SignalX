@@ -5,6 +5,7 @@ type ApiKey = {
   id: string
   name: string
   key: string
+  key_env: 'live' | 'test'
   plan: string
   is_active: boolean
   requests_month: number
@@ -25,6 +26,11 @@ export default function DashboardKeysPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
   const [newKeyMode, setNewKeyMode] = useState<'generic' | 'account'>('account')
+  // Defaults to Test — a new developer's first key should be one they can't
+  // hurt anything with. Switching to Live is one click away once they're
+  // ready; the API's own default stays 'live' for backward compatibility
+  // with any caller that omits the field (see app/api/v1/keys/route.ts).
+  const [newKeyEnv, setNewKeyEnv] = useState<'live' | 'test'>('test')
   const [creating, setCreating] = useState(false)
   // Shown exactly once after creation — the full key value never comes
   // back from the API again, same "copy it now" pattern as everywhere
@@ -46,7 +52,7 @@ export default function DashboardKeysPage() {
       const res = await fetch('/api/dashboard-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newKeyName || 'My API Key', mode: newKeyMode }),
+        body: JSON.stringify({ name: newKeyName || 'My API Key', mode: newKeyMode, env: newKeyEnv }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Could not create key')
@@ -119,6 +125,24 @@ export default function DashboardKeysPage() {
               <input id="key-name" type="text" placeholder="My API Key" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} className={inputCls} />
             </div>
             <fieldset>
+              <legend className={labelCls}>Environment</legend>
+              <div className="flex rounded-lg border border-ink-600 p-1 gap-1" role="radiogroup" aria-label="Key environment">
+                <button type="button" role="radio" aria-checked={newKeyEnv === 'test'} onClick={() => setNewKeyEnv('test')}
+                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors ${focusRing} ${newKeyEnv === 'test' ? 'bg-pulse-600 text-white' : 'text-ink-300 hover:bg-ink-800'}`}>
+                  Test — safe, nothing real happens
+                </button>
+                <button type="button" role="radio" aria-checked={newKeyEnv === 'live'} onClick={() => setNewKeyEnv('live')}
+                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors ${focusRing} ${newKeyEnv === 'live' ? 'bg-signal-500 text-ink-950' : 'text-ink-300 hover:bg-ink-800'}`}>
+                  Live — real money, real messages
+                </button>
+              </div>
+              <p className="text-xs text-ink-300 mt-1.5">
+                {newKeyEnv === 'test'
+                  ? 'Test keys never charge a real card, send a real WhatsApp message, or touch your real inventory. Switch to Live when you’re ready to ship.'
+                  : 'This key can move real money and send real messages the moment it’s created.'}
+              </p>
+            </fieldset>
+            <fieldset>
               <legend className={labelCls}>Mode</legend>
               <div className="flex gap-4 text-sm text-ink-200">
                 <label className="flex items-center gap-2">
@@ -153,7 +177,12 @@ export default function DashboardKeysPage() {
           {keys.map(k => (
             <div key={k.id} className="border border-ink-700 rounded-xl p-4 bg-ink-900">
               <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                <span className="font-medium text-sm">{k.name}</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-medium text-sm">{k.name}</span>
+                  <span className={`text-[11px] font-bold tracking-wide px-1.5 py-0.5 rounded ${k.key_env === 'test' ? 'bg-pulse-700/30 text-pulse-200' : 'bg-signal-600/20 text-signal-300'}`}>
+                    {k.key_env === 'test' ? 'TEST' : 'LIVE'}
+                  </span>
+                </span>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${k.is_active ? 'bg-signal-600/20 text-signal-300' : 'bg-ink-800 text-ink-200'}`}>
                   {k.is_active ? 'Active' : 'Disabled'}
                 </span>

@@ -55,8 +55,13 @@ export async function POST(request: NextRequest) {
       currency,
       description,
       confirmation_token: confirmationToken,
+      // Mirrored from the key, not re-derived later — the approve route and
+      // the Stripe webhook both need this without a join, and it must be
+      // fixed at creation time so it can never drift from the key that
+      // actually created the charge.
+      key_env: key.key_env,
     })
-    .select('id, status, amount_cents, currency, description, created_at, expires_at')
+    .select('id, status, amount_cents, currency, description, created_at, expires_at, key_env')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: CORS })

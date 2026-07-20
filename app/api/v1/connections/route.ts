@@ -29,6 +29,17 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response
   const { key, supabase } = auth
 
+  // A connection request reaches a real merchant's real inbox/consent
+  // screen — there's no safe way to simulate that without a fixture
+  // merchant account, which doesn't exist yet (tracked as a fast-follow).
+  // Block outright rather than let a test key spam a real merchant email.
+  if (key.key_env === 'test') {
+    return NextResponse.json(
+      { error: 'Sandbox connections aren’t available yet — use a live key for /api/v1/connections' },
+      { status: 403, headers: CORS }
+    )
+  }
+
   let body: { merchant_email?: string; scopes?: Scope[] }
   try {
     body = await request.json()

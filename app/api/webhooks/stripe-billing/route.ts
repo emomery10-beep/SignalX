@@ -146,10 +146,18 @@ export async function POST(request: NextRequest) {
             .update({ status: 'approved', merchant_user_id: userId, approved_at: new Date().toISOString() })
             .eq('id', chargeId)
             .eq('status', 'pending')
-            .select('id, key_id, amount_cents, platform_fee_percent')
+            .select('id, key_id, amount_cents, platform_fee_percent, key_env')
             .single()
 
-          if (updated) {
+          // key_env is re-checked here, independently of the approve route
+          // and the DB constraint that both already make a real Stripe
+          // session impossible for a test-env charge — this handler trusts
+          // a Stripe event payload it doesn't fully control the provenance
+          // of, so it shouldn't also trust "no test charge ever reaches
+          // here" as an invariant it doesn't verify itself. A test charge
+          // should never get this far (nothing calls Stripe for one), but
+          // if it somehow did, no payout debt for it is ever recorded.
+          if (updated && updated.key_env !== 'test') {
             const developerShareCents = Math.round(updated.amount_cents * (1 - updated.platform_fee_percent / 100))
             await supabase.from('developer_payouts_ledger').insert({
               key_id: updated.key_id,

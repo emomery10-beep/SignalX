@@ -54,7 +54,7 @@ export default function DeveloperTermsPage() {
       <h2>2. Definitions</h2>
       <ul>
         <li><strong>&ldquo;API&rdquo;</strong> means the AskBiz REST API served under <code>/api/v1/*</code>, documented at <a href="/docs">developer.askbiz.co/docs</a>.</li>
-        <li><strong>&ldquo;API Key&rdquo;</strong> means a credential of the form <code>abz_live_&hellip;</code> issued to you for authenticating requests.</li>
+        <li><strong>&ldquo;API Key&rdquo;</strong> means a credential of the form <code>abz_live_&hellip;</code> (a Live Key, which can move real money and send real messages) or <code>abz_test_&hellip;</code> (a Test Key, restricted to simulated responses on billed and messaging endpoints) issued to you for authenticating requests.</li>
         <li><strong>&ldquo;Application&rdquo; or &ldquo;App&rdquo;</strong> means software you build that calls the API, optionally grouped under a named App in the dashboard.</li>
         <li><strong>&ldquo;Merchant&rdquo;</strong> means an AskBiz business account holder whose data your Application may request scoped access to.</li>
         <li><strong>&ldquo;Connection&rdquo;</strong> means a scoped grant of access to a specific Merchant&rsquo;s account, created via <code>POST /api/v1/connections</code> and approved by the Merchant on a hosted consent page.</li>

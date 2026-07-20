@@ -30,11 +30,11 @@ const steps = [
   },
   {
     name: 'Paste your API key',
-    text: 'Paste a real abz_live_… key into the API key field. It’s sent from your browser straight through to askbiz.co for that one request only — the console never stores, logs, or re-displays it, the same policy as every key and webhook secret in this product. Paste it fresh each time; it isn’t remembered between visits or endpoint switches.',
+    text: 'Paste either an abz_test_… or an abz_live_… key into the API key field — the console detects which one you’ve pasted and labels the request accordingly. It’s sent from your browser straight through to askbiz.co for that one request only — the console never stores, logs, or re-displays it, the same policy as every key and webhook secret in this product. Paste it fresh each time; it isn’t remembered between visits or endpoint switches.',
   },
   {
     name: 'Edit the request body and send it',
-    text: 'Each endpoint starts with a realistic example body pre-filled — edit it to match what you actually want to test, then click Send request. This is a real call: a billed endpoint (scan, whatsapp/send) really debits your balance on success, and a real WhatsApp message or merchant consent email really goes out. It’s not a sandbox or a dry run.',
+    text: 'Each endpoint starts with a realistic example body pre-filled — edit it to match what you actually want to test, then click Send request. With a test key, /api/v1/scan, /api/v1/whatsapp/send, and /api/v1/charges all return a realistic canned response with no real side effect — no debit, no WhatsApp message, no Stripe charge. With a live key, it’s a real call: a billed endpoint really debits your balance on success, and a real WhatsApp message, charge, or merchant consent email really goes out.',
   },
   {
     name: 'Read the real response',
@@ -53,11 +53,14 @@ export default function UseTheApiConsoleGuide() {
         { name: 'Use the API console', href: '/docs/guides/use-the-api-console' },
       ]}
     >
-      <div className="not-prose mb-6 p-4 rounded-xl border border-amber-700/40 bg-amber-500/5">
-        <p className="text-amber-200/90 text-sm leading-relaxed">
-          The console sends <strong>real</strong> requests with your <strong>real</strong> key — there&rsquo;s no
-          sandbox or test-mode key today (every key is <code>abz_live_&hellip;</code>). A billed call debits your
-          actual balance on success, and <code>/api/v1/whatsapp/send</code> sends an actual WhatsApp message.
+      <div className="not-prose mb-6 p-4 rounded-xl border border-pulse-700/40 bg-pulse-500/5">
+        <p className="text-pulse-200/90 text-sm leading-relaxed">
+          Use a <code>abz_test_&hellip;</code> key here if you just want to see the shape of a response —
+          <code>/api/v1/scan</code>, <code>/api/v1/whatsapp/send</code>, and <code>/api/v1/charges</code> all return
+          a realistic canned result with no real side effect on a test key: no debit, no WhatsApp message sent, no
+          Stripe charge created. Switch to an <code>abz_live_&hellip;</code> key once you&rsquo;re ready for the
+          request to really happen — a billed call debits your actual balance, and{' '}
+          <code>/api/v1/whatsapp/send</code> sends an actual WhatsApp message.
         </p>
       </div>
 
@@ -83,7 +86,7 @@ export default function UseTheApiConsoleGuide() {
         items={[
           {
             question: 'Is there a sandbox or test mode, so I don’t use real credits or send a real WhatsApp message?',
-            answer: 'Not today — every API key is a live key (abz_live_…), including in the Console, so a billed call debits your real balance and a WhatsApp send really delivers. Use a low-cost endpoint like /api/v1/ask or a real test phone number you control when trying out /api/v1/whatsapp/send.',
+            answer: 'Yes — create a test key (abz_test_…) from the Keys page, or toggle Test when creating one. On /api/v1/scan, /api/v1/whatsapp/send, and /api/v1/charges, a test key always returns a realistic canned response and never debits your balance, sends a real message, or creates a real Stripe charge. /api/v1/ask answers for real in both modes, since it’s never billed and only ever reads your own data. /api/v1/connections isn’t sandboxed yet — it requires a live key, since it reaches a real merchant’s inbox.',
           },
           {
             question: 'Is my API key stored when I use the console?',

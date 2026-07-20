@@ -5,9 +5,9 @@ import { API_PLAN_LIMITS as PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits
 
 export const runtime = 'nodejs'
 
-function generateKey(): string {
+function generateKey(env: 'live' | 'test'): string {
   const rand = randomBytes(24).toString('hex')
-  return `abz_live_${rand}`
+  return `abz_${env}_${rand}`
 }
 
 // ── GET — list all keys for the logged-in user ────────────────────────────────
@@ -18,16 +18,19 @@ export async function GET() {
 
   const { data: keys, error } = await supabase
     .from('api_keys')
-    .select('id, name, key, mode, plan, is_active, requests_month, request_limit_month, credit_balance_cents, last_used_at, created_at, app_id')
+    .select('id, name, key, mode, key_env, plan, is_active, requests_month, request_limit_month, credit_balance_cents, last_used_at, created_at, app_id')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Mask the key — only show last 6 chars
+  // Mask the key — only show last 6 chars. Prefix must come from key_env,
+  // not be hardcoded to abz_live_ — with test keys now existing, a
+  // hardcoded prefix would render every test key's masked display as if
+  // it were live, defeating the whole point of an at-a-glance distinction.
   const masked = (keys || []).map(k => ({
     ...k,
-    key: `abz_live_${'•'.repeat(10)}${k.key.slice(-6)}`,
+    key: `abz_${k.key_env}_${'•'.repeat(10)}${k.key.slice(-6)}`,
   }))
 
   return NextResponse.json({ keys: masked })
@@ -41,6 +44,13 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { name = 'My API Key', mode = 'generic', app_id = null } = body
+
+  // Sandbox / test-mode keys. Default to 'live' at the API layer for
+  // backward compatibility — the dashboard UI defaults its own toggle to
+  // Test for new developers (a safety nudge), but this endpoint's default
+  // must stay 'live' so any existing caller that omits the field keeps
+  // today's behavior.
+  const requestedEnv = body.env === 'test' ? 'test' : 'live'
 
   // Optional app grouping — if given, must be an app the caller actually owns.
   // Grouping is opt-in: omitting app_id keeps a key exactly as it works today.
@@ -75,7 +85,7 @@ export async function POST(request: NextRequest) {
   }
 
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free
-  const key = generateKey()
+  const key = generateKey(requestedEnv)
 
   const { data, error } = await supabase
     .from('api_keys')
@@ -84,6 +94,7 @@ export async function POST(request: NextRequest) {
       key,
       name,
       mode,
+      key_env:              requestedEnv,
       plan,
       app_id,
       request_limit_month:  limits.month,
@@ -111,6 +122,10 @@ export async function PATCH(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // key_env is deliberately not editable here — it's set once at creation
+  // (POST) and immutable after, same as Stripe's own live/test key model.
+  // A key that could flip from test to live in place would undermine every
+  // guard downstream that trusts key_env as a stable signal.
   const body = await request.json()
   const { id, name, is_active, app_id } = body
 
