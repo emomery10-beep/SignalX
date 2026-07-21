@@ -285,43 +285,55 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
         />
       )}
 
-      {/* Manual entry form */}
+      {/* Manual entry form — rendered as a true full-screen/centered modal (fixed
+          backdrop + opaque panel, above the floating quick-scan FAB's z-index:50)
+          so it never shares scroll position with, or visually bleeds into, the
+          "By Category" chart underneath it. Was previously an inline block sitting
+          directly in normal document flow, which is what caused the overlap. */}
       {showManual && (
-        <div style={{ borderRadius: 12, border: `1px solid ${INDIGO}30`, background: `${INDIGO}04`, padding: '16px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('cfo_expenses.add_manually_title')}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_vendor')}</label>
-              <input value={manualForm.vendor} onChange={e => setManualForm(p => ({ ...p, vendor: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor')} style={inputStyle} />
+        <div
+          onClick={() => setShowManual(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 999, backdropFilter: 'blur(2px)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '88vh' : '90vh', overflowY: 'auto', background: 'var(--bg)', border: `1px solid ${INDIGO}30`, borderRadius: isMobile ? '16px 16px 0 0' : 14, boxShadow: '0 12px 40px rgba(0,0,0,.3)', zIndex: 1000, padding: 16, boxSizing: 'border-box' }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('cfo_expenses.add_manually_title')}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_vendor')}</label>
+                <input value={manualForm.vendor} onChange={e => setManualForm(p => ({ ...p, vendor: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor')} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_amount', { sym })}</label>
+                <input type="number" min="0" step="0.01" value={manualForm.amount || ''} onChange={e => setManualForm(p => ({ ...p, amount: Number(e.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_date')}</label>
+                <input type="date" value={manualForm.date} onChange={e => setManualForm(p => ({ ...p, date: e.target.value }))} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_category')}</label>
+                <select value={manualForm.category} onChange={e => setManualForm(p => ({ ...p, category: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+                  {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_amount', { sym })}</label>
-              <input type="number" min="0" step="0.01" value={manualForm.amount || ''} onChange={e => setManualForm(p => ({ ...p, amount: Number(e.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={inputStyle} />
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_notes')}</label>
+              <input value={manualForm.notes} onChange={e => setManualForm(p => ({ ...p, notes: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes')} style={inputStyle} />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_date')}</label>
-              <input type="date" value={manualForm.date} onChange={e => setManualForm(p => ({ ...p, date: e.target.value }))} style={inputStyle} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowManual(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_expenses.cancel')}</button>
+              <button
+                onClick={() => saveExpense(manualForm)}
+                disabled={!manualForm.vendor || !manualForm.amount || saving}
+                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!manualForm.vendor || !manualForm.amount) ? 0.5 : 1 }}
+              >
+                {saving ? tc('cfo_expenses.saving') : tc('cfo_expenses.save_expense')}
+              </button>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_category')}</label>
-              <select value={manualForm.category} onChange={e => setManualForm(p => ({ ...p, category: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
-              </select>
-            </div>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_notes')}</label>
-            <input value={manualForm.notes} onChange={e => setManualForm(p => ({ ...p, notes: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes')} style={inputStyle} />
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setShowManual(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_expenses.cancel')}</button>
-            <button
-              onClick={() => saveExpense(manualForm)}
-              disabled={!manualForm.vendor || !manualForm.amount || saving}
-              style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!manualForm.vendor || !manualForm.amount) ? 0.5 : 1 }}
-            >
-              {saving ? tc('cfo_expenses.saving') : tc('cfo_expenses.save_expense')}
-            </button>
           </div>
         </div>
       )}
