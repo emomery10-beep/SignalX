@@ -262,7 +262,7 @@ export default function InteractivePosDemo({ tc, lang }: { tc: Tc; lang?: string
       </div>
 
       <style>{`
-        .ipos-qty{width:22px;height:22px;border-radius:6px;border:1px solid ${P.border};background:${P.bg};cursor:pointer;font-size:13px;font-weight:700;color:${P.muted}}
+        .ipos-qty{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;line-height:1;border-radius:6px;border:1px solid ${P.border};background:${P.bg};cursor:pointer;font-size:13px;font-weight:700;color:${P.muted}}
         .ipos-tap{transition:transform .12s ease}.ipos-tap:active{transform:scale(.95)}
         @keyframes ipos-in{0%{opacity:0;transform:translateX(10px)}100%{opacity:1;transform:translateX(0)}}
         @keyframes ipos-pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
