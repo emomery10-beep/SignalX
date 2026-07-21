@@ -129,7 +129,9 @@ export async function PUT(req: NextRequest) {
 
   const menuList = (menuItems || []).slice(0, 150).map((m: any) => `- ${m.name}`).join('\n')
 
-  const { text: _groqText, model, usage } = await visionAI(image, `You are a restaurant waste tracking assistant. Look at this photo of food waste.
+  let _groqText: string, model: string, usage: { input_tokens: number; output_tokens: number }
+  try {
+    ;({ text: _groqText, model, usage } = await visionAI(image, `You are a restaurant waste tracking assistant. Look at this photo of food waste.
 
 Identify:
 1. What food item is being wasted
@@ -155,7 +157,11 @@ Rules:
 - reason: one of: expired | dropped | overcooked | returned | spoiled | overproduced | trimming | other
 - menu_item_name: the closest match from the menu list above, or null if nothing fits
 - confidence: 0-100
-- notes: brief observation (max 20 words) or ""`, 512)
+- notes: brief observation (max 20 words) or ""`, 512))
+  } catch (err: any) {
+    console.error('restaurant/waste vision error:', err)
+    return NextResponse.json({ recognized: null }, { status: 500 })
+  }
   logUsage({ route: 'pos/restaurant/waste', model, usage, userId: auth.ownerId })
 
   const jsonMatch = _groqText.trim().match(/\{[\s\S]*\}/)
