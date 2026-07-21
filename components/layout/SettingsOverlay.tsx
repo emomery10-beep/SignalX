@@ -61,7 +61,9 @@ export default function SettingsOverlay({ user, geo, onClose }: Props) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
+    // Hard nav — a soft push can leave this account's cached dashboard
+    // renderable in the Router Cache for whoever signs in next on this tab.
+    window.location.href = '/'
   }
 
   return (

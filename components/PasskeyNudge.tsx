@@ -1,9 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { PASSKEY_NUDGE_DISMISSED_KEY } from '@/lib/passkey-nudge'
+
+// Hard navigation, not router.push — this fires right after a session
+// change (sign-in just completed). Next's client Router Cache is keyed by
+// pathname only, so a soft push to a route visited earlier in this tab (e.g.
+// a previous account's /pos on a shared device) can serve that OLD render
+// instead of fetching fresh. A full navigation guarantees the new cookies
+// are what the server sees.
+const goTo = (destination: string) => { window.location.href = destination }
 
 // Shown once after a successful email/password or phone+PIN auth (signup or
 // sign-in) to nudge the user toward adding a passkey — skipped entirely if
@@ -15,7 +22,6 @@ import { PASSKEY_NUDGE_DISMISSED_KEY } from '@/lib/passkey-nudge'
 // nudge UI (and navigates itself once the user dismisses/completes it), or
 // renders nothing and navigates straight to `destination` immediately.
 export default function PasskeyNudge({ destination }: { destination: string }) {
-  const router = useRouter()
   const supabase = createClient()
   const { tc } = useLang()
 
@@ -28,7 +34,7 @@ export default function PasskeyNudge({ destination }: { destination: string }) {
     ;(async () => {
       try {
         if (typeof window !== 'undefined' && localStorage.getItem(PASSKEY_NUDGE_DISMISSED_KEY)) {
-          if (!cancelled) router.push(destination)
+          if (!cancelled) goTo(destination)
           return
         }
         const auth = supabase.auth as any
@@ -37,13 +43,13 @@ export default function PasskeyNudge({ destination }: { destination: string }) {
           const res = await listFn.call(auth)
           const passkeys = res?.data?.passkeys || res?.data || []
           if (Array.isArray(passkeys) && passkeys.length > 0) {
-            if (!cancelled) router.push(destination)
+            if (!cancelled) goTo(destination)
             return
           }
         }
         if (!cancelled) setShow(true)
       } catch {
-        if (!cancelled) router.push(destination)
+        if (!cancelled) goTo(destination)
       }
     })()
     return () => { cancelled = true }
@@ -52,7 +58,7 @@ export default function PasskeyNudge({ destination }: { destination: string }) {
 
   const dismiss = () => {
     if (dontRemind && typeof window !== 'undefined') localStorage.setItem(PASSKEY_NUDGE_DISMISSED_KEY, '1')
-    router.push(destination)
+    goTo(destination)
   }
 
   const addPasskey = async () => {
@@ -68,7 +74,7 @@ export default function PasskeyNudge({ destination }: { destination: string }) {
       // add a passkey later from settings.
     } finally {
       setBusy(false)
-      router.push(destination)
+      goTo(destination)
     }
   }
 

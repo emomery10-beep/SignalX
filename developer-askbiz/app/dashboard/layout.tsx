@@ -45,7 +45,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push('/signin')
+    // Hard nav — a soft push can leave this account's cached dashboard
+    // renderable in the Router Cache for whoever signs in next on this tab.
+    window.location.href = '/signin'
   }
 
   if (!checked) {

@@ -150,7 +150,7 @@ function AuthPage() {
         // onboarding completes instead (see finish()/skip() in
         // app/onboarding/page.tsx), so a brand-new user isn't asked to set up
         // a passkey before they've even named their business.
-        if (data.session) { router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
+        if (data.session) { window.location.href = shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding' }
         else { setSuccess(tc('auth.ok_check_inbox', { email })) }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -173,7 +173,10 @@ function AuthPage() {
       const { data, error } = await (supabase.auth as any).signInWithPasskey()
       if (error) throw error
       if (data?.session) {
-        router.push(getPostAuthRedirect())
+        // Hard nav, not router.push — see PasskeyNudge.tsx's goTo() comment.
+        // A soft push here can render a previous account's cached /pos from
+        // this same tab (shared device) before the new session is reflected.
+        window.location.href = getPostAuthRedirect()
       }
     } catch (e: any) {
       const msg = e?.message || e?.error_description || tc('auth.err_passkey_failed')
@@ -234,7 +237,7 @@ function AuthPage() {
         if (error) throw error
         // Bypasses the passkey nudge — see the matching comment on the email
         // signup path above.
-        router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding')
+        window.location.href = shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding'
       } else {
         const res = await fetch('/api/auth/phone-pin', {
           method: 'POST',

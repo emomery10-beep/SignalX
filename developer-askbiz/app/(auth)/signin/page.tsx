@@ -1,6 +1,6 @@
 'use client'
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { phoneToSyntheticEmail, isValidPin } from '@/lib/phone-auth'
@@ -26,7 +26,6 @@ export default function DeveloperSignInPage() {
 }
 
 function DeveloperSignInForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
 
@@ -63,7 +62,11 @@ function DeveloperSignInForm() {
     try {
       const { data, error } = await (supabase.auth as any).signInWithPasskey()
       if (error) throw error
-      if (data?.session) router.push(nextPath)
+      // Hard nav, not router.push — see main app's PasskeyNudge.tsx goTo()
+      // comment. This subdomain shares the account/session cookie with
+      // askbiz.co/pos.askbiz.co, so a soft push here can render a different
+      // account's cached dashboard from earlier in this same tab.
+      if (data?.session) window.location.href = nextPath
     } catch (e: any) {
       const msg = e?.message || e?.error_description || 'Passkey sign-in failed'
       const fullText = `${msg} ${e?.name || ''}`
@@ -104,12 +107,12 @@ function DeveloperSignInForm() {
         if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
           throw new Error('An account with this email already exists — sign in instead.')
         }
-        if (data.session) router.push(nextPath)
+        if (data.session) window.location.href = nextPath
         else setSuccess(`Check ${email} for a verification link to finish signing up.`)
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        router.push(nextPath)
+        window.location.href = nextPath
       }
     } catch (e: any) {
       setError(e?.message || 'Sign-in failed')
@@ -132,7 +135,7 @@ function DeveloperSignInForm() {
         if (!res.ok) throw new Error(data.error || 'Sign-up failed')
         const { error } = await supabase.auth.signInWithPassword({ email: phoneToSyntheticEmail(phone), password: pin })
         if (error) throw error
-        router.push(nextPath)
+        window.location.href = nextPath
       } else {
         const res = await fetch('/api/auth/phone-pin', {
           method: 'POST',
@@ -146,7 +149,7 @@ function DeveloperSignInForm() {
           refresh_token: data.session.refresh_token,
         })
         if (error) throw error
-        router.push(nextPath)
+        window.location.href = nextPath
       }
     } catch (e: any) {
       setError(e?.message || 'Sign-in failed')

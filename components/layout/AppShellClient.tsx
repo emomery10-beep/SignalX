@@ -237,7 +237,9 @@ export default function AppShellClient({ user, conversations, children }: {
   useEffect(() => { setSidebarOpen(false); setMoreOpen(false) }, [pathname])
   useMotion()
 
-  const signOut = async () => { await supabase.auth.signOut(); router.push('/') }
+  // Hard nav — a soft push can leave this account's cached dashboard
+  // renderable in the Router Cache for whoever signs in next on this tab.
+  const signOut = async () => { await supabase.auth.signOut(); window.location.href = '/' }
   const newChat = () => router.push('/ask')
 
   const today = new Date().toDateString()

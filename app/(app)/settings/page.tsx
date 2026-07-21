@@ -1,6 +1,5 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
 import { useLang } from '@/components/LanguageProvider'
@@ -1674,7 +1673,6 @@ function CompliancePanel() {
 // ── Page shell ────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const router  = useRouter()
   const supabase = createClient()
   const { tc } = useLang()
   const [active, setActive] = useState<Section>('profile')
@@ -1690,7 +1688,9 @@ export default function SettingsPage() {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
+    // Hard nav — a soft push can leave this account's cached dashboard
+    // renderable in the Router Cache for whoever signs in next on this tab.
+    window.location.href = '/'
   }
 
   const activeItem = NAV.find(n => n.id === active)
