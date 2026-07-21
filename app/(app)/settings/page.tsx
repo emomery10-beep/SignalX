@@ -8,6 +8,7 @@ import type { Lang } from '@/lib/i18n'
 import { CURRENCIES } from '@/lib/geo'
 import { PLAN_FEATURES, getPlanFeatures } from '@/lib/plans'
 import { compressLogoToDataUrl } from '@/lib/image-compress'
+import { formatDate } from '@/lib/i18n-format'
 import ApiKeys from '@/components/settings/ApiKeys'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -1296,7 +1297,7 @@ type DevConnection = {
 }
 
 function ConnectedAppsCard() {
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
   const [connections, setConnections] = useState<DevConnection[] | null>(null)
   const [appMeta, setAppMeta] = useState<Record<string, { name: string; logo_url: string | null }>>({})
   const [revoking, setRevoking] = useState<string | null>(null)
@@ -1363,7 +1364,7 @@ function ConnectedAppsCard() {
                 <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)' }}>{name}</div>
                 <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 1 }}>
                   {(c.scopes || []).map(s => SCOPE_LABELS[s] || s).join(', ') || '—'}
-                  {c.approved_at && ` · ${tc('settings.connected_apps_connected_since')} ${new Date(c.approved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                  {c.approved_at && ` · ${tc('settings.connected_apps_connected_since')} ${formatDate(lang, c.approved_at)}`}
                 </div>
               </div>
               <button onClick={() => revoke(c)} disabled={revoking === c.id}
