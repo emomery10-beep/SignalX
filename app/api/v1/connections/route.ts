@@ -23,22 +23,15 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS })
 }
 
+// Fixed, non-real merchant identity for sandbox connections — never a real
+// inbox, never a real AskBiz account.
+const FIXTURE_MERCHANT_EMAIL = 'fixture-merchant@sandbox.askbiz.co'
+
 export async function POST(request: NextRequest) {
   const start = Date.now()
   const auth = await authenticateApiKey(request)
   if (!auth.ok) return auth.response
   const { key, supabase } = auth
-
-  // A connection request reaches a real merchant's real inbox/consent
-  // screen — there's no safe way to simulate that without a fixture
-  // merchant account, which doesn't exist yet (tracked as a fast-follow).
-  // Block outright rather than let a test key spam a real merchant email.
-  if (key.key_env === 'test') {
-    return NextResponse.json(
-      { error: 'Sandbox connections aren’t available yet — use a live key for /api/v1/connections' },
-      { status: 403, headers: CORS }
-    )
-  }
 
   let body: { merchant_email?: string; scopes?: Scope[] }
   try {
@@ -59,6 +52,35 @@ export async function POST(request: NextRequest) {
   const requestedScopes = body.scopes !== undefined ? body.scopes : [...ALLOWED_SCOPES]
   if (!Array.isArray(requestedScopes) || requestedScopes.some(s => !ALLOWED_SCOPES.includes(s))) {
     return NextResponse.json({ error: `"scopes" must be an array from: ${ALLOWED_SCOPES.join(', ')}` }, { status: 400, headers: CORS })
+  }
+
+  // Sandbox: a real connection reaches a real merchant's real inbox and
+  // consent screen — there's nothing safe to simulate there, so instead of
+  // going through that flow at all, hand back an already-active fixture
+  // connection instantly. No email sent, no real AskBiz account touched,
+  // whatever merchant_email was requested is ignored and replaced with a
+  // fixed sandbox address. Mirrors /api/v1/scan's test-mode shape: a hard
+  // early return before any real-data/side-effect path, test_mode: true.
+  if (key.key_env === 'test') {
+    const confirmationToken = randomBytes(24).toString('hex')
+    const { data: fixture, error: fixtureError } = await supabase
+      .from('developer_connections')
+      .insert({
+        key_id: key.id,
+        app_id: key.app_id,
+        merchant_email: FIXTURE_MERCHANT_EMAIL,
+        confirmation_token: confirmationToken,
+        scopes: requestedScopes,
+        status: 'active',
+        is_fixture: true,
+        approved_at: new Date().toISOString(),
+      })
+      .select('id, merchant_email, status, scopes, app_id, created_at, expires_at')
+      .single()
+    if (fixtureError) return NextResponse.json({ error: fixtureError.message }, { status: 500, headers: CORS })
+
+    await recordRequest(supabase, key, '/api/v1/connections', 200, Date.now() - start)
+    return NextResponse.json({ connection: { ...fixture, test_mode: true } }, { headers: CORS })
   }
 
   const { data: existingActive } = await supabase

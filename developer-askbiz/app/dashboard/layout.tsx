@@ -14,6 +14,7 @@ const NAV = [
   { href: '/dashboard/charges', label: 'Charges', icon: CardIcon },
   { href: '/dashboard/connections', label: 'Connections', icon: LinkIcon },
   { href: '/dashboard/console', label: 'Console', icon: ConsoleIcon },
+  { href: '/dashboard/verification', label: 'Verification', icon: VerificationIcon },
   { href: '/dashboard/docs', label: 'Docs', icon: DocIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
 ]
@@ -30,6 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const supabase = createClient()
   const [checked, setChecked] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -40,6 +42,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     })
     return () => { cancelled = true }
   }, [pathname, router, supabase])
+
+  // Status dot on the nav item — a lightweight signal so a business doesn't
+  // have to click into Verification just to see where it stands.
+  useEffect(() => {
+    if (!checked) return
+    fetch('/api/dashboard-verification').then(r => r.json()).then(d => {
+      setVerificationStatus(d.verification?.status ?? null)
+    }).catch(() => {})
+  }, [checked])
 
   useEffect(() => { setMobileOpen(false) }, [pathname])
 
@@ -64,6 +75,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className={`flex items-center gap-2.5 px-3 py-3 rounded-md text-sm font-medium transition-colors ${focusRing} ${active ? 'bg-ink-700 text-ink-50' : 'text-ink-300 hover:text-ink-50 hover:bg-ink-800'}`}>
             <Icon className="w-4 h-4 flex-shrink-0" />
             {item.label}
+            {item.href === '/dashboard/verification' && verificationStatus && (
+              <span
+                aria-label={`Verification ${verificationStatus}`}
+                className={`ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  verificationStatus === 'approved' ? 'bg-signal-400' : verificationStatus === 'pending' ? 'bg-amber-400' : 'bg-red-400'
+                }`}
+              />
+            )}
           </Link>
         )
       })}
@@ -152,6 +171,9 @@ function LinkIcon({ className }: { className?: string }) {
 }
 function DocIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>
+}
+function VerificationIcon({ className }: { className?: string }) {
+  return <svg {...iconProps(className)}><path d="M12 2l2.4 1.4 2.8-.3 1.2 2.5 2.5 1.2-.3 2.8L22 12l-1.4 2.4.3 2.8-2.5 1.2-1.2 2.5-2.8-.3L12 22l-2.4-1.4-2.8.3-1.2-2.5-2.5-1.2.3-2.8L2 12l1.4-2.4-.3-2.8 2.5-1.2 1.2-2.5 2.8.3z" /><path d="M9 12l2 2 4-4" /></svg>
 }
 function SettingsIcon({ className }: { className?: string }) {
   return <svg {...iconProps(className)}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>

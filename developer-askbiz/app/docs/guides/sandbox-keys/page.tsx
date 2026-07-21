@@ -103,7 +103,7 @@ export default function SandboxKeysGuide() {
           </tr>
           <tr>
             <td><code>POST /api/v1/connections</code></td>
-            <td>Not available yet on a test key — a connection request reaches a real merchant&rsquo;s inbox, and there&rsquo;s no fixture merchant to test against today. Use a live key.</td>
+            <td>Returns an already-active fixture connection instantly on a test key — no real merchant inbox is reached, <code>merchant_email</code> in the response is a fixed sandbox address, and <code>connection.test_mode</code> is <code>true</code>.</td>
           </tr>
         </tbody>
       </table>

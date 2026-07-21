@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 // Session-authenticated (mirrors /api/v1/keys) — managing webhook endpoints
 // is an account-settings action, not a per-request API call, so it's driven
 // from the developer dashboard rather than gated by x-api-key.
-const ALLOWED_EVENTS = ['sale.created', 'purchase_order.received', 'stock.low'] as const
+const ALLOWED_EVENTS = ['sale.created', 'purchase_order.received', 'stock.low', 'connection.approved', 'connection.revoked'] as const
 
 function generateSecret(): string {
   return `whsec_${randomBytes(24).toString('hex')}`

@@ -25,7 +25,7 @@ const statusColor: Record<string, string> = {
   dead: 'bg-red-600/20 text-red-300',
 }
 
-const EVENT_TYPES = ['sale.created', 'purchase_order.received', 'stock.low'] as const
+const EVENT_TYPES = ['sale.created', 'purchase_order.received', 'stock.low', 'connection.approved', 'connection.revoked'] as const
 
 const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
 const inputCls = `w-full px-3 py-3 rounded-lg border border-ink-600 bg-ink-950 text-ink-50 text-sm transition-colors ${focusRing}`

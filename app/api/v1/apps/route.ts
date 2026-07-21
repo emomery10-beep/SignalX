@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { randomBytes } from 'crypto'
 
 export const runtime = 'nodejs'
+
+function generateVerificationToken(): string {
+  return randomBytes(16).toString('hex')
+}
 
 // Session-authenticated, same pattern as app/api/v1/keys/route.ts — creating
 // and managing an "app" is an account-settings action, not a per-request API
@@ -18,7 +23,7 @@ export async function GET() {
 
   const { data: apps, error } = await supabase
     .from('developer_apps')
-    .select('id, name, logo_url, redirect_uri, created_at')
+    .select('id, name, logo_url, redirect_uri, redirect_uri_verification_token, redirect_uri_verified_at, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -60,8 +65,18 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('developer_apps')
-    .insert({ user_id: user.id, name, logo_url: body.logo_url || null, redirect_uri: body.redirect_uri || null })
-    .select('id, name, logo_url, redirect_uri, created_at')
+    .insert({
+      user_id: user.id,
+      name,
+      logo_url: body.logo_url || null,
+      redirect_uri: body.redirect_uri || null,
+      // A fresh, unverified token whenever a redirect_uri is set — the
+      // consent-flow redirect (app/connect/[token]/page.tsx) only ever
+      // fires once redirect_uri_verified_at is set via the DNS TXT check.
+      redirect_uri_verification_token: body.redirect_uri ? generateVerificationToken() : null,
+      redirect_uri_verified_at: null,
+    })
+    .select('id, name, logo_url, redirect_uri, redirect_uri_verification_token, redirect_uri_verified_at, created_at')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -89,7 +104,18 @@ export async function PATCH(request: NextRequest) {
   }
   if (redirect_uri !== undefined) {
     if (redirect_uri && !/^https:\/\//.test(redirect_uri)) return NextResponse.json({ error: '"redirect_uri" must be an https:// URL' }, { status: 400 })
-    update.redirect_uri = redirect_uri || null
+
+    // Changing the URI (or clearing it) invalidates any prior verification
+    // — only re-generate a token when the value actually changes, so
+    // re-PATCHing with the same redirect_uri doesn't force a needless
+    // re-verify.
+    const { data: current } = await supabase.from('developer_apps').select('redirect_uri').eq('id', id).eq('user_id', user.id).maybeSingle()
+    const nextUri = redirect_uri || null
+    if (nextUri !== current?.redirect_uri) {
+      update.redirect_uri_verification_token = nextUri ? generateVerificationToken() : null
+      update.redirect_uri_verified_at = null
+    }
+    update.redirect_uri = nextUri
   }
 
   const { data, error } = await supabase
@@ -97,7 +123,7 @@ export async function PATCH(request: NextRequest) {
     .update(update)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, name, logo_url, redirect_uri, created_at')
+    .select('id, name, logo_url, redirect_uri, redirect_uri_verification_token, redirect_uri_verified_at, created_at')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

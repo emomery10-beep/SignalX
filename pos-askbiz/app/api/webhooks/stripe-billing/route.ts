@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, planUpgradeEmail, posSeatsWelcomeEmail, unsubscribeUrl, firstNameOf } from '@/lib/email'
 import { resolveLocale, type Lang } from '@/lib/i18n-locale'
-import { API_PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
+import { API_PLAN_LIMITS, isApiPlan, withVerifiedMultiplier } from '@/lib/api-plan-limits'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
@@ -49,7 +49,15 @@ export async function POST(request: NextRequest) {
   // reliably resync regardless of which endpoint Stripe actually calls.
   const resyncApiKeyLimits = async (userId: string, planId: string) => {
     if (!isApiPlan(planId)) return
-    const limits = API_PLAN_LIMITS[planId]
+    // Preserve the Verified Business multiplier across plan changes — see
+    // root app's identical addition for the full comment.
+    const { data: verification } = await supabase
+      .from('business_verifications')
+      .select('status')
+      .eq('user_id', userId)
+      .eq('status', 'approved')
+      .maybeSingle()
+    const limits = withVerifiedMultiplier(API_PLAN_LIMITS[planId], !!verification)
     await supabase.from('api_keys').update({
       plan: planId,
       request_limit_month: limits.month,

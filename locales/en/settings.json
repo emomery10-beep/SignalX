@@ -147,6 +147,15 @@
   "priv_read_full": "Read our full",
   "priv_read_full_post": "to understand how your data is handled.",
 
+  "card_connected_apps": "Connected apps",
+  "connected_apps_empty": "No connected apps yet. When you approve a third-party developer app's request to access your AskBiz data, it'll show up here.",
+  "connected_apps_generic_name": "A third-party app",
+  "connected_apps_scope_read_inventory": "Reads your inventory",
+  "connected_apps_revoke": "Revoke",
+  "connected_apps_revoking": "Revoking…",
+  "connected_apps_revoke_confirm": "Revoke access for {name}? They'll no longer be able to read your AskBiz data through the API — you can always reconnect later if they send you a new request.",
+  "connected_apps_connected_since": "Connected since",
+
   "account_title": "Account",
   "account_desc": "Manage your subscription, export your data, or close your account.",
   "card_current_plan": "Current plan",

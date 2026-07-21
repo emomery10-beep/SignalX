@@ -16,3 +16,17 @@ export const API_PLAN_LIMITS: Record<ApiPlan, { month: number; minute: number }>
 export function isApiPlan(value: string): value is ApiPlan {
   return value === 'free' || value === 'growth' || value === 'business'
 }
+
+// Mirrors: lib/api-plan-limits.ts (root) — Verified Business bonus.
+export const VERIFIED_LIMIT_MULTIPLIER = 3
+
+export function withVerifiedMultiplier(
+  limits: { month: number; minute: number },
+  verified: boolean
+): { month: number; minute: number } {
+  if (!verified) return limits
+  return {
+    month:  limits.month === -1 ? -1 : limits.month * VERIFIED_LIMIT_MULTIPLIER,
+    minute: limits.minute * VERIFIED_LIMIT_MULTIPLIER,
+  }
+}

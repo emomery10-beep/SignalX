@@ -140,11 +140,11 @@ export default function ConnectionsReferencePage() {
         <a href="/docs/api-reference/scan">POST /api/v1/scan</a> to read their inventory instead of your own.
       </p>
       <p>
-        This is the one core endpoint <strong>not</strong> available on a test key (<code>abz_test_&hellip;</code>):
-        <code>POST</code> reaches a real merchant&rsquo;s real inbox and consent screen, and there&rsquo;s no safe
-        way to simulate that without a fixture merchant, which doesn&rsquo;t exist yet — every <code>POST</code> call
-        with a test key gets a 403 instead. See{' '}
-        <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a>.
+        On a test key (<code>abz_test_&hellip;</code>), <code>POST</code> never reaches a real merchant — it returns
+        an already-<code>active</code> fixture connection instantly instead, with{' '}
+        <code>merchant_email</code> fixed to a sandbox address regardless of what you send, and{' '}
+        <code>connection.test_mode: true</code> in the response. No email is sent and no real AskBiz account is
+        touched. See <a href="/docs/guides/sandbox-keys">Build safely with a sandbox key</a>.
       </p>
 
       <h2>Request</h2>
@@ -222,8 +222,7 @@ export default function ConnectionsReferencePage() {
         <tbody>
           <tr><td>400</td><td>Invalid <code>merchant_email</code>, or <code>scopes</code> isn&rsquo;t a valid array of recognized scope names. (<code>POST</code> only.)</td></tr>
           <tr><td>401</td><td>Missing or invalid <code>x-api-key</code>.</td></tr>
-          <tr><td>403</td><td>The key is a test key (<code>abz_test_&hellip;</code>) — sandbox connections aren&rsquo;t available yet. Use a live key. (<code>POST</code> only.)</td></tr>
-          <tr><td>409</td><td>An active connection to that <code>merchant_email</code> already exists for this key. (<code>POST</code> only.)</td></tr>
+          <tr><td>409</td><td>An active connection to that <code>merchant_email</code> already exists for this key. (<code>POST</code> only — doesn&rsquo;t apply to test keys, which always get a fresh fixture connection.)</td></tr>
         </tbody>
       </table>
 
@@ -252,7 +251,7 @@ export default function ConnectionsReferencePage() {
           },
           {
             question: 'Can I test this endpoint with a sandbox key?',
-            answer: 'Not yet. POST /api/v1/connections always returns a 403 for a test key — it reaches a real merchant’s real consent screen, and there’s no fixture merchant to test against today. Use a live key for this one endpoint.',
+            answer: 'Yes. POST /api/v1/connections with a test key returns an already-active fixture connection instantly — no real merchant email is contacted, and connection.test_mode is true in the response. merchant_email in the response is always the fixed sandbox address, regardless of what you sent.',
           },
         ]}
       />

@@ -8,6 +8,7 @@ type Connection = {
   status: string
   scopes: string[]
   app_id: string | null
+  is_fixture: boolean
   created_at: string
 }
 
@@ -30,7 +31,7 @@ export default function ConnectionsPage() {
   useEffect(() => {
     supabase
       .from('developer_connections')
-      .select('id, merchant_email, status, scopes, app_id, created_at')
+      .select('id, merchant_email, status, scopes, app_id, is_fixture, created_at')
       .order('created_at', { ascending: false })
       .limit(100)
       .then(({ data, error: fetchError }) => {
@@ -66,7 +67,10 @@ export default function ConnectionsPage() {
           {connections.map(c => (
             <div key={c.id} className="border border-ink-700 rounded-xl p-4 bg-ink-900 flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="text-sm block mb-1">{c.merchant_email}</span>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-sm">{c.merchant_email}</span>
+                  {c.is_fixture && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-600/20 text-amber-300">Sandbox</span>}
+                </div>
                 <span className="text-ink-400 text-xs">{(c.scopes || []).map(s => SCOPE_LABELS[s] || s).join(', ') || 'No scopes granted'}</span>
                 {c.app_id && appNames[c.app_id] && (
                   <span className="block text-signal-300 text-xs mt-0.5">via {appNames[c.app_id]}</span>

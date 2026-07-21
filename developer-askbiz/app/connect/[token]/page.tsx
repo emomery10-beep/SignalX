@@ -18,9 +18,10 @@ type Connection = {
   status: string
   scopes: string[]
   app_id: string | null
+  key_id: string | null
 }
 
-type App = { id: string; name: string; logo_url: string | null }
+type App = { id: string; name: string; logo_url: string | null; user_id: string; redirect_uri: string | null; redirect_uri_verified_at: string | null }
 
 // Merchant-facing approval screen for Phase 4 (see app/api/v1/connections
 // on the main app for the developer side, and the migration
@@ -35,6 +36,7 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
   const supabase = createClient()
   const [connection, setConnection] = useState<Connection | null>(null)
   const [app, setApp] = useState<App | null>(null)
+  const [verified, setVerified] = useState(false)
   const [selectedScopes, setSelectedScopes] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -48,7 +50,7 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
 
       const { data, error: fetchError } = await supabase
         .from('developer_connections')
-        .select('id, merchant_email, status, scopes, app_id')
+        .select('id, merchant_email, status, scopes, app_id, key_id')
         .eq('confirmation_token', params.token)
         .single()
 
@@ -60,10 +62,28 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
       // this connection was grouped under one — a merchant sees "App XYZ
       // wants..." instead of a bare, unnamed request. Not every connection
       // has an app (grouping is opt-in), so a miss here is normal, not an error.
+      let resolvedApp: App | null = null
       if (data.app_id) {
-        const { data: appData } = await supabase.from('developer_apps').select('id, name, logo_url').eq('id', data.app_id).maybeSingle()
-        if (!cancelled && appData) setApp(appData)
+        const { data: appData } = await supabase.from('developer_apps').select('id, name, logo_url, user_id, redirect_uri, redirect_uri_verified_at').eq('id', data.app_id).maybeSingle()
+        if (appData) resolvedApp = appData
       }
+      if (!cancelled) setApp(resolvedApp)
+
+      // Verified-business badge — prefer the app's registered owner (the
+      // more meaningful "business behind this integration" when one
+      // exists), else fall back to the key's owner via a SECURITY DEFINER
+      // RPC (api_keys is owner-only RLS, so the merchant can't read it
+      // directly). Best-effort: a failed check just means no badge, never
+      // blocks the consent flow.
+      try {
+        const { data: isVerified } = resolvedApp
+          ? await supabase.rpc('is_user_verified', { target_user_id: resolvedApp.user_id })
+          : data.key_id
+            ? await supabase.rpc('is_key_owner_verified', { target_key_id: data.key_id })
+            : { data: false }
+        if (!cancelled) setVerified(!!isVerified)
+      } catch { /* badge is a bonus, not required to render the consent screen */ }
+
       setLoading(false)
     }
     load()
@@ -79,6 +99,12 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    // Only the merchant's very first decision (pending → active/revoked)
+    // should ever bounce them off-site — the same "Revoke access" button
+    // also calls respond(false) later from the active state, and that
+    // should just update in place, not redirect.
+    const wasPending = connection?.status === 'pending'
+
     // A merchant can only ever narrow what was requested, never grant a
     // scope the developer didn't ask for — selectedScopes starts as a copy
     // of the requested set and checkboxes only remove from it.
@@ -92,6 +118,18 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
       .eq('confirmation_token', params.token)
 
     if (updateError) { setError(updateError.message); setBusy(false); return }
+
+    // Only ever redirect once the app has proven domain ownership via DNS
+    // TXT (redirect_uri_verified_at) — an unverified or absent redirect_uri
+    // means the merchant just stays on this page, the existing safe default.
+    if (wasPending && app?.redirect_uri && app.redirect_uri_verified_at) {
+      const target = new URL(app.redirect_uri)
+      target.searchParams.set('connection_id', connection?.id || '')
+      target.searchParams.set('status', approve ? 'approved' : 'declined')
+      window.location.href = target.toString()
+      return
+    }
+
     setConnection(c => c ? { ...c, status: update.status, scopes: approve ? selectedScopes : c.scopes } : c)
     setBusy(false)
   }
@@ -111,7 +149,11 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
                   ? <img src={app.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
                   : <div className="w-8 h-8 rounded-lg bg-signal-600/20 flex-shrink-0" />}
                 <span className="text-ink-100 text-sm font-semibold">{app.name}</span>
+                {verified && <VerifiedBadge />}
               </div>
+            )}
+            {!app && verified && (
+              <div className="mb-3"><VerifiedBadge /></div>
             )}
             <h1 className="font-display text-lg font-bold mb-1">
               {app ? `Connect ${app.name} to your AskBiz account?` : 'Connect this app to your AskBiz account?'}
@@ -158,5 +200,17 @@ export default function ConnectConfirmationPage({ params }: { params: { token: s
         )}
       </div>
     </div>
+  )
+}
+
+function VerifiedBadge() {
+  return (
+    <span title="This business has been verified by AskBiz" className="inline-flex items-center gap-1 text-signal-300 text-xs font-medium">
+      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l2.4 1.4 2.8-.3 1.2 2.5 2.5 1.2-.3 2.8L22 12l-1.4 2.4.3 2.8-2.5 1.2-1.2 2.5-2.8-.3L12 22l-2.4-1.4-2.8.3-1.2-2.5-2.5-1.2.3-2.8L2 12l1.4-2.4-.3-2.8 2.5-1.2 1.2-2.5 2.8.3z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+      Verified
+    </span>
   )
 }

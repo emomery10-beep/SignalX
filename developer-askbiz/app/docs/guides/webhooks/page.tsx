@@ -9,8 +9,8 @@ import { howTo, SITE } from '@/lib/schema'
 const URL = `${SITE}/docs/guides/webhooks`
 
 export const metadata: Metadata = {
-  title: 'Subscribe to webhooks — sale.created, purchase_order.received, stock.low — AskBiz API guide',
-  description: 'Set up AskBiz webhooks from the developer dashboard: register an endpoint and event types, save the whsec_ secret, verify the x-askbiz-signature header, and test a delivery before going live. Delivery runs on a ~5-minute cron sweep, not instantly.',
+  title: 'Subscribe to webhooks — sale.created, connection.approved, and more — AskBiz API guide',
+  description: 'Set up AskBiz webhooks from the developer dashboard: register an endpoint and event types (sale.created, purchase_order.received, stock.low, connection.approved, connection.revoked), save the whsec_ secret, verify the x-askbiz-signature header, and test a delivery before going live. Delivery runs on a ~5-minute cron sweep, not instantly.',
   alternates: { canonical: URL },
   openGraph: {
     title: 'Subscribe to webhooks — AskBiz API',
@@ -36,7 +36,7 @@ app.post('/webhooks/askbiz', express.raw({ type: 'application/json' }), (req, re
   }
 
   const { event, data } = JSON.parse(req.body)
-  // event is one of: sale.created | purchase_order.received | stock.low
+  // event is one of: sale.created | purchase_order.received | stock.low | connection.approved | connection.revoked
   console.log(event, data)
   res.status(200).send('ok')
 })`
@@ -59,7 +59,7 @@ def askbiz_webhook():
 
     payload = request.get_json()
     event, data = payload["event"], payload["data"]
-    # event is one of: sale.created | purchase_order.received | stock.low
+    # event is one of: sale.created | purchase_order.received | stock.low | connection.approved | connection.revoked
     return "ok", 200`
 
 const saleCreatedPayload = `{
@@ -94,10 +94,32 @@ const stockLowPayload = `{
   }
 }`
 
+const connectionApprovedPayload = `{
+  "event": "connection.approved",
+  "data": {
+    "connection_id": "c1a2b3c4-...",
+    "app_id": "d4e5f6a7-...",
+    "merchant_email": "owner@example-shop.com",
+    "scopes": ["read_inventory"],
+    "test_mode": false,
+    "approved_at": "2026-07-21T09:12:00.000Z"
+  }
+}`
+
+const connectionRevokedPayload = `{
+  "event": "connection.revoked",
+  "data": {
+    "connection_id": "c1a2b3c4-...",
+    "app_id": "d4e5f6a7-...",
+    "merchant_email": "owner@example-shop.com",
+    "revoked_at": "2026-08-02T14:03:00.000Z"
+  }
+}`
+
 const steps = [
   {
     name: 'Create a webhook from the dashboard',
-    text: 'Webhooks aren’t created with an x-api-key REST call — they’re managed from the developer.askbiz.co dashboard’s Webhooks page, the same way you’d manage account settings. Add your endpoint URL (must be https://) and pick which event types to subscribe to: sale.created, purchase_order.received, stock.low. You can subscribe to one, two, or all three, and you can hold up to 10 webhooks per account.',
+    text: 'Webhooks aren’t created with an x-api-key REST call — they’re managed from the developer.askbiz.co dashboard’s Webhooks page, the same way you’d manage account settings. Add your endpoint URL (must be https://) and pick which event types to subscribe to: sale.created, purchase_order.received, stock.low, connection.approved, connection.revoked. You can subscribe to as few or as many as you like, and you can hold up to 10 webhooks per account.',
   },
   {
     name: 'Save the whsec_ secret — it’s shown once',
@@ -105,7 +127,7 @@ const steps = [
   },
   {
     name: 'Verify the x-askbiz-signature header on your receiving endpoint',
-    text: 'Every delivery is signed: the request body is HMAC-SHA256’d with your webhook secret, and the resulting hex digest is sent in the x-askbiz-signature header. Compute the same HMAC over the raw request body on your end and compare it to the header using a constant-time comparison — never a plain === or ==, which leaks timing information. Reject the request if it doesn’t match. Each delivery’s JSON body is { "event": "…", "data": { … } }, where event is one of the three subscribed event types.',
+    text: 'Every delivery is signed: the request body is HMAC-SHA256’d with your webhook secret, and the resulting hex digest is sent in the x-askbiz-signature header. Compute the same HMAC over the raw request body on your end and compare it to the header using a constant-time comparison — never a plain === or ==, which leaks timing information. Reject the request if it doesn’t match. Each delivery’s JSON body is { "event": "…", "data": { … } }, where event is one of your subscribed event types.',
     code: (
       <CodeTabs
         samples={[
@@ -129,7 +151,7 @@ export default function WebhooksGuide() {
   return (
     <ArticleShell
       title="Subscribe to real-time webhooks"
-      description="Webhooks let you react to sale.created, purchase_order.received, and stock.low events instead of polling. They're set up from the developer dashboard, not called with an x-api-key, and delivery runs on a ~5-minute cron sweep rather than instantly."
+      description="Webhooks let you react to sale.created, purchase_order.received, stock.low, connection.approved, and connection.revoked events instead of polling. They're set up from the developer dashboard, not called with an x-api-key, and delivery runs on a ~5-minute cron sweep rather than instantly."
       breadcrumbs={[
         { name: 'Docs', href: '/docs' },
         { name: 'Guides', href: '/docs/guides' },
@@ -137,12 +159,13 @@ export default function WebhooksGuide() {
       ]}
     >
       <p>
-        AskBiz webhooks push three event types to a URL you control: <code>sale.created</code>,{' '}
-        <code>purchase_order.received</code>, and <code>stock.low</code> — no others exist today. Unlike every
-        other page in this API reference, webhooks are <strong>not</strong> something a third-party server calls with
-        an <code>x-api-key</code>. They’re an account-settings action: you register the endpoint URL and event
-        types from the developer.askbiz.co dashboard’s Webhooks page, the same place you’d manage API keys.
-        Delivery is asynchronous and runs on a cron sweep roughly every 5 minutes, not instantly.
+        AskBiz webhooks push five event types to a URL you control: <code>sale.created</code>,{' '}
+        <code>purchase_order.received</code>, <code>stock.low</code>, <code>connection.approved</code>, and{' '}
+        <code>connection.revoked</code> — no others exist today. Unlike every other page in this API reference,
+        webhooks are <strong>not</strong> something a third-party server calls with an <code>x-api-key</code>.
+        They’re an account-settings action: you register the endpoint URL and event types from the
+        developer.askbiz.co dashboard’s Webhooks page, the same place you’d manage API keys. Delivery is
+        asynchronous and runs on a cron sweep roughly every 5 minutes, not instantly.
       </p>
 
       <HowToSteps steps={steps} />
@@ -167,6 +190,23 @@ export default function WebhooksGuide() {
         repeatedly on every update while it stays low.
       </p>
       <CodeTabs samples={[{ label: 'Payload', lang: 'json', code: stockLowPayload }]} />
+
+      <h3>connection.approved</h3>
+      <p>
+        Fires when a merchant approves a <a href="/docs/api-reference/connections">Connection</a> request — or,
+        on a test key, the instant a sandbox fixture connection is created (<code>POST /api/v1/connections</code>{' '}
+        with a test key never reaches a real merchant, but still fires this event so you can verify your receiver
+        before going live). <code>test_mode</code> tells the two apart.
+      </p>
+      <CodeTabs samples={[{ label: 'Payload', lang: 'json', code: connectionApprovedPayload }]} />
+
+      <h3>connection.revoked</h3>
+      <p>
+        Fires when a merchant revokes a Connection — from the original <code>/connect/&#123;token&#125;</code>{' '}
+        confirmation page, or from their own AskBiz account&rsquo;s Connected Apps settings. This is the only way
+        to find out about a merchant-initiated revoke without polling <code>GET /api/v1/connections</code>.
+      </p>
+      <CodeTabs samples={[{ label: 'Payload', lang: 'json', code: connectionRevokedPayload }]} />
 
       <h2>What&rsquo;s next</h2>
       <p>

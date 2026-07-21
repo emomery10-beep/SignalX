@@ -19,3 +19,22 @@ export const API_PLAN_LIMITS: Record<ApiPlan, { month: number; minute: number }>
 export function isApiPlan(value: string): value is ApiPlan {
   return value === 'free' || value === 'growth' || value === 'business'
 }
+
+// Verified Business bonus — a flat multiplier applied on top of the plan
+// limits above, not a new plan tier. Applied at the same two snapshot
+// points as the base limits: key creation (app/api/v1/keys/route.ts) and
+// admin approval of a verification (app/api/admin/developers/route.ts,
+// resource=verifications). -1 (business plan's "unlimited" month) is left
+// untouched — multiplying it would silently turn it into a real cap.
+export const VERIFIED_LIMIT_MULTIPLIER = 3
+
+export function withVerifiedMultiplier(
+  limits: { month: number; minute: number },
+  verified: boolean
+): { month: number; minute: number } {
+  if (!verified) return limits
+  return {
+    month:  limits.month === -1 ? -1 : limits.month * VERIFIED_LIMIT_MULTIPLIER,
+    minute: limits.minute * VERIFIED_LIMIT_MULTIPLIER,
+  }
+}

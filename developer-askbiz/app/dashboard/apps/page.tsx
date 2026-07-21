@@ -6,6 +6,8 @@ type App = {
   name: string
   logo_url: string | null
   redirect_uri: string | null
+  redirect_uri_verification_token: string | null
+  redirect_uri_verified_at: string | null
   created_at: string
 }
 
@@ -83,6 +85,28 @@ export default function AppsPage() {
     await load()
   }
 
+  const [verifying, setVerifying] = useState<string | null>(null)
+  const [verifyErrors, setVerifyErrors] = useState<Record<string, string>>({})
+
+  const handleVerify = async (appId: string) => {
+    setVerifying(appId)
+    setVerifyErrors(e => ({ ...e, [appId]: '' }))
+    try {
+      const res = await fetch('/api/dashboard-apps/verify-redirect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: appId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Verification failed')
+      await load()
+    } catch (e: any) {
+      setVerifyErrors(cur => ({ ...cur, [appId]: e.message || 'Verification failed' }))
+    } finally {
+      setVerifying(null)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
@@ -148,7 +172,35 @@ export default function AppsPage() {
                     {keyCount} key{keyCount === 1 ? '' : 's'}
                   </span>
                 </div>
-                {a.redirect_uri && <code className="text-xs text-ink-400 block mb-3">{a.redirect_uri}</code>}
+                {a.redirect_uri && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-xs text-ink-400">{a.redirect_uri}</code>
+                      {a.redirect_uri_verified_at ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-signal-600/20 text-signal-300">Verified</span>
+                      ) : (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-600/20 text-amber-300">Not verified</span>
+                      )}
+                    </div>
+                    {!a.redirect_uri_verified_at && a.redirect_uri_verification_token && (
+                      <div className="mt-2 p-3 rounded-lg bg-ink-800/60 border border-ink-700 max-w-md">
+                        <p className="text-ink-400 text-xs mb-2">
+                          Merchants only get redirected here once you prove you own this domain. Add a DNS TXT record, then verify:
+                        </p>
+                        <code className="text-xs text-ink-200 block mb-1">
+                          _askbiz-challenge.{safeHostname(a.redirect_uri)}
+                        </code>
+                        <code className="text-xs text-ink-200 block mb-2 break-all">
+                          TXT: {a.redirect_uri_verification_token}
+                        </code>
+                        {verifyErrors[a.id] && <p className="text-red-400 text-xs mb-2">{verifyErrors[a.id]}</p>}
+                        <button onClick={() => handleVerify(a.id)} disabled={verifying === a.id} className={ghostBtnCls}>
+                          {verifying === a.id ? 'Checking…' : 'Verify now'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button onClick={() => handleDelete(a.id)} className={ghostBtnCls}>Delete</button>
                 </div>
@@ -159,4 +211,12 @@ export default function AppsPage() {
       )}
     </div>
   )
+}
+
+function safeHostname(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
 }

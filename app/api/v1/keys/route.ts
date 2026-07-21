@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { randomBytes } from 'crypto'
-import { API_PLAN_LIMITS as PLAN_LIMITS, isApiPlan } from '@/lib/api-plan-limits'
+import { API_PLAN_LIMITS as PLAN_LIMITS, isApiPlan, withVerifiedMultiplier } from '@/lib/api-plan-limits'
 
 export const runtime = 'nodejs'
 
@@ -84,7 +84,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free
+  const { data: verification } = await supabase
+    .from('business_verifications')
+    .select('status')
+    .eq('user_id', user.id)
+    .eq('status', 'approved')
+    .maybeSingle()
+  const limits = withVerifiedMultiplier(PLAN_LIMITS[plan] || PLAN_LIMITS.free, !!verification)
   const key = generateKey(requestedEnv)
 
   const { data, error } = await supabase

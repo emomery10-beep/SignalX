@@ -1268,6 +1268,8 @@ function PrivacyPanel() {
               {tc('settings.priv_payment_desc')}
             </p>
           </div>
+
+          <ConnectedAppsCard/>
         </>
       )}
 
@@ -1275,6 +1277,104 @@ function PrivacyPanel() {
         {tc('settings.priv_read_full')} <a href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>{tc('settings.priv_policy_link')}</a> {tc('settings.priv_read_full_post')}
       </p>
     </div>
+  )
+}
+
+// Third-party developer-platform apps the merchant has approved via
+// /connect/[token] (developer-askbiz) — the only place to see or revoke
+// that access used to be the original consent link itself. Direct RLS-
+// enforced client queries/writes, same table + same policies
+// (developer_connections_creator_select, developer_connections_merchant_update)
+// already governing the merchant's own side of that consent flow — no new
+// backend route needed.
+type DevConnection = {
+  id: string
+  status: string
+  scopes: string[]
+  app_id: string | null
+  approved_at: string | null
+}
+
+function ConnectedAppsCard() {
+  const { tc } = useLang()
+  const [connections, setConnections] = useState<DevConnection[] | null>(null)
+  const [appMeta, setAppMeta] = useState<Record<string, { name: string; logo_url: string | null }>>({})
+  const [revoking, setRevoking] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const supabase = createClient()
+    supabase
+      .from('developer_connections')
+      .select('id, status, scopes, app_id, approved_at')
+      .eq('status', 'active')
+      .order('approved_at', { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return
+        const rows = data || []
+        setConnections(rows)
+        const appIds = Array.from(new Set(rows.map(r => r.app_id).filter(Boolean))) as string[]
+        if (appIds.length) {
+          supabase.from('developer_apps').select('id, name, logo_url').in('id', appIds).then(({ data: apps }) => {
+            if (cancelled || !apps) return
+            setAppMeta(Object.fromEntries(apps.map(a => [a.id, { name: a.name, logo_url: a.logo_url }])))
+          })
+        }
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  const SCOPE_LABELS: Record<string, string> = {
+    read_inventory: tc('settings.connected_apps_scope_read_inventory'),
+  }
+
+  const revoke = async (conn: DevConnection) => {
+    const name = (conn.app_id && appMeta[conn.app_id]?.name) || tc('settings.connected_apps_generic_name')
+    if (!confirm(tc('settings.connected_apps_revoke_confirm', { name }))) return
+    setRevoking(conn.id)
+    try {
+      const supabase = createClient()
+      await supabase.from('developer_connections').update({ status: 'revoked', revoked_at: new Date().toISOString() }).eq('id', conn.id)
+      setConnections(cur => (cur || []).filter(c => c.id !== conn.id))
+    } finally {
+      setRevoking(null)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader title={tc('settings.card_connected_apps')}/>
+      {connections === null ? (
+        <div style={{ height: 80, background: 'var(--ev)' }}/>
+      ) : connections.length === 0 ? (
+        <div style={{ padding: '16px 20px' }}>
+          <p style={{ fontSize: 15, color: 'var(--tx3)', margin: 0, lineHeight: 1.5 }}>{tc('settings.connected_apps_empty')}</p>
+        </div>
+      ) : (
+        connections.map((c, i) => {
+          const meta = c.app_id ? appMeta[c.app_id] : undefined
+          const name = meta?.name || tc('settings.connected_apps_generic_name')
+          return (
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: i < connections.length - 1 ? '1px solid var(--b)' : 'none' }}>
+              {meta?.logo_url
+                ? <img src={meta.logo_url} alt="" style={{ width: 34, height: 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}/>
+                : <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--ev)', flexShrink: 0 }}/>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)' }}>{name}</div>
+                <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 1 }}>
+                  {(c.scopes || []).map(s => SCOPE_LABELS[s] || s).join(', ') || '—'}
+                  {c.approved_at && ` · ${tc('settings.connected_apps_connected_since')} ${new Date(c.approved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                </div>
+              </div>
+              <button onClick={() => revoke(c)} disabled={revoking === c.id}
+                style={{ fontSize: 14, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, opacity: revoking === c.id ? .5 : 1 }}>
+                {revoking === c.id ? tc('settings.connected_apps_revoking') : tc('settings.connected_apps_revoke')}
+              </button>
+            </div>
+          )
+        })
+      )}
+    </Card>
   )
 }
 

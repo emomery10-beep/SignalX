@@ -13,6 +13,7 @@ const TABS = [
   { id: 'keys', label: 'Developers & keys' },
   { id: 'connections', label: 'Connections' },
   { id: 'charges', label: 'Charges' },
+  { id: 'verifications', label: 'Verifications' },
 ]
 
 type AdminKey = {
@@ -29,6 +30,13 @@ type AdminCharge = {
   id: string; key_id: string; merchant_email: string; amount_cents: number
   currency: string; status: string; created_at: string
 }
+type AdminVerificationDocument = { id: string; kind: string; uploaded_at: string; url: string | null }
+type AdminVerification = {
+  id: string; user_id: string; user_email: string | null; status: 'pending' | 'approved' | 'rejected'
+  legal_name: string | null; registration_number: string | null; tax_id: string | null; address: string | null
+  submitted_at: string | null; reviewed_at: string | null; rejection_reason: string | null
+  documents: AdminVerificationDocument[]
+}
 
 export default function AdminPage() {
   const [active, setActive] = useState('keys')
@@ -40,6 +48,7 @@ export default function AdminPage() {
       {active === 'keys' && <KeysTab />}
       {active === 'connections' && <ConnectionsTab />}
       {active === 'charges' && <ChargesTab />}
+      {active === 'verifications' && <VerificationsTab />}
     </div>
   )
 }
@@ -247,6 +256,171 @@ function ChargesTab() {
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+const STATUS_BADGE: Record<string, string> = {
+  pending: 'bg-amber-600/20 text-amber-300',
+  approved: 'bg-signal-600/20 text-signal-300',
+  rejected: 'bg-red-600/20 text-red-400',
+}
+
+function VerificationsTab() {
+  const [rows, setRows] = useState<AdminVerification[] | null>(null)
+  const [error, setError] = useState('')
+  const [reviewing, setReviewing] = useState<AdminVerification | null>(null)
+
+  const load = () => {
+    fetch('/api/admin/verifications').then(r => r.json()).then(d => {
+      if (d.error) setError(d.error); else setRows(d.verifications)
+    })
+  }
+  useEffect(load, [])
+
+  return (
+    <div>
+      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+      {!rows && !error && <p className="text-ink-300 text-sm">Loading…</p>}
+      {rows && rows.length === 0 && <p className="text-ink-300 text-sm">No verification submissions yet.</p>}
+      {rows && rows.length > 0 && (
+        <div className="border border-ink-700 rounded-xl overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-ink-700 text-ink-300 text-left bg-ink-900">
+                <th className="px-3 py-2.5 font-medium">Business</th>
+                <th className="px-3 py-2.5 font-medium">Owner</th>
+                <th className="px-3 py-2.5 font-medium">Documents</th>
+                <th className="px-3 py-2.5 font-medium">Status</th>
+                <th className="px-3 py-2.5 font-medium">Submitted</th>
+                <th className="px-3 py-2.5 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(v => (
+                <tr key={v.id} className="border-b border-ink-800 last:border-0">
+                  <td className="px-3 py-2.5 text-ink-100">{v.legal_name || '—'}</td>
+                  <td className="px-3 py-2.5 text-ink-200">{v.user_email || v.user_id.slice(0, 8)}</td>
+                  <td className="px-3 py-2.5 text-ink-300">{v.documents.length}/4</td>
+                  <td className="px-3 py-2.5">
+                    <span className={`px-2 py-0.5 rounded-full ${STATUS_BADGE[v.status]}`}>{v.status}</span>
+                  </td>
+                  <td className="px-3 py-2.5 text-ink-300">{v.submitted_at ? new Date(v.submitted_at).toLocaleDateString() : '—'}</td>
+                  <td className="px-3 py-2.5">
+                    <button onClick={() => setReviewing(v)} className={ghostBtnCls}>Review…</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <ReviewModal verification={reviewing} onClose={() => setReviewing(null)} onReviewed={load} />
+    </div>
+  )
+}
+
+const DOCUMENT_LABEL: Record<string, string> = {
+  registration_certificate: 'Registration certificate',
+  proof_of_address: 'Proof of address',
+  owner_id: "Owner's ID",
+  ownership_disclosure: 'Ownership disclosure',
+}
+
+function ReviewModal({ verification, onClose, onReviewed }: { verification: AdminVerification | null; onClose: () => void; onReviewed: () => void }) {
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [saving, setSaving] = useState<'approve' | 'reject' | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => { if (verification) { setRejectionReason(''); setError('') } }, [verification])
+
+  const submit = async (action: 'approve' | 'reject') => {
+    if (!verification) return
+    if (action === 'reject' && !rejectionReason.trim()) {
+      setError('A rejection reason is required'); return
+    }
+    setSaving(action); setError('')
+    try {
+      const body: Record<string, unknown> = { action, verification_id: verification.id }
+      if (action === 'reject') body.rejection_reason = rejectionReason
+      const res = await fetch('/api/admin/verifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `Could not ${action}`)
+      onReviewed(); onClose()
+    } catch (e: any) {
+      setError(e.message || `Could not ${action}`)
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  return (
+    <Modal open={verification !== null} onClose={onClose} title={`Review — ${verification?.legal_name || ''}`}>
+      {verification && (
+        <div className="space-y-4">
+          <dl className="space-y-2 text-xs">
+            <Row label="Owner" value={verification.user_email || verification.user_id} />
+            <Row label="Registration number" value={verification.registration_number || '—'} />
+            <Row label="Tax ID" value={verification.tax_id || '—'} />
+            <Row label="Address" value={verification.address || '—'} />
+          </dl>
+
+          <div>
+            <p className={labelCls}>Documents ({verification.documents.length}/4)</p>
+            {verification.documents.length === 0 && <p className="text-ink-500 text-xs">None uploaded yet.</p>}
+            <ul className="space-y-1">
+              {verification.documents.map(d => (
+                <li key={d.id} className="text-xs">
+                  {d.url ? (
+                    <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-signal-300 underline underline-offset-2">
+                      {DOCUMENT_LABEL[d.kind] || d.kind}
+                    </a>
+                  ) : (
+                    <span className="text-ink-400">{DOCUMENT_LABEL[d.kind] || d.kind} (link unavailable)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {verification.status !== 'pending' && (
+            <p className="text-ink-400 text-xs">
+              Already {verification.status}{verification.rejection_reason ? ` — ${verification.rejection_reason}` : ''}. Approving or rejecting again overrides this.
+            </p>
+          )}
+
+          <div>
+            <label htmlFor="rejection-reason" className={labelCls}>Rejection reason (required to reject)</label>
+            <input id="rejection-reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className={inputCls} />
+          </div>
+
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+
+          <div className="flex gap-2">
+            <button onClick={() => submit('approve')} disabled={saving !== null} className={primaryBtnCls}>
+              {saving === 'approve' ? 'Approving…' : 'Approve'}
+            </button>
+            <button onClick={() => submit('reject')} disabled={saving !== null}
+              className={`py-2.5 px-4 rounded-lg border border-red-800 text-red-400 text-sm font-medium hover:bg-red-950/40 transition-colors disabled:opacity-50 ${focusRing}`}>
+              {saving === 'reject' ? 'Rejecting…' : 'Reject'}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between border-b border-ink-800 pb-2 last:border-0 last:pb-0">
+      <dt className="text-ink-400">{label}</dt>
+      <dd className="text-ink-100 font-medium text-right">{value}</dd>
     </div>
   )
 }
