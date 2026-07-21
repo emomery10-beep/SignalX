@@ -27,6 +27,9 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') ?? '/pos'
   // If next is a Shopify link-pending route, always honour it (even for new users)
   const isShopifyLink = next.startsWith('/api/shopify/link-pending')
+  // Supabase/the provider can redirect straight back with an error instead of
+  // a code (e.g. user denied consent, provider misconfigured) — surface it.
+  const upstreamError = searchParams.get('error_description') || searchParams.get('error')
 
   const supabase = createClient()
 
@@ -39,6 +42,7 @@ export async function GET(request: NextRequest) {
         const isNew = !profile.data?.onboarded
         return syncLocaleCookie(NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`), supabase, data.user.id)
       }
+      if (error) console.error('[auth/callback] exchangeCodeForSession failed:', error.status, error.code, error.message)
     }
 
     if (token_hash && type) {
@@ -49,8 +53,13 @@ export async function GET(request: NextRequest) {
         const isNew = !profile.data?.onboarded
         return syncLocaleCookie(NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`), supabase, data.user.id)
       }
+      if (error) console.error('[auth/callback] verifyOtp failed:', error.status, error.code, error.message)
     }
-  } catch (_) {}
+
+    if (upstreamError) console.error('[auth/callback] upstream provider error:', upstreamError)
+  } catch (e) {
+    console.error('[auth/callback] unexpected error:', e)
+  }
 
   return NextResponse.redirect(`${origin}/signin?error=auth_failed`)
 }

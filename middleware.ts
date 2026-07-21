@@ -81,7 +81,21 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  let { data: { user } } = await supabase.auth.getUser()
+  let { data: { user }, error: getUserError } = await supabase.auth.getUser()
+
+  // A stale/invalid refresh-token cookie (session revoked server-side, or a
+  // leftover cookie from before this browser's last cookie-domain change)
+  // otherwise fails the exact same way on every single request forever —
+  // getUser() surfaces the error but never clears the cookie that caused it.
+  // Seen in production 2026-07-20: this repeated on every request (including
+  // unrelated static pages) from one browser and coincided with a failed
+  // Google sign-in at /auth/callback. Only clear for the specific
+  // unrecoverable codes — not transient/5xx errors, which shouldn't nuke a
+  // legitimate session over a momentary blip.
+  if (getUserError && ['refresh_token_not_found', 'refresh_token_already_used'].includes(getUserError.code || '')) {
+    await supabase.auth.signOut()
+    user = null
+  }
 
   // ── 24-hour session cap ────────────────────────────────────────────────────
   // Supabase refresh tokens keep a session alive indefinitely by default. Force
