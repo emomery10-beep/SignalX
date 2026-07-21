@@ -2611,7 +2611,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Is there an API sandbox for testing?", a: "Yes. Append /sandbox to the base URL (https://api.askbiz.co/sandbox/v1/) to use the sandbox environment. It returns realistic mock data and does not affect your live account." },
+      { q: "Is there an API sandbox for testing?", a: "Not yet — there's no sandbox mode, so every call to the base URL hits your real, live account data. While you're building, stick to non-destructive read endpoints (like `GET /pulse` or `GET /alerts`) and double-check write calls such as `POST /data/push` before running them." },
       { q: "Where is the full API documentation?", a: "Full API docs with request/response schemas, code examples in Python, Node.js, and curl are at docs.askbiz.co." },
     ],
     related: ["authentication", "rate-limits", "plans-comparison"],
@@ -2731,7 +2731,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Do I need coding experience to use the AskBiz API?", a: "Yes — the API is designed for developers. If you want to build integrations without coding, use the Zapier integration (no-code) or the native AskBiz dashboard features." },
-      { q: "Is there an API sandbox for testing?", a: "Yes — use the base URL `https://api.askbiz.co/sandbox/v1/` with your API key. The sandbox returns realistic dummy data and accepts writes without affecting your live account. Sandbox access is available on all plans." },
+      { q: "Is there an API sandbox for testing?", a: "Not yet — there's no sandbox mode, so every call is a real, live call against your account. Test with non-destructive read endpoints first, and be careful with write calls like `POST /data/import/orders` or `POST /ai/query` until you're confident in the request." },
     ],
     related: ["api-access", "authentication", "webhook-events-reference"],
   },
@@ -2796,7 +2796,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "SDK configuration options",
-        body: "Both SDKs support the following configuration options:\n\n```typescript\nconst client = new AskBiz({\n  apiKey: 'ak_live_...',\n  baseUrl: 'https://api.askbiz.co/v1', // override for sandbox: /sandbox/v1\n  timeout: 30000, // request timeout in ms (default: 30000)\n  maxRetries: 3, // automatic retry attempts on 429 and 5xx (default: 3)\n  retryDelay: 1000, // base delay between retries in ms (default: 1000)\n});\n```\n\nFor local development, set `baseUrl` to `https://api.askbiz.co/sandbox/v1` to use the sandbox environment.",
+        body: "Both SDKs support the following configuration options:\n\n```typescript\nconst client = new AskBiz({\n  apiKey: 'ak_live_...',\n  baseUrl: 'https://api.askbiz.co/v1',\n  timeout: 30000, // request timeout in ms (default: 30000)\n  maxRetries: 3, // automatic retry attempts on 429 and 5xx (default: 3)\n  retryDelay: 1000, // base delay between retries in ms (default: 1000)\n});\n```\n\nThere's no sandbox mode yet, so calls made during local development are real, live calls against your account — the `baseUrl` above is the only one currently available.",
       },
     ],
     faq: [

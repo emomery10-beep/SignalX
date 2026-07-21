@@ -213,6 +213,7 @@ export function buildLandingSchemas(): Record<string, unknown>[] {
       '@type': 'Organization',
       '@id': 'https://askbiz.co/#org',
       name: 'AskBiz',
+      alternateName: ['Utauza', 'Utauza App'],
       url: 'https://askbiz.co',
       logo: 'https://askbiz.co/logo.svg',
       sameAs: [
