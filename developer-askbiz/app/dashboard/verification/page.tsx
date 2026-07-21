@@ -95,7 +95,7 @@ function StatusBanner({ verification }: { verification: Verification }) {
       <div className="border border-amber-800 bg-amber-950/30 rounded-xl p-5">
         <p className="text-amber-300 text-sm font-medium mb-1">Pending review</p>
         <p className="text-amber-200/80 text-xs">
-          Submitted {verification.submitted_at ? new Date(verification.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''} — an AskBiz admin will review it. You can update your details and documents any time before a decision is made.
+          Submitted {verification.submitted_at ? new Date(verification.submitted_at).toLocaleDateString() : ''} — an AskBiz admin will review it. You can update your details and documents any time before a decision is made.
         </p>
       </div>
     )
