@@ -72,6 +72,7 @@
   "each": "للقطعة",
   "decrease_quantity": "تقليل كمية {name}",
   "increase_quantity": "زيادة كمية {name}",
+  "remove_item": "إزالة {name} من السلة",
   "quantity_label": "الكمية: {qty}",
   "note_placeholder": "مثلاً: بدون سكر، حليب الشوفان، وسط...",
   "save": "حفظ",

@@ -515,6 +515,10 @@ export default function SellPage() {
     setEditNoteIdx(null)
   }
 
+  const removeCartItem = (idx: number) => {
+    setCart(prev => prev.filter((_, i) => i !== idx))
+  }
+
   const confirmScan = () => {
     if (!scanResult) return
     addToCart({ name: scanResult.name, unit_price: scanResult.price, cost_price: 0, inventory_id: scanResult.inventory_id, unit: scanResult.unit })
@@ -1121,8 +1125,13 @@ export default function SellPage() {
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('sell.heading_is_empty', { heading: biz.heading })}</div>
         ) : (
           cart.map((item, idx) => (
-            <div key={idx} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 14, marginBottom: 10, border: '1px solid var(--pos-border)', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+            <div key={idx} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 14, marginBottom: 10, border: '1px solid var(--pos-border)', overflow: 'hidden', position: 'relative' }}>
+              <button
+                onClick={() => removeCartItem(idx)}
+                aria-label={tc('sell.remove_item', { name: item.name })}
+                style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'var(--pos-danger-pale)', border: '1px solid var(--pos-danger-ring)', color: 'var(--pos-danger)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+              >×</button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 40px 14px 16px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)' }}>{item.name}</div>
                   <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{sym}{item.unit_price.toFixed(2)} {item.unit === 'kg' ? tc('sell.per_kg') : tc('sell.each')}</div>

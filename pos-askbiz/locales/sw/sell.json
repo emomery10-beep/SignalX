@@ -72,6 +72,7 @@
   "each": "kila moja",
   "decrease_quantity": "Punguza kiasi cha {name}",
   "increase_quantity": "Ongeza kiasi cha {name}",
+  "remove_item": "Ondoa {name} kwenye kikapu",
   "quantity_label": "Kiasi: {qty}",
   "note_placeholder": "mfano: bila sukari, oat milk, wastani...",
   "save": "Hifadhi",

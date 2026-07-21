@@ -72,6 +72,7 @@
   "each": "por unidad",
   "decrease_quantity": "Disminuir cantidad de {name}",
   "increase_quantity": "Aumentar cantidad de {name}",
+  "remove_item": "Quitar {name} del carrito",
   "quantity_label": "Cantidad: {qty}",
   "note_placeholder": "p. ej. sin azúcar, leche de avena, mediano...",
   "save": "Guardar",

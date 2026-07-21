@@ -72,6 +72,7 @@
   "each": "per stuk",
   "decrease_quantity": "Aantal van {name} verminderen",
   "increase_quantity": "Aantal van {name} verhogen",
+  "remove_item": "{name} uit winkelwagen verwijderen",
   "quantity_label": "Aantal: {qty}",
   "note_placeholder": "bijv. geen suiker, havermelk, medium...",
   "save": "Opslaan",

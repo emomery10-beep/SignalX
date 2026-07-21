@@ -72,6 +72,7 @@
   "each": "pro Stück",
   "decrease_quantity": "Menge von {name} verringern",
   "increase_quantity": "Menge von {name} erhöhen",
+  "remove_item": "{name} aus dem Warenkorb entfernen",
   "quantity_label": "Menge: {qty}",
   "note_placeholder": "z. B. kein Zucker, Hafermilch, mittel...",
   "save": "Speichern",

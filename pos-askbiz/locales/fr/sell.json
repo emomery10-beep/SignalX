@@ -72,6 +72,7 @@
   "each": "à l'unité",
   "decrease_quantity": "Diminuer la quantité de {name}",
   "increase_quantity": "Augmenter la quantité de {name}",
+  "remove_item": "Retirer {name} du panier",
   "quantity_label": "Quantité : {qty}",
   "note_placeholder": "ex. sans sucre, lait d'avoine, moyen...",
   "save": "Enregistrer",

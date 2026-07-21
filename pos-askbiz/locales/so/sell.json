@@ -72,6 +72,7 @@
   "each": "xabbadiiba",
   "decrease_quantity": "Yaree tirada {name}",
   "increase_quantity": "Kordhi tirada {name}",
+  "remove_item": "Ka saar {name} gaariga",
   "quantity_label": "Tiro: {qty}",
   "note_placeholder": "tusaale sonkor la'aan, caano oat, dhexe...",
   "save": "Kaydi",
