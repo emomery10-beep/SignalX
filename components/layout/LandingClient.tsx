@@ -1589,6 +1589,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       title: tc('landing.footer_col_product'),
       links: [
         { href: '/point-of-sale', label: tc('landing.nav_point_of_sale') },
+        { href: '/pos-system-kenya', label: 'POS System Kenya' },
+        { href: '/best-pos-kenya', label: 'Best POS Kenya 2026' },
+        { href: '/kra-etims-pos', label: 'KRA eTIMS POS' },
+        { href: '/offline-pos-kenya', label: 'Offline POS Kenya' },
+        { href: '/cloud-pos-kenya', label: 'Cloud POS Kenya' },
         { href: '/free-mpesa-pos', label: 'Free M-Pesa POS' },
         { href: '/pos-for-market-vendors', label: 'POS for market vendors' },
         { href: '/utauza', label: 'Utauza (East Africa)' },
@@ -1602,8 +1607,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     {
       title: tc('landing.footer_col_solutions'),
       links: [
-        { href: '/point-of-sale/retail', label: tc('landing.pos_sector_retail') },
-        { href: '/point-of-sale/restaurant', label: tc('landing.pos_sector_restaurant') },
+        { href: '/retail-pos-kenya', label: 'Retail POS Kenya' },
+        { href: '/restaurant-pos-kenya', label: 'Restaurant POS Kenya' },
+        { href: '/supermarket-pos-kenya', label: 'Supermarket POS Kenya' },
+        { href: '/pharmacy-pos-kenya', label: 'Pharmacy POS Kenya' },
         { href: '/point-of-sale/salon', label: tc('landing.pos_sector_salon') },
         { href: '/point-of-sale/repair', label: tc('landing.pos_sector_repair') },
         { href: '/point-of-sale/factory', label: tc('landing.pos_sector_factory') },
@@ -1634,6 +1641,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         { href: '/glossary', label: tc('landing.nav_glossary_label') },
         { href: '/benchmarks', label: tc('landing.nav_benchmarks_label') },
         { href: '/free-tools', label: tc('landing.footer_free_tools') },
+        { href: '/pos-system-africa', label: 'POS System Africa' },
+        { href: '/mpesa-pos-integration', label: 'M-Pesa POS Integration' },
+        { href: '/ecommerce-pos-kenya', label: 'Ecommerce Platforms Kenya' },
+        { href: '/inventory-management-kenya', label: 'Inventory Management Kenya' },
       ],
     },
     {
