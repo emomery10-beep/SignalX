@@ -75,7 +75,7 @@ export default function PasskeyNudge({ destination }: { destination: string }) {
   if (!show) return null
 
   return (
-    <div className="animate-fade-up" style={{ textAlign: 'center', padding: '5px 0' }}>
+    <div className="animate-fade-up" style={{ textAlign: 'center', padding: '5px 0', maxWidth: 320, margin: '0 auto' }}>
       <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(208,138,89,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
