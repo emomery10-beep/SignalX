@@ -138,6 +138,7 @@ export default function AdminPage() {
   const [apiUsage, setApiUsage] = useState<any>(null)
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
   const [resettingPinFor, setResettingPinFor] = useState<string | null>(null)
+  const [grantingPosFor, setGrantingPosFor] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -253,6 +254,43 @@ export default function AdminPage() {
       setTimeout(() => setActionMsg(''), 4000)
     } finally {
       setResettingPinFor(null)
+    }
+  }
+
+  const grantPos = async (userId: string, name: string, currentlyEnabled: boolean) => {
+    const action = currentlyEnabled ? 'revoke_pos' : 'grant_pos'
+    let seats = 5
+    if (!currentlyEnabled) {
+      const input = window.prompt(`How many POS seats for ${name || 'this user'}? (owner dashboard is always included; seats are for cashier/inventory staff)`, '5')
+      if (input === null) return
+      seats = Math.max(1, parseInt(input, 10) || 5)
+    } else if (!window.confirm(`Revoke POS access for ${name || 'this user'}? This turns off pos_enabled and zeroes their seat count.`)) {
+      return
+    }
+    setGrantingPosFor(userId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ action, userId, seats }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        setActionMsg(currentlyEnabled ? 'POS access revoked' : `POS enabled — ${seats} seat${seats===1?'':'s'} granted`)
+        loadAll()
+      } else {
+        setActionMsg(tc('admin.error_prefix', { error: d.error || res.statusText }))
+      }
+      setTimeout(() => setActionMsg(''), 4000)
+    } catch (err: any) {
+      setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
+      setTimeout(() => setActionMsg(''), 4000)
+    } finally {
+      setGrantingPosFor(null)
     }
   }
 
@@ -730,6 +768,14 @@ export default function AdminPage() {
                             style={{padding:'3px 8px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer',marginLeft:6}}
                           >
                             {resettingPinFor===u.id ? tc('admin.sending') : 'Reset PIN'}
+                          </button>
+                          <button
+                            onClick={() => grantPos(u.id, u.full_name, u.pos_enabled)}
+                            disabled={grantingPosFor===u.id}
+                            title={u.pos_enabled ? 'Turn off POS and clear seats' : 'Manually enable POS without a payment on file'}
+                            style={{padding:'3px 8px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer',marginLeft:6}}
+                          >
+                            {grantingPosFor===u.id ? tc('admin.sending') : (u.pos_enabled ? 'Revoke POS' : 'Grant POS')}
                           </button>
                         </td>
                       </tr>

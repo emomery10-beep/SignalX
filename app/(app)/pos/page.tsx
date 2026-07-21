@@ -1052,46 +1052,49 @@ export default function POSPage() {
   // ── POS NOT ENABLED ────────────────────────────────────
   if (!posEnabled) return (
     <div className="page-shell">
-      {/* Resume banner: a POS-persona vendor who onboarded but hasn't finished
-          setup + payment gets sent back into the guided flow, not left on this
-          generic paywall. */}
-      {['retail', 'market_stall', 'food_bev', 'salon'].includes((businessType || '').toLowerCase()) && (
-        <a href="/pos/setup" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', margin: '16px', padding: '16px 18px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, color: 'inherit' }}>
-          <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 10, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_app.resume_setup_title')}</div>
-            <div style={{ fontSize: 15, color: 'var(--tx2)', marginTop: 2 }}>{tc('pos_app.resume_setup_desc')}</div>
-          </div>
-          <span style={{ flexShrink: 0, fontSize: 16, fontWeight: 700, color: ACC }}>{tc('pos_app.resume_setup_cta')}</span>
-        </a>
-      )}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-        <div style={{ maxWidth: 480, textAlign: 'center' }}>
-          <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
-          <p style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
-            {tc('pos_app.disabled_desc')}
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 28 }}>
-            {[tc('pos_app.disabled_feature_1'), tc('pos_app.disabled_feature_2'), tc('pos_app.disabled_feature_3'), tc('pos_app.disabled_feature_4'), tc('pos_app.disabled_feature_5'), tc('pos_app.disabled_feature_6')].map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, color: 'var(--tx2)' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                {f}
-              </div>
-            ))}
-          </div>
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 800 }}>£5</span>
-            <span style={{ fontSize: 16, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos_app.disabled_per_seat')}</span>
-          </div>
-          <p style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.disabled_owner_note')}</p>
-          <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
-            {tc('pos_app.disabled_add_seats')}
+      <div className="page-shell-body" style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Resume banner: a POS-persona vendor who onboarded but hasn't finished
+            setup + payment gets sent back into the guided flow, not left on this
+            generic paywall. Shares the page-shell-body gutter with the card below
+            so the two pieces of this state read as one page, not two. */}
+        {['retail', 'market_stall', 'food_bev', 'salon'].includes((businessType || '').toLowerCase()) && (
+          <a href="/pos/setup" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', marginBottom: 24, padding: '16px 18px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, color: 'inherit' }}>
+            <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 10, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_app.resume_setup_title')}</div>
+              <div style={{ fontSize: 15, color: 'var(--tx2)', marginTop: 2 }}>{tc('pos_app.resume_setup_desc')}</div>
+            </div>
+            <span style={{ flexShrink: 0, fontSize: 16, fontWeight: 700, color: ACC }}>{tc('pos_app.resume_setup_cta')}</span>
           </a>
+        )}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
+          <div style={{ maxWidth: 480, textAlign: 'center' }}>
+            <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
+            <p style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
+              {tc('pos_app.disabled_desc')}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 28 }}>
+              {[tc('pos_app.disabled_feature_1'), tc('pos_app.disabled_feature_2'), tc('pos_app.disabled_feature_3'), tc('pos_app.disabled_feature_4'), tc('pos_app.disabled_feature_5'), tc('pos_app.disabled_feature_6')].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, color: 'var(--tx2)' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  {f}
+                </div>
+              ))}
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 800 }}>£5</span>
+              <span style={{ fontSize: 16, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos_app.disabled_per_seat')}</span>
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.disabled_owner_note')}</p>
+            <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
+              {tc('pos_app.disabled_add_seats')}
+            </a>
+          </div>
         </div>
       </div>
     </div>

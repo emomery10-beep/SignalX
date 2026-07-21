@@ -295,7 +295,26 @@ export async function POST(request: NextRequest) {
   if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const { action, userId, planId } = await request.json()
+  const { action, userId, planId, seats } = await request.json()
+
+  if (action === 'grant_pos') {
+    const seatCount = Math.max(1, Number(seats) || 5)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ pos_enabled: true, pos_seat_count: seatCount })
+      .eq('id', userId)
+    if (error) return NextResponse.json({ success: false, error: error.message })
+    return NextResponse.json({ success: true })
+  }
+
+  if (action === 'revoke_pos') {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ pos_enabled: false, pos_seat_count: 0 })
+      .eq('id', userId)
+    if (error) return NextResponse.json({ success: false, error: error.message })
+    return NextResponse.json({ success: true })
+  }
 
   if (action === 'change_plan') {
     // Check if subscription row exists
