@@ -3,6 +3,7 @@
   "title": "Inventario",
   "add_product_button": "📷 Agregar producto",
   "sign_out": "Cerrar sesión",
+  "daily_brief_title": "Resumen de hoy",
   "alert_out_of_stock": "{count} sin stock",
   "alert_running_low": "{count} con stock bajo",
   "alert_expired": "⚠ {count} VENCIDO(S) — retirar ahora",

@@ -3,6 +3,7 @@
   "title": "Voorraad",
   "add_product_button": "📷 Product toevoegen",
   "sign_out": "Afmelden",
+  "daily_brief_title": "Overzicht van vandaag",
   "alert_out_of_stock": "{count} niet op voorraad",
   "alert_running_low": "{count} bijna op",
   "alert_expired": "⚠ {count} VERLOPEN — verwijder nu",

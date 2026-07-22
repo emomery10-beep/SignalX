@@ -35,6 +35,10 @@ export default function InventoryPage() {
   const [filter, setFilter]       = useState<'all' | 'low' | 'out' | 'expiring'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Daily AI business brief — manager+ only
+  const [brief, setBrief] = useState<{ improved: string; worsened: string; action: string } | null>(null)
+  const [briefDismissed, setBriefDismissed] = useState(false)
+
   // Camera (old single-photo)
   const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
   const [editingRecognizedIndex, setEditingRecognizedIndex] = useState<number | null>(null)
@@ -109,6 +113,15 @@ export default function InventoryPage() {
     'x-staff-id': s.id,
     'x-owner-id': s.owner_id,
   })
+
+  // Daily brief is manager+ business content — fetch once staff is known and gated.
+  useEffect(() => {
+    if (!staff || !isManagerOrAboveLevel(staff.role)) return
+    fetch(`${API}/api/daily-brief`, { headers: posHeaders(staff) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.brief) setBrief(data.brief) })
+      .catch(() => {})
+  }, [staff])
 
   const loadInventory = async (s?: StaffSession) => {
     const session = s || staff
@@ -433,6 +446,26 @@ export default function InventoryPage() {
           </button>
         </div>
       </div>
+
+      {/* Daily AI business brief — manager+ only */}
+      {brief && !briefDismissed && (
+        <div style={{ margin: '8px 20px', padding: '14px 16px', borderRadius: 12, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+              {tc('inventory.daily_brief_title')}
+            </div>
+            <button onClick={() => setBriefDismissed(true)}
+              style={{ background: 'none', border: 'none', color: 'var(--pos-muted)', fontSize: 14, cursor: 'pointer', lineHeight: 1 }}>
+              ×
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, color: 'var(--pos-ink)' }}>
+            {brief.improved && <div>✅ {brief.improved}</div>}
+            {brief.worsened && <div>⚠️ {brief.worsened}</div>}
+            {brief.action && <div style={{ fontWeight: 600 }}>→ {brief.action}</div>}
+          </div>
+        </div>
+      )}
 
       {/* Alert summary */}
       {(outCount > 0 || lowCount > 0 || expiredCount > 0 || expiringCount > 0) && (

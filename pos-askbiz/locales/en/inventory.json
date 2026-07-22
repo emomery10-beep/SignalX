@@ -3,6 +3,7 @@
   "title": "Inventory",
   "add_product_button": "📷 Add product",
   "sign_out": "Sign out",
+  "daily_brief_title": "Today's brief",
   "alert_out_of_stock": "{count} out of stock",
   "alert_running_low": "{count} running low",
   "alert_expired": "⚠ {count} EXPIRED — remove now",

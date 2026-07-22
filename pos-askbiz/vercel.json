@@ -10,6 +10,7 @@
     }
   },
   "crons": [
-    { "path": "/api/cron/restaurant-brief", "schedule": "30 23 * * *" }
+    { "path": "/api/cron/restaurant-brief", "schedule": "30 23 * * *" },
+    { "path": "/api/agent", "schedule": "0 6 * * *" }
   ]
 }

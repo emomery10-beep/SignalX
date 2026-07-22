@@ -3,6 +3,7 @@
   "title": "المخزون",
   "add_product_button": "📷 إضافة منتج",
   "sign_out": "تسجيل الخروج",
+  "daily_brief_title": "ملخص اليوم",
   "alert_out_of_stock": "{count} نفد من المخزون",
   "alert_running_low": "{count} على وشك النفاد",
   "alert_expired": "⚠ {count} منتهي الصلاحية — أزِله الآن",

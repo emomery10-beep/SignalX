@@ -3,6 +3,7 @@
   "title": "Inventar",
   "add_product_button": "📷 Produkt hinzufügen",
   "sign_out": "Abmelden",
+  "daily_brief_title": "Tagesbericht",
   "alert_out_of_stock": "{count} nicht vorrätig",
   "alert_running_low": "{count} fast ausverkauft",
   "alert_expired": "⚠ {count} ABGELAUFEN — jetzt entfernen",

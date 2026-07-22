@@ -1,28 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
+import { resolvePosOwner } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
+// This route previously only accepted a Supabase session (supabase.auth.getUser()),
+// but pos-askbiz's owner/staff sessions are PIN-based (x-staff-id/x-owner-id headers)
+// — no page in the app could ever call it successfully. resolvePosOwner accepts either,
+// matching every other pos-askbiz route. Gated to manager+ since this is business-level
+// content, not something a cashier needs to see.
 export async function POST(request: NextRequest) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return generateBrief(user.id, supabase)
+  const ownerId = await resolvePosOwner(request, 'engineer')
+  if (!ownerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = createServiceClient()
+  return generateBrief(ownerId, supabase)
 }
 
-export async function GET() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const ownerId = await resolvePosOwner(request, 'engineer')
+  if (!ownerId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = createServiceClient()
 
   const today = new Date().toISOString().slice(0, 10)
 
   const { data: brief } = await supabase
     .from('daily_briefs')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', ownerId)
     .eq('date', today)
     .single()
 
@@ -33,10 +39,10 @@ export async function GET() {
     return NextResponse.json({ brief, fresh: false })
   }
 
-  return generateBrief(user.id, supabase)
+  return generateBrief(ownerId, supabase)
 }
 
-async function generateBrief(userId: string, supabase: ReturnType<typeof createClient>) {
+async function generateBrief(userId: string, supabase: ReturnType<typeof createServiceClient>) {
   const today = new Date().toISOString().slice(0, 10)
 
   // ── Pull all context in parallel ──────────────────────────────
