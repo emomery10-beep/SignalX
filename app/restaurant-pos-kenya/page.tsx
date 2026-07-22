@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'Restaurant POS Kenya — Tables, Kitchen Orders & M-Pesa | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Run a Kenyan restaurant or cafe from one phone: tables, kitchen routing, split M-Pesa bills, and offline selling.',
     url: 'https://askbiz.co/restaurant-pos-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/restaurant-pos-kenya' },
+  alternates: { canonical: 'https://askbiz.co/restaurant-pos-kenya', languages: buildSeoHreflangMap('restaurant-pos-kenya') },
 }
 
 export default function Page() {

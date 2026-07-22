@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'KRA eTIMS POS — Clean Sales Records for Kenyan Businesses | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Every sale itemized and timestamped automatically, ready for your eTIMS filing or your accountant — no manual reconstruction at tax time.',
     url: 'https://askbiz.co/kra-etims-pos',
   },
-  alternates: { canonical: 'https://askbiz.co/kra-etims-pos' },
+  alternates: { canonical: 'https://askbiz.co/kra-etims-pos', languages: buildSeoHreflangMap('kra-etims-pos') },
 }
 
 export default function Page() {

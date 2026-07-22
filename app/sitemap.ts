@@ -19,6 +19,7 @@ import { DEMO_MARKETS } from "@/lib/demo-markets";
 import { SECTORS } from "@/lib/pos-sectors";
 import { POS_FEATURES } from "@/lib/pos-features";
 import { LEARNING_PATHS } from "@/lib/learning-paths-content";
+import { STATIC_LOCALE_SEO_SLUGS, READY_SEO_LOCALES } from "@/lib/seo-i18n-slugs";
 
 const base = "https://askbiz.co";
 
@@ -119,6 +120,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/mpesa-pos-integration`,                      lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/ecommerce-pos-kenya`,                        lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/inventory-management-kenya`,                 lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    // Real per-locale static variants of the 13 pages above (app/[locale]/[seoSlug]).
+    // READY_SEO_LOCALES gates this — Somali is excluded until its translation
+    // file is verified, so the sitemap never lists a URL that would 404.
+    ...READY_SEO_LOCALES.flatMap(l => STATIC_LOCALE_SEO_SLUGS.map(slug => ({
+      url: `${base}/${l}/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7,
+    }))),
     { url: `${base}/utauza`,                                     lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/app-ya-duka`,                                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/bloomberg-alternative`,                      lastModified: now, changeFrequency: "monthly", priority: 0.8 },

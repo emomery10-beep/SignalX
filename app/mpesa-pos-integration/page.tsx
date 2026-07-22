@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'M-Pesa POS Integration — Auto-Match Payments to Sales | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Turn ad-hoc M-Pesa Till or Paybill takings into a proper system — no more manually checking SMS against a notebook.',
     url: 'https://askbiz.co/mpesa-pos-integration',
   },
-  alternates: { canonical: 'https://askbiz.co/mpesa-pos-integration' },
+  alternates: { canonical: 'https://askbiz.co/mpesa-pos-integration', languages: buildSeoHreflangMap('mpesa-pos-integration') },
 }
 
 export default function Page() {

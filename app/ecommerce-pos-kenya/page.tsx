@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'One System for In-Store and WhatsApp/Instagram Orders | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Whether a sale happened at the counter or was arranged on WhatsApp or Instagram, it hits the same stock count and the same daily profit number.',
     url: 'https://askbiz.co/ecommerce-pos-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/ecommerce-pos-kenya' },
+  alternates: { canonical: 'https://askbiz.co/ecommerce-pos-kenya', languages: buildSeoHreflangMap('ecommerce-pos-kenya') },
 }
 
 export default function Page() {

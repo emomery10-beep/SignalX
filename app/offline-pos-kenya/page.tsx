@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'Offline POS Kenya — Sell With No Signal, Sync Automatically | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Keep selling and recording sales even with no network. AskBiz queues sales on the phone and syncs the moment connectivity returns.',
     url: 'https://askbiz.co/offline-pos-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/offline-pos-kenya' },
+  alternates: { canonical: 'https://askbiz.co/offline-pos-kenya', languages: buildSeoHreflangMap('offline-pos-kenya') },
 }
 
 export default function Page() {

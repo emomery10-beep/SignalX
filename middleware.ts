@@ -4,6 +4,16 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { DEFAULT_LOCALE, PREFIXED_LOCALES, resolveLocale } from '@/lib/i18n-locale'
 // CSP lives in one place (plain JS so next.config.js can require it too).
 import { CONTENT_SECURITY_POLICY } from '@/lib/security-headers'
+import { STATIC_LOCALE_SEO_SLUGS } from '@/lib/seo-i18n-slugs'
+
+// Logical paths that get a REAL per-locale static render (app/[locale]/[seoSlug])
+// instead of the generic "rewrite onto the flat English route + x-locale header"
+// treatment every other locale-prefixed path gets. Same carve-out reasoning as
+// the homepage a few lines below: reading a header forces dynamic rendering,
+// so anything meant to be genuinely translated (not just chrome-translated)
+// needs to be excluded from the rewrite and let Next's own file router match
+// the static [locale]/[seoSlug] segment directly.
+const STATIC_LOCALE_SEO_PATHS = new Set(STATIC_LOCALE_SEO_SLUGS.map(s => `/${s}`))
 
 // Inactive locale codes that once had URL prefixes — redirect to strip them.
 // Prevents 404s for users with /sw/..., /pt/..., etc. in their browser history.
@@ -237,8 +247,9 @@ export async function middleware(request: NextRequest) {
   // URL is already /es …/so, which maps to the statically-generated per-locale
   // route app/[locale]/page.tsx. Letting it pass through (like the English `/`)
   // keeps that render static and CDN-cacheable — rewriting it to a header-driven
-  // route would force it back into dynamic rendering for every visitor.
-  if (hasLocalePrefix && logicalPath !== '/') {
+  // route would force it back into dynamic rendering for every visitor. The 13
+  // Kenya/Africa SEO pages get the same treatment via app/[locale]/[seoSlug].
+  if (hasLocalePrefix && logicalPath !== '/' && !STATIC_LOCALE_SEO_PATHS.has(logicalPath)) {
     const rewriteUrl = request.nextUrl.clone()
     rewriteUrl.pathname = logicalPath
     const rewritten = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })

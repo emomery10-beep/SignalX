@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'POS System for Africa — Mobile Money, Any Phone, Any Country | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'One POS system for Kenya, Nigeria, Uganda, Tanzania, Ghana and beyond — built around mobile money and phones that already exist.',
     url: 'https://askbiz.co/pos-system-africa',
   },
-  alternates: { canonical: 'https://askbiz.co/pos-system-africa' },
+  alternates: { canonical: 'https://askbiz.co/pos-system-africa', languages: buildSeoHreflangMap('pos-system-africa') },
 }
 
 export default function Page() {

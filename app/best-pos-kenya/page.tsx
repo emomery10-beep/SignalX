@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'Best POS Kenya 2026 — What Actually Matters When Choosing One | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: "A buyer's guide to the criteria that actually matter for a POS in Kenya in 2026, not a feature checklist copied from elsewhere.",
     url: 'https://askbiz.co/best-pos-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/best-pos-kenya' },
+  alternates: { canonical: 'https://askbiz.co/best-pos-kenya', languages: buildSeoHreflangMap('best-pos-kenya') },
 }
 
 export default function Page() {

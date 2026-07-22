@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'Cloud POS Kenya — No Server, No IT Person, Any Device | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Run your business from any phone or branch with a POS that lives entirely in the cloud — nothing to install, nothing to maintain.',
     url: 'https://askbiz.co/cloud-pos-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/cloud-pos-kenya' },
+  alternates: { canonical: 'https://askbiz.co/cloud-pos-kenya', languages: buildSeoHreflangMap('cloud-pos-kenya') },
 }
 
 export default function Page() {

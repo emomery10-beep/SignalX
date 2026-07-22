@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'Pharmacy POS Kenya — Batch & Expiry Tracking, M-Pesa | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Batch and expiry tracking for medicine stock, low-stock alerts, and M-Pesa-first checkout for Kenyan pharmacies and chemists.',
     url: 'https://askbiz.co/pharmacy-pos-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/pharmacy-pos-kenya' },
+  alternates: { canonical: 'https://askbiz.co/pharmacy-pos-kenya', languages: buildSeoHreflangMap('pharmacy-pos-kenya') },
 }
 
 export default function Page() {

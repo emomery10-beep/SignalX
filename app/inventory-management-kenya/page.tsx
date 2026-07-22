@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SeoPage from '@/components/SeoPage'
+import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
   title: 'Inventory Management for Kenyan Businesses | AskBiz',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Stock deducts automatically on every sale, with low-stock alerts, expiry tracking and reorder suggestions — no manual stocktakes.',
     url: 'https://askbiz.co/inventory-management-kenya',
   },
-  alternates: { canonical: 'https://askbiz.co/inventory-management-kenya' },
+  alternates: { canonical: 'https://askbiz.co/inventory-management-kenya', languages: buildSeoHreflangMap('inventory-management-kenya') },
 }
 
 export default function Page() {
