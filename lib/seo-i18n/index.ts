@@ -16,6 +16,7 @@ import { fr } from './fr'
 import { nl } from './nl'
 import { ar } from './ar'
 import { sw } from './sw'
+import { so } from './so'
 import { READY_SEO_LOCALES } from '@/lib/seo-i18n-slugs'
 
 export type { SeoI18nEntry }
@@ -23,7 +24,7 @@ export type { SeoI18nEntry }
 export const READY_LOCALES = READY_SEO_LOCALES
 export type ReadyLocale = typeof READY_LOCALES[number]
 
-const BY_LOCALE: Record<ReadyLocale, Record<string, SeoI18nEntry>> = { de, es, fr, nl, ar, sw }
+const BY_LOCALE: Record<ReadyLocale, Record<string, SeoI18nEntry>> = { de, es, fr, nl, ar, sw, so }
 
 export function getSeoI18nEntry(slug: string, locale: string): SeoI18nEntry | undefined {
   if (!(READY_LOCALES as readonly string[]).includes(locale)) return undefined

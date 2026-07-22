@@ -29,9 +29,8 @@ const SITE = 'https://askbiz.co'
 // purpose: this file is imported by middleware.ts (Edge, every request) and
 // app/sitemap.ts (revalidate: 0, so it re-runs on every fetch) — and
 // lib/seo-i18n/index.ts pulls in ~700KB of translated page content just to
-// expose a 6-string list. Keep these two lists in sync by hand; 'so' (Somali)
-// stays out until its translation file is verified complete.
-export const READY_SEO_LOCALES = ['es', 'fr', 'de', 'nl', 'ar', 'sw'] as const
+// expose a 7-string list. Keep these two lists in sync by hand.
+export const READY_SEO_LOCALES = ['es', 'fr', 'de', 'nl', 'ar', 'sw', 'so'] as const
 
 // Reciprocal hreflang map for a given slug — English unprefixed, each ready
 // locale under its /<locale>/ prefix. Used identically by the English flat
