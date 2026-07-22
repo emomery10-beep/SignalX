@@ -127,16 +127,19 @@ export default function RevenueTrendChart({ data, currencySymbol }: Props) {
                 <rect
                   x={x} y={chartH - 20 - revH} width={barW} height={revH}
                   rx={2} fill="#22C55E" opacity={isHovered ? 1 : 0.7}
+                  style={{ transition: 'opacity .2s var(--ease-out)' }}
                 />
                 {/* COGS bar (offset right slightly) */}
                 <rect
                   x={x + barW * 0.15} y={chartH - 20 - cogsH} width={barW * 0.7} height={cogsH}
                   rx={2} fill="#F97316" opacity={isHovered ? 0.9 : 0.5}
+                  style={{ transition: 'opacity .2s var(--ease-out)' }}
                 />
                 {/* Fixed cost bar (stacked on COGS) */}
                 <rect
                   x={x + barW * 0.15} y={chartH - 20 - cogsH - fixH} width={barW * 0.7} height={fixH}
                   rx={1} fill="#EF4444" opacity={isHovered ? 0.9 : 0.45}
+                  style={{ transition: 'opacity .2s var(--ease-out)' }}
                 />
               </g>
             )
@@ -246,10 +249,9 @@ function DrillRow({ label, amount, pct, color, maxVal, sym }: { label: string; a
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <div style={{ width: 70, fontSize: 11, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
-      <div style={{ flex: 1, height: 22, borderRadius: 5, background: 'var(--sf)', overflow: 'hidden', border: '1px solid var(--b)' }}>
-        <div style={{ height: '100%', width: `${barPct}%`, background: color, borderRadius: 5, display: 'flex', alignItems: 'center', paddingLeft: 6, transition: 'width 300ms' }}>
-          {barPct > 20 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{fmt(amount, sym)}</span>}
-        </div>
+      <div style={{ flex: 1, height: 22, borderRadius: 5, background: 'var(--sf)', overflow: 'hidden', border: '1px solid var(--b)', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transformOrigin: 'left', transform: `scaleX(${barPct / 100})`, background: color, borderRadius: 5, transition: 'transform .3s var(--ease-out)' }} />
+        {barPct > 20 && <span style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', fontSize: 9, color: '#fff', fontWeight: 600 }}>{fmt(amount, sym)}</span>}
       </div>
       <div style={{ width: 50, fontSize: 11, fontWeight: 600, color, textAlign: 'right', flexShrink: 0 }}>
         {Math.round(pct)}%

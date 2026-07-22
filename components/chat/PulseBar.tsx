@@ -108,6 +108,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
 
   return (
     <div
+      className="pulse-bar"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -118,7 +119,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
         border: `1px solid ${style.border}`,
         background: style.bg,
         cursor: 'pointer',
-        transition: 'all 160ms',
+        transition: 'all 160ms var(--ease-out)',
         maxWidth: 680,
         margin: '0 auto 8px',
       }}

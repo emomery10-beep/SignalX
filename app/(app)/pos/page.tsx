@@ -197,6 +197,7 @@ export default function POSPage() {
   const [reorderRestockQty, setReorderRestockQty] = useState('')
   const [reorderRestocking, setReorderRestocking] = useState(false)
   const [archivingStockId, setArchivingStockId] = useState<string | null>(null)
+  const [removingStockId, setRemovingStockId] = useState<string | null>(null)
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -1237,10 +1238,11 @@ export default function POSPage() {
                 { label: tc('pos_app.kpi_refunds'), value: refundCount.toString(), color: refundCount > 0 ? RED : 'var(--tx)', prev: prevRefunds, curr: refundCount, type: 'refunds' as const, inverse: true },
                 { label: tc('pos_app.kpi_low_stock'), value: alertCount.toString(), color: alertCount > 0 ? RED : GREEN, prev: 0, curr: alertCount, type: 'low_stock' as const, inverse: true },
               ].map((kpi, i) => (
-                <div key={i} onClick={() => setFilterModal({ type: kpi.type, title: kpi.label })}
-                  style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
-                  onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
-                  onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
+                <div key={i} role="button" tabIndex={0}
+                  onClick={() => setFilterModal({ type: kpi.type, title: kpi.label })}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFilterModal({ type: kpi.type, title: kpi.label }) } }}
+                  className="card-hover"
+                  style={{ ...cardStyle, display: 'block' }}>
                   <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 4 }}>{kpi.label}</div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: kpi.color, letterSpacing: '-.02em' }}>{kpi.value}</div>
                   {kpi.type !== 'low_stock' && <CompBadge curr={kpi.curr} prev={kpi.prev} inverse={kpi.inverse} />}
@@ -1250,24 +1252,24 @@ export default function POSPage() {
 
             {/* Profit / margin row — clickable */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-              <div onClick={() => setFilterModal({ type: 'gross_profit', title: tc('pos_app.modal_gross_profit') })}
-                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
-                onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
+              <div role="button" tabIndex={0} onClick={() => setFilterModal({ type: 'gross_profit', title: tc('pos_app.modal_gross_profit') })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFilterModal({ type: 'gross_profit', title: tc('pos_app.modal_gross_profit') }) } }}
+                className="card-hover"
+                style={{ ...cardStyle, display: 'block' }}>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_gross_profit')}</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div>
               </div>
-              <div onClick={() => setFilterModal({ type: 'margin', title: tc('pos_app.modal_margin') })}
-                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
-                onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
+              <div role="button" tabIndex={0} onClick={() => setFilterModal({ type: 'margin', title: tc('pos_app.modal_margin') })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFilterModal({ type: 'margin', title: tc('pos_app.modal_margin') }) } }}
+                className="card-hover"
+                style={{ ...cardStyle, display: 'block' }}>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_margin')}</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: margin >= 20 ? GREEN : margin >= 10 ? AMBER : RED }}>{margin.toFixed(1)}%</div>
               </div>
-              <div onClick={() => setFilterModal({ type: 'avg_sale', title: tc('pos_app.modal_avg_sale') })}
-                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
-                onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
+              <div role="button" tabIndex={0} onClick={() => setFilterModal({ type: 'avg_sale', title: tc('pos_app.modal_avg_sale') })}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFilterModal({ type: 'avg_sale', title: tc('pos_app.modal_avg_sale') }) } }}
+                className="card-hover"
+                style={{ ...cardStyle, display: 'block' }}>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_avg_sale')}</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
               </div>
@@ -1368,12 +1370,14 @@ export default function POSPage() {
             {(lowStock.length > 0 || outOfStock.length > 0) && (
               <div style={{ marginBottom: 24 }}>
                 <div style={sectionLabel}>{tc('pos_app.stock_alerts')}</div>
+                <style>{`.stock-row-out{background:rgba(220,38,38,.06)}.stock-row-out:hover,.stock-row-out:active{background:rgba(220,38,38,.12)}.stock-row-low{background:rgba(234,179,8,.06)}.stock-row-low:hover,.stock-row-low:active{background:rgba(234,179,8,.12)}`}</style>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {outOfStock.map(item => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', cursor: 'pointer', transition: 'all 150ms', opacity: archivingStockId === item.id ? 0.4 : 1 }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.4)' }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.2)' }}>
-                      <span onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })} style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{item.name}</span>
+                    <div key={item.id} role="button" tabIndex={0} className="stock-row-out"
+                      onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id }) } }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: removingStockId === item.id ? '0 14px' : '10px 14px', borderRadius: 10, border: '1px solid rgba(220,38,38,.2)', minHeight: removingStockId === item.id ? 0 : undefined, opacity: removingStockId === item.id ? 0 : (archivingStockId === item.id ? 0.4 : 1), maxHeight: removingStockId === item.id ? 0 : 200, overflow: 'hidden', transition: 'opacity 180ms var(--ease-in), max-height 200ms var(--ease-in), padding 200ms var(--ease-in), background 150ms var(--ease-out)' }}>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 600, color: RED }}>{tc('pos_app.out_of_stock')}</span>
                         <button
@@ -1389,8 +1393,9 @@ export default function POSPage() {
                                 body: JSON.stringify({ id: item.id, active: false }),
                               })
                               if (res.ok) {
-                                setInventory(prev => prev.filter(i => i.id !== item.id))
                                 setToast({ msg: tc('pos_app.toast_item_archived', { name: item.name }), ok: true })
+                                setRemovingStockId(item.id)
+                                setTimeout(() => { setInventory(prev => prev.filter(i => i.id !== item.id)); setRemovingStockId(null) }, 200)
                               } else {
                                 setToast({ msg: tc('pos_app.toast_archive_failed'), ok: false })
                               }
@@ -1405,10 +1410,10 @@ export default function POSPage() {
                     </div>
                   ))}
                   {lowStock.map(item => (
-                    <div key={item.id} onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)', cursor: 'pointer', transition: 'all 150ms' }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,.5)' }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,.25)' }}>
+                    <div key={item.id} role="button" tabIndex={0} className="stock-row-low"
+                      onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id }) } }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(234,179,8,.25)', transition: 'background 150ms var(--ease-out)' }}>
                       <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 600, color: AMBER }}>{tc('pos_app.stock_left', { n: item.stock_qty })}</span>
@@ -2274,7 +2279,7 @@ export default function POSPage() {
                     disabled={!scanFront || scanning}
                     style={{ width: '100%', padding: '14px', borderRadius: 12, background: scanFront ? '#7c3aed' : 'var(--b)', color: scanFront ? '#fff' : 'var(--tx3)', border: 'none', fontSize: 17, fontWeight: 700, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'all .2s' }}
                   >
-                    {scanning ? '⏳ ' + tc('pos_app.reading_product') : scanFront ? '✨ ' + (scanBack ? tc('pos_app.scan_fill_both') : tc('pos_app.scan_fill_front')) : tc('pos_app.take_front_first')}
+                    {scanning ? (<><span className="spin" style={{ display: 'inline-block' }}>⏳</span>{' ' + tc('pos_app.reading_product')}</>) : scanFront ? '✨ ' + (scanBack ? tc('pos_app.scan_fill_both') : tc('pos_app.scan_fill_front')) : tc('pos_app.take_front_first')}
                   </button>
                   {scanFront && !scanBack && (
                     <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
@@ -2318,8 +2323,8 @@ export default function POSPage() {
 
             {/* Camera match result modal */}
             {recognizedProducts.length > 0 && (
-              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setRecognizedProducts([])}>
-                <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 450, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+              <div className="overlay-enter" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setRecognizedProducts([])}>
+                <div className="modal-enter" style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 450, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
                   {recognizedProducts[0]?.matched ? (
                     // ── Matched: Existing product in inventory ──
                     <>
@@ -3220,7 +3225,7 @@ export default function POSPage() {
                               {fadr !== null && (
                                 <div style={{ marginTop: 8 }}>
                                   <div style={{ height: 3, background: 'var(--b)', borderRadius: 2, overflow: 'hidden' }}>
-                                    <div style={{ width: `${fadr}%`, height: '100%', background: fadrColor, borderRadius: 2, transition: 'width 700ms cubic-bezier(0.4,0,0.2,1)' }} />
+                                    <div style={{ width: '100%', height: '100%', background: fadrColor, borderRadius: 2, transform: `scaleX(${fadr / 100})`, transformOrigin: 'left', transition: 'transform 700ms var(--ease)' }} />
                                   </div>
                                   <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 3 }}>{fadr >= 85 ? tc('pos_app.fadr_excellent') : fadr >= 70 ? tc('pos_app.fadr_needs_improvement') : tc('pos_app.fadr_critical')}</div>
                                 </div>

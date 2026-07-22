@@ -383,7 +383,7 @@ function SubTabStrip({ active, onChange }: { active: SubTab; onChange: (t: SubTa
                 cursor: 'pointer',
                 fontFamily: 'var(--font-sora)',
                 whiteSpace: 'nowrap',
-                transition: 'color .15s, border-color .15s',
+                transition: 'color .15s var(--ease), border-color .15s var(--ease)',
               }}
             >
               {t.label}

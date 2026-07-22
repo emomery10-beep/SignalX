@@ -323,6 +323,7 @@ export default function RetailTab({ currencySymbol, selectedLocation, transactio
               color: subTab === key ? ACC : 'var(--tx3)',
               borderBottom: `2px solid ${subTab === key ? ACC : 'transparent'}`,
               marginBottom: -1,
+              transition: 'color .15s var(--ease), border-color .15s var(--ease)',
             }}
           >
             {label}
@@ -595,7 +596,10 @@ function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[];
                 const open = expanded === t.id
                 return (
                   <FragmentRow key={t.id} open={open}>
-                    <tr onClick={() => setExpanded(open ? null : t.id)} style={{ cursor: 'pointer' }}>
+                    <tr onClick={() => setExpanded(open ? null : t.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(open ? null : t.id) } }}
+                      tabIndex={0} className="pos-row-btn"
+                      style={{ cursor: 'pointer', transition: 'background .15s var(--ease-out)' }}>
                       <td style={{ ...tdStyle, fontWeight: 700, color: 'var(--tx)' }}>{shortId(t.id)}</td>
                       <td style={tdStyle}>{fmtDateTime(t.created_at)}</td>
                       <td style={{ ...tdStyle, textAlign: 'right' }}>{itemCount}</td>
@@ -619,6 +623,7 @@ function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[];
         </div>
         {!filtered.length && <EmptyState icon="🔍" title={tc('pos_retail.emptyNoMatchingTxns')} hint={tc('pos_retail.emptyNoMatchingTxnsHint')} />}
       </div>
+      <style>{`.pos-row-btn:hover,.pos-row-btn:focus-visible{background:var(--ev)}.pos-row-btn:active{background:var(--ov)}`}</style>
     </div>
   )
 }
@@ -1063,7 +1068,10 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
                 const open = expanded === c.phone
                 return (
                   <FragmentRow key={c.phone} open={open}>
-                    <tr onClick={() => setExpanded(open ? null : c.phone)} style={{ cursor: 'pointer' }}>
+                    <tr onClick={() => setExpanded(open ? null : c.phone)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(open ? null : c.phone) } }}
+                      tabIndex={0} className="pos-row-btn"
+                      style={{ cursor: 'pointer', transition: 'background .15s var(--ease-out)' }}>
                       <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</td>
                       <td style={{ ...tdStyle, color: 'var(--tx3)' }}>{c.phone}</td>
                       <td style={tdStyle}>
@@ -1096,6 +1104,7 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
           </table>
         </div>
       </div>
+      <style>{`.pos-row-btn:hover,.pos-row-btn:focus-visible{background:var(--ev)}.pos-row-btn:active{background:var(--ov)}`}</style>
     </div>
   )
 }

@@ -162,11 +162,35 @@ function getComponentAnalysis(comp: HealthComponent, sector: Sector): { tips: st
 export default function MiniTrendChart({ history, label = 'Health Trend', height = 120, onAsk, forceExpanded, onClose }: MiniTrendChartProps) {
   const { tc } = useLang()
   const [expanded, setExpanded] = useState(false)
+  const [closingModal, setClosingModal] = useState(false)
+  const modalCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function openModal() {
+    if (modalCloseTimer.current) clearTimeout(modalCloseTimer.current)
+    setClosingModal(false)
+    setExpanded(true)
+  }
+
+  function closeModal() {
+    if (modalCloseTimer.current) clearTimeout(modalCloseTimer.current)
+    setClosingModal(true)
+    modalCloseTimer.current = setTimeout(() => {
+      setExpanded(false)
+      setClosingModal(false)
+      setSelectedBar(null)
+      setDrilledComponent(null)
+      onClose?.()
+    }, 180)
+  }
 
   // Allow parent to force-open the modal
   useEffect(() => {
-    if (forceExpanded) setExpanded(true)
+    if (forceExpanded) openModal()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forceExpanded])
+
+  useEffect(() => () => { if (modalCloseTimer.current) clearTimeout(modalCloseTimer.current) }, [])
+
   const [hovered, setHovered] = useState<number | null>(null)
   const [selectedBar, setSelectedBar] = useState<number | null>(null)
   const [drilledComponent, setDrilledComponent] = useState<string | null>(null)
@@ -241,11 +265,11 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
   return (
     <>
       <div
-        onClick={() => setExpanded(true)}
+        onClick={openModal}
         style={{
           padding: '16px 18px 14px', borderRadius: 16, border: '1px solid var(--b)',
           background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)',
-          cursor: 'pointer', transition: 'box-shadow 200ms, border-color 200ms', userSelect: 'none',
+          cursor: 'pointer', transition: 'box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out)', userSelect: 'none',
         }}
         onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#6366F130' }}
         onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
@@ -286,9 +310,20 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
 
       {/* ── Expanded modal ── */}
       {expanded && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => { setExpanded(false); setSelectedBar(null); setDrilledComponent(null); onClose?.() }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 700, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+        <div className="overlay-enter" style={{
+            position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            opacity: closingModal ? 0 : undefined,
+            transition: closingModal ? 'opacity 180ms var(--ease-out)' : undefined,
+            animation: closingModal ? 'none' : undefined,
+          }}
+          onClick={closeModal}>
+          <div onClick={e => e.stopPropagation()} className="modal-enter" style={{
+              background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 700, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+              opacity: closingModal ? 0 : undefined,
+              transform: closingModal ? 'scale(.96)' : undefined,
+              transition: closingModal ? 'opacity 180ms var(--ease-out), transform 180ms var(--ease-out)' : undefined,
+              animation: closingModal ? 'none' : undefined,
+            }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{label}</div>
@@ -296,7 +331,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                   {tc('intel_minitrend.scoreLabel')} <strong style={{ color: barColor(lastScore) }}>{lastScore}{tc('intel_minitrend.perHundred')}</strong> · <span style={{ color: deltaColor }}>{deltaLabel} {tc('intel_minitrend.vsThirtyDays')}</span>
                 </div>
               </div>
-              <button onClick={() => { setExpanded(false); setSelectedBar(null); setDrilledComponent(null); onClose?.() }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
+              <button onClick={closeModal} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -318,9 +353,11 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                   const isHov = hovered === i
                   const isSel = selectedBar === i
                   return (
-                    <div key={i} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
+                    <button key={i} type="button" onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
                       onClick={() => { setSelectedBar(selectedBar === i ? null : i); setDrilledComponent(null) }}
-                      style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', cursor: 'pointer' }}>
+                      aria-label={`${formatDate(h) || tc('intel_minitrend.today')}: ${sc}`}
+                      aria-pressed={isSel}
+                      style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', cursor: 'pointer', border: 'none', background: 'transparent', padding: 0, font: 'inherit' }}>
                       {isHov && !isSel && (
                         <div style={{ position: 'absolute', bottom: ht + 8, left: '50%', transform: 'translateX(-50%)', background: 'var(--tx)', color: 'var(--sf)', borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
                           {formatDate(h) && <span style={{ opacity: 0.65, marginRight: 4 }}>{formatDate(h)}</span>}{sc}
@@ -338,7 +375,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                         minWidth: 4, boxShadow: isSel ? '0 0 12px rgba(99,102,241,0.4)' : isHov ? `0 0 8px ${barColor(sc)}40` : 'none',
                         border: isSel ? '2px solid #6366F1' : 'none', boxSizing: 'border-box',
                       }} />
-                    </div>
+                    </button>
                   )
                 })}
               </div>
@@ -394,13 +431,16 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                             const analysis = getComponentAnalysis(orig, sector)
                             return (
                               <div key={ci}>
-                                <div
+                                <button
+                                  type="button"
                                   onClick={() => setDrilledComponent(isDrilled ? null : orig.name)}
+                                  aria-expanded={isDrilled}
                                   style={{
+                                    display: 'block', width: '100%', textAlign: 'left', fontFamily: 'inherit',
                                     padding: '10px 12px', borderRadius: 10,
                                     border: isDrilled ? `1px solid ${statusDot(orig.status)}30` : '1px solid var(--b)',
                                     background: isDrilled ? `${statusDot(orig.status)}06` : 'var(--sf)',
-                                    cursor: 'pointer', transition: 'all 150ms',
+                                    cursor: 'pointer', transition: 'all 150ms var(--ease-out)',
                                   }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -421,10 +461,10 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                     </div>
                                   </div>
                                   <div style={{ height: 6, background: 'var(--ev)', borderRadius: 3, overflow: 'hidden', marginBottom: 4 }}>
-                                    <div style={{ height: '100%', width: `${(orig.score / 20) * 100}%`, background: `linear-gradient(90deg, ${statusDot(orig.status)}, ${statusDot(orig.status)}88)`, borderRadius: 3, transition: 'width 400ms ease' }} />
+                                    <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${orig.score / 20})`, background: `linear-gradient(90deg, ${statusDot(orig.status)}, ${statusDot(orig.status)}88)`, borderRadius: 3, transition: 'transform 400ms var(--ease)' }} />
                                   </div>
                                   <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{orig.detail}</div>
-                                </div>
+                                </button>
 
                                 {/* ── Component deep-dive panel ── */}
                                 {isDrilled && (

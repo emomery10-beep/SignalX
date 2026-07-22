@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
@@ -33,6 +33,51 @@ function fmt(n: number, sym: string): string {
   if (Math.abs(n) >= 1_000_000) return `${sym}${(n / 1_000_000).toFixed(1)}M`
   if (Math.abs(n) >= 1_000) return `${sym}${(n / 1_000).toFixed(0)}K`
   return `${sym}${Math.round(n).toLocaleString()}`
+}
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// Tracks the slider drag continuously, so it needs to tween from wherever it currently
+// sits (not just its last settled value) toward each new target — AnimatedNumber's
+// entrance-style re-arm-from-0 behavior doesn't fit that; this is a lighter local tween.
+function useTweenedNumber(target: number, duration = 200): number {
+  const [display, setDisplay] = useState(target)
+  const displayRef = useRef(target)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
+    if (prefersReducedMotion()) {
+      displayRef.current = target
+      setDisplay(target)
+      return
+    }
+    const from = displayRef.current
+    const delta = target - from
+    if (delta === 0) return
+    const start = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      const current = from + delta * eased
+      displayRef.current = current
+      setDisplay(current)
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        displayRef.current = target
+        setDisplay(target)
+        rafRef.current = null
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current) }
+  }, [target, duration])
+
+  return display
 }
 
 export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cashBalance, currencySymbol: sym }: Props) {
@@ -88,6 +133,7 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
   const revenueGap = projRevenue - breakEvenRevenue
 
   return (
+    <>
     <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)' }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_scenario.title')}</div>
@@ -180,6 +226,8 @@ export default function ScenarioPlanner({ baseRevenue, baseCogs, baseFixed, cash
         </div>
       </div>
     </div>
+    <style>{`.sp-slider input[type="range"]:focus-visible ~ .sp-slider-thumb { outline: 2px solid #6366F1; outline-offset: 2px; }`}</style>
+    </>
   )
 }
 
@@ -195,7 +243,7 @@ function SliderControl({ label, value, min, max, step, unit, onChange }: {
         <span style={{ fontSize: 11, color: 'var(--tx2)' }}>{label}</span>
         <span style={{ fontSize: 11, fontWeight: 600, color: value !== 0 ? '#6366F1' : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{displayVal}</span>
       </div>
-      <div style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
+      <div className="sp-slider" style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
         <div style={{ position: 'absolute', width: '100%', height: 4, borderRadius: 2, background: 'var(--ev, #e5e5e5)' }} />
         <div style={{ position: 'absolute', width: `${pct}%`, height: 4, borderRadius: 2, background: '#6366F1' }} />
         <input
@@ -206,12 +254,13 @@ function SliderControl({ label, value, min, max, step, unit, onChange }: {
             position: 'absolute', width: '100%', height: 20, opacity: 0, cursor: 'pointer', margin: 0,
           }}
         />
-        <div style={{
+        <div className="sp-slider-thumb" style={{
           position: 'absolute', left: `calc(${pct}% - 7px)`,
           width: 14, height: 14, borderRadius: '50%',
           background: '#6366F1', border: '2px solid #fff',
           boxShadow: '0 1px 4px rgba(0,0,0,.15)',
           pointerEvents: 'none',
+          transition: 'outline-offset .15s var(--ease-out)',
         }} />
       </div>
     </div>
@@ -231,6 +280,7 @@ function ResultRow({ label, base, projected, sym, negative, bold, unit, isPercen
 
   const diff = projected - base
   const diffPct = base !== 0 ? ((diff / Math.abs(base)) * 100) : 0
+  const tweenedProjected = useTweenedNumber(projected, 200)
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -241,7 +291,7 @@ function ResultRow({ label, base, projected, sym, negative, bold, unit, isPercen
           color: bold ? (projected >= 0 ? '#22C55E' : '#EF4444') : negative ? '#EF4444' : 'var(--tx)',
           fontVariantNumeric: 'tabular-nums',
         }}>
-          {fmtVal(projected)}
+          {fmtVal(tweenedProjected)}
         </span>
         {Math.abs(diff) > 0.5 && (
           <span style={{

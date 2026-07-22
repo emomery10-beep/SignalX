@@ -689,6 +689,8 @@ export default function IntelligencePage() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
                     onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+                    onMouseDown={e => { e.currentTarget.style.transform = 'scale(.97)' }}
+                    onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
                   >
                     <div style={{
                       width: 40, height: 40, borderRadius: 10,
@@ -730,6 +732,8 @@ export default function IntelligencePage() {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
                     onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+                    onMouseDown={e => { e.currentTarget.style.transform = 'scale(.97)' }}
+                    onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-1px)' }}
                   >
                     <div style={{ fontSize: 24, marginBottom: 6 }}>{card.emoji}</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{card.title}</div>

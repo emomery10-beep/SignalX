@@ -95,11 +95,13 @@ export default function TeamPanel() {
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [form, setForm] = useState({ email: '', role: 'analyst', name: '' })
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
+  const [toastLeaving, setToastLeaving] = useState(false)
   const [expandedRole, setExpandedRole] = useState<string | null>(null)
   const [showCompare, setShowCompare] = useState(false)
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const toastExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const canManage = callerRole === 'owner' || callerRole === 'admin'
 
@@ -113,10 +115,20 @@ export default function TeamPanel() {
     }).finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    if (toastExitTimer.current) clearTimeout(toastExitTimer.current)
+  }, [])
+
   function showToast(msg: string, type: 'ok' | 'err' = 'ok') {
     if (toastTimer.current) clearTimeout(toastTimer.current)
+    if (toastExitTimer.current) clearTimeout(toastExitTimer.current)
+    setToastLeaving(false)
     setToast({ msg, type })
-    toastTimer.current = setTimeout(() => setToast(null), 4000)
+    toastTimer.current = setTimeout(() => {
+      setToastLeaving(true)
+      toastExitTimer.current = setTimeout(() => setToast(null), 200)
+    }, 4000)
   }
 
   async function invite() {
@@ -198,7 +210,7 @@ export default function TeamPanel() {
 
       {/* Toast */}
       {toast && (
-        <div style={{
+        <div className="toast-enter" style={{
           position: 'fixed', top: 20, right: 20, zIndex: 9999,
           padding: '10px 16px', borderRadius: 'var(--r-md)', fontSize: 13,
           fontFamily: 'var(--font-dm), sans-serif', fontWeight: 500,
@@ -206,6 +218,10 @@ export default function TeamPanel() {
           border: `1px solid ${toast.type === 'err' ? 'rgba(220,38,38,.2)' : 'rgba(5,150,105,.2)'}`,
           color: toast.type === 'err' ? '#b91c1c' : '#047857',
           maxWidth: 320,
+          opacity: toastLeaving ? 0 : 1,
+          transform: toastLeaving ? 'translateX(8px)' : 'translateX(0)',
+          transition: 'opacity 200ms var(--ease-out), transform 200ms var(--ease-out)',
+          animation: toastLeaving ? 'none' : undefined,
         }}>
           {toast.msg}
         </div>
@@ -401,7 +417,7 @@ export default function TeamPanel() {
               style={{
                 padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
                 background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
-                color: 'var(--tx)', outline: 'none', width: '100%', boxSizing: 'border-box',
+                color: 'var(--tx)', width: '100%', boxSizing: 'border-box',
               }}
             />
             <input
@@ -412,7 +428,7 @@ export default function TeamPanel() {
               style={{
                 padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
                 background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
-                color: 'var(--tx)', outline: 'none', width: '100%', boxSizing: 'border-box',
+                color: 'var(--tx)', width: '100%', boxSizing: 'border-box',
               }}
             />
           </div>
@@ -424,7 +440,7 @@ export default function TeamPanel() {
               style={{
                 flex: 1, padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
                 background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
-                color: 'var(--tx)', outline: 'none',
+                color: 'var(--tx)',
               }}>
               {ROLES_ORDER
                 .filter(r => r !== 'owner' && !(callerRole === 'admin' && r === 'admin'))
@@ -522,7 +538,7 @@ export default function TeamPanel() {
                             style={{
                               padding: '4px 8px', borderRadius: 'var(--r-sm)', border: `1px solid ${meta.color}30`,
                               background: meta.bg, fontSize: 11, fontFamily: 'var(--font-dm), sans-serif',
-                              color: meta.color, fontWeight: 600, cursor: 'pointer', outline: 'none',
+                              color: meta.color, fontWeight: 600, cursor: 'pointer',
                             }}>
                             {ROLES_ORDER
                               .filter(r => r !== 'owner' && !(callerRole === 'admin' && r === 'admin'))

@@ -148,6 +148,8 @@
   "limit_see_plans": "See all plans",
   "limit_reset_note": "Free plan resets next month.",
   "connection_error": "Connection issue — please check your internet and try again.",
+  "try_again": "Try again",
+  "thinking_slow": "Still working…",
   "status_connected_file": "Connected: {name}",
   "status_sources_connected": "{sources} connected",
   "status_synced_ago": " · synced {ago}",

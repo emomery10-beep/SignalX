@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
 
 interface KpiCard {
   label: string
@@ -11,28 +11,6 @@ interface KpiCard {
   accentColor?: string
   onClick?: () => void
   sparkline?: number[]
-}
-
-/* ── Animated count-up hook ── */
-function useCountUp(target: number, duration = 900) {
-  const [val, setVal] = useState(0)
-  const prev = useRef(0)
-  useEffect(() => {
-    if (isNaN(target)) return
-    const start = prev.current
-    const diff = target - start
-    const t0 = performance.now()
-    const step = (now: number) => {
-      const p = Math.min((now - t0) / duration, 1)
-      const ease = 1 - Math.pow(1 - p, 3)
-      const v = Math.round(start + diff * ease)
-      setVal(v)
-      if (p < 1) requestAnimationFrame(step)
-      else prev.current = target
-    }
-    requestAnimationFrame(step)
-  }, [target, duration])
-  return val
 }
 
 /* ── Inline sparkline SVG ── */
@@ -120,7 +98,6 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
   const hero = cards[0]
   const secondary = cards.slice(1)
   const heroNum = typeof hero?.value === 'number' ? hero.value : null
-  const animated = useCountUp(heroNum ?? 0, 1000)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -138,14 +115,15 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               textAlign: 'left',
               cursor: hero.onClick ? 'pointer' : 'default',
               fontFamily: 'inherit',
-              transition: 'box-shadow 200ms, transform 200ms',
-              outline: 'none',
+              transition: 'box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out)',
               display: 'flex',
               alignItems: 'center',
               gap: 14,
             }}
             onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'scale(.97)' }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-1px)' }}
           >
             {/* Score ring */}
             <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
@@ -168,7 +146,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
                 fontSize: 15, fontWeight: 800, color: hero.accentColor || 'var(--tx)',
                 fontFamily: 'var(--font-sora, inherit)',
               }}>
-                {heroNum != null ? animated : hero.value}
+                {heroNum != null ? <AnimatedNumber value={heroNum} duration={1000} tapToReplay={false} /> : hero.value}
               </div>
             </div>
 
@@ -213,8 +191,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
                 textAlign: 'left',
                 cursor: card.onClick ? 'pointer' : 'default',
                 fontFamily: 'inherit',
-                transition: 'box-shadow 200ms, transform 200ms',
-                outline: 'none',
+                transition: 'box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 6,
@@ -223,6 +200,8 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
               }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(.97)' }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-1px)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 {icon && <span style={{ fontSize: 12 }}>{icon}</span>}

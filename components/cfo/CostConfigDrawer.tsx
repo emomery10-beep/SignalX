@@ -124,6 +124,8 @@ function CostTable({ lines, setter, total, accent, sym, fmt, labelPlaceholder, a
             onChange={e => updateLine(line.id, 'label', e.target.value)}
             placeholder={labelPlaceholder}
             style={INPUT_STYLE}
+            onFocus={e => { e.currentTarget.style.borderColor = accent }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'var(--b)' }}
           />
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
@@ -134,6 +136,8 @@ function CostTable({ lines, setter, total, accent, sym, fmt, labelPlaceholder, a
               onChange={e => updateLine(line.id, 'amount', e.target.value.replace(/[^0-9.]/g, ''))}
               placeholder="0"
               style={{ ...INPUT_STYLE, paddingLeft: 20, textAlign: 'right' }}
+              onFocus={e => { e.currentTarget.style.borderColor = accent }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--b)' }}
             />
           </div>
           <button
@@ -168,6 +172,8 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
   const [fixed, setFixed] = useState<CostLine[]>(DEFAULT_FIXED)
   const [variable, setVariable] = useState<CostLine[]>(DEFAULT_VARIABLE)
   const [section, setSection] = useState<'balance' | 'fixed' | 'variable'>(initialSection)
+  const [visible, setVisible] = useState(open)
+  const [closing, setClosing] = useState(false)
 
   const defaultFixed = buildDefaultFixed(tc)
   const defaultVariable = buildDefaultVariable(tc)
@@ -180,6 +186,16 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
     setVariable(cfg.variableCosts.length ? cfg.variableCosts : defaultVariable)
     setSection(initialSection)
   }, [open, initialSection])
+
+  // Delay unmount until the exit animation finishes instead of vanishing instantly.
+  useEffect(() => {
+    if (open) { setVisible(true); setClosing(false); return }
+    if (!visible) return
+    setClosing(true)
+    const t = setTimeout(() => { setVisible(false); setClosing(false) }, 180)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const fixedTotal = fixed.reduce((s, c) => s + (Number(c.amount) || 0), 0)
   const variableTotal = variable.reduce((s, c) => s + (Number(c.amount) || 0), 0)
@@ -202,7 +218,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
   }
 
 
-  if (!open) return null
+  if (!visible) return null
 
   const tabs: Array<{ id: 'balance' | 'fixed' | 'variable'; label: string; badge?: string }> = [
     { id: 'balance', label: tc('cfo_costconfig.tabCashBalance'), badge: Number(cashBalance) > 0 ? fmt(Number(cashBalance)) : undefined },
@@ -212,8 +228,8 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
 
   return (
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 999, backdropFilter: 'blur(2px)' }} />
-      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 460, background: 'var(--bg)', zIndex: 1000, display: 'flex', flexDirection: 'column', boxShadow: '-6px 0 40px rgba(0,0,0,.2)', animation: 'drawerIn 180ms ease-out' }}>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 999, backdropFilter: 'blur(2px)', animation: `${closing ? 'drawerBackdropOut' : 'drawerBackdropIn'} 180ms var(--ease-out) both` }} />
+      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 460, background: 'var(--bg)', zIndex: 1000, display: 'flex', flexDirection: 'column', boxShadow: '-6px 0 40px rgba(0,0,0,.2)', animation: `${closing ? 'drawerOut' : 'drawerIn'} 180ms var(--ease-out) both` }}>
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
@@ -288,7 +304,12 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           <button onClick={handleSave} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnSave')}</button>
         </div>
       </div>
-      <style>{`@keyframes drawerIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+      <style>{`
+        @keyframes drawerIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes drawerOut { from{transform:translateX(0);opacity:1} to{transform:translateX(100%);opacity:0} }
+        @keyframes drawerBackdropIn { from{opacity:0} to{opacity:1} }
+        @keyframes drawerBackdropOut { from{opacity:1} to{opacity:0} }
+      `}</style>
     </>
   )
 }

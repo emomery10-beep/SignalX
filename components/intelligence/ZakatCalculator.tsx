@@ -29,7 +29,7 @@ function daysAgo(iso: string): number {
 const TILE_INPUT_STYLE = {
   fontSize: 16, fontWeight: 600, color: 'var(--tx)', background: 'var(--sf)',
   border: '1px solid var(--b)', borderRadius: 6, padding: '4px 6px',
-  fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' as const,
+  fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const,
 }
 
 function EditableTile({ label, value, sym, tone, editHint, notSet, notSetLabel, onCommit }: {

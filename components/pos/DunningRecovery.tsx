@@ -273,7 +273,10 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                         {tc('pos_dunning.btnRetryNow')}
                       </button>
                       <button onClick={() => sendReminder(payment.id)}
-                        style={{ fontSize: 9, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ fontSize: 9, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: `1px solid ${sendingReminder === payment.id ? 'rgba(34,197,94,.4)' : 'var(--b)'}`, background: 'transparent', color: sendingReminder === payment.id ? GREEN : 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit', gap: 4, transition: 'color .2s var(--ease-out), border-color .2s var(--ease-out)' }}>
+                        {sendingReminder === payment.id && (
+                          <svg className="animate-scale-in" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        )}
                         {sendingReminder === payment.id ? tc('pos_dunning.btnReminderSent') : tc('pos_dunning.btnSendReminder')}
                       </button>
                       {payment.retry_count >= payment.max_retries && (

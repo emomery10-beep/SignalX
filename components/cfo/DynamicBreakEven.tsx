@@ -92,9 +92,10 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
           </div>
           <div style={{ position: 'relative', height: 10, background: 'var(--ev, #f3f2ef)', borderRadius: 5 }}>
             <div style={{
-              width: `${Math.min(progressPct, 100)}%`, height: '100%', borderRadius: 5,
+              width: '100%', height: '100%', borderRadius: 5, transformOrigin: 'left',
+              transform: `scaleX(${Math.min(progressPct, 100) / 100})`,
               background: isProfitable ? `linear-gradient(90deg, ${AMBER}, ${GREEN})` : `linear-gradient(90deg, ${RED}, ${AMBER})`,
-              transition: 'width 500ms ease',
+              transition: 'transform 500ms var(--ease-out)',
             }} />
             {/* Break-even marker */}
             <div style={{

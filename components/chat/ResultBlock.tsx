@@ -114,7 +114,7 @@ function KpiCardBlock({ cards }: { cards: KpiCard[] }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 8, marginBottom: 16 }}>
       {cards.map((c, i) => (
-        <div key={i} style={{ padding: '10px 12px', borderRadius: 12, background: statusBg(c.status), border: `1px solid ${c.status ? statusColor(c.status) + '40' : 'var(--b)'}` }}>
+        <div key={i} className="kpi-card" style={{ padding: '10px 12px', borderRadius: 12, background: statusBg(c.status), border: `1px solid ${c.status ? statusColor(c.status) + '40' : 'var(--b)'}` }}>
           <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.label}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: c.status ? statusColor(c.status) : 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{c.value}</span>
@@ -281,7 +281,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
           {result.action_buttons!.map((btn, i) => (
             <button key={i} onClick={() => onFollowUp(btn.query)}
-              style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', display: 'flex', alignItems: 'center', gap: 5 }}
+              style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)', display: 'flex', alignItems: 'center', gap: 5 }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--ev)'}
               onMouseLeave={e => e.currentTarget.style.background = 'var(--sf)'}>
               {btn.label}
@@ -303,7 +303,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {result.follow_up_suggestions!.slice(0, 2).map((s, i) => (
             <button key={i} onClick={() => onFollowUp(s)}
-              style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(208,138,89,.25)', background: 'rgba(208,138,89,.04)', color: 'var(--acc)', fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all 150ms', display: 'flex', alignItems: 'center', gap: 7 }}
+              style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(208,138,89,.25)', background: 'rgba(208,138,89,.04)', color: 'var(--acc)', fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)', display: 'flex', alignItems: 'center', gap: 7 }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(208,138,89,.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(208,138,89,.04)'}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

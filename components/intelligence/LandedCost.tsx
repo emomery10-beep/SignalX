@@ -99,7 +99,7 @@ export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: stri
   const inp: React.CSSProperties = {
     padding: '8px 11px', fontSize: 13, background: EV,
     border: `1px solid ${B2}`, borderRadius: 9, color: TX,
-    outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const,
+    fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const,
   }
 
   const calculate = useCallback(() => {

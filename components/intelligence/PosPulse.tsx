@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { detectGeoFromTimezone } from '@/lib/geo'
 import { useLang } from '@/components/LanguageProvider'
@@ -79,6 +79,25 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
   const [periodDrill, setPeriodDrill] = useState<'yesterday' | 'prevWeek' | null>(null)
   const [sym, setSym] = useState('$')
   const [sectorInfo, setSectorInfo] = useState({ label: 'POS Pulse', emoji: '📊' })
+  const [closingDrill, setClosingDrill] = useState(false)
+  const drillCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function openSalesDrill(id: string) {
+    if (drillCloseTimer.current) clearTimeout(drillCloseTimer.current)
+    setClosingDrill(false)
+    setSalesDrill(id)
+  }
+
+  function closeSalesDrill() {
+    if (drillCloseTimer.current) clearTimeout(drillCloseTimer.current)
+    setClosingDrill(true)
+    drillCloseTimer.current = setTimeout(() => {
+      setSalesDrill(null); setKpiDrill(null); setPeriodDrill(null)
+      setClosingDrill(false)
+    }, 180)
+  }
+
+  useEffect(() => () => { if (drillCloseTimer.current) clearTimeout(drillCloseTimer.current) }, [])
 
   const DRILL_SECTIONS = [
     { id: 'time', label: tc('intel_pospulse.drillTime'), icon: '⏰' },
@@ -371,7 +390,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
       padding: '16px 18px 14px', borderRadius: 16,
       border: '1px solid var(--b)',
       background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)',
-      transition: 'all 300ms ease',
+      transition: 'all 300ms var(--ease)',
     }}>
       {/* Tab toggle */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -384,7 +403,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 background: view === v ? '#6366F1' : 'transparent',
                 color: view === v ? '#fff' : 'var(--tx3)',
                 fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                textTransform: 'uppercase', letterSpacing: '.06em', transition: 'all 100ms',
+                textTransform: 'uppercase', letterSpacing: '.06em', transition: 'all 100ms var(--ease-out)',
               }}
             >
               {v === 'sales' ? tc('intel_pospulse.tabSales') : tc('intel_pospulse.tabStock')}
@@ -470,14 +489,14 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               <div style={{ display: 'flex', gap: 4 }}>
                 {DRILL_SECTIONS.map(s => (
                   <button key={s.id}
-                    onClick={() => setSalesDrill(s.id)}
+                    onClick={() => openSalesDrill(s.id)}
                     style={{
                       flex: 1, padding: '6px 8px', borderRadius: 8,
                       border: '1px solid var(--b)',
                       background: 'var(--sf)',
                       color: 'var(--tx3)',
                       fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                      transition: 'all 150ms', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      transition: 'all 150ms var(--ease-out)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F130'; e.currentTarget.style.color = '#6366F1' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx3)' }}
@@ -498,7 +517,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                   {fmt(sales!.avgBasket)} {tc('intel_pospulse.avgFooter')}
                 </div>
                 <button
-                  onClick={() => setSalesDrill('time')}
+                  onClick={() => openSalesDrill('time')}
                   style={{ fontSize: 9, color: '#6366F1', fontWeight: 600, marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
                 >
                   {tc('intel_pospulse.tapToAnalyse')}
@@ -565,9 +584,20 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
 
       {/* ── Sales Drill Modal ── */}
       {salesDrill && hasSales && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => { setSalesDrill(null); setKpiDrill(null); setPeriodDrill(null) }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 700, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+        <div className="overlay-enter" style={{
+            position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            opacity: closingDrill ? 0 : undefined,
+            transition: closingDrill ? 'opacity 180ms var(--ease-out)' : undefined,
+            animation: closingDrill ? 'none' : undefined,
+          }}
+          onClick={closeSalesDrill}>
+          <div onClick={e => e.stopPropagation()} className="modal-enter" style={{
+              background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 700, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+              opacity: closingDrill ? 0 : undefined,
+              transform: closingDrill ? 'scale(.96)' : undefined,
+              transition: closingDrill ? 'opacity 180ms var(--ease-out), transform 180ms var(--ease-out)' : undefined,
+              animation: closingDrill ? 'none' : undefined,
+            }}>
             {/* Modal header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
@@ -578,7 +608,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                   {tc('intel_pospulse.thisWeekLabel')}<strong style={{ color: '#6366F1' }}>{fmt(sales!.weekRevenue)}</strong> · {tc('intel_pospulse.txns', { n: sales!.weekTxns })}
                 </div>
               </div>
-              <button onClick={() => { setSalesDrill(null); setKpiDrill(null); setPeriodDrill(null) }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
+              <button onClick={closeSalesDrill} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -604,7 +634,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                         padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
                         border: isDrilled ? `1px solid ${sc}30` : '1px solid var(--b)',
                         background: isDrilled ? `${sc}06` : 'var(--ev)',
-                        transition: 'all 150ms',
+                        transition: 'all 150ms var(--ease-out)',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -906,7 +936,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                     background: salesDrill === s.id ? 'rgba(99,102,241,.06)' : 'var(--sf)',
                     color: salesDrill === s.id ? '#6366F1' : 'var(--tx3)',
                     fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'all 150ms', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    transition: 'all 150ms var(--ease-out)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   }}
                 >
                   <span>{s.icon}</span>{s.label}
@@ -948,7 +978,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 {/* Yesterday comparison — clickable */}
                 <div
                   onClick={() => setPeriodDrill(periodDrill === 'yesterday' ? null : 'yesterday')}
-                  style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: periodDrill === 'yesterday' ? 0 : 12, cursor: 'pointer', border: periodDrill === 'yesterday' ? '1px solid #6366F130' : '1px solid transparent', transition: 'all 150ms' }}
+                  style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: periodDrill === 'yesterday' ? 0 : 12, cursor: 'pointer', border: periodDrill === 'yesterday' ? '1px solid #6366F130' : '1px solid transparent', transition: 'all 150ms var(--ease-out)' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div>
@@ -1022,7 +1052,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                   <div>
                     <div
                       onClick={() => setPeriodDrill(periodDrill === 'prevWeek' ? null : 'prevWeek')}
-                      style={{ padding: '12px 14px', borderRadius: periodDrill === 'prevWeek' ? '10px 10px 0 0' : 10, border: periodDrill === 'prevWeek' ? '1px solid #6366F130' : '1px dashed var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', transition: 'all 150ms' }}
+                      style={{ padding: '12px 14px', borderRadius: periodDrill === 'prevWeek' ? '10px 10px 0 0' : 10, border: periodDrill === 'prevWeek' ? '1px solid #6366F130' : '1px dashed var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', transition: 'all 150ms var(--ease-out)' }}
                     >
                       <div>
                         <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.prevWeekLabel')}</div>
@@ -1120,7 +1150,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                                 </div>
                               </div>
                               <div style={{ height: 8, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${barPct * 100}%`, background: `linear-gradient(90deg, ${c}, ${c}88)`, borderRadius: 4, transition: 'width 400ms ease' }} />
+                                <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${barPct})`, background: `linear-gradient(90deg, ${c}, ${c}88)`, borderRadius: 4, transition: 'transform 400ms var(--ease)' }} />
                               </div>
                             </div>
                           )
@@ -1198,7 +1228,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                               <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx)' }}>{fmt(s.revenue)}</span>
                             </div>
                             <div style={{ height: 6, background: 'var(--ev)', borderRadius: 3, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${barPct * 100}%`, background: i === 0 ? '#6366F1' : '#6366F166', borderRadius: 3, transition: 'width 400ms ease' }} />
+                              <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${barPct})`, background: i === 0 ? '#6366F1' : '#6366F166', borderRadius: 3, transition: 'transform 400ms var(--ease)' }} />
                             </div>
                           </div>
                         )

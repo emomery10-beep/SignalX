@@ -157,7 +157,6 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
     border: `1px solid ${B2}`,
     borderRadius: 9,
     color: TX,
-    outline: 'none',
     fontFamily: 'inherit',
     width: '100%',
     boxSizing: 'border-box',

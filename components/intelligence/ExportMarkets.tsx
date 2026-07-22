@@ -215,7 +215,7 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder={tc('intel_exportmarkets.searchPlaceholder')}
-          style={{ width: '100%', padding: '9px 12px 9px 32px', fontSize: 13, background: SF, border: `1px solid ${B2}`, borderRadius: 10, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '9px 12px 9px 32px', fontSize: 13, background: SF, border: `1px solid ${B2}`, borderRadius: 10, color: TX, fontFamily: 'inherit', boxSizing: 'border-box' }}
         />
         {searchQuery && (
           <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, lineHeight: 1 }}>×</button>

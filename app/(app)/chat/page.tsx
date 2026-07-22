@@ -95,13 +95,26 @@ export default function ChatPage() {
   const [uploading, setUploading] = useState(false)
   const [isLoading, setIsLoadingLocal] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [slowWait, setSlowWait] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
   const chatRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const nearBottomRef = useRef(true)
 
   const scrollToBottom = () => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' }) }
-  useEffect(() => { scrollToBottom() }, [messages])
+  const handleChatScroll = () => {
+    const el = chatRef.current
+    if (!el) return
+    nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  }
+  useEffect(() => { if (nearBottomRef.current) scrollToBottom() }, [messages])
+
+  useEffect(() => {
+    if (!isLoading) { setSlowWait(false); return }
+    const t = setTimeout(() => setSlowWait(true), 4000)
+    return () => clearTimeout(t)
+  }, [isLoading])
 
   useEffect(() => {
     const h = () => setWinW(window.innerWidth)
@@ -292,7 +305,7 @@ export default function ChatPage() {
     } catch {
       const errMsg: Message = {
         id: (Date.now() + 1).toString(), role: 'assistant',
-        content: '__CONNECTION_ERROR__',
+        content: `__CONNECTION_ERROR__:${q}`,
         timestamp: new Date()
       }
       setMessages(m => [...m, errMsg])
@@ -425,7 +438,7 @@ export default function ChatPage() {
         </div>
 
         {/* Chat area */}
-        <div ref={chatRef} style={{ flex: 1, overflowY: 'auto' }}>
+        <div ref={chatRef} onScroll={handleChatScroll} style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ maxWidth: 680, margin: '0 auto', padding: `16px ${isMobile ? '12px' : '18px'} 8px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
 
             {isEmpty && (
@@ -499,9 +512,17 @@ export default function ChatPage() {
                         </div>
                         <p style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 10 }}>{tc('chat.limit_reset_note')}</p>
                       </div>
-                    ) : msg.content === '__CONNECTION_ERROR__' ? (
-                      <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 15, color: '#ef4444' }}>
-                        {tc('chat.connection_error')}
+                    ) : msg.content.startsWith('__CONNECTION_ERROR__') ? (
+                      <div className="animate-fade-up" style={{ padding: '14px 16px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)' }}>
+                        <div style={{ fontSize: 15, color: '#ef4444', marginBottom: 10 }}>
+                          {tc('chat.connection_error')}
+                        </div>
+                        <button
+                          onClick={() => sendMessage(msg.content.slice('__CONNECTION_ERROR__:'.length))}
+                          style={{ padding: '8px 16px', borderRadius: 9999, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: '#ef4444', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)' }}
+                        >
+                          {tc('chat.try_again')}
+                        </button>
                       </div>
                     ) : msg.result ? (
                       <ResultBlock
@@ -525,8 +546,9 @@ export default function ChatPage() {
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><g fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11 V5 H11"/><path d="M21 5 H27 V11"/><path d="M5 21 V27 H11"/><path d="M27 21 V27 H21"/></g><circle cx="16" cy="16" r="2.6" fill="white"/></svg>
                 </div>
-                <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', display: 'flex', gap: 4, alignItems: 'center' }}>
-                  <span className="tdot"/><span className="tdot"/><span className="tdot"/>
+                <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><span className="tdot"/><span className="tdot"/><span className="tdot"/></span>
+                  {slowWait && <span className="animate-fade-in" style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('chat.thinking_slow')}</span>}
                 </div>
               </div>
             )}

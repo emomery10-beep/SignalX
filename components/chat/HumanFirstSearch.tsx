@@ -207,6 +207,10 @@ export default function HumanFirstSearch({
   useEffect(() => {
     if (inputValue) return
     const full = prompts[placeholderIdx]
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayedText(full)
+      return
+    }
     let charIdx = displayedText.length
 
     const tick = () => {
@@ -249,7 +253,7 @@ export default function HumanFirstSearch({
         borderRadius: 12,
         border: '1px solid var(--b2)',
         background: 'var(--sf)',
-        transition: 'border-color 180ms, box-shadow 180ms',
+        transition: 'border-color .18s var(--ease-out), box-shadow .18s var(--ease-out)',
       }}
         onFocusCapture={e => {
           const el = e.currentTarget as HTMLDivElement
@@ -310,7 +314,7 @@ export default function HumanFirstSearch({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'all 150ms',
+              transition: 'all 150ms var(--ease-out)',
               flexShrink: 0,
             }}
           >
@@ -347,7 +351,7 @@ export default function HumanFirstSearch({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'background 150ms',
+            transition: 'background .15s var(--ease-out), color .15s var(--ease-out), transform .15s var(--ease-out)',
             flexShrink: 0,
           }}
         >

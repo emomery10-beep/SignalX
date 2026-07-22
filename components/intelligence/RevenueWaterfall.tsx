@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { detectGeoFromTimezone } from '@/lib/geo'
 import { useLang } from '@/components/LanguageProvider'
 
@@ -56,6 +56,26 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
   const [drillItem, setDrillItem] = useState<string | null>(null)
   const [posMetrics, setPosMetrics] = useState<PosMetrics | null>(null)
   const [loadingMetrics, setLoadingMetrics] = useState(false)
+  const [closingModal, setClosingModal] = useState(false)
+  const modalCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function openModal() {
+    if (modalCloseTimer.current) clearTimeout(modalCloseTimer.current)
+    setClosingModal(false)
+    setExpanded(true)
+  }
+
+  function closeModal() {
+    if (modalCloseTimer.current) clearTimeout(modalCloseTimer.current)
+    setClosingModal(true)
+    modalCloseTimer.current = setTimeout(() => {
+      setExpanded(false)
+      setClosingModal(false)
+      setDrillItem(null)
+    }, 180)
+  }
+
+  useEffect(() => () => { if (modalCloseTimer.current) clearTimeout(modalCloseTimer.current) }, [])
 
   const DRILL_PROMPTS = buildDrillPrompts(tc)
 
@@ -260,11 +280,11 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
     <>
       {/* Mini card */}
       <div
-        onClick={() => setExpanded(true)}
+        onClick={openModal}
         style={{
           padding: '16px 18px 14px', borderRadius: 16, border: '1px solid var(--b)',
           background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)',
-          cursor: 'pointer', transition: 'box-shadow 200ms, border-color 200ms', userSelect: 'none',
+          cursor: 'pointer', transition: 'box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out)', userSelect: 'none',
         }}
         onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#6366F130' }}
         onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
@@ -315,16 +335,28 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
       {/* Expanded modal with drill-down */}
       {expanded && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => { setExpanded(false); setDrillItem(null) }}
+          className="overlay-enter"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            opacity: closingModal ? 0 : undefined,
+            transition: closingModal ? 'opacity 180ms var(--ease-out)' : undefined,
+            animation: closingModal ? 'none' : undefined,
+          }}
+          onClick={closeModal}
         >
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 640, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+          <div onClick={e => e.stopPropagation()} className="modal-enter" style={{
+              background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 640, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+              opacity: closingModal ? 0 : undefined,
+              transform: closingModal ? 'scale(.96)' : undefined,
+              transition: closingModal ? 'opacity 180ms var(--ease-out), transform 180ms var(--ease-out)' : undefined,
+              animation: closingModal ? 'none' : undefined,
+            }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700 }}>{tc('intel_revwaterfall.modalTitle')}</div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.modalSubtitle').replace('{dataSource}', posMetrics ? tc('intel_revwaterfall.dataSourcePos') : tc('intel_revwaterfall.dataSourceHealth'))}</div>
               </div>
-              <button onClick={() => { setExpanded(false); setDrillItem(null) }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
+              <button onClick={closeModal} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
@@ -352,10 +384,12 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
                 const c = COLORS[bar.type]
                 return (
                   <div key={i}>
-                    <div
+                    <button
+                      type="button"
                       onClick={() => setDrillItem(isDrill ? null : bar.key)}
                       onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '4px 0', borderRadius: 6, transition: 'background 100ms', background: isDrill ? `${c}08` : 'transparent' }}
+                      aria-expanded={isDrill}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '4px 0', borderRadius: 6, transition: 'background 100ms', background: isDrill ? `${c}08` : 'transparent', width: '100%', border: 'none', textAlign: 'left', fontFamily: 'inherit' }}
                     >
                       <div style={{ width: 90, fontSize: 12, fontWeight: bar.type === 'total' ? 700 : 400, color: isDrill ? c : 'var(--tx2)', textAlign: 'right', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
                         {bar.label}
@@ -363,15 +397,15 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
                       </div>
                       <div style={{ flex: 1, height: bar.type === 'total' ? 24 : 18, background: 'var(--ev)', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
                         <div style={{
-                          height: '100%', width: `${pct * 100}%`,
+                          height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${pct})`,
                           background: isHov || isDrill ? `linear-gradient(90deg, ${c} 0%, ${c} 100%)` : `linear-gradient(90deg, ${c}cc 0%, ${c}88 100%)`,
-                          borderRadius: 6, transition: 'width 400ms ease, background 100ms',
+                          borderRadius: 6, transition: 'transform 400ms var(--ease), background 100ms',
                           boxShadow: isHov || isDrill ? `0 0 10px ${c}30` : 'none',
                         }} />
                         {bar.type === 'total' && <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: 'var(--tx3)' }}>{bar.value > 0 ? '+' : ''}{bar.value.toFixed(0)}%</span>}
                       </div>
                       <div style={{ width: 55, fontSize: 12, fontWeight: bar.type === 'total' ? 700 : 400, color: c, textAlign: 'right', flexShrink: 0 }}>{bar.value > 0 ? '+' : ''}{bar.value.toFixed(0)}%</div>
-                    </div>
+                    </button>
 
                     {/* Drill-down panel */}
                     {isDrill && (

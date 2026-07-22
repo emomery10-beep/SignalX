@@ -100,19 +100,19 @@ export default function DecisionMemory({ onAsk }: Props) {
               placeholder={tc('intel_decisionmemory.titlePlaceholder')}
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)' }}
             />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
               <select value={form.decision_type} onChange={e => setForm(f => ({ ...f, decision_type: e.target.value }))}
-                style={{ padding: '7px 8px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}>
+                style={{ padding: '7px 8px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx)' }}>
                 {['pricing', 'stock', 'supplier', 'product', 'strategy'].map(t => (
                   <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
                 ))}
               </select>
               <input placeholder={tc('intel_decisionmemory.beforePlaceholder')} value={form.before_value} onChange={e => setForm(f => ({ ...f, before_value: e.target.value }))}
-                style={{ padding: '7px 8px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}/>
+                style={{ padding: '7px 8px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx)' }}/>
               <input placeholder={tc('intel_decisionmemory.afterPlaceholder')} value={form.after_value} onChange={e => setForm(f => ({ ...f, after_value: e.target.value }))}
-                style={{ padding: '7px 8px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}/>
+                style={{ padding: '7px 8px', borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx)' }}/>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={logDecision} disabled={!form.title || logging}

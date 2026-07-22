@@ -507,7 +507,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
       {/* Add Another Device prompt */}
       {showAddAnother && lastCreatedJob && (
-        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)' }}>
+        <div className="animate-pop-in" style={{ marginTop: 16, padding: 16, borderRadius: 12, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, marginBottom: 6 }}>
             {tc('pos_servicejobs.addAnotherJobCreated').replace('{ticket}', lastCreatedJob.ticket_number)}
           </div>

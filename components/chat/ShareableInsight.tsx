@@ -82,7 +82,7 @@ export default function ShareableInsight({ question, result }: Props) {
         color: isGreen ? '#16a34a' : isRed ? '#dc2626' : 'var(--tx3)',
         fontSize: 10, fontWeight: 500,
         cursor: state === 'loading' ? 'wait' : 'pointer',
-        fontFamily: 'inherit', transition: 'all 180ms', whiteSpace: 'nowrap',
+        fontFamily: 'inherit', transition: 'background .18s var(--ease-out), color .18s var(--ease-out), border-color .18s var(--ease-out), transform .18s var(--ease-out)', whiteSpace: 'nowrap',
       }}
       onMouseEnter={e => { if (state === 'idle') { const b = e.currentTarget; b.style.background='var(--ev)'; b.style.color='var(--tx)' } }}
       onMouseLeave={e => { if (state === 'idle') { const b = e.currentTarget; b.style.background='transparent'; b.style.color='var(--tx3)' } }}

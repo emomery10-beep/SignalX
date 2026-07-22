@@ -19,6 +19,7 @@ export default function VoiceVisualizer({ isActive, transcript, analyserNode, on
     if (!canvas || !isActive) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // 5 wave lines — blues and purples like Gemini
     const waves = [
@@ -33,7 +34,7 @@ export default function VoiceVisualizer({ isActive, transcript, analyserNode, on
     const data = new Uint8Array(analyserNode ? analyserNode.frequencyBinCount : 128)
 
     const draw = () => {
-      animRef.current = requestAnimationFrame(draw)
+      if (!reduceMotion) animRef.current = requestAnimationFrame(draw)
       const W = canvas.width
       const H = canvas.height
       ctx.clearRect(0, 0, W, H)
@@ -65,7 +66,7 @@ export default function VoiceVisualizer({ isActive, transcript, analyserNode, on
         ctx.stroke()
       })
 
-      t++
+      if (!reduceMotion) t++
     }
 
     draw()

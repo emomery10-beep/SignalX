@@ -20,6 +20,7 @@ interface ForecastResult {
 }
 interface SavedForecast { id: string; name: string; accuracy: number; method: string; created_at: string; target_column: string; horizon_days: number; result?: ForecastResult }
 interface WhatIfResult { base: ForecastResult; modified: ForecastResult; impactPct: number; impactSummary: string }
+type ChartInstance = { canvas: HTMLCanvasElement; data: { labels: unknown; datasets: unknown[] }; options: { animation?: unknown }; update: () => void; destroy: () => void }
 
 type Tab = 'overview' | 'decomposition' | 'comparison' | 'whatif' | 'data'
 type Method = 'linear' | 'moving_avg' | 'seasonal' | 'exponential' | 'auto'
@@ -50,6 +51,7 @@ export default function ForecastsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [confidence, setConfidence] = useState(1.5)
   const [scenario, setScenario] = useState<'base'|'optimistic'|'pessimistic'>('base')
+  const [initialLoading, setInitialLoading] = useState(true)
 
   // Pro state
   const [comparison, setComparison] = useState<MethodComparison[] | null>(null)
@@ -80,7 +82,7 @@ export default function ForecastsPage() {
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) { setInitialLoading(false); return }
       const [{ data: ups }, { data: forecasts }, sourcesRes] = await Promise.all([
         supabase.from('uploads').select('id, filename, column_names').eq('user_id', user.id).eq('status', 'parsed').order('created_at', { ascending: false }),
         supabase.from('forecasts').select('id, name, accuracy, method, created_at, target_column, horizon_days, result').eq('user_id', user.id).order('created_at', { ascending: false }).limit(15),
@@ -89,6 +91,7 @@ export default function ForecastsPage() {
       setUploads(ups || [])
       setSavedForecasts(forecasts || [])
       setSourceDatasets(sourcesRes.datasets || [])
+      setInitialLoading(false)
     }
     load()
   }, [supabase])
@@ -110,9 +113,9 @@ export default function ForecastsPage() {
     if (!result || !chartRef.current || activeTab !== 'overview') return
     const draw = async () => {
       const Chart = (await import('chart.js/auto')).default
-      if (chartInstanceRef.current) (chartInstanceRef.current as {destroy:()=>void}).destroy()
       const r = scenarioData(result)
       const ctx = chartRef.current!.getContext('2d')!
+      const animation = prefersReducedMotion() ? false as const : { duration: 600, easing: 'easeOutQuart' as const }
 
       const datasets: unknown[] = [
         { label: tc('forecasts.col_actual'), data: r.actual, borderColor: 'rgba(208,138,89,.9)', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, spanGaps: false },
@@ -145,22 +148,34 @@ export default function ForecastsPage() {
         }
       })
 
-      chartInstanceRef.current = new Chart(ctx, {
-        type: 'line',
-        data: { labels: r.labels, datasets: datasets as any },
-        options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 600, easing: 'easeOutQuart' },
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10, filter: (item: any) => item.text !== '' } },
-            tooltip: { backgroundColor: 'var(--sf)', titleColor: 'var(--tx)', bodyColor: 'var(--tx2)', borderColor: 'var(--b)', borderWidth: 1, padding: 10, cornerRadius: 8 },
-          },
-          scales: {
-            x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } },
-            y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } },
-          },
-        }
-      })
+      // Reuse the live instance (and let Chart.js tween between values) as long as it's
+      // still bound to the current canvas — a fresh canvas node (e.g. after navigating
+      // away from and back to this tab) needs a fresh instance instead.
+      const existing = chartInstanceRef.current as ChartInstance | null
+      if (existing && existing.canvas === chartRef.current) {
+        existing.data.labels = r.labels as any
+        existing.data.datasets = datasets as any
+        existing.options.animation = animation as any
+        existing.update()
+      } else {
+        if (existing) existing.destroy()
+        chartInstanceRef.current = new Chart(ctx, {
+          type: 'line',
+          data: { labels: r.labels, datasets: datasets as any },
+          options: {
+            responsive: true, maintainAspectRatio: false, animation,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10, filter: (item: any) => item.text !== '' } },
+              tooltip: { backgroundColor: 'var(--sf)', titleColor: 'var(--tx)', bodyColor: 'var(--tx2)', borderColor: 'var(--b)', borderWidth: 1, padding: 10, cornerRadius: 8 },
+            },
+            scales: {
+              x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } },
+              y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } },
+            },
+          }
+        })
+      }
     }
     draw()
   }, [result, scenario, scenarioData, activeTab, overlayForecasts])
@@ -182,7 +197,7 @@ export default function ForecastsPage() {
           { label: tc('forecasts.legend_residual'), data: d.residual, borderColor: '#f48080', borderWidth: 1, pointRadius: 0, borderDash: [3,3], fill: false },
         ]},
         options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+          responsive: true, maintainAspectRatio: false, animation: prefersReducedMotion() ? false : { duration: 600 },
           interaction: { mode: 'index', intersect: false },
           plugins: { legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10 } } },
           scales: { x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } } },
@@ -208,7 +223,7 @@ export default function ForecastsPage() {
           { label: tc('forecasts.legend_whatif', { sign: whatIfChange > 0 ? '+' : '', pct: whatIfChange }), data: m.predicted.map((v, i) => m.actual[i] === null ? v : null), borderColor: 'rgba(245,158,11,.9)', borderWidth: 2.5, pointRadius: 0, fill: false, spanGaps: false },
         ]},
         options: {
-          responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+          responsive: true, maintainAspectRatio: false, animation: prefersReducedMotion() ? false : { duration: 600 },
           interaction: { mode: 'index', intersect: false },
           plugins: { legend: { labels: { color: 'var(--tx3)', font: { size: 11 }, boxWidth: 10 } }, tooltip: { backgroundColor: 'var(--sf)', titleColor: 'var(--tx)', bodyColor: 'var(--tx2)', borderColor: 'var(--b)', borderWidth: 1, padding: 10, cornerRadius: 8 } },
           scales: { x: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 }, maxTicksLimit: 12 } }, y: { grid: { color: 'var(--b)' }, ticks: { color: 'var(--tx3)', font: { size: 10 } } } },
@@ -405,7 +420,8 @@ export default function ForecastsPage() {
 
               <div style={formGroup}>
                 <label style={labelStyle}>{tc('forecasts.dataset_label')}</label>
-                <select style={selectStyle} value={selectedUpload?.id || selectedSource?.id || ''} onChange={async (e) => {
+                {initialLoading ? <div className="skeleton" style={{ height: 30, marginTop: 1 }} /> : (
+                <select style={selectStyle} onFocus={focusRing} onBlur={blurRing} value={selectedUpload?.id || selectedSource?.id || ''} onChange={async (e) => {
                   const val = e.target.value
                   setTargetColumn(''); setResult(null); setComparison(null); setStats(null); setWhatIfResult(null); setOverlayForecasts([])
                   setSelectedUpload(null); setSelectedSource(null); setSourceRows(null); setNumericColumns([]); setStats(null); setStatsError(false)
@@ -448,12 +464,13 @@ export default function ForecastsPage() {
                     </optgroup>
                   )}
                 </select>
+                )}
               </div>
 
               {(selectedUpload || selectedSource) && (
                 <div style={formGroup}>
                   <label style={labelStyle}>{tc('forecasts.column_to_forecast')}</label>
-                  <select style={selectStyle} value={targetColumn} onChange={e => {
+                  <select style={selectStyle} onFocus={focusRing} onBlur={blurRing} value={targetColumn} onChange={e => {
                     setTargetColumn(e.target.value); setResult(null); setComparison(null); setWhatIfResult(null)
                     if (e.target.value && selectedUpload) fetchStats(selectedUpload.id, e.target.value)
                   }}>
@@ -470,19 +487,19 @@ export default function ForecastsPage() {
 
               <div style={formGroup}>
                 <label style={labelStyle}>{tc('forecasts.forecast_name')} <span style={{ color: 'var(--tx3)', fontWeight: 400 }}>{tc('forecasts.optional')}</span></label>
-                <input style={inputStyle} placeholder={tc('forecasts.forecast_name_placeholder')} value={forecastName} onChange={e => setForecastName(e.target.value)} />
+                <input style={inputStyle} onFocus={focusRing} onBlur={blurRing} placeholder={tc('forecasts.forecast_name_placeholder')} value={forecastName} onChange={e => setForecastName(e.target.value)} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div style={formGroup}>
                   <label style={labelStyle}>{tc('forecasts.horizon')}</label>
-                  <select style={selectStyle} value={horizon} onChange={e => setHorizon(Number(e.target.value))}>
+                  <select style={selectStyle} onFocus={focusRing} onBlur={blurRing} value={horizon} onChange={e => setHorizon(Number(e.target.value))}>
                     {[7,14,30,60,90].map(d => <option key={d} value={d}>{d} {tc('forecasts.days_suffix')}</option>)}
                   </select>
                 </div>
                 <div style={formGroup}>
                   <label style={labelStyle}>{tc('forecasts.method')}</label>
-                  <select style={selectStyle} value={method} onChange={e => setMethod(e.target.value as Method)}>
+                  <select style={selectStyle} onFocus={focusRing} onBlur={blurRing} value={method} onChange={e => setMethod(e.target.value as Method)}>
                     <option value="auto">{tc('forecasts.method_auto')}</option>
                     <option value="linear">{tc('forecasts.method_linear')}</option>
                     <option value="moving_avg">{tc('forecasts.method_moving_avg')}</option>
@@ -765,15 +782,15 @@ export default function ForecastsPage() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
                         <div>
                           <label style={labelStyle}>{tc('forecasts.whatif_change')}</label>
-                          <input type="number" style={inputStyle} value={whatIfChange} onChange={e => setWhatIfChange(Number(e.target.value))} />
+                          <input type="number" style={inputStyle} onFocus={focusRing} onBlur={blurRing} value={whatIfChange} onChange={e => setWhatIfChange(Number(e.target.value))} />
                         </div>
                         <div>
                           <label style={labelStyle}>{tc('forecasts.whatif_from_period')}</label>
-                          <input type="number" min={0} style={inputStyle} value={whatIfStart} onChange={e => setWhatIfStart(Number(e.target.value))} />
+                          <input type="number" min={0} style={inputStyle} onFocus={focusRing} onBlur={blurRing} value={whatIfStart} onChange={e => setWhatIfStart(Number(e.target.value))} />
                         </div>
                         <div>
                           <label style={labelStyle}>{tc('forecasts.whatif_to_period')}</label>
-                          <input type="number" min={0} style={inputStyle} value={whatIfEnd} onChange={e => setWhatIfEnd(Number(e.target.value))} />
+                          <input type="number" min={0} style={inputStyle} onFocus={focusRing} onBlur={blurRing} value={whatIfEnd} onChange={e => setWhatIfEnd(Number(e.target.value))} />
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -871,7 +888,7 @@ export default function ForecastsPage() {
           <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>{tc('forecasts.share_forecast')}</div>
           <div style={{ fontSize: 15, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.5 }}>{tc('forecasts.share_desc')}</div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <input readOnly value={shareUrl} style={{ ...inputStyle, flex: 1 }} onClick={e => (e.target as HTMLInputElement).select()} />
+            <input readOnly value={shareUrl} style={{ ...inputStyle, flex: 1 }} onFocus={focusRing} onBlur={blurRing} onClick={e => (e.target as HTMLInputElement).select()} />
             <button onClick={() => { navigator.clipboard.writeText(shareUrl).catch(() => {}); setShowShareModal(false) }} style={{ ...primaryBtn(true), width: 'auto', padding: '9px 18px', marginTop: 0 }}>{tc('forecasts.copied')}</button>
           </div>
         </div>
@@ -889,6 +906,11 @@ function fmt(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)
 }
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function Spinner() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
@@ -932,6 +954,9 @@ const formGroup: React.CSSProperties = { marginTop: 6, marginBottom: 0 }
 const labelStyle: React.CSSProperties = { display: 'block', minHeight: 0, fontSize: 15, fontWeight: 500, color: 'var(--tx2)', margin: 0, padding: 0, lineHeight: 1 }
 const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 15, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', marginTop: 1 }
 const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 15, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 1 }
+// selectStyle/inputStyle drop the native outline, so focus needs an explicit replacement.
+const focusRing = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => { e.currentTarget.style.borderColor = 'var(--acc)' }
+const blurRing = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => { e.currentTarget.style.borderColor = 'var(--b2)' }
 const warningBox: React.CSSProperties = { marginTop: 5, fontSize: 13, color: '#f59e0b', lineHeight: 1.5, padding: '6px 8px', background: 'rgba(245,158,11,.06)', borderRadius: 6 }
 const chartTitle: React.CSSProperties = { fontSize: 13, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 500 }
 const tdStyle: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--b)' }
