@@ -45,7 +45,13 @@ export async function serperSearch(query: string, options: {
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
-    return await res.json() as SerperResponse
+    const data = await res.json()
+    // The /news endpoint puts results under `news`, not `organic` — normalize
+    // so every caller can read `.organic` regardless of which endpoint this hit.
+    if (type === 'news' && !data.organic && Array.isArray(data.news)) {
+      data.organic = data.news
+    }
+    return data as SerperResponse
   } catch {
     return null
   }

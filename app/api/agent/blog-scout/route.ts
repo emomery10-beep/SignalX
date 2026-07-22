@@ -176,23 +176,30 @@ async function runBlogScout() {
           days: 14,
         })
 
-        // Fall back to Serper if Tavily returns nothing
+        // Fall back to Serper if Tavily returns nothing. Most of these topics
+        // are evergreen how-to content, not news events, so a 'news'-scoped
+        // search frequently comes back empty even when Serper has plenty of
+        // relevant general results — try news first (freshest), then general
+        // search (broader), before giving up.
         if (!searchResult?.results?.length) {
-          const serperRes = await serperSearch(s.query, { type: 'news', num: 5 })
-          if (serperRes?.organic?.length) {
-            searchResult = {
-              query: s.query,
-              results: serperRes.organic.map(r => ({
-                title: r.title,
-                url: r.link,
-                content: r.snippet,
-                score: 1,
-                published_date: r.date,
-              })),
-              answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
-              response_time: 0,
-            } satisfies TavilySearchResponse
-            log.push(`Serper fallback used for: "${s.query}"`)
+          for (const type of ['news', 'search'] as const) {
+            const serperRes = await serperSearch(s.query, { type, num: 5 })
+            if (serperRes?.organic?.length) {
+              searchResult = {
+                query: s.query,
+                results: serperRes.organic.map(r => ({
+                  title: r.title,
+                  url: r.link,
+                  content: r.snippet,
+                  score: 1,
+                  published_date: r.date,
+                })),
+                answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+                response_time: 0,
+              } satisfies TavilySearchResponse
+              log.push(`Serper ${type} fallback used for: "${s.query}"`)
+              break
+            }
           }
         }
 

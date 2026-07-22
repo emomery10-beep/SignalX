@@ -157,14 +157,19 @@ async function runCarolyneScout() {
           })
         }
         if (!searchResult?.results?.length && hasSerper) {
-          const serperRes = await serperSearch(s.query, { type: 'news', num: 5 })
-          if (serperRes?.organic?.length) {
-            searchResult = {
-              query:   s.query,
-              answer:  serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
-              results: serperRes.organic.map(r => ({ url: r.link, title: r.title, content: r.snippet, score: 0.7, published_date: r.date })),
-              response_time: 0,
-            } as TavilySearchResponse
+          // Most of these topics are evergreen, not news events — try news
+          // (freshest) then general search (broader) before giving up.
+          for (const type of ['news', 'search'] as const) {
+            const serperRes = await serperSearch(s.query, { type, num: 5 })
+            if (serperRes?.organic?.length) {
+              searchResult = {
+                query:   s.query,
+                answer:  serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+                results: serperRes.organic.map(r => ({ url: r.link, title: r.title, content: r.snippet, score: 0.7, published_date: r.date })),
+                response_time: 0,
+              } as TavilySearchResponse
+              break
+            }
           }
         }
         return { ...s, searchResult }

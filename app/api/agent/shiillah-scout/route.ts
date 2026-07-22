@@ -159,21 +159,26 @@ async function runShiillahScout() {
         })
 
         if (!searchResult?.results?.length) {
-          const serperRes = await serperSearch(s.query, { type: 'news', num: 5 })
-          if (serperRes?.organic?.length) {
-            searchResult = {
-              query: s.query,
-              results: serperRes.organic.map(r => ({
-                title: r.title,
-                url: r.link,
-                content: r.snippet,
-                score: 1,
-                published_date: r.date,
-              })),
-              answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
-              response_time: 0,
-            } satisfies TavilySearchResponse
-            log.push(`Serper fallback used for: "${s.query}"`)
+          // Most of these topics are evergreen, not news events — try news
+          // (freshest) then general search (broader) before giving up.
+          for (const type of ['news', 'search'] as const) {
+            const serperRes = await serperSearch(s.query, { type, num: 5 })
+            if (serperRes?.organic?.length) {
+              searchResult = {
+                query: s.query,
+                results: serperRes.organic.map(r => ({
+                  title: r.title,
+                  url: r.link,
+                  content: r.snippet,
+                  score: 1,
+                  published_date: r.date,
+                })),
+                answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+                response_time: 0,
+              } satisfies TavilySearchResponse
+              log.push(`Serper ${type} fallback used for: "${s.query}"`)
+              break
+            }
           }
         }
 
