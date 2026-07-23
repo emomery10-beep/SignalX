@@ -140,6 +140,17 @@ export function countryFromCurrency(currency: string): string | null {
   return null
 }
 
+// Same reverse lookup, but only when the currency belongs to exactly one
+// country — shared-currency zones (EUR across 9 countries here, XOF across 8,
+// XAF across 6) are genuinely ambiguous. countryFromCurrency() above picks a
+// "good enough" single guess for a phone dial-code default; for anything shown
+// to the user as a specific fact (e.g. "your tax authority is..."), confidently
+// naming the wrong country is worse than admitting it's unknown.
+export function countryFromCurrencyUnambiguous(currency: string): string | null {
+  const matches = Object.entries(COUNTRY_CURRENCY).filter(([, cur]) => cur === currency)
+  return matches.length === 1 ? matches[0][0] : null
+}
+
 // Normalise user input to E.164. Accepts local formats with a leading 0
 // (e.g. Kenyan 0712…), international 00-prefix, or already-+prefixed.
 // Returns null when the result isn't a plausible E.164 number.
