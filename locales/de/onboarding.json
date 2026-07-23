@@ -104,6 +104,8 @@
   "welcome_title": "Willkommen bei AskBiz",
   "done_title_pos_named": "Gut gemacht, {name}!",
   "done_subtitle_pos": "Dein Geschäft ist eingerichtet. Füge jetzt hinzu, was du verkaufst, und richte deine Kasse ein.",
+  "done_pos_trial_title": "Starte deine 30-tägige POS-Testphase",
+  "done_pos_trial_body": "Volle Kasse, Lagerbestand und Mitarbeiter-Logins — keine Kreditkarte nötig.",
   "done_cta_pos": "Kasse einrichten →",
   "location_detecting": "Standort wird ermittelt…",
   "location_confirm_question": "Ist das richtig?",

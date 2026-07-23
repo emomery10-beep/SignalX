@@ -110,6 +110,8 @@
   "done_cta": "Aad AskBiz →",
   "done_title_pos_named": "Shaqo fiican, {name}!",
   "done_subtitle_pos": "Ganacsigaaga waa la dejiyay. Xigga, ku dar waxaad iibiso oo bilow kaashkaaga.",
+  "done_pos_trial_title": "Bilow tijaabadaada 30-maalmood ee POS",
+  "done_pos_trial_body": "Kaash buuxa, alaabta iyo geli shaqaalaha — kaadh looma baahna.",
   "done_cta_pos": "Deji kaashkayga →",
   "helper_hint": "Taabo qalabka codka, ama weydiiso caawimaad."
 }

@@ -104,6 +104,8 @@
   "welcome_title": "Bienvenue sur AskBiz",
   "done_title_pos_named": "Beau travail, {name} !",
   "done_subtitle_pos": "Votre activité est configurée. Ajoutez maintenant ce que vous vendez et ouvrez votre caisse.",
+  "done_pos_trial_title": "Démarrez votre essai POS de 30 jours",
+  "done_pos_trial_body": "Caisse complète, inventaire et accès pour votre personnel — sans carte.",
   "done_cta_pos": "Configurer ma caisse →",
   "location_detecting": "Recherche de votre position…",
   "location_confirm_question": "Est-ce correct ?",

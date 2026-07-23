@@ -104,6 +104,8 @@
   "welcome_title": "Welkom bij AskBiz",
   "done_title_pos_named": "Goed gedaan, {name}!",
   "done_subtitle_pos": "Je bedrijf is ingesteld. Voeg nu toe wat je verkoopt en open je kassa.",
+  "done_pos_trial_title": "Start je 30-daagse POS-proefperiode",
+  "done_pos_trial_body": "Volledige kassa, voorraad en medewerkerslogins — geen creditcard nodig.",
   "done_cta_pos": "Mijn kassa instellen →",
   "location_detecting": "Je locatie zoeken…",
   "location_confirm_question": "Klopt dit?",

@@ -778,6 +778,19 @@ export default function OnboardingPage() {
               <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
                 {isPosPersona ? tc('onboarding.done_subtitle_pos') : tc('onboarding.done_subtitle')}
               </p>
+              {isPosPersona && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', maxWidth: 340, margin: '0 auto 20px', padding: '14px 16px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.25)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(208,138,89,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: TX, marginBottom: 2 }}>{tc('onboarding.done_pos_trial_title')}</div>
+                    <div style={{ fontSize: 12, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.done_pos_trial_body')}</div>
+                  </div>
+                </div>
+              )}
               {saveError && (
                 <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 11, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
                   {saveError}

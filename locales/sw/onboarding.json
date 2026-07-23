@@ -110,6 +110,8 @@
   "done_cta": "Nenda kwa AskBiz →",
   "done_title_pos_named": "Vizuri, {name}!",
   "done_subtitle_pos": "Biashara yako imepangwa. Ifuatayo, ongeza kile unauza na anza kufanya kazi kwa kiotomatiki.",
+  "done_pos_trial_title": "Anza jaribio lako la siku 30 la POS",
+  "done_pos_trial_body": "Kaunta kamili, hesabu ya bidhaa, na kuingia kwa wafanyakazi — hakuna kadi inahitajika.",
   "done_cta_pos": "Panga kiotomatiki changu →",
   "helper_hint": "Gusa spika, au omba msaada."
 }

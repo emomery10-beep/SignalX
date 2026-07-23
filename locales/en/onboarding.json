@@ -110,6 +110,8 @@
   "done_cta": "Go to AskBiz →",
   "done_title_pos_named": "Nice work, {name}!",
   "done_subtitle_pos": "Your business is set up. Next, add what you sell and start your till.",
+  "done_pos_trial_title": "Start your 30-day PoS trial",
+  "done_pos_trial_body": "Full till, inventory, and staff logins — no card needed.",
   "done_cta_pos": "Set up my till →",
   "helper_hint": "Tap the speaker, or ask for help."
 }

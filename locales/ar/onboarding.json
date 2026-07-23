@@ -104,6 +104,8 @@
   "welcome_title": "مرحبًا بك في AskBiz",
   "done_title_pos_named": "أحسنت يا {name}!",
   "done_subtitle_pos": "تم إعداد نشاطك التجاري. أضف الآن ما تبيعه وابدأ صندوقك.",
+  "done_pos_trial_title": "ابدأ تجربة POS المجانية لمدة 30 يوماً",
+  "done_pos_trial_body": "صندوق كامل، مخزون، وحسابات دخول للموظفين — لا حاجة لبطاقة.",
   "done_cta_pos": "إعداد صندوقي ←",
   "location_detecting": "جارٍ تحديد موقعك…",
   "location_confirm_question": "هل هذا صحيح؟",
