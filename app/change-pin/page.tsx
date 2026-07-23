@@ -93,6 +93,7 @@ export default function ChangePinPage() {
           width: '100%', padding: '11px 0', borderRadius: 8, border: 'none',
           background: ACC, color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700,
           cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {loading ? 'Saving…' : 'Save PIN'}
         </button>

@@ -42,6 +42,10 @@ const primaryBtn = (disabled: boolean): React.CSSProperties => ({
   width: '100%', padding: '11px 0', borderRadius: 8, border: 'none',
   background: ACC, color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700,
   cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.7 : 1,
+  // globals.css forces every button to display:inline-flex + align-items:center
+  // (site-wide 44px tap-target rule) without justify-content, so it defaults
+  // to flex-start — invisible on long labels, glaring on short ones like this.
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
 })
 
 type Step = 'phone' | 'code' | 'done'
