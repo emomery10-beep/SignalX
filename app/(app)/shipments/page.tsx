@@ -108,12 +108,19 @@ export default function ShipmentsPage() {
   const [adding, setAdding] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
   const [form, setForm] = useState({
     tracking_number: '', supplier_name: '', sku: '', quantity: '',
     unit_cost: '', expected_arrival: '', shipment_type: 'inbound', purchase_order_ref: '',
   })
+  const [trackingError, setTrackingError] = useState(false)
+
+  // Loose format check — real carrier tracking numbers vary widely in length/shape,
+  // so this only catches the obvious mistakes (empty, too short, stray whitespace/
+  // symbols from a pasted URL or email) rather than validating against a carrier list.
+  const isTrackingFormatValid = (value: string) => /^[A-Za-z0-9-]{6,}$/.test(value.trim())
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok })
@@ -183,6 +190,7 @@ export default function ShipmentsPage() {
 
   const addShipment = async () => {
     if (!form.tracking_number.trim()) return showToast(tc('shipments.toast_tracking_required'), false)
+    if (!isTrackingFormatValid(form.tracking_number)) { setTrackingError(true); return showToast(tc('shipments.tracking_format_error'), false) }
     setAdding(true)
     try {
       const res = await fetch('/api/track', {
@@ -207,6 +215,7 @@ export default function ShipmentsPage() {
       }
       showToast(d.warning || tc('shipments.toast_added'), !d.warning)
       setShowAdd(false)
+      setTrackingError(false)
       setForm({ tracking_number: '', supplier_name: '', sku: '', quantity: '', unit_cost: '', expected_arrival: '', shipment_type: 'inbound', purchase_order_ref: '' })
       load()
     } catch (e: any) {
@@ -224,6 +233,26 @@ export default function ShipmentsPage() {
       .replace('{status}', statusLabel(s.track_status, tc))
       .replace('{delay}', delayPart)
     setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail })), 400)
+  }
+
+  const deleteShipment = async (id: string) => {
+    if (!confirm(tc('shipments.confirm_delete'))) return
+    setDeletingId(id)
+    try {
+      const res = await fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id }),
+      })
+      if (!res.ok) return showToast(tc('shipments.toast_failed_to_delete'), false)
+      setShipments(prev => prev.filter(s => s.id !== id))
+      setExpandedId(prev => prev === id ? null : prev)
+      showToast(tc('shipments.toast_deleted'))
+    } catch {
+      showToast(tc('shipments.toast_failed_to_delete'), false)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const card = { padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 10 }
@@ -334,7 +363,7 @@ export default function ShipmentsPage() {
                   role="tab"
                   aria-selected={filter === f}
                   onClick={() => setFilter(f)}
-                  style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 14, fontWeight: filter === f ? 600 : 400, color: filter === f ? IND : 'var(--tx3)', borderBottom: filter === f ? `2px solid ${IND}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 44, whiteSpace: 'nowrap' }}
+                  style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 16, fontWeight: filter === f ? 600 : 400, color: filter === f ? IND : 'var(--tx3)', borderBottom: filter === f ? `2px solid ${IND}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 44, whiteSpace: 'nowrap', transition: 'color 150ms var(--ease), border-color 150ms var(--ease)' }}
                 >
                   {f === 'at_risk' ? tc('shipments.stat_at_risk') : tc('shipments.filter_' + f)}
                 </button>
@@ -343,7 +372,9 @@ export default function ShipmentsPage() {
             {/* Always-visible add button — the empty-state CTA below only renders when there are zero shipments at all */}
             <button
               onClick={() => setShowAdd(true)}
-              style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 40, marginBottom: 6 }}
+              style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 44, marginBottom: 6 }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(.96)' }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'none' }}
             >
               {tc('shipments.empty_cta')}
             </button>
@@ -354,7 +385,9 @@ export default function ShipmentsPage() {
             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--tx3)' }}>{tc('shipments.loading')}</div>
           ) : shipments.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <div style={{ fontSize: 34, marginBottom: 12 }}>📦</div>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginBottom: 12 }}>
+                <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
               <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{tc('shipments.empty_title')}</div>
               <div style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 20 }}>{tc('shipments.empty_body')}</div>
               <button onClick={() => setShowAdd(true)} style={{ padding: '10px 20px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
@@ -362,8 +395,10 @@ export default function ShipmentsPage() {
               </button>
             </div>
           ) : filter === 'at_risk' && visibleShipments.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <div style={{ fontSize: 34, marginBottom: 12 }}>✅</div>
+            <div className="animate-fade-up" style={{ textAlign: 'center', padding: '60px 0' }}>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginBottom: 12 }}>
+                <circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9.5"/>
+              </svg>
               <div style={{ fontSize: 17, fontWeight: 600 }}>{tc('intelligence.kpi_alerts_clear')}</div>
             </div>
           ) : visibleShipments.map(s => {
@@ -389,6 +424,8 @@ export default function ShipmentsPage() {
                         <code style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-mono)' }}>{s.tracking_number}</code>
                         {s.sku && <span style={{ fontSize: 13, color: 'var(--tx3)' }}>{s.sku}{s.quantity ? ' ' + tc('shipments.qty_suffix').replace('{qty}', String(s.quantity)) : ''}</span>}
                         {s.customs_hold && <span style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', borderRadius: 9999, padding: '1px 6px' }}>{tc('shipments.badge_customs_hold')}</span>}
+                        {/* At-risk previously signalled only by a subtle border color — color-not-only violation. Explicit badge, same treatment as customs hold. */}
+                        {!s.customs_hold && s.is_at_risk && <span style={{ fontSize: 12, fontWeight: 700, color: '#d97706', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 9999, padding: '1px 6px' }}>{tc('shipments.stat_at_risk')}</span>}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 9999, background: ss.bg }}>
@@ -452,7 +489,12 @@ export default function ShipmentsPage() {
                     )}
 
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button onClick={() => askAbout(s)} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <button
+                        onClick={() => askAbout(s)}
+                        style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}
+                        onMouseDown={e => { e.currentTarget.style.transform = 'scale(.96)' }}
+                        onMouseUp={e => { e.currentTarget.style.transform = 'none' }}
+                      >
                         {tc('shipments.ask_askbiz')}
                       </button>
                       <a
@@ -460,10 +502,24 @@ export default function ShipmentsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${tc('shipments.view_on_17track')} (opens in new tab)`}
-                        style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 14, textDecoration: 'none' }}
+                        style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', minHeight: 44, boxSizing: 'border-box' }}
                       >
                         {tc('shipments.view_on_17track')}
                       </a>
+                      {/* Destructive action — visually separated (marginLeft: auto) and semantic danger color, per destructive-emphasis */}
+                      <button
+                        onClick={() => deleteShipment(s.id)}
+                        disabled={deletingId === s.id}
+                        aria-label={tc('shipments.delete_shipment')}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 'auto', padding: '7px 14px', borderRadius: 9999, border: '1px solid rgba(220,38,38,.25)', background: 'transparent', color: deletingId === s.id ? 'var(--tx3)' : '#dc2626', fontSize: 14, cursor: deletingId === s.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit', minHeight: 44 }}
+                        onMouseDown={e => { if (deletingId !== s.id) e.currentTarget.style.transform = 'scale(.96)' }}
+                        onMouseUp={e => { e.currentTarget.style.transform = 'none' }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                        {tc('shipments.delete_shipment')}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -499,12 +555,20 @@ export default function ShipmentsPage() {
                 <input
                   id="field-tracking-number"
                   value={form.tracking_number}
-                  onChange={e => setForm(f => ({ ...f, tracking_number: e.target.value }))}
+                  onChange={e => { setForm(f => ({ ...f, tracking_number: e.target.value })); if (trackingError) setTrackingError(false) }}
+                  onBlur={() => setTrackingError(form.tracking_number.trim().length > 0 && !isTrackingFormatValid(form.tracking_number))}
                   required
                   aria-required="true"
+                  aria-invalid={trackingError}
+                  aria-describedby={trackingError ? 'field-tracking-number-error' : undefined}
                   placeholder={tc('shipments.placeholder_tracking_number')}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: `1px solid ${trackingError ? '#dc2626' : 'var(--b)'}`, background: 'var(--bg)', fontSize: 15, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}
                 />
+                {trackingError && (
+                  <div id="field-tracking-number-error" role="alert" style={{ fontSize: 13, color: '#dc2626', marginTop: 4 }}>
+                    {tc('shipments.tracking_format_error')}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -615,7 +679,7 @@ export default function ShipmentsPage() {
                 <button onClick={addShipment} disabled={adding} style={{ flex: 1, padding: '13px', borderRadius: 9999, border: 'none', background: adding ? 'var(--b)' : IND, color: adding ? 'var(--tx3)' : '#fff', fontSize: 16, fontWeight: 600, cursor: adding ? 'not-allowed' : 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
                   {adding ? tc('shipments.btn_registering') : tc('shipments.btn_add_track')}
                 </button>
-                <button onClick={() => setShowAdd(false)} style={{ padding: '13px 20px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
+                <button onClick={() => { setShowAdd(false); setTrackingError(false) }} style={{ padding: '13px 20px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}>
                   {tc('shipments.btn_cancel')}
                 </button>
               </div>

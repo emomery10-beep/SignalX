@@ -205,7 +205,9 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
   if (suppliers.length === 0) {
     return (
       <div style={{ padding: '32px 20px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 16 }}>
-        <div style={{ fontSize: 36, marginBottom: 12 }}>📦</div>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginBottom: 12 }}>
+          <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, color: TX, marginBottom: 6 }}>
           {tc('intel_supplierscorecard.noSupplierDataTitle')}
         </div>

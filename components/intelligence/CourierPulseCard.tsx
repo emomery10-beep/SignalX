@@ -98,14 +98,14 @@ export default function CourierPulseCard({ onAsk }: { onAsk?: (prompt: string) =
   return (
     <div style={{ padding: 16, borderRadius: 14, border: `1px solid ${border}`, background: bg }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{ position: 'relative', width: 76, height: 76, flexShrink: 0 }}>
-          <svg width="76" height="76" viewBox="0 0 76 76" style={{ transform: 'rotate(-90deg)' }}>
+        <div role="img" aria-label={`${label}, ${tc('intel_courierpulse.courierOperations')}: ${score} / 100`} style={{ position: 'relative', width: 76, height: 76, flexShrink: 0 }}>
+          <svg width="76" height="76" viewBox="0 0 76 76" aria-hidden="true" style={{ transform: 'rotate(-90deg)' }}>
             <circle cx="38" cy="38" r="36" fill="none" stroke="var(--b)" strokeWidth="6" />
             <circle cx="38" cy="38" r="36" fill="none" stroke={color} strokeWidth="6"
               strokeDasharray={circ} strokeDashoffset={dashOffset} strokeLinecap="round"
               style={{ transition: 'stroke-dashoffset 1s ease' }} />
           </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 18, fontWeight: 700, color, fontFamily: 'var(--font-sora)', lineHeight: 1 }}>{score}</span>
             <span style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('intel_courierpulse.scoreOutOf')}</span>
           </div>

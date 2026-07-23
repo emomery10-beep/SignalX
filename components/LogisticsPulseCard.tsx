@@ -7,14 +7,17 @@ export default function LogisticsPulseCard() {
   const router = useRouter()
   const { tc } = useLang()
   const [health, setHealth] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/logistics?view=health')
       .then(r => r.json())
       .then(d => { if (d?.health) setHealth(d.health) })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
+  if (loading) return <div style={{ height: 96, borderRadius: 'var(--r-md)', background: 'var(--ev)', marginTop: 10, animation: 'shimmer 1.4s infinite' }} />
   if (!health || typeof health.score !== 'number') return null
 
   const isGreen  = health.color === 'green'
@@ -24,7 +27,6 @@ export default function LogisticsPulseCard() {
   const bg       = isGrey ? 'var(--ev)' : isGreen ? 'rgba(34,197,94,.06)' : isRed ? 'rgba(239,68,68,.06)' : 'rgba(245,158,11,.06)'
   const border   = isGrey ? 'var(--b)' : isGreen ? 'rgba(34,197,94,.18)' : isRed ? 'rgba(239,68,68,.18)' : 'rgba(245,158,11,.18)'
   const score    = Math.min(100, Math.max(0, health.score))
-  const pct      = `${score}%`
 
   return (
     <div
@@ -63,9 +65,9 @@ export default function LogisticsPulseCard() {
         </div>
       </div>
 
-      {/* Health bar */}
+      {/* Health bar — fixed-width track, transform-scaled fill (compositor-only, no layout thrash) */}
       <div style={{ height: 4, borderRadius: 'var(--r-pill, 9999px)', background: 'var(--b)', marginBottom: 10, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: pct, background: color, borderRadius: 'var(--r-pill, 9999px)', transition: 'width 800ms var(--ease)' }} />
+        <div style={{ height: '100%', width: '100%', background: color, borderRadius: 'var(--r-pill, 9999px)', transform: `scaleX(${score / 100})`, transformOrigin: 'left', transition: 'transform 800ms var(--ease)' }} />
       </div>
 
       {/* Summary + stats */}

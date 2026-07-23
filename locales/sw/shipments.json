@@ -17,6 +17,10 @@
   "toast_tracking_required": "Nambari ya ufuatiliaji inahitajika",
   "toast_failed_to_add": "Imeshindwa kuongeza",
   "toast_added": "Kifurushi kimeongezwa na kusajiliwa ✓",
+  "confirm_delete": "Futa kifurushi hiki? Hatua hii haiwezi kutenduliwa.",
+  "delete_shipment": "Futa kifurushi",
+  "toast_deleted": "Kifurushi kimefutwa",
+  "toast_failed_to_delete": "Imeshindwa kufuta",
 
   "free_banner_title": "Fungua akili kamili ya vifurushi",
   "free_banner_growth": "🔒 Ukuaji — vifurushi 5, ufuatiliaji wa thamani jumla, arifa za ucheleweshaji",
@@ -76,6 +80,7 @@
   "modal_sub_business": "Akili kamili imejumuishwa",
 
   "label_tracking_number": "Nambari ya Ufuatiliaji *",
+  "tracking_format_error": "Tafadhali angalia nambari hii ya ufuatiliaji kwa makosa ya kuandika.",
   "placeholder_tracking_number": "mfano RR123456789CN",
   "label_shipment_type": "Aina ya Kifurushi",
   "type_inbound": "kinachoingia",

@@ -17,6 +17,10 @@
   "toast_tracking_required": "Tracking number required",
   "toast_failed_to_add": "Failed to add",
   "toast_added": "Shipment added and registered ✓",
+  "confirm_delete": "Delete this shipment? This can't be undone.",
+  "delete_shipment": "Delete shipment",
+  "toast_deleted": "Shipment deleted",
+  "toast_failed_to_delete": "Failed to delete",
 
   "free_banner_title": "Unlock full shipment intelligence",
   "free_banner_growth": "🔒 Growth — 5 shipments, total value tracking, delay alerts",
@@ -76,6 +80,7 @@
   "modal_sub_business": "Full intelligence included",
 
   "label_tracking_number": "Tracking Number *",
+  "tracking_format_error": "Please check this tracking number for typos.",
   "placeholder_tracking_number": "e.g. RR123456789CN",
   "label_shipment_type": "Shipment Type",
   "type_inbound": "inbound",

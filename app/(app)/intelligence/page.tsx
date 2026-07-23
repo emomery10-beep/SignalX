@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
@@ -129,8 +129,26 @@ export default function IntelligencePage() {
     // Legacy deep-links: shipments/courier now live inside the merged Logistics tab
     if (t === 'shipments') { setTab('logistics'); setLogisticsView('outgoing'); return }
     if (t === 'courier')   { setTab('logistics'); setLogisticsView('incoming'); return }
-    if (t && validTabs.includes(t)) setTab(t)
+    if (t && validTabs.includes(t)) {
+      setTab(t)
+      const v = params.get('view')
+      if (t === 'logistics' && (v === 'outgoing' || v === 'incoming')) setLogisticsView(v)
+    }
   }, [])
+
+  // Keep the URL in sync with the active tab (and logistics sub-view) so browser
+  // Back after navigating away (e.g. "Open full view" → /shipments) restores where
+  // the merchant actually was, instead of always landing back on Overview. Skips its
+  // first run so it never races the "restore tab from URL" effect above on mount.
+  const urlSyncedRef = useRef(false)
+  useEffect(() => {
+    if (!urlSyncedRef.current) { urlSyncedRef.current = true; return }
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', tab)
+    if (tab === 'logistics') params.set('view', logisticsView)
+    else params.delete('view')
+    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false })
+  }, [tab, logisticsView, router])
 
   // Fetch profile for greeting name (and to default the Market Intelligence
   // region filter to the merchant's own market instead of leaving it blank —
@@ -717,13 +735,19 @@ export default function IntelligencePage() {
                 ))}
               </div>
 
-              {/* Bottom row: secondary actions (compact grid) */}
+              {/* Bottom row: secondary actions (compact grid) — icons reuse the same
+                  TAB_ICONS paths as their destination tab (ships/market/cfo) for
+                  one consistent visual vocabulary instead of platform-dependent emoji */}
               <div className="rgrid-4" style={{ gap: 10 }}>
                 {[
-                  { emoji: '📦', title: tc('intelligence.qa_ships_title'), sub: tc('intelligence.qa_ships_sub'), color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => openLogistics('outgoing') },
-                  { emoji: '🚛', title: tc('intelligence.qa_courier_title'), sub: tc('intelligence.qa_courier_sub'), color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => openLogistics('incoming') },
-                  { emoji: '🌍', title: tc('intelligence.qa_market_title'), sub: tc('intelligence.qa_market_sub'), color: 'rgba(208,138,89,.06)', border: 'rgba(208,138,89,.15)', action: () => setTab('market') },
-                  { emoji: '🏛️', title: tc('intelligence.qa_cfo_title'), sub: tc('intelligence.qa_cfo_sub'), color: 'rgba(99,102,241,.06)', border: 'rgba(99,102,241,.15)', action: () => setTab('cfo') },
+                  { icon: TAB_ICONS.logistics, accent: '#16a34a', title: tc('intelligence.qa_ships_title'), sub: tc('intelligence.qa_ships_sub'), color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => openLogistics('outgoing') },
+                  { icon: (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="7" width="13" height="10" rx="1.5"/><path d="M14 11h4l4 3v3h-8z"/><circle cx="6" cy="19.5" r="1.75"/><circle cx="18.5" cy="19.5" r="1.75"/>
+                      </svg>
+                    ), accent: '#0891b2', title: tc('intelligence.qa_courier_title'), sub: tc('intelligence.qa_courier_sub'), color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => openLogistics('incoming') },
+                  { icon: TAB_ICONS.market, accent: '#d08a59', title: tc('intelligence.qa_market_title'), sub: tc('intelligence.qa_market_sub'), color: 'rgba(208,138,89,.06)', border: 'rgba(208,138,89,.15)', action: () => setTab('market') },
+                  { icon: TAB_ICONS.cfo, accent: '#6366F1', title: tc('intelligence.qa_cfo_title'), sub: tc('intelligence.qa_cfo_sub'), color: 'rgba(99,102,241,.06)', border: 'rgba(99,102,241,.15)', action: () => setTab('cfo') },
                 ].map((card, i) => (
                   <button
                     key={i}
@@ -743,7 +767,7 @@ export default function IntelligencePage() {
                     onMouseDown={e => { e.currentTarget.style.transform = 'scale(.97)' }}
                     onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-1px)' }}
                   >
-                    <div style={{ fontSize: 24, marginBottom: 6 }}>{card.emoji}</div>
+                    <div style={{ color: card.accent, marginBottom: 6, display: 'flex', justifyContent: 'center' }}>{card.icon}</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{card.title}</div>
                     <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{card.sub}</div>
                   </button>
@@ -797,8 +821,9 @@ export default function IntelligencePage() {
                   <button
                     key={s.id}
                     onClick={() => setLogisticsView(s.id)}
+                    aria-pressed={isActive}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
+                      display: 'flex', alignItems: 'center', gap: 6, minHeight: 44,
                       padding: '7px 16px', borderRadius: 'var(--r-sm)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif',
                       fontSize: 17, fontWeight: isActive ? 600 : 500,
                       background: isActive ? 'var(--sf)' : 'transparent',
@@ -806,6 +831,8 @@ export default function IntelligencePage() {
                       boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.07), 0 0 0 1px var(--b)' : 'none',
                       transition: 'all 150ms var(--ease)',
                     }}
+                    onMouseDown={e => { e.currentTarget.style.transform = 'scale(.96)' }}
+                    onMouseUp={e => { e.currentTarget.style.transform = 'none' }}
                   >
                     {s.icon}
                     {s.label}
@@ -844,9 +871,11 @@ export default function IntelligencePage() {
                       <button
                         key={i}
                         onClick={item.action}
-                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
+                        style={{ padding: '7px 14px', minHeight: 44, display: 'inline-flex', alignItems: 'center', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms, transform 100ms' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--acc)' }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b2)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                        onMouseDown={e => { e.currentTarget.style.transform = 'scale(.96)' }}
+                        onMouseUp={e => { e.currentTarget.style.transform = 'none' }}
                       >
                         {item.label}
                       </button>
@@ -884,9 +913,11 @@ export default function IntelligencePage() {
                       <button
                         key={i}
                         onClick={item.action}
-                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
+                        style={{ padding: '7px 14px', minHeight: 44, display: 'inline-flex', alignItems: 'center', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 15, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms, transform 100ms' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--acc)' }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b2)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                        onMouseDown={e => { e.currentTarget.style.transform = 'scale(.96)' }}
+                        onMouseUp={e => { e.currentTarget.style.transform = 'none' }}
                       >
                         {item.label}
                       </button>

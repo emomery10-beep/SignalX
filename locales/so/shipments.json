@@ -17,6 +17,10 @@
   "toast_tracking_required": "Lambarka raadraaca waa loo baahan yahay",
   "toast_failed_to_add": "Way ku guuldarraysatay in la daro",
   "toast_added": "Shixnadda waa la daray oo la diiwaangeliyay ✓",
+  "confirm_delete": "Tirtir shixnaddan? Tallaabadan lama noqon karo.",
+  "delete_shipment": "Tirtir shixnadda",
+  "toast_deleted": "Shixnadda waa la tirtiray",
+  "toast_failed_to_delete": "Way ku guuldarraysatay in la tirtiro",
 
   "free_banner_title": "Fur sirdoonka shixnadda oo dhammaystiran",
   "free_banner_growth": "🔒 Korriin — 5 shixnadood, raadraaca qiimaha guud, digniinaha dib-dhaca",
@@ -76,6 +80,7 @@
   "modal_sub_business": "Sirdoon buuxa oo ku jira",
 
   "label_tracking_number": "Lambarka Raadraaca *",
+  "tracking_format_error": "Fadlan hubi lambarkan raadraaca ee khaladaadka qorista.",
   "placeholder_tracking_number": "tusaale RR123456789CN",
   "label_shipment_type": "Nooca Shixnadda",
   "type_inbound": "soo galaya",
