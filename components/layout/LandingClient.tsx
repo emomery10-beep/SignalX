@@ -216,13 +216,15 @@ function MonitorUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
           <span style={{marginLeft:'auto',fontSize:8,padding:'1px 5px',borderRadius:9999,background:'rgba(201,122,68,.1)',color:'#C97A44',fontWeight:700}}>{tc('landing.mon_badge')}</span>
         </div>
-        <div style={{display:'flex',overflowX:'auto',flex:1,minWidth:0,scrollbarWidth:'none'}} className="pos-tabs">
-          {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)}
-              style={{padding:'0 12px',height:42,fontSize:9,fontWeight:tab===t.id?700:400,color:tab===t.id?'#C97A44':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
-              {t.label}
-            </button>
-          ))}
+        <div className="pos-tabs-wrap" style={{flex:1,minWidth:0,overflow:'hidden'}}>
+          <div style={{display:'flex',overflowX:'auto',scrollbarWidth:'none'}} className="pos-tabs">
+            {TABS.map(t=>(
+              <button key={t.id} className="mon-tab-btn" onClick={()=>setTab(t.id)}
+                style={{padding:'0 12px',height:42,fontSize:9,fontWeight:tab===t.id?700:400,color:tab===t.id?'#C97A44':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -264,7 +266,7 @@ function MonitorUIReplica({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             <div key={i} style={{display:'flex',alignItems:'center',gap:7,padding:'6px 10px',borderRadius:7,background:'rgba(251,146,60,.07)',marginBottom:4}}>
               <span style={{width:5,height:5,borderRadius:'50%',background:'#fb923c',display:'block',flexShrink:0}}/>
               <span style={{fontSize:8,color:'#1A1410',flex:1}}>{a}</span>
-              <span style={{fontSize:7,color:'#C97A44',fontWeight:700,cursor:'pointer',flexShrink:0}}>{tc('landing.mon_view_arrow')}</span>
+              <span style={{fontSize:7,color:'#AAA',fontWeight:700,flexShrink:0}}>{tc('landing.mon_view_arrow')}</span>
             </div>
           ))}
         </div>
@@ -557,7 +559,7 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
                   <div style={{fontSize:9,fontWeight:600,color:'#1A1410',marginBottom:1}}>{item.name}</div>
                   <div style={{fontSize:8,color:'#AAA',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.desc}</div>
                 </div>
-                <span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:5,background:item.status==='connected'?'rgba(34,197,94,.1)':'rgba(201,122,68,.1)',color:item.status==='connected'?'#16a34a':'#C97A44',border:`1px solid ${item.status==='connected'?'rgba(34,197,94,.2)':'rgba(201,122,68,.2)'}`,whiteSpace:'nowrap',flexShrink:0,cursor:'pointer'}}>
+                <span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:5,background:item.status==='connected'?'rgba(34,197,94,.1)':'#F5F5F5',color:item.status==='connected'?'#16a34a':'#888',border:`1px solid ${item.status==='connected'?'rgba(34,197,94,.2)':'#E5E5E5'}`,whiteSpace:'nowrap',flexShrink:0}}>
                   {item.status==='connected'?tc('landing.src_status_connected'):tc('landing.src_status_connect')}
                 </span>
               </div>
@@ -685,16 +687,18 @@ const KPI_DRILL: Record<string,{bars:number[];parts:number[]}> = {
 function KpiDrilldown({metric,tc,onClose}:{metric:{mkey:string;label:string;value:string;color:string};tc:(k:string)=>string;onClose:()=>void}) {
   const d = KPI_DRILL[metric.mkey] || KPI_DRILL.revenue
   const bw=22, gap=8, maxH=46
+  const [closing, setClosing] = useState(false)
+  const close = () => { setClosing(true); setTimeout(onClose, 150) }
   return (
-    <div className="pos-drill" style={{position:'absolute',inset:0,background:'#fff',zIndex:6,display:'flex',flexDirection:'column',padding:'14px 16px'}}>
+    <div className={`pos-drill${closing?' pos-drill-closing':''}`} style={{position:'absolute',inset:0,background:'#fff',zIndex:6,display:'flex',flexDirection:'column',padding:'14px 16px'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <button onClick={onClose} aria-label="Back" style={{width:28,height:28,borderRadius:7,border:'1px solid #E5E5E5',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>
+          <button onClick={close} aria-label="Back" style={{width:28,height:28,borderRadius:7,border:'1px solid #E5E5E5',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{metric.label}</span>
         </div>
-        <button onClick={onClose} aria-label="Close" style={{width:28,height:28,borderRadius:7,border:'none',background:'none',cursor:'pointer',color:'#AAA',padding:0}}>
+        <button onClick={close} aria-label="Close" style={{width:28,height:28,borderRadius:7,border:'none',background:'none',cursor:'pointer',color:'#AAA',padding:0}}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -756,7 +760,7 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
         <div className="pos-tabs-wrap" style={{flex:1,overflow:'hidden'}}>
           <div className="pos-tabs" style={{display:'flex',overflowX:'auto'}}>
             {TABS.map(t=>(
-              <button key={t.id} onClick={()=>setTab(t.id)}
+              <button key={t.id} className="pos-tab-btn" onClick={()=>setTab(t.id)}
                 style={{padding:'0 13px',height:44,fontSize:13,fontWeight:tab===t.id?700:400,color:tab===t.id?'#1A1410':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
                 {t.label}
               </button>
@@ -870,7 +874,7 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
               {icon:'link',label:tc('landing.pos_mod_integrations'),desc:tc('landing.pos_mod_integrations_desc')},
               {icon:'search',label:tc('landing.pos_mod_audit'),desc:tc('landing.pos_mod_audit_desc')},
             ].map((m,i)=>(
-              <div key={i} style={{padding:'10px 10px',borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',cursor:'pointer',position:'relative'}}>
+              <div key={i} style={{padding:'10px 10px',borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',position:'relative'}}>
                 {m.badge&&<span style={{position:'absolute',top:6,right:6,fontSize:10,fontWeight:700,background:'#ef4444',color:'#fff',borderRadius:9999,padding:'1px 5px'}}>{m.badge}</span>}
                 {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:10,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>{tc('landing.pos_soon')}</span>}
                 <div style={{marginBottom:6}}><Ic n={m.icon} size={15}/></div>
@@ -1085,7 +1089,7 @@ function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
             <div style={{fontSize:12.5,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_audit_header')}</div>
             <div style={{display:'flex',gap:5}}>
               {[tc('landing.pos_audit_filter_all'),tc('landing.pos_audit_filter_sales'),tc('landing.pos_audit_filter_stock'),tc('landing.pos_audit_filter_staff'),tc('landing.pos_audit_filter_settings')].map((f,i)=>(
-                <span key={f} style={{fontSize:11,padding:'3px 8px',border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,borderRadius:5,color:i===0?'#C97A44':'#888',background:i===0?'rgba(201,122,68,.06)':'transparent',cursor:'pointer'}}>{f}</span>
+                <span key={f} style={{fontSize:11,padding:'3px 8px',border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,borderRadius:5,color:i===0?'#C97A44':'#888',background:i===0?'rgba(201,122,68,.06)':'transparent'}}>{f}</span>
               ))}
             </div>
           </div>
@@ -1179,32 +1183,6 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
   )
 }
 
-// Light cashier-shaped skeleton shown for the ~1s the live PoS iframe is deferred,
-// so the deferred state reads as "opening your till", not a blank box.
-function PosPoster() {
-  return (
-    <div style={{ height:640, background:'#FAFAFA', display:'grid', gridTemplateColumns:'1.4fr .95fr', gap:14, padding:16, position:'relative' }}>
-      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-        <div className="sk" style={{ height:34, width:'55%', borderRadius:9 }} />
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gridAutoRows:'1fr', gap:10, flex:1 }}>
-          {Array.from({length:9}).map((_,i)=>(<div key={i} className="sk" style={{ borderRadius:12 }} />))}
-        </div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:10, background:'#fff', borderRadius:14, border:'1px solid #F0F0F0', padding:14 }}>
-        <div className="sk" style={{ height:15, width:'50%', borderRadius:6 }} />
-        {Array.from({length:4}).map((_,i)=>(<div key={i} className="sk" style={{ height:30, borderRadius:8 }} />))}
-        <div style={{ flex:1 }} />
-        <div style={{ height:44, borderRadius:12, background:'#cbe8d5' }} />
-      </div>
-      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
-        <div className="pos-poster-mark" style={{ width:54, height:54, borderRadius:15, background:T.acc, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 10px 30px -8px rgba(201,122,68,.5)' }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   const { lang } = useLang()
   const HERO_TABS = [
@@ -1224,20 +1202,20 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
           WebkitMaskImage:'linear-gradient(to right, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%)',
           maskImage:'linear-gradient(to right, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%)',
         }}>
-          <div style={{
+          <div className="hero-tab-slider" style={{
             position:'absolute', top:4, bottom:4, left:4,
             width:`calc(${100/HERO_TABS.length}% - 4px)`,
             transform:`translateX(${activeIdx*100}%)`,
             background:'#fff', borderRadius:9,
             boxShadow:'0 1px 2px rgba(0,0,0,.06), 0 6px 10px rgba(0,0,0,.05), 0 0 20px 6px rgba(201,122,68,.14)',
-            transition:'transform 480ms cubic-bezier(0.65,0,0.35,1)',
+            transition:'transform 480ms cubic-bezier(0.22,1,0.36,1)',
           }}/>
           {HERO_TABS.map(t=>(
             <button key={t.id} className="hero-tab-btn" onClick={()=>setHeroTab(t.id)} style={{
               position:'relative', flex:1, padding:'11px 24px', fontSize:15, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
               display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', gap:8,
               background:'none', border:'none', borderRadius:9, zIndex:1,
-              color: heroTab===t.id ? '#1A1410' : '#6B6055', transition:'color 200ms',
+              color: heroTab===t.id ? '#1A1410' : '#6B6055', transition:'color 200ms cubic-bezier(0.22,1,0.36,1)',
             }}>
               {t.icon==='chart' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 20V10M12 20V4M20 20v-6"/></svg>}
               {t.icon==='camera' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>}
@@ -1709,24 +1687,21 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @keyframes tdot{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
         @keyframes demoFadeIn{from{opacity:.4}to{opacity:1}}
         /* PosShowcase "present itself": a spotlight sweeps each KPI card once (per-card delay set inline) */
-        @keyframes posSpot{0%,100%{transform:none;box-shadow:0 0 0 0 rgba(201,122,68,0);border-color:#F0F0F0}30%,62%{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 22px -12px rgba(201,122,68,.55);border-color:#C97A44}}
+        @keyframes posSpot{0%,100%{transform:none;box-shadow:0 0 0 0 rgba(201,122,68,0)}30%,62%{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 22px -12px rgba(201,122,68,.55)}}
         .pos-present .pos-kpi{animation-name:posSpot;animation-duration:660ms;animation-timing-function:cubic-bezier(0.22,1,0.36,1);animation-fill-mode:both;will-change:transform}
         @media(prefers-reduced-motion:reduce){.pos-present .pos-kpi{animation:none!important}}
         /* tap-to-drill affordance + lazy panel */
-        .pos-overview .pos-kpi{cursor:pointer}
+        .pos-overview .pos-kpi{cursor:pointer;transition:transform 100ms}
         .pos-overview .pos-kpi:hover{box-shadow:0 6px 16px -10px rgba(201,122,68,.5)}
         .pos-overview .pos-kpi:focus-visible{outline:2px solid #C97A44;outline-offset:2px}
+        .pos-overview .pos-kpi:active{transform:scale(0.97)}
         .pos-overview .pos-kpi .kpi-more{opacity:.4;transition:opacity 180ms}
         .pos-overview .pos-kpi:hover .kpi-more{opacity:.95}
         .pos-drill{animation:drillIn 260ms cubic-bezier(0.22,1,0.36,1)}
+        .pos-drill.pos-drill-closing{animation:drillOut 150ms cubic-bezier(0.22,1,0.36,1) forwards}
         @keyframes drillIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-        @media(prefers-reduced-motion:reduce){.pos-drill{animation:none}}
-        /* PoS deferred-state skeleton shimmer + gentle mark pulse */
-        .sk{background:linear-gradient(90deg,#E5E6EA 25%,#F1F2F4 37%,#E5E6EA 63%);background-size:400% 100%;animation:skSh 1.4s ease infinite}
-        @keyframes skSh{0%{background-position:100% 0}100%{background-position:0 0}}
-        .pos-poster-mark{animation:markPulse 1.8s ease-in-out infinite}
-        @keyframes markPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.82}}
-        @media(prefers-reduced-motion:reduce){.sk{animation:none;background:#E5E6EA}.pos-poster-mark{animation:none}}
+        @keyframes drillOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(10px)}}
+        @media(prefers-reduced-motion:reduce){.pos-drill,.pos-drill.pos-drill-closing{animation:none}}
         [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
         [data-reveal].revealed{opacity:1;transform:translateY(0)}
         [data-reveal-delay="1"].revealed{transition-delay:80ms}
@@ -1760,11 +1735,18 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .pos-tabs{scrollbar-width:none;-ms-overflow-style:none}
         .pos-tabs-wrap{position:relative}
         .pos-tabs-wrap::after{content:'';position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to left,#fff,transparent);pointer-events:none;z-index:1}
+        /* Tab switcher hover/focus — hero big-demo tabs + Monitor/PosShowcase tab bars */
+        .hero-tab-btn:hover{color:${T.tx}!important}
+        .hero-tab-btn:focus-visible{outline:2px solid ${T.acc};outline-offset:2px;border-radius:9px}
+        .mon-tab-btn:hover{color:${T.acc}!important}
+        .mon-tab-btn:focus-visible{outline:2px solid ${T.acc};outline-offset:2px}
+        .pos-tab-btn:hover{color:${T.tx}!important}
+        .pos-tab-btn:focus-visible{outline:2px solid ${T.acc};outline-offset:2px}
         /* DemoUIReplica tab switcher — focus ring + fade-in on remount (CSS
            animation, not a JS timer, so content never lags behind a click) */
         .demo-tab:focus-visible{outline:2px solid ${T.acc};outline-offset:-2px;border-radius:6px}
         .demo-panel{animation:demoFadeIn 200ms cubic-bezier(0.22,1,0.36,1)}
-        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}}
+        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}.hero-tab-slider,.hero-tab-btn{transition:none!important}}
       ` }}/>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}

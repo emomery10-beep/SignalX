@@ -61,7 +61,7 @@ export default function VerticalsProof({ tc }: { tc: Tc }) {
           {SECTORS.map((s, z) => {
             const on = z === spot
             return (
-              <a key={s.slug} href={`/point-of-sale/${s.slug}`} style={{
+              <a key={s.slug} href={`/point-of-sale/${s.slug}`} className="vert-card" style={{
                 display: 'block', textDecoration: 'none', borderRadius: 18, padding: 'clamp(16px,2.5vw,22px)',
                 background: on ? M.card : '#fbf9f6', border: `1px solid ${on ? 'rgba(201,122,68,.32)' : M.bd}`,
                 boxShadow: on ? '0 18px 40px -20px rgba(80,45,15,.3)' : 'none',
@@ -74,7 +74,7 @@ export default function VerticalsProof({ tc }: { tc: Tc }) {
                 </span>
                 <div style={{ fontSize: 16, fontWeight: 700, color: M.tx, marginBottom: 4 }}>{tc(`landing.vert_${s.k}_name`)}</div>
                 <div style={{ fontSize: 13, color: M.tx2, lineHeight: 1.5 }}>{tc(`landing.vert_${s.k}_desc`)}</div>
-                <div style={{ marginTop: 12, fontSize: 12.5, fontWeight: 700, color: M.acc, opacity: on ? 1 : 0, transform: on ? 'translateX(0)' : 'translateX(-4px)', transition: 'opacity .4s ease, transform .4s ease' }}>
+                <div className="vert-see" style={{ marginTop: 12, fontSize: 12.5, fontWeight: 700, color: M.acc, opacity: on ? 1 : 0, transform: on ? 'translateX(0)' : 'translateX(-4px)', transition: 'opacity .4s ease, transform .4s ease' }}>
                   {tc('landing.vert_see')} →
                 </div>
               </a>
@@ -82,6 +82,13 @@ export default function VerticalsProof({ tc }: { tc: Tc }) {
           })}
         </div>
       </div>
+
+      <style>{`
+        .vert-card{outline:none}
+        .vert-card:hover,.vert-card:focus-visible{background:#fff!important;border-color:rgba(201,122,68,.32)!important;box-shadow:0 18px 40px -20px rgba(80,45,15,.3)!important;transform:translateY(-4px)!important}
+        .vert-card:focus-visible{outline:2px solid #C97A44;outline-offset:2px}
+        .vert-card:hover .vert-see,.vert-card:focus-visible .vert-see{opacity:1!important;transform:translateX(0)!important}
+      `}</style>
     </section>
   )
 }

@@ -125,9 +125,8 @@ export default function MultiBranchProof({ tc }: { tc: Tc }) {
         @keyframes mb-breathe{0%,100%{transform:translate(-50%,-50%) scale(.9);opacity:.72}50%{transform:translate(-50%,-50%) scale(1.14);opacity:1}}
         .mb-markers{position:absolute;inset:0;pointer-events:none}
         .mb-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px #d6281a,0 2px 6px rgba(0,0,0,.3);transform:translate(-50%,-50%)}
-        .mb-ring{position:absolute;left:50%;top:50%;border:2px solid rgba(214,40,26,.55);border-radius:50%;transform:translate(-50%,-50%);animation:mb-ripple 3s ease-out infinite}
-        @keyframes mb-ripple{0%{width:6px;height:6px;opacity:.85}100%{width:110px;height:110px;opacity:0}}
-        @media(prefers-reduced-motion:reduce){.mb-hm span{animation-duration:6s}.mb-ring{animation-duration:6s}}
+        .mb-ring{position:absolute;left:50%;top:50%;width:110px;height:110px;border:2px solid rgba(214,40,26,.55);border-radius:50%;transform:translate(-50%,-50%) scale(.055);animation:mb-ripple 3s ease-out infinite}
+        @keyframes mb-ripple{0%{transform:translate(-50%,-50%) scale(.055);opacity:.85}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
       `}</style>
     </section>
   )

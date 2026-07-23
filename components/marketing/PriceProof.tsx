@@ -1,4 +1,5 @@
 'use client'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
 
 // ── Price Proof ───────────────────────────────────────────────────────────────
 // A bold, single-price callout so the KSh 500/seat point of sale is impossible to
@@ -46,7 +47,7 @@ export default function PriceProof({ tc }: { tc: Tc }) {
           <div style={{ padding: 8, borderRadius: 28, background: C.accSoft, border: `1px solid ${C.bd}` }}>
             <div style={{ borderRadius: 22, background: C.card, border: `1px solid ${C.bd}`, boxShadow: '0 24px 60px -28px rgba(80,45,15,.28)', padding: 'clamp(28px,4vw,40px)', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--font-instrument)', fontSize: 'clamp(44px,7vw,72px)', fontWeight: 400, letterSpacing: '-.02em', color: C.tx, lineHeight: 1 }}>{tc('landing.price2_amount')}</span>
+                <span style={{ fontFamily: 'var(--font-instrument)', fontSize: 'clamp(44px,7vw,72px)', fontWeight: 400, letterSpacing: '-.02em', color: C.tx, lineHeight: 1 }}><AnimatedNumber value={tc('landing.price2_amount')} /></span>
                 <span style={{ fontSize: 16, fontWeight: 600, color: C.tx3 }}>{tc('landing.price2_per')}</span>
               </div>
               <div style={{ fontSize: 13, color: C.tx3, marginTop: 8 }}>{tc('landing.price2_approx')}</div>
@@ -64,12 +65,18 @@ export default function PriceProof({ tc }: { tc: Tc }) {
                 {tc('landing.price2_free')}
               </div>
               <div style={{ marginTop: 18 }}>
-                <a href="#pricing" style={{ fontSize: 14, fontWeight: 700, color: C.acc, textDecoration: 'none' }}>{tc('landing.price2_link')} →</a>
+                <a href="#pricing" className="price-link" style={{ fontSize: 14, fontWeight: 700, color: C.acc, textDecoration: 'none' }}>{tc('landing.price2_link')} →</a>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .price-link{transition:filter 150ms cubic-bezier(0.22,1,0.36,1);border-radius:4px}
+        .price-link:hover{filter:brightness(.82);text-decoration:underline}
+        .price-link:focus-visible{filter:brightness(.82);text-decoration:underline;outline:2px solid ${C.acc};outline-offset:3px}
+      `}</style>
     </section>
   )
 }

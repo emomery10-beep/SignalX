@@ -30,10 +30,12 @@ export default function OfflineProof({ tc }: { tc: Tc }) {
   const [online, setOnline] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
-  // Always animates once scrolled into view — toggles offline ↔ synced on a loop.
+  // Animates once scrolled into view — toggles offline ↔ synced on a loop.
+  // Skips entirely under prefers-reduced-motion (stays on its static initial frame).
   useEffect(() => {
     const el = rootRef.current
     if (!el) return
+    if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let iv: ReturnType<typeof setInterval> | null = null
     const io = new IntersectionObserver(es => {
       if (es.some(e => e.isIntersecting)) {

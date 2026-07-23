@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
 
 // ── Forecast Proof ────────────────────────────────────────────────────────────
 // Surfaces the built-in Forecasts (components/cfo/CfoForecasts.tsx) — real, and a
@@ -25,12 +26,20 @@ const line = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M
 
 export default function ForecastProof({ tc }: { tc: Tc }) {
   const [drawn, setDrawn] = useState(false)
+  const [reduced, setReduced] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Always draws in when scrolled into view (the draw-in motion is the point).
+  // Draws in when scrolled into view (the draw-in motion is the point).
+  // Under prefers-reduced-motion, skips the wait and the transition — the chart
+  // just appears already-drawn, statically, on first paint.
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setReduced(true)
+      setDrawn(true)
+      return
+    }
     const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setDrawn(true); io.disconnect() } }, { threshold: 0.4 })
     io.observe(el)
     return () => io.disconnect()
@@ -83,25 +92,25 @@ export default function ForecastProof({ tc }: { tc: Tc }) {
                   <line key={z} x1={PADX} x2={W - PADX} y1={py(g)} y2={py(g)} stroke={A.grid} strokeWidth="1" />
                 ))}
                 {/* confidence band */}
-                <path d={bandPath} fill={A.acc} opacity={drawn ? 0.1 : 0} style={{ transition: 'opacity .6s ease .5s' }} />
-                <path d={line(upper)} fill="none" stroke={A.best} strokeWidth="1.4" strokeDasharray="3 3" opacity={drawn ? 0.6 : 0} style={{ transition: 'opacity .5s ease .6s' }} />
-                <path d={line(lower)} fill="none" stroke={A.worst} strokeWidth="1.4" strokeDasharray="3 3" opacity={drawn ? 0.55 : 0} style={{ transition: 'opacity .5s ease .6s' }} />
+                <path d={bandPath} fill={A.acc} opacity={drawn ? 0.1 : 0} style={{ transition: reduced ? 'none' : 'opacity .6s cubic-bezier(0.22,1,0.36,1) .5s' }} />
+                <path d={line(upper)} fill="none" stroke={A.best} strokeWidth="1.4" strokeDasharray="3 3" opacity={drawn ? 0.6 : 0} style={{ transition: reduced ? 'none' : 'opacity .5s cubic-bezier(0.22,1,0.36,1) .6s' }} />
+                <path d={line(lower)} fill="none" stroke={A.worst} strokeWidth="1.4" strokeDasharray="3 3" opacity={drawn ? 0.55 : 0} style={{ transition: reduced ? 'none' : 'opacity .5s cubic-bezier(0.22,1,0.36,1) .6s' }} />
                 {/* projected (dashed) then historical (solid), drawn via dashoffset */}
                 <path d={line(projPts)} fill="none" stroke={A.acc} strokeWidth="2.4" strokeDasharray="6 4"
-                  style={{ opacity: drawn ? 1 : 0, transition: 'opacity .3s ease .55s' }} />
+                  style={{ opacity: drawn ? 1 : 0, transition: reduced ? 'none' : 'opacity .3s cubic-bezier(0.22,1,0.36,1) .55s' }} />
                 <path d={line(histPts)} fill="none" stroke={A.acc} strokeWidth="2.6" strokeLinecap="round"
                   pathLength={1} strokeDasharray={1} strokeDashoffset={drawn ? 0 : 1}
-                  style={{ transition: 'stroke-dashoffset .9s cubic-bezier(0.22,1,0.36,1)' }} />
+                  style={{ transition: reduced ? 'none' : 'stroke-dashoffset .9s cubic-bezier(0.22,1,0.36,1)' }} />
                 {/* markers */}
-                {histPts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.6" fill={A.acc} opacity={drawn ? 1 : 0} style={{ transition: `opacity .3s ease ${0.3 + i * 0.08}s` }} />)}
-                <circle cx={projPts[projPts.length - 1][0]} cy={projPts[projPts.length - 1][1]} r="4" fill={A.acc} opacity={drawn ? 1 : 0} style={{ transition: 'opacity .3s ease 1.1s' }} />
+                {histPts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.6" fill={A.acc} opacity={drawn ? 1 : 0} style={{ transition: reduced ? 'none' : `opacity .3s cubic-bezier(0.22,1,0.36,1) ${0.3 + i * 0.08}s` }} />)}
+                <circle cx={projPts[projPts.length - 1][0]} cy={projPts[projPts.length - 1][1]} r="4" fill={A.acc} opacity={drawn ? 1 : 0} style={{ transition: reduced ? 'none' : 'opacity .3s cubic-bezier(0.22,1,0.36,1) 1.1s' }} />
               </svg>
 
               {/* callout */}
               <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                 <div style={{ flex: 1, background: A.bg, borderRadius: 12, padding: '10px 12px' }}>
                   <div style={{ fontSize: 10.5, color: A.muted, fontWeight: 600 }}>{tc('landing.fc_next_label')}</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: A.acc }}>KSh 142,000</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: A.acc }}><AnimatedNumber value="KSh 142,000" /></div>
                 </div>
                 <div style={{ flex: 1, background: A.bg, borderRadius: 12, padding: '10px 12px' }}>
                   <div style={{ fontSize: 10.5, color: A.muted, fontWeight: 600 }}>{tc('landing.fc_runway_label')}</div>

@@ -1,4 +1,5 @@
 'use client'
+import AnimatedNumber from '@/components/ui/AnimatedNumber'
 
 // ── Zakat Proof ───────────────────────────────────────────────────────────────
 // Surfaces the built-in Zakat calculator — a genuine differentiator no competitor
@@ -52,7 +53,7 @@ export default function ZakatProof({ tc }: { tc: Tc }) {
 
               <div style={{ background: A.greenPale, borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11.5, color: A.muted, marginBottom: 3 }}>{tc('landing.zk_due_label')}</div>
-                <div style={{ fontSize: 30, fontWeight: 900, color: A.green, letterSpacing: '-.02em' }}>KSh 3,150</div>
+                <div style={{ fontSize: 30, fontWeight: 900, color: A.green, letterSpacing: '-.02em' }}><AnimatedNumber value="KSh 3,150" /></div>
                 <div style={{ fontSize: 11.5, color: A.muted, marginTop: 3 }}>{tc('landing.zk_pct')}</div>
               </div>
 
