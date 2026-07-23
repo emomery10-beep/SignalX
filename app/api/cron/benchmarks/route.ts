@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { normalizeSector, businessSize } from '@/lib/market-benchmarks'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -7,14 +8,12 @@ export const maxDuration = 60
 // Nightly collective intelligence aggregation.
 // Reads opted-in businesses' anonymised metrics and upserts into market_benchmarks.
 // Minimum 3 businesses per bucket before we publish (privacy floor).
+//
+// sector/business_size use the shared lib/market-benchmarks.ts helpers so
+// this write path always agrees with app/api/cross-sector/route.ts's read
+// path on what a "sector" is — see lib/market-benchmarks.ts for why.
 
 const PRIVACY_FLOOR = 3
-
-function businessSize(seatCount: number, plan: string): 'micro' | 'small' | 'medium' {
-  if (plan === 'business' || seatCount >= 5) return 'medium'
-  if (plan === 'growth'   || seatCount >= 2) return 'small'
-  return 'micro'
-}
 
 export async function GET(req: NextRequest) {
   const secret = req.headers.get('authorization')
@@ -56,8 +55,8 @@ export async function GET(req: NextRequest) {
   const buckets = new Map<string, Bucket>()
 
   for (const profile of profiles) {
-    const sector = profile.sector_hints?.split(',')[0]?.trim() || profile.business_type || 'retail'
-    const region = profile.region || 'United Kingdom'
+    const sector = normalizeSector(profile.sector_hints?.split(',')[0]?.trim() || profile.business_type)
+    const region = profile.region || ''
     const size   = businessSize(profile.pos_seat_count || 0, profile.plan_id || profile.plan || 'free')
     const key    = `${sector}|${region}|${size}`
 
@@ -105,8 +104,8 @@ export async function GET(req: NextRequest) {
 
   for (const [, b] of buckets) {
     const sampleSize = profiles.filter(p => {
-      const sector = p.sector_hints?.split(',')[0]?.trim() || p.business_type || 'retail'
-      const region = p.region || 'United Kingdom'
+      const sector = normalizeSector(p.sector_hints?.split(',')[0]?.trim() || p.business_type)
+      const region = p.region || ''
       const size   = businessSize(p.pos_seat_count || 0, p.plan_id || p.plan || 'free')
       return `${sector}|${region}|${size}` === `${b.sector}|${b.region}|${b.size}`
     }).length

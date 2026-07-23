@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
+import { normalizeSector, businessSize } from '@/lib/market-benchmarks'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,23 +14,22 @@ export async function GET() {
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_type, sector_hints, region')
+    .select('business_type, sector_hints, region, plan, plan_id, pos_seat_count')
     .eq('id', user.id)
     .single()
 
   const sym = await getCurrencySymbol(supabase, user.id)
-  const userSector = profile?.sector_hints?.split(',')[0]?.trim() || profile?.business_type || 'retail'
-  const userRegion = profile?.region || 'UK'
+  const userSector = normalizeSector(profile?.sector_hints?.split(',')[0]?.trim() || profile?.business_type)
+  const userRegion = profile?.region || ''
+  const userSize = businessSize(profile?.pos_seat_count || 0, profile?.plan_id || profile?.plan || 'free')
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-  const currentPeriod = new Date().toISOString().slice(0, 7)
 
-  // Parallel: user's own metrics + sector benchmarks + market benchmarks
+  // Parallel: user's own metrics + sector benchmarks
   const [
     { data: userUnified },
     { data: userPosTx },
     { data: benchmarks },
-    { data: productBenchmarks },
   ] = await Promise.all([
     supabase
       .from('unified_data')
@@ -48,17 +48,10 @@ export async function GET() {
 
     supabase
       .from('market_benchmarks')
-      .select('sector, metric, value, sample_size, period')
+      .select('sector, metric, value, sample_size, region, business_size, period')
       .gte('sample_size', 3)
       .order('period', { ascending: false })
       .limit(500),
-
-    supabase
-      .from('global_product_catalogue')
-      .select('category, avg_selling_price, avg_gross_margin, merchant_count')
-      .gte('merchant_count', 3)
-      .eq('period', currentPeriod)
-      .limit(200),
   ])
 
   // Calculate user metrics
@@ -68,7 +61,6 @@ export async function GET() {
   const ecomRefunds = (userUnified || []).reduce((s, r) => s + (r.refund_amount || 0), 0)
 
   const posRevenue = (userPosTx || []).reduce((s, t) => s + (t.total || 0), 0)
-  const posDiscounts = (userPosTx || []).reduce((s, t) => s + (t.discount_amount || 0), 0)
   const posTxCount = (userPosTx || []).length
 
   const totalRevenue = ecomRevenue + posRevenue
@@ -78,13 +70,20 @@ export async function GET() {
   const dailyRevenue = totalRevenue / 30
   const refundRate = totalRevenue > 0 ? (ecomRefunds / totalRevenue) * 100 : 0
 
-  // Organize benchmarks by sector -> metric
-  const sectorBenchmarks: Record<string, Record<string, { value: number; sample_size: number }>> = {}
+  // Organize benchmarks by sector -> metric. Prefer rows that match the
+  // user's own region + business size over rows that just have a bigger
+  // sample — otherwise "your sector average" can silently mix in a
+  // different country/scale than the user's own.
+  const sectorBenchmarks: Record<string, Record<string, { value: number; sample_size: number; matched: boolean }>> = {}
   for (const b of benchmarks || []) {
     if (!sectorBenchmarks[b.sector]) sectorBenchmarks[b.sector] = {}
     const existing = sectorBenchmarks[b.sector][b.metric]
-    if (!existing || b.sample_size > existing.sample_size) {
-      sectorBenchmarks[b.sector][b.metric] = { value: b.value, sample_size: b.sample_size }
+    const isMatch = !!userRegion && b.region === userRegion && b.business_size === userSize
+    const shouldReplace = !existing
+      || (isMatch && !existing.matched)
+      || (isMatch === existing.matched && b.sample_size > existing.sample_size)
+    if (shouldReplace) {
+      sectorBenchmarks[b.sector][b.metric] = { value: b.value, sample_size: b.sample_size, matched: isMatch }
     }
   }
 
@@ -109,8 +108,9 @@ export async function GET() {
           key: um.key,
           label: um.label,
           user_value: um.value,
-          benchmark_value: benchmark?.value || null,
+          benchmark_value: benchmark?.value ?? null,
           sample_size: benchmark?.sample_size || 0,
+          matched: benchmark?.matched ?? false,
           unit: um.unit,
           diff_pct: benchmark?.value
             ? Math.round(((um.value - benchmark.value) / benchmark.value) * 100)
@@ -120,21 +120,15 @@ export async function GET() {
     }
   })
 
-  // Category price intelligence from product catalogue
-  const categoryPrices: Record<string, { avg_price: number; avg_margin: number; merchants: number }> = {}
-  for (const p of productBenchmarks || []) {
-    const cat = p.category || 'Other'
-    if (!categoryPrices[cat]) categoryPrices[cat] = { avg_price: 0, avg_margin: 0, merchants: 0 }
-    categoryPrices[cat].avg_price = p.avg_selling_price || 0
-    categoryPrices[cat].avg_margin = p.avg_gross_margin || 0
-    categoryPrices[cat].merchants = p.merchant_count || 0
-  }
-
-  // Rank user against sectors
+  // Rank user against sectors. When nobody else has published a benchmark
+  // for a metric yet, `has_cohort` is false and percentile is null — the
+  // frontend should show "not enough data" rather than treating a lone
+  // data point as a real #1 rank.
   const rankings = userMetrics.map(um => {
     const allValues = allSectors
       .map(s => sectorBenchmarks[s]?.[um.key]?.value)
       .filter((v): v is number => v != null)
+    const hasCohort = allValues.length > 0
     allValues.push(um.value)
     allValues.sort((a, b) => um.key === 'refund_rate' ? a - b : b - a) // lower is better for refund rate
     const rank = allValues.indexOf(um.value) + 1
@@ -142,7 +136,8 @@ export async function GET() {
       ...um,
       rank,
       total: allValues.length,
-      percentile: Math.round(((allValues.length - rank) / (allValues.length - 1)) * 100) || 50,
+      percentile: hasCohort ? Math.round(((allValues.length - rank) / (allValues.length - 1)) * 100) : null,
+      has_cohort: hasCohort,
     }
   })
 

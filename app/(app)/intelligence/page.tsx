@@ -132,12 +132,17 @@ export default function IntelligencePage() {
     if (t && validTabs.includes(t)) setTab(t)
   }, [])
 
-  // Fetch profile for greeting name
+  // Fetch profile for greeting name (and to default the Market Intelligence
+  // region filter to the merchant's own market instead of leaving it blank —
+  // a blank region search skews toward US/UK web results)
   useEffect(() => {
     fetch('/api/profile')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        if (d) setGreetingName(d.first_name || d.business_name || '')
+        if (d) {
+          setGreetingName(d.first_name || d.business_name || '')
+          if (d.region) setMktRegion(prev => prev || d.region)
+        }
       })
       .catch(() => {})
   }, [])
@@ -1072,7 +1077,7 @@ export default function IntelligencePage() {
             )}
             {!mktResult && !mktLoading && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginTop: 4 }}>
-                {[['leather handbag','USA'],['running shoes','UK'],['phone case','EU'],['candles','']].map(([product, region], i) => (
+                {[['phone case','Kenya'],['school shoes','Tanzania'],['second-hand clothes','Uganda'],['rice 25kg','Nigeria']].map(([product, region], i) => (
                   <button
                     key={i}
                     onClick={() => { setMktQuery(product); if (region) setMktRegion(region) }}

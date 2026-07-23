@@ -1776,7 +1776,16 @@ function CompliancePanel() {
 export default function SettingsPage() {
   const supabase = createClient()
   const { tc } = useLang()
-  const [active, setActive] = useState<Section>('profile')
+  // Supports deep links like /settings?section=compliance (e.g. the
+  // Cross-Sector Intel opt-in prompt). Read directly off window.location
+  // rather than next/navigation's useSearchParams — this file already uses
+  // plain `window` access elsewhere (see winW below) and a hook here would
+  // require wrapping the page in a Suspense boundary for no real benefit.
+  const [active, setActive] = useState<Section>(() => {
+    if (typeof window === 'undefined') return 'profile'
+    const requested = new URLSearchParams(window.location.search).get('section')
+    return requested && NAV.some(n => n.id === requested) ? (requested as Section) : 'profile'
+  })
   const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
 
   useEffect(() => {
