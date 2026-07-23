@@ -70,21 +70,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'transaction_id and phone required' }, { status: 400 })
   }
 
+  // Was a single query embedding profiles via
+  // `profiles!pos_transactions_owner_id_fkey(...)` — that hint names the real
+  // FK (pos_transactions.owner_id -> auth.users), but PostgREST embeds need a
+  // DIRECT FK to the embedded table, and there's no direct
+  // pos_transactions -> profiles constraint (only the indirect path through
+  // auth.users, which PostgREST can't traverse). That made the whole query
+  // fail with PGRST200 on every call, surfaced here as a misleading
+  // "Transaction not found" — receipts were never reaching sendReceipt().
+  // ownerId is already authenticated above, so no join is needed at all.
   const { data: tx, error } = await service
     .from('pos_transactions')
-    .select(`
-      *,
-      pos_items(*),
-      profiles!pos_transactions_owner_id_fkey(business_name, currency_symbol)
-    `)
+    .select(`*, pos_items(*)`)
     .eq('id', transaction_id)
     .eq('owner_id', ownerId)   // fix #2 — scope to authenticated owner, prevents UUID enumeration
     .single()
 
   if (error || !tx) return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
 
-  const symbol       = (tx.profiles as { currency_symbol?: string })?.currency_symbol || '£'
-  const businessName = (tx.profiles as { business_name?: string })?.business_name || 'The Shop'
+  const { data: profile } = await service
+    .from('profiles')
+    .select('business_name, currency_symbol')
+    .eq('id', ownerId)
+    .maybeSingle()
+
+  const symbol       = profile?.currency_symbol || '£'
+  const businessName = profile?.business_name || 'The Shop'
   const date         = new Date(tx.created_at).toLocaleString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
