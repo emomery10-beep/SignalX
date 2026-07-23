@@ -2417,7 +2417,7 @@ const REGIONS: Record<string, RegionConfig> = {
 
   ZW: {
     countryName: 'Zimbabwe',
-    currencyCode: 'ZiG',
+    currencyCode: 'ZWG',
     currencySymbol: 'ZiG',
     locale: 'en-ZW',
     taxConfig: {
@@ -2871,7 +2871,7 @@ const REGIONS: Record<string, RegionConfig> = {
 
   TD: {
     countryName: 'Chad',
-    currencyCode: 'XOF',
+    currencyCode: 'XAF',
     currencySymbol: 'FCFA',
     locale: 'fr-TD',
     taxConfig: {
@@ -3519,7 +3519,7 @@ const REGIONS: Record<string, RegionConfig> = {
 
   GA: {
     countryName: 'Gabon',
-    currencyCode: 'XOF',
+    currencyCode: 'XAF',
     currencySymbol: 'FCFA',
     locale: 'fr-GA',
     taxConfig: {
@@ -3555,7 +3555,7 @@ const REGIONS: Record<string, RegionConfig> = {
 
   CG: {
     countryName: 'Congo-Brazzaville',
-    currencyCode: 'XOF',
+    currencyCode: 'XAF',
     currencySymbol: 'FCFA',
     locale: 'fr-CG',
     taxConfig: {
