@@ -17,7 +17,9 @@ const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outlin
 const inputCls = `w-full px-3 py-3 rounded-lg border border-ink-600 bg-ink-950 text-ink-50 text-sm transition-colors ${focusRing}`
 const labelCls = 'block mb-1.5 text-xs font-medium text-ink-200'
 const primaryBtnCls = `py-3 px-5 rounded-lg bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`
-const ghostBtnCls = `py-2 px-3 rounded-md border border-ink-600 text-ink-300 text-xs font-medium hover:bg-ink-800 transition-colors disabled:opacity-50 ${focusRing}`
+// py-3.5, not py-2 — same 44px touch-target fix already applied to the
+// compact text-xs controls elsewhere (see signin page's clsxMethod).
+const ghostBtnCls = `py-3.5 px-3 rounded-md border border-ink-600 text-ink-300 text-xs font-medium hover:bg-ink-800 transition-colors disabled:opacity-50 ${focusRing}`
 
 // Apps are an opt-in grouping layer on top of raw API keys (see
 // 20260717000005_developer_apps.sql) — a named, brandable integration a
@@ -165,7 +167,7 @@ export default function AppsPage() {
                   <div className="flex items-center gap-2.5">
                     {a.logo_url
                       ? <img src={a.logo_url} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
-                      : <div className="w-6 h-6 rounded bg-ink-700 flex-shrink-0" />}
+                      : <div className="w-6 h-6 rounded bg-signal-600/20 flex-shrink-0" />}
                     <span className="font-medium text-sm">{a.name}</span>
                   </div>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-ink-800 text-ink-300">

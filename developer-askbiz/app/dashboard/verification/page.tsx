@@ -5,7 +5,9 @@ const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outlin
 const inputCls = `w-full px-3 py-3 rounded-lg border border-ink-600 bg-ink-950 text-ink-50 text-sm transition-colors ${focusRing}`
 const labelCls = 'block mb-1.5 text-xs font-medium text-ink-200'
 const primaryBtnCls = `py-3 px-5 rounded-lg bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`
-const ghostBtnCls = `py-2 px-3 rounded-md border border-ink-600 text-ink-300 text-xs font-medium hover:bg-ink-800 transition-colors disabled:opacity-50 ${focusRing}`
+// py-3.5, not py-2 — same 44px touch-target fix already applied to the
+// compact text-xs controls elsewhere (see signin page's clsxMethod).
+const ghostBtnCls = `py-3.5 px-3 rounded-md border border-ink-600 text-ink-300 text-xs font-medium hover:bg-ink-800 transition-colors disabled:opacity-50 ${focusRing}`
 const cardCls = 'border border-ink-700 rounded-xl p-5 bg-ink-900'
 
 type Verification = {
@@ -230,13 +232,19 @@ function DocumentsCard({ verificationId, documents, onUploaded }: { verification
       <div className="space-y-3">
         {DOCUMENT_KINDS.map(d => {
           const done = uploadedKinds.has(d.kind)
+          // Disabled *looks* disabled whenever this row's input actually is —
+          // that's not just !verificationId, it's also true for every other
+          // row while one upload is in flight (the underlying input.disabled
+          // already covered this; the label's opacity/pointer-events didn't,
+          // so the other three rows looked clickable and silently weren't).
+          const rowDisabled = !verificationId || (uploading !== null && uploading !== d.kind)
           return (
             <div key={d.kind} className="flex items-center justify-between gap-3 border-b border-ink-800 pb-3 last:border-0 last:pb-0">
               <div className="min-w-0">
                 <p className="text-sm text-ink-100 font-medium">{d.label}</p>
                 <p className="text-ink-500 text-xs">{d.hint}</p>
               </div>
-              <label className={`flex-shrink-0 cursor-pointer ${ghostBtnCls} ${!verificationId ? 'pointer-events-none opacity-50' : ''}`}>
+              <label className={`flex-shrink-0 cursor-pointer ${ghostBtnCls} ${rowDisabled ? 'pointer-events-none opacity-50' : ''}`}>
                 {uploading === d.kind ? 'Uploading…' : done ? 'Replace' : 'Upload'}
                 <input type="file" accept="image/*" className="sr-only" disabled={!verificationId || uploading !== null} onChange={handleFile(d.kind)} />
               </label>
