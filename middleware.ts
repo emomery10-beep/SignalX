@@ -201,14 +201,14 @@ export async function middleware(request: NextRequest) {
   // follows an unprefixed link to one of these pages is a known, accepted gap
   // (see the locale rendering fix plan) closed by a later real per-locale
   // static-page migration, not by this redirect.
-  const LOCALE_REDIRECT_PREFIXES = ['/blog', '/academy', '/help', '/privacy', '/signin', '/signup']
+  const LOCALE_REDIRECT_PREFIXES = ['/', '/blog', '/academy', '/help', '/privacy', '/signin', '/signup']
   const needsLocaleRedirect =
     !hasLocalePrefix &&
     !existingLang &&
     locale !== DEFAULT_LOCALE &&
     LOCALE_REDIRECT_PREFIXES.some(p => logicalPath === p || logicalPath.startsWith(p + '/'))
   if (needsLocaleRedirect) {
-    const target = new URL(`/${locale}${logicalPath}`, request.url)
+    const target = new URL(`/${locale}${logicalPath === '/' ? '' : logicalPath}`, request.url)
     target.search = request.nextUrl.search
     return applySecurityHeaders(NextResponse.redirect(target, 307))
   }
