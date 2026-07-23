@@ -17,7 +17,7 @@ export interface ShipmentAlert {
 export interface LogisticsHealth {
   score: number // 0-100
   label: string
-  color: 'green' | 'amber' | 'red'
+  color: 'green' | 'amber' | 'red' | 'grey'
   active_shipments: number
   at_risk: number
   customs_holds: number
@@ -98,6 +98,24 @@ export async function calculateLogisticsHealth(userId: string): Promise<Logistic
 
   const shipments = active || []
   const recent = last30 || []
+
+  // No active shipments AND nothing in the last 30 days — there's genuinely nothing to
+  // score yet. Without this branch, onTimeRate below defaults to 100 and produces a
+  // "100/100 Healthy" badge that's visually identical to a real strong track record.
+  if (shipments.length === 0 && recent.length === 0) {
+    return {
+      score: 0,
+      label: 'No Shipment Data',
+      color: 'grey',
+      active_shipments: 0,
+      at_risk: 0,
+      customs_holds: 0,
+      total_working_capital: 0,
+      daily_financing_cost: 0,
+      on_time_rate: 0,
+      summary: 'No active shipments. Add tracking numbers to monitor your supply chain.',
+    }
+  }
 
   const atRisk = shipments.filter(s => s.is_at_risk).length
   const customsHolds = shipments.filter(s => s.customs_hold).length

@@ -104,7 +104,7 @@ export default function ShipmentsPage() {
   const [plan, setPlan] = useState('free')
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [filter, setFilter] = useState<'active' | 'all' | 'delivered'>('active')
+  const [filter, setFilter] = useState<'active' | 'all' | 'delivered' | 'at_risk'>('active')
   const [adding, setAdding] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -146,6 +146,12 @@ export default function ShipmentsPage() {
       }
     } finally { setLoading(false) }
   }
+
+  // Deep-link support — e.g. /shipments?filter=at_risk from the Logistics tab quick action
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('filter') === 'at_risk') setFilter('at_risk')
+  }, [])
 
   useEffect(() => { load() }, [filter])
 
@@ -221,6 +227,7 @@ export default function ShipmentsPage() {
   }
 
   const card = { padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 10 }
+  const visibleShipments = filter === 'at_risk' ? shipments.filter(s => s.is_at_risk || s.customs_hold) : shipments
 
   return (
     <div className="page-shell">
@@ -272,7 +279,7 @@ export default function ShipmentsPage() {
           {health && isGrowthOrAbove(plan) && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10, marginBottom: 20 }}>
               {[
-                { label: tc('shipments.stat_logistics_score'), value: `${health.score}/100`, color: health.color === 'green' ? '#16a34a' : health.color === 'red' ? '#dc2626' : '#d97706', show: true },
+                { label: tc('shipments.stat_logistics_score'), value: health.color === 'grey' ? '—' : `${health.score}/100`, color: health.color === 'grey' ? 'var(--tx3)' : health.color === 'green' ? '#16a34a' : health.color === 'red' ? '#dc2626' : '#d97706', show: true },
                 { label: tc('shipments.stat_active'), value: health.active_shipments, color: 'var(--tx)', show: true },
                 { label: tc('shipments.stat_at_risk'), value: health.at_risk, color: health.at_risk > 0 ? '#d97706' : '#16a34a', show: true },
                 { label: tc('shipments.stat_customs_holds'), value: health.customs_holds, color: health.customs_holds > 0 ? '#dc2626' : '#16a34a', show: isBusiness },
@@ -313,24 +320,33 @@ export default function ShipmentsPage() {
             </div>
           )}
 
-          {/* Filter tabs — role="tablist" + aria-selected communicates active state to AT */}
-          <div
-            className="tab-strip"
-            role="tablist"
-            aria-label={tc('shipments.filter_label') || 'Filter shipments'}
-            style={{ gap: 6, marginBottom: 16, borderBottom: '1px solid var(--b)' }}
-          >
-            {(['active', 'all', 'delivered'] as const).map(f => (
-              <button
-                key={f}
-                role="tab"
-                aria-selected={filter === f}
-                onClick={() => setFilter(f)}
-                style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 14, fontWeight: filter === f ? 600 : 400, color: filter === f ? IND : 'var(--tx3)', borderBottom: filter === f ? `2px solid ${IND}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 44 }}
-              >
-                {tc('shipments.filter_' + f)}
-              </button>
-            ))}
+          {/* Filter tabs + persistent add button — role="tablist" + aria-selected communicates active state to AT */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16, borderBottom: '1px solid var(--b)', flexWrap: 'wrap' }}>
+            <div
+              className="tab-strip"
+              role="tablist"
+              aria-label={tc('shipments.filter_label') || 'Filter shipments'}
+              style={{ gap: 6 }}
+            >
+              {(['active', 'all', 'delivered', 'at_risk'] as const).map(f => (
+                <button
+                  key={f}
+                  role="tab"
+                  aria-selected={filter === f}
+                  onClick={() => setFilter(f)}
+                  style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 14, fontWeight: filter === f ? 600 : 400, color: filter === f ? IND : 'var(--tx3)', borderBottom: filter === f ? `2px solid ${IND}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', minHeight: 44, whiteSpace: 'nowrap' }}
+                >
+                  {f === 'at_risk' ? tc('shipments.stat_at_risk') : tc('shipments.filter_' + f)}
+                </button>
+              ))}
+            </div>
+            {/* Always-visible add button — the empty-state CTA below only renders when there are zero shipments at all */}
+            <button
+              onClick={() => setShowAdd(true)}
+              style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: IND, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minHeight: 40, marginBottom: 6 }}
+            >
+              {tc('shipments.empty_cta')}
+            </button>
           </div>
 
           {/* Shipments list */}
@@ -345,7 +361,12 @@ export default function ShipmentsPage() {
                 {tc('shipments.empty_cta')}
               </button>
             </div>
-          ) : shipments.map(s => {
+          ) : filter === 'at_risk' && visibleShipments.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <div style={{ fontSize: 34, marginBottom: 12 }}>✅</div>
+              <div style={{ fontSize: 17, fontWeight: 600 }}>{tc('intelligence.kpi_alerts_clear')}</div>
+            </div>
+          ) : visibleShipments.map(s => {
             const ss = s.customs_hold ? STATUS_COLOR['Customs Hold']
               : s.delay_days && s.delay_days > 3 ? STATUS_COLOR['Delayed']
               : STATUS_COLOR[s.track_status] || STATUS_COLOR['Pending']

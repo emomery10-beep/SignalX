@@ -6,6 +6,7 @@ import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
 import TeamPanel from '@/components/intelligence/TeamPanel'
 import LogisticsPulseCard from '@/components/LogisticsPulseCard'
 import CourierPulseCard from '@/components/intelligence/CourierPulseCard'
+import SupplierScorecard from '@/components/intelligence/SupplierScorecard'
 import FeatureGate from '@/components/gates/FeatureGate'
 import { usePlan } from '@/lib/hooks/usePlan'
 import KpiStrip from '@/components/intelligence/KpiStrip'
@@ -82,6 +83,7 @@ export default function IntelligencePage() {
   const [courierSummary, setCourierSummary] = useState<any>(null)
   // Logistics merged tab — sub-view: 'outgoing' (ships) | 'incoming' (courier)
   const [logisticsView, setLogisticsView] = useState<'outgoing' | 'incoming'>('outgoing')
+  const [showSupplierScorecard, setShowSupplierScorecard] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -445,8 +447,9 @@ export default function IntelligencePage() {
                 <div className="rgrid-2" style={{ gap: 10 }}>
                   {/* Shipments card */}
                   {logisticsHealth && (() => {
-                    const hColor = logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706'
-                    const hBg    = logisticsHealth.color === 'green' ? 'rgba(34,197,94,.08)' : logisticsHealth.color === 'red' ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.08)'
+                    const isGrey = logisticsHealth.color === 'grey'
+                    const hColor = isGrey ? 'var(--tx3)' : logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706'
+                    const hBg    = isGrey ? 'var(--ev)' : logisticsHealth.color === 'green' ? 'rgba(34,197,94,.08)' : logisticsHealth.color === 'red' ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.08)'
                     const score  = Math.min(100, Math.max(0, logisticsHealth.score))
                     return (
                       <button
@@ -469,7 +472,7 @@ export default function IntelligencePage() {
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
-                          <span style={{ fontSize: 28, fontWeight: 800, color: hColor, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
+                          <span style={{ fontSize: 28, fontWeight: 800, color: hColor, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{isGrey ? '—' : score}</span>
                           <span style={{ fontSize: 15, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>/100</span>
                         </div>
                         <div style={{ height: 3, borderRadius: 'var(--r-pill, 9999px)', background: 'var(--b2)', overflow: 'hidden', marginBottom: 8 }}>
@@ -758,12 +761,16 @@ export default function IntelligencePage() {
               <div style={{ fontSize: 17, color: 'var(--tx3)', lineHeight: 1.55 }}>{tc('intelligence.logistics_sub')}</div>
             </div>
 
-            {/* Sub-tab toggle — Outgoing (ships) / Incoming (courier) */}
+            {/* Sub-tab toggle — internal ids are legacy ('outgoing' id = ships view, 'incoming' id =
+                courier view) but the VISIBLE label must match the subheading's actual meaning:
+                ships = supplies coming in from suppliers ("Incoming"), courier = the merchant's own
+                deliveries going out to customers ("Outgoing"). Labels are intentionally swapped
+                relative to their ids — don't "fix" this back without swapping the components too. */}
             <div style={{ display: 'inline-flex', padding: 3, borderRadius: 'var(--r-md)', background: 'var(--ev)', border: '1px solid var(--b)', marginBottom: 20 }}>
               {([
                 {
                   id: 'outgoing',
-                  label: tc('intelligence.logistics_sub_outgoing'),
+                  label: tc('intelligence.logistics_sub_incoming'),
                   icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
@@ -772,7 +779,7 @@ export default function IntelligencePage() {
                 },
                 {
                   id: 'incoming',
-                  label: tc('intelligence.logistics_sub_incoming'),
+                  label: tc('intelligence.logistics_sub_outgoing'),
                   icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
@@ -827,7 +834,7 @@ export default function IntelligencePage() {
                       { label: tc('intelligence.shipments_qa_add'), action: () => router.push('/shipments') },
                       { label: tc('intelligence.shipments_qa_at_risk'), action: () => router.push('/shipments?filter=at_risk') },
                       { label: tc('intelligence.shipments_qa_delay'), action: () => askAskBiz('Which of my shipments are delayed and what is the financial impact?') },
-                      { label: tc('intelligence.shipments_qa_supplier'), action: () => askAskBiz('Which supplier has the best delivery reliability based on my shipment history?') },
+                      { label: tc('intelligence.shipments_qa_supplier'), action: () => setShowSupplierScorecard(true) },
                     ].map((item, i) => (
                       <button
                         key={i}
@@ -841,6 +848,13 @@ export default function IntelligencePage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Real supplier reliability scorecard — reuses the same component already live on Tools/CFO */}
+                {showSupplierScorecard && (
+                  <div style={{ marginTop: 14, padding: '16px', borderRadius: 'var(--r-md)', background: 'var(--sf)', border: '1px solid var(--b)' }}>
+                    <SupplierScorecard onAsk={askAskBiz} sym={cfoSnapshot?.currency_symbol || 'KSh'} />
+                  </div>
+                )}
               </div>
             )}
 

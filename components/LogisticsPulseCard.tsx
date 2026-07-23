@@ -19,9 +19,10 @@ export default function LogisticsPulseCard() {
 
   const isGreen  = health.color === 'green'
   const isRed    = health.color === 'red'
-  const color    = isGreen ? '#16a34a' : isRed ? '#dc2626' : '#d97706'
-  const bg       = isGreen ? 'rgba(34,197,94,.06)' : isRed ? 'rgba(239,68,68,.06)' : 'rgba(245,158,11,.06)'
-  const border   = isGreen ? 'rgba(34,197,94,.18)' : isRed ? 'rgba(239,68,68,.18)' : 'rgba(245,158,11,.18)'
+  const isGrey   = health.color === 'grey'
+  const color    = isGrey ? 'var(--tx3)' : isGreen ? '#16a34a' : isRed ? '#dc2626' : '#d97706'
+  const bg       = isGrey ? 'var(--ev)' : isGreen ? 'rgba(34,197,94,.06)' : isRed ? 'rgba(239,68,68,.06)' : 'rgba(245,158,11,.06)'
+  const border   = isGrey ? 'var(--b)' : isGreen ? 'rgba(34,197,94,.18)' : isRed ? 'rgba(239,68,68,.18)' : 'rgba(245,158,11,.18)'
   const score    = Math.min(100, Math.max(0, health.score))
   const pct      = `${score}%`
 
@@ -54,7 +55,7 @@ export default function LogisticsPulseCard() {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 20, fontWeight: 800, color, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
+          <span style={{ fontSize: 20, fontWeight: 800, color, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{isGrey ? '—' : score}</span>
           <span style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('logistics_pulsecard.outOf100')}</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ marginLeft: 2 }}>
             <path d="M9 18l6-6-6-6"/>
