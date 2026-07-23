@@ -354,7 +354,7 @@ export default function BillingPage() {
     return () => clearInterval(timer)
   }, [waafiStatus, waafiReferenceId])
 
-  const handleStartTrial = async (type: 'pos' | 'growth') => {
+  const handleStartTrial = async (type: 'pos') => {
     setTrialLoading(type)
     setCheckoutError('')
     try {
@@ -546,26 +546,11 @@ export default function BillingPage() {
                 )}
 
                 {(() => {
+                  // Growth free trial is retired — only grandfathered trial holders
+                  // (isTrialing/trialExpired) still see trial-specific button copy;
+                  // everyone else gets the standard paid upgrade button below.
                   const isTrialing = plan.id === 'growth' && trials.growth?.active
-                  const canTrial = plan.id === 'growth' && !trials.growth?.used && !isCurrent
                   const trialExpired = plan.id === 'growth' && trials.growth?.expired
-
-                  if (canTrial) {
-                    return (
-                      <button
-                        onClick={() => handleStartTrial('growth')}
-                        disabled={trialLoading === 'growth'}
-                        style={{
-                          width: '100%', padding: '13px', borderRadius: 10, border: 'none', minHeight: 44,
-                          background: '#6366F1',
-                          color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {trialLoading === 'growth' ? tc('billing.btn_starting') : tc('billing.btn_start_free')}
-                      </button>
-                    )
-                  }
 
                   return (
                     <button
@@ -773,13 +758,6 @@ export default function BillingPage() {
             <span style={{ fontSize: 15, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_pos_trial')}</span>
           </div>
         )}
-        {trialSuccess === 'growth' && (
-          <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize: 15, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_growth_trial')}</span>
-          </div>
-        )}
-
         {/* POS success toast */}
         {posSuccess && (
           <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>

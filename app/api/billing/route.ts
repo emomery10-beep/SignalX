@@ -165,10 +165,14 @@ async function handlePost(request: NextRequest) {
     return NextResponse.json({ logged: true })
   }
 
-  // Start free trial (no card required)
+  // Start free trial (no card required) — POS only. The Growth plan trial is
+  // retired: it's not just unadvertised, new grants are rejected outright.
   if (action === 'start_trial') {
     const trialType = body.type as string
-    if (trialType !== 'pos' && trialType !== 'growth') {
+    if (trialType === 'growth') {
+      return NextResponse.json({ error: 'The Growth free trial is no longer available' }, { status: 403 })
+    }
+    if (trialType !== 'pos') {
       return NextResponse.json({ error: 'Invalid trial type' }, { status: 400 })
     }
 
@@ -185,7 +189,7 @@ async function handlePost(request: NextRequest) {
     }
 
     const now = new Date()
-    const endsAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+    const endsAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
     // Insert trial record
     const { error: trialErr } = await supabase.from('trials').insert({
@@ -198,26 +202,11 @@ async function handlePost(request: NextRequest) {
       return NextResponse.json({ error: 'Could not start trial' }, { status: 500 })
     }
 
-    if (trialType === 'pos') {
-      // Enable PoS with up to 5 seats
-      await supabase.from('profiles').update({
-        pos_enabled: true,
-        pos_seat_count: 5,
-      }).eq('id', user.id)
-    }
-
-    if (trialType === 'growth') {
-      // Upgrade to Growth plan (no Stripe subscription)
-      await Promise.all([
-        supabase.from('subscriptions').update({
-          plan_id: 'growth',
-          status: 'trialing',
-          trial_ends_at: endsAt.toISOString(),
-          updated_at: now.toISOString(),
-        }).eq('user_id', user.id),
-        supabase.from('profiles').update({ plan_id: 'growth' }).eq('id', user.id),
-      ])
-    }
+    // Enable PoS with up to 5 seats
+    await supabase.from('profiles').update({
+      pos_enabled: true,
+      pos_seat_count: 5,
+    }).eq('id', user.id)
 
     return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString() })
   }

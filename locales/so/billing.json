@@ -18,7 +18,6 @@
   "trial_ended_subscribe": "Tijaabadii way dhammaatay — is-diiwaangeli si aad u sii waddo",
 
   "btn_starting": "Waa la bilaabayaa…",
-  "btn_start_free": "Bilaash ku bilow →",
   "btn_loading": "Soo raraya…",
   "btn_subscribe_to": "Is-diiwaangeli {plan} →",
   "btn_current_plan": "Qorshaha hadda",
@@ -58,8 +57,7 @@
   "waafipay_try_again": "Mar kale isku day",
   "waafipay_footnote": "Waxaa ku shaqeeya WaafiPay. Kuraasta POS: $5/kursi/bishii. Lacag-bixinta kaadhka ee Stripe ayaa kor sidoo kale la heli karaa.",
 
-  "toast_pos_trial": "Tijaabada POS way bilaabatay! Shaqaalahaagu waxay geli karaan pos.askbiz.co — 90 maalmood oo bilaash ah, ilaa 5 isticmaale.",
-  "toast_growth_trial": "Tijaabada Koritaanka way bilaabatay! Waxaad si buuxda u heli kartaa dhammaan sifooyinka Koritaanka muddo 90 maalmood ah.",
+  "toast_pos_trial": "Tijaabada POS way bilaabatay! Shaqaalahaagu waxay geli karaan pos.askbiz.co — 30 maalmood oo bilaash ah, ilaa 5 isticmaale.",
   "toast_pos_activated": "Kuraasta POS waa la firfircooneeyay — keeshiyayaashaagu hadda way geli karaan pos.askbiz.co",
 
   "pos_title": "Kuraasta Meesha-Iibka (POS)",
@@ -82,7 +80,7 @@
   "pos_btn_manage": "Maaree diiwaangelinta →",
   "pos_trial_expired": "Gelitaankaagii bilaashka ahaa wuu dhammaaday — hoos ka is-diiwaangeli si aad u sii isticmaasho POS",
   "pos_btn_start_free": "Bilaash ku bilow — ilaa 5 shaqaale →",
-  "pos_no_card": "Kaadh looma baahna · Gelitaan POS oo buuxa muddo 90 maalmood ah",
+  "pos_no_card": "Kaadh looma baahna · Gelitaan POS oo buuxa muddo 30 maalmood ah",
   "pos_seat_count_price": "{seats} kursi · {price}/bishii",
   "pos_seat_count_price_one": "{seats} kursi · {price}/bishii",
 
