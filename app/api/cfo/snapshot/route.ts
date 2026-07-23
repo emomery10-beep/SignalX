@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { currencySymbol: sym, countryCode } = await getUserLocale(supabase, user.id)
+  const { currencySymbol: sym, countryCode } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
   const params = new URL(request.url).searchParams
   const now = new Date()
 

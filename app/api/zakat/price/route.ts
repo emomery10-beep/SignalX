@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   if (!user) return json({ error: 'Unauthorized' }, 401)
 
   const body = await request.json().catch(() => ({}))
-  const { currency } = await getUserLocale(supabase, user.id)
+  const { currency } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
 
   let metal: 'gold' | 'silver'
   if (body?.metal === 'gold' || body?.metal === 'silver') {

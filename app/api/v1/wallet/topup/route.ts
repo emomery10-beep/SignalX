@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   // currency (profiles.currency — reliable, unlike country_code) at a
   // PPP-discounted local price point mirroring POS_SEAT, when we have one.
   // Unlisted currencies fall back to the original GBP amount unchanged.
-  const { currency: userCurrency } = await getUserLocale(supabase, user.id)
+  const { currency: userCurrency } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
   const localBundle = WALLET_TOPUP_BUNDLES[userCurrency]
   const local = localBundle
     ? { currency: userCurrency.toLowerCase(), unitAmount: Math.round(localBundle[tierIndex] * 100) }

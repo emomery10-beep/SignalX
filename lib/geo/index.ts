@@ -90,6 +90,35 @@ export const COUNTRY_CURRENCY: Record<string, string> = {
   AE: 'AED', IN: 'INR', MX: 'MXN', BR: 'BRL',
   DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR',
   PT: 'EUR', AT: 'EUR', IE: 'EUR', FI: 'EUR',
+  // ── Expanded to match lib/region-config.ts's REGIONS map (147
+  // countries with a full tax config) — without this, onboarding's
+  // manual "type your country" picker (COUNTRY_LIST in
+  // app/onboarding/page.tsx, built from COUNTRY_NAMES below) silently
+  // couldn't offer most tax-supported countries at all, and picking one
+  // wouldn't set a currency either. Sourced from REGIONS.currencyCode.
+  // Deliberately NOT used to override any code already listed above —
+  // REGIONS disagrees with a few of those on currency and this file's
+  // existing values are kept as authoritative:
+  //   - SO (Somalia): kept USD. REGIONS says SOS, but Somali commerce is
+  //     heavily dollarized in practice — an intentional prior choice.
+  //   - GA/CG/TD (Gabon, Congo-Brazzaville, Chad): kept XAF. REGIONS says
+  //     XOF for all three, which looks like a data bug there — they're
+  //     CEMAC members and use the Central, not West, African CFA franc.
+  //   - ZW (Zimbabwe): kept ZWL. REGIONS says 'ZiG' (Zimbabwe's actual
+  //     2024 currency reform) but that's not a real ISO-4217 code.
+  // None of this was fixed in region-config.ts itself — flagged
+  // separately, out of scope here.
+  AF: 'AFN', AL: 'ALL', AM: 'AMD', AR: 'ARS', AZ: 'AZN', BA: 'BAM', BD: 'BDT', BG: 'BGN',
+  BH: 'BHD', BO: 'BOB', BZ: 'BZD', CH: 'CHF', CL: 'CLP', CN: 'CNY', CO: 'COP', CR: 'CRC',
+  CZ: 'CZK', DK: 'DKK', DO: 'DOP', EC: 'USD', EE: 'EUR', FJ: 'FJD', GE: 'GEL', GR: 'EUR',
+  GT: 'GTQ', GY: 'GYD', HK: 'HKD', HN: 'HNL', HR: 'EUR', HT: 'HTG', HU: 'HUF', ID: 'IDR',
+  IL: 'ILS', IQ: 'IQD', JM: 'JMD', JO: 'JOD', JP: 'JPY', KG: 'KGS', KH: 'KHR', KR: 'KRW',
+  KW: 'KWD', KZ: 'KZT', LA: 'LAK', LB: 'LBP', LK: 'LKR', LT: 'EUR', LV: 'EUR', MD: 'MDL',
+  ME: 'EUR', MK: 'MKD', MM: 'MMK', MN: 'MNT', MU: 'MUR', MY: 'MYR', NI: 'NIO', NO: 'NOK',
+  NP: 'NPR', NZ: 'NZD', OM: 'OMR', PA: 'PAB', PE: 'PEN', PG: 'PGK', PH: 'PHP', PK: 'PKR',
+  PL: 'PLN', PS: 'ILS', PY: 'PYG', QA: 'QAR', RO: 'RON', RS: 'RSD', SA: 'SAR', SE: 'SEK',
+  SR: 'SRD', SS: 'SSP', SV: 'USD', TH: 'THB', TJ: 'TJS', TL: 'USD', TM: 'TMT', TR: 'TRY',
+  TT: 'TTD', TW: 'TWD', UA: 'UAH', UZ: 'UZS', VN: 'VND', XK: 'EUR', YE: 'YER',
 }
 
 // ── Country → phone dial code (E.164 prefix) ─────────────────
@@ -170,6 +199,32 @@ export const COUNTRY_NAMES: Record<string, string> = {
   NL: 'Netherlands', BE: 'Belgium', PT: 'Portugal', AT: 'Austria', FI: 'Finland',
   AE: 'UAE', IN: 'India', SG: 'Singapore', AU: 'Australia', CA: 'Canada',
   MX: 'Mexico', BR: 'Brazil',
+  // ── Expanded to match REGIONS in lib/region-config.ts — see the
+  // matching comment on COUNTRY_CURRENCY above for why a few codes
+  // that already existed there (SO, GA/CG/TD, ZW) aren't touched here.
+  AF: 'Afghanistan', AL: 'Albania', AM: 'Armenia', AO: 'Angola', AR: 'Argentina',
+  AZ: 'Azerbaijan', BA: 'Bosnia & Herzegovina', BD: 'Bangladesh', BF: 'Burkina Faso',
+  BG: 'Bulgaria', BH: 'Bahrain', BJ: 'Benin', BO: 'Bolivia', BW: 'Botswana', BZ: 'Belize',
+  CD: 'DR Congo', CF: 'Central African Republic', CG: 'Congo-Brazzaville', CH: 'Switzerland',
+  CI: 'Côte d\'Ivoire', CL: 'Chile', CM: 'Cameroon', CN: 'China', CO: 'Colombia',
+  CR: 'Costa Rica', CZ: 'Czech Republic', DJ: 'Djibouti', DK: 'Denmark',
+  DO: 'Dominican Republic', DZ: 'Algeria', EC: 'Ecuador', EE: 'Estonia', EG: 'Egypt',
+  ER: 'Eritrea', FJ: 'Fiji', GA: 'Gabon', GE: 'Georgia', GN: 'Guinea', GQ: 'Equatorial Guinea',
+  GR: 'Greece', GT: 'Guatemala', GW: 'Guinea-Bissau', GY: 'Guyana', HK: 'Hong Kong',
+  HN: 'Honduras', HR: 'Croatia', HT: 'Haiti', HU: 'Hungary', ID: 'Indonesia', IL: 'Israel',
+  IQ: 'Iraq', JM: 'Jamaica', JO: 'Jordan', JP: 'Japan', KG: 'Kyrgyzstan', KH: 'Cambodia',
+  KR: 'South Korea', KW: 'Kuwait', KZ: 'Kazakhstan', LA: 'Laos', LB: 'Lebanon',
+  LK: 'Sri Lanka', LR: 'Liberia', LS: 'Lesotho', LT: 'Lithuania', LV: 'Latvia', LY: 'Libya',
+  MA: 'Morocco', MD: 'Moldova', ME: 'Montenegro', MG: 'Madagascar', MK: 'North Macedonia',
+  ML: 'Mali', MM: 'Myanmar', MN: 'Mongolia', MU: 'Mauritius', MY: 'Malaysia', NA: 'Namibia',
+  NE: 'Niger', NI: 'Nicaragua', NO: 'Norway', NP: 'Nepal', NZ: 'New Zealand', OM: 'Oman',
+  PA: 'Panama', PE: 'Peru', PG: 'Papua New Guinea', PH: 'Philippines', PK: 'Pakistan',
+  PL: 'Poland', PS: 'Palestine', PY: 'Paraguay', QA: 'Qatar', RO: 'Romania', RS: 'Serbia',
+  SA: 'Saudi Arabia', SD: 'Sudan', SE: 'Sweden', SL: 'Sierra Leone', SN: 'Senegal',
+  SO: 'Somalia', SR: 'Suriname', SS: 'South Sudan', SV: 'El Salvador', SZ: 'Eswatini',
+  TD: 'Chad', TG: 'Togo', TH: 'Thailand', TJ: 'Tajikistan', TL: 'Timor-Leste',
+  TM: 'Turkmenistan', TN: 'Tunisia', TR: 'Turkey', TT: 'Trinidad & Tobago', TW: 'Taiwan',
+  UA: 'Ukraine', UZ: 'Uzbekistan', VN: 'Vietnam', XK: 'Kosovo', YE: 'Yemen',
 }
 
 // E.164 phone → ISO country code, by longest matching dial prefix. This is

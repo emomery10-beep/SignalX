@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { currencySymbol: sym } = await getUserLocale(supabase, user.id)
+  const { currencySymbol: sym } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
 
   // Fetch from both sources in parallel
   const [{ data: posProducts }, { data: unifiedProducts }] = await Promise.all([

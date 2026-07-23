@@ -16,7 +16,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return json({ error: 'Unauthorized' }, 401)
 
-  const { countryCode } = await getUserLocale(supabase, user.id)
+  const { countryCode } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
 
   const { data, error } = await supabase
     .from('charities')

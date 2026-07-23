@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { phoneToSyntheticEmail, isValidPin, PHONE_PIN_MAX_ATTEMPTS, PHONE_PIN_LOCKOUT_MS } from '@/lib/phone-auth'
+import { countryFromPhone } from '@/lib/geo'
 
 const RESET_CONTACT_MSG = 'Contact customer@askbiz.co or WhatsApp 0713826241 to reset your PIN.'
 
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   if (action === 'signup') {
     const { firstName, lastName, consentVersion } = body
-    const { error } = await db.auth.admin.createUser({
+    const { data, error } = await db.auth.admin.createUser({
       email,
       password: pin,
       email_confirm: true,
@@ -44,6 +45,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'This phone number already has an account. Sign in instead.' }, { status: 409 })
       }
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+    // Best-effort: seed country_code from the signup phone's dial code right
+    // away, rather than leaving it null until onboarding's location-confirm
+    // step — which some users skip. Never blocks signup on failure; this is
+    // enrichment, not core to account creation (same spirit as
+    // handle_new_user's own "never block auth" exception handling).
+    const cc = countryFromPhone(phone)
+    if (cc && data.user) {
+      await db.from('profiles').update({ country_code: cc }).eq('id', data.user.id)
     }
     return NextResponse.json({ ok: true })
   }

@@ -367,7 +367,7 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const params = new URL(request.url).searchParams
-  const { currencySymbol: sym, countryCode: profileCountry } = await getUserLocale(supabase, user.id)
+  const { currencySymbol: sym, countryCode: profileCountry } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
   // Business type, fetched separately from getUserLocale (used by other routes that don't
   // need it) — feeds detectSector() below so brand-new accounts with zero sales history
   // still get a sector-specific climate instead of always falling back to General Retail.
