@@ -535,6 +535,11 @@ function AuthPage() {
               </div>
             )}
           </div>
+          {mode === 'signin' && (
+            <p style={{ fontSize: 'clamp(11px,1vw,12px)', textAlign: 'right', marginTop: -2, marginBottom: 4 }}>
+              <Link href="/forgot-pin" style={{ minHeight: 0, display: 'inline', color: 'var(--tx2)', textDecoration: 'underline' }}>Forgot PIN?</Link>
+            </p>
+          )}
           <p className="animate-fade-up" style={{ fontSize: 'clamp(11px,1vw,12px)', color: 'var(--tx3)', marginBottom: 4, lineHeight: 1.3 }}>
             {tc('auth.phone_hint')}
           </p>

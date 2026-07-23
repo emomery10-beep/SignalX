@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { phoneToSyntheticEmail, isValidPin, PHONE_PIN_MAX_ATTEMPTS, PHONE_PIN_LOCKOUT_MS } from '@/lib/phone-auth'
 import { countryFromPhone } from '@/lib/geo'
 
-const RESET_CONTACT_MSG = 'Contact customer@askbiz.co or WhatsApp 0713826241 to reset your PIN.'
+const RESET_CONTACT_MSG = 'Tap "Forgot PIN?" to reset it yourself via WhatsApp, or contact customer@askbiz.co if you need help.'
 
 // Service-role client — creates users and reads/writes the attempts table
 // (which has RLS blocking direct anon/authenticated access).
@@ -54,6 +54,15 @@ export async function POST(req: NextRequest) {
     const cc = countryFromPhone(phone)
     if (cc && data.user) {
       await db.from('profiles').update({ country_code: cc }).eq('id', data.user.id)
+    }
+    // Record the phone->account mapping self-service PIN reset relies on
+    // (see app/api/auth/phone-pin/reset/route.ts). Doesn't block signup on
+    // failure — same reasoning as above — but IS logged, since unlike
+    // country_code this is load-bearing: a missing row here means that one
+    // account can't use self-service reset until it's backfilled.
+    if (data.user) {
+      const { error: identityError } = await db.from('phone_pin_identities').insert({ phone, user_id: data.user.id })
+      if (identityError) console.error('[phone-pin] failed to record phone_pin_identities row:', identityError.message)
     }
     return NextResponse.json({ ok: true })
   }
