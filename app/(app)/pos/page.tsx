@@ -1845,7 +1845,7 @@ export default function POSPage() {
                 { icon: '⭐', label: tc('pos_app.tile_loyalty'),          tab: 'loyalty' as Tab,         desc: tc('pos_app.tile_loyalty_desc') },
                 { icon: '↩️', label: tc('pos_app.tile_returns'),          tab: 'returns' as Tab,         desc: tc('pos_app.tile_returns_desc') },
                 { icon: '📊', label: tc('pos_app.tile_reports'),         tab: 'reports' as Tab,         desc: tc('pos_app.tile_reports_desc') },
-                { icon: '📋', label: tc('pos_app.tile_purchase_orders'), tab: 'purchase_orders' as Tab, desc: tc('pos_app.tile_purchase_orders_desc'), comingSoon: true },
+                { icon: '📋', label: tc('pos_app.tile_purchase_orders'), tab: 'purchase_orders' as Tab, desc: tc('pos_app.tile_purchase_orders_desc') },
                 { icon: '🎁', label: tc('pos_app.tile_gift_cards'),      tab: 'gift_cards' as Tab,      desc: tc('pos_app.tile_gift_cards_desc'), comingSoon: true },
                 { icon: '👥', label: tc('pos_app.tile_staff'),           tab: 'staff' as Tab,           desc: tc('pos_app.tile_retail_staff_desc') },
                 { icon: '🏪', label: tc('pos_app.tile_branches'),        tab: 'branches' as Tab,        desc: tc('pos_app.tile_retail_branches_desc') },
