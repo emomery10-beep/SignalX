@@ -43,8 +43,8 @@ const REFRESH_CONFIGS: Record<string, {
     buildBody: (creds) => ({
       grant_type: 'refresh_token',
       refresh_token: creds.refresh_token as string,
-      client_id: process.env.AMAZON_SP_CLIENT_ID || '',
-      client_secret: process.env.AMAZON_SP_CLIENT_SECRET || '',
+      client_id: process.env.AMAZON_LWA_CLIENT_ID || '',
+      client_secret: process.env.AMAZON_LWA_CLIENT_SECRET || '',
     }),
   },
   ebay: {
