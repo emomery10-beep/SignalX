@@ -34,6 +34,7 @@ interface Props {
   pnlMonthly: PnlMonth[]
   totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
   cash: CashData
+  monthlyBaseline: { revenue: number; cogs: number; fixed: number }
   dailyCashflow?: DailyCashflow[]
   currencySymbol: string
   onAsk?: (prompt: string) => void
@@ -319,7 +320,7 @@ function WaterfallChart({ items, width, height, sym }: {
 }
 
 // ── Main Component ───────────────────────────────────────────
-export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, currencySymbol: sym, onAsk }: Props) {
+export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, currencySymbol: sym, monthlyBaseline, onAsk }: Props) {
   const { tc } = useLang()
   const horizons = buildHorizons(tc)
   const [horizon, setHorizon] = useState<HorizonId>('3m')
@@ -839,9 +840,9 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       {/* ── Scenario Planner (existing) ─── */}
       <div style={{ borderTop: '1px solid var(--b, #e8e6e1)', paddingTop: 16 }}>
         <ScenarioPlanner
-          baseRevenue={totals.revenue}
-          baseCogs={totals.cogs}
-          baseFixed={totals.fixed_costs}
+          baseRevenue={monthlyBaseline.revenue}
+          baseCogs={monthlyBaseline.cogs}
+          baseFixed={monthlyBaseline.fixed}
           cashBalance={cash.balance}
           currencySymbol={sym}
         />

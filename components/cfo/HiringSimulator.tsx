@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
-  totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
+  monthlyBaseline: { revenue: number; cogs: number; fixed: number }
   cash: { balance: number; monthly_fixed: number; runway_months: number | null; daily_net_burn: number }
   currencySymbol: string
   onAsk: (prompt: string) => void
@@ -29,7 +29,7 @@ function saveHires(h: HireRow[]) {
   try { localStorage.setItem('cfo_hiring_sim', JSON.stringify(h)) } catch {}
 }
 
-export default function HiringSimulator({ totals, cash, currencySymbol: sym, onAsk }: Props) {
+export default function HiringSimulator({ monthlyBaseline, cash, currencySymbol: sym, onAsk }: Props) {
   const { tc } = useLang()
   const [hires, setHires] = useState<HireRow[]>([])
   const [burdenRate, setBurdenRate] = useState(1.3) // 30% on top for benefits/tax
@@ -56,12 +56,12 @@ export default function HiringSimulator({ totals, cash, currencySymbol: sym, onA
   const totalAnnualCost = totalMonthlyCost * 12
   const totalHeadcount = hires.reduce((s, h) => s + h.count, 0)
 
-  const currentFixedCosts = totals.fixed_costs
+  const currentFixedCosts = monthlyBaseline.fixed
   const newFixedCosts = currentFixedCosts + totalMonthlyCost
-  const currentNetProfit = totals.net_profit
+  const currentNetProfit = monthlyBaseline.revenue - monthlyBaseline.cogs - monthlyBaseline.fixed
   const newNetProfit = currentNetProfit - totalMonthlyCost
-  const currentMargin = totals.net_margin_pct
-  const newMargin = totals.revenue > 0 ? (newNetProfit / totals.revenue) * 100 : 0
+  const currentMargin = monthlyBaseline.revenue > 0 ? (currentNetProfit / monthlyBaseline.revenue) * 100 : 0
+  const newMargin = monthlyBaseline.revenue > 0 ? (newNetProfit / monthlyBaseline.revenue) * 100 : 0
 
   const currentRunway = cash.runway_months
   const monthlyBurn = cash.monthly_fixed + totalMonthlyCost

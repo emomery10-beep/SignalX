@@ -18,6 +18,7 @@
 
   "set_budget_hint": "Guji unug kasta oo Miisaaniyad ah oo kor ku qoran si aad u dejiso yoolashaada, ama guji “Isticmaal tirooyinka dhabta ah sida miisaaniyad” si aad uga bilowdo tirooyinka muddadan.",
   "set_label": "+ Deji",
+  "monthly_target_note": "Yoolashu waa kuwo bille loo dejiyey — halkan waxaa loo muujiyey {period}.",
 
   "attainment_title": "Gaadhista Miisaaniyada",
   "pct_of_budget": "{n}% miisaaniyada",

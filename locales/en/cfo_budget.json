@@ -18,6 +18,7 @@
 
   "set_budget_hint": "Click any Budget cell above to set your targets, or click “Use actuals as budget” to start from this period’s numbers.",
   "set_label": "+ Set",
+  "monthly_target_note": "Targets are set monthly — shown here scaled to {period}.",
 
   "attainment_title": "Budget Attainment",
   "pct_of_budget": "{n}% of budget",

@@ -43,6 +43,7 @@ import RecoveredRevenue from './RecoveredRevenue'
 import { loadCostConfig, sumFixed } from './CostConfigDrawer'
 
 interface SnapshotData {
+  period: { start: string; end: string; compStart: string; compEnd: string; key: string }
   currency_symbol: string
   country_code?: string | null
   kpis: any[]
@@ -616,7 +617,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               totals={data.totals}
               pnlMonthly={data.pnl_monthly}
               currencySymbol={sym}
-              period={period}
+              periodRange={data.period}
               onAsk={onAsk}
             />
           ) : loading ? (
@@ -631,30 +632,62 @@ export default function CfoDashboard({ onAsk }: Props) {
       {subTab === 'forecasts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {!loading && data?.totals ? (
-            <>
-              <CfoForecasts
-                pnlMonthly={data.pnl_monthly ?? []}
-                totals={data.totals}
-                cash={data.cash}
-                dailyCashflow={data.daily_cashflow}
-                currencySymbol={sym}
-                onAsk={onAsk}
-              />
-              <HiringSimulator
-                totals={data.totals}
-                cash={data.cash}
-                currencySymbol={sym}
-                onAsk={onAsk}
-              />
-              <ThreeWayForecast
-                pnlMonthly={data.pnl_monthly ?? []}
-                totals={data.totals}
-                cash={data.cash}
-                receivablesSummary={data.receivables_summary}
-                currencySymbol={sym}
-                onAsk={onAsk}
-              />
-            </>
+            (() => {
+              // A stable "current monthly" run-rate — NOT the period-scoped `data.totals`
+              // (which is whatever the shared Today/Week/Quarter/etc tab is set to elsewhere
+              // on this dashboard). Scenario Planner, the Hiring Simulator, and the 3-Way
+              // Forecast's cascade badges all label their baseline "monthly" (e.g. "New
+              // monthly expense", "/mo"), so feeding them a single day's or a full quarter's
+              // totals silently wrecked their math depending on whatever tab was last clicked.
+              // Mirrors the avgFixed/monthly_fixed_total convention already used by
+              // CfoForecasts' own forecast engine and app/api/cfo/snapshot/route.ts.
+              const currentMonthKey = new Date().toISOString().slice(0, 7)
+              const completed = (data.pnl_monthly ?? []).filter(m => m.month < currentMonthKey)
+              const recent = completed.slice(-3)
+              let monthlyBaseline: { revenue: number; cogs: number; fixed: number }
+              if (recent.length === 0) {
+                const partial = (data.pnl_monthly ?? []).find(m => m.month === currentMonthKey)
+                monthlyBaseline = {
+                  revenue: partial?.revenue ?? data.totals.revenue,
+                  cogs: partial?.cogs ?? data.totals.cogs,
+                  fixed: partial?.fixed ?? data.totals.fixed_costs,
+                }
+              } else {
+                const revenue = recent.reduce((s, m) => s + m.revenue, 0) / recent.length
+                const cogsRatios = recent.filter(m => m.revenue > 0).map(m => m.cogs / m.revenue)
+                const avgCogsRatio = cogsRatios.length ? cogsRatios.reduce((a, b) => a + b, 0) / cogsRatios.length : 0
+                const fixed = recent.reduce((s, m) => s + m.fixed, 0) / recent.length
+                monthlyBaseline = { revenue, cogs: revenue * avgCogsRatio, fixed }
+              }
+
+              return (
+                <>
+                  <CfoForecasts
+                    pnlMonthly={data.pnl_monthly ?? []}
+                    totals={data.totals}
+                    cash={data.cash}
+                    dailyCashflow={data.daily_cashflow}
+                    currencySymbol={sym}
+                    monthlyBaseline={monthlyBaseline}
+                    onAsk={onAsk}
+                  />
+                  <HiringSimulator
+                    monthlyBaseline={monthlyBaseline}
+                    cash={data.cash}
+                    currencySymbol={sym}
+                    onAsk={onAsk}
+                  />
+                  <ThreeWayForecast
+                    pnlMonthly={data.pnl_monthly ?? []}
+                    cash={data.cash}
+                    monthlyBaseline={monthlyBaseline}
+                    receivablesSummary={data.receivables_summary}
+                    currencySymbol={sym}
+                    onAsk={onAsk}
+                  />
+                </>
+              )
+            })()
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
               {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_forecasts')}

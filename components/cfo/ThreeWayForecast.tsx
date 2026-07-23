@@ -10,8 +10,8 @@ interface PnlMonth {
 
 interface Props {
   pnlMonthly: PnlMonth[]
-  totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
   cash: { balance: number; monthly_fixed: number; runway_months: number | null; daily_net_burn: number }
+  monthlyBaseline: { revenue: number; cogs: number; fixed: number }
   receivablesSummary?: { total_receivables: number; total_payables: number; overdue_receivables: number }
   currencySymbol: string
   onAsk: (prompt: string) => void
@@ -29,7 +29,7 @@ function fmt(n: number, sym: string): string {
 
 type View = 'linked' | 'waterfall' | 'scenario'
 
-export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivablesSummary, currencySymbol: sym, onAsk }: Props) {
+export default function ThreeWayForecast({ pnlMonthly, cash, monthlyBaseline, receivablesSummary, currencySymbol: sym, onAsk }: Props) {
   const { tc } = useLang()
   const [view, setView] = useState<View>('linked')
   const [revenueAdj, setRevenueAdj] = useState(0)  // % adjustment
@@ -53,7 +53,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
     const avgRevGrowth = revGrowths.length > 0 ? revGrowths.reduce((a, b) => a + b, 0) / revGrowths.length : 0
     const avgCogsRatio = cogsRatios.length > 0 ? cogsRatios.reduce((a, b) => a + b, 0) / cogsRatios.length : 0.6
-    const avgFixed = fixedAmts.length > 0 ? fixedAmts.reduce((a, b) => a + b, 0) / fixedAmts.length : totals.fixed_costs
+    const avgFixed = fixedAmts.length > 0 ? fixedAmts.reduce((a, b) => a + b, 0) / fixedAmts.length : monthlyBaseline.fixed
 
     const lastRev = months[months.length - 1].revenue
     const projected: Array<{
@@ -95,7 +95,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
     }
 
     return { projected, avgRevGrowth, avgCogsRatio, avgFixed }
-  }, [pnlMonthly, totals, cash, receivablesSummary, revenueAdj, cogsAdj, fixedAdj])
+  }, [pnlMonthly, monthlyBaseline, cash, receivablesSummary, revenueAdj, cogsAdj, fixedAdj])
 
   if (!forecast || forecast.projected.length === 0) return null
 
@@ -249,9 +249,12 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <CascadeChip label={tc('cfo_threeway.revenue')} change={revenueAdj} color={GREEN} />
                 <Arrow />
-                <CascadeChip label={tc('cfo_threeway.grossProfit')} change={projected[2].grossProfit > 0 ? ((projected[2].grossProfit / projected[2].revenue) * 100 - totals.gross_margin_pct) : 0} color={INDIGO} />
+                <CascadeChip label={tc('cfo_threeway.grossProfit')} change={projected[2].grossProfit > 0 ? ((projected[2].grossProfit / projected[2].revenue) * 100 - (monthlyBaseline.revenue > 0 ? ((monthlyBaseline.revenue - monthlyBaseline.cogs) / monthlyBaseline.revenue) * 100 : 0)) : 0} color={INDIGO} />
                 <Arrow />
-                <CascadeChip label={tc('cfo_threeway.netProfit')} change={totals.net_profit > 0 ? ((projected[2].netProfit - totals.net_profit) / totals.net_profit) * 100 : 0} color={projected[2].netProfit >= 0 ? GREEN : RED} />
+                <CascadeChip label={tc('cfo_threeway.netProfit')} change={(() => {
+                  const baseNet = monthlyBaseline.revenue - monthlyBaseline.cogs - monthlyBaseline.fixed
+                  return baseNet > 0 ? ((projected[2].netProfit - baseNet) / baseNet) * 100 : 0
+                })()} color={projected[2].netProfit >= 0 ? GREEN : RED} />
                 <Arrow />
                 <CascadeChip label={tc('cfo_threeway.cash')} change={cash.balance > 0 ? ((projected[2].cashBalance - cash.balance) / cash.balance) * 100 : 0} color={projected[2].cashBalance >= 0 ? GREEN : RED} />
               </div>

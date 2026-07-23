@@ -15,6 +15,7 @@
   "row_net_profit": "Utilidad neta",
   "set_budget_hint": "Haz clic en cualquier celda de Presupuesto para fijar tus metas, o haz clic en \"Usar reales como presupuesto\" para partir de los números de este período.",
   "set_label": "+ Fijar",
+  "monthly_target_note": "Los objetivos se fijan por mes; aquí se muestran ajustados a {period}.",
   "attainment_title": "Cumplimiento de presupuesto",
   "pct_of_budget": "{n}% del presupuesto",
   "actual_suffix": "{v} real",

@@ -15,6 +15,7 @@
   "row_net_profit": "Nettogewinn",
   "set_budget_hint": "Klicken Sie auf eine Budget-Zelle, um Ihre Ziele festzulegen, oder klicken Sie auf „Ist-Werte als Budget verwenden\", um mit den Zahlen dieser Periode zu beginnen.",
   "set_label": "+ Festlegen",
+  "monthly_target_note": "Ziele werden monatlich festgelegt – hier skaliert auf {period} angezeigt.",
   "attainment_title": "Budgeterreichung",
   "pct_of_budget": "{n}% des Budgets",
   "actual_suffix": "{v} Ist",

@@ -14,18 +14,36 @@ interface MonthlyRow {
   gross_margin_pct: number; net_margin_pct: number
 }
 
+interface PeriodRange {
+  start: string; end: string; key: string
+}
+
 interface Budget {
   revenue: number; cogs: number; fixed_costs: number; net_profit: number
 }
 
-const STORAGE_KEY = 'cfo_budget_v2'
+// v3: stored values are always a MONTHLY figure (see `factor` below) — bumped
+// from v2, which stored whatever period happened to be on screen when the user
+// last edited, so Variance silently broke on every other period tab.
+const STORAGE_KEY = 'cfo_budget_v3'
 const DEFAULT_BUDGET: Budget = { revenue: 0, cogs: 0, fixed_costs: 0, net_profit: 0 }
+
+// Mirrors the day-count math app/api/cfo/snapshot/route.ts already uses to scale
+// monthly_fixed_costs to the selected period, so Budget and Actual stay consistent.
+function daysBetween(a: string, b: string): number {
+  return Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 86400000) + 1
+}
+
+const PERIOD_LABEL_KEY: Record<string, string> = {
+  today: 'today', this_week: 'thisWeek', this_month: 'thisMonth', last_month: 'lastMonth',
+  this_quarter: 'thisQuarter', ytd: 'ytd', last_90: 'last90Days',
+}
 
 interface Props {
   totals: Totals
   pnlMonthly?: MonthlyRow[]
   currencySymbol: string
-  period: string
+  periodRange: PeriodRange
   onAsk?: (prompt: string) => void
 }
 
@@ -36,16 +54,10 @@ function fmt(n: number, sym: string): string {
   return `${n < 0 ? '-' : ''}${sym}${Math.round(abs).toLocaleString()}`
 }
 
-function varColor(actual: number, budget: number, isNegative = false) {
-  if (budget === 0) return 'var(--tx3)'
-  const diff = actual - budget
-  if (isNegative) return diff <= 0 ? '#22C55E' : '#EF4444'
-  return diff >= 0 ? '#22C55E' : '#EF4444'
-}
-
-export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym, period, onAsk }: Props) {
+export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym, periodRange, onAsk }: Props) {
   const { tc } = useLang()
-  const [budget, setBudget] = useState<Budget>(DEFAULT_BUDGET)
+  // Canonical storage unit: always "per 30 days", regardless of which period tab was active when it was set.
+  const [monthlyBudget, setMonthlyBudget] = useState<Budget>(DEFAULT_BUDGET)
   const [editing, setEditing] = useState<keyof Budget | null>(null)
   const [editValue, setEditValue] = useState('')
   const [drillMonth, setDrillMonth] = useState<string | null>(null)
@@ -56,16 +68,29 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
-        setBudget(parsed)
+        setMonthlyBudget(parsed)
         setHasBudget(Object.values(parsed).some((v: any) => Number(v) > 0))
       }
     } catch {}
   }, [])
 
   const saveBudget = (b: Budget) => {
-    setBudget(b)
+    setMonthlyBudget(b)
     setHasBudget(Object.values(b).some(v => Number(v) > 0))
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(b)) } catch {}
+  }
+
+  // How many "budget months" the active period tab represents — e.g. ~0.03 for Today,
+  // 1 for This Month, ~3 for This Quarter. The budget is entered/stored as a monthly
+  // figure and scaled by this factor so Variance is meaningful on every tab.
+  const periodDays = Math.max(daysBetween(periodRange.start, periodRange.end), 1)
+  const factor = periodDays / 30
+
+  const budget: Budget = {
+    revenue: monthlyBudget.revenue * factor,
+    cogs: monthlyBudget.cogs * factor,
+    fixed_costs: monthlyBudget.fixed_costs * factor,
+    net_profit: monthlyBudget.net_profit * factor,
   }
 
   const startEdit = (field: keyof Budget, current: number) => {
@@ -75,8 +100,9 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
 
   const commitEdit = () => {
     if (!editing) return
-    const val = parseFloat(editValue) || 0
-    const updated = { ...budget, [editing]: val }
+    // The typed value reflects the period being viewed — normalize back to the monthly canonical unit before storing.
+    const val = (parseFloat(editValue) || 0) / factor
+    const updated = { ...monthlyBudget, [editing]: val }
     // Auto-compute net if revenue/cogs/fixed are set
     if (editing !== 'net_profit') {
       updated.net_profit = updated.revenue - updated.cogs - updated.fixed_costs
@@ -87,25 +113,14 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
 
   const importFromActuals = () => {
     const b: Budget = {
-      revenue: totals.revenue,
-      cogs: totals.cogs,
-      fixed_costs: totals.fixed_costs,
-      net_profit: totals.net_profit,
+      revenue: totals.revenue / factor,
+      cogs: totals.cogs / factor,
+      fixed_costs: totals.fixed_costs / factor,
+      net_profit: totals.net_profit / factor,
     }
     saveBudget(b)
   }
 
-  const lines: Array<{
-    key: keyof Budget; label: string; actual: number; negative?: boolean; isSub?: boolean; isSummary?: boolean
-  }> = [
-    { key: 'revenue', label: tc('cfo_budget.row_revenue'), actual: totals.revenue },
-    { key: 'cogs', label: tc('cfo_budget.detail_cogs'), actual: totals.cogs, negative: true, isSub: true },
-    { key: 'net_profit', label: tc('cfo_budget.row_gross_profit'), actual: totals.gross_profit, isSummary: true },
-    { key: 'fixed_costs', label: tc('cfo_budget.row_operating_expenses'), actual: totals.fixed_costs, negative: true, isSub: true },
-    { key: 'net_profit', label: tc('cfo_budget.row_net_profit'), actual: totals.net_profit, isSummary: true },
-  ]
-
-  // Deduplicate keys for rendering
   const uniqueLines = [
     { key: 'revenue' as keyof Budget, label: tc('cfo_budget.row_revenue'), actual: totals.revenue, isNeg: false },
     { key: 'cogs' as keyof Budget, label: tc('cfo_budget.detail_cogs'), actual: totals.cogs, isNeg: true },
@@ -224,6 +239,11 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
             {tc('cfo_budget.set_budget_hint')}
           </div>
         )}
+        {hasBudget && (
+          <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', fontSize: 11, color: 'var(--tx3)' }}>
+            {tc('cfo_budget.monthly_target_note', { period: tc(`cfo_period.${PERIOD_LABEL_KEY[periodRange.key] || 'thisMonth'}`) })}
+          </div>
+        )}
       </div>
 
       {/* Visual progress bars */}
@@ -285,8 +305,8 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
               </thead>
               <tbody>
                 {pnlMonthly.map((m, i) => {
-                  const revVar = budget.revenue > 0 ? ((m.revenue - budget.revenue) / budget.revenue) * 100 : 0
-                  const netVar = budget.net_profit !== 0 ? ((m.net - budget.net_profit) / Math.abs(budget.net_profit)) * 100 : 0
+                  const revVar = monthlyBudget.revenue > 0 ? ((m.revenue - monthlyBudget.revenue) / monthlyBudget.revenue) * 100 : 0
+                  const netVar = monthlyBudget.net_profit !== 0 ? ((m.net - monthlyBudget.net_profit) / Math.abs(monthlyBudget.net_profit)) * 100 : 0
                   const isSelected = drillMonth === m.month
                   return (
                     <tr
@@ -302,16 +322,16 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                       </td>
                       <td style={{ padding: '9px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(m.revenue, sym)}</td>
                       <td style={{ padding: '9px 12px', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-                        {fmt(budget.revenue, sym)}
-                        {budget.revenue > 0 && <span style={{ fontSize: 9, marginLeft: 4, color: revVar >= 0 ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{revVar > 0 ? '+' : ''}{revVar.toFixed(0)}%</span>}
+                        {fmt(monthlyBudget.revenue, sym)}
+                        {monthlyBudget.revenue > 0 && <span style={{ fontSize: 9, marginLeft: 4, color: revVar >= 0 ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{revVar > 0 ? '+' : ''}{revVar.toFixed(0)}%</span>}
                       </td>
                       <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 600, color: m.gross_margin_pct >= 35 ? '#22C55E' : m.gross_margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>
                         {m.gross_margin_pct.toFixed(1)}%
                       </td>
                       <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 600, color: m.net >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmt(m.net, sym)}</td>
                       <td style={{ padding: '9px 18px', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-                        {fmt(budget.net_profit, sym)}
-                        {budget.net_profit !== 0 && <span style={{ fontSize: 9, marginLeft: 4, color: netVar >= 0 ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{netVar > 0 ? '+' : ''}{netVar.toFixed(0)}%</span>}
+                        {fmt(monthlyBudget.net_profit, sym)}
+                        {monthlyBudget.net_profit !== 0 && <span style={{ fontSize: 9, marginLeft: 4, color: netVar >= 0 ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{netVar > 0 ? '+' : ''}{netVar.toFixed(0)}%</span>}
                       </td>
                     </tr>
                   )
@@ -323,8 +343,8 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
           {/* Drill-in detail */}
           {drillMonth && (() => {
             const m = pnlMonthly.find(x => x.month === drillMonth)!
-            const revVar = budget.revenue > 0 ? ((m.revenue - budget.revenue) / budget.revenue) * 100 : 0
-            const netVar = budget.net_profit !== 0 ? ((m.net - budget.net_profit) / Math.abs(budget.net_profit)) * 100 : 0
+            const revVar = monthlyBudget.revenue > 0 ? ((m.revenue - monthlyBudget.revenue) / monthlyBudget.revenue) * 100 : 0
+            const netVar = monthlyBudget.net_profit !== 0 ? ((m.net - monthlyBudget.net_profit) / Math.abs(monthlyBudget.net_profit)) * 100 : 0
             return (
               <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>
@@ -332,11 +352,11 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                   {[
-                    { label: tc('cfo_budget.detail_revenue'), actual: m.revenue, budget: budget.revenue, isNeg: false },
-                    { label: tc('cfo_budget.detail_cogs'), actual: m.cogs, budget: budget.cogs, isNeg: true },
-                    { label: tc('cfo_budget.detail_gross_profit'), actual: m.revenue - m.cogs, budget: budget.revenue - budget.cogs, isNeg: false },
-                    { label: tc('cfo_budget.detail_fixed_costs'), actual: m.fixed, budget: budget.fixed_costs, isNeg: true },
-                    { label: tc('cfo_budget.detail_net_profit'), actual: m.net, budget: budget.net_profit, isNeg: false },
+                    { label: tc('cfo_budget.detail_revenue'), actual: m.revenue, budget: monthlyBudget.revenue, isNeg: false },
+                    { label: tc('cfo_budget.detail_cogs'), actual: m.cogs, budget: monthlyBudget.cogs, isNeg: true },
+                    { label: tc('cfo_budget.detail_gross_profit'), actual: m.revenue - m.cogs, budget: monthlyBudget.revenue - monthlyBudget.cogs, isNeg: false },
+                    { label: tc('cfo_budget.detail_fixed_costs'), actual: m.fixed, budget: monthlyBudget.fixed_costs, isNeg: true },
+                    { label: tc('cfo_budget.detail_net_profit'), actual: m.net, budget: monthlyBudget.net_profit, isNeg: false },
                   ].map((item, i) => {
                     const var_ = item.budget !== 0 ? ((item.actual - item.budget) / Math.abs(item.budget)) * 100 : 0
                     const col = item.isNeg ? (item.actual <= item.budget ? '#22C55E' : '#EF4444') : (item.actual >= item.budget ? '#22C55E' : '#EF4444')
@@ -366,12 +386,6 @@ function BudgetRow({ label, actual, budget, sym, editing, isNeg, onEdit, onInput
   isNeg: boolean; onEdit: () => void; onInput: (v: string) => void
   onCommit: () => void; editValue: string; tc: TC
 }) {
-  const variance = actual - budget
-  const variancePct = budget !== 0 ? (variance / Math.abs(budget)) * 100 : null
-  const col = isNeg
-    ? (variance <= 0 ? '#22C55E' : '#EF4444')
-    : (variance >= 0 ? '#22C55E' : '#EF4444')
-
   return (
     <tr style={{ borderTop: '1px solid var(--b)' }}>
       <td style={{ padding: '9px 18px', color: 'var(--tx3)', fontSize: 12 }}>{label}</td>

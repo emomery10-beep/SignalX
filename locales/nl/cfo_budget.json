@@ -15,6 +15,7 @@
   "row_net_profit": "Nettowinst",
   "set_budget_hint": "Klik op een budgetcel hierboven om uw doelen in te stellen, of klik op \"Werkelijke cijfers als budget gebruiken\" om te beginnen met de cijfers van deze periode.",
   "set_label": "+ Instellen",
+  "monthly_target_note": "Doelen worden maandelijks vastgesteld — hier weergegeven geschaald naar {period}.",
   "attainment_title": "Budgetrealisatie",
   "pct_of_budget": "{n}% van budget",
   "actual_suffix": "{v} werkelijk",

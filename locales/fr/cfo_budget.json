@@ -15,6 +15,7 @@
   "row_net_profit": "Bénéfice net",
   "set_budget_hint": "Cliquez sur une cellule Budget ci-dessus pour définir vos objectifs, ou cliquez sur « Utiliser les réels comme budget » pour partir des chiffres de cette période.",
   "set_label": "+ Définir",
+  "monthly_target_note": "Les objectifs sont définis par mois ; ils sont affichés ici proportionnellement à {period}.",
   "attainment_title": "Atteinte du budget",
   "pct_of_budget": "{n}% du budget",
   "actual_suffix": "{v} réel",

@@ -15,6 +15,7 @@
   "row_net_profit": "Faida ya Jumla",
   "set_budget_hint": "Bofya seli yoyote ya Bajeti juu ili kuweka malengo yako, au bofya “Tumia halisi kama bajeti” ili kuanza kutoka kwa nambari za kipindi hiki.",
   "set_label": "+ Weka",
+  "monthly_target_note": "Malengo huwekwa kila mwezi — hapa yanaonyeshwa kulingana na {period}.",
   "attainment_title": "Kufikia Bajeti",
   "pct_of_budget": "{n}% ya bajeti",
   "actual_suffix": "{v} halisi",
