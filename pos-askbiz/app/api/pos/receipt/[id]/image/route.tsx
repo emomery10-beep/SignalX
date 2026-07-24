@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { formatDateTime } from '@/lib/i18n-format'
 
 export const runtime = 'edge'
 
@@ -34,9 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const symbol       = profile?.currency_symbol || '£'
   const businessName = profile?.business_name || 'The Shop'
-  const date          = new Date(tx.created_at).toLocaleString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
+  const date          = formatDateTime('en', tx.created_at)
   const items = (tx.pos_items as { name: string; qty: number; line_total: number }[]) || []
   const discount = Number(tx.discount_amount) || 0
 
