@@ -40,6 +40,7 @@
   "success_title": "Défaut enregistré",
   "success_critical_note": "Le superviseur a été alerté",
   "success_saved_note": "Fiche qualité sauvegardée",
+  "success_pending_sync": "Enregistré sur cet appareil — sera envoyé dès que vous serez de nouveau en ligne.",
   "success_log_another": "Enregistrer un autre défaut",
   "success_back_to_hub": "Retour au tableau de bord"
 }

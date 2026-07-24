@@ -40,6 +40,7 @@
   "success_title": "Defect logged",
   "success_critical_note": "Supervisor has been alerted",
   "success_saved_note": "Quality record saved",
+  "success_pending_sync": "Saved on this device — will upload once you're back online.",
   "success_log_another": "Log Another Defect",
   "success_back_to_hub": "Back to Hub"
 }

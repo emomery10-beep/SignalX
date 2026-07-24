@@ -40,6 +40,7 @@
   "success_title": "Defecto registrado",
   "success_critical_note": "Se ha alertado al supervisor",
   "success_saved_note": "Registro de calidad guardado",
+  "success_pending_sync": "Guardado en este dispositivo — se subirá cuando vuelvas a estar en línea.",
   "success_log_another": "Registrar otro defecto",
   "success_back_to_hub": "Volver al hub"
 }

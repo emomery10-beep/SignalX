@@ -40,6 +40,7 @@
   "success_title": "Defect geregistreerd",
   "success_critical_note": "Supervisor is gewaarschuwd",
   "success_saved_note": "Kwaliteitsrecord opgeslagen",
+  "success_pending_sync": "Opgeslagen op dit apparaat — wordt geüpload zodra je weer online bent.",
   "success_log_another": "Nog een defect registreren",
   "success_back_to_hub": "Terug naar hub"
 }
