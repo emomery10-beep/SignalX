@@ -52,10 +52,14 @@ export async function sendOTP(phone: string, code: string): Promise<{ ok: boolea
       template: {
         name:     template,
         language: { code: lang },
-        components: [{
-          type:       'body',
-          parameters: [{ type: 'text', text: code }],
-        }],
+        components: [
+          { type: 'body', parameters: [{ type: 'text', text: code }] },
+          // The template's "Copy code" button (see askbiz_otp in WhatsApp
+          // Manager) is itself a templated URL — it needs the code passed
+          // as a button parameter too, separate from the body parameter,
+          // or Meta rejects the send with "Button ... requires a parameter".
+          { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: code }] },
+        ],
       },
     }),
   })
@@ -71,12 +75,26 @@ export async function sendOTP(phone: string, code: string): Promise<{ ok: boolea
 }
 
 // ── Send receipt via utility template ───────────────────────────────────────
-// Template "askbiz_receipt" should be:
-//   Category: Utility
-//   Body:     "{{1}}"   ← single variable containing the full receipt text
+// Template "askbiz_receipt" (Utility, approved 2026-07-24):
+//   Header: "Payment Receipt" (static)
+//   Body:   "Hi! Your payment of {{1}} to {{2}} was received on {{3}}, paid
+//            via {{4}}.\n\nThank you for your business!"
+//   Footer: "Powered by AskBiz" (static)
 //
-// Meta allows long body variables so the full receipt fits in one parameter.
-export async function sendReceipt(phone: string, receiptText: string): Promise<{ ok: boolean; error?: string }> {
+// Was a single "{{1}} = whole formatted receipt" variable — Meta's template
+// review rejects that shape outright (tried several variants, all came back
+// REJECTED/INVALID_FORMAT). It wants a handful of small, named fields, not
+// an entire document crammed into one parameter. So this sends a payment
+// confirmation, not the full itemized breakdown — the itemized list still
+// shows in the POS app itself.
+export interface ReceiptSummary {
+  total: string
+  businessName: string
+  date: string
+  paymentType: string
+}
+
+export async function sendReceipt(phone: string, receipt: ReceiptSummary): Promise<{ ok: boolean; error?: string }> {
   const token = process.env.META_WHATSAPP_TOKEN
   const numId = phoneId()
   if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
@@ -96,7 +114,12 @@ export async function sendReceipt(phone: string, receiptText: string): Promise<{
         language: { code: lang },
         components: [{
           type:       'body',
-          parameters: [{ type: 'text', text: receiptText }],
+          parameters: [
+            { type: 'text', text: receipt.total },
+            { type: 'text', text: receipt.businessName },
+            { type: 'text', text: receipt.date },
+            { type: 'text', text: receipt.paymentType },
+          ],
         }],
       },
     }),

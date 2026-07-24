@@ -100,32 +100,18 @@ export async function POST(req: NextRequest) {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 
-  const lines = (tx.pos_items as { name: string; qty: number; line_total: number }[])
-    .map(item => `${item.name} ×${item.qty}    ${symbol}${Number(item.line_total).toFixed(2)}`)
-    .join('\n')
-
-  const discountLine = tx.discount_amount && Number(tx.discount_amount) > 0
-    ? `\nDiscount    -${symbol}${Number(tx.discount_amount).toFixed(2)}`
-    : ''
-
-  const message =
-    `🧾 *Receipt from ${businessName}*\n` +
-    `─────────────────────\n` +
-    `${lines}${discountLine}\n` +
-    `─────────────────────\n` +
-    `*TOTAL    ${symbol}${Number(tx.total).toFixed(2)}*\n\n` +
-    `${date}\n` +
-    `Payment: ${tx.payment_type}\n\n` +
-    `Thank you for shopping with us! 🙏\n` +
-    `_Powered by AskBiz_`
-
   // GDPR consent gate — receipts are transactional, but still honour a hard
   // WhatsApp opt-out if the customer has explicitly set allow_whatsapp_marketing=false.
   if (await isCustomerOptedOut(service, ownerId, 'whatsapp', { phone })) {
     return NextResponse.json({ sent: false, skipped: true, reason: 'customer opted out' })
   }
 
-  const { ok, error: waError } = await sendReceipt(phone, message)
+  const { ok, error: waError } = await sendReceipt(phone, {
+    total: `${symbol}${Number(tx.total).toFixed(2)}`,
+    businessName,
+    date,
+    paymentType: tx.payment_type,
+  })
   // fix #18 — check ok and return error to caller; previously HTTP errors were swallowed
   if (!ok) {
     return NextResponse.json({ error: waError || 'Failed to send WhatsApp receipt' }, { status: 500 })
