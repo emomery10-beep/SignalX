@@ -28,6 +28,14 @@ export interface StaffTemplate {
 // ============================================================
 // FACTORY STAFF TEMPLATES
 // ============================================================
+// defaultPermissions below is display-only (rendered in the staff template
+// selector UI; app/api/pos/staff-templates/route.ts only ever writes it to
+// metadata.permissions). Real authorization for these 5 template ids runs
+// through pos-askbiz/lib/pos-permissions.ts, which maps each id via
+// FACTORY_ROLE_MAP to a ROLE_PERMISSIONS bucket (factory_operator,
+// factory_inspector, supervisor, manager, inventory). Keep these arrays in
+// sync with that file's ROLE_PERMISSIONS — they are copied literals, not a
+// shared import, because pos-askbiz is a separate Next.js app/deployment.
 
 export const FACTORY_TEMPLATES: StaffTemplate[] = [
   {
@@ -36,7 +44,14 @@ export const FACTORY_TEMPLATES: StaffTemplate[] = [
     description: 'Production floor staff capturing output and logging wastage',
     type: 'factory',
     icon: '👷',
-    defaultPermissions: ['camera.output', 'camera.wastage'],
+    // Mirrors pos-permissions.ts ROLE_PERMISSIONS.factory_operator
+    defaultPermissions: [
+      'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
+      'batch.log', 'batch.view',
+      'downtime.report', 'downtime.close', 'downtime.view',
+      'shift.production_open', 'shift.production_close', 'shift.production_view',
+      'waybill.log', 'waybill.view',
+    ],
     responsibilities: [
       'Capture production photos (intake, output, dispatch)',
       'Log and track wastage',
@@ -56,7 +71,12 @@ export const FACTORY_TEMPLATES: StaffTemplate[] = [
     description: 'QA staff reviewing and approving production captures',
     type: 'factory',
     icon: '🔍',
-    defaultPermissions: ['camera.output', 'camera.wastage', 'capture.approve'],
+    // Mirrors pos-permissions.ts ROLE_PERMISSIONS.factory_inspector
+    defaultPermissions: [
+      'camera.intake', 'camera.wastage',
+      'quality.check', 'quality.view',
+      'batch.view', 'downtime.view', 'waybill.view',
+    ],
     responsibilities: [
       'Approve or reject production captures',
       'Review quality defect reports',
@@ -75,7 +95,23 @@ export const FACTORY_TEMPLATES: StaffTemplate[] = [
     description: 'Shift lead coordinating team and approving data',
     type: 'factory',
     icon: '👔',
-    defaultPermissions: ['camera.output', 'camera.wastage', 'capture.approve'],
+    // Mirrors pos-permissions.ts ROLE_PERMISSIONS.supervisor (shared bucket
+    // across sectors, hence the non-factory entries like sales.view)
+    defaultPermissions: [
+      'sales.view',
+      'inventory.view',
+      'service.view',
+      'shift.view',
+      'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
+      'capture.approve',
+      'reports.view',
+      'purchase_order.view',
+      'batch.log', 'batch.view',
+      'quality.check', 'quality.view',
+      'downtime.report', 'downtime.close', 'downtime.view',
+      'shift.production_open', 'shift.production_close', 'shift.production_view',
+      'waybill.log', 'waybill.view',
+    ],
     responsibilities: [
       'Oversee production floor operations',
       'Approve staff captures and reports',
@@ -94,12 +130,24 @@ export const FACTORY_TEMPLATES: StaffTemplate[] = [
     description: 'Management staff overseeing all factory operations',
     type: 'factory',
     icon: '🎯',
+    // Mirrors pos-permissions.ts ROLE_PERMISSIONS.manager (shared bucket
+    // across sectors, hence the non-factory entries like refund.approve)
     defaultPermissions: [
-      'camera.output',
-      'camera.wastage',
+      'sales.view', 'sales.view_all',
+      'refund.approve', 'amend.approve',
+      'inventory.view', 'inventory.manage',
+      'service.view', 'service.manage', 'service.parts',
+      'shift.open', 'shift.close', 'shift.view',
+      'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
       'capture.approve',
-      'data.export',
-      'settings.manage',
+      'reports.view', 'reports.financial',
+      'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
+      'batch.log', 'batch.view',
+      'quality.check', 'quality.view',
+      'downtime.report', 'downtime.close', 'downtime.view',
+      'shift.production_open', 'shift.production_close', 'shift.production_view',
+      'waybill.log', 'waybill.view',
+      'factory.machines_manage', 'factory.recipes_manage',
     ],
     responsibilities: [
       'Oversee all production operations',
@@ -120,7 +168,15 @@ export const FACTORY_TEMPLATES: StaffTemplate[] = [
     description: 'Staff managing batch traceability and stock',
     type: 'factory',
     icon: '📦',
-    defaultPermissions: ['camera.output', 'camera.wastage'],
+    // Mirrors pos-permissions.ts ROLE_PERMISSIONS.inventory (shared bucket
+    // across sectors, hence the non-factory entries like sales.view)
+    defaultPermissions: [
+      'inventory.view', 'inventory.manage',
+      'sales.view',
+      'camera.intake',
+      'purchase_order.view', 'purchase_order.create', 'purchase_order.receive', 'purchase_order.pay',
+      'batch.view', 'downtime.view', 'waybill.view',
+    ],
     responsibilities: [
       'Scan batch labels at checkpoints',
       'Track batch traceability',
