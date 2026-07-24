@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       // 2. Check connected source data for stock + anomalies
       const { data: unifiedRows } = await supabase
         .from('unified_data')
-        .select('stock_level, product_name, sku, gross_revenue, net_margin, record_date')
+        .select('stock_level, product_name, sku, gross_revenue, net_margin, record_date, source_type')
         .eq('user_id', userId)
         .order('record_date', { ascending: false })
         .limit(100)
@@ -135,16 +135,31 @@ export async function GET(request: NextRequest) {
       if (unifiedRows?.length) {
         // Low stock from live connected data
         for (const row of unifiedRows) {
-          if (typeof row.stock_level === 'number' && row.stock_level <= 3 && row.stock_level >= 0) {
+          const channel = row.source_type || 'unknown'
+          // Marketplace order-item rows (Amazon, Jumia, etc.) always hardcode
+          // stock_level: 0 as a "not applicable" placeholder on every sale —
+          // a real inventory-snapshot row from the same channel always zeroes
+          // gross_revenue instead, so that's what tells the two apart. AskBiz's
+          // own POS channel doesn't have this split: every synced row (normaliseAskBizPOS)
+          // carries a genuine, live stock reading alongside real revenue, so it's
+          // never subject to the placeholder pattern and is always trusted directly.
+          const isStockSignal = channel === 'pos' || !row.gross_revenue || row.gross_revenue === 0
+          if (isStockSignal && typeof row.stock_level === 'number' && row.stock_level <= 3 && row.stock_level >= 0) {
             const name = row.product_name || row.sku || 'Unknown product'
-            // Only add if not already flagged from upload
-            if (!allAlerts.find(a => a.metadata?.product === name)) {
+            const channelLabel = channel.charAt(0).toUpperCase() + channel.slice(1).replace(/_/g, ' ')
+            // Dedupe per (channel, product) — not product name alone — so a
+            // genuine stockout on one channel (e.g. Jumia) isn't silently
+            // swallowed just because another channel already alerted on a
+            // product with the same name. Legacy/upload-derived alerts (from
+            // checkLowStock() above) carry no `source` at all — treat those as
+            // matching any channel so this doesn't newly duplicate alongside them.
+            if (!allAlerts.find(a => a.metadata?.product === name && (!a.metadata?.source || a.metadata.source === channel))) {
               allAlerts.push({
                 type: 'stock',
                 severity: row.stock_level === 0 ? 'critical' : 'warning',
-                title: row.stock_level === 0 ? `Out of stock: ${name}` : `Low stock: ${name}`,
-                body: `${name} has ${row.stock_level} units remaining.`,
-                metadata: { product: name, stock_level: row.stock_level },
+                title: row.stock_level === 0 ? `Out of stock on ${channelLabel}: ${name}` : `Low stock on ${channelLabel}: ${name}`,
+                body: `${name} has ${row.stock_level} units remaining on ${channelLabel}.`,
+                metadata: { product: name, stock_level: row.stock_level, source: channel },
               })
             }
           }

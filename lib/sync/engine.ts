@@ -9,6 +9,7 @@ import {
   type UnifiedRecord, type QBExpenseRow
 } from './normaliser'
 import { normaliseAmazonOrder } from './amazon-normaliser'
+import { normaliseJumiaOrderItem, normaliseJumiaStock } from './jumia-normaliser'
 import { normaliseEbayOrder } from './ebay-normaliser'
 import { normaliseEtsyReceipt } from './etsy-normaliser'
 import { normaliseWooOrder } from './woocommerce-normaliser'
@@ -689,6 +690,90 @@ async function syncAmazon(
     return { records: allRecords }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'Amazon sync failed' }
+  }
+}
+
+// ── Jumia: mint a fresh access token from the merchant's own refresh token ──
+// Access tokens are short-lived (12h); the client_id is per-merchant (each
+// seller registers their own Application in their own Vendor Center account),
+// so it comes from source.config rather than a shared env var.
+async function refreshJumiaToken(clientId: string, refreshToken: string): Promise<{ access_token: string; refresh_token?: string } | null> {
+  try {
+    const res = await fetch('https://vendor-api.jumia.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      }),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return { access_token: data.access_token, refresh_token: data.refresh_token }
+  } catch { return null }
+}
+
+// ── Jumia sync (Vendor Center GPM/GOP API) ────────────────────
+async function syncJumia(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const { client_id } = source.config
+  const { refresh_token } = source.credentials
+  if (!client_id || !refresh_token) return { records: [], error: 'Missing Jumia Client ID or Refresh Token' }
+
+  // Always mint a fresh access token — the stored one (if any) is short-lived
+  // and there's no cheap way to check its remaining lifetime up front.
+  const fresh = await refreshJumiaToken(String(client_id), String(refresh_token))
+  if (!fresh) return { records: [], error: 'Jumia refresh token is invalid or expired — reconnect from Sources' }
+
+  await supabase.from('connected_sources').update({
+    credentials: encryptCredentials({ refresh_token: fresh.refresh_token || refresh_token, access_token: fresh.access_token }),
+  }).eq('id', source.id)
+
+  const baseUrl = 'https://vendor-api.jumia.com'
+  const headers = { Authorization: `Bearer ${fresh.access_token}` }
+  const allRecords: UnifiedRecord[] = []
+
+  try {
+    // Orders from the last 30 days
+    const createdAfter = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const ordersRes = await fetch(`${baseUrl}/orders?createdAfter=${createdAfter}&size=100`, { headers })
+    if (!ordersRes.ok) throw new Error(`Jumia orders API error: ${ordersRes.status}`)
+    const ordersData = await ordersRes.json()
+    const orders = (ordersData?.orders || []) as Record<string, unknown>[]
+
+    // Fetch line items per order (capped, and paced under the 4 req/sec rate limit)
+    for (const order of orders.slice(0, 50)) {
+      try {
+        const itemsRes = await fetch(`${baseUrl}/orders/items?orderId=${order.id}`, { headers })
+        if (itemsRes.ok) {
+          const itemsData = await itemsRes.json()
+          const items = (itemsData?.items || []) as Record<string, unknown>[]
+          for (const item of items) allRecords.push(normaliseJumiaOrderItem(order, item))
+        }
+      } catch { /* skip individual order failures */ }
+      await new Promise(r => setTimeout(r, 260))
+    }
+
+    // Stock levels
+    try {
+      const stockRes = await fetch(`${baseUrl}/catalog/stock?size=100`, { headers })
+      if (stockRes.ok) {
+        const stockData = await stockRes.json()
+        const stocks = (stockData?.products || []) as Record<string, unknown>[]
+        for (const s of stocks) {
+          const sku = String(s.sellerSku || '')
+          if (!sku || allRecords.some(r => r.sku === sku)) continue
+          allRecords.push(normaliseJumiaStock(s))
+        }
+      }
+    } catch { /* stock fetch is supplemental */ }
+
+    return { records: allRecords }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Jumia sync failed' }
   }
 }
 
@@ -1413,6 +1498,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         records = r.records; syncError = r.error
       } else if (source.source_type === 'amazon_fba') {
         const r = await syncAmazon(decryptedSource, supabase)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'jumia') {
+        const r = await syncJumia(decryptedSource, supabase)
         records = r.records; syncError = r.error
       } else if (source.source_type === 'ebay') {
         const r = await syncEbay(decryptedSource, supabase)

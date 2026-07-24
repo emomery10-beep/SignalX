@@ -83,6 +83,16 @@ const REFRESH_CONFIGS: Record<string, {
       client_secret: process.env.FREEAGENT_CLIENT_SECRET || '',
     }),
   },
+  // Jumia's Self Authorization flow has no AskBiz-owned app — client_id is
+  // per-merchant, stored on the connection itself rather than an env var.
+  jumia: {
+    tokenUrl: 'https://vendor-api.jumia.com/token',
+    buildBody: (creds, config) => ({
+      grant_type: 'refresh_token',
+      refresh_token: creds.refresh_token as string,
+      client_id: String(config?.client_id || ''),
+    }),
+  },
 }
 
 export async function GET(request: NextRequest) {

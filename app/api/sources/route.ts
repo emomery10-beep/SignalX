@@ -4,6 +4,7 @@ import { runSync } from '@/lib/sync/engine'
 import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
 import { validateStripeKey } from '@/lib/connectors/stripe'
 import { validateWalmartCredentials } from '@/lib/connectors/walmart'
+import { validateJumiaCredentials } from '@/lib/connectors/jumia'
 
 export async function GET() {
   const supabase = createClient()
@@ -41,6 +42,14 @@ export async function POST(request: NextRequest) {
     const clientSecret = credentials?.client_secret
     if (!clientId || !clientSecret) return NextResponse.json({ error: 'Walmart Client ID and Client Secret are required' }, { status: 400 })
     const { valid, error } = await validateWalmartCredentials(String(clientId), String(clientSecret))
+    if (!valid) return NextResponse.json({ error }, { status: 400 })
+  }
+
+  if (source_type === 'jumia') {
+    const clientId     = config?.client_id
+    const refreshToken = credentials?.refresh_token
+    if (!clientId || !refreshToken) return NextResponse.json({ error: 'Jumia Client ID and Refresh Token are required' }, { status: 400 })
+    const { valid, error } = await validateJumiaCredentials(String(clientId), String(refreshToken))
     if (!valid) return NextResponse.json({ error }, { status: 400 })
   }
 

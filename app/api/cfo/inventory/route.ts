@@ -5,6 +5,14 @@ import { getUserLocale } from '@/lib/get-currency'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Guards SKU-based matching against placeholder/blank values ("N/A", "-",
+// "0", ...) that small-merchant data entry commonly produces — matching on
+// one of these would silently cross-link two unrelated products.
+const PLACEHOLDER_SKUS = new Set(['n/a', 'na', '-', '--', 'none', 'null', '0', 'unknown', 'tbd'])
+function isLikelySku(sku: string): boolean {
+  return sku.length > 2 && !PLACEHOLDER_SKUS.has(sku)
+}
+
 export async function GET(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -50,7 +58,13 @@ export async function GET(req: NextRequest) {
   }
 
   const products: ProductItem[] = []
-  const seenProducts = new Set<string>()
+  // Indexes onto the POS rows just pushed above, so a matching ecommerce/marketplace
+  // row (Jumia, Shopify, etc.) can be merged into the same product instead of either
+  // being silently dropped (old name-only dedupe) or shown as a disconnected second
+  // row — the latter is guaranteed for Jumia, whose stock feed has no product name
+  // and falls back to the raw SKU (see lib/sync/jumia-normaliser.ts).
+  const posBySku = new Map<string, ProductItem>()
+  const posByName = new Map<string, ProductItem>()
 
   // Add POS products (inventory table uses sale_price and stock_qty)
   for (const p of posProducts || []) {
@@ -60,10 +74,8 @@ export async function GET(req: NextRequest) {
     const threshold = p.low_stock_threshold || 5
     const marginPct = price > 0 ? ((price - cost) / price) * 100 : 0
     const status: ProductItem['status'] = qty === 0 ? 'out' : qty <= threshold ? 'low' : 'healthy'
-    const key = `pos:${p.name?.toLowerCase()}`
-    seenProducts.add(key)
 
-    products.push({
+    const item: ProductItem = {
       name: p.name || 'Unknown',
       category: p.category || 'Uncategorized',
       source: 'POS',
@@ -77,7 +89,15 @@ export async function GET(req: NextRequest) {
       status,
       units_sold: 0,
       sku: p.sku || '',
-    })
+    }
+    products.push(item)
+    const posSku = p.sku?.trim().toLowerCase()
+    if (posSku && isLikelySku(posSku) && !posBySku.has(posSku)) posBySku.set(posSku, item)
+    // First-wins on a duplicate name (e.g. two size/colour variants both just
+    // called "T-Shirt") — deterministic, and avoids a later variant silently
+    // stealing an ecommerce match that was already resolved to the first one.
+    const posName = p.name?.toLowerCase()
+    if (posName && !posByName.has(posName)) posByName.set(posName, item)
   }
 
   // --- Aggregate ecommerce products from unified_data ---
@@ -127,9 +147,25 @@ export async function GET(req: NextRequest) {
   }
 
   for (const [key, item] of ecomMap) {
-    // Skip if already added from POS with same name
-    const posKey = `pos:${item.name.toLowerCase()}`
-    if (seenProducts.has(posKey)) continue
+    // Link into the matching POS row (SKU match preferred — exact and stable;
+    // falls back to name match for channels without a reliable SKU) instead of
+    // creating a disconnected duplicate row. Deliberately NOT summed into
+    // stock_quantity/value_at_cost/value_at_retail: every connector here is
+    // read-only (no push-back to the channel — see lib/sync/engine.ts), so a
+    // channel's reported stock could mean "same physical shelf units, also
+    // listed online" (summing would double-count and could mask a real
+    // in-store restock need) or "genuinely separate stock held at the
+    // channel's own warehouse" (e.g. Jumia dropshipping) — AskBiz can't tell
+    // these apart generically, so the in-store count stays authoritative for
+    // status/value. units_sold is safe to combine — a sale on either channel
+    // is never a double-count of the other.
+    const realSku = item.sku?.trim().toLowerCase()
+    const matched = (realSku && isLikelySku(realSku) && posBySku.get(realSku)) || posByName.get(item.name.toLowerCase())
+    if (matched) {
+      matched.units_sold += item.totalUnits
+      if (!matched.source.includes(item.source)) matched.source = `${matched.source} + ${item.source}`
+      continue
+    }
 
     const price = item.latestPrice
     const cost = item.latestCostPrice
