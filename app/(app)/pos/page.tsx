@@ -146,7 +146,7 @@ type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item' | 'payment_breakdown' | 'branch_detail' | 'customer_history' | 'product_history'; title: string; cashier_id?: string; item_id?: string; payment_type?: string; branch_id?: string; customer_phone?: string; product_name?: string } | null
 type TxDetailType = Transaction | null
 
-const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2' }
+const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2', factory: '#64748b' }
 
 export default function POSPage() {
   const { tc } = useLang()
@@ -2076,6 +2076,7 @@ export default function POSPage() {
                       <option value="salon">💇 {tc('pos_app.sector_salon')}</option>
                       <option value="retail">📦 {tc('pos_app.sector_retail')}</option>
                       <option value="logistics">🚛 {tc('pos_app.sector_logistics')}</option>
+                      <option value="factory">🏭 {tc('pos_app.sector_factory')}</option>
                     </select>
                   </div>
                 </div>
