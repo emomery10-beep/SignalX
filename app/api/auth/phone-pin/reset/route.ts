@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'crypto'
-import { isValidPin } from '@/lib/phone-auth'
+import { isValidPin, pinToPassword } from '@/lib/phone-auth'
 import { sendOTP } from '@/lib/whatsapp'
 
 // Self-service "forgot PIN" — verifies phone ownership over WhatsApp before
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     const { data: identity } = await db.from('phone_pin_identities').select('user_id').eq('phone', phone).maybeSingle()
     if (!identity) return NextResponse.json({ error: GENERIC_ERROR }, { status: 400 })
 
-    const { error: authError } = await db.auth.admin.updateUserById(identity.user_id, { password: newPin })
+    const { error: authError } = await db.auth.admin.updateUserById(identity.user_id, { password: pinToPassword(newPin) })
     if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
 
     await db.from('phone_pin_attempts').delete().eq('phone', phone)

@@ -7,7 +7,7 @@ import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import PasskeyNudge from '@/components/PasskeyNudge'
 import { COUNTRY_DIAL, countryFromCurrency, detectGeoFromTimezone, toE164 } from '@/lib/geo'
-import { phoneToSyntheticEmail } from '@/lib/phone-auth'
+import { phoneToSyntheticEmail, pinToPassword } from '@/lib/phone-auth'
 import SpotlightCarousel from '@/components/SpotlightCarousel'
 
 type Mode = 'signin' | 'signup'
@@ -233,7 +233,7 @@ function AuthPage() {
         // Account just created server-side with the admin API (which doesn't
         // hand back a browser session) — sign in normally with the PIN the
         // user just chose to establish the real client session.
-        const { error } = await supabase.auth.signInWithPassword({ email: phoneToSyntheticEmail(e164), password: pin })
+        const { error } = await supabase.auth.signInWithPassword({ email: phoneToSyntheticEmail(e164), password: pinToPassword(pin) })
         if (error) throw error
         // Bypasses the passkey nudge — see the matching comment on the email
         // signup path above.

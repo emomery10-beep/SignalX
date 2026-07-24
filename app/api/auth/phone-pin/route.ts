@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { phoneToSyntheticEmail, isValidPin, PHONE_PIN_MAX_ATTEMPTS, PHONE_PIN_LOCKOUT_MS } from '@/lib/phone-auth'
+import { phoneToSyntheticEmail, isValidPin, pinToPassword, PHONE_PIN_MAX_ATTEMPTS, PHONE_PIN_LOCKOUT_MS } from '@/lib/phone-auth'
 import { countryFromPhone } from '@/lib/geo'
 
 const RESET_CONTACT_MSG = 'Tap "Forgot PIN?" to reset it yourself via WhatsApp, or contact customer@askbiz.co if you need help.'
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const { firstName, lastName, consentVersion } = body
     const { data, error } = await db.auth.admin.createUser({
       email,
-      password: pin,
+      password: pinToPassword(pin),
       email_confirm: true,
       user_metadata: {
         full_name: `${firstName || ''} ${lastName || ''}`.trim(),
@@ -74,7 +74,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Too many attempts. Try again in ${retryMins} minute${retryMins === 1 ? '' : 's'}. ${RESET_CONTACT_MSG}` }, { status: 429 })
     }
 
-    const { data, error } = await anon().auth.signInWithPassword({ email, password: pin })
+    // Try the padded password first (current scheme for anything created or
+    // reset after pinToPassword existed), then fall back to the raw pin
+    // (accounts from before that, whose actual stored password IS the raw
+    // pin — there's no way to migrate them directly since Supabase only
+    // stores a one-way hash).
+    let { data, error } = await anon().auth.signInWithPassword({ email, password: pinToPassword(pin) })
+    if (error) {
+      ({ data, error } = await anon().auth.signInWithPassword({ email, password: pin }))
+    }
 
     if (error) {
       const failedCount = (attempt?.failed_count || 0) + 1

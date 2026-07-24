@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { isValidPin } from '@/lib/phone-auth'
+import { isValidPin, pinToPassword } from '@/lib/phone-auth'
 
 // Lets a signed-in user (typically one who just logged in with an
 // admin-issued temp PIN — see app/api/admin/route.ts action=reset_pin)
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   if (!isValidPin(pin || '')) return NextResponse.json({ error: 'PIN must be 4 digits' }, { status: 400 })
 
   const admin = createServiceClient()
-  const { error: authError } = await admin.auth.admin.updateUserById(user.id, { password: pin })
+  const { error: authError } = await admin.auth.admin.updateUserById(user.id, { password: pinToPassword(pin) })
   if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
 
   await admin.from('profiles').update({ must_change_pin: false }).eq('id', user.id)

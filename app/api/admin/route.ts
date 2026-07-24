@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminUser } from '@/lib/admin-auth'
+import { pinToPassword } from '@/lib/phone-auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' as any })
@@ -355,7 +356,7 @@ export async function POST(request: NextRequest) {
 
     const tempPin = String(Math.floor(Math.random() * 10000)).padStart(4, '0')
 
-    const { error: authError } = await supabase.auth.admin.updateUserById(userId, { password: tempPin })
+    const { error: authError } = await supabase.auth.admin.updateUserById(userId, { password: pinToPassword(tempPin) })
     if (authError) return NextResponse.json({ success: false, error: authError.message })
 
     const { error: profileError } = await supabase.from('profiles').update({ must_change_pin: true }).eq('id', userId)
