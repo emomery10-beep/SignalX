@@ -74,24 +74,57 @@ export async function sendOTP(phone: string, code: string): Promise<{ ok: boolea
   return { ok: true }
 }
 
-// ── Send receipt via utility template ───────────────────────────────────────
-// Template "askbiz_receipt" (Utility, approved 2026-07-24):
-//   Header: "Payment Receipt" (static)
-//   Body:   "Hi! Your payment of {{1}} to {{2}} was received on {{3}}, paid
-//            via {{4}}.\n\nThank you for your business!"
+// ── Send receipt: image first, text-summary fallback ───────────────────────
+// Template "askbiz_receipt_image" (Utility, pending review as of 2026-07-24):
+//   Header: IMAGE — a link to app/api/pos/receipt/[id]/image, so it always
+//           reflects the actual transaction, never a stale uploaded file.
+//   Body:   "Here's your receipt from {{1}}. Thank you for your business!"
 //   Footer: "Powered by AskBiz" (static)
+// This is what actually looks like a store receipt (itemized, branded) —
+// text templates can't do that (Meta rejects a body that's mostly one big
+// free-text variable, tried several variants, all came back
+// REJECTED/INVALID_FORMAT).
 //
-// Was a single "{{1}} = whole formatted receipt" variable — Meta's template
-// review rejects that shape outright (tried several variants, all came back
-// REJECTED/INVALID_FORMAT). It wants a handful of small, named fields, not
-// an entire document crammed into one parameter. So this sends a payment
-// confirmation, not the full itemized breakdown — the itemized list still
-// shows in the POS app itself.
+// Falls back to "askbiz_receipt" (Utility, approved 2026-07-24 — a short
+// payment-confirmation with amount/business/date/payment-method as four
+// small parameters) if the image template send fails for any reason —
+// most likely because it's still in Meta's review queue. Once approved,
+// sends succeed on the image attempt automatically, no code change needed.
 export interface ReceiptSummary {
   total: string
   businessName: string
   date: string
   paymentType: string
+  imageUrl: string
+}
+
+async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: string): Promise<{ ok: boolean; error?: string }> {
+  const numId = phoneId()
+  const template = process.env.META_RECEIPT_IMAGE_TEMPLATE || 'askbiz_receipt_image'
+
+  const res = await fetch(`${BASE}/${numId}/messages`, {
+    method:  'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to:   normalisePhone(phone),
+      type: 'template',
+      template: {
+        name:     template,
+        language: { code: lang },
+        components: [
+          { type: 'header', parameters: [{ type: 'image', image: { link: receipt.imageUrl } }] },
+          { type: 'body',   parameters: [{ type: 'text', text: receipt.businessName }] },
+        ],
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    return { ok: false, error: err?.error?.message || `Meta API error ${res.status}` }
+  }
+  return { ok: true }
 }
 
 export async function sendReceipt(phone: string, receipt: ReceiptSummary): Promise<{ ok: boolean; error?: string }> {
@@ -99,8 +132,13 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary): Promi
   const numId = phoneId()
   if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
 
+  const lang = process.env.META_TEMPLATE_LANG || 'en_GB'
+
+  const imageResult = await sendReceiptImage(phone, receipt, lang)
+  if (imageResult.ok) return imageResult
+  console.error('[whatsapp] sendReceipt image template failed, falling back to text summary:', imageResult.error)
+
   const template = process.env.META_RECEIPT_TEMPLATE || 'askbiz_receipt'
-  const lang     = process.env.META_TEMPLATE_LANG    || 'en_GB'
 
   const res = await fetch(`${BASE}/${numId}/messages`, {
     method:  'POST',

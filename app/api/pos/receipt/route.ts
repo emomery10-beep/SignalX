@@ -106,11 +106,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ sent: false, skipped: true, reason: 'customer opted out' })
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
   const { ok, error: waError } = await sendReceipt(phone, {
     total: `${symbol}${Number(tx.total).toFixed(2)}`,
     businessName,
     date,
     paymentType: tx.payment_type,
+    imageUrl: `${baseUrl}/api/pos/receipt/${transaction_id}/image`,
   })
   // fix #18 — check ok and return error to caller; previously HTTP errors were swallowed
   if (!ok) {
