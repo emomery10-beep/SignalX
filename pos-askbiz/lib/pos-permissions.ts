@@ -47,9 +47,37 @@ export type PosPermission =
   | 'purchase_order.send'   // send a PO to the supplier (WhatsApp)
   | 'purchase_order.receive'// receive stock against a PO
   | 'purchase_order.pay'    // mark a received PO as paid to the supplier
+  // Factory: batch traceability (app/factory/batch)
+  | 'batch.log'             // log a checkpoint scan against a batch
+  | 'batch.view'            // view the batch hub / batch history
+  // Factory: quality checks (app/factory/quality)
+  | 'quality.check'         // log a quality check (pass or fail)
+  | 'quality.view'          // view quality check history
+  // Factory: downtime (app/factory/downtime)
+  | 'downtime.report'       // report a new downtime event
+  | 'downtime.close'        // close/resolve an existing downtime event
+  | 'downtime.view'         // view active/historical downtime events
+  // Factory: production shifts (app/factory/shift) — distinct from the
+  // cash-register shift.open/shift.close above
+  | 'shift.production_open'  // start a factory production shift
+  | 'shift.production_close' // end a factory production shift
+  | 'shift.production_view'  // view the production shift hub / history
+  // Factory: waybills (app/factory/waybill)
+  | 'waybill.log'           // log a new dispatch/waybill
+  | 'waybill.view'          // view the waybill hub / on-time stats
+  // Factory: admin-level configuration
+  | 'factory.machines_manage' // create/edit the machine registry
+  | 'factory.recipes_manage'  // create/edit recipes / expected yields
+
+// Two factory-floor roles have no clean fit among the legacy buckets
+// below (see templateToLegacyRole) — line-operator needs all 4 camera
+// actions with no approval/financial rights, and quality-inspector
+// needs intake+wastage but not the unrelated inventory/PO permissions
+// that come bundled with the shared 'inventory' bucket.
+type FactoryOnlyRole = 'factory_operator' | 'factory_inspector'
 
 // ── Role → permissions map ───────────────────────────────────
-const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
+const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
   owner: [
     // Owner has everything
     'sales.create', 'sales.view', 'sales.view_all',
@@ -62,6 +90,12 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'capture.approve',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
+    'batch.log', 'batch.view',
+    'quality.check', 'quality.view',
+    'downtime.report', 'downtime.close', 'downtime.view',
+    'shift.production_open', 'shift.production_close', 'shift.production_view',
+    'waybill.log', 'waybill.view',
+    'factory.machines_manage', 'factory.recipes_manage',
   ],
   manager: [
     'sales.view', 'sales.view_all',
@@ -73,6 +107,12 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'capture.approve',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
+    'batch.log', 'batch.view',
+    'quality.check', 'quality.view',
+    'downtime.report', 'downtime.close', 'downtime.view',
+    'shift.production_open', 'shift.production_close', 'shift.production_view',
+    'waybill.log', 'waybill.view',
+    'factory.machines_manage', 'factory.recipes_manage',
   ],
   supervisor: [
     'sales.view',
@@ -83,6 +123,11 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'capture.approve',
     'reports.view',
     'purchase_order.view',
+    'batch.log', 'batch.view',
+    'quality.check', 'quality.view',
+    'downtime.report', 'downtime.close', 'downtime.view',
+    'shift.production_open', 'shift.production_close', 'shift.production_view',
+    'waybill.log', 'waybill.view',
   ],
   repair: [
     'sales.view',
@@ -98,6 +143,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'sales.view',
     'camera.intake',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.receive', 'purchase_order.pay',
+    'batch.view', 'downtime.view', 'waybill.view',
   ],
   cashier: [
     'sales.create', 'sales.view',
@@ -125,10 +171,41 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'sales.view',
     'camera.dispatch',
   ],
+  factory_operator: [
+    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
+    'batch.log', 'batch.view',
+    'downtime.report', 'downtime.close', 'downtime.view',
+    'shift.production_open', 'shift.production_close', 'shift.production_view',
+    'waybill.log', 'waybill.view',
+  ],
+  factory_inspector: [
+    'camera.intake', 'camera.wastage',
+    'quality.check', 'quality.view',
+    'batch.view', 'downtime.view', 'waybill.view',
+  ],
+}
+
+// Five factory template roles get exact, dedicated mappings rather than
+// falling through the generic keyword cascade below. That cascade sent
+// line-operator to 'cashier' (zero camera permissions — the role meant
+// to actually stand at the press and log intake/output/wastage/dispatch
+// could not submit a single capture), and it collapsed shift-supervisor,
+// production-manager, and inventory-manager onto the identical 'manager'
+// bucket despite being three distinct jobs. This only affects the five
+// exact factory-* strings below — every other sector's roles still run
+// through the unchanged cascade beneath it.
+const FACTORY_ROLE_MAP: Record<string, PosRole | FactoryOnlyRole> = {
+  'factory-line-operator':      'factory_operator',
+  'factory-quality-inspector':  'factory_inspector',
+  'factory-shift-supervisor':   'supervisor',
+  'factory-production-manager': 'manager',
+  'factory-inventory-manager':  'inventory',
 }
 
 // ── Template role → legacy role mapping ─────────────────────
-function templateToLegacyRole(role: string): PosRole | null {
+function templateToLegacyRole(role: string): PosRole | FactoryOnlyRole | null {
+  if (role in FACTORY_ROLE_MAP) return FACTORY_ROLE_MAP[role]
+
   const match = role.match(/^(factory|restaurant|repair|salon|retail|logistics)-(.+)$/)
   if (!match) return null
   const suffix = match[2]
@@ -148,7 +225,7 @@ function templateToLegacyRole(role: string): PosRole | null {
  */
 export function hasPermission(role: string | null | undefined, permission: PosPermission): boolean {
   if (!role) return false
-  const effectiveRole = ROLE_PERMISSIONS[role as PosRole] ? (role as PosRole) : templateToLegacyRole(role)
+  const effectiveRole = ROLE_PERMISSIONS[role as PosRole | FactoryOnlyRole] ? (role as PosRole | FactoryOnlyRole) : templateToLegacyRole(role)
   if (!effectiveRole) return false
   return ROLE_PERMISSIONS[effectiveRole]?.includes(permission) ?? false
 }
@@ -159,7 +236,7 @@ export function hasPermission(role: string | null | undefined, permission: PosPe
  */
 export function getPermissions(role: string | null | undefined): PosPermission[] {
   if (!role) return []
-  const effectiveRole = ROLE_PERMISSIONS[role as PosRole] ? (role as PosRole) : templateToLegacyRole(role)
+  const effectiveRole = ROLE_PERMISSIONS[role as PosRole | FactoryOnlyRole] ? (role as PosRole | FactoryOnlyRole) : templateToLegacyRole(role)
   if (!effectiveRole) return []
   return ROLE_PERMISSIONS[effectiveRole] || []
 }

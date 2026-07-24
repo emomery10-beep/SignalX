@@ -203,7 +203,7 @@ export default function FactoryCapturePage() {
   async function submit() {
     if (!captureType || !photoUrl || !session) return
     const resolvedNotes = captureType === 'wastage' ? selectedReason || notes.trim() : notes.trim()
-    if (!product.trim()) { setSaveError(tc('factory_capture.error_select_product')); return }
+    if (!product.trim() || product === '__other__') { setSaveError(tc('factory_capture.error_select_product')); return }
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError(tc('factory_capture.error_valid_quantity')); return }
     if (captureType === 'wastage' && !resolvedNotes) { setSaveError(tc('factory_capture.error_wastage_reason')); return }
     if (captureType === 'dispatch' && !notes.trim()) { setSaveError(tc('factory_capture.error_destination')); return }

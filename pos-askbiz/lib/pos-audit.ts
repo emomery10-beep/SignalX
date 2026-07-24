@@ -41,6 +41,19 @@ export type PosAuditEvent =
   | 'purchase_order.received'
   | 'purchase_order.paid'
   | 'purchase_order.cancelled'
+  // Factory: batch traceability
+  | 'batch.checkpoint_logged'
+  // Factory: quality checks
+  | 'quality.check_logged'
+  // Factory: downtime
+  | 'downtime.reported'
+  | 'downtime.closed'
+  // Factory: production shifts (distinct from shift.opened/closed above,
+  // which are the cash-register shift)
+  | 'shift.production_opened'
+  | 'shift.production_closed'
+  // Factory: waybills
+  | 'waybill.logged'
 
 export interface PosAuditPayload {
   auth:        PosAuthResult

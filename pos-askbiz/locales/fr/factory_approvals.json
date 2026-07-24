@@ -22,6 +22,7 @@
   "operator_fallback": "Opérateur",
   "product_unspecified": "Produit non spécifié",
   "no_quantity": "Quantité non renseignée",
+  "photo_unavailable": "Photo indisponible",
   "approve": "✓ Approuver",
   "reject": "✕ Rejeter",
   "reject_modal_title": "Rejeter la capture",

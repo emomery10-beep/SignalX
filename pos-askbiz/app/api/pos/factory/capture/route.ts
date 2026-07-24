@@ -138,15 +138,52 @@ export async function POST(req: NextRequest) {
       photoUrl    = `data:image/jpeg;base64,${base64Data}`
       storageMode = 'fallback'
     } else {
-      const { data: urlData } = service.storage
+      // factory-captures is a private bucket — a public URL 404s in the
+      // browser. Sign it instead (10-year expiry: these photos need to
+      // stay viewable indefinitely, not just for one session).
+      const { data: signedData, error: signErr } = await service.storage
         .from('factory-captures')
-        .getPublicUrl(filename)
-      photoUrl = urlData.publicUrl
+        .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
+      if (signErr || !signedData?.signedUrl) {
+        console.error('factory-captures signed URL failed:', signErr?.message)
+        photoUrl    = `data:image/jpeg;base64,${base64Data}`
+        storageMode = 'fallback'
+      } else {
+        photoUrl = signedData.signedUrl
+      }
     }
   } catch (err) {
     console.error('Factory capture upload error:', err)
     return json({ error: 'Image upload failed' }, 500)
   }
+
+  // Tag this capture with the owner's currently-active factory PRODUCTION
+  // shift (pos_factory_production_shifts — output targets / floor photos),
+  // if one is open. Distinct from shift_id above, which points at the
+  // cash-register pos_shifts and is untouched.
+  //
+  // Best-effort and schema-gated: the production-shifts migration
+  // (20260724000007_factory_production_shifts.sql) may not be applied to
+  // this environment yet, in which case both the lookup below and the
+  // production_shift_id column on this table are absent. We only look at
+  // whether the lookup itself errored (not whether it found a row) to
+  // decide whether to include the column in the insert at all — this way
+  // a capture never fails because an optional, not-yet-migrated column
+  // was referenced.
+  let activeProductionShiftId: string | null = null
+  let productionShiftColumnAvailable = false
+  try {
+    const { data: activeProductionShift, error: activeShiftErr } = await service
+      .from('pos_factory_production_shifts')
+      .select('id')
+      .eq('owner_id', auth.ownerId)
+      .eq('status', 'active')
+      .maybeSingle()
+    if (!activeShiftErr) {
+      productionShiftColumnAvailable = true
+      activeProductionShiftId = activeProductionShift?.id || null
+    }
+  } catch { /* production-shifts migration not applied yet — skip tagging */ }
 
   const { data: capture, error } = await service
     .from('pos_factory_captures')
@@ -164,6 +201,7 @@ export async function POST(req: NextRequest) {
       quantity:     quantity     ?? null,
       notes:        notes        || null,
       client_tx_id: clientTxId,
+      ...(productionShiftColumnAvailable ? { production_shift_id: activeProductionShiftId } : {}),
     })
     .select(`
       *,

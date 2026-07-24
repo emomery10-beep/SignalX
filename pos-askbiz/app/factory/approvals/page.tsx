@@ -62,6 +62,7 @@ export default function ApprovalsPage() {
 
   // photo lightbox
   const [zoom, setZoom] = useState<string | null>(null)
+  const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -167,11 +168,11 @@ export default function ApprovalsPage() {
               return (
                 <div key={c.id} className="pos-item" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, display: 'flex', gap: 16, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   {/* thumbnail */}
-                  {c.photo_url ? (
+                  {c.photo_url && !brokenPhotos.has(c.id) ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={c.photo_url} alt="capture" onClick={() => setZoom(c.photo_url)} style={{ width: 96, height: 96, borderRadius: 10, objectFit: 'cover', border: `2px solid ${meta.color}55`, cursor: 'zoom-in', flexShrink: 0 }} />
+                    <img src={c.photo_url} alt="capture" onClick={() => setZoom(c.photo_url)} onError={() => setBrokenPhotos(prev => new Set(prev).add(c.id))} style={{ width: 96, height: 96, borderRadius: 10, objectFit: 'cover', border: `2px solid ${meta.color}55`, cursor: 'zoom-in', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 96, height: 96, borderRadius: 10, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{meta.icon}</div>
+                    <div title={c.photo_url && brokenPhotos.has(c.id) ? tc('factory_approvals.photo_unavailable') : undefined} style={{ width: 96, height: 96, borderRadius: 10, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>{meta.icon}</div>
                   )}
 
                   {/* body */}
@@ -227,7 +228,7 @@ export default function ApprovalsPage() {
       {zoom && (
         <div onClick={() => setZoom(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, cursor: 'zoom-out' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={zoom} alt="capture full" style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }} />
+          <img src={zoom} alt="capture full" onError={() => setZoom(null)} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }} />
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES, CURRENCIES as CURRENCY_TABLE } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
 import PasskeyNudge from '@/components/PasskeyNudge'
+import { FACTORY_TYPE_OPTIONS, FACTORY_TYPE_OTHER } from '@/lib/factory-type-options'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
 
@@ -21,13 +22,18 @@ const BG   = '#f9f8f6'
 // ── Step definitions ──────────────────────────────────────────
 // 'welcome' was removed: first/last name is already known from signup
 // (email or phone+PIN both collect it), so onboarding never re-asks for it.
-const STEPS = ['business', 'location', 'sector', 'export', 'connect', 'done'] as const
+const STEPS = ['business', 'location', 'sector', 'factory_type', 'export', 'connect', 'done'] as const
 type Step = typeof STEPS[number]
 
 // Business types that need a sector (product category) step
 const NEEDS_SECTOR = new Set(['ecommerce', 'distributor', 'manufacturer', 'importer', 'exporter'])
 // Business types that should see the export markets step
 const NEEDS_EXPORT = new Set(['exporter', 'ecommerce', 'importer'])
+// Business types that see the factory_type step ("what does your factory
+// make") — only the factory/manufacturing persona. This sits between
+// 'sector' and 'export' in STEPS above; next()/back() route every other
+// business type around it exactly as they did before this step existed.
+const NEEDS_FACTORY_TYPE = new Set(['manufacturer'])
 // Business types that run a till day-to-day — land them straight in the POS.
 // These are also the "simple setup" persona: no business-name typing, no
 // Connect Data Sources step — straight from business type to done.
@@ -101,6 +107,19 @@ const SECTOR_IDS = [
 
 const buildSectors = (tc: TC) =>
   SECTOR_IDS.map((id, i) => ({ id, label: tc('onboarding.sector_' + i) }))
+
+// Factory-type picker tiles — the 12 template categories from the shared
+// options file (lib/factory-type-options.ts) plus a 13th "Other / not
+// listed" tile owned only by this page (not added to the shared file, since
+// FACTORY_TYPE_OTHER already carries that id/meaning for the profiles column).
+// Labels are plain English on purpose, matching the shared file's own
+// (deliberately untranslated) labels rather than introducing new tc() keys.
+const FACTORY_TYPE_UI_OPTIONS: { id: string; label: string; icon: string }[] = [
+  ...FACTORY_TYPE_OPTIONS,
+  { id: FACTORY_TYPE_OTHER, label: 'Other / not listed', icon: '❔' },
+]
+const FACTORY_TYPE_TITLE = 'What does your factory make?'
+const FACTORY_TYPE_SUBTITLE = 'This helps us set up the right production stages and suggested recipes for you. Optional — you can skip this and choose later from settings.'
 
 // Connect-step tiles — deep link straight into that connector's own flow on
 // /sources (same emoji + source ids as the SOURCES array in
@@ -228,6 +247,9 @@ export default function OnboardingPage() {
   const [sectors,      setSectors]      = useState<string[]>([])
   const [exportMkts,   setExportMkts]   = useState<string[]>([])
   const [wantsExport,  setWantsExport]  = useState<boolean | null>(null)
+  // Optional — only meaningful (and only ever shown/saved) for the
+  // factory/manufacturing business type. Empty string = skipped/not picked.
+  const [factoryType,  setFactoryType]  = useState('')
 
   // Location auto-detect — mirrors the pattern already used on the sign-in
   // page. Confirmed with one tap instead of a 12-item dropdown; manual
@@ -288,8 +310,20 @@ export default function OnboardingPage() {
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const stepIndex = STEPS.indexOf(step)
-  const progress  = (stepIndex / (STEPS.length - 1)) * 100
+  // Progress bar / step-counter use the steps actually reachable for this
+  // business type, not the raw STEPS array. Both 'factory_type' and 'export'
+  // are conditionally skipped (see next()/back() below) — a manufacturer
+  // reaches factory_type but never export, an exporter/ecommerce/importer
+  // is the reverse, and everyone else reaches neither — so both must be
+  // filtered independently, or a manufacturer's counter jumps a number
+  // (e.g. "4 of 7" straight to "6 of 7") for a step they never visit.
+  const visibleSteps: Step[] = STEPS.filter(s => {
+    if (s === 'factory_type') return NEEDS_FACTORY_TYPE.has(bizType)
+    if (s === 'export')       return NEEDS_EXPORT.has(bizType)
+    return true
+  })
+  const stepIndex = visibleSteps.indexOf(step)
+  const progress  = (stepIndex / (visibleSteps.length - 1)) * 100
   const isPosPersona = POS_LANDING_TYPES.has(bizType)
 
   // Text the read-aloud button speaks for the current step (heading + guidance).
@@ -298,6 +332,7 @@ export default function OnboardingPage() {
       case 'business': return `${firstName ? tc('onboarding.business_title_named', { name: firstName }) : tc('onboarding.business_title')}. ${tc('onboarding.business_subtitle')}`
       case 'location': return `${tc('onboarding.location_title')}. ${tc('onboarding.location_subtitle')}`
       case 'sector':   return `${tc('onboarding.sector_title')}. ${tc('onboarding.sector_subtitle')}`
+      case 'factory_type': return `${FACTORY_TYPE_TITLE}. ${FACTORY_TYPE_SUBTITLE}`
       case 'export':   return `${tc('onboarding.export_title')}. ${tc('onboarding.export_subtitle')}`
       case 'connect':  return `${tc('onboarding.connect_title')}. ${tc('onboarding.connect_subtitle')}`
       case 'done':     return isPosPersona ? `${firstName ? tc('onboarding.done_title_pos_named', { name: firstName }) : tc('onboarding.done_title')}. ${tc('onboarding.done_subtitle_pos')}` : `${tc('onboarding.done_title')}. ${tc('onboarding.done_subtitle')}`
@@ -318,8 +353,24 @@ export default function OnboardingPage() {
     if (step === 'location' && POS_LANDING_TYPES.has(bizType)) { setStep('done'); return }
     // Skip sector for informal business types (shops, salons, couriers, food stalls, etc.)
     if (step === 'location' && !NEEDS_SECTOR.has(bizType)) { setStep('connect'); return }
+    // From sector: factory/manufacturing businesses get one extra optional
+    // step (factory_type) that nobody else ever sees. Every other business
+    // type falls through to the original "skip export if not needed" rule,
+    // completely unchanged from before this step existed.
+    if (step === 'sector' && NEEDS_FACTORY_TYPE.has(bizType)) { setStep('factory_type'); return }
     // Skip export markets for non-exporters
     if (step === 'sector' && !NEEDS_EXPORT.has(bizType)) { setStep('connect'); return }
+    // Everyone else who reaches 'sector' (ecommerce, importer, exporter) does
+    // need the export step next — advance explicitly instead of falling
+    // through to the generic STEPS[idx+1] below, since 'factory_type' now
+    // sits immediately after 'sector' in that array (for the unrelated
+    // factory persona above) and would otherwise be shown to them too.
+    if (step === 'sector') { setStep('export'); return }
+    // factory_type is only ever reached by NEEDS_FACTORY_TYPE businesses, none
+    // of which are in NEEDS_EXPORT today — same "skip export if not needed"
+    // rule as above, just applied one step later now that factory_type sits
+    // between sector and export.
+    if (step === 'factory_type' && !NEEDS_EXPORT.has(bizType)) { setStep('connect'); return }
     const idx = STEPS.indexOf(step)
     if (idx < STEPS.length - 1) setStep(STEPS[idx + 1])
   }
@@ -328,7 +379,15 @@ export default function OnboardingPage() {
     if (step === 'done' && POS_LANDING_TYPES.has(bizType)) { setStep('location'); return }
     // Reverse the same skips
     if (step === 'connect' && !NEEDS_SECTOR.has(bizType)) { setStep('location'); return }
+    if (step === 'connect' && NEEDS_FACTORY_TYPE.has(bizType)) { setStep('factory_type'); return }
     if (step === 'connect' && NEEDS_SECTOR.has(bizType) && !NEEDS_EXPORT.has(bizType)) { setStep('sector'); return }
+    if (step === 'factory_type') { setStep('sector'); return }
+    // 'export' is now preceded by 'factory_type' in STEPS, but only
+    // NEEDS_FACTORY_TYPE businesses ever reach factory_type and none of them
+    // are ever routed to 'export' (see next() above) — so 'export' is only
+    // ever reached by non-factory exporters, for whom back() must still land
+    // on 'sector', exactly as before this step existed.
+    if (step === 'export') { setStep('sector'); return }
     const idx = STEPS.indexOf(step)
     if (idx > 0) setStep(STEPS[idx - 1])
   }
@@ -369,6 +428,11 @@ export default function OnboardingPage() {
         first_name:          firstName,
         business_name:       resolvedBusinessName(),
         business_type:       bizType,
+        // Only ever populated for the factory/manufacturing business type;
+        // every other business type explicitly gets null (never omitted, to
+        // match this call's existing style of sending explicit nulls rather
+        // than leaving stale values from a prior onboarding attempt).
+        factory_type:        NEEDS_FACTORY_TYPE.has(bizType) ? (factoryType || null) : null,
         currency:            currency,
         currency_symbol:     (CURRENCY_SYMBOLS[currency] || CURRENCY_TABLE[currency]?.sym || '£'),
         region:              region,
@@ -400,12 +464,16 @@ export default function OnboardingPage() {
   }
 
   const canNext: Record<Step, boolean> = {
-    business: !!bizType,
-    location: !!currency,
-    sector:   sectors.length > 0,
-    export:   wantsExport !== null,
-    connect:  true,
-    done:     true,
+    business:     !!bizType,
+    location:     !!currency,
+    sector:       sectors.length > 0,
+    // Optional — a business shouldn't get stuck if they don't want to pick a
+    // factory type yet. Continue is always enabled; the pick (if any) is
+    // just carried forward to the final save.
+    factory_type: true,
+    export:       wantsExport !== null,
+    connect:      true,
+    done:         true,
   }
 
   const btn: React.CSSProperties = {
@@ -452,7 +520,7 @@ export default function OnboardingPage() {
         </div>
         <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 700, color: TX }}>AskBiz</span>
         {!POS_LANDING_TYPES.has(bizType) && (
-          <span style={{ marginLeft: 'auto', fontSize: 10, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: STEPS.length })}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: visibleSteps.length })}</span>
         )}
       </div>
 
@@ -664,6 +732,46 @@ export default function OnboardingPage() {
               <div style={{ display: 'flex', gap: 10 }}>
                 <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
                 <button style={{ ...btn, opacity: canNext.sector ? 1 : .5 }} onClick={next} disabled={!canNext.sector}>{tc('onboarding.continue')}</button>
+              </div>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 11, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+                {tc('onboarding.skip')}
+              </button>
+            </div>
+          )}
+
+          {/* ── Factory type (factory/manufacturing business type only) ──
+              Only ever reachable when NEEDS_FACTORY_TYPE.has(bizType) — see
+              next()/back() above. Same chip-grid pattern as the 'sector'
+              step just above, for visual/interaction consistency. Optional:
+              Continue is always enabled (canNext.factory_type === true), and
+              a tile can be tapped again to deselect it. */}
+          {step === 'factory_type' && (
+            <div>
+              <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
+                {FACTORY_TYPE_TITLE}
+              </h2>
+              <p style={{ fontSize: 12, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
+                {FACTORY_TYPE_SUBTITLE}
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 8, marginBottom: 28 }}>
+                {FACTORY_TYPE_UI_OPTIONS.map(f => (
+                  <button
+                    key={f.id}
+                    onClick={() => setFactoryType(prev => prev === f.id ? '' : f.id)}
+                    style={{
+                      ...(factoryType === f.id ? chipActive : chipBase),
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                      minHeight: 56,
+                    }}
+                  >
+                    <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, background: factoryType === f.id ? ACC : EV, color: factoryType === f.id ? '#fff' : TX }} aria-hidden>{f.icon}</span>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: factoryType === f.id ? ACC : TX, textAlign: 'left' }}>{f.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button style={ghostBtn} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={{ ...btn, opacity: canNext.factory_type ? 1 : .5 }} onClick={next} disabled={!canNext.factory_type}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 11, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
                 {tc('onboarding.skip')}

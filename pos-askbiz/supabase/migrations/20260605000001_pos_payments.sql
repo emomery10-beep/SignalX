@@ -34,12 +34,15 @@ create table if not exists public.pos_payments (
 
 alter table public.pos_payments enable row level security;
 
+drop policy if exists "Users can view own payments" on public.pos_payments;
 create policy "Users can view own payments"
   on public.pos_payments for select using (auth.uid() = owner_id);
 
+drop policy if exists "Users can insert own payments" on public.pos_payments;
 create policy "Users can insert own payments"
   on public.pos_payments for insert with check (auth.uid() = owner_id);
 
+drop policy if exists "Users can update own payments" on public.pos_payments;
 create policy "Users can update own payments"
   on public.pos_payments for update using (auth.uid() = owner_id);
 
@@ -59,6 +62,7 @@ create index if not exists idx_pos_payments_external_ref
   on public.pos_payments(external_reference);
 
 -- ── TRIGGER: auto-update updated_at ─────────────────────────
+drop trigger if exists set_pos_payments_updated_at on public.pos_payments;
 create trigger set_pos_payments_updated_at
   before update on public.pos_payments
   for each row execute procedure public.set_updated_at();

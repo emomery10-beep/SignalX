@@ -24,7 +24,7 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json()
   const allowed = [
     'first_name', 'last_name', 'business_name',
-    'business_type', 'currency', 'currency_symbol',
+    'business_type', 'factory_type', 'currency', 'currency_symbol',
     'region', 'sector_hints', 'onboarded',
     'phone', 'address', 'town', 'county', 'postcode',
     'whatsapp_number', 'notify_whatsapp', 'notify_email_alerts', 'notify_digest_hour',

@@ -10,6 +10,7 @@ import { PLAN_FEATURES, getPlanFeatures } from '@/lib/plans'
 import { compressLogoToDataUrl } from '@/lib/image-compress'
 import { formatDate } from '@/lib/i18n-format'
 import ApiKeys from '@/components/settings/ApiKeys'
+import { FACTORY_TYPE_OPTIONS, FACTORY_TYPE_OTHER } from '@/lib/factory-type-options'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -565,12 +566,30 @@ function LocalisationPanel() {
   const [saving, setSaving]     = useState(false)
   const [saved, setSaved]       = useState(false)
 
+  // ── Factory Type (unrelated to the "Business Type" dropdown below) ──────────
+  // profiles.business_type is also the field that carries the real POS-sector
+  // classification set during onboarding (factory/restaurant/retail/salon/
+  // repair/logistics, stored there as 'manufacturer' for factory businesses —
+  // see supabase/migrations/20260704000001_fix_business_type_check.sql and
+  // pos-askbiz/supabase/migrations/20260724000009_profiles_factory_type.sql).
+  // We read it here ONLY to decide whether to show the Factory Type section —
+  // this state is never written back through the bizType dropdown/save() above.
+  const [posBusinessType, setPosBusinessType]     = useState('')
+  const [factoryType, setFactoryType]             = useState('')
+  const [factoryTypeLoaded, setFactoryTypeLoaded] = useState(false)
+  const [factorySaving, setFactorySaving]         = useState(false)
+  const [factorySaved, setFactorySaved]           = useState(false)
+  const [factoryError, setFactoryError]           = useState(false)
+
   useEffect(() => {
     fetch('/api/profile').then(r => r.json()).then(d => {
       if (d && !d.error) {
         if (d.currency)      setCurrency(d.currency)
         if (d.business_type) setBizType(d.business_type)
+        setPosBusinessType(d.business_type || '')
+        setFactoryType(d.factory_type || '')
       }
+      setFactoryTypeLoaded(true)
     })
   }, [])
 
@@ -581,6 +600,16 @@ function LocalisationPanel() {
       updateSettings({ bizType: bizType as 'retail' | 'ecommerce' | 'distributor' | 'exporter' })
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     } finally { setSaving(false) }
+  }
+
+  const saveFactoryType = async () => {
+    if (!factoryType) return
+    setFactorySaving(true); setFactoryError(false)
+    try {
+      const res = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ factory_type: factoryType }) })
+      if (!res.ok) { setFactoryError(true); return }
+      setFactorySaved(true); setTimeout(() => setFactorySaved(false), 2500)
+    } catch { setFactoryError(true) } finally { setFactorySaving(false) }
   }
 
   return (
@@ -599,6 +628,35 @@ function LocalisationPanel() {
       </Card>
 
       <SaveRow onClick={save} saving={saving} saved={saved}/>
+
+      {/* Factory Type — only shown to factory businesses (POS-sector
+          business_type === 'manufacturer'). Deliberately its own titled Card,
+          separated from "Business Type" above, so the two similarly-named but
+          unrelated settings are never mistaken for one another. */}
+      {factoryTypeLoaded && posBusinessType === 'manufacturer' && (
+        <>
+          <Card>
+            <CardHeader title="Factory Settings"/>
+            <SettingRow
+              top
+              border={false}
+              label="Factory Type"
+              description="What kind of factory do you run? This helps set up suggested production stages and yield tracking. (This is a separate setting from “Business Type” above — it doesn't change or get changed by it.)"
+              right={
+                <select value={factoryType} onChange={e => setFactoryType(e.target.value)} style={{ ...sel, minWidth: 220 }}>
+                  <option value="">Select…</option>
+                  {FACTORY_TYPE_OPTIONS.map(o => (
+                    <option key={o.id} value={o.id}>{o.icon} {o.label}</option>
+                  ))}
+                  <option value={FACTORY_TYPE_OTHER}>🏭 Other</option>
+                </select>
+              }
+            />
+          </Card>
+          <SaveRow onClick={saveFactoryType} saving={factorySaving} saved={factorySaved} label="Save factory type"/>
+          {factoryError && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 6 }}>Couldn't save — please try again.</div>}
+        </>
+      )}
     </div>
   )
 }
