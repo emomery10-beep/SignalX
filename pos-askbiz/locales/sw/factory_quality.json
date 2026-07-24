@@ -40,6 +40,7 @@
   "success_title": "Kasoro imeandikwa",
   "success_critical_note": "Msimamizi ameshaarifiwa",
   "success_saved_note": "Rekodi ya ubora imehifadhiwa",
+  "success_pending_sync": "Imehifadhiwa kwenye kifaa hiki — itapakiwa mtandaoni ukirudi mtandaoni.",
   "success_log_another": "Andika Kasoro Nyingine",
   "success_back_to_hub": "Rudi kwenye Kituo Kikuu"
 }

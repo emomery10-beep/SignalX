@@ -40,6 +40,7 @@
   "success_title": "تم تسجيل العيب",
   "success_critical_note": "تم تنبيه المشرف",
   "success_saved_note": "تم حفظ سجل الجودة",
+  "success_pending_sync": "تم الحفظ على هذا الجهاز — سيتم الرفع بمجرد عودتك للاتصال بالإنترنت.",
   "success_log_another": "تسجيل عيب آخر",
   "success_back_to_hub": "العودة إلى لوحة التحكم"
 }

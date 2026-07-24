@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -64,6 +65,7 @@ export default function QualityPage() {
   const [productName, setProductName]       = useState('')
   const [notes, setNotes]                   = useState('')
   const [saveError, setSaveError]           = useState('')
+  const [pendingSync, setPendingSync]       = useState(false)
 
   // Camera
   const videoRef   = useRef<HTMLVideoElement>(null)
@@ -82,6 +84,15 @@ export default function QualityPage() {
     if (authReady && session && stage === 'viewfinder') openCamera()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, session])
+
+  // ── Offline queue replay ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!session) return
+    const replay = () => replayOfflineQueue(session.ownerId, session.staffId || '').catch(() => {})
+    replay()
+    window.addEventListener('online', replay)
+    return () => window.removeEventListener('online', replay)
+  }, [session])
 
   const openCamera = useCallback(async () => {
     setCameraErr('')
@@ -129,19 +140,23 @@ export default function QualityPage() {
   async function submitDefect() {
     if (!photoUrl || !defectType || !severity || !session) return
     setSaveError('')
+    setPendingSync(false)
     setStage('submitting')
+    const clientTxId = generateClientTxId('quality')
+    const body = {
+      defect_type: defectType,
+      severity,
+      image: photoUrl,
+      product_name: productName.trim() || undefined,
+      quantity_affected: qty ? parseFloat(qty) : undefined,
+      notes: notes.trim() || undefined,
+      client_tx_id: clientTxId,
+    }
     try {
       const res = await fetch('/api/pos/factory/quality', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({
-          defect_type: defectType,
-          severity,
-          image: photoUrl,
-          product_name: productName.trim() || undefined,
-          quantity_affected: qty ? parseFloat(qty) : undefined,
-          notes: notes.trim() || undefined,
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -151,14 +166,25 @@ export default function QualityPage() {
       }
       setStage('success')
     } catch {
-      setSaveError(tc('factory_quality.error_network'))
-      setStage('details')
+      // Network failure (not a rejected request) — queue for replay, since
+      // the defect photo is already captured and the payload is self-contained.
+      try {
+        await enqueueOfflineWrite({
+          client_tx_id: clientTxId, owner_id: session.ownerId, staff_id: session.staffId || '',
+          endpoint: '/api/pos/factory/quality', method: 'POST', body, created_at: new Date().toISOString(),
+        })
+        setPendingSync(true)
+        setStage('success')
+      } catch (queueErr) {
+        setSaveError(queueErr instanceof OfflineQueueQuotaError ? queueErr.message : tc('factory_quality.error_network'))
+        setStage('details')
+      }
     }
   }
 
   function reset() {
     setStage('viewfinder')
-    setPhotoUrl(''); setDefectType(''); setSeverity(''); setQty(''); setProductName(''); setNotes(''); setSaveError('')
+    setPhotoUrl(''); setDefectType(''); setSeverity(''); setQty(''); setProductName(''); setNotes(''); setSaveError(''); setPendingSync(false)
     openCamera()
   }
 
@@ -399,8 +425,10 @@ export default function QualityPage() {
         <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
           {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.label}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 36 }}>
-          {selectedSeverity?.id === 'critical' ? tc('factory_quality.success_critical_note') : tc('factory_quality.success_saved_note')}
+        <div style={{ fontSize: 12, color: pendingSync ? tokens.danger : 'var(--pos-hint)', marginBottom: 36 }}>
+          {pendingSync
+            ? tc('factory_quality.success_pending_sync')
+            : (selectedSeverity?.id === 'critical' ? tc('factory_quality.success_critical_note') : tc('factory_quality.success_saved_note'))}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
