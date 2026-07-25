@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
           .select('pos_items!transaction_id(line_total, refunded, refunded_at)')
           .eq('owner_id', profile.id)
           .in('status', ['refunded', 'partially_refunded'])
+          .order('created_at', { ascending: false })
           .limit(1000),
       ])
 
