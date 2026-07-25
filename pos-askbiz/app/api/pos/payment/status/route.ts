@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
+import { verifyTransaction } from '@/lib/paystack'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -81,6 +82,43 @@ export async function GET(req: NextRequest) {
         }
       } catch (verifyErr) {
         console.warn('[payment/status] Stripe verify error:', verifyErr)
+      }
+    }
+
+    // Still pending — verify directly with Paystack as webhook fallback.
+    // Paystack only ever sends a webhook for successful charges — a declined/
+    // failed M-Pesa STK push gets no webhook at all, so this poll-time check
+    // is the only way a decline is detected before the client's own 90-attempt
+    // (~3 min) timeout gives up and shows a generic "timed out" message.
+    if (payment.external_reference && payment.provider === 'paystack') {
+      try {
+        const verified = await verifyTransaction(payment.external_reference)
+
+        if (verified.status === 'success') {
+          await service
+            .from('pos_payments')
+            .update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('id', payment.id)
+
+          await service
+            .from('pos_transactions')
+            .update({ payment_status: 'paid' })
+            .eq('id', payment.transaction_id)
+            .eq('owner_id', ownerId)
+
+          return NextResponse.json({ status: 'completed' })
+        }
+
+        if (['failed', 'abandoned', 'reversed'].includes(verified.status)) {
+          await service
+            .from('pos_payments')
+            .update({ status: 'failed' })
+            .eq('id', payment.id)
+
+          return NextResponse.json({ status: 'failed' })
+        }
+      } catch (verifyErr) {
+        console.warn('[payment/status] Paystack verify error:', verifyErr)
       }
     }
 

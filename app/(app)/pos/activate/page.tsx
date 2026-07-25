@@ -27,6 +27,8 @@ export default function PosActivatePage() {
   const [currency, setCurrency] = useState('GBP')
   const [seats, setSeats]       = useState(1) // 1 (owner) + team drafts
   const [error, setError]       = useState('')
+  const [trialAvailable, setTrialAvailable] = useState(false)
+  const [trialLoading, setTrialLoading]     = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Turn any staff drafts into real accounts once payment is confirmed.
@@ -83,6 +85,19 @@ export default function PosActivatePage() {
 
       if (profile?.pos_enabled) { setPhase('active'); return }
 
+      // Free trial is a one-time, server-enforced offer — only surface the
+      // button if this user hasn't already claimed it (avoids a dead-end
+      // "already used" error on click).
+      try {
+        const { data: existingTrial } = await supabase
+          .from('trials')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('trial_type', 'pos')
+          .maybeSingle()
+        if (!cancelled) setTrialAvailable(!existingTrial)
+      } catch { /* default: trial option stays hidden, payment still works */ }
+
       // Read query params in-effect (avoids the useSearchParams Suspense
       // requirement at build time).
       const params = new URLSearchParams(window.location.search)
@@ -126,6 +141,28 @@ export default function PosActivatePage() {
       if (d.url) { window.location.href = d.url; return }
       setError(d.error || tc('pos_setup.activate_err')); setPhase('pay')
     } catch { setError(tc('pos_setup.activate_err')); setPhase('pay') }
+  }
+
+  const startTrial = async () => {
+    setTrialLoading(true); setError('')
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        await provisionTeam()
+        setPhase('active')
+      } else {
+        // Most likely already claimed elsewhere (e.g. the billing page) since
+        // this screen loaded — hide the option rather than offer a dead retry.
+        setTrialAvailable(false)
+        setError(d.error || tc('pos_setup.activate_err'))
+      }
+    } catch { setError(tc('pos_setup.activate_err')) }
+    finally { setTrialLoading(false) }
   }
 
   const bigBtn: React.CSSProperties = {
@@ -196,15 +233,35 @@ export default function PosActivatePage() {
               </div>
             ) : (
               <>
+                {trialAvailable && (
+                  <>
+                    <button
+                      style={{ ...bigBtn, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: trialLoading ? .7 : 1, cursor: trialLoading ? 'wait' : 'pointer' }}
+                      onClick={startTrial}
+                      disabled={trialLoading}
+                    >
+                      {trialLoading ? spinner : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+                      )}
+                      {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
+                    </button>
+                    <div style={{ fontSize: 13, color: TX3, marginBottom: 18 }}>{tc('billing.pos_no_card')}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                      <div style={{ flex: 1, height: 1, background: B2 }} />
+                      <span style={{ fontSize: 12, color: TX3, fontWeight: 500 }}>{tc('auth.or')}</span>
+                      <div style={{ flex: 1, height: 1, background: B2 }} />
+                    </div>
+                  </>
+                )}
                 {isKenyan ? (
                   <>
-                    <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payMpesa}>
+                    <button style={{ ...(trialAvailable ? ghostBtn : bigBtn), marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payMpesa} disabled={trialLoading}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="6" y="2" width="10" height="18" rx="2"/><path d="M10 17h2"/><circle cx="18" cy="16" r="4.5"/><path d="M18 13.5v5M16.3 15.3h3.4M16.3 16.7h3.4"/>
                       </svg>
                       {tc('pos_setup.activate_pay_mpesa')}
                     </button>
-                    <button style={{ ...ghostBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard}>
+                    <button style={{ ...ghostBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard} disabled={trialLoading}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>
                       </svg>
@@ -212,7 +269,7 @@ export default function PosActivatePage() {
                     </button>
                   </>
                 ) : (
-                  <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard}>
+                  <button style={{ ...(trialAvailable ? ghostBtn : bigBtn), marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard} disabled={trialLoading}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>
                     </svg>
