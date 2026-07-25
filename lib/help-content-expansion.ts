@@ -1765,6 +1765,35 @@ export const EXPANDED_HELP_ARTICLES: HelpArticle[] = [
     keywords: ["card payment", "Stripe", "Apple Pay", "Google Pay", "terminal", "checkout", "POS"],
     lastUpdated: "2026-06-07",
   },
+
+  // ══ DEVELOPER VERIFICATION ══════════════════════════════════════════════════
+
+  {
+    slug: "verified-business-program",
+    title: "Verified Business Program (KYC)",
+    description: "The AskBiz Verified Business program for developers — what to submit for KYC review, how manual approval works, and the verified badge and 3× rate limits you get once approved.",
+    topic: "API & Developers",
+    topicSlug: "api-developers",
+    readTime: 4,
+    content: [
+      { heading: "What verification is", body: "Verified Business is an optional program for AskBiz developer accounts — the API key holders and integration builders on developer.askbiz.co — not the payment-provider KYC you complete when setting up Stripe or Airtel Money under POS > Payments. Getting verified earns your account a **Verified business badge** that merchants see when deciding whether to connect your app, plus a **3× increase to your API rate limits**. Applying is free, and every submission is reviewed manually — there's no automated or third-party identity-check step yet." },
+      { heading: "What you need to submit", body: "Open the **Verification** tab in your developer dashboard sidebar and fill in your business details:\n- **Legal business name** (required)\n- **Registration number** (required)\n- **Business address** (required)\n- **Tax ID** (optional)\n\nSave that first, then upload four supporting documents — clear photos are fine, you don't need scans:\n- **Business registration certificate** — certificate of incorporation, trading licence, or equivalent\n- **Proof of business address** — a utility bill, lease, or bank statement showing the address\n- **Owner's government ID** — national ID, passport, or driving licence for the account owner\n- **Ownership disclosure** — a short note or document naming anyone who owns 25% or more of the business" },
+      { heading: "How review works", body: "Once submitted, your status shows as **Pending review**. An AskBiz admin reviews it manually — there's no automated approval, and AskBiz doesn't publish a fixed turnaround time, so treat it as a background process rather than something with a guaranteed date. While you're pending, or if you come back **rejected**, you can update your business details and re-upload documents at any time — there's no need to start a fresh application. Once you're **approved**, the submission locks; if something needs to change after that, contact support rather than resubmitting." },
+      { heading: "What changes once you're approved", body: "Two things happen as soon as an admin approves you:\n\n**1. The verified badge.** Merchants see a Verified badge next to your app's name on the Connections consent screen — the page where a merchant approves your app's request to access their AskBiz data. If a connection isn't grouped under a registered app, the badge still shows on its own.\n\n**2. A 3× rate-limit multiplier**, applied to both the monthly and per-minute request limits on every one of your API keys:\n- **Free plan:** 100/month, 5/minute → 300/month, 15/minute\n- **Growth plan:** 10,000/month, 60/minute → 30,000/month, 180/minute\n- **Business plan:** unlimited/month (unchanged), 120/minute → 360/minute\n\nThe multiplier applies retroactively to your existing keys the moment you're approved, applies automatically to any key you create afterward, and stays in place through any future plan upgrade or downgrade — you don't need to reapply or ask for it to be reinstated." },
+      { heading: "Where to apply", body: "The Verification page lives at **developer.askbiz.co/dashboard/verification** — the **Verification** entry in your dashboard's left sidebar. A status dot next to that nav item reflects your current state at a glance, so you don't need to open the page just to check whether you're pending, approved, or rejected." },
+    ],
+    faq: [
+      { q: "Is this the same as the KYC I complete for Stripe or Airtel Money?", a: "No. That's a payment provider verifying you to accept card or mobile money payments in POS > Payments. Verified Business is a separate AskBiz program for developer accounts — API key holders — and has no connection to your payment provider setup." },
+      { q: "Does it cost anything to apply?", a: "No, applying is free." },
+      { q: "How long does review take?", a: "AskBiz doesn't publish a fixed turnaround time. Review is done manually by an AskBiz admin rather than an automated or third-party identity-check service, so treat it as a background process — your status on the Verification page changes to approved or rejected once it's been reviewed." },
+      { q: "Can I fix a mistake after I've submitted?", a: "Yes — you can update your business details and replace documents at any time before a decision is made, and again if you're rejected and want to resubmit. Once you're approved, the submission locks; contact support if something needs to change after that." },
+      { q: "Do I need to do anything to get the higher rate limits after approval?", a: "No. The 3× multiplier is applied automatically to your existing keys the moment you're approved, and to any new key or plan change after that." },
+      { q: "Where exactly will merchants see my verified badge?", a: "Only on the Connections consent screen — the page a merchant sees when approving your app's access to their AskBiz account. It isn't shown anywhere else yet." },
+    ],
+    related: ["rate-limits", "api-access", "authentication"],
+    keywords: ["verified business", "KYC", "business verification", "verification badge", "verified badge", "API rate limit increase", "developer verification", "business verification documents"],
+    lastUpdated: "2026-07-25",
+  },
 ];
 
 // ─── HELPER FUNCTIONS ────────────────────────────────────────────────────────

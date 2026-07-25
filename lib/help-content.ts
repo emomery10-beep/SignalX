@@ -177,6 +177,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     color: "#5a6a8a",
     articles: [
       "api-access",
+      "api-sandbox-test-mode",
       "authentication",
       "rate-limits",
       "api-use-cases",
@@ -184,6 +185,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "sdk-quickstart",
       "embedding-dashboards",
       "api-error-codes",
+      "verified-business-program",
     ],
   },
   {
@@ -201,6 +203,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "protecting-your-business-data",
       "two-factor-authentication-guide",
       "session-management-guide",
+      "connected-apps-guide",
     ],
   },
   {
@@ -734,7 +737,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-making-a-sale",
       "pos-managing-inventory",
       "pos-restocking-guide",
-      "pos-purchase-orders",
+      "pos-purchase-orders-tile",
       "pos-processing-refunds",
       "pos-amending-transactions",
       "pos-whatsapp-receipts-setup",
@@ -781,7 +784,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     slug: "factory-operations",
     title: "Factory Operations",
-    description: "Set up and use AskBiz Factory Captures — submit production photos, manage approvals, track wastage, and maintain a full audit trail across your production floor.",
+    description: "Set up and use AskBiz Factory Captures — submit production photos, manage approvals, track batches, quality, downtime, shifts and waybills, and maintain a full audit trail across your production floor.",
     icon: "🏭",
     color: "#6b7280",
     articles: [
@@ -789,6 +792,9 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-factory-submitting-captures",
       "pos-factory-approvals",
       "pos-factory-roles-permissions",
+      "pos-factory-batch-quality-downtime",
+      "pos-factory-shifts-waybills",
+      "pos-factory-type-setup",
     ],
   },
 ];
@@ -2614,10 +2620,45 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Is there an API sandbox for testing?", a: "Not yet — there's no sandbox mode, so every call to the base URL hits your real, live account data. While you're building, stick to non-destructive read endpoints (like `GET /pulse` or `GET /alerts`) and double-check write calls such as `POST /data/push` before running them." },
+      { q: "Is there an API sandbox for testing?", a: "Yes — every API key is created as either **Test** (`abz_test_…`) or **Live** (`abz_live_…`), and Test is the default so a brand-new key can't touch anything real. A test key gets a realistic, canned response from every endpoint that would otherwise cost money or reach someone — no wallet debit, no message actually delivered, no card ever charged — while request shape and error handling match a live key exactly. See the API Sandbox & Test Mode article for what each endpoint does differently in test mode." },
       { q: "Where is the full API documentation?", a: "Full API docs with request/response schemas, code examples in Python, Node.js, and curl are at docs.askbiz.co." },
     ],
-    related: ["authentication", "rate-limits", "plans-comparison"],
+    related: ["authentication", "rate-limits", "plans-comparison", "api-sandbox-test-mode"],
+  },
+  {
+    slug: "api-sandbox-test-mode",
+    title: "API Sandbox & Test Mode",
+    description: "How AskBiz API test keys work — the abz_test_ key prefix, what each endpoint returns in test mode, and how to switch to a live key when you're ready to ship.",
+    topic: "API & Developers",
+    topicSlug: "api-developers",
+    readTime: 4,
+    popular: false,
+    lastUpdated: "2026-07-25",
+    keywords: ["askbiz api sandbox", "api test mode", "test api key", "abz_test key", "sandbox key askbiz", "test vs live api key"],
+    content: [
+      {
+        heading: "Test Keys vs. Live Keys",
+        body: "Every API key you create is either **Test** (`abz_test_…`) or **Live** (`abz_live_…`) — you choose which when you create it, and it can't be changed afterward. Test is the default for a new key, so your first call against the API can't accidentally hurt anything.\n\nA test key isn't a separate, limited API — it's the same endpoints, the same request format, and the same error handling as a live key (a malformed request still gets a 400, a bad key still gets a 401). The only thing that changes is what happens when a call would otherwise succeed: nothing real happens.",
+      },
+      {
+        heading: "Creating a Test Key",
+        body: "1. Go to your developer dashboard's **Keys** page\n2. Click **New key**\n3. Leave **Environment** set to **Test** — it's selected by default\n4. Copy the key immediately — it's shown in full only once, and starts with `abz_test_`\n\nTest and live keys share the same 5-keys-per-account limit — there's no separate quota for test keys. When you're ready to ship, create a second key with Environment set to Live; your integration code doesn't need to change, only which key you send.",
+      },
+      {
+        heading: "What Each Endpoint Does With a Test Key",
+        body: "- **Scan (`POST /api/v1/scan`)** — always returns the same fixed, realistic product match. Never a real vision-model call, never a wallet debit, never a read of your real inventory.\n- **WhatsApp send (`POST /api/v1/whatsapp/send`)** — returns success immediately. No message reaches the phone number you send to, no wallet debit.\n- **Charges (`POST /api/v1/charges`)** — creates a real charge row and a real confirmation link, so you can test the full lifecycle end to end — but approving it on the confirmation page simulates the approval instead of opening a real Stripe checkout. No card is ever charged.\n- **Connections (`POST /api/v1/connections`)** — returns an already-active fixture connection instantly. No real merchant is contacted, and the response's `merchant_email` field is a fixed sandbox address.\n- **Ask (`POST /api/v1/ask`)** — answers for real on both test and live keys. It only ever reads your own account's data and was never wallet-billed to begin with, so there's no real-money or real-message risk to guard against on this one endpoint.",
+      },
+      {
+        heading: "Quota and Rate Limits Still Apply",
+        body: "Your plan's monthly request quota and per-minute rate limit apply the same way to test and live calls — a test key is not a way around your plan's limits. What's different is billing specifically: scan and WhatsApp-send never debit your wallet on a test key, since nothing real happens on either endpoint.",
+      },
+    ],
+    faq: [
+      { q: "Can I turn a test key into a live key later, or the other way around?", a: "No — a key's environment is fixed at creation and can't change afterward. Create a new key in the environment you need; it still counts toward the same 5-keys-per-account limit as any other key." },
+      { q: "Will a test scan ever return a not-found result, so I can test that path in my code?", a: "Not currently — a test key's scan endpoint always returns the same successful match. To test your own not-found handling, use a live key with a real photo of something outside your catalog." },
+      { q: "Does a test charge's confirmation link ever reach a real customer?", a: "It's safe to send one — a test charge's confirmation page never shows a real Stripe checkout, only a simulate-approve/decline control, so nothing is ever collected from whoever opens it." },
+    ],
+    related: ["api-access", "authentication", "api-use-cases", "sdk-quickstart"],
   },
   {
     slug: "authentication",
@@ -2697,7 +2738,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "My integration is sending the same request hundreds of times — why isn't caching working?", a: "Check that your cache key is deterministic and shared across instances. A common mistake is keying the cache on a request object reference rather than a stable string. Also check that serverless function cold starts aren't bypassing your in-memory cache — for serverless, use Redis or an equivalent external cache." },
       { q: "I'm getting 429s but my X-RateLimit-Remaining shows I have requests left. What's happening?", a: "This can happen when you have multiple concurrent instances all reading stale Remaining values before any of them receives a 429 response. The solution is to implement a shared rate limit counter (e.g. in Redis) that all instances write to, rather than relying on the header from each individual response." },
     ],
-    related: ["api-access", "authentication"],
+    related: ["api-access", "authentication", "verified-business-program"],
   },
 
   {
@@ -2734,9 +2775,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Do I need coding experience to use the AskBiz API?", a: "Yes — the API is designed for developers. If you want to build integrations without coding, use the Zapier integration (no-code) or the native AskBiz dashboard features." },
-      { q: "Is there an API sandbox for testing?", a: "Not yet — there's no sandbox mode, so every call is a real, live call against your account. Test with non-destructive read endpoints first, and be careful with write calls like `POST /data/import/orders` or `POST /ai/query` until you're confident in the request." },
+      { q: "Is there an API sandbox for testing?", a: "Yes — create a **Test** key (`abz_test_…`) instead of a **Live** one and you can build your whole integration with nothing real at stake: no wallet debit, no message actually sent, no card ever charged. Test is the default when you create a new key, and request shape, headers, and error handling are identical between a test and a live key, so nothing about your code changes when you switch. See the API Sandbox & Test Mode article for exactly what each endpoint returns in test mode." },
     ],
-    related: ["api-access", "authentication", "webhook-events-reference"],
+    related: ["api-access", "authentication", "webhook-events-reference", "api-sandbox-test-mode"],
   },
 
   {
@@ -2799,14 +2840,14 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "SDK configuration options",
-        body: "Both SDKs support the following configuration options:\n\n```typescript\nconst client = new AskBiz({\n  apiKey: 'ak_live_...',\n  baseUrl: 'https://api.askbiz.co/v1',\n  timeout: 30000, // request timeout in ms (default: 30000)\n  maxRetries: 3, // automatic retry attempts on 429 and 5xx (default: 3)\n  retryDelay: 1000, // base delay between retries in ms (default: 1000)\n});\n```\n\nThere's no sandbox mode yet, so calls made during local development are real, live calls against your account — the `baseUrl` above is the only one currently available.",
+        body: "Both SDKs support the following configuration options:\n\n```typescript\nconst client = new AskBiz({\n  apiKey: 'ak_live_...',\n  baseUrl: 'https://api.askbiz.co/v1',\n  timeout: 30000, // request timeout in ms (default: 30000)\n  maxRetries: 3, // automatic retry attempts on 429 and 5xx (default: 3)\n  retryDelay: 1000, // base delay between retries in ms (default: 1000)\n});\n```\n\nSandbox mode is real today, and it's a property of the key itself rather than an SDK setting: pass a **Test** key (`abz_test_…`) instead of a **Live** one as `apiKey` and every call returns a realistic canned response with nothing real at stake — no code change needed. See the API Sandbox & Test Mode article for what each endpoint does differently in test mode.",
       },
     ],
     faq: [
       { q: "Is the SDK open source?", a: "Yes — both the Node.js and Python SDKs are open source under the MIT licence. You can view the source, report issues, and contribute at github.com/askbiz/sdk-node and github.com/askbiz/sdk-python." },
       { q: "Will the SDK automatically handle token refresh?", a: "AskBiz uses static API keys, not OAuth tokens that expire. There is no token refresh needed. Your API key remains valid until you revoke it in Settings → Developer → API Keys." },
     ],
-    related: ["api-access", "authentication", "api-use-cases"],
+    related: ["api-access", "authentication", "api-use-cases", "api-sandbox-test-mode"],
   },
 
   {
@@ -2905,7 +2946,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Review Connected Applications and API Keys",
-        body: "If you have connected third-party apps or generated API keys, review them regularly:\n\n**Connected apps:** Account Settings → Security → Connected Applications. Revoke any app you no longer use or do not recognise. Revocation is instant.\n\n**API keys:** Account Settings → Developer → API Keys. Each key shows its name, creation date, and last used date. Delete keys that are:\n- No longer in use (last used > 90 days ago)\n- Associated with integrations or team members that are no longer active\n- Unrecognised — if you did not create it, delete it and investigate immediately\n\nRotate active keys every 90 days as a general security hygiene practice.",
+        body: "If you have connected third-party apps or generated API keys, review them regularly:\n\n**Connected apps:** Settings → Privacy & data → Connected apps. Each one shows the developer's app name and logo (if registered) and exactly what it can access — today that's read-only inventory access (names, stock levels, cost and sale prices); AskBiz doesn't support any other permission yet. Revoke any app you no longer use or do not recognise — it's instant, and the app immediately loses API access to your data. See the Connected Apps guide for the full walkthrough of the approval screen and what revoking does.\n\n**API keys:** Account Settings → Developer → API Keys. Each key shows its name, creation date, and last used date. Delete keys that are:\n- No longer in use (last used > 90 days ago)\n- Associated with integrations or team members that are no longer active\n- Unrecognised — if you did not create it, delete it and investigate immediately\n\nRotate active keys every 90 days as a general security hygiene practice.",
       },
       {
         heading: "What to Do If Your Account Is Compromised",
@@ -2922,7 +2963,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Can AskBiz support staff access my account?", a: "No — our staff do not have routine access to your account data. If you contact support and grant explicit permission for a session review, a staff member can view limited access logs only. Your financial data and conversation history are never accessible to support staff." },
       { q: "Does AskBiz notify me of new logins?", a: "Yes. You receive an email notification for any new login from an unrecognised device or location. You can configure these alerts in Account Settings → Security → Login Notifications." },
     ],
-    related: ["phishing-and-fraud-awareness", "protecting-your-business-data", "data-security"],
+    related: ["phishing-and-fraud-awareness", "protecting-your-business-data", "data-security", "connected-apps-guide"],
   },
   {
     slug: "phishing-and-fraud-awareness",
@@ -3215,6 +3256,43 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "I revoked all sessions but the suspicious session came back. What does that mean?", a: "This means the attacker still has your password and is logging back in. Change your password immediately and enable 2FA — changing the password invalidates all existing sessions and the 2FA requirement will stop them logging back in without your phone." },
     ],
     related: ["two-factor-authentication-guide", "account-security-guide", "protecting-your-business-data"],
+  },
+
+  {
+    slug: "connected-apps-guide",
+    title: "Connected Apps: Managing Third-Party Access to Your Account",
+    description: "How third-party developer apps request access to your AskBiz data, what you see before approving, and how to review or revoke access at any time from Settings.",
+    topic: "Safety & Security",
+    topicSlug: "safety-security",
+    readTime: 4,
+    popular: false,
+    lastUpdated: "2026-07-25",
+    keywords: ["connected apps askbiz", "revoke third-party app access", "developer app permissions", "third-party api access askbiz", "askbiz connection request"],
+    content: [
+      {
+        heading: "What Is a Connected App?",
+        body: "AskBiz has a developer platform where outside developers can build apps and integrations that read data from a merchant's AskBiz account through the API. Before any of that data sharing happens, the developer has to send you — the account owner — a request, and you have to explicitly approve it. Once approved, that's called a **connection**, and it stays in place, working in the background, until you revoke it or the developer's access is removed.\n\nThis is separate from the data sources you connect yourself under **Sources** (Shopify, Amazon, QuickBooks, and similar). Those are integrations *you* set up so AskBiz can read *their* data. A Connected App runs the other way: it's a third-party developer's app reading *your* AskBiz data, with your explicit permission.",
+      },
+      {
+        heading: "Approving a Connection Request",
+        body: "A developer sends you a link that opens a confirmation screen at **developer.askbiz.co/connect/...** — this is AskBiz's own developer-platform site, not a separate company. AskBiz does not email you this link itself; it comes from the developer, usually as a button inside their own app or website (something like \"Connect your AskBiz account\"). If you receive a link like this from somewhere you don't recognise, don't approve it until you've confirmed with the developer directly.\n\nOn the confirmation screen you'll see:\n- The app's name and logo, if the developer has registered it (otherwise it just says \"this app\")\n- A **Verified** badge next to the name if AskBiz has verified the business behind it — a separate programme from this connection request itself\n- Exactly what access is being requested, in plain English — currently the only permission AskBiz apps can request is **read-only access to your inventory** (product names, stock levels, cost and sale prices)\n\nYou can untick any permission you don't want to grant before approving — you can only narrow what's requested, never grant more than the developer actually asked for. At least one permission has to stay ticked to continue. Choose **Allow access** to approve, or **Decline** to refuse — declining takes effect immediately and the developer gets nothing.",
+      },
+      {
+        heading: "Viewing and Revoking Connected Apps",
+        body: "To see every app currently connected to your account, go to **Settings → Privacy & data**, and scroll to the **Connected apps** card. Each entry shows:\n- The app's logo and name (or \"A third-party app\" if it wasn't registered under a named app)\n- What it can access, in plain English (currently just \"Reads your inventory\")\n- The date you connected it, if available\n\nThere's no separate \"last used\" timestamp shown here today — this list only tells you what's connected and what it can see, not how recently it's been used.\n\nTo remove an app's access, click **Revoke** next to it and confirm. This takes effect immediately: the app can no longer read your AskBiz data through the API, and it disappears from your Connected apps list.",
+      },
+      {
+        heading: "What Revoking Actually Does",
+        body: "Revoking is immediate and one-way. It does not:\n- Notify the developer directly inside AskBiz — but if the developer has set up their own webhook alerts for connection events, their system may find out and act on it automatically. Either way, you won't see anything about this on your end.\n- Delete data the app already retrieved before you revoked it — AskBiz can only control access going forward, not what a developer already stored on their side\n- Block the developer from sending you a brand new connection request later — if you want to reconnect after revoking, the developer has to send a fresh request, and you approve it the same way as the first time\n\nIf you decline or revoke a request that turns out to be legitimate, just ask the developer to resend it.",
+      },
+    ],
+    faq: [
+      { q: "Will AskBiz email me when a developer wants to connect to my account?", a: "No. AskBiz doesn't send you the connection request — the developer does, usually as a link or button inside their own app. If you're expecting a request and haven't seen one, check with the developer directly rather than searching your inbox." },
+      { q: "What can a connected app actually see?", a: "Only what you approved, and only what AskBiz currently supports requesting — which today is read-only access to your inventory (product names, stock levels, cost and sale prices). A connected app cannot write, change, or delete anything, and cannot see sales, customers, or financial data through this mechanism." },
+      { q: "Is developer.askbiz.co a different, less trustworthy site?", a: "No — it's AskBiz's own developer-platform domain, used specifically for developer-facing pages like app registration and connection approval screens. It's a normal part of AskBiz, not a separate company." },
+      { q: "I revoked an app by accident. Can I get it back without the developer resending a request?", a: "No — there's no self-serve reconnect. Ask the developer to send you a new connection request and approve it the same way you did the first time." },
+    ],
+    related: ["account-security-guide", "protecting-your-business-data", "api-access"],
   },
 
   {
@@ -11335,7 +11413,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-managing-inventory", "pos-viewing-daily-stats", "pos-exporting-data"],
   },
   {
-    slug: "pos-purchase-orders",
+    slug: "pos-purchase-orders-tile",
     title: "Ordering Stock from Suppliers with Purchase Orders",
     description: "Create a purchase order from your low-stock items, send it to a supplier over WhatsApp, and log deliveries against it as stock arrives — from the Purchase Orders tile in POS Retail Operations.",
     topic: "Point of Sale (POS)",
@@ -13651,7 +13729,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Privacy controls",
-        body: "Go to **Settings → Privacy** to manage:\n\n- **Data processing consent** — AskBiz needs this to analyse your data and provide insights. You can see when consent was given.\n- **AI training consent** — optional. Allows anonymised data to improve AskBiz models. Fully opt-in.\n- **Data retention** — view how long your data is stored and request early deletion",
+        body: "Go to **Settings → Privacy** to manage:\n\n- **Data processing consent** — AskBiz needs this to analyse your data and provide insights. You can see when consent was given.\n- **AI training consent** — optional. Allows anonymised data to improve AskBiz models. Fully opt-in.\n- **Data retention** — view how long your data is stored and request early deletion\n- **Connected apps** — see every third-party developer app that has access to your account, what it can access, and revoke any of them instantly",
       },
       {
         heading: "Compliance section",
@@ -13665,7 +13743,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "What happens if I withdraw data consent?", a: "AskBiz will no longer be able to analyse your connected data or answer questions about it. Your account remains active and you can re-consent at any time to restore full functionality." },
     ],
-    related: ["settings-overview", "data-security", "gdpr-compliance", "data-subject-rights"],
+    related: ["settings-overview", "data-security", "gdpr-compliance", "data-subject-rights", "connected-apps-guide"],
   },
 
   // ── ADDITIONAL: TROUBLESHOOTING (connector errors) ──────────────────────────
@@ -14514,9 +14592,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "Step-by-step guide for floor workers: log in to pos.askbiz.co with your PIN, open the capture dashboard, take a photo, select a capture type, add notes, and submit for supervisor approval.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
-    readTime: 3,
-    lastUpdated: "2026-05-18",
-    keywords: ["submit factory capture", "pos.askbiz.co floor worker", "production photo log", "capture intake output", "factory capture how to"],
+    readTime: 4,
+    lastUpdated: "2026-07-24",
+    keywords: ["submit factory capture", "pos.askbiz.co floor worker", "production photo log", "capture intake output", "factory capture how to", "capture quantity unit", "wastage reason", "dispatch destination"],
     content: [
       {
         heading: "Logging in as a floor worker",
@@ -14524,7 +14602,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Opening the capture dashboard and submitting",
-        body: "Tap the capture button for the event you are logging (for example, **Output**). The capture form opens in four steps:\n\n1. **Photo** — tap the camera icon to take a photo, or tap the gallery icon to upload an existing image. The photo is **mandatory** — you cannot submit without one.\n2. **Type** — the capture type is pre-filled based on the button you tapped. You can change it if needed.\n3. **Notes** — optional but recommended. Include the batch reference, quantity, or any relevant context your supervisor needs to approve the capture.\n4. **Submit** — tap **Submit Capture** to send it to the pending approval queue.\n\nYou will see a confirmation screen with a **Pending** status badge. Your capture is now visible to supervisors.",
+        body: "Tap the camera button on the Factory hub, or tap a capture-type pill at the bottom of the live camera screen, then tap the shutter (or use the gallery icon to upload an existing photo instead). The form then walks you through:\n\n1. **Photo** — taken live or chosen from your gallery. The photo is **mandatory** — you cannot submit without one.\n2. **Type** — tap one of the four type cards (Intake, Output, Wastage, Dispatch) shown under your photo. If you tapped a type pill before shooting, that type is already selected.\n3. **Product** — pick a product from your inventory list, or choose **Other** and type a name. This is required.\n4. **Quantity and unit** — enter the amount on the on-screen numpad and pick a unit (kg, pcs, litres, and others). This is required.\n5. **Wastage reason** (wastage only) — choose one of the quick reason chips: damaged, spoiled, QC reject, machine fault, contamination, overproduction, or other. This is **mandatory** for wastage.\n6. **Destination** (dispatch only) — type where the goods are going. This is **mandatory** for dispatch.\n7. **Notes** (intake and output only) — optional free text.\n8. **Submit** — send it to the pending approval queue.\n\nYou will see a confirmation screen. Your capture is now visible to supervisors. If you're offline when you submit, AskBiz queues the capture on your device and sends it automatically once you're back online, rather than showing an error.",
+      },
+      {
+        heading: "Dispatch captures vs. waybills",
+        body: "A **dispatch** capture (above) is a quick photo-log of goods leaving the facility — the same four fields as any other capture. If you need a fuller dispatch record — a destination, waybill and vehicle reference, a scheduled time, and whether the dispatch was on time — use **Waybills** instead, a separate tool covered in **Production Shifts and Waybills**. Many factories use both: a dispatch capture for the general log, and a waybill for shipments that need real paperwork.",
       },
       {
         heading: "After submission — what to expect",
@@ -14532,11 +14614,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "What should I include in the notes field?", a: "Include the batch reference number, quantity logged, and any relevant context — for example, a damaged batch reference or a supplier delivery note number. Good notes make supervisor approval faster and the audit trail more useful." },
+      { q: "What should I include in the notes field?", a: "Notes are only shown for intake and output captures, and they're optional — use them for anything your supervisor needs that isn't already covered by the product, quantity, and unit fields, such as a supplier delivery note number. If you need to follow a specific batch through its stages, use Batch Tracking instead of writing a batch number into notes." },
       { q: "Can I submit a capture without a photo?", a: "No. A photo is mandatory for every capture submission. This is by design — the photo is what gives the capture its evidentiary value and allows supervisors to verify the event visually." },
+      { q: "Do I have to enter a quantity?", a: "Yes. Every capture needs a quantity greater than zero and a unit (kg, pcs, litres, and others). AskBiz uses this to build your production, wastage, and dispatch totals." },
       { q: "What happens if I submit the wrong capture type?", a: "Contact your supervisor immediately. They can reject the capture with a reason, and you can resubmit with the correct type. Do not attempt to submit a duplicate with the correct type while the original is still pending — wait for the rejection first." },
     ],
-    related: ["pos-factory-getting-started", "pos-factory-approvals", "pos-factory-roles-permissions"],
+    related: ["pos-factory-getting-started", "pos-factory-approvals", "pos-factory-roles-permissions", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
   },
   {
     slug: "pos-factory-approvals",
@@ -14544,9 +14627,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "How supervisors and managers review the pending approvals queue, approve captures with one tap, reject with a mandatory reason, and what happens to the audit trail after each action.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
-    readTime: 4,
-    lastUpdated: "2026-05-18",
-    keywords: ["approve factory capture", "reject production capture", "supervisor approvals pos", "capture.approve permission", "factory audit trail approval"],
+    readTime: 5,
+    lastUpdated: "2026-07-24",
+    keywords: ["approve factory capture", "reject production capture", "supervisor approvals pos", "capture.approve permission", "factory audit trail approval", "does batch tracking need approval", "quality check approval"],
     content: [
       {
         heading: "The approvals queue — supervisor login",
@@ -14560,13 +14643,124 @@ export const HELP_ARTICLES: HelpArticle[] = [
         heading: "Rejecting a capture and what happens next",
         body: "To reject a capture:\n\n1. Tap the capture entry in the queue\n2. Tap **Reject**\n3. Enter a **rejection reason** — this field is mandatory\n4. Tap **Confirm Rejection**\n\nCommon rejection reasons include: *photo unclear or missing*, *incorrect capture type selected*, *batch reference missing from notes*, or *duplicate submission*.\n\nThe rejection reason is recorded in the **audit trail** alongside your supervisor ID and timestamp. The floor worker is notified of the rejection and can see your reason. They should resubmit with the issue corrected.\n\n**Managers** can override a rejection and approve a previously rejected capture from the admin panel Audit tab if needed.",
       },
+      {
+        heading: "What does not go through this queue",
+        body: "This approvals queue covers only the four capture types — intake, output, wastage, and dispatch. AskBiz's other Factory tools — Batch Tracking, Quality Checks, Downtime Logging, Production Shifts, and Waybills — save directly to your production record with no pending-approval step. There's nothing to approve or reject for those; your audit trail (who did what, and when) is the oversight mechanism instead. See **Batch Tracking, Quality Checks, and Downtime Logging** and **Production Shifts and Waybills** for how each of those works.",
+      },
     ],
     faq: [
       { q: "Can I approve captures in bulk?", a: "Currently, approvals are one at a time to ensure each capture is reviewed individually. Bulk approval is on the product roadmap." },
       { q: "What happens if a shift ends with pending captures still in the queue?", a: "Pending captures remain in the queue until approved or rejected — they do not expire. However, best practice is to clear the queue before a shift ends. Managers can see all pending captures across shifts from the admin panel." },
       { q: "Can a manager approve captures if no supervisor is available?", a: "Yes. Managers have all supervisor permissions by default, including capture.approve. If no supervisor is on shift, a manager can approve captures directly." },
+      { q: "Do quality checks or downtime reports need approval too?", a: "No. Quality Checks, Downtime Logging, Batch Tracking, Production Shifts, and Waybills all save immediately — they don't sit in this pending queue. Only the four capture types (intake, output, wastage, dispatch) go through supervisor approval." },
+      { q: "What if a capture's photo won't load in the queue?", a: "You'll see a placeholder icon and a note that the photo is unavailable instead of a broken image — this can happen if a photo is still syncing from an offline queue. You can still approve or reject using the other details shown." },
     ],
-    related: ["pos-factory-getting-started", "pos-factory-submitting-captures", "pos-audit-trail-guide"],
+    related: ["pos-factory-getting-started", "pos-factory-submitting-captures", "pos-audit-trail-guide", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
+  },
+  {
+    slug: "pos-factory-batch-quality-downtime",
+    title: "Batch Tracking, Quality Checks, and Downtime Logging",
+    description: "How to scan a batch through its checkpoints, log a quality defect, and report machine downtime in AskBiz POS's Factory sector — three floor-level tools that save directly to your production record.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 5,
+    lastUpdated: "2026-07-24",
+    keywords: ["batch tracking pos", "quality check factory", "downtime logging machine", "batch checkpoint scan", "defect type severity", "machine downtime askbiz", "factory hub tools"],
+    content: [
+      {
+        heading: "Batch Tracking — following one batch through the line",
+        body: "**Batch Tracking** lets you follow one specific batch through five checkpoints — **intake**, **in progress**, **QC pass**, **QC fail**, and **dispatch** — with a photo at each stage, instead of relying on a single capture per event.\n\nTo log a checkpoint: open **Batch Scan** from the Factory hub at **pos.askbiz.co/factory**, take a photo, and enter the **batch reference** (a code you choose, for example `SB-2607`). If that reference doesn't exist yet, AskBiz creates it automatically at the checkpoint you're logging; if it already exists, this checkpoint is added to its trail and its status moves forward. There's no need to create a batch separately first — just type the same reference the same way each time.\n\nThe **Batch hub** lists every batch with its current status and photo trail, so you or an inspector can open any batch and see every checkpoint it's passed through, in order.",
+      },
+      {
+        heading: "Quality Checks — logging a defect",
+        body: "**Quality Checks** is a dedicated defect log, separate from a general wastage capture. Open **Quality Check** from the Factory hub, take a photo of the issue, then record:\n\n- **Defect type** — dimensional, surface, contamination, assembly, packaging, or other\n- **Severity** — critical, major, or minor\n- **Quantity affected** and a **product name**\n- Optional notes\n\nToday, this tool only logs a **fail** — there's no \"log a pass\" or \"clear this batch for dispatch\" action in the app yet, so use it whenever you spot a defect, not to record a clean check. The Factory hub shows how many quality fails were logged today and flags if any were critical.\n\nThis is a different record from a **wastage** capture (Factory Captures): use a wastage capture to log damaged, spoiled, or rejected material leaving your stock; use a Quality Check to formally record the defect itself — its type, severity, and how much product it affected. Many factories log both for the same incident.",
+      },
+      {
+        heading: "Downtime Logging — machine stops",
+        body: "**Downtime Logging** tracks when a machine on your floor stops running. Open **Machine Down** from the Factory hub, photograph the machine, pick a **reason** — breakdown, changeover, no materials, quality hold, planned maintenance, or other — and give the machine a name (there are quick-pick suggestions like Mixer, Cutter, Press, Conveyor, Packer, and Boiler, or type your own). AskBiz remembers machine names you've used before, so typing the same name again links this event to the same machine record.\n\nWhen the machine is running again, open the same downtime event and close it with a second photo — AskBiz calculates and records how long it was down. The Factory hub shows any downtime events still open, so you always know if a machine is currently stopped.",
+      },
+      {
+        heading: "Permissions and where these live",
+        body: "All three tools are reached from the **Factory hub** (`pos.askbiz.co/factory`), alongside Factory Captures. None of them go through the pending-approval queue used for the four capture types — see **Approving and Rejecting Captures** — they save directly to your production record and are written to your audit trail.\n\nThe permission flags are:\n\n- **`batch.log`** to log a checkpoint, **`batch.view`** to view the batch hub\n- **`quality.check`** to log a defect, **`quality.view`** to view quality history\n- **`downtime.report`** to open an event, **`downtime.close`** to close one, **`downtime.view`** to view them\n\nSee **Factory Roles and Permissions** for which of the five factory role templates carry which of these by default.",
+      },
+    ],
+    faq: [
+      { q: "Do I need to create a batch before I can scan its first checkpoint?", a: "No. Type a batch reference at any checkpoint and AskBiz creates the batch automatically if it doesn't already exist. Just use the same reference each time you log a checkpoint for that batch." },
+      { q: "Can I mark a batch as having passed quality and cleared for dispatch?", a: "Not yet as a formal \"pass\" action — today's Quality Check tool only logs fails. Use the QC pass / QC fail checkpoints in Batch Tracking to record that a batch's quality stage is done." },
+      { q: "What happens to the duration when I close a downtime event?", a: "AskBiz calculates the time between when you reported it and when you closed it, and records it in minutes against that event — you don't need to time it yourself." },
+      { q: "Is a wastage capture the same as a Quality Check?", a: "No. A wastage capture (Factory Captures) logs material leaving your stock as damaged, spoiled, or rejected. A Quality Check records the defect itself — its type and severity — and can exist alongside a wastage capture for the same incident." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-shifts-waybills", "pos-factory-roles-permissions", "pos-factory-approvals"],
+  },
+  {
+    slug: "pos-factory-shifts-waybills",
+    title: "Production Shifts and Waybills",
+    description: "How to run a production shift with a live output target and log a dispatch waybill with on-time tracking in AskBiz POS's Factory sector.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 5,
+    lastUpdated: "2026-07-24",
+    keywords: ["production shift factory", "shift target output", "waybill dispatch pos", "on-time rate factory", "dispatch documentation askbiz", "factory hub shift"],
+    content: [
+      {
+        heading: "Production Shifts — tracking output against a target",
+        body: "A **Production Shift** tracks a block of working time on your factory floor against an output target — separate from the cash-register shift your cashiers open and close at checkout.\n\nTo start one, open **Start Shift** from the Factory hub (`pos.askbiz.co/factory`), take a photo, choose **Morning**, **Afternoon**, **Night**, or **Custom** (with your own name), and optionally set a **target output**. Only one production shift can be active at a time.\n\nWhile the shift is running, the Factory hub shows **live output** — the total quantity from every approved output capture logged during that shift — updating as captures are approved. When the shift ends, open **End Shift**, take a closing photo, and AskBiz locks in the final output figure and the shift's duration. That final figure won't change afterwards even if a capture from that shift is approved or rejected later, so it stays a reliable historical record.",
+      },
+      {
+        heading: "Waybills — logging a full dispatch record",
+        body: "A **Waybill** is a fuller dispatch record than a plain dispatch capture — use it for shipments that need real paperwork. Open **Scan Waybill** from the Factory hub, photograph the shipment, then fill in:\n\n- **Destination** — required\n- **Scheduled time** — optional, but needed if you want on-time tracking (see below)\n- **Waybill reference** and **vehicle reference** — optional, shown in capitals\n- **Product** and **quantity** — optional\n- **Notes** — optional\n\nOnce logged, the waybill appears in your recent-dispatches list with its photo and, if you set a scheduled time, an on-time or late badge.",
+      },
+      {
+        heading: "On-time tracking, explained",
+        body: "If you set a **scheduled time** for a waybill, AskBiz compares it against the moment you actually logged the dispatch, with a 15-minute grace window — dispatch at or before the scheduled time (plus 15 minutes) counts as **on time**; anything later is **late**. Waybills with no scheduled time show as \"no schedule\" and aren't counted either way.\n\nThe Factory hub and the Waybill hub both show **today's on-time rate** — the percentage of today's scheduled dispatches that went out on time — along with totals for on-time, late, and overall dispatches. Only dispatches with a scheduled time count toward this rate.",
+      },
+      {
+        heading: "Permissions and where these live",
+        body: "Both tools are reached from the **Factory hub** (`pos.askbiz.co/factory`). Like Batch Tracking, Quality Checks, and Downtime Logging, neither goes through the pending-approval queue used for the four capture types — they save immediately and are written to your audit trail.\n\nThe permission flags are:\n\n- **`shift.production_open`**, **`shift.production_close`**, **`shift.production_view`** — start, end, or view production shifts\n- **`waybill.log`**, **`waybill.view`** — log a dispatch waybill, or view the waybill hub and stats\n\nThese are separate from the general **`shift.open`**/**`shift.close`** permissions used for the cash-register shift — holding one doesn't grant the other. See **Factory Roles and Permissions** for which of the five factory role templates carry which of these by default.",
+      },
+    ],
+    faq: [
+      { q: "Is a Production Shift the same as the shift cashiers open at checkout?", a: "No. Production Shifts track factory floor output against a target. The cash-register shift is a completely separate reconciliation feature for till takings. Holding permission for one doesn't grant the other." },
+      { q: "Can two production shifts run at once, for two different lines?", a: "Not currently — only one production shift can be active per business at a time, regardless of how many locations or lines you run." },
+      { q: "What's the difference between a dispatch capture and a waybill?", a: "A dispatch capture (Factory Captures) is a quick photo-log of goods leaving. A waybill is the fuller dispatch record — destination, references, a schedule, and on-time tracking — for shipments that need real paperwork. See How to Submit a Factory Capture for the dispatch capture flow." },
+      { q: "What if I don't set a scheduled time on a waybill?", a: "It's logged normally but shows as \"no schedule\" rather than on-time or late, and doesn't count toward your on-time rate." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-batch-quality-downtime", "pos-factory-roles-permissions", "pos-factory-submitting-captures"],
+  },
+  {
+    slug: "pos-factory-type-setup",
+    title: "Choosing Your Factory Type",
+    description: "What AskBiz's 12 factory-type categories are, what each one covers, and what picking one at onboarding or in settings does today.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 4,
+    lastUpdated: "2026-07-24",
+    keywords: ["factory type askbiz", "manufacturer business type", "factory type settings", "oil pressing water milling dairy bakery soap concrete poultry coffee fish", "pos factory categories"],
+    content: [
+      {
+        heading: "What is a Factory Type?",
+        body: "If your **Business Type** is set to **Manufacturer**, AskBiz can also record your **Factory Type** — a more specific classification of what you actually produce. This is a separate setting from Business Type: changing one never changes the other.\n\nIt's optional. You can skip it during onboarding and pick one later, or never pick one at all — an unset factory type doesn't limit or change any capture, batch, quality, downtime, shift, or waybill feature. Everything in Factory Operations works the same regardless.",
+      },
+      {
+        heading: "The 12 categories, in plain terms",
+        body: "- **Cooking Oil Pressing** (sesame, groundnut, sunflower, or palm) — pressing seeds or fruit into oil. Yields vary hugely by seed, from around 18% for palm to over 70% for groundnut, and the press-cake left over is a sellable by-product, not waste.\n- **Packaged Drinking Water** (sachet or bottled) — treating raw water and packaging it. Includes a required regulatory lab-test hold before any batch can be sold.\n- **Maize Milling** (posho/flour mill) — grinding maize into flour at one of three grades. Each run produces two sellable products at once: the flour and the bran/germ removed alongside it.\n- **Cassava Processing** (garri, fufu, or starch) — peeling, washing, and grating cassava, then branching into one of three different finished products, each with its own process and yield.\n- **Rice Milling / Parboiling** — cleaning and milling paddy into rice, optionally parboiling it first, which significantly reduces breakage and raises the milled-rice yield.\n- **Dairy Processing** (yoghurt, cheese, or ghee) — pasteurizing raw milk, then branching three ways. Yoghurt and ghee/butter are sellable the same day; cheese needs a genuine ripening period first.\n- **Bakery / Bread Production** — mixing, proofing, and baking dough. Unsold stock ages out fast (about a day), so freshness tracking matters more here than in most other types.\n- **Soap / Detergent Making** — combining oils/fats with lye, moulding, and curing. A batch is genuinely not sellable until several weeks of curing are complete.\n- **Concrete Block / Brick Making** — mixing cement, sand, aggregate, and water, moulding, and curing blocks. Minimum cure is about a week; full design strength takes 28 days.\n- **Poultry Processing / Abattoir** (broiler, turkey, duck, or goose) — slaughtering, defeathering, and eviscerating birds down to a dressed carcass, tracked as a percentage of live weight.\n- **Coffee Processing** (wet/washed) — pulping, fermenting, washing, and drying cherry down to green beans. Dried parchment coffee is a real, separately-sellable stopping point along the way.\n- **Fish Smoking / Processing** — cleaning and smoking fresh fish until it reaches a shelf-stable moisture level. Yield varies the most of any type here, so AskBiz encourages tracking your own average rather than relying on a generic figure.\n\nThere's also an **Other** option for anything not listed.",
+      },
+      {
+        heading: "Where to set or change it",
+        body: "You're asked to pick a factory type once during onboarding, on a step shown only to the Manufacturer business type, right after you pick your sector. It's skippable.\n\nTo set or change it later, go to **Settings → Localisation → Factory Settings** in your AskBiz admin panel (askbiz.co, not the pos.askbiz.co staff terminal) and choose from the dropdown, then save. This setting lives alongside — but is completely separate from — the **Business Type** setting on the same page.",
+      },
+      {
+        heading: "What picking a type does — and doesn't — do today",
+        body: "Right now, picking a factory type simply records which of the 12 categories (or Other) your business is, on your business profile. It does not currently change your capture buttons, add stage-specific checklists to the app, or pre-fill any yield/recipe figures for you — every factory still uses the same four capture types and the same Batch, Quality, Downtime, Shift, and Waybill tools described elsewhere in Factory Operations, regardless of which type you pick.\n\nUNVERIFIED: whether or how soon type-specific stage guidance and suggested yield recipes will appear in the app — the underlying reference data (typical production stages and expected yield ranges per type) exists, but nothing in the product surfaces it to you yet.",
+      },
+    ],
+    faq: [
+      { q: "I picked the wrong factory type — how do I fix it?", a: "Go to Settings → Localisation → Factory Settings and pick a different one, then save. There's no limit on how many times you can change it." },
+      { q: "My factory doesn't match any of the 12 categories — what do I pick?", a: "Choose Other. Nothing about your capture screens or the rest of Factory Operations changes based on this choice." },
+      { q: "Does choosing a factory type cost extra or require a specific plan?", a: "UNVERIFIED: no plan restriction on the factory type setting itself was found while researching this article — treat this as unconfirmed until checked against current plan terms." },
+      { q: "Will picking a factory type change what my staff see when they submit a capture?", a: "Not today. Every factory type sees the same four capture types and the same Batch, Quality, Downtime, Shift, and Waybill tools." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-roles-permissions"],
   },
   {
     slug: "pos-factory-roles-permissions",
@@ -14574,29 +14768,31 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "Understand the factory-specific permission flags in AskBiz POS — camera.intake, camera.output, camera.wastage, camera.dispatch, and capture.approve — and how to assign them to your staff.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
-    readTime: 4,
-    lastUpdated: "2026-05-18",
-    keywords: ["factory permissions askbiz", "camera.intake permission", "capture.approve role", "factory staff roles pos", "production floor permissions"],
+    readTime: 6,
+    lastUpdated: "2026-07-24",
+    keywords: ["factory permissions askbiz", "camera.intake permission", "capture.approve role", "factory staff roles pos", "production floor permissions", "batch.log permission", "quality.check permission", "downtime permissions factory", "shift.production_open", "waybill.log permission", "factory role templates", "line operator quality inspector shift supervisor"],
     content: [
       {
         heading: "The factory permission flags",
-        body: "AskBiz Factory Captures uses five specific permission flags that control what each staff member can do on the production floor:\n\n- **`camera.intake`** — can submit intake captures (incoming materials/components)\n- **`camera.output`** — can submit output captures (finished goods off the line)\n- **`camera.wastage`** — can submit wastage captures (damaged or rejected materials)\n- **`camera.dispatch`** — can submit dispatch captures (finished goods leaving the facility)\n- **`capture.approve`** — can see the pending approvals queue and approve or reject captures\n\nPermission flags are additive — a staff member can hold any combination. A floor supervisor might hold all four `camera.*` flags plus `capture.approve`.",
+        body: "AskBiz's Factory sector uses a set of specific permission flags. The original five cover the capture-and-approve flow:\n\n- **`camera.intake`** — can submit intake captures (incoming materials/components)\n- **`camera.output`** — can submit output captures (finished goods off the line)\n- **`camera.wastage`** — can submit wastage captures (damaged or rejected materials)\n- **`camera.dispatch`** — can submit dispatch captures (finished goods leaving the facility)\n- **`capture.approve`** — can see the pending approvals queue and approve or reject captures\n\nA further set covers the wider Factory toolkit (see **Batch Tracking, Quality Checks, and Downtime Logging** and **Production Shifts and Waybills**):\n\n- **`batch.log`** / **`batch.view`** — log a batch checkpoint scan / view the batch hub and history\n- **`quality.check`** / **`quality.view`** — log a quality check / view quality check history\n- **`downtime.report`**, **`downtime.close`**, **`downtime.view`** — open a downtime event, close one, or view them\n- **`shift.production_open`**, **`shift.production_close`**, **`shift.production_view`** — start, end, or view production shifts (separate from the general `shift.open`/`shift.close` used at the cash register)\n- **`waybill.log`** / **`waybill.view`** — log a dispatch waybill / view the waybill hub and on-time stats\n- **`factory.machines_manage`** / **`factory.recipes_manage`** — reserved for upcoming machine-registry and recipe-management screens; owners and managers hold them today, but no admin screen currently uses them\n\nPermission flags are additive — a staff member can hold any combination.",
       },
       {
-        heading: "Roles in context — who gets what",
-        body: "While you can configure permissions freely, most factory operations map to these typical role profiles:\n\n- **Floor worker (general)** — assigned `camera.intake` and `camera.output`. Logs material arrivals and finished goods.\n- **Wastage monitor** — assigned `camera.wastage`. Responsible for formally logging all waste events.\n- **Dispatch operative** — assigned `camera.dispatch`. Logs goods leaving the facility.\n- **Supervisor** — assigned `capture.approve` plus any camera flags relevant to their floor role. Reviews and approves all pending captures.\n- **Manager** — has all permissions by default, including `capture.approve`. Can also access the audit trail and override rejected captures.\n- **Owner/admin** — full access to all features including staff management and audit trail.",
+        heading: "Roles in context — the five factory role templates",
+        body: "When you add a factory staff member from **Settings → POS → Staff**, you can start from one of five ready-made role templates instead of toggling flags one by one:\n\n- **Line Operator** — the general floor role. Gets all four `camera.*` flags plus batch, downtime, production-shift, and waybill logging — everything needed to run the line day to day, but not `capture.approve`.\n- **Quality Inspector** — QA staff. Gets `camera.intake`/`camera.wastage`, `quality.check`/`quality.view`, and view access to batches, downtime, and waybills.\n- **Shift Supervisor** — a working supervisor. Gets everything a Line Operator gets, plus `capture.approve`, `quality.check`/`quality.view`, and view-level access across sales, inventory, service jobs, and reports.\n- **Production Manager** — full management access: every Factory permission (including `capture.approve` and the reserved machine/recipe flags), plus inventory management, refunds, and financial reports.\n- **Inventory Manager** — stock and traceability focused. Gets `camera.intake`, full purchase-order permissions, and view access to batches, downtime, and waybills, alongside general inventory management.\n- **Owner** — full access to every feature, always, including staff management.\n\nYou can still fine-tune any staff member's individual flags after applying a template — templates are a starting point, not a lock.",
       },
       {
         heading: "Assigning roles from the admin Staff tab",
-        body: "To assign factory permissions to a staff member:\n\n1. Go to **Settings → POS → Staff** in your admin panel\n2. Find the staff member and tap **Edit**\n3. Under **Factory Permissions**, toggle on the relevant flags\n4. Tap **Save**\n\nChanges take effect immediately — the staff member will see the updated capture buttons the next time they log in at **pos.askbiz.co**.\n\nTo remove a permission, return to the same screen and toggle it off. The staff member's historical captures are not affected — only future capture access is changed.",
+        body: "For a new staff member, the fastest route is picking one of the five role templates above when you add them from **Settings → POS → Staff** — it applies a sensible permission set in one step. To fine-tune afterwards, or to set permissions from scratch:\n\n1. Go to **Settings → POS → Staff** in your admin panel\n2. Find the staff member and tap **Edit**\n3. Under **Factory Permissions**, toggle on the relevant flags\n4. Tap **Save**\n\nChanges take effect immediately — the staff member will see the updated capture buttons the next time they log in at **pos.askbiz.co**.\n\nTo remove a permission, return to the same screen and toggle it off. The staff member's historical captures are not affected — only future capture access is changed.",
       },
     ],
     faq: [
       { q: "Can a floor worker also be a supervisor?", a: "Yes. You can assign both camera permissions and capture.approve to the same staff member. This is common in small operations where a working supervisor logs captures and approves their own team's submissions." },
       { q: "What happens if a staff member tries to access a capture type they do not have permission for?", a: "The capture button for that type simply does not appear on their dashboard. Staff only see the actions their permissions allow — there is no error or workaround." },
       { q: "How do I remove a staff member's capture permissions if they change roles?", a: "Go to Settings → POS → Staff, edit the staff member, and toggle off the relevant factory permission flags. Changes are immediate." },
+      { q: "What's the fastest way to set up a new factory team?", a: "Add each staff member from Settings → POS → Staff and pick the closest of the five role templates (Line Operator, Quality Inspector, Shift Supervisor, Production Manager, Inventory Manager) instead of ticking permission flags one by one. You can still adjust individual flags afterwards." },
+      { q: "What do factory.machines_manage and factory.recipes_manage do?", a: "They're reserved for upcoming machine-registry and recipe/yield-management screens. Owners and managers hold them today, but no admin screen currently uses them yet — nothing changes for your team by holding or not holding these two." },
     ],
-    related: ["pos-factory-getting-started", "pos-staff-roles-explained", "pos-factory-approvals"],
+    related: ["pos-factory-getting-started", "pos-staff-roles-explained", "pos-factory-approvals", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills", "pos-factory-type-setup"],
   },
 
   // ── POS — STAFF ROLES & AUDIT TRAIL ─────────────────────────────────────────
