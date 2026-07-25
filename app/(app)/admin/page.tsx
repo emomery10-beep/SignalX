@@ -23,6 +23,47 @@ const TAB_KEYS: Record<Tab, string> = {
   Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
 }
 
+// ── Users tab helpers ──
+const USERS_PAGE_SIZE = 25
+const BIZ_TYPE_LABELS: Record<string, string> = {
+  retail: 'Retail', ecommerce: 'E-commerce', distributor: 'Distributor',
+  manufacturer: 'Manufacturer', importer: 'Importer', exporter: 'Exporter',
+  services: 'Services', food_bev: 'Food & Beverage',
+}
+const bizTypeLabel = (t?: string | null) => {
+  if (!t) return null
+  return BIZ_TYPE_LABELS[t] || t.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+}
+const fmtCompact = (n: number) => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(Math.round(n))
+const relativeDate = (iso?: string | null) => {
+  if (!iso) return '—'
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+  if (days <= 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return days + 'd ago'
+  if (days < 60) return Math.floor(days / 7) + 'w ago'
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+// Deterministic per-user colour so the same person always gets the same avatar tint.
+const AVATAR_COLORS = ['#2563eb', '#7c3aed', '#b45309', '#047857', '#dc2626', '#0891b2', '#c026d3', '#65a30d']
+const hashStr = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) { h = (h << 5) - h + s.charCodeAt(i); h |= 0 } return Math.abs(h) }
+const initialsOf = (name?: string | null, email?: string | null) => {
+  const src = (name || '').trim()
+  if (src) {
+    const parts = src.split(/\s+/).filter(Boolean)
+    return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : src.slice(0, 2).toUpperCase()
+  }
+  return (email || '?').slice(0, 2).toUpperCase()
+}
+function Avatar({ name, email, size = 34 }: { name?: string | null; email?: string | null; size?: number }) {
+  const color = AVATAR_COLORS[hashStr(name || email || '') % AVATAR_COLORS.length]
+  return (
+    <div aria-hidden style={{width:size,height:size,borderRadius:'50%',background:color+'1f',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:Math.round(size*0.38),fontWeight:700,fontFamily:'var(--font-sora)',flexShrink:0,letterSpacing:'-.02em'}}>
+      {initialsOf(name, email)}
+    </div>
+  )
+}
+
 function KV({ label, value, sub, color, onClick, active }: { label: string; value: any; sub?: string; color?: string; onClick?: () => void; active?: boolean }) {
   const clickable = !!onClick
   return (
@@ -119,6 +160,147 @@ function MoreNote({ n }: { n: number }) {
   return <div style={{fontSize:14,color:'var(--tx3)',textAlign:'center',paddingTop:10}}>+{n} more</div>
 }
 
+function SortHeader({ label, sortKey, active, dir, onClick, align }: { label: string; sortKey: string; active: string; dir: 'asc' | 'desc'; onClick: (k: string) => void; align?: 'left' | 'right' }) {
+  const isActive = active === sortKey
+  return (
+    <th className="no-tap-target" onClick={() => onClick(sortKey)} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') onClick(sortKey) }}
+      style={{padding:'10px 14px',textAlign:align||'left',fontWeight:600,whiteSpace:'nowrap',color:isActive?'var(--tx)':'var(--tx2)',cursor:'pointer',userSelect:'none'}}>
+      <span style={{display:'inline-flex',alignItems:'center',gap:4,flexDirection:align==='right'?'row-reverse':'row'}}>
+        {label}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{opacity:isActive?1:0.3,transform:isActive&&dir==='asc'?'rotate(180deg)':'none',transition:'transform .15s'}}><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </th>
+  )
+}
+
+// ── Users tab: row detail / actions drawer ──
+function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, onResetPin, sendingEmailFor, resettingPinFor, grantingPosFor }: {
+  user: any | null
+  onClose: () => void
+  tc: (k: string, v?: Record<string, string | number>) => string
+  onChangePlan: (id: string, plan: string) => void
+  onGrantPos: (id: string, name: string, enabled: boolean) => void
+  onSendEmail: (id: string, type: string) => void
+  onResetPin: (id: string, name: string) => void
+  sendingEmailFor: string | null
+  resettingPinFor: string | null
+  grantingPosFor: string | null
+}) {
+  const [displayUser, setDisplayUser] = useState<any | null>(user)
+  const [visible, setVisible] = useState(!!user)
+  const [closing, setClosing] = useState(false)
+
+  useEffect(() => {
+    if (user) { setDisplayUser(user); setVisible(true); setClosing(false); return }
+    if (!visible) return
+    setClosing(true)
+    const t = setTimeout(() => { setVisible(false); setClosing(false) }, 180)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [user, onClose])
+
+  if (!visible || !displayUser) return null
+  const u = displayUser
+  const EMAIL_TYPES = [
+    { id: 'welcome', label: 'Welcome' },
+    { id: 're_engagement_7', label: 'Re-engage · 7d' },
+    { id: 're_engagement_14', label: 'Re-engage · 14d' },
+    { id: 're_engagement_30', label: 'Re-engage · 30d' },
+    { id: 'plan_upgrade', label: 'Plan upgrade' },
+    { id: 'pos_seats_welcome', label: 'POS seats welcome' },
+  ]
+
+  return (
+    <>
+      <div onClick={onClose} className="overlay-enter" style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',zIndex:999,backdropFilter:'blur(2px)',animation:(closing?'fadeOut':'fadeIn')+' 180ms var(--ease-out) both'}} />
+      <div style={{position:'fixed',top:0,right:0,bottom:0,width:'100%',maxWidth:440,background:'var(--bg)',zIndex:1000,display:'flex',flexDirection:'column',boxShadow:'-6px 0 40px rgba(0,0,0,.2)',animation:(closing?'userDrawerOut':'userDrawerIn')+' 200ms var(--ease-out) both'}}>
+        <div style={{padding:'20px 22px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'flex-start',gap:14,flexShrink:0}}>
+          <Avatar name={u.full_name} email={u.email} size={48} />
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:17,fontWeight:700,fontFamily:'var(--font-sora)',display:'flex',alignItems:'center',gap:8,letterSpacing:'-.01em',flexWrap:'wrap'}}>
+              {u.full_name || tc('admin.empty_dash')}
+              {u.is_suspicious && <span style={{fontSize:11,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'#dc262620',color:'#dc2626',whiteSpace:'nowrap'}}>⚠ FLAGGED</span>}
+            </div>
+            <div style={{fontSize:14,color:'var(--tx3)',marginTop:3,wordBreak:'break-all'}}>{u.email}</div>
+          </div>
+          <button className="no-tap-target" onClick={onClose} aria-label="Close details" style={{flexShrink:0,width:30,height:30,borderRadius:9,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx3)',cursor:'pointer',fontSize:18,lineHeight:1,fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+        </div>
+
+        <div style={{flex:1,overflowY:'auto',padding:'20px 22px'}}>
+          <SectionLabel>Plan</SectionLabel>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,flexWrap:'wrap'}}>
+            <span style={{padding:'2px 9px',borderRadius:9999,fontSize:13,fontWeight:600,background:(PLAN_COLORS[u.plan_id]||'#64748b')+'20',color:PLAN_COLORS[u.plan_id]||'#64748b',textTransform:'capitalize'}}>{u.plan_id}</span>
+            {PAYMENT_BADGE[u.plan_payment_status as string]}
+          </div>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:24}}>
+            {['free','growth','business','enterprise'].map(p => (
+              <button key={p} className="no-tap-target" onClick={() => onChangePlan(u.id, p)} disabled={u.plan_id === p}
+                style={{padding:'7px 14px',borderRadius:9999,border:'1px solid '+(u.plan_id===p?(PLAN_COLORS[p]||'#6366F1'):'var(--b)'),background:u.plan_id===p?(PLAN_COLORS[p]||'#6366F1')+'18':'var(--sf)',color:u.plan_id===p?(PLAN_COLORS[p]||'#6366F1'):'var(--tx2)',fontSize:13.5,fontWeight:600,cursor:u.plan_id===p?'default':'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <SectionLabel>Point of sale</SectionLabel>
+          {u.pos_enabled ? (
+            <div style={{marginBottom:12}}>
+              <ChipStats items={[
+                { label: 'Seats', value: u.pos_seat_count || 0 },
+                { label: 'Sales', value: u.pos_tx_count || 0 },
+                { label: 'Revenue', value: u.pos_revenue > 0 ? fmtCompact(u.pos_revenue) : 0 },
+              ]} />
+              {PAYMENT_BADGE[u.pos_payment_status as string] && <div style={{marginTop:10}}>{PAYMENT_BADGE[u.pos_payment_status as string]}</div>}
+            </div>
+          ) : <div style={{fontSize:14,color:'var(--tx3)',marginBottom:12}}>POS is not enabled for this account.</div>}
+          <button onClick={() => onGrantPos(u.id, u.full_name, u.pos_enabled)} disabled={grantingPosFor === u.id}
+            style={{padding:'0 18px',borderRadius:10,border:'1px solid '+(u.pos_enabled?'#dc2626':'#16a34a'),background:u.pos_enabled?'#dc262610':'#16a34a10',color:u.pos_enabled?'#dc2626':'#16a34a',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',width:'100%',justifyContent:'center',marginBottom:24}}>
+            {grantingPosFor === u.id ? tc('admin.sending') : (u.pos_enabled ? 'Revoke POS access' : 'Grant POS access')}
+          </button>
+
+          <SectionLabel>Engagement</SectionLabel>
+          <div style={{marginBottom:24}}>
+            {[
+              { label: 'Questions asked', value: u.questions_used || 0 },
+              { label: 'Business type', value: bizTypeLabel(u.business_type) || tc('admin.empty_dash') },
+              { label: 'Country', value: u.registration_country || tc('admin.empty_dash') },
+              { label: 'Joined', value: u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : tc('admin.empty_dash') },
+            ].map(({ label, value }) => (
+              <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:'1px solid var(--b)',fontSize:14}}>
+                <span style={{color:'var(--tx2)'}}>{label}</span>
+                <span style={{fontWeight:600}}>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <SectionLabel>Send lifecycle email</SectionLabel>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:24}}>
+            {EMAIL_TYPES.map(e => (
+              <button key={e.id} onClick={() => onSendEmail(u.id, e.id)} disabled={sendingEmailFor === u.id}
+                style={{padding:'0 14px',borderRadius:9999,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx2)',fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>
+                {sendingEmailFor === u.id ? tc('admin.sending') : e.label}
+              </button>
+            ))}
+          </div>
+
+          <SectionLabel>Account</SectionLabel>
+          <button onClick={() => onResetPin(u.id, u.full_name)} disabled={resettingPinFor === u.id}
+            style={{padding:'0 18px',borderRadius:10,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx2)',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',width:'100%',justifyContent:'center'}}>
+            {resettingPinFor === u.id ? tc('admin.sending') : 'Reset PIN'}
+          </button>
+          <div style={{fontSize:12,color:'var(--tx3)',marginTop:10,textAlign:'center'}}>User ID: {u.id}</div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const { tc } = useLang()
@@ -139,6 +321,11 @@ export default function AdminPage() {
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
   const [resettingPinFor, setResettingPinFor] = useState<string | null>(null)
   const [grantingPosFor, setGrantingPosFor] = useState<string | null>(null)
+  const [userFilter, setUserFilter] = useState<'all' | 'suspicious' | 'paying' | 'pos'>('all')
+  const [userSortKey, setUserSortKey] = useState<'created_at' | 'questions_used' | 'pos_revenue' | 'full_name'>('created_at')
+  const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('desc')
+  const [userPage, setUserPage] = useState(0)
+  const [drawerUserId, setDrawerUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -297,6 +484,33 @@ export default function AdminPage() {
   if (!authorized) return null
 
   const fu = users.filter(u => u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()))
+  const suspiciousUserCount = users.filter(u => u.is_suspicious).length
+  const payingUserCount = users.filter(u => u.plan_id && u.plan_id !== 'free').length
+  const posEnabledUserCount = users.filter(u => u.pos_enabled).length
+  const filteredUsers = fu.filter(u => {
+    if (userFilter === 'suspicious') return !!u.is_suspicious
+    if (userFilter === 'paying') return !!u.plan_id && u.plan_id !== 'free'
+    if (userFilter === 'pos') return !!u.pos_enabled
+    return true
+  })
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    let av: any, bv: any
+    if (userSortKey === 'questions_used') { av = a.questions_used || 0; bv = b.questions_used || 0 }
+    else if (userSortKey === 'pos_revenue') { av = a.pos_revenue || 0; bv = b.pos_revenue || 0 }
+    else if (userSortKey === 'full_name') { av = (a.full_name || a.email || '').toLowerCase(); bv = (b.full_name || b.email || '').toLowerCase() }
+    else { av = a.created_at || ''; bv = b.created_at || '' }
+    if (av < bv) return userSortDir === 'asc' ? -1 : 1
+    if (av > bv) return userSortDir === 'asc' ? 1 : -1
+    return 0
+  })
+  const userTotalPages = Math.max(1, Math.ceil(sortedUsers.length / USERS_PAGE_SIZE))
+  const userPageClamped = Math.min(userPage, userTotalPages - 1)
+  const pagedUsers = sortedUsers.slice(userPageClamped * USERS_PAGE_SIZE, userPageClamped * USERS_PAGE_SIZE + USERS_PAGE_SIZE)
+  const drawerUser = users.find(u => u.id === drawerUserId) || null
+  const toggleUserSort = (key: string) => {
+    if (userSortKey === key) setUserSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setUserSortKey(key as any); setUserSortDir(key === 'full_name' ? 'asc' : 'desc') }
+  }
   const mrr = stripeData?.mrr ?? stats?.mrr ?? 0
   const arr = stripeData?.arr ?? mrr * 12
   const payingCount = stripeData?.activeSubscriptions ?? stats?.payingUsers ?? 0
@@ -582,7 +796,15 @@ export default function AdminPage() {
         .kv-clickable:hover { border-color: var(--tx3); box-shadow: 0 4px 14px rgba(0,0,0,.07); transform: translateY(-1px); }
         .kv-clickable:focus-visible { outline: 2px solid #6366F1; outline-offset: 2px; }
         .ov-detail { animation: fadeUp .22s ease-out; }
-        @media (prefers-reduced-motion: reduce) { .kv-clickable:hover { transform: none; } .ov-detail { animation: none; } }
+        .admin-row:hover { background: var(--ev); }
+        .admin-row:focus-visible { outline: 2px solid #6366F1; outline-offset: -2px; }
+        @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+        @keyframes userDrawerIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes userDrawerOut { from{transform:translateX(0);opacity:1} to{transform:translateX(100%);opacity:0} }
+        @media (prefers-reduced-motion: reduce) {
+          .kv-clickable:hover { transform: none; }
+          .ov-detail { animation: none; }
+        }
       `}</style>
       {actionMsg && <div style={{position:'fixed',top:16,right:16,zIndex:999,padding:'10px 16px',borderRadius:10,background:'rgba(34,197,94,.15)',border:'1px solid rgba(34,197,94,.3)',color:'#16a34a',fontSize:15,fontWeight:500}}>✓ {actionMsg}</div>}
       <div style={{padding:'20px 24px',borderBottom:'1px solid var(--b)',background:'var(--sf)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
@@ -598,7 +820,7 @@ export default function AdminPage() {
       </div>
       <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
         {TABS.map(t => (
-          <button key={t} onClick={() => { setTab(t); setExpanded(null) }} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:15,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
+          <button key={t} onClick={() => { setTab(t); setExpanded(null); setDrawerUserId(null) }} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:15,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
             {tc('admin.' + TAB_KEYS[t])}{t==='Users'?' (' + users.length + ')':''}
           </button>
         ))}
@@ -714,75 +936,103 @@ export default function AdminPage() {
           </>}
 
           {tab==='Users' && <>
-            <div style={{marginBottom:16,display:'flex',gap:12,alignItems:'center'}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={tc('admin.search_placeholder')} style={{flex:1,minWidth:200,padding:'9px 14px',borderRadius:10,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:15,outline:'none'}} />
-              <span style={{fontSize:14,color:'var(--tx3)'}}>{tc('admin.results_count', { shown: fu.length, total: users.length })}</span>
+            <div style={{marginBottom:14,display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+              <div style={{position:'relative',flex:'1 1 240px',minWidth:200}}>
+                <svg style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input value={search} onChange={e=>{setSearch(e.target.value); setUserPage(0)}} placeholder={tc('admin.search_placeholder')} style={{width:'100%',padding:'9px 14px 9px 34px',borderRadius:10,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:14.5,outline:'none',boxSizing:'border-box'}} />
+              </div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                {[
+                  {key:'all' as const,label:'All',n:users.length,color:'#6366F1'},
+                  {key:'suspicious' as const,label:'Suspicious',n:suspiciousUserCount,color:'#dc2626'},
+                  {key:'paying' as const,label:'Paying',n:payingUserCount,color:'#047857'},
+                  {key:'pos' as const,label:'POS enabled',n:posEnabledUserCount,color:'#0891b2'},
+                ].map(f => (
+                  <button key={f.key} className="no-tap-target" onClick={()=>{setUserFilter(f.key); setUserPage(0)}}
+                    style={{padding:'6px 12px',borderRadius:9999,border:'1px solid '+(userFilter===f.key?f.color:'var(--b)'),background:userFilter===f.key?f.color+'14':'transparent',color:userFilter===f.key?f.color:'var(--tx2)',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
+                    {f.label} <span style={{opacity:.7}}>{f.n}</span>
+                  </button>
+                ))}
+              </div>
+              <span style={{fontSize:13.5,color:'var(--tx3)',marginLeft:'auto',whiteSpace:'nowrap'}}>{tc('admin.results_count', { shown: filteredUsers.length, total: users.length })}</span>
             </div>
+
             <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
               <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',fontSize:14}}>
+                <table style={{width:'100%',minWidth:760,borderCollapse:'collapse',fontSize:14}}>
                   <thead>
                     <tr style={{background:'var(--ev)'}}>
-                      {[tc('admin.th_name'),tc('admin.th_email'),tc('admin.th_plan'),tc('admin.th_type'),tc('admin.th_country'),tc('admin.th_questions'),'POS Sales','POS Revenue','POS Seats',tc('admin.th_joined'),tc('admin.th_actions')].map(h => (
-                        <th key={h} style={{padding:'10px 12px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>{h}</th>
-                      ))}
+                      <SortHeader label={tc('admin.th_name')} sortKey="full_name" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} />
+                      <th style={{padding:'10px 14px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>{tc('admin.th_plan')}</th>
+                      <th style={{padding:'10px 14px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>Business</th>
+                      <SortHeader label={tc('admin.th_questions')} sortKey="questions_used" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} align="right" />
+                      <SortHeader label="POS" sortKey="pos_revenue" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} align="right" />
+                      <SortHeader label={tc('admin.th_joined')} sortKey="created_at" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} />
+                      <th style={{width:30}} />
                     </tr>
                   </thead>
                   <tbody>
-                    {fu.map((u,i) => (
-                      <tr key={u.id} style={{borderTop:'1px solid var(--b)',background:u.is_suspicious?'rgba(248,113,113,.04)':i%2===0?'var(--sf)':'var(--bg)'}}>
-                        <td style={{padding:'9px 12px',fontWeight:500}}>{u.full_name||tc('admin.empty_dash')}{u.is_suspicious?' ⚠️':''}</td>
-                        <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.email}</td>
-                        <td style={{padding:'9px 12px'}}>
-                          <span style={{padding:'2px 8px',borderRadius:9999,fontSize:13,fontWeight:600,background:(PLAN_COLORS[u.plan_id]||'#64748b')+'20',color:PLAN_COLORS[u.plan_id]||'#64748b'}}>{u.plan_id}</span>
-                          {PAYMENT_BADGE[u.plan_payment_status as string]}
-                        </td>
-                        <td style={{padding:'9px 12px',color:'var(--tx2)',textTransform:'capitalize'}}>{u.business_type||tc('admin.empty_dash')}</td>
-                        <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.registration_country||tc('admin.empty_dash')}</td>
-                        <td style={{padding:'9px 12px'}}>{u.questions_used||0}</td>
-                        <td style={{padding:'9px 12px'}}>{u.pos_tx_count > 0 ? <span style={{padding:'2px 8px',borderRadius:9999,fontSize:13,fontWeight:600,background:'#0891b220',color:'#0891b2'}}>{u.pos_tx_count}</span> : <span style={{color:'var(--tx3)'}}>—</span>}</td>
-                        <td style={{padding:'9px 12px',fontWeight:u.pos_revenue>0?600:'normal',color:u.pos_revenue>0?'var(--tx)':'var(--tx3)'}}>{u.pos_revenue>0 ? (u.pos_revenue>=1000 ? (u.pos_revenue/1000).toFixed(1)+'K' : u.pos_revenue.toFixed(0)) : '—'}</td>
-                        <td style={{padding:'9px 12px'}}>{u.pos_enabled ? <><span style={{padding:'2px 8px',borderRadius:9999,fontSize:13,fontWeight:600,background:'#16a34a20',color:'#16a34a'}}>{u.pos_seat_count||0} seat{u.pos_seat_count===1?'':'s'}</span>{PAYMENT_BADGE[u.pos_payment_status as string]}</> : <span style={{color:'var(--tx3)'}}>—</span>}</td>
-                        <td style={{padding:'9px 12px',color:'var(--tx3)'}}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
-                        <td style={{padding:'9px 12px'}}>
-                          <select onChange={e=>changePlan(u.id,e.target.value)} value={u.plan_id} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer'}}>
-                            {['free','growth','business','enterprise'].map(p=><option key={p} value={p}>{p}</option>)}
-                          </select>
-                          <select
-                            value=""
-                            disabled={sendingEmailFor===u.id}
-                            onChange={e=>{ if(e.target.value) sendLifecycleEmail(u.id, e.target.value); e.target.value='' }}
-                            style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer',marginLeft:6}}
-                          >
-                            <option value="" disabled>{sendingEmailFor===u.id?tc('admin.sending'):tc('admin.send_email')}</option>
-                            <option value="welcome">Welcome</option>
-                            <option value="re_engagement_7">Re-engagement (7d)</option>
-                            <option value="re_engagement_14">Re-engagement (14d)</option>
-                            <option value="re_engagement_30">Re-engagement (30d)</option>
-                            <option value="plan_upgrade">Plan upgrade welcome</option>
-                            <option value="pos_seats_welcome">POS seats welcome</option>
-                          </select>
-                          <button
-                            onClick={() => resetPin(u.id, u.full_name)}
-                            disabled={resettingPinFor===u.id}
-                            style={{padding:'3px 8px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer',marginLeft:6}}
-                          >
-                            {resettingPinFor===u.id ? tc('admin.sending') : 'Reset PIN'}
-                          </button>
-                          <button
-                            onClick={() => grantPos(u.id, u.full_name, u.pos_enabled)}
-                            disabled={grantingPosFor===u.id}
-                            title={u.pos_enabled ? 'Turn off POS and clear seats' : 'Manually enable POS without a payment on file'}
-                            style={{padding:'3px 8px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,cursor:'pointer',marginLeft:6}}
-                          >
-                            {grantingPosFor===u.id ? tc('admin.sending') : (u.pos_enabled ? 'Revoke POS' : 'Grant POS')}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {pagedUsers.map(u => {
+                      const suspicious = !!u.is_suspicious
+                      return (
+                        <tr key={u.id} className="admin-row no-tap-target" role="button" tabIndex={0}
+                          onClick={() => setDrawerUserId(u.id)}
+                          onKeyDown={e => { if (e.key === 'Enter') setDrawerUserId(u.id) }}
+                          style={{borderTop:'1px solid var(--b)',cursor:'pointer',borderLeft:'3px solid '+(suspicious?'#dc2626':'transparent')}}>
+                          <td style={{padding:'10px 14px'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
+                              <Avatar name={u.full_name} email={u.email} />
+                              <div style={{minWidth:0}}>
+                                <div style={{fontWeight:600,fontSize:14.5,display:'flex',alignItems:'center',gap:6,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:220}}>
+                                  {u.full_name || tc('admin.empty_dash')}
+                                  {suspicious && <span title="Flagged suspicious" aria-label="Flagged suspicious" style={{fontSize:12,color:'#dc2626',flexShrink:0}}>⚠</span>}
+                                </div>
+                                <div style={{fontSize:12.5,color:'var(--tx3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:220}}>{u.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{padding:'10px 14px'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+                              <span style={{padding:'2px 8px',borderRadius:9999,fontSize:12.5,fontWeight:600,background:(PLAN_COLORS[u.plan_id]||'#64748b')+'1f',color:PLAN_COLORS[u.plan_id]||'#64748b',textTransform:'capitalize'}}>{u.plan_id}</span>
+                              {PAYMENT_BADGE[u.plan_payment_status as string]}
+                            </div>
+                          </td>
+                          <td style={{padding:'10px 14px',color:'var(--tx2)',fontSize:13.5,whiteSpace:'nowrap'}}>
+                            {bizTypeLabel(u.business_type) || tc('admin.empty_dash')}{u.registration_country ? ' · '+u.registration_country : ''}
+                          </td>
+                          <td style={{padding:'10px 14px',textAlign:'right',fontVariantNumeric:'tabular-nums'}}>{u.questions_used||0}</td>
+                          <td style={{padding:'10px 14px',textAlign:'right'}}>
+                            {u.pos_enabled ? (
+                              <div>
+                                <div style={{fontWeight:600,fontSize:14,fontVariantNumeric:'tabular-nums'}}>{u.pos_revenue>0 ? fmtCompact(u.pos_revenue) : '—'}</div>
+                                <div style={{fontSize:12,color:'var(--tx3)',whiteSpace:'nowrap'}}>{u.pos_tx_count||0} sales · {u.pos_seat_count||0} seat{u.pos_seat_count===1?'':'s'}</div>
+                              </div>
+                            ) : <span style={{color:'var(--tx3)'}}>—</span>}
+                          </td>
+                          <td style={{padding:'10px 14px',color:'var(--tx3)',fontSize:13,whiteSpace:'nowrap'}} title={u.created_at ? new Date(u.created_at).toLocaleString('en-GB') : undefined}>{relativeDate(u.created_at)}</td>
+                          <td style={{padding:'10px 10px'}}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                    {pagedUsers.length === 0 && (
+                      <tr><td colSpan={7}><EmptyNote text="No users match this search or filter." /></td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+              {userTotalPages > 1 && (
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',borderTop:'1px solid var(--b)',background:'var(--ev)'}}>
+                  <span style={{fontSize:13,color:'var(--tx3)'}}>Page {userPageClamped+1} of {userTotalPages}</span>
+                  <div style={{display:'flex',gap:6}}>
+                    <button className="no-tap-target" disabled={userPageClamped===0} onClick={()=>setUserPage(p=>Math.max(0,p-1))}
+                      style={{padding:'5px 12px',borderRadius:8,border:'1px solid var(--b)',background:'var(--sf)',fontSize:13,fontWeight:600,cursor:userPageClamped===0?'default':'pointer',opacity:userPageClamped===0?.4:1,fontFamily:'inherit'}}>← Prev</button>
+                    <button className="no-tap-target" disabled={userPageClamped>=userTotalPages-1} onClick={()=>setUserPage(p=>Math.min(userTotalPages-1,p+1))}
+                      style={{padding:'5px 12px',borderRadius:8,border:'1px solid var(--b)',background:'var(--sf)',fontSize:13,fontWeight:600,cursor:userPageClamped>=userTotalPages-1?'default':'pointer',opacity:userPageClamped>=userTotalPages-1?.4:1,fontFamily:'inherit'}}>Next →</button>
+                  </div>
+                </div>
+              )}
             </div>
           </>}
 
@@ -1084,6 +1334,18 @@ export default function AdminPage() {
 
         </>}
       </div>
+      <UserDrawer
+        user={drawerUser}
+        onClose={() => setDrawerUserId(null)}
+        tc={tc}
+        onChangePlan={changePlan}
+        onGrantPos={grantPos}
+        onSendEmail={sendLifecycleEmail}
+        onResetPin={resetPin}
+        sendingEmailFor={sendingEmailFor}
+        resettingPinFor={resettingPinFor}
+        grantingPosFor={grantingPosFor}
+      />
     </div>
   )
 }
