@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 
@@ -68,7 +69,9 @@ export default function NotificationBell() {
   })
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'notifications' | 'pulse'>('pulse')
-  const ref = useRef<HTMLDivElement>(null)
+  const [panelPos, setPanelPos] = useState({ top: 0, left: 0, width: 300, maxHeight: 420 })
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -95,14 +98,44 @@ export default function NotificationBell() {
     return () => { clearInterval(t1); clearInterval(t2) }
   }, [fetchNotifications, fetchSignals])
 
-  // Close on outside click
+  // Close on outside click (the panel is portaled to <body>, so it's checked separately)
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (wrapRef.current?.contains(target)) return
+      if (panelRef.current?.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  // Anchor the dropdown to the bell's real screen position, clamped inside the viewport.
+  // Needed because the bell can sit inside a narrow mobile drawer where a fixed left/width
+  // offset would run off the edge of the screen.
+  useLayoutEffect(() => {
+    if (!open) return
+    const reposition = () => {
+      const btn = wrapRef.current
+      if (!btn) return
+      const rect = btn.getBoundingClientRect()
+      const margin = 12
+      const width = Math.min(300, window.innerWidth - margin * 2)
+      let left = rect.left
+      if (left + width > window.innerWidth - margin) left = window.innerWidth - margin - width
+      if (left < margin) left = margin
+      const top = rect.bottom + 6
+      const maxHeight = Math.min(420, window.innerHeight - top - margin)
+      setPanelPos({ top, left, width, maxHeight })
+    }
+    reposition()
+    window.addEventListener('resize', reposition)
+    window.addEventListener('scroll', reposition, true)
+    return () => {
+      window.removeEventListener('resize', reposition)
+      window.removeEventListener('scroll', reposition, true)
+    }
+  }, [open])
 
   const unread = notifications.filter(n => !n.read_at).length
   const visibleSignals = signals.filter(s => !dismissedIds.has(s.id))
@@ -143,7 +176,7 @@ export default function NotificationBell() {
   }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={wrapRef} style={{ position: 'relative' }}>
       {/* Bell button */}
       <button
         onClick={() => setOpen(v => !v)}
@@ -175,11 +208,12 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown */}
-      {open && (
-        <div style={{
-          position: 'absolute', top: -4, left: 36, zIndex: 200,
-          width: 300, maxHeight: 420,
+      {/* Dropdown — portaled to <body> so it can't be clipped or mispositioned by an
+          ancestor's transform/overflow (e.g. the mobile sidebar drawer) */}
+      {open && typeof document !== 'undefined' && createPortal(
+        <div ref={panelRef} style={{
+          position: 'fixed', top: panelPos.top, left: panelPos.left, zIndex: 200,
+          width: panelPos.width, maxHeight: panelPos.maxHeight,
           background: 'var(--sf)', border: '1px solid var(--b)',
           borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.15)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -367,7 +401,8 @@ export default function NotificationBell() {
               </div>
             </>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
