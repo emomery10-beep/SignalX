@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import PasskeyNudge from '@/components/PasskeyNudge'
-import { COUNTRY_DIAL, countryFromCurrency, detectGeoFromTimezone, toE164 } from '@/lib/geo'
+import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
 import { phoneToSyntheticEmail, pinToPassword } from '@/lib/phone-auth'
 import SpotlightCarousel from '@/components/SpotlightCarousel'
 
@@ -53,25 +53,6 @@ function AuthPage() {
   // onboarding first and shows the nudge there instead (see finish()/skip()
   // in app/onboarding/page.tsx).
   const [pendingNudge, setPendingNudge] = useState<string | null>(null)
-
-  // Prefill the dial-code country from geo; fall back to timezone-derived
-  // currency when /api/geo is unreachable (e.g. local dev).
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/geo')
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        if (!cancelled && d?.countryCode && COUNTRY_DIAL.some(c => c.code === d.countryCode)) {
-          setPhoneCountry(d.countryCode)
-        }
-      })
-      .catch(() => {
-        if (cancelled) return
-        const cc = countryFromCurrency(detectGeoFromTimezone().currency)
-        if (cc && COUNTRY_DIAL.some(c => c.code === cc)) setPhoneCountry(cc)
-      })
-    return () => { cancelled = true }
-  }, [])
 
   // Surface a failed OAuth/magic-link round trip (redirected here from
   // /auth/callback?error=auth_failed) — otherwise the user lands back on a
