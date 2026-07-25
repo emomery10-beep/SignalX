@@ -421,6 +421,166 @@ export function normaliseQuickBooksBill(bill: Record<string, unknown>): QBExpens
   }
 }
 
+// ── XERO ─────────────────────────────────────────────────────
+// Xero's Invoices endpoint returns both sales invoices (Type: ACCREC) and
+// bills (Type: ACCPAY) in one collection — the sync handler routes each to
+// the right normaliser below based on Type, mirroring the QuickBooks split.
+
+// Maps a Xero ACCREC (sales) invoice → unified sales records
+export function normaliseXeroInvoice(invoice: Record<string, unknown>): UnifiedRecord[] {
+  const records: UnifiedRecord[] = []
+  const lines = (invoice.LineItems as Record<string, unknown>[]) || []
+  const currency = safeStr(invoice.CurrencyCode) || 'GBP'
+  const total = safeNum(invoice.Total)
+  const amountDue = safeNum(invoice.AmountDue)
+  const paymentStatus = amountDue > 0 ? (amountDue === total ? 'pending' : 'partially_paid') : 'paid'
+  const contactName = safeStr((invoice.Contact as Record<string, unknown>)?.Name)
+
+  for (const line of lines) {
+    const qty = safeNum(line.Quantity) || 1
+    const price = safeNum(line.UnitAmount)
+    const grossRev = safeNum(line.LineAmount)
+
+    records.push({
+      record_date: safeDate(invoice.Date),
+      sku: safeStr(line.ItemCode),
+      product_name: safeStr(line.Description) || contactName,
+      category: '',
+      variant: '',
+      supplier: contactName,
+      units_sold: qty,
+      selling_price: price,
+      discount: safeNum(line.DiscountAmount),
+      gross_revenue: grossRev,
+      net_revenue: grossRev,
+      cost_price: 0,
+      shipping_cost: 0,
+      packaging_cost: 0,
+      marketplace_fee: 0,
+      tax: safeNum(line.TaxAmount),
+      total_cost: safeNum(line.TaxAmount),
+      gross_margin: 0,
+      net_margin: 0,
+      stock_level: 0,
+      stock_movement: -qty,
+      low_stock_flag: false,
+      damaged_stock: 0,
+      channel: 'xero',
+      customer_region: '',
+      currency,
+      ad_spend: 0,
+      campaign: '',
+      coupon_code: '',
+      coupon_discount: 0,
+      payment_status: paymentStatus,
+      refund_amount: 0,
+      payout_amount: grossRev,
+      source_record_id: `xero_invoice_${invoice.InvoiceID}_line_${safeStr(line.LineItemID) || lines.indexOf(line)}`,
+      source_type: 'xero',
+      raw_data: { invoice_id: invoice.InvoiceID, invoice_number: invoice.InvoiceNumber, due_date: invoice.DueDate, status: invoice.Status, ...line },
+    })
+  }
+  return records
+}
+
+// Maps a Xero ACCPAY (bill) invoice → cfo_expenses rows — reuses the same
+// QBExpenseRow shape as QuickBooks Bills since the target table is identical.
+export function normaliseXeroBill(bill: Record<string, unknown>): QBExpenseRow | null {
+  const total = safeNum(bill.Total)
+  if (!total) return null
+  const vendorName = safeStr((bill.Contact as Record<string, unknown>)?.Name) || 'Unknown vendor'
+  const lines = (bill.LineItems as Record<string, unknown>[]) || []
+  const category = safeStr(lines[0]?.AccountCode) || 'Other'
+
+  return {
+    vendor: vendorName,
+    date: safeDate(bill.Date) || new Date().toISOString().slice(0, 10),
+    amount: total,
+    category,
+    notes: safeStr(bill.Reference) || `Xero Bill #${bill.InvoiceNumber || bill.InvoiceID}`,
+    source_record_id: `xero_bill_${bill.InvoiceID}`,
+  }
+}
+
+// ── FREEAGENT ────────────────────────────────────────────────
+// FreeAgent has separate /v2/invoices (receivable) and /v2/bills (payable)
+// endpoints, like QuickBooks — unlike Xero's single split-by-Type endpoint.
+
+// Maps a FreeAgent invoice → unified sales records
+export function normaliseFreeAgentInvoice(invoice: Record<string, unknown>): UnifiedRecord[] {
+  const records: UnifiedRecord[] = []
+  const items = (invoice.invoice_items as Record<string, unknown>[]) || []
+  const currency = safeStr(invoice.currency) || 'GBP'
+  const dueValue = safeNum(invoice.due_value)
+  const totalValue = safeNum(invoice.total_value)
+  const paymentStatus = dueValue > 0 ? (dueValue === totalValue ? 'pending' : 'partially_paid') : 'paid'
+  const contactName = safeStr((invoice.contact as Record<string, unknown>)?.organisation_name)
+  const invoiceId = safeStr(invoice.url).split('/').pop() || safeStr(invoice.reference)
+
+  for (const [idx, item] of items.entries()) {
+    const qty = safeNum(item.quantity) || 1
+    const price = safeNum(item.price)
+    const grossRev = safeNum(item.total_value)
+
+    records.push({
+      record_date: safeDate(invoice.dated_on),
+      sku: '',
+      product_name: safeStr(item.description) || contactName,
+      category: safeStr(item.item_type),
+      variant: '',
+      supplier: contactName,
+      units_sold: qty,
+      selling_price: price,
+      discount: 0,
+      gross_revenue: grossRev,
+      net_revenue: grossRev,
+      cost_price: 0,
+      shipping_cost: 0,
+      packaging_cost: 0,
+      marketplace_fee: 0,
+      tax: safeNum(item.sales_tax_value),
+      total_cost: safeNum(item.sales_tax_value),
+      gross_margin: 0,
+      net_margin: 0,
+      stock_level: 0,
+      stock_movement: -qty,
+      low_stock_flag: false,
+      damaged_stock: 0,
+      channel: 'freeagent',
+      customer_region: '',
+      currency,
+      ad_spend: 0,
+      campaign: '',
+      coupon_code: '',
+      coupon_discount: 0,
+      payment_status: paymentStatus,
+      refund_amount: 0,
+      payout_amount: grossRev,
+      source_record_id: `freeagent_invoice_${invoiceId}_line_${idx}`,
+      source_type: 'freeagent',
+      raw_data: { invoice_url: invoice.url, reference: invoice.reference, due_on: invoice.due_on, status: invoice.status, ...item },
+    })
+  }
+  return records
+}
+
+// Maps a FreeAgent bill → cfo_expenses rows — reuses the QBExpenseRow shape.
+export function normaliseFreeAgentBill(bill: Record<string, unknown>): QBExpenseRow | null {
+  const totalValue = safeNum(bill.total_value)
+  if (!totalValue) return null
+  const vendorName = safeStr((bill.contact as Record<string, unknown>)?.organisation_name) || 'Unknown vendor'
+  const billId = safeStr(bill.url).split('/').pop() || safeStr(bill.reference)
+
+  return {
+    vendor: vendorName,
+    date: safeDate(bill.dated_on) || new Date().toISOString().slice(0, 10),
+    amount: totalValue,
+    category: safeStr(bill.category).split('/').pop() || 'Other',
+    notes: safeStr(bill.reference) || `FreeAgent Bill ${billId}`,
+    source_record_id: `freeagent_bill_${billId}`,
+  }
+}
+
 // ── GOOGLE SHEETS ────────────────────────────────────────────
 // Maps a generic spreadsheet into unified model
 // Tries to auto-detect columns by name

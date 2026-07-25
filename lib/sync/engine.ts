@@ -6,6 +6,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import {
   normaliseShopify, normaliseStripe, normaliseSquare, normaliseAskBizPOS,
   normaliseQuickBooks, normaliseQuickBooksBill, normaliseGoogleSheets,
+  normaliseXeroInvoice, normaliseXeroBill,
+  normaliseFreeAgentInvoice, normaliseFreeAgentBill,
   type UnifiedRecord, type QBExpenseRow
 } from './normaliser'
 import { normaliseAmazonOrder } from './amazon-normaliser'
@@ -17,7 +19,7 @@ import { normaliseWalmartOrder } from './walmart-normaliser'
 import {
   normaliseTikTokOrders, normaliseTikTokAnalytics,
   normaliseInstagramOrders, normaliseInstagramInsights,
-  normalisePinterestAnalytics,
+  normalisePinterestAnalytics, normaliseGoogleAdsCampaign,
   type SocialSignalRecord,
 } from './social-normaliser'
 import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
@@ -357,6 +359,38 @@ async function refreshQuickBooksToken(refreshToken: string): Promise<{ access_to
   } catch { return null }
 }
 
+async function refreshXeroToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string } | null> {
+  try {
+    const clientId = process.env.XERO_CLIENT_ID!
+    const clientSecret = process.env.XERO_CLIENT_SECRET!
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+    const res = await fetch('https://identity.xero.com/connect/token', {
+      method: 'POST',
+      headers: { Authorization: `Basic ${basicAuth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch { return null }
+}
+
+async function refreshFreeAgentToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string } | null> {
+  try {
+    const res = await fetch('https://api.freeagent.com/v2/token_endpoint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: process.env.FREEAGENT_CLIENT_ID || '',
+        client_secret: process.env.FREEAGENT_CLIENT_SECRET || '',
+      }),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch { return null }
+}
+
 async function refreshAmazonToken(refreshToken: string): Promise<string | null> {
   try {
     const res = await fetch('https://api.amazon.com/auth/o2/token', {
@@ -558,6 +592,173 @@ async function syncQuickBooks(
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'QuickBooks sync failed' }
   }
+}
+
+// ── Xero sync ───────────────────────────────────────────────
+// Xero's /Invoices endpoint returns both sales invoices (ACCREC) and bills
+// (ACCPAY) in one collection — split by Type below, same target tables as
+// QuickBooks (unified_data for ACCREC, cfo_expenses for ACCPAY).
+async function syncXero(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  let { access_token, refresh_token } = source.credentials
+  const { tenant_id } = source.config
+  if (!access_token || !tenant_id) return { records: [], error: 'Missing Xero credentials' }
+
+  // Only approved/reconciled transactions — matches what the help article promises.
+  const whereClause = encodeURIComponent('Status=="AUTHORISED" OR Status=="PAID"')
+
+  const xeroFetch = async (page: number) => {
+    const headers = () => ({
+      Authorization: `Bearer ${access_token}`,
+      'Xero-tenant-id': String(tenant_id),
+      Accept: 'application/json',
+    })
+    let res = await fetch(
+      `https://api.xero.com/api.xro/2.0/Invoices?where=${whereClause}&order=UpdatedDateUTC DESC&page=${page}`,
+      { headers: headers() }
+    )
+    if (res.status === 401 && refresh_token) {
+      const refreshed = await refreshXeroToken(String(refresh_token))
+      if (refreshed) {
+        access_token = refreshed.access_token
+        refresh_token = refreshed.refresh_token
+        await supabase.from('connected_sources').update({
+          credentials: encryptCredentials({ access_token, refresh_token })
+        }).eq('id', source.id)
+        res = await fetch(
+          `https://api.xero.com/api.xro/2.0/Invoices?where=${whereClause}&order=UpdatedDateUTC DESC&page=${page}`,
+          { headers: headers() }
+        )
+      }
+    }
+    if (!res.ok) throw new Error(`Xero API error ${res.status}`)
+    return res.json()
+  }
+
+  try {
+    const records: UnifiedRecord[] = []
+    const billRows: QBExpenseRow[] = []
+
+    let page = 1
+    while (true) {
+      const data = await xeroFetch(page)
+      const invoices = (data?.Invoices || []) as Record<string, unknown>[]
+      if (!invoices.length) break
+
+      for (const invoice of invoices) {
+        if (invoice.Type === 'ACCREC') {
+          records.push(...normaliseXeroInvoice(invoice))
+        } else if (invoice.Type === 'ACCPAY') {
+          const row = normaliseXeroBill(invoice)
+          if (row) billRows.push(row)
+        }
+      }
+
+      if (invoices.length < 100) break // Xero returns up to 100 per page
+      page++
+    }
+
+    // ── Bills → cfo_expenses (upsert by source_record_id) ────
+    if (billRows.length > 0) {
+      const ids = billRows.map(r => r.source_record_id)
+      const { data: existing } = await supabase
+        .from('cfo_expenses')
+        .select('source_record_id')
+        .eq('user_id', userId)
+        .in('source_record_id', ids)
+
+      const existingIds = new Set((existing || []).map((r: { source_record_id: string }) => r.source_record_id))
+      const toInsert = billRows
+        .filter(r => !existingIds.has(r.source_record_id))
+        .map(r => ({ ...r, user_id: userId }))
+
+      if (toInsert.length > 0) {
+        await supabase.from('cfo_expenses').insert(toInsert)
+      }
+    }
+
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Xero sync failed' }
+  }
+}
+
+// ── FreeAgent sync ─────────────────────────────────────────────
+// FreeAgent has separate /v2/invoices (receivable) and /v2/bills (payable)
+// endpoints, like QuickBooks — a FreeAgent OAuth token is scoped to a single
+// company, so unlike Xero/QuickBooks no tenant/realm ID is needed per request.
+async function syncFreeAgent(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  let { access_token, refresh_token } = source.credentials
+  if (!access_token) return { records: [], error: 'Missing FreeAgent credentials' }
+
+  const faFetch = async (path: string) => {
+    const headers = () => ({ Authorization: `Bearer ${access_token}`, Accept: 'application/json' })
+    let res = await fetch(`https://api.freeagent.com/v2${path}`, { headers: headers() })
+    if (res.status === 401 && refresh_token) {
+      const refreshed = await refreshFreeAgentToken(String(refresh_token))
+      if (refreshed) {
+        access_token = refreshed.access_token
+        refresh_token = refreshed.refresh_token
+        await supabase.from('connected_sources').update({
+          credentials: encryptCredentials({ access_token, refresh_token })
+        }).eq('id', source.id)
+        res = await fetch(`https://api.freeagent.com/v2${path}`, { headers: headers() })
+      }
+    }
+    if (!res.ok) throw new Error(`FreeAgent API error ${res.status}: ${path}`)
+    return res.json()
+  }
+
+  try {
+    const [invoiceData, billData] = await Promise.all([
+      faFetch('/invoices?view=all'),
+      faFetch('/bills?view=all'),
+    ])
+
+    // Only approved/non-draft transactions — matches the Xero precedent.
+    const invoices = ((invoiceData?.invoices || []) as Record<string, unknown>[])
+      .filter(inv => safeAgentStatus(inv.status) !== 'draft')
+    const records = invoices.flatMap(normaliseFreeAgentInvoice)
+
+    const bills = ((billData?.bills || []) as Record<string, unknown>[])
+      .filter(bill => safeAgentStatus(bill.status) !== 'draft')
+    const billRows: QBExpenseRow[] = bills
+      .map(normaliseFreeAgentBill)
+      .filter((r): r is QBExpenseRow => r !== null)
+
+    if (billRows.length > 0) {
+      const ids = billRows.map(r => r.source_record_id)
+      const { data: existing } = await supabase
+        .from('cfo_expenses')
+        .select('source_record_id')
+        .eq('user_id', userId)
+        .in('source_record_id', ids)
+
+      const existingIds = new Set((existing || []).map((r: { source_record_id: string }) => r.source_record_id))
+      const toInsert = billRows
+        .filter(r => !existingIds.has(r.source_record_id))
+        .map(r => ({ ...r, user_id: userId }))
+
+      if (toInsert.length > 0) {
+        await supabase.from('cfo_expenses').insert(toInsert)
+      }
+    }
+
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'FreeAgent sync failed' }
+  }
+}
+
+function safeAgentStatus(status: unknown): string {
+  return String(status || '').toLowerCase()
 }
 
 // ── Amazon FBA sync ───────────────────────────────────────────
@@ -1117,6 +1318,66 @@ async function syncGoogleSheetsWithRefresh(
   }
 }
 
+// ── Google Ads sync ────────────────────────────────────────────
+// Requires a Google-approved Developer Token (GOOGLE_ADS_DEVELOPER_TOKEN) —
+// a manual application process separate from OAuth. The connect callback
+// only stores a customer_id if that token was present and valid at connect
+// time; without one, this returns early rather than call the Ads API blind.
+async function syncGoogleAds(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<{ records: UnifiedRecord[]; signals: SocialSignalRecord[]; error?: string }> {
+  let { access_token, refresh_token } = source.credentials
+  const { customer_id } = source.config
+  const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN
+  if (!access_token || !customer_id) return { records: [], signals: [], error: 'Missing Google Ads customer ID — reconnect once GOOGLE_ADS_DEVELOPER_TOKEN is configured' }
+  if (!developerToken) return { records: [], signals: [], error: 'GOOGLE_ADS_DEVELOPER_TOKEN is not configured' }
+
+  const query = `
+    SELECT campaign.id, campaign.name, segments.date,
+           metrics.cost_micros, metrics.impressions, metrics.clicks,
+           metrics.conversions, metrics.conversions_value
+    FROM campaign
+    WHERE segments.date DURING LAST_30_DAYS
+  `.trim()
+
+  const gadsFetch = async () => {
+    const headers = () => ({
+      Authorization: `Bearer ${access_token}`,
+      'developer-token': developerToken,
+      'Content-Type': 'application/json',
+    })
+    let res = await fetch(
+      `https://googleads.googleapis.com/v17/customers/${customer_id}/googleAds:search`,
+      { method: 'POST', headers: headers(), body: JSON.stringify({ query }) }
+    )
+    if (res.status === 401 && refresh_token) {
+      const newToken = await refreshGoogleToken(String(refresh_token))
+      if (newToken) {
+        access_token = newToken
+        await supabase.from('connected_sources').update({
+          credentials: encryptCredentials({ ...source.credentials, access_token })
+        }).eq('id', source.id)
+        res = await fetch(
+          `https://googleads.googleapis.com/v17/customers/${customer_id}/googleAds:search`,
+          { method: 'POST', headers: headers(), body: JSON.stringify({ query }) }
+        )
+      }
+    }
+    if (!res.ok) throw new Error(`Google Ads API error ${res.status}`)
+    return res.json()
+  }
+
+  try {
+    const data = await gadsFetch()
+    const rows = (data?.results || []) as Record<string, unknown>[]
+    const signals = rows.map(row => normaliseGoogleAdsCampaign(row, 'GBP'))
+    return { records: [], signals }
+  } catch (e: unknown) {
+    return { records: [], signals: [], error: e instanceof Error ? e.message : 'Google Ads sync failed' }
+  }
+}
+
 // ── Upsert social signals ─────────────────────────────────────
 async function upsertSocialSignals(
   supabase: ReturnType<typeof createServiceClient>,
@@ -1452,7 +1713,93 @@ async function syncWooCommerce(
   }
 }
 
+// ── Plan-aware sync interval gating ────────────────────────────
+const PLAN_INTERVAL_MINUTES: Record<string, number> = {
+  free: 24 * 60,     // 1440 — daily
+  growth: 6 * 60,    // 360 — every 6 hours
+  business: 60,      // hourly
+}
+
+// Connectors whose own data doesn't need to move faster than this, even on Business.
+const CONNECTOR_FLOOR_MINUTES: Partial<Record<string, number>> = {
+  stripe: 3 * 60,      // 180
+  etsy: 8 * 60,        // 480
+  instagram: 6 * 60,   // 360
+  tiktok_shop: 6 * 60,
+  pinterest: 6 * 60,
+}
+
+function effectiveIntervalMinutes(sourceType: string, planId: string): number {
+  const planInterval = PLAN_INTERVAL_MINUTES[planId] ?? PLAN_INTERVAL_MINUTES.free
+  const floor = CONNECTOR_FLOOR_MINUTES[sourceType]
+  return floor ? Math.max(planInterval, floor) : planInterval
+}
+
+// Batch plan lookup — no FK exists between connected_sources and subscriptions
+// (both independently reference auth.users), so this is a manual join.
+async function getPlanByUser(
+  supabase: ReturnType<typeof createServiceClient>,
+  userIds: string[]
+): Promise<Map<string, string>> {
+  const { data: subs } = await supabase
+    .from('subscriptions')
+    .select('user_id, plan_id, status, trial_ends_at')
+    .in('user_id', userIds)
+
+  const now = Date.now()
+  return new Map(
+    (subs ?? []).map((s: { user_id: string; plan_id: string | null; status: string | null; trial_ends_at: string | null }) => {
+      // Growth-trial expiry is otherwise only applied lazily when a user loads /billing —
+      // without this check a lapsed trial would keep its faster interval indefinitely.
+      const trialExpired = s.status === 'trialing' && !!s.trial_ends_at && new Date(s.trial_ends_at).getTime() < now
+      return [s.user_id, trialExpired ? 'free' : (s.plan_id || 'free')] as [string, string]
+    })
+  )
+}
+
+export interface SyncPreviewEntry {
+  sourceId: string
+  sourceType: string
+  userId: string
+  planId: string
+  effectiveIntervalMinutes: number
+  lastSyncedAt: string | null
+  dueNow: boolean
+}
+
+// Read-only diagnostic: reports what the next cron sweep would or wouldn't sync, and why —
+// no sync handler is dispatched and last_synced_at is never written.
+export async function previewSync(): Promise<SyncPreviewEntry[]> {
+  const supabase = createServiceClient()
+  const { data: sources } = await supabase
+    .from('connected_sources')
+    .select('*')
+    .eq('status', 'active')
+  if (!sources?.length) return []
+
+  const userIds = [...new Set(sources.map((s: { user_id: string }) => s.user_id))] as string[]
+  const planByUser = await getPlanByUser(supabase, userIds)
+  const now = Date.now()
+
+  return sources.map((source: { id: string; source_type: string; user_id: string; last_synced_at: string | null }) => {
+    const planId = planByUser.get(source.user_id) || 'free'
+    const interval = effectiveIntervalMinutes(source.source_type, planId)
+    const dueNow = !source.last_synced_at || (now - new Date(source.last_synced_at).getTime() >= interval * 60_000)
+    return {
+      sourceId: source.id,
+      sourceType: source.source_type,
+      userId: source.user_id,
+      planId,
+      effectiveIntervalMinutes: interval,
+      lastSyncedAt: source.last_synced_at,
+      dueNow,
+    }
+  })
+}
+
 // ── Main sync runner ──────────────────────────────────────────
+// `userId` set = manual "Sync Now" — always syncs immediately, bypasses interval gating below.
+// `userId` unset = the bulk cron sweep — only sources due per the caller's plan interval are synced.
 export async function runSync(userId?: string): Promise<SyncResult[]> {
   const supabase = createServiceClient()
   const results: SyncResult[] = []
@@ -1465,8 +1812,22 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
 
   if (userId) query = query.eq('user_id', userId)
 
-  const { data: sources } = await query
+  let { data: sources } = await query
   if (!sources?.length) return results
+
+  if (!userId) {
+    const userIds = [...new Set(sources.map((s: { user_id: string }) => s.user_id))] as string[]
+    const planByUser = await getPlanByUser(supabase, userIds)
+    const now = Date.now()
+
+    sources = sources.filter((source: { last_synced_at: string | null; user_id: string; source_type: string }) => {
+      if (!source.last_synced_at) return true
+      const planId = planByUser.get(source.user_id) || 'free'
+      const intervalMs = effectiveIntervalMinutes(source.source_type, planId) * 60_000
+      return now - new Date(source.last_synced_at).getTime() >= intervalMs
+    })
+    if (!sources.length) return results
+  }
 
   for (const source of sources) {
     const startedAt = new Date()
@@ -1493,9 +1854,19 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
       } else if (source.source_type === 'quickbooks') {
         const r = await syncQuickBooks(decryptedSource, supabase, source.user_id)
         records = r.records; syncError = r.error
+      } else if (source.source_type === 'xero') {
+        const r = await syncXero(decryptedSource, supabase, source.user_id)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'freeagent') {
+        const r = await syncFreeAgent(decryptedSource, supabase, source.user_id)
+        records = r.records; syncError = r.error
       } else if (source.source_type === 'google_sheets') {
         const r = await syncGoogleSheetsWithRefresh(decryptedSource, supabase)
         records = r.records; syncError = r.error
+      } else if (source.source_type === 'google_ads') {
+        const r = await syncGoogleAds(decryptedSource, supabase)
+        records = r.records; syncError = r.error
+        await upsertSocialSignals(supabase, source.user_id, source.id, r.signals)
       } else if (source.source_type === 'amazon_fba') {
         const r = await syncAmazon(decryptedSource, supabase)
         records = r.records; syncError = r.error
