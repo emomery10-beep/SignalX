@@ -1015,7 +1015,10 @@ body {
   backdrop-filter: blur(6px);
   cursor: pointer;
   transform: translateX(-50%);
-  animation: advertise-bubble-float 24s ease-in-out infinite;
+  /* linear, not ease-in-out: with 7 chained keyframe stops, ease-in-out
+     decelerates to a dead stop at every single one, so the bubble spends
+     most of the loop stuttering rather than drifting. */
+  animation: advertise-bubble-float 24s linear infinite;
   transition: background 150ms ease, transform 150ms ease;
 }
 .advertise-banner:hover {
