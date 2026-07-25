@@ -203,10 +203,13 @@ async function handlePost(request: NextRequest) {
     }
 
     // Enable PoS with up to 5 seats
-    await supabase.from('profiles').update({
+    const { error: posErr } = await supabase.from('profiles').update({
       pos_enabled: true,
       pos_seat_count: 5,
     }).eq('id', user.id)
+    if (posErr) {
+      return NextResponse.json({ error: 'Could not start trial' }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString() })
   }
