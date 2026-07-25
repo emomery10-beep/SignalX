@@ -986,3 +986,29 @@ body {
     background: linear-gradient(135deg, #d08a59 0%, #b96f42 100%);
   }
 }
+
+/* Floating "advertise here" pill in the auth visual panel — links out to the
+   existing Business Spotlight submission flow (Settings → Get featured). */
+.advertise-banner {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .3);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  transition: background 150ms ease, transform 150ms ease;
+}
+.advertise-banner:hover {
+  background: rgba(255, 255, 255, .24);
+  transform: translateY(-1px);
+}

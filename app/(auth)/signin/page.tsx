@@ -625,6 +625,10 @@ function AuthPage() {
       {/* Visual column — brand panel, desktop only (>=900px, see globals.css) */}
       <div className="signin-visual-col">
         <div style={{ position: 'absolute', inset: 0, opacity: .12, backgroundImage: 'radial-gradient(circle, #fff 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}/>
+        <Link href="/settings?section=spotlight" className="advertise-banner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11v3a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M14.5 8.5a4 4 0 0 1 0 7"/><path d="M17.5 5.5a8 8 0 0 1 0 13"/></svg>
+          {tc('auth.advertise_banner')}
+        </Link>
         <SpotlightCarousel/>
       </div>
     </div>
