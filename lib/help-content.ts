@@ -946,7 +946,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "How It's Calculated",
-        body: "The score is a weighted composite across five dimensions:\n- **Revenue Health (25%)** — trend direction, consistency, seasonality-adjusted growth\n- **Cash Flow Health (25%)** — runway, burn rate, receivables velocity\n- **Customer Health (20%)** — retention rate, churn risk, LTV trends\n- **Operational Health (20%)** — refund rates, fulfilment speed, supplier reliability\n- **Market Signals (10%)** — social commerce trends, competitive signals, export market conditions\n\nEach dimension is scored 0–100, then weighted. The final score is updated daily (or in real-time if you have Growth or Business plan).",
+        body: "The score is a weighted composite across five dimensions:\n- **Revenue Health (25%)** — trend direction, consistency, seasonality-adjusted growth\n- **Cash Flow Health (25%)** — runway, burn rate, receivables velocity\n- **Customer Health (20%)** — retention rate, churn risk, LTV trends\n- **Operational Health (20%)** — refund rates, fulfilment speed, supplier reliability\n- **Market Signals (10%)** — social commerce trends, competitive signals, export market conditions\n\nEach dimension is scored 0–100, then weighted. The final score updates on your plan's sync schedule — daily on Free, every 6 hours on Growth, hourly on Business.",
       },
       {
         heading: "Score Ranges",
@@ -963,7 +963,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Is the score compared to other businesses?", a: "No. Your score is benchmarked against your own historical performance and sector-specific thresholds — not against other AskBiz users. Your data is never used in aggregate comparisons." },
-      { q: "How often does the score update?", a: "Free plan: daily. Growth plan: every 6 hours. Business plan: real-time (on data sync events)." },
+      { q: "How often does the score update?", a: "Free plan: daily. Growth plan: every 6 hours. Business plan: hourly." },
       { q: "Can I drill into what's hurting my score?", a: "Yes. Click any score dimension on the /home page, or ask: 'What's dragging my Pulse score down?'" },
     ],
     related: ["daily-brief-explained", "anomaly-alerts-guide", "connect-first-data-source"],
@@ -1112,7 +1112,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Data freshness and sync frequency",
-        body: "AskBiz syncs data from your connected platforms on a schedule that varies by plan:\n\n- **Free plan**: syncs once daily (overnight)\n- **Growth plan**: syncs every 6 hours\n- **Business plan**: near real-time (syncs within minutes of new data being available)\n\nFor most business decisions, daily sync is sufficient. If you need to see today's orders and revenue throughout the day, the Growth or Business plan is recommended.\n\nYou can also trigger a manual sync at any time: go to **Settings → Integrations → [platform] → Sync Now**. Manual syncs are available to all plans.",
+        body: "AskBiz syncs data from your connected platforms on a schedule that varies by plan:\n\n- **Free plan**: syncs once daily (overnight)\n- **Growth plan**: syncs every 6 hours\n- **Business plan**: syncs hourly\n\nA few integrations (Stripe, Etsy, and social platforms) have their own minimum sync interval regardless of plan, since that data doesn't change fast enough to need faster polling — see each connector's own help article for specifics.\n\nFor most business decisions, daily sync is sufficient. If you need to see today's orders and revenue throughout the day, the Growth or Business plan is recommended.\n\nYou can also trigger a manual sync at any time: go to **Settings → Integrations → [platform] → Sync Now**. Manual syncs are available to all plans.",
       },
       {
         heading: "Data that AskBiz cannot currently access",
@@ -1152,7 +1152,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Business Plan — £39/month",
-        body: "**Price:** £39/mo (or £39/mo billed annually)\n**Questions:** Unlimited\n**Data connectors:** All connectors + priority sync\n**Business Tools:** All tools + CFO Mode (advanced financial modelling)\n**Intelligence:** Real-time Business Pulse, all alerts + Decision Memory (6-week check-ins)\n**Daily Brief:** Included + team-specific briefs\n**Social Commerce:** Full + competitor social signals\n**Team seats:** Up to 5 team members included\n\nBest for: Multi-channel businesses, teams with multiple decision-makers, or founders who want a full AI Chief of Staff.",
+        body: "**Price:** £39/mo (or £39/mo billed annually)\n**Questions:** Unlimited\n**Data connectors:** All connectors + priority sync\n**Business Tools:** All tools + CFO Mode (advanced financial modelling)\n**Intelligence:** Hourly Business Pulse updates, all alerts + Decision Memory (6-week check-ins)\n**Daily Brief:** Included + team-specific briefs\n**Social Commerce:** Full + competitor social signals\n**Team seats:** Up to 5 team members included\n\nBest for: Multi-channel businesses, teams with multiple decision-makers, or founders who want a full AI Chief of Staff.",
       },
       {
         heading: "Annual Billing Discount",
@@ -2680,7 +2680,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Caching Strategy",
-        body: "Most AskBiz data doesn't change second-by-second. Cache aggressively to stay within limits:\n\n**Business Pulse score:** Updates at most every 6 hours (Growth) or on sync events (Business). Cache for 30 minutes minimum — there's no value in fetching it more often.\n\n**Daily Brief:** Generated once per day. Cache until midnight and fetch fresh the next morning.\n\n**Anomaly alerts:** New alerts are infrequent. Cache the alert list for 15 minutes, or better — use webhooks (see above).\n\n**Tool results (FX Risk, Landed Cost):** These are deterministic for a given input. Cache the result by input parameters. If the inputs haven't changed, the result won't have changed either.\n\nExample caching pattern with a simple in-memory TTL:\n```javascript\nconst cache = new Map();\n\nasync function getCachedPulse() {\n  const cached = cache.get('pulse');\n  if (cached && Date.now() - cached.ts < 30 * 60 * 1000) {\n    return cached.data; // return cached if < 30 mins old\n  }\n  const data = await fetchPulse();\n  cache.set('pulse', { data, ts: Date.now() });\n  return data;\n}\n```",
+        body: "Most AskBiz data doesn't change second-by-second. Cache aggressively to stay within limits:\n\n**Business Pulse score:** Updates at most every 6 hours (Growth) or hourly (Business). Cache for 30 minutes minimum — there's no value in fetching it more often.\n\n**Daily Brief:** Generated once per day. Cache until midnight and fetch fresh the next morning.\n\n**Anomaly alerts:** New alerts are infrequent. Cache the alert list for 15 minutes, or better — use webhooks (see above).\n\n**Tool results (FX Risk, Landed Cost):** These are deterministic for a given input. Cache the result by input parameters. If the inputs haven't changed, the result won't have changed either.\n\nExample caching pattern with a simple in-memory TTL:\n```javascript\nconst cache = new Map();\n\nasync function getCachedPulse() {\n  const cached = cache.get('pulse');\n  if (cached && Date.now() - cached.ts < 30 * 60 * 1000) {\n    return cached.data; // return cached if < 30 mins old\n  }\n  const data = await fetchPulse();\n  cache.set('pulse', { data, ts: Date.now() });\n  return data;\n}\n```",
       },
       {
         heading: "Batching Data Pushes",
@@ -3246,7 +3246,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "After the initial import, AskBiz automatically re-syncs new orders **once a day**. To trigger an immediate sync — for example after a promotional campaign — go to **Sources**, find WooCommerce, and click **Sync Now**.",
+        body: "After the initial import, AskBiz automatically re-syncs new orders on your plan's schedule: once a day on Free, every 6 hours on Growth, hourly on Business. To trigger an immediate sync — for example after a promotional campaign — go to **Sources**, find WooCommerce, and click **Sync Now**.",
       },
     ],
     faq: [
@@ -3286,7 +3286,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "After the initial import, AskBiz automatically re-syncs new Walmart orders **once a day**. To trigger an immediate sync, go to **Sources**, find Walmart, and click **Sync Now**.\n\nNote: Walmart access tokens expire after 15 minutes. AskBiz handles token refresh automatically — you do not need to reconnect.",
+        body: "After the initial import, AskBiz automatically re-syncs new Walmart orders on your plan's schedule: once a day on Free, every 6 hours on Growth, hourly on Business. To trigger an immediate sync, go to **Sources**, find Walmart, and click **Sync Now**.\n\nNote: Walmart access tokens expire after 15 minutes. AskBiz handles token refresh automatically — you do not need to reconnect.",
       },
     ],
     faq: [
@@ -3326,7 +3326,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "AskBiz automatically re-syncs every connected source, including Jumia, **once a day**. To force an immediate refresh — for example right after a big sale — go to **Sources**, find Jumia in your connected list, and click **Sync now**. Note that Sync now refreshes all of your connected sources at once, not just Jumia.\n\nYour Jumia access token is short-lived; AskBiz mints a fresh one from your Refresh Token automatically every time it syncs, so you shouldn't need to reconnect. If Jumia ever revokes or expires the Refresh Token itself — for example if the Application is deleted in Vendor Center — the connection will show an error and you'll need to reconnect with freshly generated credentials.",
+        body: "AskBiz automatically re-syncs every connected source, including Jumia, on your plan's schedule: once a day on Free, every 6 hours on Growth, hourly on Business. To force an immediate refresh — for example right after a big sale — go to **Sources**, find Jumia in your connected list, and click **Sync now**. Note that Sync now refreshes all of your connected sources at once, not just Jumia.\n\nYour Jumia access token is short-lived; AskBiz mints a fresh one from your Refresh Token automatically every time it syncs, so you shouldn't need to reconnect. If Jumia ever revokes or expires the Refresh Token itself — for example if the Application is deleted in Vendor Center — the connection will show an error and you'll need to reconnect with freshly generated credentials.",
       },
       {
         heading: "Where Jumia data shows up in AskBiz",
@@ -3373,7 +3373,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "Xero data syncs every **12 hours**. Xero transactions that are still in draft status in Xero are not included — only approved and reconciled transactions are pulled into AskBiz. This ensures your AskBiz financial data reflects confirmed figures, not provisional entries.",
+        body: "Xero data syncs on your plan's schedule: once a day on Free, every 6 hours on Growth, hourly on Business. Xero transactions that are still in draft status in Xero are not included — only approved and reconciled transactions are pulled into AskBiz. This ensures your AskBiz financial data reflects confirmed figures, not provisional entries.",
       },
     ],
     faq: [
@@ -3413,7 +3413,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "Stripe data syncs every **3 hours** — more frequently than most integrations because payment data changes quickly. Failed payment retries, refund processing, and new subscription sign-ups are all reflected within 3 hours.",
+        body: "Stripe data syncs on your plan's schedule — once a day on Free, every 6 hours on Growth — except on Business, where it's capped at every 3 hours rather than the usual hourly, since that's as fast as Stripe needs to sync for anyone. Failed payment retries, refund processing, and new subscription sign-ups are all reflected within that window.",
       },
     ],
     faq: [
@@ -3453,7 +3453,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "Etsy data syncs every **8 hours**. New orders, cancellations, and refunds are reflected within one sync cycle. Listing changes (price updates, new products) sync within 24 hours.",
+        body: "Etsy data syncs once a day on Free, but is capped at every 8 hours on both Growth and Business — slower than those plans' usual 6-hour and hourly sync — since Etsy's own data doesn't change fast enough to need more than that. New orders, cancellations, and refunds are reflected within one sync cycle. Listing changes (price updates, new products) sync within 24 hours.",
       },
     ],
     faq: [
@@ -4372,7 +4372,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "Can I have different dashboards for different team members?", a: "Each user has their own dashboard layout — changes you make do not affect other users' views. Admins can create a shared default layout that new users inherit, but individuals can still customise their own view from there." },
       { q: "Why do some metric cards show 'No data'?", a: "'No data' appears when AskBiz cannot calculate a metric for the selected date range — usually because the connected data source does not have transactions in that period, or the data source was connected after the period you are viewing. Try extending your date range or checking your connection status in Settings → Data Sources." },
-      { q: "How often does the dashboard update?", a: "Most data sources sync every 4–6 hours. Your dashboard shows the most recent sync. You can see the last sync time by hovering over the connection indicator next to each data source name. To force a manual sync, go to Settings → Data Sources and click Sync Now." },
+      { q: "How often does the dashboard update?", a: "Most data sources sync on your plan's schedule — daily on Free, every 6 hours on Growth, hourly on Business (a few integrations have their own slower minimum interval regardless of plan). Your dashboard shows the most recent sync. You can see the last sync time by hovering over the connection indicator next to each data source name. To force a manual sync, go to Settings → Data Sources and click Sync Now." },
     ],
     related: ["how-to-read-your-metrics", "daily-brief-explained", "anomaly-alerts-guide"],
   },
@@ -9788,7 +9788,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "How often does AskBiz sync data?",
-        body: "AskBiz syncs data automatically on a schedule that depends on your plan:\n\n- **Starter**: Every 24 hours (once daily)\n- **Growth**: Every 6 hours\n- **Business**: Every 1 hour\n- **Enterprise**: Near real-time (every 5–15 minutes depending on the source)\n\nThis means data in AskBiz is always slightly behind live — it reflects the state of your accounts at the last sync, not this exact second.",
+        body: "AskBiz syncs data automatically on a schedule that depends on your plan:\n\n- **Free**: Every 24 hours (once daily)\n- **Growth**: Every 6 hours\n- **Business**: Every 1 hour\n\nA few integrations (Stripe, Etsy, and social platforms) have their own minimum sync interval regardless of plan, since that data doesn't change fast enough to need faster polling.\n\nThis means data in AskBiz is always slightly behind live — it reflects the state of your accounts at the last sync, not this exact second.",
       },
       {
         heading: "Force a manual sync",
@@ -9804,12 +9804,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "When to contact support",
-        body: "Contact support at hello@askbiz.co if:\n\n- Data has not updated for more than 48 hours (for Starter plan) or more than 12 hours (Growth+)\n- Your integration shows 'Synced' but the data hasn't changed\n- Data is missing from a specific date range that should have synced\n- You see an error message in Settings → Integrations\n\nInclude your account email, the integration name, and the last date the data appears to be correct.",
+        body: "Contact support at hello@askbiz.co if:\n\n- Data has not updated for more than 48 hours (Free plan) or more than 12 hours (Growth and above)\n- Your integration shows 'Synced' but the data hasn't changed\n- Data is missing from a specific date range that should have synced\n- You see an error message in Settings → Integrations\n\nInclude your account email, the integration name, and the last date the data appears to be correct.",
       },
     ],
     faq: [
-      { q: "Can I get real-time data on the Starter plan?", a: "Starter plan syncs every 24 hours. For more frequent updates, upgrade to Growth (6-hour sync) or Business (1-hour sync). Enterprise offers near-real-time syncing. Upgrade at Settings → Billing." },
-      { q: "My Shopify orders from today aren't showing up", a: "If your last sync was more than an hour ago (on Growth/Business plans), trigger a manual sync via Settings → Integrations → Sync Now. On Starter, today's orders won't appear until the next daily sync." },
+      { q: "Can I get real-time data on the Free plan?", a: "Free plan syncs every 24 hours. For more frequent updates, upgrade to Growth (6-hour sync) or Business (1-hour sync). Upgrade at Settings → Billing." },
+      { q: "My Shopify orders from today aren't showing up", a: "If your last sync was more than an hour ago (on Growth/Business plans), trigger a manual sync via Settings → Integrations → Sync Now. On the Free plan, today's orders won't appear until the next daily sync." },
       { q: "Amazon shows different revenue numbers than AskBiz — why?", a: "Amazon has a 24–48 hour reporting delay. AskBiz shows Amazon data as Amazon reports it. If you're comparing against Amazon Seller Central, make sure you're looking at the same date range and the same report type (e.g. both showing 'shipped' vs 'ordered')." },
     ],
     related: ["data-not-syncing", "dashboard-is-empty", "shopify-sync-error", "amazon-sync-error"],
@@ -10183,7 +10183,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "What AskBiz tracks for Amazon sellers",
-        body: "AskBiz connects to Amazon Seller Central via the Selling Partner API (SP-API) to pull:\n\n- Orders, revenue, and units sold by ASIN and SKU\n- Buy Box win percentage by ASIN\n- Best Seller Rank (BSR) by category\n- Advertising performance (ACoS, TACoS, spend, sales) from Amazon Ads\n- Return rate and refund data\n- FBA fee breakdown\n- Inventory levels and coverage\n\nData updates every 6 hours on Growth plan and every 1 hour on Business/Enterprise.",
+        body: "AskBiz connects to Amazon Seller Central via the Selling Partner API (SP-API) to pull:\n\n- Orders, revenue, and units sold by ASIN and SKU\n- Buy Box win percentage by ASIN\n- Best Seller Rank (BSR) by category\n- Advertising performance (ACoS, TACoS, spend, sales) from Amazon Ads\n- Return rate and refund data\n- FBA fee breakdown\n- Inventory levels and coverage\n\nData updates every 6 hours on Growth plan and hourly on Business.",
       },
       {
         heading: "Step 1: Connect Amazon Seller Central",
@@ -10249,7 +10249,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "I'm the only seller on this ASIN but my Buy Box % is 85% — why?", a: "If you're the only seller, Buy Box loss is almost always due to a suppressed listing, a pricing issue (e.g. price too high relative to historical price or compared to your own website), or an account health problem. Check Seller Central → Inventory for any 'Suppressed' flags." },
       { q: "Does winning the Buy Box more mean higher sales?", a: "Yes — the correlation is very strong. Every 1% increase in Buy Box % typically translates to roughly 1% increase in units sold, holding other factors constant. Improving Buy Box % from 80% to 95% often means a 15–18% increase in order volume." },
-      { q: "How often does AskBiz update Buy Box data?", a: "Buy Box % is updated every 6 hours on Growth plan and every 1 hour on Business/Enterprise. The data comes from Amazon's SP-API, which itself may have a short delay. For real-time Buy Box monitoring, use Amazon Seller Central directly." },
+      { q: "How often does AskBiz update Buy Box data?", a: "Buy Box % is updated every 6 hours on Growth plan and hourly on Business. The data comes from Amazon's SP-API, which itself may have a short delay. For real-time Buy Box monitoring, use Amazon Seller Central directly." },
     ],
     related: ["amazon-seller-overview", "bsr-ranking-guide", "amazon-fee-analysis"],
   },
@@ -10279,7 +10279,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Tracking BSR over time in AskBiz",
-        body: "AskBiz records BSR snapshots every 6 hours per ASIN. Go to **Amazon → Products → [ASIN] → BSR History** to see a 90-day trend chart.\n\nWhat to look for:\n- **Steady improvement:** your sales strategy is working\n- **Sudden spike then fall:** a promotion or viral moment; check if organic rank is improving\n- **Gradual worsening:** growing competition or declining demand; check your review score and pricing\n- **Flat:** stable market position; may indicate you've reached a ceiling without further investment",
+        body: "AskBiz records BSR snapshots on your plan's schedule — daily on Free, every 6 hours on Growth, hourly on Business. Go to **Amazon → Products → [ASIN] → BSR History** to see a 90-day trend chart.\n\nWhat to look for:\n- **Steady improvement:** your sales strategy is working\n- **Sudden spike then fall:** a promotion or viral moment; check if organic rank is improving\n- **Gradual worsening:** growing competition or declining demand; check your review score and pricing\n- **Flat:** stable market position; may indicate you've reached a ceiling without further investment",
       },
       {
         heading: "How to improve BSR",
@@ -10333,7 +10333,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "My ACoS is high but sales are growing — should I cut ad spend?", a: "Check your TACoS first. If TACoS is declining while total revenue grows, your ads are building organic rank effectively — this is a good outcome even if ACoS looks high. Cut spend only if TACoS is stable or rising and organic rank isn't improving." },
       { q: "How do I find my break-even ACoS in AskBiz?", a: "Go to Amazon → Products → [ASIN] → Profitability. AskBiz calculates break-even ACoS using your product cost (if entered in Products → Cost of Goods), FBA fees pulled from Amazon, and referral fee. Enter your COGS in Settings → Products for accurate break-even calculations." },
-      { q: "How often does Amazon advertising data update in AskBiz?", a: "Amazon Advertising data updates every 6 hours on Growth plan, every 1 hour on Business/Enterprise. Amazon itself has up to a 12-hour reporting lag on some advertising metrics (clicks and impressions are near-real-time; conversion data can lag)." },
+      { q: "How often does Amazon advertising data update in AskBiz?", a: "Amazon Advertising data updates every 6 hours on Growth plan, hourly on Business. Amazon itself has up to a 12-hour reporting lag on some advertising metrics (clicks and impressions are near-real-time; conversion data can lag)." },
     ],
     related: ["amazon-seller-overview", "bsr-ranking-guide", "amazon-vs-dtc-comparison"],
   },
@@ -10518,7 +10518,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Step 1: Connect your social accounts",
-        body: "Go to **Settings → Integrations** and connect each platform:\n\n- **Instagram & Facebook:** connect via Meta Business account. Requires Business Manager admin access.\n- **TikTok:** connect via TikTok Business account\n- **LinkedIn:** connect via LinkedIn Company Page (admin required)\n- **Pinterest:** connect via Pinterest Business account\n\nFor paid social data, connect **Meta Ads** and **TikTok Ads** separately — these are different permissions from the organic account connections.\n\nAfter connecting, historical data syncs for the past 90 days. Ongoing data updates every 6 hours.",
+        body: "Go to **Settings → Integrations** and connect each platform:\n\n- **Instagram & Facebook:** connect via Meta Business account. Requires Business Manager admin access.\n- **TikTok:** connect via TikTok Business account\n- **LinkedIn:** connect via LinkedIn Company Page (admin required)\n- **Pinterest:** connect via Pinterest Business account\n\nFor paid social data, connect **Meta Ads** and **TikTok Ads** separately — these are different permissions from the organic account connections.\n\nAfter connecting, historical data syncs for the past 90 days. Ongoing updates follow your plan's schedule — once a day on Free, every 6 hours on Growth — except on Business, where social data is capped at every 6 hours rather than the usual hourly, since it doesn't change fast enough to need more than that.",
       },
       {
         heading: "Navigating the Social dashboard",
@@ -10731,7 +10731,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Why does AskBiz show different follower counts than Instagram Insights?", a: "Minor discrepancies (± a few hundred) can occur due to timing of data pulls — AskBiz syncs every 6 hours while Instagram Insights shows real-time. Larger discrepancies may indicate the API connection needs refreshing. Go to Settings → Integrations → Instagram → Reconnect to refresh." },
+      { q: "Why does AskBiz show different follower counts than Instagram Insights?", a: "Minor discrepancies (± a few hundred) can occur due to timing of data pulls — AskBiz syncs on your plan's schedule (up to every 6 hours), while Instagram Insights shows real-time. Larger discrepancies may indicate the API connection needs refreshing. Go to Settings → Integrations → Instagram → Reconnect to refresh." },
       { q: "Can I see which hashtags drive the most reach?", a: "Hashtag performance data is no longer available via the Meta Graph API (Meta removed this in 2021). AskBiz shows post-level reach breakdown by source (hashtag, home, explore, other) but not per-hashtag metrics. For hashtag research, use Instagram's native insights or a third-party tool like Flick." },
     ],
     related: ["engagement-rate-guide", "social-media-content-performance", "social-media-analytics-overview"],
