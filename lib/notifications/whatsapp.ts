@@ -79,3 +79,30 @@ export function digestWhatsApp(opts: {
   const lines = opts.items.map(i => `• *${i.label}:* ${i.value}`).join('\n')
   return `📋 *AskBiz Daily Brief — ${opts.businessName}*\n\n${lines}\n\nhttps://askbiz.co/home`
 }
+
+function fmtMoney(symbol: string, amount: number): string {
+  const rounded = Math.round(amount)
+  return rounded < 0 ? `-${symbol}${Math.abs(rounded).toLocaleString()}` : `${symbol}${rounded.toLocaleString()}`
+}
+
+export function salesBriefWhatsApp(opts: {
+  businessName: string
+  symbol: string
+  last24h: { sales: number; profit: number; losses: number }
+  last7d: { sales: number; profit: number; losses: number }
+}): string {
+  const f = (n: number) => fmtMoney(opts.symbol, n)
+  return `📊 *AskBiz Brief — ${opts.businessName}*
+
+*Last 24h*
+Sales: ${f(opts.last24h.sales)}
+Profit: ${f(opts.last24h.profit)}
+Losses: ${f(opts.last24h.losses)}
+
+*Last 7 days*
+Sales: ${f(opts.last7d.sales)}
+Profit: ${f(opts.last7d.profit)}
+Losses: ${f(opts.last7d.losses)}
+
+https://askbiz.co/home`
+}
