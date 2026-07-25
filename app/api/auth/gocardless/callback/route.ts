@@ -55,7 +55,13 @@ export async function GET(request: NextRequest) {
 
   const supabase = createClient()
 
-  await supabase
+  // GoCardless's partner-OAuth token response only documents access_token and
+  // organisation_id — no refresh_token, and no documented renewal flow for this
+  // specific flow (their separate Bank Account Data product has one, but that's
+  // a different API). Whether this token actually expires wasn't confirmed
+  // during development — if syncGoCardless() starts failing with 401s in
+  // practice, that's the first thing to check against a real sandbox account.
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
@@ -66,6 +72,10 @@ export async function GET(request: NextRequest) {
       config: { organisation_id: organisation_id || '' },
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=gocardless_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 

@@ -19,7 +19,25 @@ const REFRESH_CONFIGS: Record<string, {
       refresh_token: creds.refresh_token as string,
     }),
   },
+  google_ads: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    buildBody: (creds) => ({
+      client_id: process.env.GOOGLE_CLIENT_ID || '',
+      client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+      grant_type: 'refresh_token',
+      refresh_token: creds.refresh_token as string,
+    }),
+  },
   google_sheets: {
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    buildBody: (creds) => ({
+      client_id: process.env.GOOGLE_CLIENT_ID || '',
+      client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+      grant_type: 'refresh_token',
+      refresh_token: creds.refresh_token as string,
+    }),
+  },
+  google_analytics: {
     tokenUrl: 'https://oauth2.googleapis.com/token',
     buildBody: (creds) => ({
       client_id: process.env.GOOGLE_CLIENT_ID || '',
@@ -123,7 +141,10 @@ export async function GET(request: NextRequest) {
     // Meta issues no refresh_token for user access tokens — instead, a still-valid
     // long-lived token can be re-exchanged for a fresh 60-day token indefinitely.
     // Only do this once the current token is within 10 days of expiry.
-    if (source.source_type === 'instagram') {
+    // Meta Ads' callback captures the same access_token/expires_at shape as
+    // Instagram Shopping's, via the same fb_exchange_token flow, so both reuse
+    // this branch rather than duplicating it.
+    if (source.source_type === 'instagram' || source.source_type === 'meta_ads') {
       const creds = decryptCredentials(source.credentials as Record<string, unknown>)
       const expiresAt = creds.expires_at ? new Date(String(creds.expires_at)).getTime() : 0
       const tenDaysMs = 10 * 24 * 60 * 60 * 1000
@@ -138,7 +159,7 @@ export async function GET(request: NextRequest) {
         }))
         if (!res.ok) {
           const errText = await res.text().catch(() => res.statusText)
-          errors.push(`instagram(${source.id.slice(0, 8)}): ${res.status} ${errText.slice(0, 100)}`)
+          errors.push(`${source.source_type}(${source.id.slice(0, 8)}): ${res.status} ${errText.slice(0, 100)}`)
           failed++
           continue
         }
@@ -156,7 +177,7 @@ export async function GET(request: NextRequest) {
           .eq('id', source.id)
         refreshed++
       } catch (e) {
-        errors.push(`instagram(${source.id.slice(0, 8)}): ${e instanceof Error ? e.message : String(e)}`)
+        errors.push(`${source.source_type}(${source.id.slice(0, 8)}): ${e instanceof Error ? e.message : String(e)}`)
         failed++
       }
       continue

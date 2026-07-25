@@ -22,11 +22,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=invalid_state', request.url))
   }
 
+  const appId = process.env.META_APP_ID!
+  const appSecret = process.env.META_APP_SECRET!
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/meta/callback`
 
   const tokenRes = await fetch('https://graph.facebook.com/v19.0/oauth/access_token?' + new URLSearchParams({
-    client_id: process.env.META_APP_ID!,
-    client_secret: process.env.META_APP_SECRET!,
+    client_id: appId,
+    client_secret: appSecret,
     redirect_uri: redirectUri,
     code,
   }))
@@ -35,26 +37,50 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=meta_token_failed', request.url))
   }
 
-  const { access_token } = await tokenRes.json()
+  const { access_token: shortLivedToken } = await tokenRes.json()
 
-  // Get user name for display name
-  const meRes = await fetch(`https://graph.facebook.com/me?fields=name&access_token=${access_token}`)
-  const meData = meRes.ok ? await meRes.json() : {}
-  const displayName = meData.name || 'Meta Ads'
+  // Short-lived → long-lived token (~60 days). Meta issues no refresh_token for
+  // user tokens — the token-refresh cron re-exchanges this before it expires,
+  // mirroring the same pattern already used by the instagram-shopping connector.
+  const longTokenRes = await fetch('https://graph.facebook.com/v19.0/oauth/access_token?' + new URLSearchParams({
+    grant_type: 'fb_exchange_token',
+    client_id: appId,
+    client_secret: appSecret,
+    fb_exchange_token: shortLivedToken,
+  }))
+  if (!longTokenRes.ok) {
+    return NextResponse.redirect(new URL('/sources?error=meta_token_exchange_failed', request.url))
+  }
+  const { access_token, expires_in } = await longTokenRes.json() as { access_token: string; expires_in: number }
+
+  // Discover the first accessible ad account — the Marketing API needs the
+  // act_<id> form for every insights request.
+  const adAccountsRes = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name&access_token=${access_token}`)
+  const adAccounts = adAccountsRes.ok ? ((await adAccountsRes.json())?.data || []) : []
+  const firstAccount = adAccounts[0]
+  const adAccountId = firstAccount?.id || ''
+  const displayName = firstAccount?.name || 'Meta Ads'
+
+  const expiresAt = new Date(Date.now() + (expires_in || 60 * 24 * 60 * 60) * 1000).toISOString()
 
   const supabase = createClient()
 
-  await supabase
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
       source_type: 'meta_ads',
       name: displayName,
-      status: 'active',
-      credentials: encryptCredentials({ access_token }),
-      config: {},
+      status: adAccountId ? 'active' : 'error',
+      credentials: encryptCredentials({ access_token, expires_at: expiresAt }),
+      config: { ad_account_id: adAccountId },
+      error_message: adAccountId ? null : 'No Meta ad account found for this login',
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=meta_ads_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 

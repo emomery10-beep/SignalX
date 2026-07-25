@@ -310,3 +310,103 @@ export function normalisePinterestAnalytics(
     }
   })
 }
+
+// ── Google Ads ────────────────────────────────────────────────
+// Maps one GAQL campaign-performance row → a social signal.
+// content_id encodes the date because the upsert conflict target
+// (user_id, source_type, content_id) doesn't include record_date —
+// without this, each new day's sync would overwrite the previous day.
+export function normaliseGoogleAdsCampaign(row: Record<string, unknown>, currency: string): SocialSignalRecord {
+  const campaign = (row.campaign as Record<string, unknown>) || {}
+  const segments = (row.segments as Record<string, unknown>) || {}
+  const metrics = (row.metrics as Record<string, unknown>) || {}
+  const date = String(segments.date || '')
+  const campaignId = String(campaign.id || '')
+  const spend = Number(metrics.costMicros || 0) / 1_000_000
+  const clicks = Number(metrics.clicks || 0)
+  const impressions = Number(metrics.impressions || 0)
+  const conversions = Number(metrics.conversions || 0)
+  const conversionsValue = Number(metrics.conversionsValue || 0)
+
+  return {
+    source_type:     'google_ads',
+    platform:        'google_ads',
+    content_id:      `${campaignId}::${date}`,
+    content_type:    'campaign',
+    product_name:    String(campaign.name || ''),
+    sku:             '',
+    record_date:     date,
+    views:           0,
+    likes:           0,
+    comments:        0,
+    shares:          0,
+    saves:           0,
+    clicks,
+    impressions,
+    orders:          Math.round(conversions),
+    units_sold:      0,
+    gross_revenue:   conversionsValue,
+    conversion_rate: clicks > 0 ? conversions / clicks : 0,
+    avg_order_value: conversions > 0 ? conversionsValue / conversions : 0,
+    save_rate:       0,
+    engagement_rate: 0,
+    viral_score:     0,
+    creator_handle:  '',
+    campaign_name:   String(campaign.name || ''),
+    is_paid:         true,
+    ad_spend:        spend,
+    roas:            spend > 0 ? conversionsValue / spend : 0,
+    currency,
+    raw_data:        row,
+  }
+}
+
+// ── Meta Ads ──────────────────────────────────────────────────
+// Maps one Marketing API insights row (level=campaign, time_increment=1) →
+// a social signal. Same date-encoded content_id reasoning as Google Ads.
+export function normaliseMetaAdsInsight(row: Record<string, unknown>, currency: string): SocialSignalRecord {
+  const campaignId = safeStr(row.campaign_id)
+  const date = safeStr(row.date_start)
+  const spend = safeNum(row.spend)
+  const clicks = safeNum(row.clicks)
+  const impressions = safeNum(row.impressions)
+
+  const actions = (row.actions as { action_type: string; value: string }[]) || []
+  const actionValues = (row.action_values as { action_type: string; value: string }[]) || []
+  const purchaseAction = actions.find(a => a.action_type === 'omni_purchase' || a.action_type === 'purchase')
+  const purchaseValue = actionValues.find(a => a.action_type === 'omni_purchase' || a.action_type === 'purchase')
+  const conversions = safeNum(purchaseAction?.value)
+  const conversionsValue = safeNum(purchaseValue?.value)
+
+  return {
+    source_type:     'meta_ads',
+    platform:        'meta_ads',
+    content_id:      `${campaignId}::${date}`,
+    content_type:    'campaign',
+    product_name:    safeStr(row.campaign_name),
+    sku:             '',
+    record_date:     date,
+    views:           0,
+    likes:           0,
+    comments:        0,
+    shares:          0,
+    saves:           0,
+    clicks,
+    impressions,
+    orders:          Math.round(conversions),
+    units_sold:      0,
+    gross_revenue:   conversionsValue,
+    conversion_rate: clicks > 0 ? conversions / clicks : 0,
+    avg_order_value: conversions > 0 ? conversionsValue / conversions : 0,
+    save_rate:       0,
+    engagement_rate: 0,
+    viral_score:     0,
+    creator_handle:  '',
+    campaign_name:   safeStr(row.campaign_name),
+    is_paid:         true,
+    ad_spend:        spend,
+    roas:            spend > 0 ? conversionsValue / spend : 0,
+    currency,
+    raw_data:        row,
+  }
+}

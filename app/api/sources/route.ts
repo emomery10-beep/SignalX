@@ -5,6 +5,7 @@ import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
 import { validateStripeKey } from '@/lib/connectors/stripe'
 import { validateWalmartCredentials } from '@/lib/connectors/walmart'
 import { validateJumiaCredentials } from '@/lib/connectors/jumia'
+import { validateKlaviyoCredentials } from '@/lib/connectors/klaviyo'
 
 export async function GET() {
   const supabase = createClient()
@@ -50,6 +51,13 @@ export async function POST(request: NextRequest) {
     const refreshToken = credentials?.refresh_token
     if (!clientId || !refreshToken) return NextResponse.json({ error: 'Jumia Client ID and Refresh Token are required' }, { status: 400 })
     const { valid, error } = await validateJumiaCredentials(String(clientId), String(refreshToken))
+    if (!valid) return NextResponse.json({ error }, { status: 400 })
+  }
+
+  if (source_type === 'klaviyo') {
+    const apiKey = credentials?.api_key
+    if (!apiKey) return NextResponse.json({ error: 'Klaviyo private API key is required' }, { status: 400 })
+    const { valid, error } = await validateKlaviyoCredentials(String(apiKey))
     if (!valid) return NextResponse.json({ error }, { status: 400 })
   }
 

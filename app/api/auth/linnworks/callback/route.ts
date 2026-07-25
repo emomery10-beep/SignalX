@@ -41,7 +41,12 @@ export async function GET(request: NextRequest) {
 
   const supabase = createClient()
 
-  await supabase
+  // Note: this Token is Linnworks' permanent access token, not a session token —
+  // AppId/AppSecret are AskBiz's own app credentials (env vars), not per-connection
+  // secrets, so nothing extra needs storing here. syncLinnworks() exchanges this
+  // permanent token for a fresh ~20-minute session token on every sync via
+  // AuthorizeByApplication, since that session token is too short-lived to persist.
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
@@ -52,6 +57,10 @@ export async function GET(request: NextRequest) {
       config: { server: server || '' },
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=linnworks_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 

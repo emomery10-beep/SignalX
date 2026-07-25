@@ -8,6 +8,8 @@ import {
   normaliseQuickBooks, normaliseQuickBooksBill, normaliseGoogleSheets,
   normaliseXeroInvoice, normaliseXeroBill,
   normaliseFreeAgentInvoice, normaliseFreeAgentBill,
+  normaliseGoogleAnalyticsRow, normaliseGoCardlessPayment,
+  normaliseMailchimpCampaign, normaliseKlaviyoCampaign,
   type UnifiedRecord, type QBExpenseRow
 } from './normaliser'
 import { normaliseAmazonOrder } from './amazon-normaliser'
@@ -15,11 +17,12 @@ import { normaliseJumiaOrderItem, normaliseJumiaStock } from './jumia-normaliser
 import { normaliseEbayOrder } from './ebay-normaliser'
 import { normaliseEtsyReceipt } from './etsy-normaliser'
 import { normaliseWooOrder } from './woocommerce-normaliser'
+import { normaliseLinnworksOrder } from './linnworks-normaliser'
 import { normaliseWalmartOrder } from './walmart-normaliser'
 import {
   normaliseTikTokOrders, normaliseTikTokAnalytics,
   normaliseInstagramOrders, normaliseInstagramInsights,
-  normalisePinterestAnalytics, normaliseGoogleAdsCampaign,
+  normalisePinterestAnalytics, normaliseGoogleAdsCampaign, normaliseMetaAdsInsight,
   type SocialSignalRecord,
 } from './social-normaliser'
 import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
@@ -1378,6 +1381,266 @@ async function syncGoogleAds(
   }
 }
 
+// ── Google Analytics sync ──────────────────────────────────────
+// Writes to ga_sessions directly (not unified_data/social_signals — session
+// and channel data doesn't fit either shape).
+async function syncGoogleAnalytics(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  let { access_token, refresh_token } = source.credentials
+  const { property_id } = source.config
+  if (!access_token || !property_id) return { records: [], error: 'Missing GA4 property ID' }
+
+  const body = {
+    dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+    dimensions: [{ name: 'date' }, { name: 'sessionDefaultChannelGroup' }],
+    metrics: [
+      { name: 'sessions' }, { name: 'totalUsers' }, { name: 'conversions' },
+      { name: 'bounceRate' }, { name: 'averageSessionDuration' }, { name: 'totalRevenue' },
+    ],
+  }
+
+  const gaFetch = async () => {
+    const headers = () => ({ Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' })
+    let res = await fetch(
+      `https://analyticsdata.googleapis.com/v1beta/properties/${property_id}:runReport`,
+      { method: 'POST', headers: headers(), body: JSON.stringify(body) }
+    )
+    if (res.status === 401 && refresh_token) {
+      const newToken = await refreshGoogleToken(String(refresh_token))
+      if (newToken) {
+        access_token = newToken
+        await supabase.from('connected_sources').update({
+          credentials: encryptCredentials({ ...source.credentials, access_token })
+        }).eq('id', source.id)
+        res = await fetch(
+          `https://analyticsdata.googleapis.com/v1beta/properties/${property_id}:runReport`,
+          { method: 'POST', headers: headers(), body: JSON.stringify(body) }
+        )
+      }
+    }
+    if (!res.ok) throw new Error(`Google Analytics API error ${res.status}`)
+    return res.json()
+  }
+
+  try {
+    const data = await gaFetch()
+    const rows = (data?.rows || []) as Record<string, unknown>[]
+    const gaRows = rows.map(normaliseGoogleAnalyticsRow)
+
+    if (gaRows.length > 0) {
+      await supabase.from('ga_sessions').upsert(
+        gaRows.map(r => ({ ...r, user_id: userId, source_id: source.id, updated_at: new Date().toISOString() })),
+        { onConflict: 'user_id,source_id,record_date,channel' }
+      )
+    }
+
+    return { records: [] }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Google Analytics sync failed' }
+  }
+}
+
+// ── GoCardless sync ─────────────────────────────────────────────
+// Writes to gocardless_payments directly — payment/mandate data doesn't fit
+// unified_data or social_signals. No inline 401-refresh: the current token
+// model has no confirmed renewal flow for this OAuth scope (see the callback
+// route's comment) — a 401 here surfaces as a sync error rather than retrying.
+async function syncGoCardless(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const { access_token } = source.credentials
+  if (!access_token) return { records: [], error: 'Missing GoCardless credentials' }
+
+  try {
+    const records: UnifiedRecord[] = []
+    let after: string | undefined
+    const paymentRows: ReturnType<typeof normaliseGoCardlessPayment>[] = []
+
+    do {
+      const url = new URL('https://api.gocardless.com/payments')
+      url.searchParams.set('limit', '100')
+      if (after) url.searchParams.set('after', after)
+
+      const res = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          'GoCardless-Version': '2015-07-06',
+        },
+      })
+      if (!res.ok) throw new Error(`GoCardless API error ${res.status}`)
+      const data = await res.json()
+      const payments = (data?.payments || []) as Record<string, unknown>[]
+      paymentRows.push(...payments.map(normaliseGoCardlessPayment))
+      after = data?.meta?.cursors?.after || undefined
+    } while (after)
+
+    if (paymentRows.length > 0) {
+      await supabase.from('gocardless_payments').upsert(
+        paymentRows.map(r => ({ ...r, user_id: userId, source_id: source.id, updated_at: new Date().toISOString() })),
+        { onConflict: 'user_id,payment_id' }
+      )
+    }
+
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'GoCardless sync failed' }
+  }
+}
+
+// ── Mailchimp sync ──────────────────────────────────────────────
+// Writes to email_campaigns directly. Mailchimp OAuth2 tokens don't expire,
+// so no refresh logic is needed here.
+async function syncMailchimp(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const { access_token } = source.credentials
+  const { api_endpoint } = source.config
+  if (!access_token || !api_endpoint) return { records: [], error: 'Missing Mailchimp credentials' }
+
+  try {
+    const res = await fetch(`${api_endpoint}/3.0/reports?count=100&sort_field=send_time&sort_dir=DESC`, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    })
+    if (!res.ok) throw new Error(`Mailchimp API error ${res.status}`)
+    const { reports } = await res.json()
+    const campaignRows = ((reports || []) as Record<string, unknown>[]).map(normaliseMailchimpCampaign)
+
+    if (campaignRows.length > 0) {
+      await supabase.from('email_campaigns').upsert(
+        campaignRows.map(r => ({ ...r, user_id: userId, source_id: source.id, updated_at: new Date().toISOString() })),
+        { onConflict: 'user_id,source_type,campaign_id' }
+      )
+    }
+
+    return { records: [] }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Mailchimp sync failed' }
+  }
+}
+
+// ── Klaviyo sync ────────────────────────────────────────────────
+// NOTE: the Campaign Values Reporting request shape below (particularly
+// resolving a "Placed Order"-style conversion_metric_id, and the exact
+// statistics/response field names) could not be verified against
+// authenticated Klaviyo API docs during development — treat this as needing
+// a live-account check before relying on it, same flag as syncLinnworks().
+async function syncKlaviyo(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const { api_key } = source.credentials
+  if (!api_key) return { records: [], error: 'Missing Klaviyo API key' }
+
+  const headers = {
+    Authorization: `Klaviyo-API-Key ${api_key}`,
+    revision: '2024-10-15',
+    'Content-Type': 'application/json',
+  }
+
+  try {
+    // Find the "Placed Order" metric to use as the conversion metric.
+    const metricsRes = await fetch('https://a.klaviyo.com/api/metrics/?filter=equals(name,"Placed Order")', { headers })
+    if (!metricsRes.ok) throw new Error(`Klaviyo metrics API error ${metricsRes.status}`)
+    const metricsData = await metricsRes.json()
+    const conversionMetricId = metricsData?.data?.[0]?.id
+
+    // List email campaigns from the last 90 days.
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+    const campaignsRes = await fetch(
+      `https://a.klaviyo.com/api/campaigns/?filter=and(equals(messages.channel,'email'),greater-than(created_at,${since}))`,
+      { headers }
+    )
+    if (!campaignsRes.ok) throw new Error(`Klaviyo campaigns API error ${campaignsRes.status}`)
+    const { data: campaigns } = await campaignsRes.json()
+    if (!campaigns?.length) return { records: [] }
+
+    const campaignRows: ReturnType<typeof normaliseKlaviyoCampaign>[] = []
+
+    if (conversionMetricId) {
+      const reportRes = await fetch('https://a.klaviyo.com/api/campaign-values-reports/', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          data: {
+            type: 'campaign-values-report',
+            attributes: {
+              timeframe: { key: 'last_90_days' },
+              conversion_metric_id: conversionMetricId,
+              filter: `any(campaign_id,[${campaigns.map((c: Record<string, unknown>) => `"${c.id}"`).join(',')}])`,
+              statistics: ['recipients', 'opens_unique', 'clicks_unique', 'unsubscribes', 'conversion_value', 'conversion_value_currency'],
+            },
+          },
+        }),
+      })
+      if (reportRes.ok) {
+        const { data: report } = await reportRes.json()
+        const results = (report?.attributes?.results || []) as Record<string, unknown>[]
+        for (const result of results) {
+          const groupings = (result.groupings as Record<string, unknown>) || {}
+          const campaign = campaigns.find((c: Record<string, unknown>) => c.id === groupings.campaign_id)
+          if (campaign) campaignRows.push(normaliseKlaviyoCampaign(campaign, (result.statistics as Record<string, unknown>) || {}))
+        }
+      }
+    }
+
+    // Any campaign without a matching report row still gets a zero-stats record
+    // rather than being silently dropped.
+    const reportedIds = new Set(campaignRows.map(r => r.campaign_id))
+    for (const campaign of campaigns as Record<string, unknown>[]) {
+      if (!reportedIds.has(String(campaign.id))) campaignRows.push(normaliseKlaviyoCampaign(campaign, {}))
+    }
+
+    if (campaignRows.length > 0) {
+      await supabase.from('email_campaigns').upsert(
+        campaignRows.map(r => ({ ...r, user_id: userId, source_id: source.id, updated_at: new Date().toISOString() })),
+        { onConflict: 'user_id,source_type,campaign_id' }
+      )
+    }
+
+    return { records: [] }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Klaviyo sync failed' }
+  }
+}
+
+// ── Meta Ads sync ───────────────────────────────────────────────
+// No inline refresh here — Meta issues no refresh_token for these tokens;
+// the token-refresh cron's special-cased instagram/meta_ads branch keeps
+// access_token current via periodic fb_exchange_token re-exchange instead.
+async function syncMetaAds(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> }
+): Promise<{ records: UnifiedRecord[]; signals: SocialSignalRecord[]; error?: string }> {
+  const { access_token } = source.credentials
+  const { ad_account_id } = source.config
+  if (!access_token || !ad_account_id) return { records: [], signals: [], error: 'Missing Meta ad account ID' }
+
+  try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const until = new Date().toISOString().slice(0, 10)
+    const fields = 'campaign_id,campaign_name,spend,impressions,clicks,actions,action_values'
+    const timeRange = encodeURIComponent(JSON.stringify({ since, until }))
+
+    const res = await fetch(
+      `https://graph.facebook.com/v19.0/${ad_account_id}/insights?fields=${fields}&time_range=${timeRange}&time_increment=1&level=campaign&access_token=${access_token}`
+    )
+    if (!res.ok) throw new Error(`Meta Ads API error ${res.status}`)
+    const { data } = await res.json()
+    const rows = (data || []) as Record<string, unknown>[]
+    const signals = rows.map(row => normaliseMetaAdsInsight(row, 'GBP'))
+    return { records: [], signals }
+  } catch (e: unknown) {
+    return { records: [], signals: [], error: e instanceof Error ? e.message : 'Meta Ads sync failed' }
+  }
+}
+
 // ── Upsert social signals ─────────────────────────────────────
 async function upsertSocialSignals(
   supabase: ReturnType<typeof createServiceClient>,
@@ -1589,6 +1852,50 @@ async function syncPinterest(
     }
   } catch (e: unknown) {
     return { records: [], signals: [], error: e instanceof Error ? e.message : 'Pinterest sync failed' }
+  }
+}
+
+// ── Linnworks ─────────────────────────────────────────────────
+// The stored credential is Linnworks' permanent access token, not a session
+// token — session tokens last only ~20 minutes, far shorter than any sync
+// interval, so a fresh one is minted via AuthorizeByApplication on every
+// sync rather than cached and refreshed reactively.
+async function syncLinnworks(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> }
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const { access_token } = source.credentials
+  const { server } = source.config
+  const appId = process.env.LINNWORKS_APP_ID
+  const appSecret = process.env.LINNWORKS_SECRET
+  if (!access_token || !server) return { records: [], error: 'Missing Linnworks credentials' }
+  if (!appId || !appSecret) return { records: [], error: 'LINNWORKS_APP_ID/LINNWORKS_SECRET not configured' }
+
+  try {
+    const sessionRes = await fetch('https://api.linnworks.net/api/Auth/AuthorizeByApplication', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ApplicationId: appId, ApplicationSecret: appSecret, Token: access_token }),
+    })
+    if (!sessionRes.ok) throw new Error(`Linnworks session error ${sessionRes.status}`)
+    const { Token: sessionToken } = await sessionRes.json()
+    if (!sessionToken) throw new Error('Linnworks did not return a session token')
+
+    const ordersRes = await fetch(`${server}/api/Orders/GetOpenOrders`, {
+      method: 'POST',
+      headers: {
+        Authorization: sessionToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ entriesPerPage: 200, pageNumber: 1 }),
+    })
+    if (!ordersRes.ok) throw new Error(`Linnworks orders error ${ordersRes.status}`)
+    const { Data } = await ordersRes.json()
+    const orders = (Data || []) as Record<string, unknown>[]
+    const records = orders.flatMap(normaliseLinnworksOrder)
+
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Linnworks sync failed' }
   }
 }
 
@@ -1867,6 +2174,22 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         const r = await syncGoogleAds(decryptedSource, supabase)
         records = r.records; syncError = r.error
         await upsertSocialSignals(supabase, source.user_id, source.id, r.signals)
+      } else if (source.source_type === 'google_analytics') {
+        const r = await syncGoogleAnalytics(decryptedSource, supabase, source.user_id)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'meta_ads') {
+        const r = await syncMetaAds(decryptedSource)
+        records = r.records; syncError = r.error
+        await upsertSocialSignals(supabase, source.user_id, source.id, r.signals)
+      } else if (source.source_type === 'gocardless') {
+        const r = await syncGoCardless(decryptedSource, supabase, source.user_id)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'mailchimp') {
+        const r = await syncMailchimp(decryptedSource, supabase, source.user_id)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'klaviyo') {
+        const r = await syncKlaviyo(decryptedSource, supabase, source.user_id)
+        records = r.records; syncError = r.error
       } else if (source.source_type === 'amazon_fba') {
         const r = await syncAmazon(decryptedSource, supabase)
         records = r.records; syncError = r.error
@@ -1896,6 +2219,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         records = r.records; syncError = r.error
       } else if (source.source_type === 'walmart') {
         const r = await syncWalmart(decryptedSource)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'linnworks') {
+        const r = await syncLinnworks(decryptedSource)
         records = r.records; syncError = r.error
       } else if (source.source_type === 'askbiz_pos') {
         const r = await syncAskBizPOS(supabase, source.user_id)

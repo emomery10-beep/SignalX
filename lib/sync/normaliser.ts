@@ -630,6 +630,105 @@ export function normaliseGoogleAnalyticsRow(row: Record<string, unknown>): GASes
   }
 }
 
+// ── GOCARDLESS ───────────────────────────────────────────────
+export interface GoCardlessPaymentRow {
+  payment_id: string
+  mandate_id: string
+  amount: number
+  currency: string
+  status: string
+  charge_date: string
+  description: string
+  raw_data: Record<string, unknown>
+}
+
+export function normaliseGoCardlessPayment(payment: Record<string, unknown>): GoCardlessPaymentRow {
+  const links = (payment.links as Record<string, unknown>) || {}
+  // GoCardless amounts are in the minor currency unit (pence/cents).
+  const amountMinor = safeNum(payment.amount)
+
+  return {
+    payment_id: safeStr(payment.id),
+    mandate_id: safeStr(links.mandate),
+    amount: amountMinor / 100,
+    currency: safeStr(payment.currency) || 'GBP',
+    status: safeStr(payment.status),
+    charge_date: safeDate(payment.charge_date),
+    description: safeStr(payment.description),
+    raw_data: payment,
+  }
+}
+
+// ── EMAIL CAMPAIGNS (Mailchimp + Klaviyo) ─────────────────────
+export interface EmailCampaignRow {
+  source_type:   'mailchimp' | 'klaviyo'
+  campaign_id:   string
+  campaign_name: string
+  sent_at:       string | null
+  recipients:    number
+  opens:         number
+  open_rate:     number
+  clicks:        number
+  click_rate:    number
+  unsubscribes:  number
+  revenue:       number
+  currency:      string
+  raw_data:      Record<string, unknown>
+}
+
+// Maps one Mailchimp /3.0/reports entry.
+export function normaliseMailchimpCampaign(report: Record<string, unknown>): EmailCampaignRow {
+  const opensInfo = (report.opens as Record<string, unknown>) || {}
+  const clicksInfo = (report.clicks as Record<string, unknown>) || {}
+  const ecommerce = (report.ecommerce as Record<string, unknown>) || {}
+  const recipients = safeNum(report.emails_sent)
+
+  return {
+    source_type:   'mailchimp',
+    campaign_id:   safeStr(report.id),
+    campaign_name: safeStr(report.campaign_title),
+    sent_at:       report.send_time ? new Date(String(report.send_time)).toISOString() : null,
+    recipients,
+    opens:         safeNum(opensInfo.opens_total),
+    open_rate:     safeNum(opensInfo.open_rate),
+    clicks:        safeNum(clicksInfo.clicks_total),
+    click_rate:    safeNum(clicksInfo.click_rate),
+    unsubscribes:  safeNum(report.unsubscribed),
+    revenue:       safeNum(ecommerce.total_revenue),
+    currency:      safeStr(ecommerce.currency_code) || 'GBP',
+    raw_data:      report,
+  }
+}
+
+// Maps one Klaviyo campaign-values-report result (from the Campaign Values
+// Reporting API — aggregated per-campaign statistics, not raw events).
+export function normaliseKlaviyoCampaign(
+  campaign: Record<string, unknown>,
+  stats: Record<string, unknown>
+): EmailCampaignRow {
+  const recipients = safeNum(stats.recipients)
+  const opens = safeNum(stats.opens_unique)
+  const clicks = safeNum(stats.clicks_unique)
+
+  return {
+    source_type:   'klaviyo',
+    campaign_id:   safeStr(campaign.id),
+    campaign_name: safeStr((campaign.attributes as Record<string, unknown>)?.name),
+    sent_at:       (campaign.attributes as Record<string, unknown>)?.send_time
+                     ? new Date(String((campaign.attributes as Record<string, unknown>).send_time)).toISOString()
+                     : null,
+    recipients,
+    opens,
+    open_rate:     recipients > 0 ? opens / recipients : 0,
+    clicks,
+    click_rate:    recipients > 0 ? clicks / recipients : 0,
+    unsubscribes:  safeNum(stats.unsubscribes),
+    revenue:       safeNum(stats.conversion_value),
+    currency:      safeStr(stats.conversion_value_currency) || 'GBP',
+    raw_data:      { campaign, stats },
+  }
+}
+
 // ── GOOGLE SHEETS ────────────────────────────────────────────
 // Maps a generic spreadsheet into unified model
 // Tries to auto-detect columns by name

@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
   const expiresAt = new Date(Date.now() + (expires_in || 60 * 24 * 60 * 60) * 1000).toISOString()
 
   const supabase = createClient()
-  await supabase
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
@@ -117,6 +117,10 @@ export async function GET(request: NextRequest) {
       config: { business_id: businessId, commerce_merchant_settings_id: commerceMerchantSettingsId, ig_user_id: igUserId },
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=instagram_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 
