@@ -91,6 +91,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "upload-csv-excel",
       "connect-woocommerce",
       "connect-walmart",
+      "connect-jumia",
       "connect-xero",
       "connect-stripe",
       "connect-etsy",
@@ -732,6 +733,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-making-a-sale",
       "pos-managing-inventory",
       "pos-restocking-guide",
+      "pos-purchase-orders",
       "pos-processing-refunds",
       "pos-amending-transactions",
       "pos-whatsapp-receipts-setup",
@@ -3243,7 +3245,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "After the initial import, AskBiz syncs new orders every **6 hours**. To trigger an immediate sync — for example after a promotional campaign — go to **Sources**, find WooCommerce, and click **Sync Now**.",
+        body: "After the initial import, AskBiz automatically re-syncs new orders **once a day**. To trigger an immediate sync — for example after a promotional campaign — go to **Sources**, find WooCommerce, and click **Sync Now**.",
       },
     ],
     faq: [
@@ -3283,7 +3285,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Ongoing sync",
-        body: "After the initial import, AskBiz syncs new Walmart orders every **6 hours**. To trigger an immediate sync, go to **Sources**, find Walmart, and click **Sync Now**.\n\nNote: Walmart access tokens expire after 15 minutes. AskBiz handles token refresh automatically — you do not need to reconnect.",
+        body: "After the initial import, AskBiz automatically re-syncs new Walmart orders **once a day**. To trigger an immediate sync, go to **Sources**, find Walmart, and click **Sync Now**.\n\nNote: Walmart access tokens expire after 15 minutes. AskBiz handles token refresh automatically — you do not need to reconnect.",
       },
     ],
     faq: [
@@ -3293,6 +3295,52 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Where does the marketplace fee figure come from?", a: "AskBiz estimates the Walmart referral fee at 8% of the item price, which is the approximate average across most categories. Actual fees vary by category (typically 6–15%). You can see the estimated fee per order in the CFO Mode cost breakdown." },
     ],
     related: ["connect-shopify", "connect-amazon", "connect-ebay"],
+  },
+
+  {
+    slug: "connect-jumia",
+    title: "Connect Jumia to AskBiz",
+    description: "Step-by-step guide to connecting your Jumia Vendor Center seller account so AskBiz can sync orders, payouts and stock across your African storefronts.",
+    topic: "Connecting Data Sources",
+    topicSlug: "connecting-data",
+    readTime: 6,
+    lastUpdated: "2026-07-24",
+    keywords: ["connect Jumia", "Jumia Vendor Center", "Jumia seller account", "Jumia API", "Jumia Self Authorisation", "Jumia marketplace orders", "Africa ecommerce integration"],
+    content: [
+      {
+        heading: "Before you start",
+        body: "You will need:\n- An approved, active **Jumia Vendor Center** seller account\n- Access to create an **Application** inside Vendor Center (**Settings → Applications**)\n- A few minutes to copy two credentials — a Client ID and a Refresh Token\n\nUNVERIFIED: other marketplace connectors in AskBiz (Walmart, WooCommerce, Amazon, TikTok Shop) are documented as requiring the Growth or Business plan. The current Sources connect flow doesn't show a plan check in the code, so whether Jumia specifically is restricted by plan couldn't be confirmed here — if the Connect button appears locked for you, check your plan under Settings → Billing.",
+      },
+      {
+        heading: "Setting it up",
+        body: "1. Log in to **Jumia Vendor Center** and go to **Settings → Applications**.\n2. Click **Create Application** and choose **Self Authorisation** — this is Jumia's model for third-party read access, so there's no AskBiz-hosted login redirect; the Application belongs entirely to your own Vendor Center account.\n3. Copy the **Client ID**, then generate and copy the **Refresh Token**. Treat the Refresh Token like a password — Jumia may only display it once.\n4. In AskBiz, go to **Sources** (`/sources`) and find **Jumia** under **E-Commerce** (it's marked with an **API token** badge, meaning you paste credentials rather than being redirected to log in).\n5. Click **Connect**, paste your **Client ID** and **Refresh Token** into the Connect Jumia dialog, then click **Connect** again to confirm.\n\nAskBiz validates your credentials against Jumia immediately, before saving anything — it requests an access token with your Refresh Token, then checks it can read your shop list. If something's wrong you'll see a specific message rather than a generic failure, for example: \"Could not authenticate with Jumia — check the Client ID and Refresh Token from Vendor Center › Settings › Applications\", or if the Application is missing a role, \"Connected to Jumia but could not read your shops — check the application has an Order/Product role in Vendor Center.\"",
+      },
+      {
+        heading: "Initial data import",
+        body: "Once connected, AskBiz immediately pulls your first batch of data: orders placed in the last **30 days** (up to 100 orders, with full line-item detail fetched for the most recent 50 of those), plus your current stock levels (up to 100 SKUs) from Jumia's catalog. This usually finishes within a few minutes. AskBiz paces its requests to stay within Jumia's API limits, so a larger catalogue may take a little longer to fully come through.",
+      },
+      {
+        heading: "What data flows in from Jumia",
+        body: "- **Orders** — Jumia reports order items per unit rather than per line quantity, so each unit sold arrives as its own record, carrying paid price, voucher/discount amount, shipping, tax, and order status\n- **Currency and country** — each order keeps the currency and country of the specific Jumia storefront it came from, so if you sell on more than one Jumia country marketplace they're tracked separately rather than blended into one figure\n- **Stock levels** — current quantity per SKU from Jumia's catalogue stock feed\n\n**Not included:** Jumia's marketplace commission. The orders endpoint AskBiz reads doesn't expose it — that only appears on Jumia's separate payout-statement report, which isn't connected — so revenue shown for Jumia is what the customer paid, before Jumia's cut. Cost price isn't available from Jumia either; margin on a Jumia product that hasn't been matched to a POS product (see below) will look inflated until it is.",
+      },
+      {
+        heading: "Ongoing sync",
+        body: "AskBiz automatically re-syncs every connected source, including Jumia, **once a day**. To force an immediate refresh — for example right after a big sale — go to **Sources**, find Jumia in your connected list, and click **Sync now**. Note that Sync now refreshes all of your connected sources at once, not just Jumia.\n\nYour Jumia access token is short-lived; AskBiz mints a fresh one from your Refresh Token automatically every time it syncs, so you shouldn't need to reconnect. If Jumia ever revokes or expires the Refresh Token itself — for example if the Application is deleted in Vendor Center — the connection will show an error and you'll need to reconnect with freshly generated credentials.",
+      },
+      {
+        heading: "Where Jumia data shows up in AskBiz",
+        body: "- **CFO Mode → Inventory** (`/intelligence` → CFO tab → Inventory): if a Jumia SKU or product name matches something already in your POS inventory, AskBiz merges them into one row — combining units sold and labelling the source as \"POS + Jumia\" — instead of showing two disconnected products. Your in-store stock count and value stay authoritative; Jumia's reported stock is never added on top, since AskBiz can't tell whether it's the same physical shelf stock also listed online or genuinely separate stock held at Jumia's own warehouse. A Jumia product with no POS match shows as its own row, flagged **Low Stock** at 5 units or fewer and **Out of Stock** at 0.\n- **Stock alerts** — your notification bell (and email/WhatsApp, if enabled) raises a low-stock alert when a Jumia SKU's live count drops to **3 units or fewer**, and an out-of-stock alert at 0 — labelled \"on Jumia\" so you know exactly which channel needs restocking.\n- **Intelligence → market filter** — pick **Jumia** from the channel dropdown to see Jumia-only sales trends, separate from your other connected channels.",
+      },
+    ],
+    faq: [
+      { q: "Why don't I see my full Jumia order history?", a: "The initial import — and every sync after it — only pulls orders from the last 30 days, up to 100 orders with line items expanded for the most recent 50. Older orders aren't backfilled. If you've been trading on Jumia for years, expect your AskBiz numbers to build up from the point you connected rather than reflect all-time history." },
+      { q: "Does AskBiz show what Jumia takes in commission?", a: "Not currently. The Jumia orders API that AskBiz reads doesn't expose the commission amount — that only appears on Jumia's separate payout-statement report, which isn't connected. Revenue and margin figures for Jumia reflect what the customer paid, before Jumia's cut." },
+      { q: "A Jumia product shows as a separate line from the same product in my POS. Why?", a: "AskBiz links a Jumia row to a POS product by matching SKU first, then product name if there's no SKU match. If your Jumia seller SKU or listing title doesn't exactly match what's in your POS inventory, they'll show as two separate rows. Aligning your Jumia SKU with your POS SKU will merge them automatically on the next sync." },
+      { q: "AskBiz says my Jumia stock is low, but I know I have plenty. What's going on?", a: "AskBiz reads the stock level Jumia itself reports for that listing — it reflects what's registered as available to sell on Jumia, not your total physical stock. AskBiz deliberately doesn't add Jumia's stock number on top of your POS count, so if the two look different, it usually means the Jumia listing needs restocking on Jumia's side, not your shop." },
+      { q: "My connection shows an error and stopped syncing. What do I do?", a: "This almost always means your Refresh Token is no longer valid — usually because the Application was deleted or regenerated in Jumia Vendor Center. Go to Settings → Applications in Vendor Center, generate a fresh Refresh Token (and Client ID if you recreated the Application), then in AskBiz go to Sources, disconnect the old Jumia connection, and reconnect with the new credentials." },
+      { q: "I also see a Takealot option in the Intelligence channel filter — can I connect that too?", a: "Not yet. Takealot is recognised as a channel label in a couple of places in AskBiz, but there's no Jumia-style connector built for it yet, so there's currently no way to actually link a Takealot account." },
+    ],
+    related: ["connect-walmart", "connect-amazon", "upload-csv-excel"],
   },
 
   {
@@ -11240,6 +11288,42 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-managing-inventory", "pos-viewing-daily-stats", "pos-exporting-data"],
   },
   {
+    slug: "pos-purchase-orders",
+    title: "Ordering Stock from Suppliers with Purchase Orders",
+    description: "Create a purchase order from your low-stock items, send it to a supplier over WhatsApp, and log deliveries against it as stock arrives — from the Purchase Orders tile in POS Retail Operations.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    lastUpdated: "2026-07-24",
+    keywords: ["purchase orders pos", "order stock from suppliers", "pos supplier orders", "send purchase order whatsapp", "receive stock against order", "back order pos", "restock via purchase order"],
+    content: [
+      {
+        heading: "What Purchase Orders does",
+        body: "The **Purchase Orders** tile (📋) sits in **/pos → Retail Operations** and gives you a proper paper trail for reordering stock: build an order from what's running low, send it straight to the supplier over WhatsApp, then log what actually arrives against that same order — including partial deliveries.\n\nThis is a separate, more structured system from the free-text supplier field on a plain restock (see Restocking Products and Updating Quantities). An order created here has its own status, tracks ordered vs received quantity per line, and produces a WhatsApp message your supplier can act on directly — use it when you want a record of what you ordered and what showed up, not just a quick stock top-up.",
+      },
+      {
+        heading: "Creating an order",
+        body: "Open **/pos**, make sure **Retail** is the selected sector, and tap the **Purchase Orders** tile. Tap **+ New order**.\n\nPick an existing supplier or add one on the spot (name and WhatsApp number — the number is what makes sending possible). If you have low-stock items, AskBiz pre-fills the order for you at a suggested quantity that tops each one back up to twice its reorder point; adjust quantities and unit costs freely, and add other products from your inventory or a note for the supplier. AskBiz totals the order as you edit it. Tap **Create order** to save it as a **Draft** — nothing is sent yet and stock is not affected.",
+      },
+      {
+        heading: "Sending it to your supplier",
+        body: "Open the draft and tap **Send to supplier on WhatsApp**. AskBiz sends the order automatically if a WhatsApp template is available; if not (for example, while a new message template is still awaiting approval), it opens a **wa.me** link pre-filled with the same order text instead, so you can send it from your own WhatsApp in one tap. Either way, the order moves from **Draft** to **Ordered**.\n\nIf you edit quantities or need to chase the supplier again, reopen the order and tap **Resend on WhatsApp**. If a supplier has no WhatsApp number on file, AskBiz tells you to add one before it can send.",
+      },
+      {
+        heading: "Receiving stock and tracking payment",
+        body: "When a delivery arrives, open the order and tap **Receive stock**. Enter the quantity actually received for each line — it does not need to match what was ordered. Confirming updates your inventory levels immediately for any line linked to a catalogue product.\n\nIf a delivery is short, the order becomes **Partially received** and stays open, with the shortfall tracked as a **back-order** — use the **Back-orders** filter at the top of the Purchase Orders list to see everything still outstanding. Once every line has its full quantity in, the order becomes **Received**, and a **Mark as paid** button appears. Payment status (**Unpaid / Partially paid / Paid**) is tracked separately from delivery status, so you can always see which suppliers you still owe even after stock is already on your shelves.",
+      },
+    ],
+    faq: [
+      { q: "Who can create, send, or receive purchase orders?", a: "Owners and Managers have full access — create, send, receive, and mark orders paid. Supervisors can view orders, but creating, sending, receiving, or paying is blocked for that role. Cashiers have no purchase-order permissions at all." },
+      { q: "Does creating or sending an order change my stock levels?", a: "No. Stock only changes when you tap Receive stock and confirm a quantity. You can draft and send as many orders as you like with no effect on your inventory numbers until stock is actually logged as received." },
+      { q: "Is this the same as the Supplier Scorecard I've seen in Business Intelligence?", a: "No — they're separate features. The Purchase Orders tile in POS is where you create, send, and receive orders day to day. Supplier Scorecard (see Supplier Scorecard Explained) is an analytics view that grades supplier performance — delivery reliability, quality, lead time, price stability — typically fed by purchase order and bill data from a connected accounting platform such as Xero or QuickBooks. The two do not currently share data." },
+      { q: "Can I cancel a purchase order?", a: "UNVERIFIED — the order status model includes a Cancelled state, but a Cancel action was not found in the current Purchase Orders screen. If you need to cancel an order you've created, contact support@askbiz.co." },
+      { q: "Is Purchase Orders limited on any plan?", a: "UNVERIFIED — no plan-based restriction on purchase orders or suppliers was found in the current implementation. Treat it as available the same way on Free, Growth, and Business plans unless told otherwise." },
+    ],
+    related: ["pos-restocking-guide", "pos-managing-inventory", "supplier-scorecard-explained"],
+  },
+  {
     slug: "pos-processing-refunds",
     title: "Processing Full and Partial Refunds",
     description: "Refund a full transaction or specific line items through AskBiz POS. Understand refund permissions, how refunds affect reporting, and how to handle edge cases.",
@@ -11308,12 +11392,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-whatsapp-receipts-setup",
     title: "Setting Up WhatsApp Receipts",
-    description: "Send digital receipts to customers via WhatsApp after each POS sale. Configure the WhatsApp integration, customise your receipt template, and manage opt-in.",
+    description: "Send digital receipts to customers via WhatsApp after each POS sale. What the itemised receipt image looks like, when it falls back to a short text confirmation, and how to manage opt-in.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
-    lastUpdated: "2026-05-12",
-    keywords: ["whatsapp receipt pos", "send receipt via whatsapp", "digital receipt pos", "pos whatsapp integration", "paperless receipt pos system", "whatsapp business pos"],
+    lastUpdated: "2026-07-24",
+    keywords: ["whatsapp receipt pos", "send receipt via whatsapp", "digital receipt pos", "pos whatsapp integration", "paperless receipt pos system", "whatsapp business pos", "whatsapp receipt image", "itemised whatsapp receipt", "receipt text fallback"],
     content: [
       {
         heading: "Why WhatsApp receipts?",
@@ -11324,17 +11408,22 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "Go to **Settings → POS → Receipts → WhatsApp** and tap **Connect**. You will need a WhatsApp Business account (free from Meta). AskBiz uses the WhatsApp Business API to send messages — follow the on-screen prompts to link your account.\n\nOnce connected, you will see a green **WhatsApp Connected** badge on your POS settings page. Test the connection by sending a receipt to your own number from any completed transaction.",
       },
       {
-        heading: "Customising your receipt template",
-        body: "The default receipt template includes your business name, transaction date, line items with prices, total, VAT breakdown, and a thank-you message. You can customise:\n\n- **Business logo** — appears at the top of the receipt\n- **Footer message** — add your returns policy, opening hours, or a promotional message\n- **Colours** — match your brand\n\nEdit the template in **Settings → POS → Receipts → Template**. Preview changes before saving — the preview shows exactly what the customer will see in their WhatsApp chat.",
+        heading: "What the receipt actually looks like",
+        body: "AskBiz renders a real, itemised receipt image for every sale — not just a line of text. It shows:\n\n- Your **business name** at the top\n- The **date/time** and **payment method** used\n- Every **line item**, with quantity and price\n- The **discount**, if one was applied\n- The **total**, and a thank-you footer with AskBiz branding\n\nThe layout is fixed today — there is no logo upload, colour picker, or custom footer message yet, so treat this as the current receipt design rather than something you configure per business.",
+      },
+      {
+        heading: "When a customer gets a text instead of the image",
+        body: "Every send tries the itemised image first. If it can't be delivered — most commonly because AskBiz is mid-rollout on a new WhatsApp template still awaiting approval, occasionally due to a one-off delivery hiccup — AskBiz automatically falls back to a short text confirmation instead, showing the total, business name, date, and payment method. This happens server-side with no action needed from staff, and no sale is ever blocked waiting on it.\n\nIf WhatsApp can't deliver either version, the sale screen shows an error so staff can tap Resend or use print/email instead.",
       },
       {
         heading: "Sending receipts during a sale",
-        body: "After completing a sale, the receipt screen offers a **Send via WhatsApp** option. Enter the customer's phone number (with country code) and tap Send. The receipt is delivered within seconds.\n\nTo speed up the process for regular customers, AskBiz remembers phone numbers linked to customer profiles. If the customer has purchased before and provided their number, it auto-fills. Staff can also skip the receipt entirely by tapping **Done** — sending is always optional and never automatic without customer consent.",
+        body: "After completing a sale, the receipt screen offers a **Send via WhatsApp** option. Enter the customer's phone number (with country code) and tap Send. The itemised receipt (or its text fallback — see above) is delivered within seconds.\n\nTo speed up the process for regular customers, AskBiz remembers phone numbers linked to customer profiles. If the customer has purchased before and provided their number, it auto-fills. Staff can also skip the receipt entirely by tapping **Done** — sending is always optional and never automatic without customer consent.",
       },
     ],
     faq: [
       { q: "Does the customer need to opt in to receive WhatsApp receipts?", a: "Yes. You must have the customer's verbal or written consent before sending a WhatsApp message. AskBiz does not send receipts automatically — your staff must manually enter the number and tap Send each time." },
       { q: "Is there a cost per WhatsApp message?", a: "AskBiz covers the WhatsApp Business API cost for receipt messages on Growth and Business plans. Free plan users can send up to 50 WhatsApp receipts per month. Additional messages are charged at the standard WhatsApp Business API rate." },
+      { q: "Why did my customer get a short text message instead of the full receipt image?", a: "This is automatic and expected — AskBiz always tries the full itemised receipt image first and only falls back to a short text confirmation (total, business name, date, payment method) if the image can't be delivered. No setup or troubleshooting is needed on your end; sends switch over to the image automatically once it's available for your account." },
     ],
     related: ["pos-making-a-sale", "pos-vat-tax-settings", "pos-getting-started"],
   },
@@ -11498,12 +11587,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-login-issues",
     title: "Troubleshooting: Login and Magic Link Issues",
-    description: "Fix common POS login problems — magic link not arriving, link expired, staff PIN not working, and session timeout issues.",
+    description: "Fix common POS login problems — magic link not arriving, link expired, staff PIN not working, session timeout issues, and how to reset a forgotten account PIN yourself.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
-    readTime: 3,
-    lastUpdated: "2026-05-12",
-    keywords: ["pos login not working", "magic link not received pos", "pos staff pin not working", "pos session expired", "pos login troubleshooting", "askbiz pos login help"],
+    readTime: 4,
+    lastUpdated: "2026-07-24",
+    keywords: ["pos login not working", "magic link not received pos", "pos staff pin not working", "pos session expired", "pos login troubleshooting", "askbiz pos login help", "forgot pin", "reset pin whatsapp", "forgot account pin", "phone pin reset"],
     content: [
       {
         heading: "Magic link not arriving",
@@ -11521,10 +11610,15 @@ export const HELP_ARTICLES: HelpArticle[] = [
         heading: "Session timeout and re-authentication",
         body: "POS sessions stay active for **12 hours** by default. After that, the staff member is logged out and must re-authenticate with their magic link or PIN. This timeout protects against unattended devices being used by unauthorised people.\n\nYou can adjust the timeout period in **Settings → POS → Security → Session Timeout**. For high-security environments, reduce it to 1–4 hours. For convenience in trusted environments (e.g. your own shop with no public access), you can extend it to 24 hours.",
       },
+      {
+        heading: "Forgotten your own PIN?",
+        body: "This is different from a **staff PIN** (above) — this is the PIN you, the account owner, use to sign in to your own AskBiz account with your phone number. If you can't remember it, you don't need to contact support:\n\n1. Go to **/signin**, choose the **Phone** tab, and tap **Forgot PIN?**\n2. Enter the phone number your account is registered under and tap **Send code via WhatsApp**\n3. A 6-digit code arrives on WhatsApp within a few seconds, valid for **10 minutes**\n4. Enter the code plus a new 4-digit PIN (twice, to confirm) and tap **Reset PIN**\n\nYou can request a new code once every **60 seconds**, and each code allows **5 attempts** before you need to request a fresh one. For your security, the request step never reveals whether a phone number actually has an account — if nothing arrives on WhatsApp within a couple of minutes, double-check you entered the number your account is registered under (including the correct country code), then try again.",
+      },
     ],
     faq: [
       { q: "Can I use a password instead of a magic link?", a: "No. AskBiz POS uses magic links and PINs only — there are no passwords to remember, forget, or compromise. This is a deliberate security choice that reduces the risk of credential theft." },
-      { q: "What if I (the account owner) cannot log in?", a: "Account owner login issues are not POS-specific — use the main AskBiz login at /login. If your magic link is not arriving, check the general login troubleshooting guide or contact support at help@askbiz.co." },
+      { q: "What if I (the account owner) cannot log in?", a: "Account owner login issues are not POS-specific — sign in at /signin, not a separate POS login page. If you sign in with email, use the password reset or magic-link options there. If you sign in with phone + PIN and have forgotten your PIN, tap Forgot PIN? on the Phone tab of /signin to reset it yourself over WhatsApp (see 'Forgotten your own PIN?' above) — no need to contact support for this." },
+      { q: "Is resetting my own PIN the same as resetting a staff member's PIN?", a: "No. Resetting your own PIN is self-service, via /forgot-pin, verified by a WhatsApp code sent to your own phone. Resetting a staff member's PIN is something only you (the account owner) can do, from Settings → POS → Staff → [name] → Reset PIN — staff cannot reset their own PIN." },
     ],
     related: ["pos-adding-staff", "pos-getting-started", "pos-camera-troubleshooting"],
   },
@@ -14334,10 +14428,10 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "Learn what Factory Captures are, how to enable the factory sector in AskBiz POS, and understand the four capture types — intake, output, wastage, and dispatch.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
-    readTime: 4,
+    readTime: 5,
     popular: true,
-    lastUpdated: "2026-05-18",
-    keywords: ["factory captures askbiz", "production logging pos", "photo capture manufacturing", "askbiz factory feature", "production intake output wastage dispatch"],
+    lastUpdated: "2026-07-24",
+    keywords: ["factory captures askbiz", "production logging pos", "photo capture manufacturing", "askbiz factory feature", "production intake output wastage dispatch", "factory type", "batch tracking", "quality checks", "downtime logging", "production shift", "waybill"],
     content: [
       {
         heading: "What are Factory Captures?",
@@ -14351,13 +14445,21 @@ export const HELP_ARTICLES: HelpArticle[] = [
         heading: "The four capture types",
         body: "AskBiz Factory Captures has four event types, each covering a distinct production stage:\n\n- **Intake** — log incoming raw materials or components. Staff photograph the batch on arrival.\n- **Output** — record finished goods coming off the production line. Photo verifies quantity and condition.\n- **Wastage** — document damaged, spoiled, or rejected materials. Every wastage event builds your loss rate record.\n- **Dispatch** — log finished goods leaving the facility. Closes the loop between production and fulfilment.\n\nEach type has its own permission flag (`camera.intake`, `camera.output`, `camera.wastage`, `camera.dispatch`) so you can assign exactly the right access to each staff member.",
       },
+      {
+        heading: "Factory Types — tell AskBiz what you make",
+        body: "If your business type is set to **Manufacturer**, you can also record your **factory type** — the specific kind of production you run. AskBiz currently has 12 built-in categories (cooking oil pressing, packaged water, maize milling, cassava processing, rice milling, dairy processing, bakery, soap making, concrete blocks, poultry processing, coffee processing, and fish smoking), plus an **Other** option for anything not listed.\n\nYou're asked to pick one during onboarding, and can change it any time afterwards at **Settings → Localisation → Factory Settings** in your AskBiz admin panel — it's optional, and skipping it doesn't block anything. Picking a type doesn't change which capture buttons your staff see today; every factory still uses the same four capture types above. See **Choosing Your Factory Type** for what each of the 12 categories covers.",
+      },
+      {
+        heading: "Beyond captures — the wider Factory toolkit",
+        body: "Factory Captures is the entry point, but the Factory sector also includes five more floor-level tools, all reachable from the **Factory hub** at **pos.askbiz.co/factory**:\n\n- **Batch Tracking** — scan a batch reference through checkpoints (intake, in progress, QC pass, QC fail, dispatch) with a photo at each one, building a traceability trail for that batch.\n- **Quality Checks** — log a defect against a product with a defect type and severity, separate from a general wastage capture.\n- **Downtime Logging** — report when a machine stops, with a start photo, and close it out later with an end photo. AskBiz records how long it was down.\n- **Production Shifts** — start and end a named production shift with a photo at each end, optionally set a target output, and track live output against it.\n- **Waybills** — log a full dispatch record with a destination, references, and a scheduled time, and see whether the dispatch was on time.\n\nUnlike the four capture types above, none of these five go through the pending-approval queue described in **Approving and Rejecting Captures** — they save directly to your production record, with every action written to your audit trail. See **Batch Tracking, Quality Checks, and Downtime Logging** and **Production Shifts and Waybills** for the full detail.",
+      },
     ],
     faq: [
       { q: "Do I need special hardware to use Factory Captures?", a: "No. Factory Captures runs in any browser at pos.askbiz.co. Staff use the camera on their phone or tablet to take photos. No app download or dedicated hardware is required." },
       { q: "Can I use Factory Captures alongside the POS sales features?", a: "Yes. Factory Captures is a feature layer on top of AskBiz POS. Staff who process sales and log captures use the same pos.askbiz.co interface — their permissions determine which features they see." },
       { q: "What happens to a capture before it is approved?", a: "It sits in the pending queue and is visible to supervisors with the capture.approve permission. It does not appear in your formal production record or audit trail until it is approved." },
     ],
-    related: ["pos-factory-submitting-captures", "pos-factory-approvals", "pos-factory-roles-permissions"],
+    related: ["pos-factory-submitting-captures", "pos-factory-approvals", "pos-factory-roles-permissions", "pos-factory-type-setup", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
   },
   {
     slug: "pos-factory-submitting-captures",

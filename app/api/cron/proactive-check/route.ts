@@ -1,5 +1,5 @@
 // ── Proactive Intelligence Cron ───────────────────────────────────────────────
-// Runs every 4 hours via Vercel cron.
+// Runs once a day via Vercel cron (see vercel.json — "0 8 * * *").
 // For each active user: checks stock, revenue anomalies, shipment risks,
 // and sector news — then delivers via notification bell + email + WhatsApp.
 
