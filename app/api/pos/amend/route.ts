@@ -87,13 +87,13 @@ export async function POST(req: NextRequest) {
     }))
   )
 
-  // Reverse original in unified_data, new tx trigger handles the new one
-  await service.from('unified_data').insert({
-    user_id:       ownerId,
-    channel:       'pos',
-    gross_revenue: -(original.total),
-    gross_margin:  0,
-    record_date:   new Date().toISOString().split('T')[0],
+  // Reverse original in unified_data, new tx trigger handles the new one —
+  // via RPC, not a plain insert, since that trigger already upserted a row
+  // for (owner, today); a bare insert would 23505 against that same row.
+  await service.rpc('adjust_pos_daily_revenue', {
+    p_owner_id: ownerId,
+    p_amount:   -(original.total),
+    p_date:     new Date().toISOString().split('T')[0],
   })
 
   // Legacy audit_log entry

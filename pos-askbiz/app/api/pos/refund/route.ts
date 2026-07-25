@@ -78,13 +78,13 @@ export async function POST(req: NextRequest) {
     // Restore stock for all items
     await restoreStock(allItems)
 
-    // Reverse the unified_data entry
-    await service.from('unified_data').insert({
-      user_id:       ownerId,
-      channel:       'pos',
-      gross_revenue: -(tx.total),
-      gross_margin:  0,
-      record_date:   new Date().toISOString().split('T')[0],
+    // Reverse the unified_data entry — via RPC, not a plain insert, since the
+    // sale's own trigger already upserted a row for (owner, today); a bare
+    // insert would 23505 against that same row.
+    await service.rpc('adjust_pos_daily_revenue', {
+      p_owner_id: ownerId,
+      p_amount:   -(tx.total),
+      p_date:     new Date().toISOString().split('T')[0],
     })
   } else {
     // Partial refund — mark specific items
@@ -106,12 +106,10 @@ export async function POST(req: NextRequest) {
 
     const refundAmount = refundedItems.reduce((s, i) => s + i.line_total, 0)
 
-    await service.from('unified_data').insert({
-      user_id:       ownerId,
-      channel:       'pos',
-      gross_revenue: -refundAmount,
-      gross_margin:  0,
-      record_date:   new Date().toISOString().split('T')[0],
+    await service.rpc('adjust_pos_daily_revenue', {
+      p_owner_id: ownerId,
+      p_amount:   -refundAmount,
+      p_date:     new Date().toISOString().split('T')[0],
     })
   }
 
