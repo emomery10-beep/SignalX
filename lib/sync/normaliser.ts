@@ -581,6 +581,55 @@ export function normaliseFreeAgentBill(bill: Record<string, unknown>): QBExpense
   }
 }
 
+// ── GOOGLE ANALYTICS ─────────────────────────────────────────
+export interface GASessionRow {
+  record_date: string
+  channel: string
+  sessions: number
+  users: number
+  conversions: number
+  conversion_rate: number
+  bounce_rate: number
+  avg_session_secs: number
+  revenue: number
+  currency: string
+  raw_data: Record<string, unknown>
+}
+
+// GA4's Data API returns values positionally (dimensionValues[]/metricValues[])
+// matched to the dimensions/metrics requested — this maps one row assuming the
+// exact request shape built in syncGoogleAnalytics(): dimensions
+// [date, sessionDefaultChannelGroup], metrics [sessions, totalUsers,
+// conversions, bounceRate, averageSessionDuration, totalRevenue].
+export function normaliseGoogleAnalyticsRow(row: Record<string, unknown>): GASessionRow {
+  const dims = (row.dimensionValues as Record<string, unknown>[]) || []
+  const mets = (row.metricValues as Record<string, unknown>[]) || []
+  const dim = (i: number) => safeStr(dims[i]?.value)
+  const met = (i: number) => safeNum(mets[i]?.value)
+
+  const rawDate = dim(0) // GA4 returns YYYYMMDD
+  const isoDate = rawDate.length === 8
+    ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
+    : safeDate(rawDate)
+
+  const sessions = met(0)
+  const conversions = met(2)
+
+  return {
+    record_date: isoDate,
+    channel: dim(1) || 'Unassigned',
+    sessions,
+    users: met(1),
+    conversions,
+    conversion_rate: sessions > 0 ? conversions / sessions : 0,
+    bounce_rate: met(3),
+    avg_session_secs: met(4),
+    revenue: met(5),
+    currency: 'GBP',
+    raw_data: row,
+  }
+}
+
 // ── GOOGLE SHEETS ────────────────────────────────────────────
 // Maps a generic spreadsheet into unified model
 // Tries to auto-detect columns by name

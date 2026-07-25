@@ -127,5 +127,12 @@
   "kv_rejected_sub": "مرفوض",
   "open_x_agent": "فتح X Agent ←",
   "recent_activity": "النشاط الأخير",
-  "no_x_activity": "لا يوجد نشاط على X حتى الآن."
+  "no_x_activity": "لا يوجد نشاط على X حتى الآن.",
+  "spotlight_view_spotlights": "الإبرازات",
+  "spotlight_view_inquiries": "الاستفسارات",
+  "spotlight_filter_contacted": "تم التواصل",
+  "spotlight_filter_dismissed": "مرفوض",
+  "spotlight_inquiries_empty": "لا توجد استفسارات بعد.",
+  "spotlight_inquiry_contact": "وضع علامة تم التواصل",
+  "spotlight_inquiry_dismiss": "تجاهل"
 }

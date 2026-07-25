@@ -127,5 +127,12 @@
   "kv_rejected_sub": "Geweigerd",
   "open_x_agent": "X Agent openen →",
   "recent_activity": "Recente activiteit",
-  "no_x_activity": "Nog geen X-activiteit."
+  "no_x_activity": "Nog geen X-activiteit.",
+  "spotlight_view_spotlights": "Spotlights",
+  "spotlight_view_inquiries": "Aanvragen",
+  "spotlight_filter_contacted": "Gecontacteerd",
+  "spotlight_filter_dismissed": "Afgewezen",
+  "spotlight_inquiries_empty": "Nog geen aanvragen.",
+  "spotlight_inquiry_contact": "Markeer als gecontacteerd",
+  "spotlight_inquiry_dismiss": "Afwijzen"
 }

@@ -47,21 +47,41 @@ export async function GET(request: NextRequest) {
     headers: { Authorization: `Bearer ${access_token}` },
   })
   const userData = userRes.ok ? await userRes.json() : {}
-  const displayName = `Google Analytics — ${userData.email || 'connected'}`
+
+  // Discover the first accessible GA4 property — the Data API needs a
+  // specific property ID (e.g. "properties/123456789") on every request.
+  let propertyId = ''
+  let propertyName = ''
+  const accountsRes = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+    headers: { Authorization: `Bearer ${access_token}` },
+  })
+  if (accountsRes.ok) {
+    const { accountSummaries } = await accountsRes.json()
+    const firstProperty = accountSummaries?.[0]?.propertySummaries?.[0]
+    propertyId = String(firstProperty?.property || '').replace('properties/', '')
+    propertyName = firstProperty?.displayName || ''
+  }
+
+  const displayName = propertyName || `Google Analytics — ${userData.email || 'connected'}`
 
   const supabase = createClient()
 
-  await supabase
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
       source_type: 'google_analytics',
       name: displayName,
-      status: 'active',
+      status: propertyId ? 'active' : 'error',
       credentials: encryptCredentials({ access_token, refresh_token }),
-      config: {},
+      config: { property_id: propertyId },
+      error_message: propertyId ? null : 'Could not find a GA4 property on this Google account',
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=google_analytics_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 

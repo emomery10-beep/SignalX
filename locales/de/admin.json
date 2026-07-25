@@ -127,5 +127,12 @@
   "kv_rejected_sub": "Abgelehnt",
   "open_x_agent": "X-Agent öffnen →",
   "recent_activity": "Letzte Aktivitäten",
-  "no_x_activity": "Noch keine X-Aktivitäten."
+  "no_x_activity": "Noch keine X-Aktivitäten.",
+  "spotlight_view_spotlights": "Spotlights",
+  "spotlight_view_inquiries": "Anfragen",
+  "spotlight_filter_contacted": "Kontaktiert",
+  "spotlight_filter_dismissed": "Verworfen",
+  "spotlight_inquiries_empty": "Noch keine Anfragen.",
+  "spotlight_inquiry_contact": "Als kontaktiert markieren",
+  "spotlight_inquiry_dismiss": "Verwerfen"
 }

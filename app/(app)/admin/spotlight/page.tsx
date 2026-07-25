@@ -19,6 +19,18 @@ interface SpotlightItem {
 }
 
 type Filter = 'pending' | 'approved' | 'rejected' | 'all'
+type View = 'spotlights' | 'inquiries'
+type InquiryFilter = 'pending' | 'contacted' | 'dismissed' | 'all'
+
+interface InquiryItem {
+  id: string
+  name: string
+  phone: string
+  email: string
+  status: 'pending' | 'contacted' | 'dismissed'
+  submitted_at: string
+  reviewed_at: string | null
+}
 
 export default function SpotlightAdminPage() {
   const { tc, fmtDate } = useLang()
@@ -26,11 +38,17 @@ export default function SpotlightAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
+  const [view, setView]             = useState<View>('spotlights')
   const [filter, setFilter]         = useState<Filter>('pending')
   const [items, setItems]           = useState<SpotlightItem[]>([])
   const [actionId, setActionId]     = useState<string | null>(null)
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+
+  const [inqFilter, setInqFilter]     = useState<InquiryFilter>('pending')
+  const [inqItems, setInqItems]       = useState<InquiryItem[]>([])
+  const [inqLoading, setInqLoading]   = useState(false)
+  const [inqActionId, setInqActionId] = useState<string | null>(null)
 
   const authHeader = useCallback(async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -48,6 +66,17 @@ export default function SpotlightAdminPage() {
     }
   }, [authHeader])
 
+  const loadInquiries = useCallback(async (status: InquiryFilter) => {
+    setInqLoading(true)
+    try {
+      const headers = await authHeader()
+      const res = await fetch(`/api/admin/spotlight-inquiries?status=${status}`, { headers })
+      if (res.ok) setInqItems((await res.json()).inquiries || [])
+    } finally {
+      setInqLoading(false)
+    }
+  }, [authHeader])
+
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -58,7 +87,8 @@ export default function SpotlightAdminPage() {
     init()
   }, [])
 
-  useEffect(() => { if (authorized) load(filter) }, [filter])
+  useEffect(() => { if (authorized && view === 'spotlights') load(filter) }, [filter])
+  useEffect(() => { if (authorized && view === 'inquiries') loadInquiries(inqFilter) }, [view, inqFilter])
 
   const act = async (id: string, action: 'approve' | 'reject', reason?: string) => {
     setActionId(id)
@@ -78,6 +108,21 @@ export default function SpotlightAdminPage() {
     }
   }
 
+  const actInquiry = async (id: string, action: 'contact' | 'dismiss') => {
+    setInqActionId(id)
+    try {
+      const headers = await authHeader()
+      const res = await fetch('/api/admin/spotlight-inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ id, action }),
+      })
+      if (res.ok) setInqItems(prev => prev.filter(i => i.id !== id))
+    } finally {
+      setInqActionId(null)
+    }
+  }
+
   if (!authorized) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)' }}>{loading ? tc('admin.loading') : null}</div>
   }
@@ -87,6 +132,21 @@ export default function SpotlightAdminPage() {
       <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, marginBottom: 6 }}>{tc('admin.spotlight_title')}</h1>
       <p style={{ fontSize: 15, color: 'var(--tx3)', marginBottom: 20 }}>{tc('admin.spotlight_desc')}</p>
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '1px solid var(--b)', paddingBottom: 16 }}>
+        {(['spotlights', 'inquiries'] as View[]).map(v => (
+          <button key={v} onClick={() => setView(v)}
+            style={{
+              padding: '6px 14px', borderRadius: 9999, border: 'none', fontFamily: 'inherit',
+              fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              background: view === v ? 'var(--tx)' : 'transparent',
+              color: view === v ? 'var(--bg)' : 'var(--tx2)',
+            }}>
+            {tc('admin.spotlight_view_' + v)}
+          </button>
+        ))}
+      </div>
+
+      {view === 'spotlights' && (<>
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {(['pending', 'approved', 'rejected', 'all'] as Filter[]).map(f => (
           <button key={f} onClick={() => setFilter(f)}
@@ -163,6 +223,61 @@ export default function SpotlightAdminPage() {
           ))}
         </div>
       )}
+      </>)}
+
+      {view === 'inquiries' && (<>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {(['pending', 'contacted', 'dismissed', 'all'] as InquiryFilter[]).map(f => (
+          <button key={f} onClick={() => setInqFilter(f)}
+            style={{
+              padding: '6px 14px', borderRadius: 9999, border: '1px solid var(--b2)', fontFamily: 'inherit',
+              fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              background: inqFilter === f ? 'var(--acc)' : 'var(--sf)',
+              color: inqFilter === f ? '#fff' : 'var(--tx2)',
+            }}>
+            {tc('admin.spotlight_filter_' + f)}
+          </button>
+        ))}
+      </div>
+
+      {inqLoading ? (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)' }}>{tc('admin.loading')}</div>
+      ) : inqItems.length === 0 ? (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)' }}>
+          {tc('admin.spotlight_inquiries_empty')}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {inqItems.map(item => (
+            <div key={item.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)', padding: 16, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{item.name}</div>
+                <div style={{ fontSize: 14, color: 'var(--tx2)', marginTop: 4, display: 'flex', gap: 14, flexWrap: 'wrap' as const }}>
+                  <a href={`tel:${item.phone}`} style={{ color: 'var(--acc)' }}>{item.phone}</a>
+                  <a href={`mailto:${item.email}`} style={{ color: 'var(--acc)' }}>{item.email}</a>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 6 }}>
+                  {tc('admin.spotlight_submitted')} {fmtDate ? fmtDate(item.submitted_at) : new Date(item.submitted_at).toLocaleDateString()}
+                </div>
+              </div>
+
+              {item.status === 'pending' && (
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button onClick={() => actInquiry(item.id, 'contact')} disabled={inqActionId === item.id}
+                    style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: inqActionId === item.id ? .6 : 1 }}>
+                    {tc('admin.spotlight_inquiry_contact')}
+                  </button>
+                  <button onClick={() => actInquiry(item.id, 'dismiss')} disabled={inqActionId === item.id}
+                    style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                    {tc('admin.spotlight_inquiry_dismiss')}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      </>)}
     </div>
   )
 }

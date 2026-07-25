@@ -146,5 +146,12 @@
   "spotlight_confirm_reject": "Confirm reject",
   "spotlight_cancel": "Cancel",
   "spotlight_approve": "Approve",
-  "spotlight_reject": "Reject"
+  "spotlight_reject": "Reject",
+  "spotlight_view_spotlights": "Spotlights",
+  "spotlight_view_inquiries": "Inquiries",
+  "spotlight_filter_contacted": "Contacted",
+  "spotlight_filter_dismissed": "Dismissed",
+  "spotlight_inquiries_empty": "No inquiries yet.",
+  "spotlight_inquiry_contact": "Mark contacted",
+  "spotlight_inquiry_dismiss": "Dismiss"
 }

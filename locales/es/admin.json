@@ -127,5 +127,12 @@
   "kv_rejected_sub": "Rechazado",
   "open_x_agent": "Abrir X Agent →",
   "recent_activity": "Actividad reciente",
-  "no_x_activity": "Aún no hay actividad en X."
+  "no_x_activity": "Aún no hay actividad en X.",
+  "spotlight_view_spotlights": "Destacados",
+  "spotlight_view_inquiries": "Consultas",
+  "spotlight_filter_contacted": "Contactado",
+  "spotlight_filter_dismissed": "Descartado",
+  "spotlight_inquiries_empty": "Aún no hay consultas.",
+  "spotlight_inquiry_contact": "Marcar como contactado",
+  "spotlight_inquiry_dismiss": "Descartar"
 }

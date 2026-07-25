@@ -131,5 +131,12 @@
   "kv_rejected_sub": "La diiday",
   "open_x_agent": "Fur Wakiilka X →",
   "recent_activity": "Dhaqdhaqaaqa Dhawaan",
-  "no_x_activity": "Weli dhaqdhaqaaq X ah ma jiro."
+  "no_x_activity": "Weli dhaqdhaqaaq X ah ma jiro.",
+  "spotlight_view_spotlights": "Muujinta",
+  "spotlight_view_inquiries": "Su'aalaha",
+  "spotlight_filter_contacted": "La xiriiray",
+  "spotlight_filter_dismissed": "La diiday",
+  "spotlight_inquiries_empty": "Wali su'aalo ma jiraan.",
+  "spotlight_inquiry_contact": "Calaamadi in la xiriiray",
+  "spotlight_inquiry_dismiss": "Diid"
 }

@@ -9,6 +9,7 @@ import PasskeyNudge from '@/components/PasskeyNudge'
 import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
 import { phoneToSyntheticEmail, pinToPassword } from '@/lib/phone-auth'
 import SpotlightCarousel from '@/components/SpotlightCarousel'
+import AdvertiseInquiryModal from '@/components/AdvertiseInquiryModal'
 
 type Mode = 'signin' | 'signup'
 type Method = 'email' | 'phone'
@@ -53,6 +54,9 @@ function AuthPage() {
   // onboarding first and shows the nudge there instead (see finish()/skip()
   // in app/onboarding/page.tsx).
   const [pendingNudge, setPendingNudge] = useState<string | null>(null)
+
+  // "Advertise here" floating bubble → lead-capture modal (anonymous, no auth)
+  const [showAdvertiseModal, setShowAdvertiseModal] = useState(false)
 
   // Surface a failed OAuth/magic-link round trip (redirected here from
   // /auth/callback?error=auth_failed) — otherwise the user lands back on a
@@ -606,12 +610,14 @@ function AuthPage() {
       {/* Visual column — brand panel, desktop only (>=900px, see globals.css) */}
       <div className="signin-visual-col">
         <div style={{ position: 'absolute', inset: 0, opacity: .12, backgroundImage: 'radial-gradient(circle, #fff 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}/>
-        <Link href="/settings?section=spotlight" className="advertise-banner">
+        <button onClick={() => setShowAdvertiseModal(true)} className="advertise-banner" type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11v3a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M14.5 8.5a4 4 0 0 1 0 7"/><path d="M17.5 5.5a8 8 0 0 1 0 13"/></svg>
           {tc('auth.advertise_banner')}
-        </Link>
+        </button>
         <SpotlightCarousel/>
       </div>
+
+      {showAdvertiseModal && <AdvertiseInquiryModal onClose={() => setShowAdvertiseModal(false)} />}
     </div>
   )
 }

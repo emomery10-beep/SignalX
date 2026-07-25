@@ -47,21 +47,46 @@ export async function GET(request: NextRequest) {
     headers: { Authorization: `Bearer ${access_token}` },
   })
   const userData = userRes.ok ? await userRes.json() : {}
+
+  // Discover the Google Ads customer ID this token can access — requires a
+  // Google-approved Developer Token (a manual application process, separate
+  // from OAuth; see GOOGLE_ADS_DEVELOPER_TOKEN). Without it this call 401s
+  // and the connection is stored without a customer_id, which syncGoogleAds()
+  // cannot proceed without.
+  let customerId = ''
+  if (process.env.GOOGLE_ADS_DEVELOPER_TOKEN) {
+    const customersRes = await fetch('https://googleads.googleapis.com/v17/customers:listAccessibleCustomers', {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        'developer-token': process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+      },
+    })
+    if (customersRes.ok) {
+      const { resourceNames } = await customersRes.json()
+      customerId = String(resourceNames?.[0] || '').replace('customers/', '')
+    }
+  }
+
   const displayName = `Google Ads — ${userData.email || 'connected'}`
 
   const supabase = createClient()
 
-  await supabase
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
       source_type: 'google_ads',
       name: displayName,
-      status: 'active',
+      status: customerId ? 'active' : 'error',
       credentials: encryptCredentials({ access_token, refresh_token }),
-      config: {},
+      config: { customer_id: customerId },
+      error_message: customerId ? null : 'Could not discover a Google Ads customer ID — check GOOGLE_ADS_DEVELOPER_TOKEN is set and approved',
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=google_ads_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 

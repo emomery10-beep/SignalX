@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = createClient()
 
-  await supabase
+  const { error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
@@ -64,6 +64,10 @@ export async function GET(request: NextRequest) {
       config: {},
       sync_interval_minutes: 60,
     }, { onConflict: 'user_id,source_type' })
+
+  if (upsertError) {
+    return NextResponse.redirect(new URL('/sources?error=freeagent_save_failed', request.url))
+  }
 
   try { await runSync(userId) } catch (_) {}
 
