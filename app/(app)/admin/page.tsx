@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { formatDate } from '@/lib/i18n-format'
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
@@ -35,14 +36,14 @@ const bizTypeLabel = (t?: string | null) => {
   return BIZ_TYPE_LABELS[t] || t.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
 }
 const fmtCompact = (n: number) => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(Math.round(n))
-const relativeDate = (iso?: string | null) => {
+const relativeDate = (iso: string | null | undefined, lang: string) => {
   if (!iso) return '—'
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
   if (days <= 0) return 'Today'
   if (days === 1) return 'Yesterday'
   if (days < 7) return days + 'd ago'
   if (days < 60) return Math.floor(days / 7) + 'w ago'
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return formatDate(lang, iso, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 // Deterministic per-user colour so the same person always gets the same avatar tint.
 const AVATAR_COLORS = ['#2563eb', '#7c3aed', '#b45309', '#047857', '#dc2626', '#0891b2', '#c026d3', '#65a30d']
@@ -189,6 +190,7 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
   const [displayUser, setDisplayUser] = useState<any | null>(user)
   const [visible, setVisible] = useState(!!user)
   const [closing, setClosing] = useState(false)
+  const { lang } = useLang()
 
   useEffect(() => {
     if (user) { setDisplayUser(user); setVisible(true); setClosing(false); return }
@@ -270,7 +272,7 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
               { label: 'Questions asked', value: u.questions_used || 0 },
               { label: 'Business type', value: bizTypeLabel(u.business_type) || tc('admin.empty_dash') },
               { label: 'Country', value: u.registration_country || tc('admin.empty_dash') },
-              { label: 'Joined', value: u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : tc('admin.empty_dash') },
+              { label: 'Joined', value: u.created_at ? formatDate(lang, u.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) : tc('admin.empty_dash') },
             ].map(({ label, value }) => (
               <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:'1px solid var(--b)',fontSize:14}}>
                 <span style={{color:'var(--tx2)'}}>{label}</span>
@@ -303,7 +305,7 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
 
 export default function AdminPage() {
   const router = useRouter()
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -1009,7 +1011,7 @@ export default function AdminPage() {
                               </div>
                             ) : <span style={{color:'var(--tx3)'}}>—</span>}
                           </td>
-                          <td style={{padding:'10px 14px',color:'var(--tx3)',fontSize:13,whiteSpace:'nowrap'}} title={u.created_at ? new Date(u.created_at).toLocaleString('en-GB') : undefined}>{relativeDate(u.created_at)}</td>
+                          <td style={{padding:'10px 14px',color:'var(--tx3)',fontSize:13,whiteSpace:'nowrap'}} title={u.created_at ? formatDate(lang, u.created_at, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : undefined}>{relativeDate(u.created_at, lang)}</td>
                           <td style={{padding:'10px 10px'}}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
                           </td>
