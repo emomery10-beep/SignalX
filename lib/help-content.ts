@@ -149,6 +149,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "churn-prediction-explained",
       "custom-alert-setup",
       "smart-goals-and-targets",
+      "zakat-calculator-guide",
     ],
   },
   {
@@ -3269,7 +3270,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Before you start",
-        body: "You will need:\n- An active **Walmart Marketplace seller account** (US marketplace)\n- Access to **Walmart Seller Center → Developer Tools**\n- Your account must be approved and in good standing\n\nWalmart Marketplace connection requires the **Growth or Business plan**.",
+        body: "You will need:\n- An active **Walmart Marketplace seller account** (US marketplace)\n- Access to **Walmart Seller Center → Developer Tools**\n- Your account must be approved and in good standing\n\nWalmart Marketplace connection is documented as requiring the **Growth or Business plan** — but this isn't currently enforced anywhere in the connect flow, so a Free plan account can connect it too. If plan enforcement is added here in future, this article will be updated to match.",
       },
       {
         heading: "Step 1 — Generate API credentials in Seller Center",
@@ -3655,6 +3656,52 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "I hit my target early. Should I update it?", a: "Yes — if you hit a target significantly ahead of schedule, update it to a more ambitious level. A target you have already achieved is no longer motivating. The process of revising targets upward is itself a positive signal — it means your business is outperforming its own expectations." },
     ],
     related: ["custom-alert-setup", "daily-brief-explained", "setting-up-your-kpis"],
+  },
+
+  {
+    slug: "zakat-calculator-guide",
+    title: "Zakat Calculator Guide",
+    description: "How the AskBiz Zakat calculator works: how your zakat base is calculated from inventory, cash, receivables and payables, what nisab and hawl mean, and where to find it in My Business.",
+    topic: "Intelligence & Alerts",
+    topicSlug: "intelligence-alerts",
+    readTime: 6,
+    popular: false,
+    lastUpdated: "2026-07-25",
+    keywords: ["zakat calculator", "zakat calculator for business", "nisab calculator", "business zakat tool", "islamic finance business"],
+    content: [
+      {
+        heading: "What Is the Zakat Calculator?",
+        body: "The Zakat calculator works out your business's zakat position — inventory, cash, receivables and payables, checked against the nisab threshold — using your real AskBiz data instead of a spreadsheet. It lives in the **Zakat** tab of My Business and is free on every plan, including Free — no upgrade needed.\n\nIt calculates zakat on **trade assets**: cash, stock-in-trade at retail value, and money owed to you, less short-term business debts — at the standard rate of **2.5%** once that total has stayed above the nisab threshold for a full lunar year (the hawl). It only reads business data recorded in AskBiz, so it doesn't cover personal wealth, personally-held gold or silver, agricultural zakat, or livestock zakat.",
+      },
+      {
+        heading: "Where to Find It",
+        body: "Open **My Business** from the main navigation — this is the page at `/intelligence` — then select the **Zakat** tab. It sits alongside Overview, CFO, Team, Logistics, Market and Actions.\n\nDirect link: `/intelligence?tab=zakat`.\n\nAsk AskBiz can't deep-link you into this tab yet the way it can for some others — open it directly from My Business rather than asking the AI chat to take you there.",
+      },
+      {
+        heading: "How Your Zakat Base Is Calculated",
+        body: "Every time you open the calculator, AskBiz pulls four figures from your live business data:\n\n- **Inventory** — the retail value of your active stock (sale price × quantity on hand)\n- **Cash** — the cash balance you've entered in your CFO cost settings. If you've never entered one, the tile shows **Not set** rather than treating it as zero\n- **Receivables** — money owed to you, from your logged receivables\n- **Payables** — money you owe, subtracted from the total. This includes any received purchase orders you haven't fully paid your supplier for yet\n\nYour **zakat base** is Cash + Inventory + Receivables − Payables (floored at zero). Tap any figure to override it for this calculation — useful if a number doesn't reflect reality yet. Overrides only affect the calculation in front of you: they don't change your underlying inventory or CFO records, and they aren't remembered the next time you open the calculator unless you enter them again.",
+      },
+      {
+        heading: "Nisab: The Threshold for Owing Zakat",
+        body: "You only owe zakat once your zakat base is at or above the **nisab** — the minimum threshold of wealth. AskBiz uses the standard weight-based nisab: **87.48g of gold** or **612.36g of silver**, converted to your local currency using a current metal price. Silver is used by default, as it's the lower of the two thresholds.\n\nMetal prices aren't checked automatically — click **Check current price** to look one up. AskBiz runs a live price search and caches the result, along with the date it was checked, so it doesn't need to look it up every time you open the page. Treat the figure as an indicative market estimate rather than an exact spot rate — if precision matters, confirm it independently.\n\nYou can switch between **Gold** and **Silver** at any time. Each metal's last-checked price is remembered separately, so switching back and forth doesn't lose either value.",
+      },
+      {
+        heading: "Hawl: Why 'Above Nisab' Isn't the Same as 'Due'",
+        body: "Being above nisab today doesn't mean zakat is due today — your zakat base needs to stay above nisab for a full lunar year (**hawl**, tracked as 355 days) before anything is actually owed. AskBiz tracks this automatically:\n\n- The day your zakat base first goes above nisab, AskBiz starts the hawl clock and shows a progress bar\n- If your zakat base drops back below nisab before the year is up, the clock resets — it starts again next time you cross the threshold\n- Once the full hawl completes while still above nisab, the status changes to **Due now** and shows the amount owed (2.5% of your zakat base)\n\nUntil hawl completes, the amount shown is a live running estimate, not a due amount. The status badge tells you which state you're in: **Check price to begin** (nisab not yet checked), **Below nisab**, **Above nisab** (hawl running), or **Due now**.",
+      },
+      {
+        heading: "Saving a Calculation and Giving to Charity",
+        body: "Click **Save this calculation** to log a snapshot of the figures, any overrides you applied, and the resulting amount — for your own records. Each save is an independent log entry, not a running balance.\n\nBelow the calculator, AskBiz lists **verified partner charities** you can give to directly, filtered to your country where possible. Each entry links out to the charity's own donation page — AskBiz doesn't process the payment itself. If no partner charities are listed for your country yet, you'll see a note saying so; the directory is curated by AskBiz and is still growing.",
+      },
+    ],
+    faq: [
+      { q: "Is the Zakat calculator really free?", a: "Yes — it's available on every plan, including Free, with no upgrade required." },
+      { q: "Does AskBiz decide how much zakat I owe, like a fatwa?", a: "No. It's a calculation aid based on the standard nisab, hawl and 2.5% methodology for zakat on business/trade assets — it doesn't account for madhhab-specific differences or your full personal financial picture. For rulings specific to your situation, speak to your own scholar or imam." },
+      { q: "If I correct a figure, does it update my actual inventory or cash records?", a: "No. Overrides only affect the calculation you're looking at — they aren't written back to your inventory, CFO, or accounting data. Re-enter them next time if the underlying figure in AskBiz is still wrong." },
+      { q: "Why does my cash figure show 'Not set'?", a: "AskBiz only knows your cash balance if you've entered one in Cost Configuration → Cash Balance (inside the CFO tab, a Business-plan feature). On Free or Growth, or if you simply haven't set it, the tile shows 'Not set' rather than treating it as zero — tap it to enter your cash balance directly for this calculation instead." },
+      { q: "Can I give my zakat to a charity that isn't in the list?", a: "Yes. The partner charity list is a convenience for giving directly from AskBiz — you're free to pay your zakat to any eligible recipient of your choosing." },
+    ],
+    related: ["daily-brief-explained", "plans-comparison", "cash-flow-intelligence"],
   },
 
   // ── TROUBLESHOOTING ───────────────────────────────────────────────────────────
