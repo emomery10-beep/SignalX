@@ -12,6 +12,10 @@
 
 const BASE = 'https://graph.facebook.com/v19.0'
 
+// Public customer-care group invite — linked from onboarding and the landing
+// page footer. Safe to import from client components (no server-only code).
+export const CUSTOMER_CARE_WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/FDAPXQIRVQqL2DE0pU3o6L?s=hd&p=i&ilr=4'
+
 function headers() {
   return {
     'Authorization': `Bearer ${process.env.META_WHATSAPP_TOKEN}`,

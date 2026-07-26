@@ -12,6 +12,7 @@ import DayInTheLife from '@/components/marketing/DayInTheLife'
 import VideoReel from '@/components/marketing/VideoReel'
 import { createClient } from '@/lib/supabase/client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
+import { CUSTOMER_CARE_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 
 // Below-the-fold "show and tell" sections + the hero PoS demo are code-split out of
 // the main bundle (each was a static import, all bundled/hydrated eagerly before any
@@ -2408,6 +2409,16 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <span style={{ fontFamily:'var(--font-instrument)',fontSize:FS.sm,color:T.tx }}>AskBiz</span>
               <span style={{ fontSize:FS.sm,color:T.tx3 }}>· {tc('landing.footer_utauza')}</span>
               <span style={{ fontSize:FS.sm,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
+              <a
+                href={CUSTOMER_CARE_WHATSAPP_GROUP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={tc('landing.footer_whatsapp_label')}
+                title={tc('landing.footer_whatsapp_label')}
+                style={{ width:22,height:22,borderRadius:'50%',background:'rgba(37,211,102,.14)',display:'flex',alignItems:'center',justifyContent:'center',marginLeft:4 }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2.13c-5.45 0-9.9 4.45-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2 22l5.15-1.35a9.9 9.9 0 0 0 4.89 1.28h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.64-1.03-5.13-2.9-7-1.86-1.87-4.35-2.9-7-2.9Zm5.8 14.14c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.8-.11a16 16 0 0 1-1.62-.6c-2.85-1.23-4.7-4.1-4.85-4.3-.14-.2-1.15-1.53-1.15-2.92 0-1.4.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.65.5.24.55.82 1.9.89 2.04.07.14.12.3.02.49-.1.19-.15.3-.3.46-.14.17-.3.37-.43.5-.14.14-.3.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.28.14.45.12.62-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.66-.17 1.3Z"/></svg>
+              </a>
             </div>
             <p style={{ fontSize:FS.xs,color:T.tx3,opacity:0.8,margin:0 }}>{tc('landing.footer_tagline')} · {tc('landing.footer_countries')}</p>
           </div>
