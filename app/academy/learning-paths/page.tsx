@@ -1,5 +1,19 @@
 import type { Metadata } from 'next'
+import { ACTIVE_LOCALES, localePath } from '@/lib/i18n-locale'
 import LearningPathsPageClient from './LearningPathsPageClient'
+
+const SITE = 'https://askbiz.co'
+
+// hreflang alternates — mirrors the x-default + per-locale pattern in
+// app/layout.tsx (see its 'so'/'sw' entries), generalized to all 7 active
+// locales via localePath(). Content behind each locale URL is still English
+// today (LearningPath objects have no translation mechanism yet), but the
+// route already resolves per-locale, so advertising the alternates is
+// correct and forward-compatible.
+const LEARNING_PATHS_HUB_LANGUAGES: Record<string, string> = {
+  'x-default': `${SITE}/academy/learning-paths`,
+  ...Object.fromEntries(ACTIVE_LOCALES.map(l => [l, `${SITE}${localePath('/academy/learning-paths', l)}`])),
+}
 
 export const metadata: Metadata = {
   title: 'Learning Paths — AskBiz Academy',
@@ -19,7 +33,7 @@ export const metadata: Metadata = {
     description: 'Structured paths for SME founders — eCommerce, retail, supply chain, manufacturing, and more.',
     images: ['https://askbiz.co/og-image.png'],
   },
-  alternates: { canonical: 'https://askbiz.co/academy/learning-paths' },
+  alternates: { canonical: 'https://askbiz.co/academy/learning-paths', languages: LEARNING_PATHS_HUB_LANGUAGES },
 }
 
 export default function LearningPathsPage() {

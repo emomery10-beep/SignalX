@@ -30,7 +30,7 @@ function readCountFor(pathId: string, total: number): number {
 // path at the top of the hub. Renders nothing until it finds in-progress work,
 // so first-time and finished visitors see no empty band.
 export default function ContinueLearning() {
-  const { lang, tc } = useLang()
+  const { lang, tc, isRTL } = useLang()
   const [inProgress, setInProgress] = useState<
     { id: string; title: string; icon: string; color: string; done: number; total: number; pct: number }[]
   >([])
@@ -72,7 +72,7 @@ export default function ContinueLearning() {
               </div>
               <span style={{ fontSize: 10, fontWeight: 700, color: r.color, flexShrink: 0, whiteSpace: 'nowrap' }}>{r.done}/{r.total}</span>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: ACC, marginTop: 10 }}>{tc('academy.lp_continue_cta')} →</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: ACC, marginTop: 10 }}>{tc('academy.lp_continue_cta')} {isRTL ? '←' : '→'}</div>
           </Link>
         ))}
       </div>

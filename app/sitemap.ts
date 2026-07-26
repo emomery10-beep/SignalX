@@ -20,6 +20,7 @@ import { SECTORS } from "@/lib/pos-sectors";
 import { POS_FEATURES } from "@/lib/pos-features";
 import { LEARNING_PATHS } from "@/lib/learning-paths-content";
 import { STATIC_LOCALE_SEO_SLUGS, READY_SEO_LOCALES } from "@/lib/seo-i18n-slugs";
+import { localePath, PREFIXED_LOCALES } from "@/lib/i18n-locale";
 
 const base = "https://askbiz.co";
 
@@ -179,6 +180,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/academy`,                lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
     { url: `${base}/academy/learning-paths`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     ...LEARNING_PATHS.map(lp => ({ url: `${base}/academy/learning-paths/${lp.id}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
+    // Localized learning-path variants — self-canonicalizing hreflang variants,
+    // same flat-entry-per-locale pattern as the localized homepages above.
+    ...LEARNING_PATHS.flatMap(lp => PREFIXED_LOCALES.map(l => ({
+      url: `${base}${localePath(`/academy/learning-paths/${lp.id}`, l)}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }))),
     { url: `${base}/academy/learning-askbiz`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/academy/checklists`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     ...academyCategories.map((cat) => ({
@@ -187,12 +196,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
+    // Localized category variants (same pattern as above)
+    ...academyCategories.flatMap((cat) => PREFIXED_LOCALES.map(l => ({
+      url: `${base}${localePath(`/academy/category/${cat.slug}`, l)}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }))),
     ...academyArticles.map((article) => ({
       url: `${base}/academy/${article.slug}`,
       lastModified: hashModifiedDate(article.slug),
       changeFrequency: "monthly" as const,
       priority: article.difficulty === "Beginner" ? 0.8 : 0.7,
     })),
+    // Localized article-detail variants (same pattern as above)
+    ...academyArticles.flatMap((article) => PREFIXED_LOCALES.map(l => ({
+      url: `${base}${localePath(`/academy/${article.slug}`, l)}`,
+      lastModified: hashModifiedDate(article.slug),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }))),
 
     // ── HELP: topics + articles ──────────────────────────────────────────────────
     { url: `${base}/help`,          lastModified: now, changeFrequency: "weekly", priority: 0.9 },

@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react'
 import { LEARNING_PATHS, totalArticles } from '@/lib/learning-paths-content'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 import ContinueLearning from './ContinueLearning'
 
 const ACC = '#d08a59'
@@ -83,7 +84,7 @@ export default function LearningPathsPageClient() {
         .lp-mob-tog      { display: none; cursor: pointer; border: none; background: none; align-items: center; }
         .lp-sb-overlay   { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
         @media (max-width: 860px) {
-          .lp-sb-wrap  { display: none; position: fixed; top: 54px; left: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
+          .lp-sb-wrap  { display: none; position: fixed; top: 54px; inset-inline-start: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
           .lp-sb-wrap.open { display: block; }
           .lp-sb-overlay.open { display: block; }
           .lp-mob-tog  { display: flex !important; }
@@ -108,7 +109,10 @@ export default function LearningPathsPageClient() {
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lp_try_free')}</Link>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <LanguageToggle compact />
+          <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lp_try_free')}</Link>
+        </div>
       </nav>
 
       {/* Mobile overlay */}
@@ -118,7 +122,7 @@ export default function LearningPathsPageClient() {
       <div style={{ display: 'flex', height: 'calc(100vh - 54px)', overflow: 'hidden' }}>
 
         {/* Sidebar */}
-        <div className={`lp-sb-wrap${sidebarOpen ? ' open' : ''}`} style={{ width: 244, flexShrink: 0, overflowY: 'auto', borderRight: `1px solid ${BD}`, background: SF, padding: '20px 0 32px' }}>
+        <div className={`lp-sb-wrap${sidebarOpen ? ' open' : ''}`} style={{ width: 244, flexShrink: 0, overflowY: 'auto', borderInlineEnd: `1px solid ${BD}`, background: SF, padding: '20px 0 32px' }}>
 
           {/* All paths */}
           <div style={{ padding: '0 12px', marginBottom: 4 }}>
@@ -142,7 +146,7 @@ export default function LearningPathsPageClient() {
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, color: TX2, fontSize: 11, fontWeight: 400, marginBottom: 1, textDecoration: 'none' }}
               >
                 <span style={{ fontSize: 12, flexShrink: 0 }}>{path.icon}</span>
-                <span style={{ lineHeight: 1.35, flex: 1, textAlign: 'left' }}>{path.title}</span>
+                <span style={{ lineHeight: 1.35, flex: 1, textAlign: 'start' }}>{path.title}</span>
                 <span style={{ fontSize: 9, color: TX3, flexShrink: 0 }}>{path.articles.length}</span>
               </Link>
             </div>
@@ -180,7 +184,7 @@ export default function LearningPathsPageClient() {
 
             {/* Search bar */}
             <div style={{ position: 'relative', maxWidth: 520 }}>
-              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
+              <svg style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
               <input
@@ -189,10 +193,10 @@ export default function LearningPathsPageClient() {
                 placeholder={tc('academy.lp_search_placeholder')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 36px 10px 40px', fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10 }}
+                style={{ width: '100%', boxSizing: 'border-box', paddingBlock: 10, paddingInlineStart: 40, paddingInlineEnd: 36, fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10 }}
               />
               {search && (
-                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                <button onClick={() => setSearch('')} style={{ position: 'absolute', insetInlineEnd: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
               )}
             </div>
           </div>

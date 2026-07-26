@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 import { ASKBIZ_TRAINING_ARTICLES } from '@/lib/askbiz-training-articles'
 import { ASKBIZ_POS_TRAINING_ARTICLES } from '@/lib/askbiz-pos-training-articles'
 import { ASKBIZ_POS_RETAIL_ARTICLES } from '@/lib/askbiz-pos-retail-articles'
@@ -73,7 +74,10 @@ export default function LearningAskBizPageClient() {
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <LanguageToggle compact />
+          <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
+        </div>
       </nav>
 
       {/* Breadcrumbs */}

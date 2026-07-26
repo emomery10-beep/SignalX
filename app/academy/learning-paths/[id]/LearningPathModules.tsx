@@ -30,7 +30,7 @@ export default function LearningPathModules({
   path: LearningPath
   articleMeta: Record<string, ArticleMeta | undefined>
 }) {
-  const { lang } = useLang()
+  const { lang, isRTL } = useLang()
   const [read, setRead] = useState<Set<string>>(new Set())
   const [hydrated, setHydrated] = useState(false)
 
@@ -63,7 +63,7 @@ export default function LearningPathModules({
         <div style={{ flex: 1, height: 8, background: BD, borderRadius: 9999, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: path.color, borderRadius: 9999, transition: hydrated ? 'width 300ms' : 'none' }} />
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? '#1e7e34' : path.color, flexShrink: 0, minWidth: 90, textAlign: 'right' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? '#1e7e34' : path.color, flexShrink: 0, minWidth: 90, textAlign: 'end' }}>
           {doneCount}/{path.articles.length} {pct === 100 ? 'complete' : `read (${pct}%)`}
         </span>
       </div>
@@ -121,7 +121,7 @@ export default function LearningPathModules({
                     {readLabel}
                   </p>
                 </div>
-                <div style={{ fontSize: 16, color: meta ? ACC : TX3, flexShrink: 0 }}>→</div>
+                <div style={{ fontSize: 16, color: meta ? ACC : TX3, flexShrink: 0 }}>{isRTL ? '←' : '→'}</div>
               </div>
             )
 

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AcademyArticle } from "@/lib/academy-types";
-import { academyArticles } from "@/lib/academy-content";
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 import { markArticleRead } from '@/lib/academy-read-tracking'
 import { parseYoutubeId } from '@/lib/youtube-feed'
 
@@ -19,9 +19,13 @@ interface BlogCrossLink {
 interface Props {
   article: AcademyArticle;
   blogCrossLinks?: BlogCrossLink[];
+  // Pre-localized by the server (app/academy/[article]/page.tsx) via
+  // getLocalizedArticle, one per article.relatedSlugs entry — this component
+  // stays a plain renderer and never dynamic-imports locale content itself.
+  relatedArticles?: AcademyArticle[];
 }
 
-export default function AcademyArticleClient({ article, blogCrossLinks = [] }: Props) {
+export default function AcademyArticleClient({ article, blogCrossLinks = [], relatedArticles = [] }: Props) {
   const { lang, tc } = useLang()
 
   // Reddit-style visited tracking — any real visit counts as "read", not just
@@ -49,7 +53,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
     return () => observer.disconnect();
   }, [article.slug, article.content.length]);
 
-  const related = academyArticles.filter((a) => article.relatedSlugs.includes(a.slug));
+  const related = relatedArticles;
 
   const diffColor =
     article.difficulty === "Beginner"
@@ -69,16 +73,19 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
       `}</style>
       {/* Breadcrumb */}
       <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 11, color: "#6a655c" }}>
-          <Link href={localePath('/', toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_home')}</Link>
-          {" / "}
-          <Link href={localePath('/academy', toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_academy')}</Link>
-          {" / "}
-          <Link href={localePath(`/academy/category/${article.categorySlug}`, toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>
-            {article.category}
-          </Link>
-          {" / "}
-          <span style={{ color: "#171512" }}>{article.title}</span>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 11, color: "#6a655c" }}>
+            <Link href={localePath('/', toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_home')}</Link>
+            {" / "}
+            <Link href={localePath('/academy', toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>{tc('academy.art_breadcrumb_academy')}</Link>
+            {" / "}
+            <Link href={localePath(`/academy/category/${article.categorySlug}`, toLocale(lang))} style={{ color: "#6a655c", textDecoration: "none" }}>
+              {article.category}
+            </Link>
+            {" / "}
+            <span style={{ color: "#171512" }}>{article.title}</span>
+          </div>
+          <LanguageToggle compact />
         </div>
       </div>
 
@@ -124,7 +131,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
             <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 13, fontWeight: 700, color: "#d08a59", margin: "0 0 14px" }}>
               {tc('academy.art_key_takeaways')}
             </h2>
-            <ul style={{ margin: 0, paddingLeft: 20 }}>
+            <ul style={{ margin: 0, paddingInlineStart: 20 }}>
               {article.keyTakeaways.map((kt, i) => (
                 <li key={i} style={{ fontSize: 13, color: "#333", lineHeight: 1.6, marginBottom: 8 }}>
                   {kt}
@@ -256,9 +263,10 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                       color: active ? "#95592b" : "#555",
                       fontWeight: active ? 700 : 400,
                       textDecoration: "none",
-                      padding: "6px 0 6px 10px",
-                      borderLeft: `2px solid ${active ? "#d08a59" : "transparent"}`,
-                      marginLeft: -10,
+                      paddingBlock: 6,
+                      paddingInlineStart: 10,
+                      borderInlineStart: `2px solid ${active ? "#d08a59" : "transparent"}`,
+                      marginInlineStart: -10,
                       borderBottom: i < article.content.length - 1 ? "1px solid #f5f5f5" : "none",
                       lineHeight: 1.4,
                       transition: "color 120ms, border-color 120ms",

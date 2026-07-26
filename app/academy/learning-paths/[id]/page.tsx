@@ -1,10 +1,14 @@
 import Link from 'next/link'
 import { cookies, headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { resolveLocale, localePath } from '@/lib/i18n-locale'
+import { resolveLocale, localePath, ACTIVE_LOCALES, isRTL } from '@/lib/i18n-locale'
 import { LEARNING_PATHS } from '@/lib/learning-paths-content'
 import { academyArticles } from '@/lib/academy-content'
+import { preloadLocaleTranslations, getLocalizedListFields } from '@/lib/academy-i18n-loader'
 import LearningPathModules from './LearningPathModules'
+import LanguageToggle from '@/components/LanguageToggle'
+
+const SITE = 'https://askbiz.co'
 
 // Real per-article metadata keyed by slug — lets the hub page render each
 // module's actual description and read time instead of a generic placeholder,
@@ -42,19 +46,32 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const suffix = ' · AskBiz Academy'
   const title = path.title.length + suffix.length <= 62 ? path.title + suffix : path.title
   const description = truncateAtWord(path.description, 157)
-  const url = `https://askbiz.co/academy/learning-paths/${path.id}`
+  const url = `${SITE}/academy/learning-paths/${path.id}`
+
+  // hreflang alternates — mirrors the x-default + per-locale pattern in
+  // app/layout.tsx (see its 'so'/'sw' entries), generalized to all 7 active
+  // locales via localePath() instead of hardcoded URLs. The content behind
+  // each locale URL is still English today (LearningPath objects themselves
+  // have no translation mechanism yet — see the page component below), but
+  // the route already resolves per-locale via resolveLocale(), so
+  // advertising the alternates is correct and forward-compatible.
+  const languages: Record<string, string> = { 'x-default': url }
+  for (const locale of ACTIVE_LOCALES) {
+    languages[locale] = `${SITE}${localePath(`/academy/learning-paths/${path.id}`, locale)}`
+  }
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: { canonical: url, languages },
     openGraph: { type: 'website', url, title, description },
     twitter: { card: 'summary_large_image', title, description },
   }
 }
 
-export default function LearningPathPage({ params }: { params: { id: string } }) {
+export default async function LearningPathPage({ params }: { params: { id: string } }) {
   const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
+  const rtl = isRTL(lang)
   const id = params.id
   const path = LEARNING_PATHS.find(p => p.id === id)
 
@@ -65,14 +82,35 @@ export default function LearningPathPage({ params }: { params: { id: string } })
           <h1 style={{ fontSize: 26, fontWeight: 700, color: TX, marginBottom: 12 }}>Learning Path Not Found</h1>
           <p style={{ fontSize: 13, color: TX2, marginBottom: 36 }}>The learning path you're looking for doesn't exist.</p>
           <Link href={localePath('/academy/learning-paths', lang)} style={{ display: 'inline-block', padding: '12px 28px', background: ACC, color: SF, textDecoration: 'none', borderRadius: 10, fontWeight: 700 }}>
-            ← Back to Learning Paths
+            {rtl ? '→' : '←'} Back to Learning Paths
           </Link>
         </div>
       </div>
     )
   }
 
-  const url = `https://askbiz.co/academy/learning-paths/${path.id}`
+  const url = `${SITE}/academy/learning-paths/${path.id}`
+
+  // List-view localization: load the locale's translation table once, then
+  // localize each member article's title/description synchronously (see
+  // lib/academy-i18n-loader.ts's getLocalizedListFields docs). Today every
+  // locale table is empty ({}), so this resolves to the original English
+  // strings — a no-op until translated content lands — but the JSON-LD and
+  // the modules list below are now wired for it.
+  //
+  // NOTE (scope gap): this only localizes the per-ARTICLE fields (title from
+  // path.articles, description from the matched AcademyArticle). The
+  // LearningPath object itself (path.title/subtitle/description) has no
+  // translation mechanism yet — LearningPath isn't a TranslatableFields
+  // shape and lib/academy-i18n-loader.ts only overlays AcademyArticle prose.
+  // Course.name/description below (and the page heading/subtitle/body
+  // further down) stay English in every locale until a LearningPath-level
+  // i18n story exists.
+  const translations = await preloadLocaleTranslations(lang)
+  const localizedArticles = path.articles.map(a => ({
+    slug: a.slug,
+    title: getLocalizedListFields({ slug: a.slug, title: a.title, description: '' }, lang, translations).title,
+  }))
 
   // hasPart lists every lesson as its own LearningResource with a real,
   // crawlable URL — richer for Google's Course rich results and gives AI
@@ -84,7 +122,8 @@ export default function LearningPathPage({ params }: { params: { id: string } })
     name: path.title,
     description: path.description,
     url,
-    provider: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
+    inLanguage: lang,
+    provider: { '@type': 'Organization', name: 'AskBiz', url: SITE },
     hasCourseInstance: {
       '@type': 'CourseInstance',
       courseMode: 'online',
@@ -97,9 +136,9 @@ export default function LearningPathPage({ params }: { params: { id: string } })
       return {
         '@type': 'LearningResource',
         position: i + 1,
-        name: a.title,
-        url: meta ? `https://askbiz.co/academy/${a.slug}` : undefined,
-        description: meta?.description,
+        name: localizedArticles[i].title,
+        url: meta ? `${SITE}/academy/${a.slug}` : undefined,
+        description: meta ? getLocalizedListFields(meta, lang, translations).description : undefined,
       }
     }),
   }
@@ -137,9 +176,12 @@ export default function LearningPathPage({ params }: { params: { id: string } })
       {/* Header */}
       <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '24px clamp(16px, 4vw, 32px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <Link href={localePath('/academy/learning-paths', lang)} style={{ color: ACC, textDecoration: 'none', fontSize: 12, fontWeight: 600, marginBottom: 16, display: 'inline-block' }}>
-            ← Back to Learning Paths
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+            <Link href={localePath('/academy/learning-paths', lang)} style={{ color: ACC, textDecoration: 'none', fontSize: 12, fontWeight: 600, display: 'inline-block' }}>
+              {rtl ? '→' : '←'} Back to Learning Paths
+            </Link>
+            <LanguageToggle compact />
+          </div>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 24 }}>
             <div style={{ fontSize: 54, lineHeight: 1 }}>{path.icon}</div>
             <div style={{ flex: 1 }}>
@@ -176,7 +218,7 @@ export default function LearningPathPage({ params }: { params: { id: string } })
               lives in its own 'use client' component; everything else on this
               page stays server-rendered and crawlable. */}
           <LearningPathModules
-            path={path}
+            path={{ ...path, articles: localizedArticles }}
             articleMeta={Object.fromEntries(
               path.articles.map(a => {
                 const meta = ARTICLE_BY_SLUG.get(a.slug)
@@ -201,7 +243,7 @@ export default function LearningPathPage({ params }: { params: { id: string } })
               fontWeight: 700,
               fontSize: 12,
             }}>
-              Get Started Free →
+              Get Started Free {rtl ? '←' : '→'}
             </Link>
           </div>
         </div>

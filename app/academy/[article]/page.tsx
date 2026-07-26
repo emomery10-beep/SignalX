@@ -1,8 +1,11 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cookies, headers } from "next/headers";
 import { academyArticles } from "@/lib/academy-content";
 import { getAllPosts } from "@/lib/blog-content";
 import { parseYoutubeId } from "@/lib/youtube-feed";
+import { getLocalizedArticle } from "@/lib/academy-i18n-loader";
+import { resolveLocale, localePath, ACTIVE_LOCALES, type Locale } from "@/lib/i18n-locale";
 import AcademyArticleClient from "./AcademyArticleClient";
 
 interface Props {
@@ -11,6 +14,18 @@ interface Props {
 
 export async function generateStaticParams() {
   return academyArticles.map((a) => ({ article: a.slug }));
+}
+
+// Same locale-resolution pattern as app/academy/category/[slug]/page.tsx and
+// app/for/[segment]/page.tsx: URL prefix (via middleware's x-locale header)
+// wins, falling back to the askbiz_lang cookie. Reading headers()/cookies()
+// opts this route into per-request dynamic rendering (same tradeoff those
+// routes already made) so the right locale's content can be served.
+function getRequestLocale(): Locale {
+  return resolveLocale({
+    urlLocale: headers().get("x-locale"),
+    cookie: cookies().get("askbiz_lang")?.value,
+  });
 }
 
 // Transforms plain academy descriptions into click-worthy SERP hooks
@@ -38,46 +53,68 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = academyArticles.find((a) => a.slug === params.article);
   if (!article) return {};
 
-  const ogImageUrl = `https://askbiz.co/api/og?title=${encodeURIComponent(article.title)}&category=${encodeURIComponent(article.category)}&difficulty=${encodeURIComponent(article.difficulty)}&readTime=${article.readTime}`;
-  const enhancedDesc = enhanceAcademyDescription(article);
+  const locale = getRequestLocale();
+  const localized = await getLocalizedArticle(article, locale);
+
+  const canonicalUrl = `https://askbiz.co${localePath(`/academy/${article.slug}`, locale)}`;
+  const ogImageUrl = `https://askbiz.co/api/og?title=${encodeURIComponent(localized.title)}&category=${encodeURIComponent(article.category)}&difficulty=${encodeURIComponent(article.difficulty)}&readTime=${article.readTime}`;
+  const enhancedDesc = enhanceAcademyDescription({ ...article, title: localized.title, description: localized.description });
+
+  // hreflang alternates — one per ACTIVE_LOCALES entry for this article's URL
+  // (mirroring the reciprocal-map approach used for the Somali/Swahili entries
+  // in app/layout.tsx, adapted here to a generic per-locale loop via
+  // localePath() instead of hand-listed country variants), plus x-default
+  // pointing at the unprefixed English URL.
+  const languages: Record<string, string> = {
+    "x-default": `https://askbiz.co/academy/${article.slug}`,
+  };
+  ACTIVE_LOCALES.forEach((l) => {
+    languages[l] = `https://askbiz.co${localePath(`/academy/${article.slug}`, l)}`;
+  });
 
   return {
-    title: `${article.title} | AskBiz Academy`,
+    title: `${localized.title} | AskBiz Academy`,
     description: enhancedDesc,
-    keywords: article.keywords.join(", "),
+    keywords: localized.keywords.join(", "),
     alternates: {
-      canonical: `https://askbiz.co/academy/${article.slug}`,
+      canonical: canonicalUrl,
+      languages,
     },
     openGraph: {
-      title: article.title,
+      title: localized.title,
       description: enhancedDesc,
-      url: `https://askbiz.co/academy/${article.slug}`,
+      url: canonicalUrl,
       type: "article",
       siteName: "AskBiz Academy",
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: article.title }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: localized.title }],
     },
     twitter: {
       card: "summary_large_image",
-      title: article.title,
+      title: localized.title,
       description: enhancedDesc,
       images: [ogImageUrl],
     },
   };
 }
 
-export default function ArticlePage({ params }: Props) {
+export default async function ArticlePage({ params }: Props) {
   const article = academyArticles.find((a) => a.slug === params.article);
   if (!article) notFound();
+
+  const locale = getRequestLocale();
+  const localizedArticle = await getLocalizedArticle(article, locale);
+  const canonicalUrl = `https://askbiz.co${localePath(`/academy/${article.slug}`, locale)}`;
 
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: article.title,
-    description: article.description,
-    keywords: article.keywords.join(", "),
+    headline: localizedArticle.title,
+    description: localizedArticle.description,
+    keywords: localizedArticle.keywords.join(", "),
+    inLanguage: locale,
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://askbiz.co/academy/${article.slug}`,
+      "@id": canonicalUrl,
     },
     author: {
       "@type": "Organization",
@@ -96,12 +133,13 @@ export default function ArticlePage({ params }: Props) {
     articleSection: article.category,
     timeRequired: `PT${article.readTime}M`,
     educationalLevel: article.difficulty,
-    url: `https://askbiz.co/academy/${article.slug}`,
+    url: canonicalUrl,
   };
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    inLanguage: locale,
     itemListElement: [
       {
         "@type": "ListItem",
@@ -124,18 +162,19 @@ export default function ArticlePage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 4,
-        name: article.title,
-        item: `https://askbiz.co/academy/${article.slug}`,
+        name: localizedArticle.title,
+        item: canonicalUrl,
       },
     ],
   };
 
   const faqSchema =
-    article.faq && article.faq.length > 0
+    localizedArticle.faq && localizedArticle.faq.length > 0
       ? {
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: article.faq.map((item) => ({
+          inLanguage: locale,
+          mainEntity: localizedArticle.faq.map((item) => ({
             "@type": "Question",
             name: item.q,
             acceptedAnswer: {
@@ -154,8 +193,9 @@ export default function ArticlePage({ params }: Props) {
         return {
           "@context": "https://schema.org",
           "@type": "VideoObject",
-          name: article.title,
-          description: article.description,
+          name: localizedArticle.title,
+          description: localizedArticle.description,
+          inLanguage: locale,
           thumbnailUrl: [`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`],
           embedUrl: `https://www.youtube.com/embed/${videoId}`,
           contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
@@ -172,14 +212,15 @@ export default function ArticlePage({ params }: Props) {
   // "Step 1 — ...", "Step 2 — ..."; surface that existing structure as
   // schema.org HowTo so step-by-step content is directly citable by AI
   // answer engines and eligible for how-to rich results.
-  const stepSections = article.content.filter((s) => /^step\s+\d+/i.test(s.heading));
+  const stepSections = localizedArticle.content.filter((s) => /^step\s+\d+/i.test(s.heading));
   const howToSchema =
     stepSections.length >= 2
       ? {
           "@context": "https://schema.org",
           "@type": "HowTo",
-          name: article.title,
-          description: article.description,
+          name: localizedArticle.title,
+          description: localizedArticle.description,
+          inLanguage: locale,
           step: stepSections.map((s) => ({
             "@type": "HowToStep",
             name: s.heading.replace(/^step\s+\d+\s*[—-]\s*/i, ""),
@@ -188,7 +229,11 @@ export default function ArticlePage({ params }: Props) {
         }
       : null;
 
-  // Cross-link to blog articles: find blog posts relevant to this academy topic
+  // Cross-link to blog articles: find blog posts relevant to this academy topic.
+  // Deliberately matched against the RAW ENGLISH article (not localizedArticle)
+  // — blog content itself has no locale overlay, so matching translated
+  // keywords/title against English blog text would silently break this
+  // discovery for every non-English locale.
   const _academyWords = (article.title + ' ' + article.description + ' ' + article.keywords.join(' ')).toLowerCase()
   const allPosts = getAllPosts()
   const blogCrossLinks = allPosts
@@ -198,6 +243,13 @@ export default function ArticlePage({ params }: Props) {
     })
     .slice(0, 4)
     .map(p => ({ slug: p.slug, title: p.title, cluster: p.cluster, readTime: p.readTime }))
+
+  // Related articles — localized so a reader in a non-English locale sees
+  // translated titles for related articles too, once they exist. Forward-
+  // compatible only right now: getLocalizedArticle falls back to English for
+  // any slug with no translation yet, so this is not visibly different today.
+  const relatedRaw = academyArticles.filter((a) => article.relatedSlugs.includes(a.slug));
+  const relatedArticles = await Promise.all(relatedRaw.map((a) => getLocalizedArticle(a, locale)));
 
   return (
     <>
@@ -227,7 +279,7 @@ export default function ArticlePage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
-      <AcademyArticleClient article={article} blogCrossLinks={blogCrossLinks} />
+      <AcademyArticleClient article={localizedArticle} blogCrossLinks={blogCrossLinks} relatedArticles={relatedArticles} />
     </>
   );
 }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -424,8 +425,9 @@ export default function ChecklistsPageClient() {
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <Link href={localePath('/academy', toLocale(lang))} style={{ fontSize: 11, color: TX2, textDecoration: 'none' }}>{tc('academy.cl_back_academy')}</Link>
+          <LanguageToggle compact />
           <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.cl_try_free')}</Link>
         </div>
       </nav>

@@ -4,9 +4,11 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 import { academyCategories, academyArticles } from '@/lib/academy-content'
 import type { AcademyArticle } from '@/lib/academy-types'
 import { getReadArticles } from '@/lib/academy-read-tracking'
+import { preloadLocaleTranslations, getLocalizedListFields, type LocaleTranslations } from '@/lib/academy-i18n-loader'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -36,12 +38,17 @@ const DIFF_COLORS: Record<string, string> = {
   Advanced:     '#e74c3c',
 }
 
-function ArticleRow({ article, index, total, isRead }: { article: AcademyArticle; index: number; total: number; isRead: boolean }) {
+function ArticleRow({ article, index, total, isRead, translations }: { article: AcademyArticle; index: number; total: number; isRead: boolean; translations: LocaleTranslations }) {
   const { lang, tc } = useLang()
+  const locale = toLocale(lang)
   const color = academyCategories.find(c => c.slug === article.categorySlug)?.color || ACC
+  // List-friendly localization — English fallback today (no translations
+  // authored yet), forward-compatible once lib/academy-i18n/<locale> gains
+  // content. See lib/academy-i18n-loader.ts.
+  const { title, description } = getLocalizedListFields(article, locale, translations)
   return (
     <Link
-      href={localePath(`/academy/${article.slug}`, toLocale(lang))}
+      href={localePath(`/academy/${article.slug}`, locale)}
       className="ac-row"
       style={{
         textDecoration: 'none', display: 'grid', gridTemplateColumns: '1fr auto',
@@ -57,11 +64,11 @@ function ArticleRow({ article, index, total, isRead }: { article: AcademyArticle
         {/* Reddit-style visited dimming — read articles recede so a scanned
             list shows what's new vs. already seen. */}
         <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: isRead ? TX3 : TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
-          {article.title}
-          {isRead && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 500, color: TX3 }}>✓ read</span>}
+          {title}
+          {isRead && <span style={{ marginInlineStart: 8, fontSize: 10, fontWeight: 500, color: TX3 }}>✓ read</span>}
         </div>
         <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
-          {(article.description || '').slice(0, 120)}{(article.description || '').length > 120 ? '…' : ''}
+          {(description || '').slice(0, 120)}{(description || '').length > 120 ? '…' : ''}
         </p>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -73,6 +80,7 @@ function ArticleRow({ article, index, total, isRead }: { article: AcademyArticle
 
 export default function AcademyClient() {
   const { lang, tc } = useLang()
+  const locale = toLocale(lang)
   const searchRef = useRef<HTMLInputElement>(null)
 
   const [activeCategory,    setActiveCategory]    = useState<string | null>(null)
@@ -85,8 +93,20 @@ export default function AcademyClient() {
   const [difficultyFilter,   setDifficultyFilter]   = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All')
   const [hideRead,           setHideRead]           = useState(false)
   const [sortBy,             setSortBy]             = useState<'default' | 'quickest'>('default')
+  // Loaded once per locale change and handed to every ArticleRow — see
+  // getLocalizedListFields's docs in lib/academy-i18n-loader.ts for why list
+  // views preload once instead of awaiting per card. Starts (and today stays)
+  // {} for every locale, since no article translations exist yet — English
+  // titles/descriptions render unchanged until a locale's table gains content.
+  const [translations,       setTranslations]       = useState<LocaleTranslations>({})
 
   useEffect(() => { setReadSlugs(getReadArticles()) }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    preloadLocaleTranslations(locale).then(t => { if (!cancelled) setTranslations(t) })
+    return () => { cancelled = true }
+  }, [locale])
 
   const searchResults = useMemo(() => {
     if (search.trim().length <= 1) return []
@@ -196,7 +216,7 @@ export default function AcademyClient() {
         .ac-mob-tog    { display: none; cursor: pointer; border: none; background: none; align-items: center; }
         .ac-sb-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
         @media (max-width: 860px) {
-          .ac-sb-wrap  { display: none; position: fixed; top: 54px; left: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
+          .ac-sb-wrap  { display: none; position: fixed; top: 54px; inset-inline-start: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
           .ac-sb-wrap.open  { display: block; }
           .ac-sb-overlay.open { display: block; }
           .ac-mob-tog  { display: flex !important; }
@@ -226,9 +246,12 @@ export default function AcademyClient() {
             <span style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 13, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
-          {tc('academy.try_free')}
-        </Link>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <LanguageToggle compact />
+          <Link href={localePath('/signin', toLocale(lang))} style={{ fontSize: 11, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
+            {tc('academy.try_free')}
+          </Link>
+        </div>
       </nav>
 
       {/* Mobile overlay */}
@@ -238,7 +261,7 @@ export default function AcademyClient() {
       <div style={{ display: 'flex', height: 'calc(100vh - 54px)', overflow: 'hidden' }}>
 
         {/* ── Sidebar ── */}
-        <div className={`ac-sb-wrap${sidebarOpen ? ' open' : ''}`} style={{ width: 244, flexShrink: 0, overflowY: 'auto', borderRight: `1px solid ${BD}`, background: SF, padding: '20px 0 32px' }}>
+        <div className={`ac-sb-wrap${sidebarOpen ? ' open' : ''}`} style={{ width: 244, flexShrink: 0, overflowY: 'auto', borderInlineEnd: `1px solid ${BD}`, background: SF, padding: '20px 0 32px' }}>
 
           {/* All categories */}
           <div style={{ padding: '0 12px', marginBottom: 4 }}>
@@ -297,7 +320,7 @@ export default function AcademyClient() {
                       flex: 1, display: 'flex', alignItems: 'center', gap: 8,
                       padding: '7px 6px 7px 10px', borderRadius: '8px 0 0 8px',
                       color: isActive ? color : TX2,
-                      fontSize: 11, fontWeight: isActive ? 600 : 400, textAlign: 'left',
+                      fontSize: 11, fontWeight: isActive ? 600 : 400, textAlign: 'start',
                     }}
                   >
                     <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
@@ -315,10 +338,10 @@ export default function AcademyClient() {
                 </div>
 
                 {isExp && (
-                  <div style={{ paddingLeft: 26, paddingBottom: 4 }}>
+                  <div style={{ paddingInlineStart: 26, paddingBottom: 4 }}>
                     {academyArticles.filter(a => a.categorySlug === cat.slug).map(article => (
-                      <Link key={article.slug} href={localePath(`/academy/${article.slug}`, toLocale(lang))} className="ac-art-link" onClick={() => setSidebarOpen(false)}>
-                        {article.title}
+                      <Link key={article.slug} href={localePath(`/academy/${article.slug}`, locale)} className="ac-art-link" onClick={() => setSidebarOpen(false)}>
+                        {getLocalizedListFields(article, locale, translations).title}
                       </Link>
                     ))}
                   </div>
@@ -361,7 +384,7 @@ export default function AcademyClient() {
               </div>
             )}
             <div style={{ position: 'relative', maxWidth: isHome ? 580 : 480 }}>
-              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
+              <svg style={{ position: 'absolute', insetInlineStart: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
               <input
@@ -373,10 +396,10 @@ export default function AcademyClient() {
                 onChange={e => { setSearch(e.target.value); setActiveCategory(null); setVisibleCount(PAGE_SIZE) }}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '11px 38px 11px 44px', fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
+                style={{ width: '100%', boxSizing: 'border-box', paddingBlock: 11, paddingInlineStart: 44, paddingInlineEnd: 38, fontSize: 12, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
               />
               {search && (
-                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
+                <button onClick={() => setSearch('')} style={{ position: 'absolute', insetInlineEnd: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
               )}
             </div>
           </div>
@@ -454,7 +477,7 @@ export default function AcademyClient() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {featuredArticles.map((a, i) => (
-                    <ArticleRow key={a.slug} article={a} index={i} total={featuredArticles.length} isRead={readSlugs.has(a.slug)} />
+                    <ArticleRow key={a.slug} article={a} index={i} total={featuredArticles.length} isRead={readSlugs.has(a.slug)} translations={translations} />
                   ))}
                 </div>
                 <div style={{ marginTop: 20, textAlign: 'center' }}>
@@ -586,7 +609,7 @@ export default function AcademyClient() {
               {/* Article list */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {visibleRows.map((a, i) => (
-                  <ArticleRow key={a.slug} article={a} index={i} total={visibleRows.length} isRead={readSlugs.has(a.slug)} />
+                  <ArticleRow key={a.slug} article={a} index={i} total={visibleRows.length} isRead={readSlugs.has(a.slug)} translations={translations} />
                 ))}
               </div>
 

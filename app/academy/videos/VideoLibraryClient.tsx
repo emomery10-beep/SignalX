@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 import { VideoCard } from '@/components/marketing/VideoReel'
 import type { YoutubeVideo } from '@/lib/youtube-feed'
 
@@ -28,10 +29,13 @@ export default function VideoLibraryClient({ videos }: { videos: YoutubeVideo[] 
   return (
     <div style={{ background: BG, minHeight: '100vh' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 12px' }}>
-        <div style={{ display: 'flex', gap: 6, fontSize: 12, color: TX2, marginBottom: 20 }}>
-          <Link href={localePath('/academy', toLocale(lang))} className="vl-crumb" style={{ color: TX2, textDecoration: 'none' }}>Academy</Link>
-          <span>/</span>
-          <span style={{ color: TX }}>Video Library</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+          <div style={{ display: 'flex', gap: 6, fontSize: 12, color: TX2 }}>
+            <Link href={localePath('/academy', toLocale(lang))} className="vl-crumb" style={{ color: TX2, textDecoration: 'none' }}>Academy</Link>
+            <span>/</span>
+            <span style={{ color: TX }}>Video Library</span>
+          </div>
+          <LanguageToggle compact />
         </div>
 
         <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, color: TX, lineHeight: 1.15, margin: '0 0 12px' }}>
