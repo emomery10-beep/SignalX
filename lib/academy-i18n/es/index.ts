@@ -1,8 +1,8 @@
 // Academy article translations — Español (es).
 //
-// Empty for now: zero Academy articles have been translated into this
-// locale yet. lib/academy-i18n-loader.ts falls back to the English article
-// for every slug/field until entries are added below.
+// Wave A (POS + product cluster pilot, 38 articles) is wired in below via
+// batch files. lib/academy-i18n-loader.ts falls back to the English article
+// for every slug/field not yet covered.
 //
 // Translation-wave sessions: see lib/academy-i18n/README.md for the full
 // contract. In short, add real `slug -> TranslatableFields` entries directly
@@ -17,5 +17,18 @@
 // with later batches spread in the same way as they land.
 
 import type { LocaleTranslations } from '../../academy-i18n-loader'
+import { waveABatch1Translations } from './wave-a-batch1'
+import { waveABatch2Translations } from './wave-a-batch2'
+import { wavea3Translations } from './wave-a-batch3'
+import { wavea3Part2Translations } from './wave-a-batch3-part2'
+import { wavea3Part3Translations } from './wave-a-batch3-part3'
+import { waveABatch4NewArticlesTranslations } from './wave-a-batch4-new-articles'
 
-export const translations: LocaleTranslations = {}
+export const translations: LocaleTranslations = {
+  ...waveABatch1Translations,
+  ...waveABatch2Translations,
+  ...wavea3Translations,
+  ...wavea3Part2Translations,
+  ...wavea3Part3Translations,
+  ...waveABatch4NewArticlesTranslations,
+}
