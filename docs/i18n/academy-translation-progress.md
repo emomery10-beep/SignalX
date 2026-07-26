@@ -16,10 +16,12 @@ translated into all 7 active locales (`es, fr, de, nl, ar, sw, so`).
 | Step | Status | Notes |
 |---|---|---|
 | Milestone 0 — this tracker | ✅ done | |
-| Milestone 1 — English content-freshness update | ✅ done (commit e918cb95) | 12 new AskBiz Tutorials articles + 4 stale articles corrected (PO "coming soon", 2x false SMS-delivery claims, Factory description). Typecheck/build clean, 2 pages browser-verified. Not pushed. |
-| Milestone 2 — `lib/academy-i18n/<locale>/` overlay + `getLocalizedArticle()` | ⬜ not started | must ship as a no-op (English fallback) before any translation wave starts |
-| Language switcher + RTL polish on Academy pages | ⬜ not started | `LanguageToggle` not yet confirmed wired into `app/academy/layout.tsx` |
-| hreflang / sitemap / schema.org per locale for Academy | ⬜ not started | mirror the `/so` pattern (hreflang so/so-SO/so-DJ, FAQPage schema) |
+| Milestone 1 — English content-freshness update | ✅ done (commit e918cb95) | 12 new AskBiz Tutorials articles + 4 stale articles corrected (PO "coming soon", 2x false SMS-delivery claims, Factory description). Typecheck/build clean, 2 pages browser-verified. Pushed. |
+| Milestone 2 — `lib/academy-i18n/<locale>/` overlay + `getLocalizedArticle()` | ✅ done (commit a0f4a617) | Ships as a no-op — English fallback everywhere, 0 translated content yet. Browser-verified: hreflang (9 links incl. x-default), schema `inLanguage`, RTL (`dir="rtl"`/`lang="ar"`), 11,620 locale-prefixed academy sitemap URLs. Pushed. |
+| Language switcher + RTL polish on Academy pages | ✅ done (commit a0f4a617) | `<LanguageToggle compact/>` added inline to all 8 Academy route surfaces (layout.tsx is metadata-only, no shared header — deliberate deviation, documented). RTL logical-property fixes applied. |
+| hreflang / sitemap / schema.org per locale for Academy | ✅ done (commit a0f4a617) | Mirrors the `/so` pattern via `localePath()`, generalized to all `ACTIVE_LOCALES`. |
+
+**Note:** a concurrent `vercel` deploy in this same worktree ran `git stash -u` mid-Milestone-2 (stash message: "protecting from vercel CLI deploy") — correctly protected the changes, recovered via `git stash pop`, nothing lost. A separate unrelated merge conflict (on `app/(app)/intelligence/page.tsx` and `lib/voiceRoutes.ts`, not Academy files) blocked this tracker's own commit once; both Milestone 1 and 2 commits are now confirmed pushed and live on `origin/main`.
 
 ## Glossaries (lock once per language, reuse across every wave)
 
