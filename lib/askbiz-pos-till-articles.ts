@@ -178,8 +178,8 @@ export const ASKBIZ_POS_TILL_ARTICLES: AcademyArticle[] = [
         body: "If your till is connected to a receipt printer, AskBiz automatically sends the receipt to the printer as soon as the sale completes. If the printer is offline or out of paper, you'll see an alert and can retry the print job from the last-transaction screen. Thermal printers are the most common connection — check that the AskBiz till is paired to your printer via the device settings before your first sale of the day."
       },
       {
-        heading: "Sending digital receipts by SMS or WhatsApp",
-        body: "When a customer profile is linked to a sale (captured via their phone number), AskBiz can send a digital receipt via SMS or WhatsApp. Tap the 'Send receipt' option after completing the payment and select the delivery method. The customer receives a concise summary with the total paid, items, and a reference number. Digital receipts are also stored against the customer's profile so you can retrieve any past receipt by looking up the customer in Operations > Customers."
+        heading: "Sending digital receipts by WhatsApp",
+        body: "When a customer profile is linked to a sale (captured via their phone number), AskBiz can send a digital receipt over WhatsApp. Tap the 'Send receipt' option after completing the payment. AskBiz sends an image of the itemised receipt first — branded with your business name, so it looks like a real store receipt rather than a plain text message. If the image send doesn't go through, AskBiz automatically falls back to a short text summary with the total paid, business name, date, and payment method, so the customer still gets a confirmation either way. Digital receipts are also stored against the customer's profile so you can retrieve any past receipt by looking up the customer in Operations > Customers."
       },
       {
         heading: "Finding a past transaction in the audit trail",
@@ -775,7 +775,7 @@ export const ASKBIZ_POS_TILL_ARTICLES: AcademyArticle[] = [
       },
       {
         heading: "Which features require connectivity",
-        body: "Features that need a live internet connection: M-Pesa payments (payment confirmation requires real-time Safaricom API access), card payments (same reason), sending digital receipts by SMS or WhatsApp, the Ask AI feature, viewing real-time dashboard updates, and syncing stock adjustments made on another device. If M-Pesa is a significant payment method for you, consider a mobile data backup connection (a phone hotspot) for the till so you can maintain digital payment capability during broadband outages."
+        body: "Features that need a live internet connection: M-Pesa payments (payment confirmation requires real-time Safaricom API access), card payments (same reason), sending digital receipts by WhatsApp, the Ask AI feature, viewing real-time dashboard updates, and syncing stock adjustments made on another device. If M-Pesa is a significant payment method for you, consider a mobile data backup connection (a phone hotspot) for the till so you can maintain digital payment capability during broadband outages."
       },
       {
         heading: "How offline transactions sync on reconnection",

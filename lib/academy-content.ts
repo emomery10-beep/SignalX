@@ -11,6 +11,18 @@ import { ASKBIZ_POS_HACKS_ARTICLES } from './askbiz-pos-hacks-articles';
 import { ASKBIZ_POS_REPORTS_ARTICLES } from './askbiz-pos-reports-articles';
 import { ACADEMY_POS_SWAHILI_ARTICLES } from './academy-pos-swahili';
 import { ACADEMY_POS_SOMALI_ARTICLES } from './academy-pos-somali';
+import { academyPurchaseOrdersGuide } from './academy-purchase-orders-guide-askbiz';
+import { academyMarketingAdsSources } from './academy-connect-marketing-ads-sources-askbiz';
+import { academyConnectGoCardless } from './academy-connect-gocardless-askbiz';
+import { academyConnectLinnworksAskbiz } from './academy-connect-linnworks-askbiz';
+import { academyConnectXeroFreeAgent } from './academy-connect-xero-freeagent-askbiz';
+import { academyJumiaMarketplaceConnector } from './academy-connect-jumia-marketplace-askbiz';
+import { academyPosReceiptDesignVat } from './academy-pos-receipt-design-vat-askbiz';
+import { academyWhatsappDailyPlBrief } from './academy-whatsapp-daily-pl-brief-askbiz';
+import { academyForgotPinResetWhatsapp } from './academy-forgot-pin-reset-whatsapp-askbiz';
+import { academyZakatCalculatorCharity } from './academy-zakat-calculator-charity-askbiz';
+import { academyFactorySectorGuideAskbiz } from './academy-factory-sector-guide-askbiz';
+import { academyPosFreeTrialExplained } from './academy-pos-free-trial-explained-askbiz';
 // ─── CFO Dashboard Training (100 articles) ───────────────────────────────────
 import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
 import { ACADEMY_CFO_BATCH_2 } from './academy-cfo-batch2';
@@ -15451,6 +15463,20 @@ academyArticles.push(...ASKBIZ_POS_HACKS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_REPORTS_ARTICLES);
 academyArticles.push(...ACADEMY_POS_SWAHILI_ARTICLES);
 academyArticles.push(...ACADEMY_POS_SOMALI_ARTICLES);
+
+// ─── MERGE NEW ASKBIZ TUTORIALS (12 articles) ───────────────────────────────
+academyArticles.push(...academyPurchaseOrdersGuide);
+academyArticles.push(...academyMarketingAdsSources);
+academyArticles.push(...academyConnectGoCardless);
+academyArticles.push(...academyConnectLinnworksAskbiz);
+academyArticles.push(...academyConnectXeroFreeAgent);
+academyArticles.push(...academyJumiaMarketplaceConnector);
+academyArticles.push(...academyPosReceiptDesignVat);
+academyArticles.push(...academyWhatsappDailyPlBrief);
+academyArticles.push(...academyForgotPinResetWhatsapp);
+academyArticles.push(...academyZakatCalculatorCharity);
+academyArticles.push(...academyFactorySectorGuideAskbiz);
+academyArticles.push(...academyPosFreeTrialExplained);
 
 // ─── MERGE SAAS CFO TRAINING ARTICLES (BATCHES 50-90) ──────────────────────
 // NOTE: Batches 50-90 exist locally but not yet committed to git.

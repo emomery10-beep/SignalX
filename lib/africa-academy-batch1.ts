@@ -561,7 +561,7 @@ export const AFRICA_ACADEMY_BATCH1 = [
       },
       {
         heading: 'BI Designed for African Operating Conditions',
-        body: 'Enterprise BI tools often assume reliable high-speed internet, large screens, and dedicated data analysts. African SMEs operate under different conditions: intermittent connectivity, mobile-first usage, and owners who handle analytics themselves. AskBiz is built for these realities. Dashboards are optimised for mobile screens. Critical data syncs offline so you can access it even when connectivity drops. The Daily Brief delivers key insights via WhatsApp or SMS, requiring no login. Insights are written in clear language, not statistical jargon. The Business Health Score distils complex multi-dimensional performance into a single number from 0 to 100 that any business owner can understand and act upon.',
+        body: 'Enterprise BI tools often assume reliable high-speed internet, large screens, and dedicated data analysts. African SMEs operate under different conditions: intermittent connectivity, mobile-first usage, and owners who handle analytics themselves. AskBiz is built for these realities. Dashboards are optimised for mobile screens. Critical data syncs offline so you can access it even when connectivity drops. The Daily Brief delivers key insights via WhatsApp, requiring no login. Insights are written in clear language, not statistical jargon. The Business Health Score distils complex multi-dimensional performance into a single number from 0 to 100 that any business owner can understand and act upon.',
       },
       {
         heading: 'Getting Started with BI',
@@ -647,7 +647,7 @@ export const AFRICA_ACADEMY_BATCH1 = [
       'Heavy dashboards that require constant connectivity exclude most African businesses from BI.',
       'Offline-first design ensures critical data is always accessible.',
       'Mobile-optimised dashboards are essential when phones are the primary business device.',
-      'AskBiz delivers key metrics via WhatsApp and SMS, requiring minimal bandwidth.',
+      'AskBiz delivers key metrics via WhatsApp, requiring minimal bandwidth.',
     ],
     content: [
       {
@@ -663,8 +663,8 @@ export const AFRICA_ACADEMY_BATCH1 = [
         body: 'In Africa, the smartphone is the primary computing device for most business owners. AskBiz\'s dashboards are built mobile-first, not adapted from desktop designs. This means large touch targets, minimal scrolling for key metrics, and data visualisations that are readable on a five-inch screen. The most important information appears first: today\'s revenue, Business Health Score, and any critical anomalies. Deeper analytics are accessible through progressive disclosure, meaning you tap to see more detail rather than being overwhelmed by dense charts on the first screen. Colour coding and simple iconography communicate status at a glance, whether the owner has thirty seconds or thirty minutes to review.',
       },
       {
-        heading: 'WhatsApp and SMS Delivery',
-        body: 'The lowest-bandwidth way to deliver business intelligence is through channels that already work on every African phone: WhatsApp and SMS. AskBiz\'s Daily Brief can be delivered as a WhatsApp message or SMS, summarising key metrics in a format that loads instantly on any device. A typical Daily Brief includes yesterday\'s revenue, comparison to the weekly average, top three products, any anomalies detected, and the current Business Health Score. This requires negligible data and works even on feature phones via SMS. For the business owner who checks WhatsApp every morning before opening the shop, this is BI that fits naturally into their existing routine without requiring a new app or a strong data connection.',
+        heading: 'WhatsApp Delivery',
+        body: 'The lowest-bandwidth way to deliver business intelligence is through a channel that already works on every African smartphone: WhatsApp. AskBiz\'s Daily Brief is delivered as a WhatsApp message, summarising key metrics in a format that loads instantly on any device. A typical Daily Brief includes yesterday\'s revenue, comparison to the weekly average, top three products, any anomalies detected, and the current Business Health Score. This requires negligible data and needs no separate app or dashboard login. For the business owner who checks WhatsApp every morning before opening the shop, this is BI that fits naturally into their existing routine without requiring a new app or a strong data connection.',
       },
       {
         heading: 'Data-Efficient Analytics',
@@ -762,7 +762,7 @@ export const AFRICA_ACADEMY_BATCH1 = [
       },
       {
         heading: 'Delivery That Fits Your Routine',
-        body: 'The most powerful analytics tool is useless if you do not use it. AskBiz delivers the Daily Brief through the channel you already check each morning. For most African business owners, that is WhatsApp. The Brief arrives as a formatted message before your typical opening time. No login required, no app to open, no dashboard to navigate. If you prefer email or SMS, those options are available too. The point is to eliminate every friction point between you and your daily data. When reviewing yesterday\'s performance is as easy as reading a WhatsApp message, the habit forms naturally. Consistency of review matters more than depth of analysis.',
+        body: 'The most powerful analytics tool is useless if you do not use it. AskBiz delivers the Daily Brief through the channel you already check each morning: WhatsApp. The Brief arrives as a formatted message before your typical opening time. No login required, no app to open, no dashboard to navigate. The point is to eliminate every friction point between you and your daily data. When reviewing yesterday\'s performance is as easy as reading a WhatsApp message, the habit forms naturally. Consistency of review matters more than depth of analysis.',
       },
       {
         heading: 'Building Cumulative Business Intuition',

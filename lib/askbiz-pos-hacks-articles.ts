@@ -506,49 +506,45 @@ export const ASKBIZ_POS_HACKS_ARTICLES: AcademyArticle[] = [
   {
     slug: "pos-hack-supplier-po-fast-askbiz",
     title: "Create a Supplier Restock Order in 3 Steps",
-    description: "How to use the AskBiz POS Low Stock list to build a supplier restock order in minutes — and what's coming in the Purchase Orders feature for one-tap supplier emails.",
+    description: "The fastest way to raise a supplier restock order in AskBiz POS — accept the auto-prefilled low-stock list in Purchase Orders and send it in under 2 minutes.",
     category: "AskBiz Tutorials",
     categorySlug: "askbiz-tutorials",
     difficulty: "Intermediate",
     readTime: 5,
-    keywords: ["purchase order", "supplier order", "restock", "supplier email", "AskBiz POS", "inventory reorder", "supply chain", "stock replenishment"],
+    keywords: ["purchase order", "supplier order", "restock", "auto-prefill", "AskBiz POS", "inventory reorder", "supply chain", "stock replenishment"],
     keyTakeaways: [
-      "The Low Stock filter in Inventory is your instant restock list — export it as a CSV to send to suppliers today.",
-      "AskBiz Purchase Orders (coming soon) will allow you to create, send, and track supplier orders from within the POS.",
-      "Building a restock order from AskBiz data takes 3 minutes and eliminates manual stock counting.",
-      "Set consistent supplier contact details in a shared note or your phone contacts to speed up the ordering process."
+      "Purchase Orders (Operations > Purchase Orders) auto-prefills a new order with every product at or below its low-stock threshold — you don't have to build the list yourself.",
+      "The suggested quantity tops each item back up to roughly double its threshold, using the last cost price on file, so most routine restocks can be sent as-is.",
+      "Sending delivers an itemised WhatsApp message straight to your supplier's number — no copying line items into a chat by hand.",
+      "For a power user, the whole 3-step loop — open, accept the prefill, send — takes under 2 minutes for a typical restock."
     ],
     content: [
       {
-        heading: "From low stock alert to supplier order in 3 minutes",
-        body: "Most small businesses create restock orders by walking the shop floor with a clipboard. AskBiz eliminates the clipboard walk — your Low Stock list is already compiled in real time. The Purchase Orders section (Operations > Purchase Orders) is coming soon to AskBiz, and will enable direct supplier emails and back-order tracking. Until then, the Low Stock export workflow described here gives you the same result in 3 steps.",
+        heading: "The fastest path from Low Stock to a sent order",
+        body: "Skip building a restock list by hand — Purchase Orders (Operations > Purchase Orders) already knows what's low. Start a new order and AskBiz auto-prefills every product currently at or below its low-stock threshold, with a suggested quantity that tops it back up to roughly double that threshold and a unit cost pulled from the product's last recorded cost price. For most routine restocks, that prefilled list is the order — the 3 steps below are the quickest way to get it from draft to sent.",
         image: "/images/training/pos-hack-suppliers.png",
       },
       {
-        heading: "Step 1 — Export the Low Stock list",
-        body: "Go to Operations > Inventory and click the 'Low stock' filter tab. You'll see every product below its reorder threshold with current quantities and costs. Click 'CSV import/export' (or the download icon) to export this list. The CSV contains product name, SKU, current stock, cost price, and branch. This is your restock order draft — open it in any spreadsheet app and add a column for 'Order quantity' based on your typical delivery size."
+        heading: "Step 1 — Start a new order and let it prefill",
+        body: "Go to Operations > Purchase Orders and tap '+ New order'. Pick the supplier from the dropdown, or add one on the spot with a name and phone number (the number is required later, to send). The item list below opens already populated with everything at or below its reorder threshold — quantities and costs pre-filled. Scan it, remove anything you don't actually need this round, and adjust quantities if a delivery size doesn't suit you. Most of the time, this takes seconds, not minutes."
       },
       {
-        heading: "Step 2 — Group products by supplier",
-        body: "In the exported CSV, sort or group by supplier (if you've added supplier names to your product descriptions in Inventory). Most businesses deal with 3–5 primary suppliers. Create a separate order for each: Supplier A gets one list, Supplier B gets another. This takes 2 minutes with a spreadsheet filter. Copy each supplier's list into a WhatsApp message or email. Being specific — product name, SKU, and quantity — reduces supplier confusion and speeds delivery confirmation."
+        heading: "Step 2 — Send it straight to your supplier",
+        body: "Tap Send. AskBiz builds an itemised message — each line as product, quantity, and cost, plus the total — and delivers it as an automated WhatsApp message to the supplier's number on file. If the automated send isn't available, it falls back to a pre-filled WhatsApp link you tap to send yourself, so the message still goes out fully formatted. The order moves from Draft to Ordered the moment it's sent, with no manual retyping into a chat."
       },
       {
-        heading: "Step 3 — Update stock when deliveries arrive",
-        body: "When a delivery arrives, go to Operations > Inventory > Scan to add. Scan each delivered item's barcode — AskBiz increases the stock count automatically. For deliveries without barcodes, click 'Edit' on the product and update the stock quantity manually. The Audit Log records the adjustment with your name, the timestamp, and the quantity change. This closes the loop: Low Stock → Order placed → Delivery received → Stock updated → LOW badge removed."
+        heading: "Step 3 — Receive stock as deliveries arrive",
+        body: "When goods arrive, open the order and tap 'Receive stock'. Each line defaults to its full outstanding quantity — adjust down if only part of it showed up. Confirming updates your live stock count immediately, and the order status recalculates on its own: Received if every line is now fully in, Partial if some are still short. You can come back and receive against the same order again as a delivery arrives in stages — nothing is overwritten between receipts."
       },
       {
-        heading: "What Purchase Orders will add (coming soon)",
-        body: "The Purchase Orders section visible at Operations > Purchase Orders shows the upcoming workflow: Create POs (build orders from low-stock items automatically), Send to supplier (email or WhatsApp POs directly from AskBiz), Receive stock (scan deliveries to confirm and update inventory), Back-orders (track partial deliveries), Auto-reorder (AI suggests restock timing based on your sales velocity), and Supplier insights (lead times and cost trends). When this feature launches, the 3-step manual process above becomes one-tap."
-      },
-      {
-        heading: "Hack — Keep a supplier WhatsApp group for fast ordering",
-        body: "Create a WhatsApp group with each of your main suppliers. When you export the Low Stock list, paste the relevant products directly into the appropriate group with a standard format: 'RESTOCK REQUEST — [Date] — [Product] [Qty]'. This creates a timestamped, searchable order history in WhatsApp that you can cross-reference against AskBiz deliveries. It takes 90 seconds per supplier and requires no special software."
+        heading: "Power-user tip — trust the prefill on routine restocks",
+        body: "The habit that saves the most time is not second-guessing the auto-prefill on a typical order. It's already reading your real low-stock threshold and your last paid cost, so for a supplier you reorder from regularly, the fastest move is: open, glance, send. Save manual edits for the exceptions — a one-off bulk order, a product you're deliberately not restocking yet, or a supplier whose pricing changed since your last delivery."
       }
     ],
-    relatedSlugs: ["pos-hack-reorder-alerts-askbiz", "pos-hack-audit-log-shrinkage-askbiz", "pos-manual-stock-adjust-askbiz"],
+    relatedSlugs: ["purchase-orders-guide-askbiz", "pos-hack-reorder-alerts-askbiz", "pos-hack-audit-log-shrinkage-askbiz", "pos-manual-stock-adjust-askbiz"],
     faq: [
-      { q: "When will Purchase Orders be available in AskBiz?", a: "Purchase Orders is listed as 'Coming soon' in Operations. Check the AskBiz release notes or contact support for the expected launch date." },
-      { q: "Can I track which deliveries I'm waiting for?", a: "Until Purchase Orders launches, use a shared note or spreadsheet to track outstanding orders. The Audit Log shows the date each product's stock was last updated, so you can confirm a delivery was entered correctly." }
+      { q: "Do I have to build the restock list myself?", a: "No — starting a new Purchase Order auto-prefills every product at or below its low-stock threshold, with a suggested quantity and cost already filled in. You can edit, remove, or add lines, but for a routine restock the prefill is usually the whole order." },
+      { q: "Can I track which deliveries I'm still waiting for?", a: "Yes — an order that's only partly delivered automatically shows as 'Partial', and the Backorders filter on the Purchase Orders list shows every order in that state at a glance, so you always know what's still outstanding." }
     ]
   },
 
