@@ -16,7 +16,7 @@ translated into all 7 active locales (`es, fr, de, nl, ar, sw, so`).
 | Step | Status | Notes |
 |---|---|---|
 | Milestone 0 — this tracker | ✅ done | |
-| Milestone 1 — English content-freshness update | ⬜ not started | new articles for Purchase Orders, Sources connectors, receipt redesign, WhatsApp brief, WhatsApp PIN reset, Zakat calculator, Factory sector |
+| Milestone 1 — English content-freshness update | ✅ done (commit e918cb95) | 12 new AskBiz Tutorials articles + 4 stale articles corrected (PO "coming soon", 2x false SMS-delivery claims, Factory description). Typecheck/build clean, 2 pages browser-verified. Not pushed. |
 | Milestone 2 — `lib/academy-i18n/<locale>/` overlay + `getLocalizedArticle()` | ⬜ not started | must ship as a no-op (English fallback) before any translation wave starts |
 | Language switcher + RTL polish on Academy pages | ⬜ not started | `LanguageToggle` not yet confirmed wired into `app/academy/layout.tsx` |
 | hreflang / sitemap / schema.org per locale for Academy | ⬜ not started | mirror the `/so` pattern (hreflang so/so-SO/so-DJ, FAQPage schema) |
@@ -37,20 +37,20 @@ translated into all 7 active locales (`es, fr, de, nl, ar, sw, so`).
 
 ## Wave A — POS + product cluster (pilot, Milestone 3)
 
-Source: `Point of Sale & Retail` (39 articles) + Milestone 1's new articles (~10, count TBD
-until Milestone 1 completes). `POS kwa Kiswahili` (6) and `POS af-Soomaali` (6) are already
+Source: `Point of Sale & Retail` (39 articles) + Milestone 1's 12 new articles (confirmed —
+commit e918cb95) = 51 total. `POS kwa Kiswahili` (6) and `POS af-Soomaali` (6) are already
 native sw/so content — not translation targets, just verify they still read correctly once
 the language switcher exists.
 
 | Locale | Status | Articles done / total |
 |---|---|---|
-| es | ⬜ not started | 0 / ~49 |
-| fr | ⬜ not started | 0 / ~49 |
-| de | ⬜ not started | 0 / ~49 |
-| nl | ⬜ not started | 0 / ~49 |
-| ar | ⬜ not started | 0 / ~49 |
-| sw | ⬜ not started | 0 / ~49 |
-| so | ⬜ not started | 0 / ~49 |
+| es | ⬜ not started | 0 / 51 |
+| fr | ⬜ not started | 0 / 51 |
+| de | ⬜ not started | 0 / 51 |
+| nl | ⬜ not started | 0 / 51 |
+| ar | ⬜ not started | 0 / 51 |
+| sw | ⬜ not started | 0 / 51 |
+| so | ⬜ not started | 0 / 51 |
 
 ## Wave B — "AskBiz Tutorials" category (832 articles)
 
