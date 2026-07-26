@@ -38,7 +38,8 @@ const bizTypeLabel = (t?: string | null) => {
 const fmtCompact = (n: number) => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(Math.round(n))
 const relativeDate = (iso: string | null | undefined, lang: string) => {
   if (!iso) return '—'
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(iso))) / 86400000)
   if (days <= 0) return 'Today'
   if (days === 1) return 'Yesterday'
   if (days < 7) return days + 'd ago'
