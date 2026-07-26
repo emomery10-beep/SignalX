@@ -9,6 +9,21 @@ sessions; TaskCreate/TaskList do not.
 articles, 1,811,313 words. Target: all content current with shipped product features,
 translated into all 7 active locales (`es, fr, de, nl, ar, sw, so`).
 
+**Baseline correction, 2026-07-26 (Milestone 3 kickoff):** the original category count only
+matched double-quoted `category: "..."` fields. There's a second set of 295 articles using
+single-quoted `category: '...'` across 28 files, missed by that grep: 200 more under
+"Point of Sale & Retail", 30 more "International Trade", 25 more "AskBiz Tutorials", 10 each
+more "SaaS & Subscription Metrics"/"HR & People"/"Financial Intelligence"/"Currency & FX".
+Sampled one (`quantum-computing-combinatorial-pos-optimization`) — same character as the
+"AskBiz Tutorials" bulk: dense academic-jargon pSEO, not genuine product education (e.g.
+"Quantum Computing Applications for Combinatorial Optimization Problems in Point-of-Sale
+Operations"). True total is **~1,980 articles**, not 1,673 — word-count baseline (1.81M,
+measured via `wc -w` which doesn't care about quote style) is unaffected. These 295 route
+into Wave B/C's dedup-audit treatment, NOT the Milestone 3 pilot — confirmed the pilot's
+"Point of Sale & Retail" (39) is the genuinely hand-written, double-quoted, practical set
+living in `lib/academy-content.ts` (What Is a POS System, Processing a Sale, Camera
+Scanning, Refunds, VAT, Multi-Branch, Repair workflows, etc.) — untouched by this discovery.
+
 ---
 
 ## Architecture status
@@ -54,7 +69,7 @@ the language switcher exists.
 | sw | ⬜ not started | 0 / 51 |
 | so | ⬜ not started | 0 / 51 |
 
-## Wave B — "AskBiz Tutorials" category (832 articles)
+## Wave B — "AskBiz Tutorials" category (~857 articles, was 832 + 25 single-quoted found 2026-07-26)
 
 Starts with a redundancy/dedup audit (batch files run at least `batch11`...`batch38` —
 likely combinatorial). Per-batch-file breakdown to be filled in once that audit runs.
@@ -69,7 +84,11 @@ likely combinatorial). Per-batch-file breakdown to be filled in once that audit 
 | sw | ⬜ not started | 0 / 832 |
 | so | ⬜ not started | 0 / 832 |
 
-## Wave C — remaining 22 generic-business categories (790 articles)
+## Wave C — remaining generic-business categories (~1,060 articles: 790 original + 70 more
+single-quoted International Trade/SaaS/HR/Financial Intelligence/Currency & FX + 200
+single-quoted "Point of Sale & Retail" pSEO articles that don't belong in Wave A's genuine
+POS cluster — exact split TBD by Wave B's own dedup audit, run the same audit against these
+200 before committing to translate them)
 
 Funding & Investment (60), Business Strategy & Growth (60), eCommerce Intelligence (50),
 Tax & Compliance (50), Inventory & Supply Chain (50), Financial Intelligence (50), Retail &
