@@ -25,11 +25,14 @@ export async function POST(request: NextRequest) {
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
   if (!phone) return NextResponse.json({ error: 'Phone number is required' }, { status: 400 })
   if (!email || !validEmail(email)) return NextResponse.json({ error: 'A valid email is required' }, { status: 400 })
+  // Explicit opt-in required before we can contact this lead — mirrors the
+  // checkbox in AdvertiseInquiryModal, enforced server-side too.
+  if (body.consent !== true) return NextResponse.json({ error: 'Consent to be contacted is required' }, { status: 400 })
 
   const service = createServiceClient()
   const { error } = await service
     .from('advertise_inquiries')
-    .insert({ name, phone, email })
+    .insert({ name, phone, email, consent_at: new Date().toISOString() })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

@@ -756,9 +756,12 @@ interface SpotlightState {
   tagline: string
   link_url: string | null
   logo_url: string | null
+  banner_url: string | null
   status: 'pending' | 'approved' | 'rejected'
   is_active: boolean
   rejected_reason: string | null
+  starts_at: string | null
+  ends_at: string | null
 }
 
 function SpotlightPanel() {
@@ -770,6 +773,9 @@ function SpotlightPanel() {
   const [linkUrl, setLinkUrl]     = useState('')
   const [logoPreview, setLogoPreview] = useState('')
   const [logoError, setLogoError] = useState('')
+  const [bannerPreview, setBannerPreview] = useState('')
+  const [bannerError, setBannerError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
   const [error, setError]     = useState('')
@@ -784,6 +790,8 @@ function SpotlightPanel() {
         setTagline(s.tagline || '')
         setLinkUrl(s.link_url || '')
         setLogoPreview(s.logo_url || '')
+        setBannerPreview(s.banner_url || '')
+        setTermsAccepted(true) // a prior submission already accepted them
       } else {
         // No submission yet — prefill from the business profile to cut typing.
         fetch('/api/profile').then(r => r.json()).then(p => {
@@ -805,14 +813,32 @@ function SpotlightPanel() {
     }
   }
 
+  const onBannerPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBannerError('')
+    try {
+      // Recommended 800×400 (2:1); capped to a 960px longest edge so a
+      // phone-camera original doesn't upload at full resolution.
+      setBannerPreview(await compressLogoToDataUrl(file, 960))
+    } catch {
+      setBannerError(tc('settings.spotlight_logo_error'))
+    }
+  }
+
   const submit = async () => {
     setError('')
     if (!businessName.trim() || !tagline.trim()) { setError(tc('settings.spotlight_required')); return }
+    if (!termsAccepted) { setError(tc('settings.spotlight_terms_required')); return }
     setSaving(true)
     try {
       const res = await fetch('/api/spotlight', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ business_name: businessName, tagline, link_url: linkUrl, logo: logoPreview || undefined }),
+        body: JSON.stringify({
+          business_name: businessName, tagline, link_url: linkUrl,
+          logo: logoPreview || undefined, banner: bannerPreview || undefined,
+          terms_accepted: true,
+        }),
       })
       const d = await res.json()
       if (res.ok) { setSpotlight(d.spotlight); setSaved(true); setTimeout(() => setSaved(false), 2500) }
@@ -903,6 +929,38 @@ function SpotlightPanel() {
             </div>
           </div>
         </div>
+
+        <div style={{ padding: '0 20px 16px' }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.spotlight_banner_label')}</label>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ width: 120, height: 60, borderRadius: 10, background: 'var(--ev)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--b2)' }}>
+              {bannerPreview
+                ? <img src={bannerPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>}
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--acc)', cursor: 'pointer' }}>
+                {tc('settings.spotlight_banner_upload')}
+                <input type="file" accept="image/*" onChange={onBannerPick} style={{ display: 'none' }}/>
+              </label>
+              <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('settings.spotlight_banner_hint')}</div>
+              {bannerError && <div style={{ fontSize: 12, color: '#dc2626', marginTop: 4 }}>{bannerError}</div>}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '0 20px 16px', fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.spotlight_pricing_note')}</div>
+
+        <div style={{ padding: '0 20px 16px' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--tx2)', lineHeight: 1.4, cursor: 'pointer' }}>
+            <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }}/>
+            <span>
+              {tc('settings.spotlight_terms_prefix')}{' '}
+              <a href="/terms#advertising" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)' }}>{tc('settings.spotlight_terms_link')}</a>
+            </span>
+          </label>
+        </div>
+
         <div style={{ padding: '0 20px 16px' }}>
           <SaveRow onClick={submit} saving={saving} saved={saved} label={spotlight ? tc('settings.spotlight_resubmit') : tc('settings.spotlight_submit')}/>
           {error && <div style={{ fontSize: 14, color: '#dc2626', marginTop: 8 }}>{error}</div>}

@@ -11,11 +11,19 @@ interface SpotlightItem {
   tagline: string
   link_url: string | null
   logo_url: string | null
+  banner_url: string | null
   status: 'pending' | 'approved' | 'rejected'
   is_active: boolean
   rejected_reason: string | null
   submitted_at: string
   reviewed_at: string | null
+  terms_accepted_at: string | null
+  duration_days: number | null
+  ends_at: string | null
+  amount_charged: number | null
+  currency: string | null
+  impressions: number
+  clicks: number
 }
 
 type Filter = 'pending' | 'approved' | 'rejected' | 'all'
@@ -44,6 +52,10 @@ export default function SpotlightAdminPage() {
   const [actionId, setActionId]     = useState<string | null>(null)
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [approvingId, setApprovingId] = useState<string | null>(null)
+  const [approveDuration, setApproveDuration] = useState('30')
+  const [approveAmount, setApproveAmount] = useState('')
+  const [approveCurrency, setApproveCurrency] = useState('')
 
   const [inqFilter, setInqFilter]     = useState<InquiryFilter>('pending')
   const [inqItems, setInqItems]       = useState<InquiryItem[]>([])
@@ -94,14 +106,22 @@ export default function SpotlightAdminPage() {
     setActionId(id)
     try {
       const headers = await authHeader()
+      const body: Record<string, unknown> = { id, action, reason }
+      if (action === 'approve') {
+        const days = parseInt(approveDuration, 10)
+        body.duration_days = Number.isFinite(days) && days > 0 ? days : 30
+        if (approveAmount.trim()) body.amount_charged = parseFloat(approveAmount)
+        if (approveCurrency.trim()) body.currency = approveCurrency.trim().toUpperCase()
+      }
       const res = await fetch('/api/admin/spotlight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
-        body: JSON.stringify({ id, action, reason }),
+        body: JSON.stringify(body),
       })
       if (res.ok) {
         setItems(prev => prev.filter(i => i.id !== id))
         setRejectingId(null); setRejectReason('')
+        setApprovingId(null); setApproveDuration('30'); setApproveAmount(''); setApproveCurrency('')
       }
     } finally {
       setActionId(null)
@@ -161,6 +181,12 @@ export default function SpotlightAdminPage() {
         ))}
       </div>
 
+      {filter === 'pending' && (
+        <div style={{ padding: '12px 16px', marginBottom: 16, borderRadius: 'var(--r-lg)', background: 'rgba(180,83,9,.06)', border: '1px solid rgba(180,83,9,.25)', fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6 }}>
+          <strong style={{ color: 'var(--tx)' }}>{tc('admin.spotlight_checklist_title')}</strong> {tc('admin.spotlight_checklist_body')}
+        </div>
+      )}
+
       {loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)' }}>{tc('admin.loading')}</div>
       ) : items.length === 0 ? (
@@ -171,11 +197,17 @@ export default function SpotlightAdminPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {items.map(item => (
             <div key={item.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)', padding: 16, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--ev)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {item.logo_url
-                  ? <img src={item.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
-                  : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>}
-              </div>
+              {item.banner_url ? (
+                <div style={{ width: 96, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                  <img src={item.banner_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                </div>
+              ) : (
+                <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--ev)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {item.logo_url
+                    ? <img src={item.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                    : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>}
+                </div>
+              )}
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{item.business_name}</div>
@@ -183,7 +215,15 @@ export default function SpotlightAdminPage() {
                 <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 6, display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
                   <span>{tc('admin.spotlight_submitted')} {fmtDate ? fmtDate(item.submitted_at) : new Date(item.submitted_at).toLocaleDateString()}</span>
                   {item.link_url && <a href={item.link_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)' }}>{item.link_url}</a>}
+                  {!item.terms_accepted_at && <span style={{ color: '#b45309' }}>{tc('admin.spotlight_no_terms')}</span>}
                 </div>
+                {item.status === 'approved' && (
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 6, display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
+                    {item.ends_at && <span>{tc('admin.spotlight_ends')} {fmtDate ? fmtDate(item.ends_at) : new Date(item.ends_at).toLocaleDateString()}</span>}
+                    <span>{item.impressions || 0} {tc('admin.spotlight_impressions')} · {item.clicks || 0} {tc('admin.spotlight_clicks')}</span>
+                    {item.amount_charged != null && <span>{item.currency || ''} {item.amount_charged}</span>}
+                  </div>
+                )}
                 {item.status === 'rejected' && item.rejected_reason && (
                   <div style={{ fontSize: 13, color: '#dc2626', marginTop: 6 }}>{tc('admin.spotlight_reason_prefix')} {item.rejected_reason}</div>
                 )}
@@ -205,11 +245,37 @@ export default function SpotlightAdminPage() {
                     </button>
                   </div>
                 )}
+
+                {approvingId === item.id && (
+                  <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                    <label style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('admin.spotlight_duration_label')}</label>
+                    <input
+                      autoFocus type="number" min={1} value={approveDuration} onChange={e => setApproveDuration(e.target.value)}
+                      style={{ width: 64, padding: '7px 10px', fontSize: 14, borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontFamily: 'inherit' }}
+                    />
+                    <input
+                      placeholder={tc('admin.spotlight_amount_placeholder')} value={approveAmount} onChange={e => setApproveAmount(e.target.value)}
+                      style={{ width: 90, padding: '7px 10px', fontSize: 14, borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontFamily: 'inherit' }}
+                    />
+                    <input
+                      placeholder={tc('admin.spotlight_currency_placeholder')} value={approveCurrency} onChange={e => setApproveCurrency(e.target.value)}
+                      style={{ width: 70, padding: '7px 10px', fontSize: 14, borderRadius: 8, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontFamily: 'inherit' }}
+                    />
+                    <button onClick={() => act(item.id, 'approve')} disabled={actionId === item.id}
+                      style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                      {tc('admin.spotlight_confirm_approve')}
+                    </button>
+                    <button onClick={() => setApprovingId(null)}
+                      style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                      {tc('admin.spotlight_cancel')}
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {item.status === 'pending' && rejectingId !== item.id && (
+              {item.status === 'pending' && rejectingId !== item.id && approvingId !== item.id && (
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button onClick={() => act(item.id, 'approve')} disabled={actionId === item.id}
+                  <button onClick={() => setApprovingId(item.id)} disabled={actionId === item.id}
                     style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: actionId === item.id ? .6 : 1 }}>
                     {tc('admin.spotlight_approve')}
                   </button>

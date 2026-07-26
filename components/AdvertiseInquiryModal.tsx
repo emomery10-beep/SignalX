@@ -18,6 +18,7 @@ export default function AdvertiseInquiryModal({ onClose }: { onClose: () => void
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [consent, setConsent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -34,12 +35,18 @@ export default function AdvertiseInquiryModal({ onClose }: { onClose: () => void
       setError(tc('auth.advertise_modal_required'))
       return
     }
+    // Explicit, default-unchecked opt-in — captured before any marketing
+    // contact is made, per POPIA §69 and Nigeria's NDPA consent standard.
+    if (!consent) {
+      setError(tc('auth.advertise_modal_consent_required'))
+      return
+    }
     setSubmitting(true)
     try {
       const res = await fetch('/api/advertise-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email }),
+        body: JSON.stringify({ name, phone, email, consent: true }),
       })
       const d = await res.json()
       if (res.ok) setSubmitted(true)
@@ -79,6 +86,11 @@ export default function AdvertiseInquiryModal({ onClose }: { onClose: () => void
               <input value={phone} onChange={e => setPhone(e.target.value)} placeholder={tc('auth.advertise_modal_phone')} type="tel" style={inputStyle}/>
               <input value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.advertise_modal_email')} type="email" style={inputStyle}/>
             </div>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 14, fontSize: 13, color: 'var(--tx2)', lineHeight: 1.4, cursor: 'pointer' }}>
+              <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }}/>
+              {tc('auth.advertise_modal_consent')}
+            </label>
 
             {error && <p style={{ fontSize: 13, color: '#dc2626', marginTop: 10 }}>{error}</p>}
 

@@ -16,9 +16,12 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('business_spotlights')
-    .select('id, business_name, tagline, logo_url, link_url')
+    .select('id, business_name, tagline, logo_url, banner_url, link_url')
     .eq('status', 'approved')
     .eq('is_active', true)
+    // ends_at is null for the old free-flow rows and any open-ended deal —
+    // only rows with an explicit, already-passed end date are excluded.
+    .or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`)
     .order('submitted_at', { ascending: true })
     .limit(24)
 

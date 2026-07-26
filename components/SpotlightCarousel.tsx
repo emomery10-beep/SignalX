@@ -7,10 +7,19 @@ interface Spotlight {
   business_name: string
   tagline: string
   logo_url: string | null
+  banner_url: string | null
   link_url: string | null
 }
 
 const ROTATE_MS = 5500
+
+function track(id: string, kind: 'impression' | 'click') {
+  fetch('/api/spotlight/track', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, kind }),
+    keepalive: true,
+  }).catch(() => {})
+}
 
 // Slide 0 is always the AskBiz brand card (today's static content, unchanged
 // look). Slides 1..N are approved business_spotlights, fetched client-side
@@ -38,6 +47,14 @@ export default function SpotlightCarousel() {
     return () => clearInterval(t)
   }, [total, paused, reducedMotion])
 
+  // Basic Phase-1 impression tracking: count each time a spotlight (not the
+  // brand slide) becomes the visible one, including repeats across loops.
+  useEffect(() => {
+    if (index === 0) return
+    const s = spotlights[index - 1]
+    if (s) track(s.id, 'impression')
+  }, [index, spotlights])
+
   const brandSlide = (
     <>
       <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
@@ -57,11 +74,17 @@ export default function SpotlightCarousel() {
       <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,.65)', marginBottom: 14 }}>
         {tc('auth.spotlight_eyebrow')}
       </div>
-      <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(255,255,255,.15)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-        {s.logo_url
-          ? <img src={s.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
-          : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>}
-      </div>
+      {s.banner_url ? (
+        <div style={{ width: '100%', maxWidth: 300, aspectRatio: '2 / 1', borderRadius: 14, overflow: 'hidden', margin: '0 auto 18px' }}>
+          <img src={s.banner_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+        </div>
+      ) : (
+        <div style={{ width: 64, height: 64, borderRadius: 18, background: 'rgba(255,255,255,.15)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          {s.logo_url
+            ? <img src={s.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+            : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>}
+        </div>
+      )}
       <div style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-.02em', marginBottom: 10, overflowWrap: 'anywhere' as const }}>
         {s.business_name}
       </div>
@@ -69,7 +92,7 @@ export default function SpotlightCarousel() {
         {s.tagline}
       </p>
       {s.link_url && (
-        <a href={s.link_url} target="_blank" rel="noopener noreferrer"
+        <a href={s.link_url} target="_blank" rel="noopener noreferrer" onClick={() => track(s.id, 'click')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 9999, background: 'rgba(255,255,255,.15)', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
           {tc('auth.spotlight_visit')}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>

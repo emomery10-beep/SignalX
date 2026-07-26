@@ -243,6 +243,33 @@ export default function TermsPage() {
             <p><strong>{t('terms.sec_17_company_label')}</strong> {t('terms.sec_17_company_value')}</p>
           </Section>
 
+          <Section id="advertising" title={t('terms.sec_18_title')}>
+            <p>{t('terms.sec_18_p1')}</p>
+            <SubSection title={t('terms.sec_18_1_title')}>
+              <p>{t('terms.sec_18_1_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_18_2_title')}>
+              <p>{t('terms.sec_18_2_p1')}</p>
+              <ul>
+                {[0, 1, 2, 3, 4].map(i => (
+                  <li key={i}>{t('terms.sec_18_2_li_' + i)}</li>
+                ))}
+              </ul>
+            </SubSection>
+            <SubSection title={t('terms.sec_18_3_title')}>
+              <p>{t('terms.sec_18_3_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_18_4_title')}>
+              <p>{t('terms.sec_18_4_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_18_5_title')}>
+              <p>{t('terms.sec_18_5_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_18_6_title')}>
+              <p>{t('terms.sec_18_6_p1')}</p>
+            </SubSection>
+          </Section>
+
         </div>
 
         {/* Footer links */}
@@ -256,9 +283,9 @@ export default function TermsPage() {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div id={id} style={id ? { scrollMarginTop: 72 } : undefined}>
       <h2 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 18, fontWeight: 700, marginBottom: 16, letterSpacing: '-.01em', paddingBottom: 10, borderBottom: '1px solid var(--b)' }}>{title}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13, lineHeight: 1.75, color: 'var(--tx2)' }}>
         {children}
