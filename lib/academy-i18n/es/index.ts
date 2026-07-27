@@ -23,6 +23,12 @@ import { wavea3Translations } from './wave-a-batch3'
 import { wavea3Part2Translations } from './wave-a-batch3-part2'
 import { wavea3Part3Translations } from './wave-a-batch3-part3'
 import { waveABatch4NewArticlesTranslations } from './wave-a-batch4-new-articles'
+import { waveB1Translations } from './wave-b-batch1'
+import { waveB2Translations } from './wave-b-batch2'
+import { waveB3Translations } from './wave-b-batch3'
+import { waveB4Translations } from './wave-b-batch4'
+import { waveB5Translations } from './wave-b-batch5'
+import { waveB6Translations } from './wave-b-batch6'
 
 export const translations: LocaleTranslations = {
   ...waveABatch1Translations,
@@ -31,4 +37,10 @@ export const translations: LocaleTranslations = {
   ...wavea3Part2Translations,
   ...wavea3Part3Translations,
   ...waveABatch4NewArticlesTranslations,
+  ...waveB1Translations,
+  ...waveB2Translations,
+  ...waveB3Translations,
+  ...waveB4Translations,
+  ...waveB5Translations,
+  ...waveB6Translations,
 }

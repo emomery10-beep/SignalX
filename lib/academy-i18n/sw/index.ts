@@ -17,5 +17,14 @@
 // with later batches spread in the same way as they land.
 
 import type { LocaleTranslations } from '../../academy-i18n-loader'
+import { waveABatch1Translations } from './wave-a-batch1'
+import { wave_a_batch2Translations } from './wave-a-batch2'
+import { waveABatch3Translations } from './wave-a-batch3'
+import { waveABatch4NewArticlesTranslations } from './wave-a-batch4-new-articles'
 
-export const translations: LocaleTranslations = {}
+export const translations: LocaleTranslations = {
+  ...waveABatch1Translations,
+  ...wave_a_batch2Translations,
+  ...waveABatch3Translations,
+  ...waveABatch4NewArticlesTranslations,
+}
