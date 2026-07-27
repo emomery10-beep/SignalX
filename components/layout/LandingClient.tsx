@@ -1687,6 +1687,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
         @keyframes tdot{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
         @keyframes demoFadeIn{from{opacity:.4}to{opacity:1}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
         /* PosShowcase "present itself": a spotlight sweeps each KPI card once (per-card delay set inline) */
         @keyframes posSpot{0%,100%{transform:none;box-shadow:0 0 0 0 rgba(201,122,68,0)}30%,62%{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 22px -12px rgba(201,122,68,.55)}}
         .pos-present .pos-kpi{animation-name:posSpot;animation-duration:660ms;animation-timing-function:cubic-bezier(0.22,1,0.36,1);animation-fill-mode:both;will-change:transform}
@@ -2232,8 +2233,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </h2>
             <p style={{ fontSize:FS.md,color:T.tx2 }}>{tc('landing.pricing_subtitle')}</p>
           </div>
-          {/* POS add-on */}
-          <div data-reveal style={{ borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20 }}>
+          {/* POS add-on — hidden until geo data loads to avoid showing wrong currency initially */}
+          {!liveGeo && <div style={{height:160,borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20,animation:'pulse 2s cubic-bezier(0.4,0,0.6,1) infinite',opacity:0.6}}></div>}
+          {liveGeo && <div data-reveal style={{ borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20 }}>
             <div style={{ display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:16 }}>
               <div>
                 <div style={{ display:'inline-flex',alignItems:'center',gap:8,marginBottom:9 }}>
@@ -2260,9 +2262,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 ))}
               </div>
             </div>
-          </div>
-          {/* Annual toggle */}
-          <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:16 }}>
+          </div>}
+          {/* Annual toggle — hide until geo data loads */}
+          {liveGeo && <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:16 }}>
             <span style={{ fontSize:FS.sm,color:annual?T.tx3:T.tx,fontWeight:annual?400:600 }}>{tc('landing.pricing_toggle_monthly')}</span>
             <button role="switch" aria-checked={annual} onClick={()=>setAnnual(v=>!v)} style={{ width:44,height:23,borderRadius:12,background:annual?T.acc:T.bd2,border:'none',cursor:'pointer',position:'relative',transition:'background 200ms',outline:'none' }}>
               <div style={{ width:17,height:17,borderRadius:'50%',background:'#fff',position:'absolute',top:3,left:annual?24:3,transition:'left 200ms',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }}/>
@@ -2270,9 +2272,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <span style={{ fontSize:FS.sm,color:annual?T.tx:T.tx3,fontWeight:annual?600:400 }}>
               {tc('landing.pricing_toggle_annual')} <span style={{ fontSize:FS.xs,fontWeight:700,color:'#16a34a',background:'rgba(22,163,74,.08)',borderRadius:9999,padding:'1px 6px',marginLeft:3 }}>{tc('landing.pricing_toggle_save')}</span>
             </span>
-          </div>
-          {/* Tiers */}
-          <div className="three-col" style={{ gap:12 }}>
+          </div>}
+          {/* Tiers — hide until geo data loads to ensure correct currency is shown */}
+          {liveGeo && <div className="three-col" style={{ gap:12 }}>
             {[
               {id:'free',name:tc('landing.plan_free_name'),colour:'#8C7B6B',price:liveGeo?.pricing?.sym?(liveGeo.pricing.sym.length>1?`${liveGeo.pricing.sym} 0`:`${liveGeo.pricing.sym}0`):tc('landing.plan_free_price'),sub:tc('landing.plan_free_sub'),popular:false,
                 features:[0,1,2,3,4,5,6].map(j=>tc('landing.plan_free_feat_'+j))},
@@ -2306,7 +2308,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 </Link>
               </div>
             ))}
-          </div>
+          </div>}
         </div>
       </section>
 
