@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import ArticleShell from '@/components/docs/ArticleShell'
+import Card from '@/components/ui/Card'
+import Reveal from '@/components/ui/Reveal'
 import { CORE_ENDPOINTS, ACCOUNT_ENDPOINTS } from '@/lib/endpoints'
 import { SITE } from '@/lib/schema'
 
@@ -20,33 +21,34 @@ export default function ApiReferenceIndex() {
     >
       <h2>Callable with your API key</h2>
       <p>These are the endpoints a third-party integration calls directly, authenticated with the <code>x-api-key</code> header.</p>
-      <div className="not-prose grid sm:grid-cols-2 gap-3 mb-8">
-        {CORE_ENDPOINTS.map(e => (
-          <Link key={e.slug} href={`/docs/api-reference/${e.slug}`}
-            className="block border border-ink-700 rounded-xl p-4 bg-ink-900 hover:border-signal-600 transition-colors">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-ink-800 text-signal-300">{e.method}</span>
-              <code className="text-sm text-ink-100">{e.path}</code>
-              {typeof e.priceCents === 'number' && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-signal-600/20 text-signal-300">{e.priceCents}¢/call</span>
-              )}
-            </div>
-            <p className="text-ink-400 text-xs leading-relaxed">{e.summary}</p>
-          </Link>
+      <div className="not-prose grid sm:grid-cols-2 gap-4 mb-10">
+        {CORE_ENDPOINTS.map((e, i) => (
+          <Reveal key={e.slug} delay={i * 50}>
+            <Card href={`/docs/api-reference/${e.slug}`} padding="p-4">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-signal-300">{e.method}</span>
+                <code className="text-sm text-ink-100">{e.path}</code>
+                {typeof e.priceCents === 'number' && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-signal-500/10 ring-1 ring-signal-400/20 text-signal-300">{e.priceCents}&cent;/call</span>
+                )}
+              </div>
+              <p className="text-ink-400 text-xs leading-relaxed">{e.summary}</p>
+            </Card>
+          </Reveal>
         ))}
       </div>
 
       <h2>Account management (dashboard only)</h2>
       <p>These control your account, not a specific request — they&rsquo;re managed from the developer dashboard rather than called from your server with an API key.</p>
-      <div className="not-prose grid sm:grid-cols-2 gap-3">
+      <div className="not-prose grid sm:grid-cols-2 gap-4">
         {ACCOUNT_ENDPOINTS.map(e => (
-          <div key={e.slug} className="block border border-ink-800 rounded-xl p-4 bg-ink-900/50">
+          <Card key={e.slug} interactive={false} padding="p-4">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-ink-800 text-ink-300">{e.method}</span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-ink-300">{e.method}</span>
               <code className="text-sm text-ink-200">{e.path}</code>
             </div>
             <p className="text-ink-400 text-xs leading-relaxed">{e.summary}</p>
-          </div>
+          </Card>
         ))}
       </div>
 

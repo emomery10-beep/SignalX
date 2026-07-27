@@ -13,8 +13,8 @@ export default function CodeTabs({ samples }: { samples: CodeSample[] }) {
   const [active, setActive] = useState(0)
 
   return (
-    <div className="border border-ink-700 rounded-xl overflow-hidden bg-ink-950 not-prose">
-      <div className="flex border-b border-ink-700 bg-ink-900">
+    <div className="rounded-2xl overflow-hidden bg-ink-950 ring-1 ring-white/[0.08] not-prose">
+      <div className="flex border-b border-white/[0.08] bg-white/[0.03]">
         {samples.map((s, i) => (
           <button
             key={s.label}

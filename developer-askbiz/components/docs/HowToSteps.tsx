@@ -8,7 +8,7 @@ export default function HowToSteps({ steps }: { steps: Step[] }) {
     <ol className="not-prose space-y-6 my-6">
       {steps.map((step, i) => (
         <li key={step.name} className="flex gap-4">
-          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-signal-600/20 text-signal-300 text-sm font-bold flex items-center justify-center">
+          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-signal-500/10 ring-1 ring-signal-400/20 text-signal-300 text-sm font-bold flex items-center justify-center">
             {i + 1}
           </span>
           <div className="flex-1 min-w-0">

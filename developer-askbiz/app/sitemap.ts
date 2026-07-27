@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { CORE_ENDPOINTS } from '@/lib/endpoints'
 import { GUIDES } from '@/lib/guides'
+import { LESSONS } from '@/lib/academy'
 
 const SITE = 'https://developer.askbiz.co'
 
@@ -26,20 +27,27 @@ const UPDATED: Record<string, string> = {
   '/docs/quickstart': '2026-07-20',
   '/docs/starters': '2026-07-20',
   '/pricing': '2026-07-19',
+  '/help': '2026-07-27',
+  '/academy': '2026-07-27',
+  '/academy/build-your-first-integration': '2026-07-27',
+  '/academy/understanding-billing-and-pricing': '2026-07-27',
+  '/academy/production-readiness-checklist': '2026-07-27',
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     '/', '/pricing', '/docs', '/docs/quickstart', '/docs/authentication', '/docs/api-reference',
     '/docs/starters', '/docs/guides', '/docs/faq', '/docs/changelog', '/docs/terms', '/docs/privacy', '/docs/sitemap',
+    '/help', '/academy',
   ]
   const apiReferencePages = CORE_ENDPOINTS.map(e => `/docs/api-reference/${e.slug}`)
   const guidePages = GUIDES.map(g => `/docs/guides/${g.slug}`)
+  const academyLessonPages = LESSONS.map(l => `/academy/${l.slug}`)
 
-  return [...staticPages, ...apiReferencePages, ...guidePages].map(path => ({
+  return [...staticPages, ...apiReferencePages, ...guidePages, ...academyLessonPages].map(path => ({
     url: `${SITE}${path}`,
     lastModified: UPDATED[path] || LAUNCH_DATE,
     changeFrequency: 'weekly' as const,
-    priority: path === '/' ? 1 : path === '/pricing' ? 0.95 : path === '/docs' ? 0.9 : path === '/docs/terms' || path === '/docs/privacy' ? 0.4 : 0.7,
+    priority: path === '/' ? 1 : path === '/pricing' ? 0.95 : path === '/docs' || path === '/help' || path === '/academy' ? 0.9 : path === '/docs/terms' || path === '/docs/privacy' ? 0.4 : 0.7,
   }))
 }

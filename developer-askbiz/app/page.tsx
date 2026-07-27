@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import JsonLd from '@/components/docs/JsonLd'
-import Logo from '@/components/Logo'
+import PublicHeader from '@/components/PublicHeader'
+import PublicFooter from '@/components/PublicFooter'
+import GlowField from '@/components/ui/GlowField'
+import Reveal from '@/components/ui/Reveal'
+import Eyebrow from '@/components/ui/Eyebrow'
+import Card from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { organizationAndWebsite, SITE } from '@/lib/schema'
 import { CORE_ENDPOINTS } from '@/lib/endpoints'
-
-const focusRing = 'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal-500'
 
 export const metadata: Metadata = {
   title: 'AskBiz Developers — Build on the API that powers AskBiz',
@@ -55,139 +58,142 @@ export default async function DeveloperHome() {
   if (user) redirect('/dashboard')
 
   return (
-    <div className="min-h-screen flex flex-col bg-ink-950">
-      <header className="border-b border-ink-800">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-ink-50">
-            <Logo size={28} />
-            <span className="font-display font-bold text-sm tracking-tight whitespace-nowrap">AskBiz Developers</span>
-          </div>
-          <nav className="flex items-center gap-2">
-            <Link href="/docs" className={`px-3 py-2 rounded-md text-sm font-medium text-ink-300 hover:text-ink-50 hover:bg-ink-800 transition-colors ${focusRing}`}>
-              Docs
-            </Link>
-            <Link href="/pricing" className={`px-3 py-2 rounded-md text-sm font-medium text-ink-300 hover:text-ink-50 hover:bg-ink-800 transition-colors ${focusRing}`}>
-              Pricing
-            </Link>
-            <Link href="/signin" className={`px-4 py-2 rounded-md bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors ${focusRing}`}>
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col bg-ink-950 relative">
+      <GlowField />
+      <PublicHeader current="/" />
 
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         {/* Hero */}
-        <section className="max-w-3xl mx-auto px-4 md:px-6 pt-20 pb-16 text-center">
-          <p className="text-signal-300 text-xs font-semibold tracking-wide uppercase mb-4">AskBiz API</p>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-ink-50 mb-5 tracking-tight leading-tight">
-            Build on the API that powers AskBiz
-          </h1>
-          <p className="text-ink-300 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto">
-            Vision recognition, WhatsApp messaging, and business-intelligence Q&amp;A for African SME commerce —
-            the same engine behind the AskBiz app, available pay-per-use.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/docs/quickstart" className={`px-6 py-3 rounded-lg bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors ${focusRing}`}>
-              Get started →
-            </Link>
-            <Link href="/docs/api-reference" className={`px-6 py-3 rounded-lg border border-ink-600 text-ink-200 text-sm font-medium hover:bg-ink-800 transition-colors ${focusRing}`}>
-              Browse API reference
-            </Link>
-          </div>
+        <section className="max-w-3xl mx-auto px-4 md:px-6 pt-28 pb-20 text-center">
+          <Reveal>
+            <div className="mb-6 flex justify-center"><Eyebrow>AskBiz API</Eyebrow></div>
+            <h1 className="font-display text-4xl md:text-6xl font-bold text-ink-50 mb-6 tracking-tight leading-[1.05]">
+              Build on the API that powers AskBiz
+            </h1>
+            <p className="text-ink-300 text-base md:text-lg leading-relaxed mb-10 max-w-xl mx-auto">
+              Vision recognition, WhatsApp messaging, and business-intelligence Q&amp;A for African SME commerce —
+              the same engine behind the AskBiz app, available pay-per-use.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Button href="/docs/quickstart">Get started</Button>
+              <Button href="/docs/api-reference" variant="secondary">Browse API reference</Button>
+            </div>
+          </Reveal>
         </section>
 
         {/* Code sample */}
-        <section className="max-w-2xl mx-auto px-4 md:px-6 pb-20">
-          <div className="border border-ink-700 rounded-xl overflow-hidden bg-ink-900">
-            <div className="px-4 py-2.5 border-b border-ink-700 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-ink-700" />
-              <span className="w-2.5 h-2.5 rounded-full bg-ink-700" />
-              <span className="w-2.5 h-2.5 rounded-full bg-ink-700" />
-              <span className="text-ink-400 text-xs ml-2">Identify a product from a photo</span>
+        <section className="max-w-2xl mx-auto px-4 md:px-6 pb-28">
+          <Reveal delay={100}>
+            <div className="rounded-[1.75rem] p-1.5 bg-white/[0.02] ring-1 ring-white/[0.06]">
+              <div className="rounded-[calc(1.75rem-0.375rem)] overflow-hidden bg-ink-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <div className="px-5 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+                  <span className="text-ink-400 text-xs ml-2">Identify a product from a photo</span>
+                </div>
+                <pre className="p-5 overflow-x-auto text-xs leading-relaxed text-ink-100"><code>{curlSample}</code></pre>
+              </div>
             </div>
-            <pre className="p-4 overflow-x-auto text-xs leading-relaxed text-ink-100"><code>{curlSample}</code></pre>
+          </Reveal>
+        </section>
+
+        {/* Feature grid — asymmetrical bento */}
+        <section className="max-w-5xl mx-auto px-4 md:px-6 pb-28">
+          <Reveal>
+            <div className="text-center mb-12">
+              <p className="text-signal-300 text-xs font-semibold tracking-[0.2em] uppercase mb-3">Endpoints</p>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-ink-50 mb-3">Five endpoints, one API key</h2>
+              <p className="text-ink-300 text-sm max-w-lg mx-auto">
+                Every endpoint documented with real request/response shapes, error codes, and pricing — not a sales page.
+              </p>
+            </div>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {CORE_ENDPOINTS.map((e, i) => (
+              <Reveal key={e.slug} delay={i * 60}>
+                <Card href={`/docs/api-reference/${e.slug}`}>
+                  <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-signal-300">{e.method}</span>
+                    <code className="text-sm text-ink-100">{e.path}</code>
+                  </div>
+                  <p className="text-ink-400 text-xs leading-relaxed">{e.summary}</p>
+                </Card>
+              </Reveal>
+            ))}
+            <Reveal delay={CORE_ENDPOINTS.length * 60}>
+              <Card href="/docs/guides/webhooks">
+                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-signal-300">WEBHOOKS</span>
+                </div>
+                <p className="text-ink-400 text-xs leading-relaxed">React to sale.created, purchase_order.received, and stock.low events in real time instead of polling.</p>
+              </Card>
+            </Reveal>
           </div>
         </section>
 
-        {/* Feature grid */}
-        <section className="max-w-5xl mx-auto px-4 md:px-6 pb-20">
-          <h2 className="font-display text-2xl font-bold text-ink-50 mb-2 text-center">Five endpoints, one API key</h2>
-          <p className="text-ink-300 text-sm text-center mb-10 max-w-lg mx-auto">
-            Every endpoint documented with real request/response shapes, error codes, and pricing — not a sales page.
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {CORE_ENDPOINTS.map(e => (
-              <Link key={e.slug} href={`/docs/api-reference/${e.slug}`}
-                className={`block border border-ink-700 rounded-xl p-5 bg-ink-900 hover:border-signal-600 transition-colors ${focusRing}`}>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-ink-800 text-signal-300">{e.method}</span>
-                  <code className="text-sm text-ink-100">{e.path}</code>
-                </div>
-                <p className="text-ink-400 text-xs leading-relaxed">{e.summary}</p>
-              </Link>
-            ))}
-            <Link href="/docs/guides/webhooks"
-              className={`block border border-ink-700 rounded-xl p-5 bg-ink-900 hover:border-signal-600 transition-colors ${focusRing}`}>
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="text-xs font-mono px-2 py-0.5 rounded bg-ink-800 text-signal-300">WEBHOOKS</span>
-              </div>
-              <p className="text-ink-400 text-xs leading-relaxed">React to sale.created, purchase_order.received, and stock.low events in real time instead of polling.</p>
-            </Link>
+        {/* Learn — Academy / Help cross-link */}
+        <section className="max-w-5xl mx-auto px-4 md:px-6 pb-28">
+          <div className="grid sm:grid-cols-2 gap-5">
+            <Reveal>
+              <Card href="/academy" padding="p-7">
+                <p className="text-signal-300 text-[10px] font-semibold tracking-[0.2em] uppercase mb-3">Academy</p>
+                <h3 className="font-display text-lg font-bold text-ink-50 mb-2">Learn to build on AskBiz</h3>
+                <p className="text-ink-400 text-xs leading-relaxed">Structured learning paths, project tutorials, and production-readiness lessons — from your first API key to a shipped integration.</p>
+              </Card>
+            </Reveal>
+            <Reveal delay={80}>
+              <Card href="/help" padding="p-7">
+                <p className="text-signal-300 text-[10px] font-semibold tracking-[0.2em] uppercase mb-3">Help</p>
+                <h3 className="font-display text-lg font-bold text-ink-50 mb-2">Get unstuck fast</h3>
+                <p className="text-ink-400 text-xs leading-relaxed">Answers to the questions developers actually ask, organized by topic — billing, auth, connections, webhooks, and errors.</p>
+              </Card>
+            </Reveal>
           </div>
         </section>
 
         {/* Benefits */}
-        <section className="max-w-5xl mx-auto px-4 md:px-6 pb-20">
-          <h2 className="font-display text-2xl font-bold text-ink-50 mb-10 text-center">Built to be trusted, not just tried</h2>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {BENEFITS.map(b => (
-              <div key={b.title} className="flex gap-3">
-                <div className="w-8 h-8 rounded-lg bg-signal-600/20 flex-shrink-0 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-signal-400" />
+        <section className="max-w-5xl mx-auto px-4 md:px-6 pb-28">
+          <Reveal>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-ink-50 mb-12 text-center">Built to be trusted, not just tried</h2>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-8">
+            {BENEFITS.map((b, i) => (
+              <Reveal key={b.title} delay={i * 70}>
+                <div className="flex gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-signal-500/10 ring-1 ring-signal-400/20 flex-shrink-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-signal-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-ink-50 text-sm font-semibold mb-1.5">{b.title}</h3>
+                    <p className="text-ink-400 text-xs leading-relaxed">{b.body}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-ink-50 text-sm font-semibold mb-1">{b.title}</h3>
-                  <p className="text-ink-400 text-xs leading-relaxed">{b.body}</p>
-                </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
 
         {/* CTA */}
-        <section className="max-w-2xl mx-auto px-4 md:px-6 pb-24 text-center">
-          <div className="border border-ink-700 rounded-2xl bg-ink-900 px-8 py-12">
-            <h2 className="font-display text-2xl font-bold text-ink-50 mb-3">Ready to build?</h2>
-            <p className="text-ink-300 text-sm mb-6 max-w-sm mx-auto">
-              Create an account, get an API key, and make your first call in a few minutes — no card required to start.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/signin" className={`px-6 py-3 rounded-lg bg-signal-500 text-ink-950 text-sm font-semibold hover:bg-signal-400 transition-colors ${focusRing}`}>
-                Create your first key →
-              </Link>
-              <Link href="/docs" className={`px-6 py-3 rounded-lg border border-ink-600 text-ink-200 text-sm font-medium hover:bg-ink-800 transition-colors ${focusRing}`}>
-                Read the docs
-              </Link>
+        <section className="max-w-2xl mx-auto px-4 md:px-6 pb-32 text-center">
+          <Reveal>
+            <div className="rounded-[2rem] p-1.5 bg-white/[0.02] ring-1 ring-white/[0.06]">
+              <div className="rounded-[calc(2rem-0.375rem)] bg-ink-900/80 px-8 py-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <h2 className="font-display text-2xl md:text-3xl font-bold text-ink-50 mb-3">Ready to build?</h2>
+                <p className="text-ink-300 text-sm mb-8 max-w-sm mx-auto">
+                  Create an account, get an API key, and make your first call in a few minutes — no card required to start.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Button href="/signin">Create your first key</Button>
+                  <Button href="/docs" variant="secondary" icon={false}>Read the docs</Button>
+                </div>
+              </div>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 
-      <footer className="border-t border-ink-800">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-8 flex flex-wrap items-center justify-between gap-4 text-xs text-ink-400">
-          <span>&copy; {new Date().getFullYear()} AskBiz Ltd.</span>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a href="https://askbiz.co" className="hover:text-signal-300 transition-colors">askbiz.co</a>
-            <Link href="/docs" className="hover:text-signal-300 transition-colors">Docs</Link>
-            <Link href="/docs/changelog" className="hover:text-signal-300 transition-colors">Changelog</Link>
-            <Link href="/docs/sitemap" className="hover:text-signal-300 transition-colors">Sitemap</Link>
-            <Link href="/docs/terms" className="hover:text-signal-300 transition-colors">Terms</Link>
-            <Link href="/docs/privacy" className="hover:text-signal-300 transition-colors">Privacy</Link>
-            <a href="mailto:hello@askbiz.co" className="hover:text-signal-300 transition-colors">hello@askbiz.co</a>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
 
       <JsonLd data={organizationAndWebsite()} />
     </div>
