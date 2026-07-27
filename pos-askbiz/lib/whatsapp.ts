@@ -84,22 +84,19 @@ export async function sendOTP(phone: string, code: string): Promise<{ ok: boolea
   return { ok: true }
 }
 
-// ── Send receipt: image first, text-summary fallback ───────────────────────
-// Template "askbiz_receipt_image" (Utility, pending review as of 2026-07-24):
-//   Header: IMAGE — a link to app/api/pos/receipt/[id]/image, so it always
-//           reflects the actual transaction, never a stale uploaded file.
-//   Body:   "Here's your receipt from {{1}}. Thank you for your business!"
-//   Footer: "Powered by AskBiz" (static)
-// This is what actually looks like a store receipt (itemized, branded) —
-// text templates can't do that (Meta rejects a body that's mostly one big
-// free-text variable, tried several variants, all came back
-// REJECTED/INVALID_FORMAT).
-//
-// Falls back to "askbiz_receipt" (Utility, approved 2026-07-24 — a short
-// payment-confirmation with amount/business/date/payment-method as four
-// small parameters) if the image template send fails for any reason —
-// most likely because it's still in Meta's review queue. Once approved,
-// sends succeed on the image attempt automatically, no code change needed.
+// ── Send receipt: text-only (image template disabled — see below) ──────────
+// Template "askbiz_receipt_image" (Utility) was meant to send a branded,
+// itemized receipt image as the template header, falling back to the plain
+// text template "askbiz_receipt" if Meta's API rejected the send (e.g. while
+// the image template was still pending review). That fallback logic only
+// triggers on an explicit API error — but once Meta approved the image
+// template (on/around 2026-07-27), it started returning 200 OK for the send
+// while the message never actually reached the recipient. Confirmed live,
+// same day: disabling the image attempt and going straight to the text
+// template restored real delivery. Root cause on Meta's side not diagnosed
+// (something about the dynamic image header, most likely) — investigate via
+// Meta Business Manager's WhatsApp Manager message log before re-enabling
+// sendReceiptImage below.
 export interface ReceiptSummary {
   total: string
   businessName: string
@@ -143,21 +140,6 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHi
   if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
 
   const lang = process.env.META_TEMPLATE_LANG || 'en_GB'
-
-  // TEMPORARY DIAGNOSTIC (2026-07-27): skip the image-template attempt and go
-  // straight to the plain-text template. The image template just started
-  // getting accepted by Meta on the first try (previously it was rejected as
-  // "pending review", silently falling back to text every time) — testing
-  // whether the image template is actually failing to *deliver* after
-  // Meta accepts it, vs. the text template which reportedly was delivering
-  // fine before. Revert once confirmed either way.
-  const skipImageTemplate = true
-  const imageResult = skipImageTemplate
-    ? { ok: false, error: 'skipped for diagnostic' }
-    : await sendReceiptImage(phone, receipt, lang, dialHint)
-  if (imageResult.ok) return imageResult
-  if (!skipImageTemplate) console.error('[whatsapp] sendReceipt image template failed, falling back to text summary:', imageResult.error)
-
   const template = process.env.META_RECEIPT_TEMPLATE || 'askbiz_receipt'
 
   const res = await fetch(`${BASE}/${numId}/messages`, {
