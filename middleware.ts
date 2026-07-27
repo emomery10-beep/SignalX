@@ -167,7 +167,7 @@ export async function middleware(request: NextRequest) {
     res.headers.set('X-Frame-Options', 'DENY')
     res.headers.set('X-Content-Type-Options', 'nosniff')
     res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    res.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self)')
+    res.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self)')
     if (!res.headers.has('Content-Security-Policy')) {
       res.headers.set('Content-Security-Policy', CONTENT_SECURITY_POLICY)
     }
