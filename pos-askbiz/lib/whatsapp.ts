@@ -144,9 +144,19 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHi
 
   const lang = process.env.META_TEMPLATE_LANG || 'en_GB'
 
-  const imageResult = await sendReceiptImage(phone, receipt, lang, dialHint)
+  // TEMPORARY DIAGNOSTIC (2026-07-27): skip the image-template attempt and go
+  // straight to the plain-text template. The image template just started
+  // getting accepted by Meta on the first try (previously it was rejected as
+  // "pending review", silently falling back to text every time) — testing
+  // whether the image template is actually failing to *deliver* after
+  // Meta accepts it, vs. the text template which reportedly was delivering
+  // fine before. Revert once confirmed either way.
+  const skipImageTemplate = true
+  const imageResult = skipImageTemplate
+    ? { ok: false, error: 'skipped for diagnostic' }
+    : await sendReceiptImage(phone, receipt, lang, dialHint)
   if (imageResult.ok) return imageResult
-  console.error('[whatsapp] sendReceipt image template failed, falling back to text summary:', imageResult.error)
+  if (!skipImageTemplate) console.error('[whatsapp] sendReceipt image template failed, falling back to text summary:', imageResult.error)
 
   const template = process.env.META_RECEIPT_TEMPLATE || 'askbiz_receipt'
 
