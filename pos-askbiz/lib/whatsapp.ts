@@ -23,9 +23,19 @@ function phoneId() {
   return process.env.META_PHONE_NUMBER_ID
 }
 
-// Strip all non-digits and ensure international format (no +)
-function normalisePhone(phone: string): string {
-  return phone.replace(/\D/g, '')
+// Convert to Meta's expected international format (digits only, no +, no
+// leading 0). Bare digit-stripping alone silently ships a local-format
+// number like Kenyan "0712345678" straight to the Graph API — Meta accepts
+// it with a 200 OK (no synchronous validation that it maps to a real
+// WhatsApp account) but the message never delivers. dialHint is the
+// merchant's own dial code (from profiles.country_code via COUNTRY_DIAL)
+// used to fill in the country prefix when the caller typed a local number.
+function normalisePhone(phone: string, dialHint?: string): string {
+  const trimmed = phone.trim()
+  if (trimmed.startsWith('+')) return trimmed.replace(/\D/g, '')
+  const digits = trimmed.replace(/\D/g, '')
+  if (dialHint && digits.startsWith('0')) return dialHint.replace(/\D/g, '') + digits.slice(1)
+  return digits
 }
 
 // ── Send OTP via authentication template ────────────────────────────────────
@@ -98,7 +108,7 @@ export interface ReceiptSummary {
   imageUrl: string
 }
 
-async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: string): Promise<{ ok: boolean; error?: string }> {
+async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: string, dialHint?: string): Promise<{ ok: boolean; error?: string }> {
   const numId = phoneId()
   const template = process.env.META_RECEIPT_IMAGE_TEMPLATE || 'askbiz_receipt_image'
 
@@ -107,7 +117,7 @@ async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: st
     headers: headers(),
     body: JSON.stringify({
       messaging_product: 'whatsapp',
-      to:   normalisePhone(phone),
+      to:   normalisePhone(phone, dialHint),
       type: 'template',
       template: {
         name:     template,
@@ -127,14 +137,14 @@ async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: st
   return { ok: true }
 }
 
-export async function sendReceipt(phone: string, receipt: ReceiptSummary): Promise<{ ok: boolean; error?: string }> {
+export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHint?: string): Promise<{ ok: boolean; error?: string }> {
   const token = process.env.META_WHATSAPP_TOKEN
   const numId = phoneId()
   if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
 
   const lang = process.env.META_TEMPLATE_LANG || 'en_GB'
 
-  const imageResult = await sendReceiptImage(phone, receipt, lang)
+  const imageResult = await sendReceiptImage(phone, receipt, lang, dialHint)
   if (imageResult.ok) return imageResult
   console.error('[whatsapp] sendReceipt image template failed, falling back to text summary:', imageResult.error)
 
@@ -145,7 +155,7 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary): Promi
     headers: headers(),
     body: JSON.stringify({
       messaging_product: 'whatsapp',
-      to:   normalisePhone(phone),
+      to:   normalisePhone(phone, dialHint),
       type: 'template',
       template: {
         name:     template,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 import { sendReceipt } from '@/lib/whatsapp'
+import { COUNTRY_DIAL } from '@/lib/phone'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -90,12 +91,18 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await service
     .from('profiles')
-    .select('business_name, currency_symbol')
+    .select('business_name, currency_symbol, country_code')
     .eq('id', ownerId)
     .maybeSingle()
 
   const symbol       = profile?.currency_symbol || '£'
   const businessName = profile?.business_name || 'The Shop'
+  // Cashiers type the customer's phone as a local number (e.g. "0712345678"),
+  // no country selector on that field — use the merchant's own signup
+  // country as the dial-code hint so it normalises to E.164 before hitting
+  // the WhatsApp Cloud API. Without this, Meta accepts the malformed number
+  // with a 200 OK but the message never delivers (see lib/whatsapp.ts).
+  const dialHint = COUNTRY_DIAL.find(c => c.code === profile?.country_code)?.dial
   const date         = new Date(tx.created_at).toLocaleString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
@@ -113,7 +120,7 @@ export async function POST(req: NextRequest) {
     date,
     paymentType: tx.payment_type,
     imageUrl: `${baseUrl}/api/pos/receipt/${transaction_id}/image`,
-  })
+  }, dialHint)
   // fix #18 — check ok and return error to caller; previously HTTP errors were swallowed
   if (!ok) {
     return NextResponse.json({ error: waError || 'Failed to send WhatsApp receipt' }, { status: 500 })
