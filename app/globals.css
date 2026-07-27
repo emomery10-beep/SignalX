@@ -160,6 +160,36 @@ label:not(.no-tap-target),
   }
 }
 
+/* Replica UI grids (rep-3col/4col/5col) — used inside device-mockup
+   replicas (Monitor, PosShowcase, feature grids). These had NO responsive
+   rules at all: the inline gridTemplateColumns never collapsed, so on
+   mobile the replica content overflowed/squished illegibly. */
+.rep-3col,
+.rep-4col,
+.rep-5col {
+  min-width: 0;
+}
+.rep-3col > *,
+.rep-4col > *,
+.rep-5col > * {
+  min-width: 0;
+}
+@media (max-width: 768px) {
+  .rep-4col,
+  .rep-5col {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+@media (max-width: 480px) {
+  .rep-3col,
+  .rep-4col,
+  .rep-5col {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
 /* ── Mobile visibility ──────────────────────────────────────── */
 .rep-hide-sm {
   display: block;
