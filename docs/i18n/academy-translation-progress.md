@@ -42,17 +42,21 @@ Scanning, Refunds, VAT, Multi-Branch, Repair workflows, etc.) — untouched by t
 
 | Locale | Glossary status | Source |
 |---|---|---|
-| sw | ✅ locked (reuse) | established for POS/UI translation — see memory `pos-askbiz-swahili`, `i18n-foundation-progress` |
-| so | ✅ locked (reuse) | established for UI translation — see memory `somali-locale-build` |
-| es | ⬜ not yet locked | to be established during Milestone 3 (Wave A) |
-| fr | ⬜ not yet locked | to be established during Milestone 3 (Wave A) |
-| de | ⬜ not yet locked | to be established during Milestone 3 (Wave A) |
-| nl | ⬜ not yet locked | to be established during Milestone 3 (Wave A) |
-| ar | ⬜ not yet locked | to be established during Milestone 3 (Wave A) — RTL, needs extra layout QA |
+| sw | ✅ locked (reuse) | reused from prior POS/UI translation; confirmed in Milestone 3 |
+| so | ✅ locked (reuse) | reused from prior UI translation; confirmed in Milestone 3 |
+| es | ✅ locked (new) | established Milestone 3, 59 core terms, verified across all 51 articles |
+| fr | ✅ locked (new) | established Milestone 3 batches 1-2, ready for batches 3-4 retry |
+| de | ✅ locked (new) | established Milestone 3, verified across all 51 articles |
+| nl | ✅ locked (new) | established Milestone 3, verified across all 51 articles |
+| ar | ✅ locked (new) | established Milestone 3, verified across 45/51 articles (6 missing from batch4) |
 
 ---
 
-## Wave A — POS + product cluster (pilot, Milestone 3)
+## Wave A — POS + product cluster (pilot, Milestone 3, PARTIAL 2026-07-27)
+
+**Status:** 4/7 languages complete (es/de/nl/sw fully wired with all 51 articles); 3/7 partial.
+Typecheck + build passed. 28 batch files created, 7 index files updated, changes committed locally.
+Ready for next steps; missing articles from ar/fr/so need retry or investigation.
 
 Source: `Point of Sale & Retail` (39 articles) + Milestone 1's 12 new articles (confirmed —
 commit e918cb95) = 51 total. `POS kwa Kiswahili` (6) and `POS af-Soomaali` (6) are already
@@ -61,13 +65,13 @@ the language switcher exists.
 
 | Locale | Status | Articles done / total |
 |---|---|---|
-| es | ⬜ not started | 0 / 51 |
-| fr | ⬜ not started | 0 / 51 |
-| de | ⬜ not started | 0 / 51 |
-| nl | ⬜ not started | 0 / 51 |
-| ar | ⬜ not started | 0 / 51 |
-| sw | ⬜ not started | 0 / 51 |
-| so | ⬜ not started | 0 / 51 |
+| es | ✅ done | 51 / 51 |
+| de | ✅ done | 51 / 51 |
+| nl | ✅ done | 51 / 51 |
+| sw | ✅ done | 51 / 51 |
+| ar | ⚠️ partial | 45 / 51 (batch4 incomplete: 6 missing connect-* + purchase-orders articles) |
+| fr | ⚠️ partial | 26 / 51 (batch3-4 failed; batches 1-2 done) |
+| so | ⚠️ partial | 39 / 51 (batch4 never created; batches 1-3 done) |
 
 ## Wave B — "AskBiz Tutorials" category (~857 articles, was 832 + 25 single-quoted found 2026-07-26)
 
