@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Interactive PoS Demo (hero) ───────────────────────────────────────────────
 // Self-contained, genuinely CLICKABLE till that replaces the old cashier <iframe>.
@@ -12,7 +13,6 @@ import { useState, useEffect, useRef } from 'react'
 // copy from landing.* keys; item/data values are illustrative.
 
 type Tc = (k: string, vars?: Record<string, string | number>) => string
-const money = (n: number) => 'KSh ' + n.toLocaleString('en-US')
 
 const P = {
   bg: '#f9f8f6', surface: '#fff', border: '#e5e2dc', ink: '#1a1916', muted: '#6b6760',
@@ -63,7 +63,7 @@ function Done({ tc, sub }: { tc: Tc; sub: string }) {
 }
 
 // ── Sell till (retail / restaurant / salon) ──────────────────────────────────
-function SellScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
+function SellScreen({ tc, sectorId, fx }: { tc: Tc; sectorId: string; fx?: Fx }) {
   const cfg = SELL[sectorId]
   const [cart, setCart] = useState<Record<number, number>>({})
   const [stage, setStage] = useState<'shop' | 'pay' | 'done'>('shop')
@@ -85,7 +85,7 @@ function SellScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
             </span>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: P.ink, lineHeight: 1.25 }}>{it.n}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: P.acc }}>{money(it.p)}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: P.acc }}>{money(it.p, fx)}</span>
           </button>
         ))}
       </div>
@@ -102,22 +102,22 @@ function SellScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
               <div key={l.i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', animation: 'ipos-in .35s ease' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.it.n}</div>
-                  <div style={{ fontSize: 10.5, color: P.muted }}>{money(l.it.p)}</div>
+                  <div style={{ fontSize: 10.5, color: P.muted }}>{money(l.it.p, fx)}</div>
                 </div>
                 <button onClick={() => dec(l.i)} className="ipos-qty">−</button>
                 <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 14, textAlign: 'center' }}>{l.q}</span>
                 <button onClick={() => add(l.i)} className="ipos-qty">+</button>
-                <span style={{ fontSize: 12.5, fontWeight: 800, minWidth: 50, textAlign: 'right' }}>{money(l.it.p * l.q)}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800, minWidth: 50, textAlign: 'right' }}>{money(l.it.p * l.q, fx)}</span>
               </div>
             ))}
           </div>
           <div style={{ padding: '12px 14px 14px', borderTop: `1px solid ${P.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: P.muted }}>{tc('landing.moat_demo_total')}</span>
-              <span style={{ fontSize: 19, fontWeight: 900 }}>{money(total)}</span>
+              <span style={{ fontSize: 19, fontWeight: 900 }}>{money(total, fx)}</span>
             </div>
             <button onClick={charge} disabled={!count} style={{ ...doneBtn(!!count), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {stage === 'pay' ? <><span className="ipos-dots"><i/><i/><i/></span>{tc('landing.moat_demo_pay_mpesa')}</> : <>{tc(`landing.${cfg.action}`)}{count ? ` · ${money(total)}` : ''}</>}
+              {stage === 'pay' ? <><span className="ipos-dots"><i/><i/><i/></span>{tc('landing.moat_demo_pay_mpesa')}</> : <>{tc(`landing.${cfg.action}`)}{count ? ` · ${money(total, fx)}` : ''}</>}
             </button>
           </div>
         </div>
@@ -127,7 +127,7 @@ function SellScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
 }
 
 // ── Repair job ticket ────────────────────────────────────────────────────────
-function RepairScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
+function RepairScreen({ tc, sectorId, fx }: { tc: Tc; sectorId: string; fx?: Fx }) {
   const [dev, setDev] = useState<number | null>(null)
   const [flt, setFlt] = useState<number | null>(null)
   const [done, setDone] = useState(false)
@@ -152,7 +152,7 @@ function RepairScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '12px 14px', background: P.bg, borderRadius: 12, marginBottom: 12, opacity: flt !== null ? 1 : .5 }}>
           <span style={{ fontSize: 12.5, color: P.muted, fontWeight: 600 }}>{tc('landing.till_rep_quote')}{dev !== null ? ` · ${REP_DEVICES[dev]}` : ''}</span>
-          <span style={{ fontSize: 18, fontWeight: 900, color: P.acc }}>{money(quote)}</span>
+          <span style={{ fontSize: 18, fontWeight: 900, color: P.acc }}>{money(quote, fx)}</span>
         </div>
         <button onClick={() => dev !== null && flt !== null && setDone(true)} disabled={dev === null || flt === null} style={doneBtn(dev !== null && flt !== null)}>{tc('landing.till_rep_start')}</button>
       </>)}
@@ -161,7 +161,7 @@ function RepairScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
 }
 
 // ── Factory production tally ──────────────────────────────────────────────────
-function FactoryScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
+function FactoryScreen({ tc, sectorId, fx }: { tc: Tc; sectorId: string; fx?: Fx }) {
   const [q, setQ] = useState<Record<number, number>>({})
   const [done, setDone] = useState(false)
   useEffect(() => { setQ({}); setDone(false) }, [sectorId])
@@ -177,7 +177,7 @@ function FactoryScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', background: P.bg, borderRadius: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{it.n}</div>
-                <div style={{ fontSize: 10.5, color: P.muted }}>{money(it.p)}</div>
+                <div style={{ fontSize: 10.5, color: P.muted }}>{money(it.p, fx)}</div>
               </div>
               <button onClick={() => set(i, -1)} className="ipos-qty">−</button>
               <span style={{ fontSize: 14, fontWeight: 800, minWidth: 20, textAlign: 'center' }}>{q[i] || 0}</span>
@@ -187,7 +187,7 @@ function FactoryScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '12px 4px 12px' }}>
           <span style={{ fontSize: 12.5, color: P.muted, fontWeight: 600 }}>{tc('landing.till_fac_output')}</span>
-          <span style={{ fontSize: 15, fontWeight: 800 }}>{units} {tc('landing.till_fac_units')} · <span style={{ color: P.acc }}>{money(value)}</span></span>
+          <span style={{ fontSize: 15, fontWeight: 800 }}>{units} {tc('landing.till_fac_units')} · <span style={{ color: P.acc }}>{money(value, fx)}</span></span>
         </div>
         <button onClick={() => units > 0 && setDone(true)} disabled={units === 0} style={doneBtn(units > 0)}>{tc('landing.till_fac_dispatch')}</button>
       </>)}
@@ -196,7 +196,7 @@ function FactoryScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
 }
 
 // ── Logistics parcel run ──────────────────────────────────────────────────────
-function LogisticsScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
+function LogisticsScreen({ tc, sectorId, fx }: { tc: Tc; sectorId: string; fx?: Fx }) {
   const [del, setDel] = useState<Record<number, boolean>>({})
   useEffect(() => { setDel({}) }, [sectorId])
   const done = Object.values(del).filter(Boolean).length
@@ -214,7 +214,7 @@ function LogisticsScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.id} · {p.to}</div>
-              <div style={{ fontSize: 10.5, color: P.muted }}>COD {money(p.cod)}</div>
+              <div style={{ fontSize: 10.5, color: P.muted }}>COD {money(p.cod, fx)}</div>
             </div>
             <button onClick={() => setDel(c => ({ ...c, [i]: !c[i] }))} className="ipos-tap" style={{ cursor: 'pointer', padding: '7px 13px', borderRadius: 9, border: `1px solid ${d ? 'transparent' : P.border}`, background: d ? P.success : P.surface, color: d ? '#fff' : P.ink, fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit', flexShrink: 0 }}>
               {d ? tc('landing.till_log_done') : tc('landing.till_log_deliver')}
@@ -226,7 +226,7 @@ function LogisticsScreen({ tc, sectorId }: { tc: Tc; sectorId: string }) {
   )
 }
 
-export default function InteractivePosDemo({ tc, lang }: { tc: Tc; lang?: string }) {
+export default function InteractivePosDemo({ tc, lang, fx }: { tc: Tc; lang?: string; fx?: Fx }) {
   const [sector, setSector] = useState(0)
   const S = SECTORS[sector]
   return (
@@ -246,10 +246,10 @@ export default function InteractivePosDemo({ tc, lang }: { tc: Tc; lang?: string
         )})}
       </div>
 
-      {S.kind === 'sell' && <SellScreen tc={tc} sectorId={S.id} />}
-      {S.kind === 'repair' && <RepairScreen tc={tc} sectorId={S.id} />}
-      {S.kind === 'factory' && <FactoryScreen tc={tc} sectorId={S.id} />}
-      {S.kind === 'logistics' && <LogisticsScreen tc={tc} sectorId={S.id} />}
+      {S.kind === 'sell' && <SellScreen tc={tc} sectorId={S.id} fx={fx} />}
+      {S.kind === 'repair' && <RepairScreen tc={tc} sectorId={S.id} fx={fx} />}
+      {S.kind === 'factory' && <FactoryScreen tc={tc} sectorId={S.id} fx={fx} />}
+      {S.kind === 'logistics' && <LogisticsScreen tc={tc} sectorId={S.id} fx={fx} />}
 
       <div style={{ textAlign: 'center', marginTop: 'clamp(12px,2vw,18px)' }}>
         <p style={{ fontSize: 12.5, color: P.muted, lineHeight: 1.55, maxWidth: 640, margin: '0 auto 12px' }}>{tc('landing.hero_pos_caption')}</p>

@@ -24,7 +24,7 @@ function Check() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.acc} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
 }
 
-export default function PriceProof({ tc }: { tc: Tc }) {
+export default function PriceProof({ tc, posPrice }: { tc: Tc; posPrice?: string }) {
   const inc = ['price2_inc_0', 'price2_inc_1', 'price2_inc_2', 'price2_inc_3', 'price2_inc_4']
   return (
     <section style={{ padding: 'clamp(64px,9vw,112px) clamp(16px,4vw,40px)', background: C.bg }}>
@@ -47,10 +47,9 @@ export default function PriceProof({ tc }: { tc: Tc }) {
           <div style={{ padding: 8, borderRadius: 28, background: C.accSoft, border: `1px solid ${C.bd}` }}>
             <div style={{ borderRadius: 22, background: C.card, border: `1px solid ${C.bd}`, boxShadow: '0 24px 60px -28px rgba(80,45,15,.28)', padding: 'clamp(28px,4vw,40px)', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--font-instrument)', fontSize: 'clamp(44px,7vw,72px)', fontWeight: 400, letterSpacing: '-.02em', color: C.tx, lineHeight: 1 }}><AnimatedNumber value={tc('landing.price2_amount')} /></span>
+                <span style={{ fontFamily: 'var(--font-instrument)', fontSize: 'clamp(44px,7vw,72px)', fontWeight: 400, letterSpacing: '-.02em', color: C.tx, lineHeight: 1 }}><AnimatedNumber value={posPrice || tc('landing.price2_amount')} /></span>
                 <span style={{ fontSize: 16, fontWeight: 600, color: C.tx3 }}>{tc('landing.price2_per')}</span>
               </div>
-              <div style={{ fontSize: 13, color: C.tx3, marginTop: 8 }}>{tc('landing.price2_approx')}</div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '10px 18px', margin: '26px 0 24px', textAlign: 'left' }}>
                 {inc.map((k, z) => (

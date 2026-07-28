@@ -1,4 +1,5 @@
 'use client'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Any-Phone Proof ───────────────────────────────────────────────────────────
 // Proves "works on any phone, no hardware" by showing the SAME AskBiz home screen
@@ -12,7 +13,7 @@ const M = { bg: '#ffffff', tx: '#1A1410', tx2: '#4A4038', tx3: '#6b6560', acc: '
 const P = { bg: '#f9f8f6', surface: '#fff', border: '#e5e2dc', ink: '#1a1916', muted: '#6b6760', acc: '#d08a59', accPale: 'rgba(208,138,89,0.12)' }
 
 // The shared AskBiz home screen — identical in both frames (that's the point).
-function MiniHome({ tc }: { tc: Tc }) {
+function MiniHome({ tc, fx }: { tc: Tc; fx?: Fx }) {
   return (
     <div style={{ position: 'absolute', inset: 0, background: P.bg, display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-jakarta), system-ui, sans-serif' }}>
       <div style={{ padding: '28px 14px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -21,7 +22,7 @@ function MiniHome({ tc }: { tc: Tc }) {
       </div>
       <div style={{ padding: '4px 16px 10px' }}>
         <div style={{ fontSize: 10.5, color: P.muted, fontWeight: 600 }}>{tc('landing.any_home_today')}</div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: P.ink, letterSpacing: '-.02em' }}>KSh 4,820</div>
+        <div style={{ fontSize: 26, fontWeight: 900, color: P.ink, letterSpacing: '-.02em' }}>{money(4820, fx)}</div>
       </div>
       <div style={{ display: 'flex', gap: 8, padding: '0 12px 12px' }}>
         {[['any_home_sales', '34'], ['any_home_top', 'Soda']].map(([k, v], z) => (
@@ -41,7 +42,7 @@ function MiniHome({ tc }: { tc: Tc }) {
   )
 }
 
-export default function AnyPhoneProof({ tc }: { tc: Tc }) {
+export default function AnyPhoneProof({ tc, fx }: { tc: Tc; fx?: Fx }) {
   return (
     <section style={{ padding: 'clamp(64px,9vw,112px) clamp(16px,4vw,40px)', background: M.bg }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -66,7 +67,7 @@ export default function AnyPhoneProof({ tc }: { tc: Tc }) {
             <div style={{ width: 'clamp(150px,40vw,190px)', margin: '0 auto', padding: 7, borderRadius: 28, background: 'linear-gradient(160deg,#3a3a3d,#161617)', boxShadow: '0 24px 50px -22px rgba(0,0,0,.4)' }}>
               <div style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', background: P.bg, aspectRatio: '9 / 18' }}>
                 <span style={{ position: 'absolute', top: 7, left: '50%', transform: 'translateX(-50%)', width: 7, height: 7, borderRadius: '50%', background: '#000', zIndex: 2 }} />
-                <MiniHome tc={tc} />
+                <MiniHome tc={tc} fx={fx} />
               </div>
             </div>
             <div style={{ marginTop: 14, fontSize: 13, fontWeight: 600, color: M.tx3 }}>{tc('landing.any_cap_android')}</div>
@@ -77,7 +78,7 @@ export default function AnyPhoneProof({ tc }: { tc: Tc }) {
             <div style={{ width: 'clamp(160px,42vw,210px)', margin: '0 auto', padding: 9, borderRadius: 40, background: 'linear-gradient(160deg,#2a2622,#0f0d0b)', boxShadow: '0 30px 60px -22px rgba(80,45,15,.32), inset 0 1px 1px rgba(255,255,255,.14)' }}>
               <div style={{ position: 'relative', borderRadius: 31, overflow: 'hidden', background: P.bg, aspectRatio: '9 / 19' }}>
                 <span style={{ position: 'absolute', top: 9, left: '50%', transform: 'translateX(-50%)', width: 46, height: 15, borderRadius: 9999, background: '#000', zIndex: 2 }} />
-                <MiniHome tc={tc} />
+                <MiniHome tc={tc} fx={fx} />
               </div>
             </div>
             <div style={{ marginTop: 14, fontSize: 13, fontWeight: 600, color: M.tx3 }}>{tc('landing.any_cap_iphone')}</div>

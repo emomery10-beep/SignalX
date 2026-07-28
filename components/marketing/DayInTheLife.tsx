@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── A day in the life ─────────────────────────────────────────────────────────
 // A stacked deck of scene cards. Each scene folds down onto the pile one at a
@@ -52,12 +53,6 @@ const SCENES = [
 // SCENES rev values are KES-magnitude sample takings. `fx` (from the landing's
 // geo) converts them to the visitor's display currency so the tally isn't stuck
 // on "KSh" for every locale (e.g. the Somali page shows $).
-const KES_MULT = 165
-type Fx = { sym: string; mult: number; dec?: boolean }
-const money = (kesAmount: number, fx?: Fx) => {
-  const amt = fx ? (kesAmount / KES_MULT) * fx.mult : kesAmount
-  return (fx?.sym ?? 'KSh ') + Math.round(amt).toLocaleString('en-US')
-}
 // {sales}/{profit}/{customers} vars for the day_s*_head/body/chip copy — those
 // strings used to hardcode "KSh 340"/"KSh 2,180" directly (every locale, even
 // ones whose currency isn't KES), showing a different figure than the fx-aware

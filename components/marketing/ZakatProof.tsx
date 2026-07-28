@@ -1,5 +1,6 @@
 'use client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Zakat Proof ───────────────────────────────────────────────────────────────
 // Surfaces the built-in Zakat calculator — a genuine differentiator no competitor
@@ -15,13 +16,13 @@ const M = { bg: '#ffffff', tx: '#1A1410', tx2: '#4A4038', tx3: '#6b6560', acc: '
 const A = { ink: '#1a1916', muted: '#6b6760', surface: '#fff', border: '#e5e2dc', bg: '#f9f8f6', green: '#16a34a', greenPale: 'rgba(22,163,74,0.10)', neg: '#dc2626' }
 
 const TILES = [
-  { k: 'zk_inv',  v: 'KSh 98,000' },
-  { k: 'zk_cash', v: 'KSh 32,000' },
-  { k: 'zk_recv', v: 'KSh 8,000' },
-  { k: 'zk_pay',  v: '− KSh 12,000', neg: true },
+  { k: 'zk_inv',  v: 98000 },
+  { k: 'zk_cash', v: 32000 },
+  { k: 'zk_recv', v: 8000 },
+  { k: 'zk_pay',  v: 12000, neg: true },
 ]
 
-export default function ZakatProof({ tc }: { tc: Tc }) {
+export default function ZakatProof({ tc, fx }: { tc: Tc; fx?: Fx }) {
   return (
     <section style={{ padding: 'clamp(64px,9vw,112px) clamp(16px,4vw,40px)', background: M.bg }}>
       <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 'clamp(32px,5vw,56px)', alignItems: 'center' }} className="zk-grid">
@@ -53,7 +54,7 @@ export default function ZakatProof({ tc }: { tc: Tc }) {
 
               <div style={{ background: A.greenPale, borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11.5, color: A.muted, marginBottom: 3 }}>{tc('landing.zk_due_label')}</div>
-                <div style={{ fontSize: 30, fontWeight: 900, color: A.green, letterSpacing: '-.02em' }}><AnimatedNumber value="KSh 3,150" /></div>
+                <div style={{ fontSize: 30, fontWeight: 900, color: A.green, letterSpacing: '-.02em' }}><AnimatedNumber value={money(3150, fx)} /></div>
                 <div style={{ fontSize: 11.5, color: A.muted, marginTop: 3 }}>{tc('landing.zk_pct')}</div>
               </div>
 
@@ -61,7 +62,7 @@ export default function ZakatProof({ tc }: { tc: Tc }) {
                 {TILES.map((t, z) => (
                   <div key={z} style={{ background: A.bg, border: `1px solid ${A.border}`, borderRadius: 12, padding: '10px 12px' }}>
                     <div style={{ fontSize: 10.5, color: A.muted, fontWeight: 600, marginBottom: 2 }}>{tc(`landing.${t.k}`)}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: t.neg ? A.neg : A.ink }}>{t.v}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: t.neg ? A.neg : A.ink }}>{t.neg ? '− ' : ''}{money(t.v, fx)}</div>
                   </div>
                 ))}
               </div>

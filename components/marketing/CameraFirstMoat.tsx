@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import CameraCheckoutDemo from '@/components/marketing/CameraCheckoutDemo'
 import FlowScanDemo from '@/components/marketing/FlowScanDemo'
+import type { Fx } from '@/lib/demo-fx'
 
 // ── Camera-First Moat ─────────────────────────────────────────────────────────
 // The single most important section on the page: proves that AskBiz's camera is
@@ -95,7 +96,7 @@ function DeviceScreen({ flow, tc, active }: { flow: Flow; tc: Tc; active: boolea
   )
 }
 
-export default function CameraFirstMoat({ tc }: { tc: Tc }) {
+export default function CameraFirstMoat({ tc, fx }: { tc: Tc; fx?: Fx }) {
   // Defaults to Sell (index 0) so the checkout demo plays first. No auto-advance —
   // the demo needs a full ~9s loop to land, and the flows are tap-to-explore.
   const [i, setI] = useState(0)
@@ -150,7 +151,7 @@ export default function CameraFirstMoat({ tc }: { tc: Tc }) {
                 {FLOWS.map((f, k) => (
                   <div key={f.key} aria-hidden={k !== i} style={{ position: 'absolute', inset: 0, opacity: k === i ? 1 : 0, transition: 'opacity .5s cubic-bezier(0.22,1,0.36,1)', pointerEvents: k === i ? 'auto' : 'none' }}>
                     {f.key === 'sell'
-                      ? <CameraCheckoutDemo tc={tc} active={k === i && visible} />
+                      ? <CameraCheckoutDemo tc={tc} active={k === i && visible} fx={fx} />
                       : <FlowScanDemo tc={tc} flowKey={f.key as 'stock' | 'expense' | 'repair' | 'parcel'} active={k === i && visible} />}
                   </div>
                 ))}

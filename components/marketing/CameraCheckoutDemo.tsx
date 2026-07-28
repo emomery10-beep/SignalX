@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Camera Checkout Demo ──────────────────────────────────────────────────────
 // A self-presenting montage of the REAL AskBiz cashier (pos.askbiz.co), rebuilt
@@ -22,7 +23,6 @@ const ITEMS = [
   { name: 'Blue Band 250g',  price: 190 },
 ]
 const TOTAL = ITEMS.reduce((s, x) => s + x.price, 0)
-const money = (n: number) => 'KSh ' + n.toFixed(2)
 
 // Beat timeline — deliberately slow so each step reads. ph = phase, p = product,
 // m = mode. Loops forever.
@@ -67,7 +67,7 @@ function Tub({ color, size = 1 }: { color: string; size?: number }) {
 const Product = ({ i, ...p }: { i: number; color: string; size?: number }) =>
   i === 1 ? <Tub {...p} /> : <Bottle {...p} />
 
-export default function CameraCheckoutDemo({ tc, active }: { tc: Tc; active: boolean }) {
+export default function CameraCheckoutDemo({ tc, active, fx }: { tc: Tc; active: boolean; fx?: Fx }) {
   const [beat, setBeat] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -149,7 +149,7 @@ export default function CameraCheckoutDemo({ tc, active }: { tc: Tc; active: boo
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
               </span>
               <span style={{ fontSize:11.5, fontWeight:700, color:P.ink }}>{ITEMS[prod].name}</span>
-              <span style={{ fontSize:11.5, fontWeight:700, color:P.acc }}>{money(ITEMS[prod].price)}</span>
+              <span style={{ fontSize:11.5, fontWeight:700, color:P.acc }}>{money(ITEMS[prod].price, fx)}</span>
             </div>
           </div>
         </Screen>
@@ -171,14 +171,14 @@ export default function CameraCheckoutDemo({ tc, active }: { tc: Tc; active: boo
                 </span>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:12.5, fontWeight:600, lineHeight:1.2, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{it.name}</div>
-                  <div style={{ fontSize:10.5, color:P.muted, marginTop:1 }}>{money(it.price)} {tc('landing.moat_demo_each')}</div>
+                  <div style={{ fontSize:10.5, color:P.muted, marginTop:1 }}>{money(it.price, fx)} {tc('landing.moat_demo_each')}</div>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0 }}>
                   <span style={{ width:21, height:21, borderRadius:6, border:`1px solid ${P.border}`, background:P.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:P.muted }}>−</span>
                   <span style={{ fontSize:12.5, fontWeight:700, minWidth:11, textAlign:'center' }}>1</span>
                   <span style={{ width:21, height:21, borderRadius:6, border:`1px solid ${P.border}`, background:P.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:P.muted }}>+</span>
                 </div>
-                <div style={{ fontSize:12.5, fontWeight:800, minWidth:44, textAlign:'right', flexShrink:0 }}>{money(it.price)}</div>
+                <div style={{ fontSize:12.5, fontWeight:800, minWidth:44, textAlign:'right', flexShrink:0 }}>{money(it.price, fx)}</div>
               </div>
             ))}
           </div>
@@ -186,7 +186,7 @@ export default function CameraCheckoutDemo({ tc, active }: { tc: Tc; active: boo
             opacity: phase==='cart'?1:0, transform: phase==='cart'?'translateY(0)':'translateY(12px)', transition:'opacity .6s ease .9s, transform .6s cubic-bezier(0.22,1,0.36,1) .9s' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:11 }}>
               <span style={{ fontSize:14, fontWeight:600, color:P.muted }}>{tc('landing.moat_demo_total')}</span>
-              <span style={{ fontSize:20, fontWeight:900 }}>{money(TOTAL)}</span>
+              <span style={{ fontSize:20, fontWeight:900 }}>{money(TOTAL, fx)}</span>
             </div>
             <div style={{ padding:'12px', borderRadius:12, background:P.acc, color:'#fff', fontSize:15, fontWeight:700, textAlign:'center' }}>{tc('landing.moat_demo_checkout')} →</div>
           </div>
@@ -201,7 +201,7 @@ export default function CameraCheckoutDemo({ tc, active }: { tc: Tc; active: boo
                   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                 </span>
                 <div style={{ fontSize:17, fontWeight:800, marginBottom:5 }}>{tc('landing.moat_demo_success')}</div>
-                <div style={{ fontSize:20, fontWeight:900, color:P.acc, marginBottom:8 }}>{money(TOTAL)}</div>
+                <div style={{ fontSize:20, fontWeight:900, color:P.acc, marginBottom:8 }}>{money(TOTAL, fx)}</div>
                 <div style={{ fontSize:12.5, color:P.muted }}>{tc('landing.moat_demo_success_sub')}</div>
               </>
             ) : (
@@ -210,7 +210,7 @@ export default function CameraCheckoutDemo({ tc, active }: { tc: Tc; active: boo
                   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>
                 </span>
                 <div style={{ fontSize:13, fontWeight:700, color:P.success, marginBottom:6 }}>{tc('landing.moat_demo_pay_mpesa')}</div>
-                <div style={{ fontSize:22, fontWeight:900, marginBottom:8 }}>{money(TOTAL)}</div>
+                <div style={{ fontSize:22, fontWeight:900, marginBottom:8 }}>{money(TOTAL, fx)}</div>
                 <div style={{ fontSize:12.5, color:P.muted, lineHeight:1.5, maxWidth:200 }}>{tc('landing.moat_demo_pay_prompt')}</div>
                 <div style={{ marginTop:16, display:'flex', gap:5 }}>
                   {[0,1,2].map(d=>(<span key={d} style={{ width:7, height:7, borderRadius:'50%', background:P.success, animation:`moat-pulse 1.2s ease-in-out ${d*0.2}s infinite` }} />))}

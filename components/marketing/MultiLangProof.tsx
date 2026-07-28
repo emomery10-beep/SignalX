@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Multi-Language Proof ──────────────────────────────────────────────────────
 // Proves real localisation (8 active locales incl. RTL Arabic). A phone screen
@@ -20,7 +21,7 @@ const LANGS = [
   { code: 'fr', name: 'Français',  flag: '🇫🇷', rtl: false, hi: 'Bonjour', today: 'Ventes du jour', cta: 'Nouvelle vente' },
 ]
 
-export default function MultiLangProof({ tc }: { tc: Tc }) {
+export default function MultiLangProof({ tc, fx }: { tc: Tc; fx?: Fx }) {
   const [i, setI] = useState(0)
   useEffect(() => {
     const iv = setInterval(() => setI(v => (v + 1) % LANGS.length), 2400)
@@ -69,7 +70,7 @@ export default function MultiLangProof({ tc }: { tc: Tc }) {
 
               <div style={{ padding: '6px 18px 12px' }}>
                 <div key={'t' + i} style={{ fontSize: 11, color: P.muted, fontWeight: 600, animation: 'ml-fade .5s ease' }}>{L.today}</div>
-                <div style={{ fontSize: 27, fontWeight: 900, color: P.ink, letterSpacing: '-.02em' }}>KSh 4,820</div>
+                <div style={{ fontSize: 27, fontWeight: 900, color: P.ink, letterSpacing: '-.02em' }}>{money(4820, fx)}</div>
               </div>
 
               <div style={{ padding: '0 14px', flex: 1 }}>

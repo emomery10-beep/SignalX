@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Offline Proof ─────────────────────────────────────────────────────────────
 // Shows the real offline behaviour: keep selling with no signal, sales queue on
@@ -14,9 +15,9 @@ const M = { bg: '#FDFBF7', tx: '#1A1410', tx2: '#4A4038', tx3: '#6b6560', acc: '
 const P = { bg: '#f9f8f6', surface: '#fff', border: '#e5e2dc', ink: '#1a1916', muted: '#6b6760', acc: '#d08a59', warning: '#f97316', warnPale: 'rgba(249,115,22,0.12)', success: '#16a34a', okPale: 'rgba(22,163,74,0.12)' }
 
 const SALES = [
-  { t: '13:04', a: 'KSh 260.00' },
-  { t: '12:51', a: 'KSh 90.00' },
-  { t: '12:38', a: 'KSh 540.00' },
+  { t: '13:04', a: 260 },
+  { t: '12:51', a: 90 },
+  { t: '12:38', a: 540 },
 ]
 
 function CloudOff({ c }: { c: string }) {
@@ -26,7 +27,7 @@ function Check({ c }: { c: string }) {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
 }
 
-export default function OfflineProof({ tc }: { tc: Tc }) {
+export default function OfflineProof({ tc, fx }: { tc: Tc; fx?: Fx }) {
   const [online, setOnline] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -99,7 +100,7 @@ export default function OfflineProof({ tc }: { tc: Tc }) {
               {/* today total */}
               <div style={{ padding: '10px 16px 6px' }}>
                 <div style={{ fontSize: 10.5, color: P.muted, fontWeight: 600 }}>{tc('landing.off_today')}</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: P.ink, letterSpacing: '-.01em' }}>KSh 890.00</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: P.ink, letterSpacing: '-.01em' }}>{money(890, fx)}</div>
               </div>
 
               {/* queued sales */}
@@ -107,7 +108,7 @@ export default function OfflineProof({ tc }: { tc: Tc }) {
                 {SALES.map((s, k) => (
                   <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, background: P.surface, border: `1px solid ${P.border}`, borderRadius: 11, padding: '9px 12px', marginBottom: 8 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: P.ink, minWidth: 34 }}>{s.t}</span>
-                    <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: P.ink }}>{s.a}</span>
+                    <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: P.ink }}>{money(s.a, fx)}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, color: online ? P.success : P.muted, transition: 'color .4s ease' }}>
                       {online ? <Check c={P.success} /> : <CloudOff c={P.muted} />}
                       {online ? tc('landing.off_synced') : tc('landing.off_pending')}

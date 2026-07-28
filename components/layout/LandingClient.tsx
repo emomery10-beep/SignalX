@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
 import { CUSTOMER_CARE_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 import { formatNumber } from '@/lib/i18n-format'
+import { DEMO_FX, fxFor, type Fx } from '@/lib/demo-fx'
 
 // Below-the-fold "show and tell" sections + the hero PoS demo are code-split out of
 // the main bundle (each was a static import, all bundled/hydrated eagerly before any
@@ -82,12 +83,6 @@ const CURRENCIES = [
 // local couriers, not £ and Royal Mail. Base figures are in GBP, scaled per
 // currency and rounded to believable demo numbers.
 const AFRICAN_CC = new Set(['KE','NG','UG','TZ','GH','ZA','ET','RW','ZM','ZW','CI','SN','CM','EG','MA'])
-const DEMO_FX: Record<string,{sym:string;mult:number;dec?:boolean}> = {
-  GBP:{sym:'£',mult:1,dec:true}, USD:{sym:'$',mult:1.3,dec:true}, EUR:{sym:'€',mult:1.2,dec:true},
-  KES:{sym:'KSh ',mult:165}, NGN:{sym:'₦',mult:1950}, UGX:{sym:'USh ',mult:4800},
-  TZS:{sym:'TSh ',mult:3300}, GHS:{sym:'₵',mult:16}, ZAR:{sym:'R ',mult:24}, ETB:{sym:'Br ',mult:75},
-  INR:{sym:'₹',mult:110}, AED:{sym:'AED ',mult:4.8,dec:true}, CAD:{sym:'CA$',mult:1.7,dec:true}, AUD:{sym:'A$',mult:1.9,dec:true},
-}
 
 // Converts a reference USD figure (e.g. a competitor's published price, used in
 // the Compare section) into the visitor's local currency using the same static
@@ -1218,7 +1213,7 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
   )
 }
 
-function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
+function HeroBigDemo({tc,demo,fx}:{tc:(k:string)=>string;demo:Demo;fx?:Fx}) {
   const { lang } = useLang()
   const HERO_TABS = [
     {id:'ops' as const, label:'Business Intelligence', icon:'chart'},
@@ -1262,7 +1257,7 @@ function HeroBigDemo({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
       {heroTab==='ops' ? (
         <PosShowcase tc={tc} demo={demo} />
       ) : (
-        <InteractivePosDemo tc={tc} lang={lang} />
+        <InteractivePosDemo tc={tc} lang={lang} fx={fx} />
       )}
       <div style={{
         position:'absolute', inset:0, borderRadius:22, pointerEvents:'none',
@@ -1549,6 +1544,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const businessPrice = liveGeo?.pricing?.business || '£39'
   const posPrice      = liveGeo?.pricing?.pos      || '£5'
   const country       = liveGeo?.country           || ''
+  // Shared by every homepage demo mockup (Zakat, Forecast, Offline, hero till,
+  // etc) so they all convert their illustrative KES figures the same way.
+  const demoFx = fxFor(liveGeo?.currency)
   // Compare section — competitor prices are only ever published in USD, so
   // convert them the same way the demo P&L figures are (see usdToLocal above).
   const compareShopifyPrice = usdToLocal(39, liveGeo?.currency, lang)
@@ -1960,7 +1958,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
           </div>
           <div style={{ marginTop:'clamp(24px,3vw,36px)' }}>
-            <HeroBigDemo tc={tc} demo={demo} />
+            <HeroBigDemo tc={tc} demo={demo} fx={demoFx} />
           </div>
         </div>
         <div style={{ position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,zIndex:2,opacity:Math.max(0,1-scrollY/250),pointerEvents:'none' }}>
@@ -1970,17 +1968,17 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── CAMERA-FIRST MOAT — the core differentiator, right below the hero ── */}
-      <CameraFirstMoat tc={tc} />
+      <CameraFirstMoat tc={tc} fx={demoFx} />
 
       {/* ── SHOW-AND-TELL PROOF SECTIONS ──────────────────────────────── */}
-      <PriceProof tc={tc} />
-      <OfflineProof tc={tc} />
-      <AnyPhoneProof tc={tc} />
+      <PriceProof tc={tc} posPrice={posPrice} />
+      <OfflineProof tc={tc} fx={demoFx} />
+      <AnyPhoneProof tc={tc} fx={demoFx} />
       <MultiBranchProof tc={tc} />
-      <ZakatProof tc={tc} />
-      <ForecastProof tc={tc} />
+      <ZakatProof tc={tc} fx={demoFx} />
+      <ForecastProof tc={tc} fx={demoFx} />
       <VerticalsProof tc={tc} />
-      <MultiLangProof tc={tc} />
+      <MultiLangProof tc={tc} fx={demoFx} />
 
       {/* ── PROOF STRIP ───────────────────────────────────────────────── */}
       <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'14px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(20px,3vw,48px)',flexWrap:'wrap' }}>
@@ -2039,7 +2037,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── A DAY IN THE LIFE — narrative fold-card deck ───────────────── */}
-      <DayInTheLife tc={tc} fx={DEMO_FX[liveGeo?.currency || 'GBP'] || DEMO_FX.GBP} />
+      <DayInTheLife tc={tc} fx={demoFx} />
 
       {/* ── POINT OF SALE — Eleven-pattern example section ─────────────── */}
       <section id="pos" style={{ padding:'clamp(44px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>

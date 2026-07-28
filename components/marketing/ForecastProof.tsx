@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
+import { type Fx, money } from '@/lib/demo-fx'
 
 // ── Forecast Proof ────────────────────────────────────────────────────────────
 // Surfaces the built-in Forecasts (components/cfo/CfoForecasts.tsx) — real, and a
@@ -24,7 +25,7 @@ const px = (i: number) => PADX + (i * (W - PADX * 2)) / (N - 1)
 const py = (v: number) => PADT + (1 - v) * (H - PADT - PADB)
 const line = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
 
-export default function ForecastProof({ tc }: { tc: Tc }) {
+export default function ForecastProof({ tc, fx }: { tc: Tc; fx?: Fx }) {
   const [drawn, setDrawn] = useState(false)
   const [reduced, setReduced] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -110,7 +111,7 @@ export default function ForecastProof({ tc }: { tc: Tc }) {
               <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                 <div style={{ flex: 1, background: A.bg, borderRadius: 12, padding: '10px 12px' }}>
                   <div style={{ fontSize: 10.5, color: A.muted, fontWeight: 600 }}>{tc('landing.fc_next_label')}</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: A.acc }}><AnimatedNumber value="KSh 142,000" /></div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: A.acc }}><AnimatedNumber value={money(142000, fx)} /></div>
                 </div>
                 <div style={{ flex: 1, background: A.bg, borderRadius: 12, padding: '10px 12px' }}>
                   <div style={{ fontSize: 10.5, color: A.muted, fontWeight: 600 }}>{tc('landing.fc_runway_label')}</div>
