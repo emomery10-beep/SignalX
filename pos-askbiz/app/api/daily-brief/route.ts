@@ -47,6 +47,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createS
 
   // ── Pull all context in parallel ──────────────────────────────
   const [
+    { data: profile },
     { data: health },
     { data: anomalies },
     { data: decisions },
@@ -55,6 +56,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createS
     { data: churnAlerts },
     { data: socialSignals },
   ] = await Promise.all([
+    supabase.from('profiles').select('currency_symbol').eq('id', userId).single(),
     supabase.from('health_scores').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).single(),
     supabase.from('anomalies').select('title,body,severity').eq('user_id', userId).eq('seen', false).order('created_at', { ascending: false }).limit(5),
     supabase.from('decisions').select('title,review_at').eq('user_id', userId).eq('reviewed', false).lte('review_at', new Date(Date.now() + 7 * 86400000).toISOString()).order('review_at', { ascending: true }).limit(3),
@@ -64,6 +66,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createS
     supabase.from('alerts').select('title,message,type').eq('user_id', userId).eq('is_active', true).limit(3),
     supabase.from('social_signals').select('platform,saves,product_name').eq('user_id', userId).gt('saves', 20).eq('orders', 0).order('saves', { ascending: false }).limit(2),
   ])
+  const sym = profile?.currency_symbol || '£'
 
   // ── POS context for brief ─────────────────────────────────
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
@@ -75,7 +78,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createS
   const posSalesToday = (posTx || []).filter((t: { status: string }) => t.status === 'completed').length
   const posRefunds   = (posTx || []).filter((t: { status: string }) => t.status.includes('refund')).length
   const posContext   = posSalesToday > 0 || (lowStockItems?.length ?? 0) > 0
-    ? `POS today: ${posSalesToday} sales, £${posRevToday.toFixed(2)} revenue${posRefunds > 0 ? `, ${posRefunds} refund${posRefunds > 1 ? 's' : ''}` : ''}.${(lowStockItems?.length ?? 0) > 0 ? ` Low/out of stock: ${(lowStockItems || []).slice(0, 3).map((i: { name: string }) => i.name).join(', ')}.` : ''}`
+    ? `POS today: ${posSalesToday} sales, ${sym}${posRevToday.toFixed(2)} revenue${posRefunds > 0 ? `, ${posRefunds} refund${posRefunds > 1 ? 's' : ''}` : ''}.${(lowStockItems?.length ?? 0) > 0 ? ` Low/out of stock: ${(lowStockItems || []).slice(0, 3).map((i: { name: string }) => i.name).join(', ')}.` : ''}`
     : ''
 
   // ── Build rich context ────────────────────────────────────────
@@ -97,7 +100,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createS
     const totalRevenue = recentData.reduce((s, r) => s + (r.gross_revenue || 0), 0)
     const avgMargin = recentData.filter(r => r.gross_margin).reduce((s, r) => s + r.gross_margin, 0) / Math.max(recentData.filter(r => r.gross_margin).length, 1)
     const channels = [...new Set(recentData.map(r => r.channel).filter(Boolean))]
-    revenueContext = `Last 7 days: £${Math.round(totalRevenue).toLocaleString()} revenue, ${Math.round(avgMargin)}% avg margin. Channels: ${channels.join(', ')}.`
+    revenueContext = `Last 7 days: ${sym}${Math.round(totalRevenue).toLocaleString()} revenue, ${Math.round(avgMargin)}% avg margin. Channels: ${channels.join(', ')}.`
   }
 
   const sourcesContext = sources?.length
