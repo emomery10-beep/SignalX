@@ -13,6 +13,7 @@ import VideoReel from '@/components/marketing/VideoReel'
 import { createClient } from '@/lib/supabase/client'
 import AnimatedNumber from '@/components/ui/AnimatedNumber'
 import { CUSTOMER_CARE_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
+import { formatNumber } from '@/lib/i18n-format'
 
 // Below-the-fold "show and tell" sections + the hero PoS demo are code-split out of
 // the main bundle (each was a static import, all bundled/hydrated eagerly before any
@@ -98,16 +99,16 @@ function usdToLocalAmount(usd: number, currency?: string): { sym: string; n: num
   const step = local < 100 ? 1 : local < 1000 ? 10 : local < 10000 ? 100 : 1000
   return { sym: fx.sym, n: Math.round(local / step) * step }
 }
-function usdToLocal(usd: number, currency?: string): string {
+function usdToLocal(usd: number, currency: string | undefined, locale: string): string {
   const { sym, n } = usdToLocalAmount(usd, currency)
-  return sym + n.toLocaleString('en-GB', { maximumFractionDigits: 0 })
+  return sym + formatNumber(locale, n, { maximumFractionDigits: 0 })
 }
 // Range variant — prints the currency symbol once (e.g. "KSh 1,300–2,500") instead
 // of repeating it per bound.
-function usdToLocalRange(usdLow: number, usdHigh: number, currency?: string): string {
+function usdToLocalRange(usdLow: number, usdHigh: number, currency: string | undefined, locale: string): string {
   const lo = usdToLocalAmount(usdLow, currency)
   const hi = usdToLocalAmount(usdHigh, currency)
-  return `${lo.sym}${lo.n.toLocaleString('en-GB')}–${hi.n.toLocaleString('en-GB')}`
+  return `${lo.sym}${formatNumber(locale, lo.n)}–${formatNumber(locale, hi.n)}`
 }
 interface Demo {
   afri: boolean
@@ -1550,8 +1551,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const country       = liveGeo?.country           || ''
   // Compare section — competitor prices are only ever published in USD, so
   // convert them the same way the demo P&L figures are (see usdToLocal above).
-  const compareShopifyPrice = usdToLocal(39, liveGeo?.currency)
-  const comparePowerBiPrice = usdToLocalRange(10, 20, liveGeo?.currency)
+  const compareShopifyPrice = usdToLocal(39, liveGeo?.currency, lang)
+  const comparePowerBiPrice = usdToLocalRange(10, 20, liveGeo?.currency, lang)
   const flag          = liveGeo?.flag              || ''
 
   function annualPrice(price: string): string {
