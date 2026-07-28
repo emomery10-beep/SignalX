@@ -1593,7 +1593,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       if(d.pricing) {
         const g: Geo = {country:d.country||'',countryCode:d.countryCode||'',city:d.city||'',currency:d.currency||'USD',currencySymbol:d.currencySymbol||'$',currencyName:d.currencyName||'US Dollar',flag:d.flag||'',pricing:d.pricing}
         setLiveGeo(g)
-        document.cookie = `askbiz_geo=${encodeURIComponent(JSON.stringify(g))}; path=/; max-age=${60*60*24*30}; SameSite=Lax`
+        // 1 day, not 30 — /api/geo was just found to have served one frozen,
+        // wrong-country response to every visitor for ~90 minutes (edge-cache
+        // bug, now fixed separately). A short TTL here bounds how long any
+        // visitor who cached that bad response keeps seeing the wrong currency.
+        document.cookie = `askbiz_geo=${encodeURIComponent(JSON.stringify(g))}; path=/; max-age=${60*60*24}; SameSite=Lax`
       }
       const saved = getCookie('askbiz_lang')
       if(!saved){

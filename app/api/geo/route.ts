@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { COUNTRY_CURRENCY, CURRENCIES, SECTOR_HINTS, PRICING_TIERS } from '@/lib/geo'
 
 export const runtime = 'nodejs'
+// Per-visitor geo data was being served from Vercel's edge cache — same response
+// to every visitor worldwide regardless of their real IP — because a route
+// handler with no dynamic-forcing signal gets statically optimized at build
+// time. The explicit 'Cache-Control: private, no-store' response header below
+// never even took effect since the function body wasn't re-running per request.
+export const dynamic = 'force-dynamic'
 
 // Formatted pricing strings per country (mirrors app/page.tsx PRICING_TIERS)
 const APP_PRICING: Record<string, { growth: string; business: string; sym: string; pos: string }> = {

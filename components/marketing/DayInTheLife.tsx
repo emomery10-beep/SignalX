@@ -46,7 +46,7 @@ const SCENES = [
   { icon: 'flame',    chipIcon: 'flame',    ac: '#2F9E44', rev: 6900, cust: 58 },
   { icon: 'bell',     chipIcon: 'whatsapp', ac: '#8C6FE0', rev: 8250, cust: 74 },
   { icon: 'book',     chipIcon: 'checks',   ac: '#7B5FD0', rev: 9480, cust: 83 },
-  { icon: 'moon',     chipIcon: 'moon',     ac: '#E6B17F', rev: 9480, cust: 83, dark: true },
+  { icon: 'moon',     chipIcon: 'moon',     ac: '#E6B17F', rev: 9480, cust: 83, profit: 2180, dark: true },
 ] as const
 
 // SCENES rev values are KES-magnitude sample takings. `fx` (from the landing's
@@ -58,6 +58,14 @@ const money = (kesAmount: number, fx?: Fx) => {
   const amt = fx ? (kesAmount / KES_MULT) * fx.mult : kesAmount
   return (fx?.sym ?? 'KSh ') + Math.round(amt).toLocaleString('en-US')
 }
+// {sales}/{profit}/{customers} vars for the day_s*_head/body/chip copy — those
+// strings used to hardcode "KSh 340"/"KSh 2,180" directly (every locale, even
+// ones whose currency isn't KES), showing a different figure than the fx-aware
+// running tally right below. Interpolating keeps the story and the tally in sync.
+const sceneVars = (s: { rev: number; cust: number; profit?: number }, fx?: Fx) => ({
+  sales: money(s.rev, fx), customers: s.cust,
+  ...(s.profit != null ? { profit: money(s.profit, fx) } : {}),
+})
 const N = SCENES.length
 const DURATION = 4800
 
@@ -182,14 +190,14 @@ export default function DayInTheLife({ tc, fx }: { tc: Tc; fx?: Fx }) {
                 </div>
 
                 <h3 style={{ fontFamily: 'var(--font-instrument)', fontSize: 'clamp(25px,3.4vw,36px)', fontWeight: 400, lineHeight: 1.12, letterSpacing: '-.02em', color: s.dark ? '#F5F0EA' : C.tx, margin: '20px 0 12px' }}>
-                  {tc(`landing.day_s${k}_head`)}
+                  {tc(`landing.day_s${k}_head`, sceneVars(s, fx))}
                 </h3>
                 <p style={{ fontSize: 15, lineHeight: 1.62, color: s.dark ? '#C7BEB4' : C.tx2, margin: 0 }}>
-                  {tc(`landing.day_s${k}_body`)}
+                  {tc(`landing.day_s${k}_body`, sceneVars(s, fx))}
                 </p>
 
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 18, padding: '7px 14px', borderRadius: 9999, background: hexA(s.ac, s.dark ? .18 : .12), color: s.ac, fontSize: 14, fontWeight: 600 }}>
-                  <Icon name={s.chipIcon} size={15} stroke={1.8} />{tc(`landing.day_s${k}_chip`)}
+                  <Icon name={s.chipIcon} size={15} stroke={1.8} />{tc(`landing.day_s${k}_chip`, sceneVars(s, fx))}
                 </div>
               </div>
             </article>
