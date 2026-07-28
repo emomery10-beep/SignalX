@@ -87,6 +87,28 @@ const DEMO_FX: Record<string,{sym:string;mult:number;dec?:boolean}> = {
   TZS:{sym:'TSh ',mult:3300}, GHS:{sym:'₵',mult:16}, ZAR:{sym:'R ',mult:24}, ETB:{sym:'Br ',mult:75},
   INR:{sym:'₹',mult:110}, AED:{sym:'AED ',mult:4.8,dec:true}, CAD:{sym:'CA$',mult:1.7,dec:true}, AUD:{sym:'A$',mult:1.9,dec:true},
 }
+
+// Converts a reference USD figure (e.g. a competitor's published price, used in
+// the Compare section) into the visitor's local currency using the same static
+// approximate rates as the rest of the demo data above — illustrative, not a
+// live FX feed, consistent with how every other demo figure on this page works.
+function usdToLocalAmount(usd: number, currency?: string): { sym: string; n: number } {
+  const fx = DEMO_FX[currency || ''] || DEMO_FX.USD
+  const local = usd * fx.mult / DEMO_FX.USD.mult
+  const step = local < 100 ? 1 : local < 1000 ? 10 : local < 10000 ? 100 : 1000
+  return { sym: fx.sym, n: Math.round(local / step) * step }
+}
+function usdToLocal(usd: number, currency?: string): string {
+  const { sym, n } = usdToLocalAmount(usd, currency)
+  return sym + n.toLocaleString('en-GB', { maximumFractionDigits: 0 })
+}
+// Range variant — prints the currency symbol once (e.g. "KSh 1,300–2,500") instead
+// of repeating it per bound.
+function usdToLocalRange(usdLow: number, usdHigh: number, currency?: string): string {
+  const lo = usdToLocalAmount(usdLow, currency)
+  const hi = usdToLocalAmount(usdHigh, currency)
+  return `${lo.sym}${lo.n.toLocaleString('en-GB')}–${hi.n.toLocaleString('en-GB')}`
+}
 interface Demo {
   afri: boolean
   compact: (gbp:number)=>string
@@ -1526,6 +1548,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const businessPrice = liveGeo?.pricing?.business || '£39'
   const posPrice      = liveGeo?.pricing?.pos      || '£5'
   const country       = liveGeo?.country           || ''
+  // Compare section — competitor prices are only ever published in USD, so
+  // convert them the same way the demo P&L figures are (see usdToLocal above).
+  const compareShopifyPrice = usdToLocal(39, liveGeo?.currency)
+  const comparePowerBiPrice = usdToLocalRange(10, 20, liveGeo?.currency)
   const flag          = liveGeo?.flag              || ''
 
   function annualPrice(price: string): string {
@@ -1548,9 +1574,27 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
   useEffect(() => {
     if (geo) return
+    const getCookie = (name: string) => document.cookie.split(';').find(c=>c.trim().startsWith(name+'='))?.trim().slice(name.length+1)
+
+    // Geo/currency is looked up once per visitor and cached in a cookie — every
+    // page nav was re-hitting /api/geo (and its ipapi.co fallback) for data that
+    // almost never changes within a visit, adding a network round-trip and the
+    // "pricing hidden until geo loads" flash on every single page.
+    const cachedGeo = getCookie('askbiz_geo')
+    if (cachedGeo) {
+      try {
+        const d = JSON.parse(decodeURIComponent(cachedGeo))
+        if (d.pricing) { setLiveGeo(d); return }
+      } catch (_) { /* fall through to a fresh lookup */ }
+    }
+
     fetch('/api/geo').then(r=>r.json()).then(d=>{
-      if(d.pricing) setLiveGeo({country:d.country||'',countryCode:d.countryCode||'',city:d.city||'',currency:d.currency||'USD',currencySymbol:d.currencySymbol||'$',currencyName:d.currencyName||'US Dollar',flag:d.flag||'',pricing:d.pricing})
-      const saved = document.cookie.split(';').find(c=>c.trim().startsWith('askbiz_lang='))
+      if(d.pricing) {
+        const g: Geo = {country:d.country||'',countryCode:d.countryCode||'',city:d.city||'',currency:d.currency||'USD',currencySymbol:d.currencySymbol||'$',currencyName:d.currencyName||'US Dollar',flag:d.flag||'',pricing:d.pricing}
+        setLiveGeo(g)
+        document.cookie = `askbiz_geo=${encodeURIComponent(JSON.stringify(g))}; path=/; max-age=${60*60*24*30}; SameSite=Lax`
+      }
+      const saved = getCookie('askbiz_lang')
       if(!saved){
         const bl=navigator.language?.split('-')[0]?.toLowerCase()
         const BMAP: Record<string,Lang>={en:'en',fr:'fr',de:'de',es:'es',ar:'ar',sw:'sw',pt:'pt',nl:'nl',it:'it',pl:'pl'}
@@ -1715,8 +1759,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @keyframes drillIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         @keyframes drillOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(10px)}}
         @media(prefers-reduced-motion:reduce){.pos-drill,.pos-drill.pos-drill-closing{animation:none}}
-        [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
-        [data-reveal].revealed{opacity:1;transform:translateY(0)}
+        /* opacity stays 1 so content is never hidden behind JS (IntersectionObserver
+           setup can be delayed or skipped entirely on slow connections/older
+           devices) — only the translateY entrance is gated behind .revealed */
+        [data-reveal]{opacity:1;transform:translateY(18px);transition:transform 600ms cubic-bezier(0.22,1,0.36,1)}
+        [data-reveal].revealed{transform:translateY(0)}
         [data-reveal-delay="1"].revealed{transition-delay:80ms}
         [data-reveal-delay="2"].revealed{transition-delay:160ms}
         .cta-btn{transition:all 300ms cubic-bezier(0.32,0.72,0,1)}
@@ -2178,7 +2225,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               } : {
                 name:tc('landing.compare_0_name'),
                 role:tc('landing.compare_0_role'),
-                price:tc('landing.compare_0_price'),
+                price:tc('landing.compare_0_price',{price:compareShopifyPrice}),
                 pros:[0,1,2].map(j=>tc('landing.compare_0_pro_'+j)),
                 cons:[0,1,2,3].map(j=>tc('landing.compare_0_con_'+j)),
                 verdict:tc('landing.compare_0_verdict'),
@@ -2202,7 +2249,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               } : {
                 name:tc('landing.compare_2_name'),
                 role:tc('landing.compare_2_role'),
-                price:tc('landing.compare_2_price'),
+                price:tc('landing.compare_2_price',{price:comparePowerBiPrice}),
                 pros:[0,1,2].map(j=>tc('landing.compare_2_pro_'+j)),
                 cons:[0,1,2,3].map(j=>tc('landing.compare_2_con_'+j)),
                 verdict:tc('landing.compare_2_verdict'),
