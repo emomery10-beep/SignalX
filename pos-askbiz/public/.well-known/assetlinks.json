@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "co.askbiz.pos",
+      "sha256_cert_fingerprints": [
+        "0D:56:84:3A:5C:9D:66:55:E3:70:F0:1E:D2:03:D7:8B:4F:08:18:45:85:81:1C:50:94:2A:05:2F:7C:E4:00:F5"
+      ]
+    }
+  }
+]
