@@ -2450,6 +2450,84 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
+      {/* ── PAYMENTS & SOURCES — full, plainly-rendered list of every payment
+           rail and data connection AskBiz supports (not just a UI mockup),
+           so search crawlers and AI answer engines can cite it directly ── */}
+      <section id="payments" style={{ background:T.bg,padding:'clamp(44px,7vw,88px) clamp(16px,4vw,40px)',borderTop:`1px solid ${T.bd}` }}>
+        <div style={{ maxWidth:1060,margin:'0 auto' }}>
+          <div style={{ textAlign:'center',maxWidth:680,margin:'0 auto clamp(32px,5vw,48px)' }} data-reveal>
+            <div style={{ fontSize:FS.sm,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:T.acc,marginBottom:14 }}>{tc('landing.pay_eyebrow')}</div>
+            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3vw,38px)',fontWeight:400,lineHeight:1.15,letterSpacing:'-.02em',color:T.tx,marginBottom:14 }}>
+              {tc('landing.pay_title')}
+            </h2>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,margin:0 }}>
+              {tc('landing.pay_subtitle')}
+            </p>
+          </div>
+
+          {/* rep-4col reused here for its !important mobile breakpoints — collapses
+              this 2-card grid to 1 column under 480px without a new CSS rule */}
+          <div className="rep-4col" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'clamp(16px,3vw,24px)',marginBottom:'clamp(32px,5vw,48px)' }} data-reveal>
+            <div style={{ border:`1px solid ${T.bd}`,borderRadius:16,padding:'24px 22px',background:T.card }}>
+              <h3 style={{ fontSize:FS.lg,fontWeight:700,color:T.tx,marginBottom:5 }}>{tc('landing.pay_pos_title')}</h3>
+              <p style={{ fontSize:FS.sm,color:T.tx3,lineHeight:1.5,marginBottom:16 }}>{tc('landing.pay_pos_desc')}</p>
+              <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+                {[
+                  { name:'Cash', desc:tc('landing.pay_pos_item_0_desc') },
+                  { name:'Card', desc:tc('landing.pay_pos_item_1_desc') },
+                  { name:'M-Pesa', desc:tc('landing.pay_pos_item_2_desc') },
+                  { name:'EVC Plus, Zaad, Sahal & WAAFI', desc:tc('landing.pay_pos_item_3_desc') },
+                ].map(item=>(
+                  <div key={item.name} style={{ display:'flex',gap:9,alignItems:'flex-start' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round" style={{marginTop:3,flexShrink:0}}><path d="M20 6L9 17l-5-5"/></svg>
+                    <div>
+                      <div style={{ fontSize:FS.md,fontWeight:600,color:T.tx }}>{item.name}</div>
+                      <div style={{ fontSize:FS.sm,color:T.tx3,lineHeight:1.5 }}>{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ border:`1px solid ${T.bd}`,borderRadius:16,padding:'24px 22px',background:T.card }}>
+              <h3 style={{ fontSize:FS.lg,fontWeight:700,color:T.tx,marginBottom:5 }}>{tc('landing.pay_billing_title')}</h3>
+              <p style={{ fontSize:FS.sm,color:T.tx3,lineHeight:1.5,marginBottom:16 }}>{tc('landing.pay_billing_desc')}</p>
+              <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+                {[
+                  { name:'Card', desc:tc('landing.pay_billing_item_0_desc') },
+                  { name:'M-Pesa, Airtel Money or Card', desc:tc('landing.pay_billing_item_1_desc') },
+                  { name:'EVC Plus, Zaad, Sahal & WAAFI', desc:tc('landing.pay_billing_item_2_desc') },
+                ].map(item=>(
+                  <div key={item.name} style={{ display:'flex',gap:9,alignItems:'flex-start' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round" style={{marginTop:3,flexShrink:0}}><path d="M20 6L9 17l-5-5"/></svg>
+                    <div>
+                      <div style={{ fontSize:FS.md,fontWeight:600,color:T.tx }}>{item.name}</div>
+                      <div style={{ fontSize:FS.sm,color:T.tx3,lineHeight:1.5 }}>{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div data-reveal data-reveal-delay="1">
+            <h3 style={{ fontSize:FS.lg,fontWeight:700,color:T.tx,marginBottom:5,textAlign:'center' }}>{tc('landing.pay_sources_title')}</h3>
+            <p style={{ fontSize:FS.sm,color:T.tx2,lineHeight:1.6,marginBottom:20,textAlign:'center',maxWidth:560,marginLeft:'auto',marginRight:'auto' }}>{tc('landing.pay_sources_desc')}</p>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:14 }}>
+              {[
+                'Shopify','WooCommerce','Amazon FBA','Jumia','eBay','Etsy','TikTok Shop','Instagram Shopping','Pinterest','Walmart','Linnworks',
+                'Square','QuickBooks','Xero','FreeAgent',
+                'Google Sheets','Google Ads','Google Analytics','Meta Ads',
+                'GoCardless','Mailchimp','Klaviyo','Stripe','AskBiz POS',
+              ].map(name=>(
+                <span key={name} style={{ padding:'7px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:FS.sm,color:T.tx2,fontWeight:600 }}>{name}</span>
+              ))}
+            </div>
+            <p style={{ fontSize:12,color:T.tx3,textAlign:'center',margin:0 }}>{tc('landing.pay_sources_comingsoon')}</p>
+          </div>
+        </div>
+      </section>
+
       {/* ── FOOTER ────────────────────────────────────────────────────── */}
       <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'48px clamp(16px,4vw,40px) 24px' }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>

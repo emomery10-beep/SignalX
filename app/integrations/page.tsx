@@ -55,7 +55,7 @@ const INTEGRATIONS_SOFTWARE_LD = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web, Android, iOS',
   url: 'https://askbiz.co',
-  description: 'Phone POS and business tracker that connects to M-Pesa, MTN Mobile Money, Airtel, Shopify, Xero, QuickBooks, Stripe, Meta Ads, and 25+ more tools. One tap to connect.',
+  description: 'Phone POS and business tracker that connects to M-Pesa, Shopify, Xero, QuickBooks, Stripe, Meta Ads, and 20+ more tools. One tap to connect.',
   publisher: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
 }
 
@@ -131,7 +131,7 @@ export default function IntegrationsPage() {
           <div style={{ flex: '1 1 300px' }}>
             <p style={{ fontSize: 9, fontWeight: 700, color: ACC, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 10 }}>Mobile money — Africa built in</p>
             <p style={{ fontSize: 12, color: TX2, lineHeight: 1.75, margin: 0 }}>
-              M-Pesa, MTN Mobile Money, and Airtel Money are connected out of the box — no developer, no API keys, no setup fee. If your customers pay by mobile money in Nairobi, Lagos, Kampala, Accra, or anywhere across Africa, AskBiz handles it automatically and updates your stock and daily report in real time.
+              M-Pesa is connected out of the box — no developer, no API keys, no setup fee — with more mobile money rails on the way. If your customers pay by mobile money in Nairobi, Kampala, Dar es Salaam, or Mogadishu, AskBiz handles it automatically and updates your stock and daily report in real time.
             </p>
           </div>
           <div style={{ flex: '1 1 300px' }}>

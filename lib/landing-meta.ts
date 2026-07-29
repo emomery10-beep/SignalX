@@ -167,9 +167,10 @@ export function buildLandingSchemas(): Record<string, unknown>[] {
         },
       ],
       featureList: [
-        'M-Pesa payment acceptance',
-        'MTN Mobile Money integration',
-        'Airtel Money integration',
+        'M-Pesa payment acceptance (STK push)',
+        'Card acceptance via Stripe and Paystack, including Apple Pay and Google Pay',
+        'Somalia mobile wallets — EVC Plus, Zaad, Sahal and WAAFI',
+        'Subscription billing via Stripe (worldwide), PesaPal (M-Pesa, Airtel Money, card — Kenya) or WaafiPay (Somalia)',
         'Camera barcode scanning — no barcode gun needed',
         'Offline mode — cash sales continue with no internet, auto-sync when reconnected',
         'Daily takings report',
@@ -304,6 +305,42 @@ export function buildLandingSchemas(): Record<string, unknown>[] {
       ],
     },
 
+    // Payment methods — POS acceptance + AskBiz subscription billing, split
+    // clearly so crawlers/AI don't conflate "what merchants can charge
+    // customers" with "how merchants pay AskBiz"
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'AskBiz Payment Methods',
+      description: 'Payment methods AskBiz point-of-sale merchants can accept from customers, and payment methods for the AskBiz subscription itself',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Cash (POS)', description: 'Always available — works with zero internet connection' },
+        { '@type': 'ListItem', position: 2, name: 'Card via Stripe or Paystack (POS)', description: 'Visa and Mastercard, plus Apple Pay and Google Pay' },
+        { '@type': 'ListItem', position: 3, name: 'M-Pesa STK push (POS)', description: 'Mobile money checkout in Kenya, Tanzania and Uganda' },
+        { '@type': 'ListItem', position: 4, name: 'EVC Plus, Zaad, Sahal & WAAFI (POS)', description: "Somalia's mobile wallets, built into checkout" },
+        { '@type': 'ListItem', position: 5, name: 'Stripe (AskBiz billing)', description: 'Card payments for the AskBiz subscription, worldwide' },
+        { '@type': 'ListItem', position: 6, name: 'PesaPal (AskBiz billing)', description: 'M-Pesa, Airtel Money or card for the AskBiz subscription in Kenya' },
+        { '@type': 'ListItem', position: 7, name: 'WaafiPay (AskBiz billing)', description: 'EVC Plus, Zaad, Sahal and WAAFI for the AskBiz subscription in Somalia' },
+      ],
+    },
+
+    // Data source connectors — live sync integrations only; partially-built
+    // stubs (Sage, Wave, PayPal, SumUp, Cin7, ShipStation, Royal Mail) are
+    // deliberately excluded here to keep this list AEO-accurate
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'AskBiz Data Source Connections',
+      description: 'E-commerce, accounting, marketing and point-of-sale platforms AskBiz syncs sales, stock and ad-spend data from automatically',
+      itemListElement: [
+        'Shopify', 'WooCommerce', 'Amazon FBA', 'Jumia', 'eBay', 'Etsy', 'TikTok Shop',
+        'Instagram Shopping', 'Pinterest', 'Walmart', 'Linnworks', 'Square',
+        'QuickBooks', 'Xero', 'FreeAgent', 'Google Sheets', 'Google Ads',
+        'Google Analytics', 'Meta Ads', 'GoCardless', 'Mailchimp', 'Klaviyo',
+        'Stripe', 'AskBiz POS',
+      ].map((name, i) => ({ '@type': 'ListItem', position: i + 1, name })),
+    },
+
     // FAQPage — targets featured snippets and AI Overviews
     {
       '@context': 'https://schema.org',
@@ -322,7 +359,7 @@ export function buildLandingSchemas(): Record<string, unknown>[] {
         {
           '@type': 'Question',
           name: 'What payments does AskBiz accept?',
-          acceptedAnswer: { '@type': 'Answer', text: 'M-Pesa, MTN Mobile Money, Airtel Money, cash, credit card, Stripe, and more. If your customer can pay it, AskBiz can take it. UK plans include Stripe integration for card payments.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'At the till: cash, card (Visa/Mastercard via Stripe or Paystack, plus Apple Pay and Google Pay), M-Pesa STK push, and in Somalia the EVC Plus, Zaad, Sahal and WAAFI mobile wallets. For your own AskBiz subscription: card via Stripe worldwide, or M-Pesa, Airtel Money and card via PesaPal in Kenya, or EVC Plus, Zaad, Sahal and WAAFI via WaafiPay in Somalia.' },
         },
         {
           '@type': 'Question',
@@ -384,5 +421,17 @@ export const SO_FAQ_SCHEMA = {
 // for a Somali one so AI answer engines cite Somali text for Somali queries.
 export function activeLandingSchemas(lang: string): Record<string, unknown>[] {
   const schemas = buildLandingSchemas()
-  return lang === 'so' ? [schemas[0], schemas[1], SO_FAQ_SCHEMA] : schemas
+  if (lang !== 'so') return schemas
+  // Keep SoftwareApplication + Organization, plus the two payment/source
+  // ItemLists — proper nouns (EVC Plus, Zaad, M-Pesa, Shopify…) need no
+  // translation and are highly relevant to Somali-market queries — then swap
+  // in the Somali FAQ instead of the English one.
+  const byName = (name: string) => schemas.find(s => (s as { name?: string }).name === name)
+  return [
+    schemas[0],
+    schemas[1],
+    byName('AskBiz Payment Methods'),
+    byName('AskBiz Data Source Connections'),
+    SO_FAQ_SCHEMA,
+  ].filter(Boolean) as Record<string, unknown>[]
 }
