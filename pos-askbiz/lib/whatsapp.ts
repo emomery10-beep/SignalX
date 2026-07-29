@@ -165,12 +165,25 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHi
     }),
   })
 
+  const body = await res.json().catch(() => ({}))
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    const msg = err?.error?.message || `Meta API error ${res.status}`
+    const msg = body?.error?.message || `Meta API error ${res.status}`
     console.error('[whatsapp] sendReceipt failed:', msg)
     return { ok: false, error: msg }
   }
+
+  // Meta's 200 OK only means the message was accepted for delivery, not that
+  // it arrived (see normalisePhone above + 2026-07-27/29 non-delivery
+  // incidents). Log the message id and status so a delivery report can be
+  // cross-referenced in Meta Business Manager's WhatsApp Manager message log,
+  // since there's no delivery-status webhook wired up yet.
+  console.log('[whatsapp] sendReceipt accepted:', JSON.stringify({
+    to: normalisePhone(phone, dialHint),
+    messageId: body?.messages?.[0]?.id,
+    messageStatus: body?.messages?.[0]?.message_status,
+    contactWaId: body?.contacts?.[0]?.wa_id,
+  }))
 
   return { ok: true }
 }
