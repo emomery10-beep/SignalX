@@ -39,5 +39,10 @@
   "no_appointments_filters": "Keine Termine für die gewählten Filter",
   "dash": "–",
   "no_show_title": "Keine Termine",
-  "no_show_empty": "Hier erscheinen Ihre Buchungen."
+  "no_show_empty": "Hier erscheinen Ihre Buchungen.",
+  "save_error": "Diese Buchung konnte nicht gespeichert werden: {error}",
+  "save_error_generic": "Diese Buchung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+  "client_name_required": "Kundenname ist erforderlich.",
+  "time_required": "Terminzeit ist erforderlich.",
+  "saving": "Wird gespeichert…"
 }

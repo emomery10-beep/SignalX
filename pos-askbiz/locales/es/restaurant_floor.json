@@ -32,5 +32,7 @@
   "shape_square": "Cuadrado",
   "cancel": "Cancelar",
   "adding": "Agregando...",
-  "person_suffix": "{count}p"
+  "person_suffix": "{count}p",
+  "load_error_generic": "No se pudo cargar el plano del local. Inténtalo de nuevo.",
+  "add_error_generic": "No se pudo guardar la mesa. Inténtalo de nuevo."
 }

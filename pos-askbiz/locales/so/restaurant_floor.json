@@ -32,5 +32,7 @@
   "shape_square": "Afargees",
   "cancel": "Jooji",
   "adding": "Ku darista...",
-  "person_suffix": "{count}q"
+  "person_suffix": "{count}q",
+  "load_error_generic": "Lama soo bandhigi karin qorshaha dabaqa. Fadlan isku day mar kale.",
+  "add_error_generic": "Lama kaydin karin miiska. Fadlan isku day mar kale."
 }

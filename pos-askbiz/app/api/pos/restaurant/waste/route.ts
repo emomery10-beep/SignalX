@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     .select(`
       id, item_name, qty, unit, cost_per_unit, total_cost, reason, created_at,
       menu_item_id,
-      restaurant_menu_items(name, base_price, food_cost)
+      restaurant_menu_items(name, price, food_cost)
     `)
     .eq('owner_id', auth.ownerId)
     .gte('created_at', from.toISOString())
@@ -122,7 +122,7 @@ export async function PUT(req: NextRequest) {
   // Fetch menu items to match against
   const { data: menuItems } = await service
     .from('restaurant_menu_items')
-    .select('id, name, food_cost, base_price, unit')
+    .select('id, name, food_cost, price, unit')
     .eq('owner_id', auth.ownerId)
     .eq('active', true)
     .order('name')

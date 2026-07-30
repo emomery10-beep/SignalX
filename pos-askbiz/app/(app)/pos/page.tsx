@@ -1,11 +1,13 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
 import RestaurantSnapshot from '@/components/pos/RestaurantSnapshot'
 import PurchaseOrdersTab from '@/components/pos/PurchaseOrdersTab'
+import { getRoleHomeRoute } from '@/lib/pos-role-client'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -98,6 +100,7 @@ type TxDetailType = Transaction | null
 
 export default function POSPage() {
   const supabase = createClient()
+  const router = useRouter()
   const { tc } = useLang()
   const ROLE_OPTIONS = useMemo(() => buildRoleOptions(tc), [tc])
   const [tab, setTab] = useState<Tab>('overview')
@@ -225,6 +228,27 @@ export default function POSPage() {
   useEffect(() => {
     const init = async () => {
       setLoading(true)
+
+      // This page is the OWNER dashboard — gated on a real Supabase auth
+      // session. A PIN-authenticated staff member (e.g. a salon stylist or
+      // manager) has no such session, so supabase.auth.getUser() below would
+      // always resolve to null and this effect would bail out with `loading`
+      // stuck at true forever — rendering an infinite skeleton (reported as
+      // "blank") instead of taking the staff member anywhere useful. Detect
+      // a cached PIN session first and send them straight to their sector
+      // home (e.g. /salon) instead of trying — and silently failing — to
+      // load the owner dashboard.
+      try {
+        const raw = localStorage.getItem('pos_staff')
+        if (raw) {
+          const staffSession = JSON.parse(raw)
+          if (staffSession?.id && staffSession?.owner_id) {
+            router.replace(getRoleHomeRoute(staffSession.role))
+            return
+          }
+        }
+      } catch { /* malformed cache — fall through to owner auth check */ }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
@@ -48,12 +48,25 @@ function serviceLabel(tc: Tc, tx: Tx) {
   return tc('salon.service_plus', { name: items[0].name, count: items.length - 1 })
 }
 
+// Raw (currency- and language-independent) dashboard metrics. Kept separate from
+// the formatted `KPI[]` shown on screen so currency/locale formatting always uses
+// the CURRENT `sym`/`tc` at render time — see the useMemo below.
+interface RawMetrics {
+  apptCount: number
+  todaySalesCount: number
+  todayRevenue: number
+  avgService: number
+  walkIns: number
+  topService: [string, number] | null
+  returnRate: number
+}
+
 export default function SalonHub() {
   const router = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
-  const [kpis, setKpis] = useState<KPI[]>([])
+  const [metrics, setMetrics] = useState<RawMetrics | null>(null)
   const [schedule, setSchedule] = useState<Tx[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -74,9 +87,17 @@ export default function SalonHub() {
   async function loadAll() {
     setLoading(true)
     try {
-      // No dedicated salon-booking API yet — derive appointments from POS transactions.
-      const res = await fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } })
-      const data = await res.json()
+      const todayStr = new Date().toISOString().slice(0, 10)
+      // Real salon appointments (salon_appointments), scoped to today — this is
+      // the source of truth for "Today's Appointments", not POS sales tickets.
+      const [apptRes, txRes] = await Promise.all([
+        fetch(`/api/pos/salon/appointments?date=${todayStr}`, { headers: { ...session!.headers } }),
+        fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } }),
+      ])
+      const apptData = await apptRes.json()
+      const apptCount: number = (apptData.appointments || []).length
+
+      const data = await txRes.json()
       const txs: Tx[] = data.transactions || []
 
       const todayTxs = txs.filter(t => isToday(t.created_at) && t.status !== 'voided')
@@ -91,7 +112,7 @@ export default function SalonHub() {
       todayTxs.forEach(t => (t.pos_items || []).forEach(it => {
         serviceCount[it.name] = (serviceCount[it.name] || 0) + (it.qty || 1)
       }))
-      const topService = Object.entries(serviceCount).sort((a, b) => b[1] - a[1])[0]
+      const topService = Object.entries(serviceCount).sort((a, b) => b[1] - a[1])[0] as [string, number] | undefined
 
       // Return-client rate: share of customers (by phone) seen on more than one day in the dataset
       const phoneDays: Record<string, Set<string>> = {}
@@ -105,14 +126,15 @@ export default function SalonHub() {
       const returning = phones.filter(s => s.size > 1).length
       const returnRate = phones.length ? (returning / phones.length) * 100 : 0
 
-      setKpis([
-        { label: tc('salon.kpi_appointments'), value: `${todayTxs.length}`, sub: tc('salon.kpi_appointments_sub'), status: 'neutral' },
-        { label: tc('salon.kpi_revenue'), value: `${sym}${todayRevenue.toFixed(2)}`, sub: tc('salon.kpi_revenue_sub' + (todayTxs.length === 1 ? '_one' : '_other'), { count: todayTxs.length }), status: 'good' },
-        { label: tc('salon.kpi_avg_service'), value: `${sym}${avgService.toFixed(2)}`, sub: tc('salon.kpi_avg_service_sub'), status: 'neutral' },
-        { label: tc('salon.kpi_walk_ins'), value: `${walkIns}`, sub: tc('salon.kpi_walk_ins_sub'), status: walkIns > todayTxs.length / 2 ? 'warn' : 'neutral' },
-        { label: tc('salon.kpi_top_service'), value: topService ? topService[0] : '—', sub: topService ? tc('salon.kpi_top_service_sub' + (topService[1] === 1 ? '_one' : '_other'), { count: topService[1] }) : tc('salon.kpi_top_service_sub_none'), status: 'neutral' },
-        { label: tc('salon.kpi_return_rate'), value: `${returnRate.toFixed(0)}%`, sub: tc('salon.kpi_return_rate_sub'), status: returnRate >= 40 ? 'good' : returnRate >= 20 ? 'warn' : 'bad' },
-      ])
+      setMetrics({
+        apptCount,
+        todaySalesCount: todayTxs.length,
+        todayRevenue,
+        avgService,
+        walkIns,
+        topService: topService || null,
+        returnRate,
+      })
 
       setSchedule(todayTxs.slice().sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at)))
     } catch (e) {
@@ -121,6 +143,27 @@ export default function SalonHub() {
       setLoading(false)
     }
   }
+
+  // Recomputed on every render from the raw metrics + the CURRENT `sym`/`tc`.
+  // Previously this formatting (incl. the £/KSh currency symbol) was baked into
+  // state inside loadAll(), which is only re-invoked by the 30s setInterval —
+  // that interval closure captured `sym` from the render where it was created
+  // (still the '£' default, before /api/pos/config resolved) and never picked
+  // up the corrected value, so the KPI tile stayed on '£' forever while
+  // everything else on the page (rendered fresh each time) showed the right
+  // currency.
+  const kpis: KPI[] = useMemo(() => {
+    if (!metrics) return []
+    const { apptCount, todaySalesCount, todayRevenue, avgService, walkIns, topService, returnRate } = metrics
+    return [
+      { label: tc('salon.kpi_appointments'), value: `${apptCount}`, sub: tc('salon.kpi_appointments_sub'), status: 'neutral' },
+      { label: tc('salon.kpi_revenue'), value: `${sym}${todayRevenue.toFixed(2)}`, sub: tc('salon.kpi_revenue_sub' + (todaySalesCount === 1 ? '_one' : '_other'), { count: todaySalesCount }), status: 'good' },
+      { label: tc('salon.kpi_avg_service'), value: `${sym}${avgService.toFixed(2)}`, sub: tc('salon.kpi_avg_service_sub'), status: 'neutral' },
+      { label: tc('salon.kpi_walk_ins'), value: `${walkIns}`, sub: tc('salon.kpi_walk_ins_sub'), status: walkIns > todaySalesCount / 2 ? 'warn' : 'neutral' },
+      { label: tc('salon.kpi_top_service'), value: topService ? topService[0] : '—', sub: topService ? tc('salon.kpi_top_service_sub' + (topService[1] === 1 ? '_one' : '_other'), { count: topService[1] }) : tc('salon.kpi_top_service_sub_none'), status: 'neutral' },
+      { label: tc('salon.kpi_return_rate'), value: `${returnRate.toFixed(0)}%`, sub: tc('salon.kpi_return_rate_sub'), status: returnRate >= 40 ? 'good' : returnRate >= 20 ? 'warn' : 'bad' },
+    ]
+  }, [metrics, sym, tc])
 
   const nav = [
     { label: tc('salon.nav_bookings_label'), href: '/salon/bookings', desc: tc('salon.nav_bookings_desc') },

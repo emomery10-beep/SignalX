@@ -39,5 +39,10 @@
   "no_appointments_filters": "Geen afspraken komen overeen met de filters.",
   "dash": "—",
   "no_show_title": "Niet-verschenen bijhouden",
-  "no_show_empty": "Geen gemiste afspraken geregistreerd. Markeer een geplande afspraak als \"niet verschenen\" om deze hier bij te houden."
+  "no_show_empty": "Geen gemiste afspraken geregistreerd. Markeer een geplande afspraak als \"niet verschenen\" om deze hier bij te houden.",
+  "save_error": "Kan deze afspraak niet opslaan: {error}",
+  "save_error_generic": "Kan deze afspraak niet opslaan. Probeer het opnieuw.",
+  "client_name_required": "Klantnaam is verplicht.",
+  "time_required": "Afspraaktijd is verplicht.",
+  "saving": "Opslaan…"
 }

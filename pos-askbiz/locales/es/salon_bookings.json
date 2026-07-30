@@ -39,5 +39,10 @@
   "no_appointments_filters": "Ninguna cita coincide con los filtros.",
   "dash": "—",
   "no_show_title": "Seguimiento de ausencias",
-  "no_show_empty": "No hay citas perdidas registradas. Marca una cita programada como \"no show\" para rastrearla aquí."
+  "no_show_empty": "No hay citas perdidas registradas. Marca una cita programada como \"no show\" para rastrearla aquí.",
+  "save_error": "No se pudo guardar esta cita: {error}",
+  "save_error_generic": "No se pudo guardar esta cita. Inténtalo de nuevo.",
+  "client_name_required": "El nombre del cliente es obligatorio.",
+  "time_required": "La hora de la cita es obligatoria.",
+  "saving": "Guardando…"
 }

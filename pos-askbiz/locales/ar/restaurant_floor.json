@@ -32,5 +32,7 @@
   "shape_square": "مربع",
   "cancel": "إلغاء",
   "adding": "جارٍ الإضافة...",
-  "person_suffix": "{count}ش"
+  "person_suffix": "{count}ش",
+  "load_error_generic": "تعذر تحميل مخطط الصالة. يرجى المحاولة مرة أخرى.",
+  "add_error_generic": "تعذر حفظ الطاولة. يرجى المحاولة مرة أخرى."
 }

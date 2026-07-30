@@ -32,5 +32,7 @@
   "shape_square": "Quadrat",
   "cancel": "Abbrechen",
   "adding": "Wird hinzugefügt...",
-  "person_suffix": "{count}P"
+  "person_suffix": "{count}P",
+  "load_error_generic": "Der Tischplan konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+  "add_error_generic": "Der Tisch konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
 }

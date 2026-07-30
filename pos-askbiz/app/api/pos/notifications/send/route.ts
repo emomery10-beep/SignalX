@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
+import { sendNotification } from '@/lib/whatsapp'
+import { COUNTRY_DIAL } from '@/lib/phone'
 
 type ConsentChannel = 'whatsapp' | 'sms' | 'email'
 
@@ -82,9 +84,21 @@ export async function POST(req: NextRequest) {
     // Get notification settings
     const { data: settings } = await service
       .from('pos_notification_settings')
-      .select('whatsapp_enabled, email_enabled, whatsapp_account_sid, email_provider')
+      .select('whatsapp_enabled, email_enabled, email_provider')
       .eq('owner_id', ownerId)
       .single()
+
+    // Cashiers/customers type local-format numbers with no country selector
+    // on that field — use the merchant's own signup country as the dial-code
+    // hint, same as /api/pos/receipt, so it normalises to E.164 before
+    // hitting the WhatsApp Cloud API (a malformed number still gets a 200 OK
+    // from Meta but never delivers).
+    const { data: profile } = await service
+      .from('profiles')
+      .select('country_code')
+      .eq('id', ownerId)
+      .maybeSingle()
+    const dialHint = COUNTRY_DIAL.find(c => c.code === profile?.country_code)?.dial
 
     // Build message from template
     const message = buildMessage(message_template, data)
@@ -116,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     // Try WhatsApp first (primary channel)
     if (settings?.whatsapp_enabled && recipient_phone && !whatsappOptedOut) {
-      const whatsappResult = await sendWhatsApp(recipient_phone, message, settings)
+      const whatsappResult = await sendWhatsApp(recipient_phone, message, dialHint)
       notificationResult.methods_attempted.push('whatsapp')
 
       if (whatsappResult.success) {
@@ -221,43 +235,20 @@ function buildMessage(template: string, data: Record<string, any>): string {
   return message
 }
 
+// Real send via Meta's WhatsApp Cloud API — same helper (lib/whatsapp.ts) and
+// same env vars (META_WHATSAPP_TOKEN / META_PHONE_NUMBER_ID) that retail's
+// receipt send (app/api/pos/receipt/route.ts) already uses in production.
 async function sendWhatsApp(
   recipientPhone: string,
   message: string,
-  settings: any
+  dialHint?: string
 ): Promise<{ success: boolean; message_id?: string; error?: string }> {
-  try {
-    // Would use Twilio WhatsApp API in production
-    // For now, return mock success
-    // Do not log recipient phone or message body (PII).
-    console.log('WhatsApp notification dispatched')
-
-    // Mock API call to Twilio
-    /*
-    const response = await fetch('https://api.twilio.com/2010-04-01/Accounts/' + settings.whatsapp_account_sid + '/Messages.json', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + Buffer.from(settings.twilio_account_sid + ':' + settings.twilio_auth_token).toString('base64'),
-      },
-      body: new URLSearchParams({
-        From: 'whatsapp:' + settings.whatsapp_sender_number,
-        To: 'whatsapp:' + recipientPhone,
-        Body: message,
-      }).toString(),
-    })
-    */
-
-    return {
-      success: true,
-      message_id: `msg_${Date.now()}`,
-    }
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message,
-    }
+  // Do not log recipient phone or message body (PII).
+  const result = await sendNotification(recipientPhone, message, dialHint)
+  if (!result.ok) {
+    return { success: false, error: result.error }
   }
+  return { success: true, message_id: result.messageId }
 }
 
 async function sendEmail(

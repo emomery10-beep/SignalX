@@ -32,5 +32,7 @@
   "shape_square": "Vierkant",
   "cancel": "Annuleren",
   "adding": "Toevoegen...",
-  "person_suffix": "{count}p"
+  "person_suffix": "{count}p",
+  "load_error_generic": "Kan de plattegrond niet laden. Probeer het opnieuw.",
+  "add_error_generic": "Kan de tafel niet opslaan. Probeer het opnieuw."
 }

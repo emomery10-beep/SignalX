@@ -32,5 +32,7 @@
   "shape_square": "Mraba",
   "cancel": "Futa",
   "adding": "Inaongeza...",
-  "person_suffix": "watu {count}"
+  "person_suffix": "watu {count}",
+  "load_error_generic": "Imeshindwa kupakia mpangilio wa sakafu. Tafadhali jaribu tena.",
+  "add_error_generic": "Imeshindwa kuhifadhi meza. Tafadhali jaribu tena."
 }

@@ -92,10 +92,17 @@ export default function ProductionLogPage() {
     return true
   })
 
+  // '__other__' is the raw placeholder the capture form's "Other" option used
+  // to save before it required a typed-in product name (and can still show
+  // up in older records, or a future write path that skips that guard).
+  // Never render it — fall back to a human-readable "unspecified" label.
+  const displayProduct = (name: string | null) =>
+    (!name || name === '__other__') ? tc('factory_production.yield_unspecified') : name
+
   // Yield summary: output qty / intake qty per product
   const yieldMap: Record<string, { intake: number; output: number }> = {}
   for (const c of captures) {
-    const p = c.product_name || tc('factory_production.yield_unspecified')
+    const p = displayProduct(c.product_name)
     if (c.type === 'intake' || c.type === 'output') {
       yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
       yieldMap[p][c.type] += c.quantity || 0
@@ -203,7 +210,7 @@ export default function ProductionLogPage() {
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ background: `${meta.color}22`, color: meta.color, padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{meta.icon} {typeLabel(tc, c.type)}</span>
                         </td>
-                        <td style={{ padding: '12px 14px', color: '#e2e8f0', fontWeight: 600 }}>{c.product_name || '—'}</td>
+                        <td style={{ padding: '12px 14px', color: '#e2e8f0', fontWeight: 600 }}>{displayProduct(c.product_name)}</td>
                         <td style={{ padding: '12px 14px', color: '#e2e8f0' }}>{c.quantity ?? '—'}</td>
                         <td style={{ padding: '12px 14px', color: '#64748b' }}>{c.batch_ref || '—'}</td>
                         <td style={{ padding: '12px 14px' }}>
@@ -235,7 +242,7 @@ export default function ProductionLogPage() {
             )}
 
             <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <Field label={tc('factory_production.detail_product')} value={detail.product_name || '—'} />
+              <Field label={tc('factory_production.detail_product')} value={displayProduct(detail.product_name)} />
               <Field label={tc('factory_production.detail_quantity')} value={`${detail.quantity ?? '—'} ${detail.batch_ref || ''}`.trim()} />
               <Field label={tc('factory_production.detail_status')} value={tc('factory_production.status_' + detail.status)} valueColor={STATUS_COLOR[detail.status]} />
               <Field label={tc('factory_production.detail_logged')} value={fmtDate(detail.created_at)} />

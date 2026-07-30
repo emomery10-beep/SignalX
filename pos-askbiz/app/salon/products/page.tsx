@@ -80,8 +80,13 @@ export default function SalonProducts() {
   async function load() {
     setLoading(true)
     try {
+      // sector=salon restricts this to products actually tagged for the salon
+      // vertical (retail/backbar items) instead of the owner's whole inventory —
+      // without it this page showed every business-wide product (groceries,
+      // general retail stock, etc.), matching the pattern already used by
+      // /repair/parts (?sector=repair).
       const [invRes, txRes] = await Promise.all([
-        fetch('/api/pos/inventory?limit=200', { headers: { ...session!.headers } }),
+        fetch('/api/pos/inventory?sector=salon&limit=200', { headers: { ...session!.headers } }),
         fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } }),
       ])
       const invData = await invRes.json()

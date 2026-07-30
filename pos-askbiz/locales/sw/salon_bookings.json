@@ -39,5 +39,10 @@
   "no_appointments_filters": "Hakuna miadi inayolingana na vichujio.",
   "dash": "—",
   "no_show_title": "Ufuatiliaji wa Wasiokuja",
-  "no_show_empty": "Hakuna miadi iliyokosa iliyorekodiwa. Weka alama kwenye miadi iliyopangwa kama “hakuja” ili kuifuatilia hapa."
+  "no_show_empty": "Hakuna miadi iliyokosa iliyorekodiwa. Weka alama kwenye miadi iliyopangwa kama “hakuja” ili kuifuatilia hapa.",
+  "save_error": "Imeshindwa kuhifadhi miadi hii: {error}",
+  "save_error_generic": "Imeshindwa kuhifadhi miadi hii. Tafadhali jaribu tena.",
+  "client_name_required": "Jina la mteja linahitajika.",
+  "time_required": "Muda wa miadi unahitajika.",
+  "saving": "Inahifadhi…"
 }

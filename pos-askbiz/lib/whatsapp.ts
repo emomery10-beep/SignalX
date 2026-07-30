@@ -231,6 +231,67 @@ export async function sendPurchaseOrder(phone: string, poText: string): Promise<
   return { ok: true }
 }
 
+// ── Send a generic notification (repair status, inventory/cash/tax alerts) ──
+// Template "askbiz_notification" should be:
+//   Category: Utility
+//   Body:     "{{1}}"   ← single variable containing the full composed message
+//
+// Mirrors sendPurchaseOrder's single-variable-body pattern: notification copy
+// varies a lot by type (service_intake, service_ready, service_quote,
+// service_collected, service_warranty, inventory_alert, etc — see
+// buildMessage() in app/api/pos/notifications/send/route.ts) so one utility
+// template with a single free-text body covers all of them without needing a
+// separate Meta-approved template per notification type. Until this template
+// is approved in Meta Business Manager, sends will fail with a clear Meta API
+// error (no silent fallback here — callers fall back to email where the
+// notification settings allow it).
+export async function sendNotification(phone: string, message: string, dialHint?: string): Promise<{ ok: boolean; error?: string; messageId?: string }> {
+  const token = process.env.META_WHATSAPP_TOKEN
+  const numId = phoneId()
+  if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured (META_WHATSAPP_TOKEN / META_PHONE_NUMBER_ID missing)' }
+
+  const template = process.env.META_NOTIFICATION_TEMPLATE || 'askbiz_notification'
+  const lang     = process.env.META_TEMPLATE_LANG || 'en_GB'
+
+  const res = await fetch(`${BASE}/${numId}/messages`, {
+    method:  'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to:   normalisePhone(phone, dialHint),
+      type: 'template',
+      template: {
+        name:     template,
+        language: { code: lang },
+        components: [{
+          type:       'body',
+          parameters: [{ type: 'text', text: message }],
+        }],
+      },
+    }),
+  })
+
+  const body = await res.json().catch(() => ({}))
+
+  if (!res.ok) {
+    const msg = body?.error?.message || `Meta API error ${res.status}`
+    console.error('[whatsapp] sendNotification failed:', msg)
+    return { ok: false, error: msg }
+  }
+
+  // Same accept-vs-delivered caveat as sendReceipt: a 200 here only means
+  // Meta accepted the message, not that it arrived. Log the id/status so it
+  // can be cross-referenced in WhatsApp Manager's message log.
+  console.log('[whatsapp] sendNotification accepted:', JSON.stringify({
+    to: normalisePhone(phone, dialHint),
+    messageId: body?.messages?.[0]?.id,
+    messageStatus: body?.messages?.[0]?.message_status,
+    contactWaId: body?.contacts?.[0]?.wa_id,
+  }))
+
+  return { ok: true, messageId: body?.messages?.[0]?.id }
+}
+
 // Build a click-to-chat wa.me link with prefilled text — the fallback that
 // works with no approved template and no prior conversation with the supplier.
 export function waLink(phone: string, text: string): string {

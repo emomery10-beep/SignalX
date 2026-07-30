@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
           pin: pin ? parseInt(pin) : null,
         },
       })
-      .select()
+      .select('*, location:pos_locations!location_id(id, name)')
       .single()
 
     if (staffError) {
@@ -144,6 +144,7 @@ export async function POST(request: NextRequest) {
         role: staffData.role,
         active: staffData.active,
         location_id: staffData.location_id,
+        location: staffData.location,
         permissions: template.defaultPermissions,
         template: {
           id: templateId,

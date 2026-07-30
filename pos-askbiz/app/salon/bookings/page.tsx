@@ -48,6 +48,8 @@ export default function SalonBookings() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [staff, setStaff] = useState<{ id: string; name: string }[]>([])
   const [form, setForm] = useState({ client: '', phone: '', service: '', stylist_id: '', time: '' })
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -67,9 +69,15 @@ export default function SalonBookings() {
       // Bookings list shows ONLY real salon appointments. Generic POS transactions
       // are not fetched here — they belong to other sectors and were previously
       // mis-rendered as salon "services" (cross-sector data bleed).
+      //
+      // Staff list: /api/pos/staff is the OWNER-dashboard endpoint — it's gated on
+      // a real Supabase auth cookie (supabase.auth.getUser()), not the x-staff-id /
+      // x-owner-id PIN-auth headers this page sends. For a PIN-authenticated stylist
+      // or manager that request always 401s, so the dropdown silently ended up empty.
+      // /api/pos/staff/list uses resolvePosAuth() and accepts both auth styles.
       const [apptRes, staffRes] = await Promise.all([
         fetch('/api/pos/salon/appointments', { headers: { ...session!.headers } }),
-        fetch('/api/pos/staff', { headers: { ...session!.headers } }),
+        fetch('/api/pos/staff/list', { headers: { ...session!.headers } }),
       ])
       const apptData = await apptRes.json()
       const staffData = await staffRes.json()
@@ -107,9 +115,16 @@ export default function SalonBookings() {
 
   async function submitBooking(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.client.trim() || !form.time.trim()) return
+    setFormError(null)
+    if (!form.client.trim()) { setFormError(tc('salon_bookings.client_name_required')); return }
+    if (!form.time.trim()) { setFormError(tc('salon_bookings.time_required')); return }
+    setSaving(true)
     try {
       // Create (or attach) a salon client record so the booking persists against a profile.
+      // A failure here is non-fatal to the booking itself — fall back to a
+      // walk-in (client_id: null) but log it, since it usually signals the
+      // same permission/auth problem that would also break the appointment
+      // save below.
       let client_id: string | null = null
       const clientRes = await fetch('/api/pos/salon/clients', {
         method: 'POST',
@@ -117,7 +132,11 @@ export default function SalonBookings() {
         body: JSON.stringify({ name: form.client.trim(), phone: form.phone || null }),
       })
       const clientData = await clientRes.json()
-      if (clientData.client) client_id = clientData.client.id
+      if (clientRes.ok && clientData.client) {
+        client_id = clientData.client.id
+      } else if (!clientRes.ok) {
+        console.error('Create client error:', clientData.error || clientRes.status)
+      }
 
       // Compose scheduled_at from the selected day + chosen time.
       const scheduled_at = new Date(`${date}T${form.time}:00`).toISOString()
@@ -134,12 +153,26 @@ export default function SalonBookings() {
         }),
       })
       const data = await res.json()
-      if (data.appointment) setAppointments(prev => [data.appointment, ...prev])
+
+      if (!res.ok || !data.appointment) {
+        // Surface the real failure instead of quietly clearing the form as
+        // if it had worked — this used to fail silently (e.g. a 403 from a
+        // permission gap, or an RLS rejection) with the UI showing no sign
+        // anything went wrong.
+        setFormError(data.error ? tc('salon_bookings.save_error', { error: data.error }) : tc('salon_bookings.save_error_generic'))
+        setSaving(false)
+        return
+      }
+
+      setAppointments(prev => [data.appointment, ...prev])
+      setForm({ client: '', phone: '', service: '', stylist_id: '', time: '' })
+      setShowForm(false)
+      setFormError(null)
     } catch (err) {
       console.error('Create booking error:', err)
+      setFormError(tc('salon_bookings.save_error_generic'))
     }
-    setForm({ client: '', phone: '', service: '', stylist_id: '', time: '' })
-    setShowForm(false)
+    setSaving(false)
   }
 
   async function updateStatus(id: string, status: string) {
@@ -203,9 +236,14 @@ export default function SalonBookings() {
               </select>
               <input style={inputStyle} type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
             </div>
+            {formError && (
+              <div style={{ marginTop: 12, background: '#450a0a', border: `1px solid ${C.bad}`, borderRadius: 8, padding: '8px 12px', color: '#fca5a5', fontSize: 12.5 }}>
+                ⚠️ {formError}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc('salon_bookings.save_booking')}</button>
-              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_bookings.cancel')}</button>
+              <button type="submit" disabled={saving} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: saving ? 'default' : 'pointer', fontWeight: 600, fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? tc('salon_bookings.saving') : tc('salon_bookings.save_booking')}</button>
+              <button type="button" onClick={() => { setShowForm(false); setFormError(null) }} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_bookings.cancel')}</button>
             </div>
           </form>
         )}

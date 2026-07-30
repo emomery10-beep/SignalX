@@ -32,5 +32,7 @@
   "shape_square": "Carré",
   "cancel": "Annuler",
   "adding": "Ajout en cours...",
-  "person_suffix": "{count}p"
+  "person_suffix": "{count}p",
+  "load_error_generic": "Impossible de charger le plan de salle. Veuillez réessayer.",
+  "add_error_generic": "Impossible d'enregistrer la table. Veuillez réessayer."
 }

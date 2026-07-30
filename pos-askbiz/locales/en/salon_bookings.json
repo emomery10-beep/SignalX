@@ -39,5 +39,10 @@
   "no_appointments_filters": "No appointments match the filters.",
   "dash": "—",
   "no_show_title": "No-Show Tracking",
-  "no_show_empty": "No missed appointments recorded. Mark a scheduled appointment as “no show” to track it here."
+  "no_show_empty": "No missed appointments recorded. Mark a scheduled appointment as “no show” to track it here.",
+  "save_error": "Couldn't save this booking: {error}",
+  "save_error_generic": "Couldn't save this booking. Please try again.",
+  "client_name_required": "Client name is required.",
+  "time_required": "Appointment time is required.",
+  "saving": "Saving…"
 }

@@ -39,5 +39,10 @@
   "no_appointments_filters": "Ballan la mid ah shaandhooyinka lama helin.",
   "dash": "—",
   "no_show_title": "Raadraaca Kuwa Aan Iman",
-  "no_show_empty": "Ballan la seegay lama diiwaangelin. Calaamadee ballan la qorsheeyay “ma iman” si aad halkan uga raadrayso."
+  "no_show_empty": "Ballan la seegay lama diiwaangelin. Calaamadee ballan la qorsheeyay “ma iman” si aad halkan uga raadrayso.",
+  "save_error": "Lama kaydin karin ballanka: {error}",
+  "save_error_generic": "Lama kaydin karin ballanka. Fadlan isku day mar kale.",
+  "client_name_required": "Magaca macmiilka waa loo baahan yahay.",
+  "time_required": "Waqtiga ballanka waa loo baahan yahay.",
+  "saving": "Kaydinaya…"
 }

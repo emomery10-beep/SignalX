@@ -10,14 +10,16 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const location_id = searchParams.get('location_id') || auth.locationId
 
+  // Note: current_order_id has no FK constraint to restaurant_orders (deliberately
+  // loose so the order row can be voided/cleared independently), so it can't be
+  // embedded via PostgREST relationship syntax like `restaurant_orders!current_order_id`.
+  // Doing so makes PostgREST fail to resolve the relationship and the whole query
+  // errors out with a 500 — which silently renders as an empty floor plan client-side.
+  // Fetch current orders separately instead and merge them in.
   let query = service.from('restaurant_tables')
     .select(`
       *,
       server:pos_staff!server_id(id, name, role),
-      current_order:restaurant_orders!current_order_id(
-        id, status, covers, total, created_at, seated_at,
-        order_items:restaurant_order_items(id, name, qty, status)
-      ),
       upcoming_reservations:restaurant_reservations(
         id, customer_name, covers, reserved_at, status
       )
@@ -29,7 +31,29 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ tables: data || [] })
+
+  const tables = data || []
+  const orderIds = Array.from(new Set(tables.map((t: any) => t.current_order_id).filter(Boolean)))
+
+  let ordersById: Record<string, any> = {}
+  if (orderIds.length > 0) {
+    const { data: orders, error: ordersError } = await service
+      .from('restaurant_orders')
+      .select(`
+        id, status, covers, total, created_at, seated_at,
+        order_items:restaurant_order_items(id, name, qty, status)
+      `)
+      .in('id', orderIds)
+    if (ordersError) return NextResponse.json({ error: ordersError.message }, { status: 500 })
+    ordersById = Object.fromEntries((orders || []).map((o: any) => [o.id, o]))
+  }
+
+  const tablesWithOrders = tables.map((t: any) => ({
+    ...t,
+    current_order: t.current_order_id ? (ordersById[t.current_order_id] || null) : null,
+  }))
+
+  return NextResponse.json({ tables: tablesWithOrders })
 }
 
 // POST — create a table

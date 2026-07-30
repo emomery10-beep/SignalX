@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('pos_staff')
       .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role, sector: sector || 'retail', sector_edit_count: 0, location_id: location_id || null })
-      .select()
+      .select('*, location:pos_locations!location_id(id, name)')
       .single()
 
     if (error) {
@@ -186,7 +186,7 @@ export async function PATCH(req: NextRequest) {
       .update(updates)
       .eq('id', id)
       .eq('owner_id', user.id)
-      .select()
+      .select('*, location:pos_locations!location_id(id, name)')
       .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

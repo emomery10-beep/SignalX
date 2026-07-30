@@ -98,6 +98,16 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'factory.machines_manage', 'factory.recipes_manage',
   ],
   manager: [
+    // 'sales.create' was missing here — a manager (incl. template roles like
+    // salon-manager) already holds refund.approve/amend.approve, both
+    // strictly higher-privilege actions than creating a sale, so excluding
+    // sales.create was an oversight, not intentional restriction. Confirmed
+    // live bug: it silently 403'd salon-manager attempts to create a client
+    // or booking on /salon/bookings (POST /api/pos/salon/clients and
+    // /api/pos/salon/appointments both gate on sales.create), and the
+    // calling UI didn't surface the error — the form just cleared as if it
+    // had succeeded.
+    'sales.create',
     'sales.view', 'sales.view_all',
     'refund.approve', 'amend.approve',
     'inventory.view', 'inventory.manage',

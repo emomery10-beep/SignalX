@@ -89,7 +89,14 @@ export async function POST(req: NextRequest) {
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
   const body = await req.json()
-  const { type, image, shift_id, product_name, batch_ref, quantity, notes, location_id } = body
+  const { type, image, shift_id, batch_ref, quantity, notes, location_id } = body
+  // '__other__' is the capture form's raw <option> value for "pick from a
+  // free-text product name instead of the inventory list" -- the client is
+  // expected to swap it for the typed-in name before submitting, but never
+  // trust that from the server side. Treat a literal '__other__' the same
+  // as "no product name" rather than let the placeholder leak into
+  // reporting (e.g. the /factory/production Yield Summary).
+  const product_name = body.product_name === '__other__' ? null : body.product_name
 
   if (!type || !image) return json({ error: 'type and image required' }, 400)
   if (!['intake', 'output', 'wastage', 'dispatch'].includes(type)) {

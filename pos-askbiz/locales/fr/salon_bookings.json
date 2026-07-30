@@ -39,5 +39,10 @@
   "no_appointments_filters": "Aucun rendez-vous ne correspond aux filtres.",
   "dash": "—",
   "no_show_title": "Suivi des absences",
-  "no_show_empty": "Aucune absence enregistrée. Marquez un rendez-vous planifié comme \"absent\" pour le suivre ici."
+  "no_show_empty": "Aucune absence enregistrée. Marquez un rendez-vous planifié comme \"absent\" pour le suivre ici.",
+  "save_error": "Impossible d'enregistrer ce rendez-vous : {error}",
+  "save_error_generic": "Impossible d'enregistrer ce rendez-vous. Veuillez réessayer.",
+  "client_name_required": "Le nom du client est requis.",
+  "time_required": "L'heure du rendez-vous est requise.",
+  "saving": "Enregistrement…"
 }

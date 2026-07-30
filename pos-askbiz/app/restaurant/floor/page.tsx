@@ -50,6 +50,8 @@ export default function FloorPlan() {
   const [showAddTable, setShowAdd]  = useState(false)
   const [newTable, setNewTable]     = useState({ name: '', section: 'Main', capacity: 4, shape: 'rectangle' })
   const [saving, setSaving]         = useState(false)
+  const [addError, setAddError]     = useState<string | null>(null)
+  const [loadError, setLoadError]   = useState<string | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -73,10 +75,19 @@ export default function FloorPlan() {
     try {
       const res = await fetch('/api/pos/restaurant/tables', { headers: session.headers })
       const data = await res.json()
+      if (!res.ok) {
+        setLoadError(data.error || tc(NS + 'load_error_generic'))
+        setTables([])
+        return
+      }
+      setLoadError(null)
       const t: Table[] = data.tables || []
       setTables(t)
       const secs = ['All', ...Array.from(new Set(t.map((x: Table) => x.section)))]
       setSections(secs)
+    } catch {
+      setLoadError(tc(NS + 'load_error_generic'))
+      setTables([])
     } finally { setLoading(false) }
   }
 
@@ -109,14 +120,25 @@ export default function FloorPlan() {
   async function addTable() {
     if (!newTable.name.trim() || !session) return
     setSaving(true)
-    await fetch('/api/pos/restaurant/tables', {
-      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...newTable }),
-    })
-    setShowAdd(false)
-    setNewTable({ name: '', section: 'Main', capacity: 4, shape: 'rectangle' })
-    setSaving(false)
-    await loadTables()
+    setAddError(null)
+    try {
+      const res = await fetch('/api/pos/restaurant/tables', {
+        method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newTable }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setAddError(data.error || tc(NS + 'add_error_generic'))
+        return
+      }
+      setShowAdd(false)
+      setNewTable({ name: '', section: 'Main', capacity: 4, shape: 'rectangle' })
+      await loadTables()
+    } catch {
+      setAddError(tc(NS + 'add_error_generic'))
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function deleteTable(id: string) {
@@ -187,6 +209,13 @@ export default function FloorPlan() {
           </button>
         ))}
       </div>
+
+      {/* Load error banner */}
+      {loadError && (
+        <div style={{ margin: '12px 20px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#fca5a5', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+          {loadError}
+        </div>
+      )}
 
       {/* Legend */}
       <div style={{ padding: '10px 20px', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -370,8 +399,13 @@ export default function FloorPlan() {
                 </div>
               </div>
             </div>
+            {addError && (
+              <div style={{ marginTop: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#fca5a5', borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
+                {addError}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
+              <button onClick={() => { setShowAdd(false); setAddError(null) }} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
               <button onClick={addTable} disabled={saving || !newTable.name.trim()}
                 className="pos-btn-primary"
                 style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newTable.name.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newTable.name.trim() ? 0.5 : 1 }}>
