@@ -10,8 +10,8 @@ const STOP_WORDS = new Set(['the','a','an','of','per','and','in','for','with','m
 
 function fuzzyMatch(
   queryName: string,
-  candidates: { id: string; name: string; food_cost: number; base_price: number }[]
-): { id: string; name: string; food_cost: number; base_price: number } | null {
+  candidates: { id: string; name: string; food_cost: number; price: number }[]
+): { id: string; name: string; food_cost: number; price: number } | null {
   const words = queryName.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w))
   if (words.length === 0) return null
   const scored = candidates.map(item => {
@@ -115,7 +115,7 @@ Reply ONLY with valid JSON matching this shape — no markdown, no explanation:
     // STEP 2: Match each extracted item against restaurant_menu_items to find food_cost update candidates
     const { data: menuItems } = await service
       .from('restaurant_menu_items')
-      .select('id, name, food_cost, base_price')
+      .select('id, name, food_cost, price')
       .eq('owner_id', auth.ownerId)
       .eq('active', true)
       .order('name')
@@ -127,7 +127,7 @@ Reply ONLY with valid JSON matching this shape — no markdown, no explanation:
         menu_item_id:   menuMatch?.id   ?? null,
         menu_item_name: menuMatch?.name ?? null,
         current_food_cost: menuMatch?.food_cost ?? null,
-        menu_base_price:   menuMatch?.base_price ?? null,
+        menu_base_price:   menuMatch?.price ?? null,
         suggested_food_cost: lineItem.unit_price > 0 ? lineItem.unit_price : null,
         matched: !!menuMatch,
       }
