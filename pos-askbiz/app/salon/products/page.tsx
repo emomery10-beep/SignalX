@@ -42,6 +42,12 @@ export default function SalonProducts() {
   const [soldMap, setSoldMap] = useState<Record<string, number>>({})
   const [search, setSearch] = useState('')
 
+  // Add product (retail/backbar stock tagged sector='salon' — mirrors /repair/parts)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [productForm, setProductForm] = useState({ name: '', sku: '', stock_qty: '', cost_price: '', sale_price: '', unit: '', low_stock_threshold: '' })
+
   // Backbar usage logging
   const [usage, setUsage] = useState<UsageLog[]>([])
   const [form, setForm] = useState({ product: '', amount: '', service: '' })
@@ -113,6 +119,39 @@ export default function SalonProducts() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function addProduct() {
+    if (!productForm.name.trim()) { setFormError(tc('salon_products.err_name_required')); return }
+    setSaving(true); setFormError('')
+    try {
+      const res = await fetch('/api/pos/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
+        body: JSON.stringify({
+          name: productForm.name.trim(),
+          sku: productForm.sku.trim() || null,
+          stock_qty: productForm.stock_qty ? Number(productForm.stock_qty) : 0,
+          cost_price: productForm.cost_price ? Number(productForm.cost_price) : 0,
+          sale_price: productForm.sale_price ? Number(productForm.sale_price) : 0,
+          unit: productForm.unit.trim() || 'item',
+          low_stock_threshold: productForm.low_stock_threshold ? Number(productForm.low_stock_threshold) : 5,
+          // sector='salon' is what keeps this product scoped to the salon
+          // vertical's /repair/parts-style inventory view (?sector=salon)
+          // instead of leaking into — or being invisible from — other verticals.
+          sector: 'salon',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setFormError(data.error || tc('salon_products.err_add_failed')); setSaving(false); return }
+      setShowForm(false)
+      setProductForm({ name: '', sku: '', stock_qty: '', cost_price: '', sale_price: '', unit: '', low_stock_threshold: '' })
+      await load()
+    } catch (err) {
+      console.error('Add product error:', err)
+      setFormError(tc('salon_products.err_add_failed_conn'))
+    }
+    setSaving(false)
   }
 
   const filtered = useMemo(() => {
@@ -197,9 +236,58 @@ export default function SalonProducts() {
             <div style={{ fontSize: 12, color: C.muted }}>{tc('salon_products.header_subtitle')}</div>
           </div>
         </div>
+        <button onClick={() => { setShowForm(s => !s); setFormError('') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          {showForm ? tc('salon_products.cancel') : tc('salon_products.add_product')}
+        </button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
+        {/* Add product form */}
+        {showForm && (
+          <div style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, marginBottom: 14 }}>{tc('salon_products.form_title')}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_name')}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={tc('salon_products.placeholder_name')} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_sku')}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} value={productForm.sku} onChange={e => setProductForm(f => ({ ...f, sku: e.target.value }))} placeholder={tc('salon_products.placeholder_sku')} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_stock')}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="numeric" value={productForm.stock_qty} onChange={e => setProductForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="0" />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_cost', { sym })}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="decimal" value={productForm.cost_price} onChange={e => setProductForm(f => ({ ...f, cost_price: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_price', { sym })}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="decimal" value={productForm.sale_price} onChange={e => setProductForm(f => ({ ...f, sale_price: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_unit')}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} value={productForm.unit} onChange={e => setProductForm(f => ({ ...f, unit: e.target.value }))} placeholder={tc('salon_products.placeholder_unit')} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_reorder')}</label>
+                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="numeric" value={productForm.low_stock_threshold} onChange={e => setProductForm(f => ({ ...f, low_stock_threshold: e.target.value }))} placeholder="5" />
+              </div>
+            </div>
+            {formError && (
+              <div style={{ marginTop: 12, background: '#450a0a', border: `1px solid ${C.bad}`, borderRadius: 8, padding: '8px 12px', color: '#fca5a5', fontSize: 12.5 }}>
+                ⚠️ {formError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <button onClick={addProduct} disabled={saving} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: saving ? 'default' : 'pointer', fontWeight: 600, fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? tc('salon_products.saving') : tc('salon_products.save_product')}</button>
+              <button type="button" onClick={() => { setShowForm(false); setFormError('') }} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_products.cancel')}</button>
+            </div>
+          </div>
+        )}
+
         {/* Low stock alerts */}
         {lowStock.length > 0 && (
           <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>

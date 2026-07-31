@@ -95,6 +95,38 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Fire-and-forget WhatsApp reservation confirmation — never blocks the booking.
+  if (customer_phone) {
+    service
+      .from('profiles')
+      .select('business_name')
+      .eq('id', auth.ownerId)
+      .single()
+      .then(({ data: profile }) => {
+        const businessName = profile?.business_name || 'the restaurant'
+        const reservedTime = new Date(reserved_at).toLocaleString('en-GB', {
+          weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+        })
+        return fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+          body: JSON.stringify({
+            notification_type: 'restaurant_reservation',
+            recipient_phone: customer_phone,
+            message_template: 'restaurant_reservation_confirmed',
+            data: {
+              customer_name: customer_name || 'there',
+              covers: data.covers,
+              reserved_time: reservedTime,
+              business_name: businessName,
+            },
+          }),
+        })
+      })
+      .catch((err: unknown) => console.error('Restaurant reservation notification failed:', err))
+  }
+
   return NextResponse.json({ reservation: data })
 }
 

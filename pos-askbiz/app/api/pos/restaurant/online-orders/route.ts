@@ -53,6 +53,42 @@ export async function POST(req: NextRequest) {
     status: 'pending',
   }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Fire-and-forget WhatsApp order confirmation — never blocks order intake.
+  // Only fires when a phone number was actually captured (manual phone
+  // orders and some delivery-app sources provide one; website widget orders
+  // may not).
+  if (customer_phone) {
+    service
+      .from('profiles')
+      .select('business_name, currency_symbol')
+      .eq('id', auth.ownerId)
+      .single()
+      .then(({ data: profile }) => {
+        const businessName = profile?.business_name || 'the restaurant'
+        const currency = profile?.currency_symbol || '£'
+        const orderSummary = (items_json as { name: string; qty: number }[])
+          .map(i => `${i.qty}x ${i.name}`)
+          .join(', ')
+        return fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+          body: JSON.stringify({
+            notification_type: 'restaurant_order',
+            recipient_phone: customer_phone,
+            message_template: 'restaurant_order_confirmed',
+            data: {
+              customer_name: customer_name || 'there',
+              order_summary: orderSummary,
+              total: `${currency}${Number(total || 0).toFixed(2)}`,
+              business_name: businessName,
+            },
+          }),
+        })
+      })
+      .catch((err: unknown) => console.error('Restaurant order notification failed:', err))
+  }
+
   return NextResponse.json({ online_order: data })
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth, roleCanAccess } from '@/lib/pos-auth'
+import { notifyParcelEvent } from '@/lib/pos-logistics-notify'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -328,6 +329,15 @@ export async function PATCH(req: NextRequest) {
     .single()
 
   if (error) return json({ error: error.message }, 500)
+
+  // "Dispatched / assigned to driver" notification — fires the moment a
+  // parcel is assigned to a driver (dispatch/page.tsx sets status:'assigned'
+  // when a truck+driver are picked). Fire-and-forget; never blocks the
+  // dispatch action itself. `data` already carries sender/receiver phone,
+  // tracking_number, destination_city and receipt_consent via SELECT's `*`.
+  if (body.status === 'assigned' && current.status !== 'assigned') {
+    notifyParcelEvent(req, service, auth.ownerId, auth.staffId, data as any, 'dispatched')
+  }
 
   return json({ parcel: data })
 }

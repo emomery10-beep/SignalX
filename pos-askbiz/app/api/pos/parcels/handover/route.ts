@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { notifyParcelEvent } from '@/lib/pos-logistics-notify'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -145,6 +146,12 @@ export async function POST(req: NextRequest) {
     .eq('id', parcel_id)
     .eq('owner_id', auth.ownerId)
     .single()
+
+  // "Delivered" notification — fires on the driver's 'deliver' handover
+  // action. Fire-and-forget; never blocks the handover itself.
+  if (action === 'deliver' && updated) {
+    notifyParcelEvent(req, service, auth.ownerId, auth.staffId, updated as any, 'delivered')
+  }
 
   return json({ parcel: updated, photo_id: photoId })
 }

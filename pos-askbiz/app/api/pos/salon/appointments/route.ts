@@ -86,6 +86,42 @@ export async function POST(req: NextRequest) {
 
   if (error) return json({ error: error.message }, 500)
 
+  // Fire-and-forget WhatsApp booking confirmation — never blocks the booking
+  // itself. Client phone comes from the salon_clients join already present
+  // on APPOINTMENT_SELECT, so no extra lookup is needed. Walk-ins with no
+  // linked client (client_id null) simply have no phone to notify.
+  const clientPhone = (appointment as any)?.client?.phone
+  if (clientPhone) {
+    service
+      .from('profiles')
+      .select('business_name')
+      .eq('id', auth.ownerId)
+      .single()
+      .then(({ data: profile }) => {
+        const businessName = profile?.business_name || 'the salon'
+        const appointmentTime = new Date(appointment.scheduled_at).toLocaleString('en-GB', {
+          weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+        })
+        return fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+          body: JSON.stringify({
+            notification_type: 'salon_booking',
+            recipient_phone: clientPhone,
+            message_template: 'salon_booking_confirmed',
+            data: {
+              client_name: (appointment as any)?.client?.name || 'there',
+              service_name: appointment.service_name,
+              appointment_time: appointmentTime,
+              stylist_name: (appointment as any)?.stylist?.name || null,
+              business_name: businessName,
+            },
+          }),
+        })
+      })
+      .catch((err: unknown) => console.error('Salon booking notification failed:', err))
+  }
+
   return json({ appointment }, 201)
 }
 

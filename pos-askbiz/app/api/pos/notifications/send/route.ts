@@ -223,6 +223,20 @@ function buildMessage(template: string, data: Record<string, any>): string {
     service_collected: `🧾 Repair Receipt\nHi ${data.customer_name},\n\nThank you for collecting your ${data.device_model}.\n\nTicket: ${data.ticket_number}\nTotal paid: ${data.total_paid}\n\nThank you for choosing ${data.business_name}!`,
 
     service_warranty: `🛡️ Warranty Information\nHi ${data.customer_name},\n\nYour repair (${data.device_model}) comes with a ${data.warranty_days}-day warranty.\n\nTicket: ${data.ticket_number}\nWarranty expires: ${data.warranty_expires}\n\nIf you experience any issues, quote your ticket number.\n— ${data.business_name}`,
+
+    salon_booking_confirmed: `💇 Booking Confirmed\nHi ${data.client_name},\n\nYour ${data.service_name} appointment is confirmed for ${data.appointment_time}.${data.stylist_name ? `\nStylist: ${data.stylist_name}` : ''}\n\nSee you then!\n— ${data.business_name}`,
+
+    restaurant_order_confirmed: `🍽️ Order Confirmed\nHi ${data.customer_name},\n\nWe've received your order:\n${data.order_summary}\n\nTotal: ${data.total}\n\nWe'll let you know when it's ready.\n— ${data.business_name}`,
+
+    restaurant_reservation_confirmed: `📅 Reservation Confirmed\nHi ${data.customer_name},\n\nYour table for ${data.covers} on ${data.reserved_time} is confirmed.\n\nWe look forward to seeing you.\n— ${data.business_name}`,
+
+    logistics_dispatched_sender: `🚚 Parcel Dispatched\nHi ${data.sender_name},\n\nYour parcel to ${data.destination} has been assigned to a driver and is on its way.\n\nTracking: ${data.tracking_number}\n— ${data.business_name}`,
+
+    logistics_dispatched_receiver: `🚚 Parcel On The Way\nHi ${data.receiver_name},\n\nA parcel from ${data.sender_name} is on its way to you.\n\nTracking: ${data.tracking_number}\n— ${data.business_name}`,
+
+    logistics_delivered_sender: `✅ Parcel Delivered\nHi ${data.sender_name},\n\nYour parcel has been delivered to ${data.receiver_name}.\n\nTracking: ${data.tracking_number}\n— ${data.business_name}`,
+
+    logistics_delivered_receiver: `✅ Parcel Delivered\nHi ${data.receiver_name},\n\nYour parcel has arrived. Thank you!\n\nTracking: ${data.tracking_number}\n— ${data.business_name}`,
   }
 
   let message = messages[template] || template
@@ -313,6 +327,13 @@ function getEmailSubject(template: string): string {
     service_quote: '💬 Repair Quote for Your Device',
     service_collected: '🧾 Repair Collection Receipt',
     service_warranty: '🛡️ Repair Warranty Information',
+    salon_booking_confirmed: '💇 Your Appointment is Confirmed',
+    restaurant_order_confirmed: '🍽️ Your Order is Confirmed',
+    restaurant_reservation_confirmed: '📅 Your Reservation is Confirmed',
+    logistics_dispatched_sender: '🚚 Your Parcel Has Been Dispatched',
+    logistics_dispatched_receiver: '🚚 A Parcel is On Its Way to You',
+    logistics_delivered_sender: '✅ Your Parcel Has Been Delivered',
+    logistics_delivered_receiver: '✅ Your Parcel Has Arrived',
   }
 
   return subjects[template] || 'AskBiz Alert'
