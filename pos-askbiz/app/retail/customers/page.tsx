@@ -3,10 +3,27 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { Button, Banner, Input } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
-const ACC = '#22c55e'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:    'var(--pos-accent)',
+  danger:    'var(--pos-danger)',
+  success:   'var(--pos-success)',
+  warning:   'var(--pos-warning)',
+  intake:    'var(--factory-intake)',
+  dispatch:  'var(--factory-dispatch)',
+}
+
+const ACC = tokens.accent
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 type Segment = 'new' | 'returning' | 'loyal' | 'lapsed'
@@ -22,8 +39,10 @@ interface Customer {
   segment: Segment; txns: Txn[]
 }
 
+// new/loyal reuse the factory section's blue/purple semantic vars — the app
+// has no other categorical colour tokens defined for customer segmentation.
 const SEG_COLOR: Record<Segment, string> = {
-  new: '#3b82f6', returning: '#22c55e', loyal: '#a855f7', lapsed: '#ef4444',
+  new: tokens.intake, returning: tokens.success, loyal: tokens.dispatch, lapsed: tokens.danger,
 }
 
 function buildSegMeta(tc: Tc): Record<Segment, { label: string; color: string; desc: string }> {
@@ -193,9 +212,8 @@ export default function RetailCustomers() {
 
   const topSpenders = [...customers].slice(0, 5)
 
-  const inp: React.CSSProperties = { background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#f1f5f9', padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }
-  const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '1px solid #334155' }
-  const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: '1px solid #1e293b' }
+  const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1, borderBottom: `1px solid ${tokens.border}` }
+  const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: `1px solid ${tokens.border}` }
 
   function fmtDate(d: string | null) {
     if (!d) return '—'
@@ -203,19 +221,19 @@ export default function RetailCustomers() {
   }
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Button variant="secondary" onClick={() => router.push('/retail')}>←</Button>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 {tc('retail_customers.header_title')}</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_customers.header_subtitle')}</div>
+          <div style={{ fontSize: 12, color: tokens.muted }}>{tc('retail_customers.header_subtitle')}</div>
         </div>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1300, margin: '0 auto' }}>
         {/* Segment chips */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
-          <Chip label={tc('retail_customers.chip_all', { count: customers.length })} active={segFilter === 'all'} color="#94a3b8" onClick={() => setSegFilter('all')} />
+        <div className="pos-reveal" style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+          <Chip label={tc('retail_customers.chip_all', { count: customers.length })} active={segFilter === 'all'} color={tokens.muted} onClick={() => setSegFilter('all')} />
           {(Object.keys(segMeta) as Segment[]).map(s => (
             <Chip key={s} label={tc('retail_customers.chip_segment', { label: segMeta[s].label, count: segCounts[s] })} active={segFilter === s} color={segMeta[s].color} onClick={() => setSegFilter(s)} />
           ))}
@@ -224,26 +242,26 @@ export default function RetailCustomers() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
           {/* Main list */}
           <div>
-            <input placeholder={tc('retail_customers.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%', marginBottom: 14 }} />
-            <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+            <Input placeholder={tc('retail_customers.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} />
+            <div style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
                   <th style={th}>{tc('retail_customers.col_customer')}</th><th style={th}>{tc('retail_customers.col_segment')}</th><th style={th}>{tc('retail_customers.col_orders')}</th>
                   <th style={th}>{tc('retail_customers.col_spend')}</th><th style={th}>{tc('retail_customers.col_avg')}</th><th style={th}>{tc('retail_customers.col_last_visit')}</th>
                 </tr></thead>
                 <tbody>
-                  {loading && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>{tc('retail_customers.loading')}</span></td></tr>}
-                  {!loading && filtered.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>{search || segFilter !== 'all' ? tc('retail_customers.no_match') : tc('retail_customers.no_customers_yet')}</span></td></tr>}
+                  {loading && <tr><td style={td} colSpan={6}><span style={{ color: tokens.hint }}>{tc('retail_customers.loading')}</span></td></tr>}
+                  {!loading && filtered.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: tokens.hint }}>{search || segFilter !== 'all' ? tc('retail_customers.no_match') : tc('retail_customers.no_customers_yet')}</span></td></tr>}
                   {filtered.map((c, idx) => (
                     <tr key={c.key} className="pos-item" onClick={() => setSelected(c)} style={{ cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(34,197,94,0.06)')}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--pos-accent-pale)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={{ ...td, fontWeight: 600 }}>{c.name}<div style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>{c.phone || '—'}</div></td>
+                      <td style={{ ...td, fontWeight: 600 }}>{c.name}<div style={{ fontSize: 11, color: tokens.hint, fontWeight: 400 }}>{c.phone || '—'}</div></td>
                       <td style={td}><span style={{ background: segMeta[c.segment].color + '22', color: segMeta[c.segment].color, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>{segMeta[c.segment].label}</span></td>
                       <td style={td}>{c.orders}</td>
                       <td style={{ ...td, fontWeight: 700, color: ACC }}>{sym}{c.spend.toFixed(2)}</td>
-                      <td style={{ ...td, color: '#94a3b8' }}>{sym}{c.avgBasket.toFixed(2)}</td>
-                      <td style={{ ...td, color: '#94a3b8' }}>{fmtDate(c.lastVisit)}</td>
+                      <td style={{ ...td, color: tokens.muted }}>{sym}{c.avgBasket.toFixed(2)}</td>
+                      <td style={{ ...td, color: tokens.muted }}>{fmtDate(c.lastVisit)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -253,16 +271,16 @@ export default function RetailCustomers() {
 
           {/* Top spenders */}
           <div>
-            <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 18 }}>
+            <div style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: 18 }}>
               <div style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }}>🏆 {tc('retail_customers.top_spenders')}</div>
-              {topSpenders.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_customers.no_data_yet')}</div>}
+              {topSpenders.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail_customers.no_data_yet')}</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {topSpenders.map((c, i) => (
                   <button key={c.key} type="button" className="pos-item" onClick={() => setSelected(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', animationDelay: `${Math.min(i, 8) * 40}ms`, background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: 0, color: 'inherit' }}>
-                    <span style={{ color: '#64748b', width: 16, textAlign: 'right', fontSize: 12 }}>{i + 1}</span>
+                    <span style={{ color: tokens.hint, width: 16, textAlign: 'right', fontSize: 12 }}>{i + 1}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{tc('retail_customers.orders_count', { count: c.orders })}</div>
+                      <div style={{ fontSize: 11, color: tokens.hint }}>{tc('retail_customers.orders_count', { count: c.orders })}</div>
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: ACC }}>{sym}{c.spend.toFixed(0)}</div>
                   </button>
@@ -276,14 +294,14 @@ export default function RetailCustomers() {
       {/* Detail drawer */}
       {selected && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'flex-end', zIndex: 50 }} onClick={closeDrawer}>
-          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderLeft: '1px solid #334155', width: '100%', maxWidth: 440, height: '100%', overflowY: 'auto', padding: 24 }}>
+          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: tokens.surface, borderLeft: `1px solid ${tokens.border}`, width: '100%', maxWidth: 440, height: '100%', overflowY: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>{selected.name}</div>
-                <div style={{ fontSize: 13, color: '#94a3b8' }}>{selected.phone || tc('retail_customers.no_phone')}</div>
+                <div style={{ fontSize: 13, color: tokens.muted }}>{selected.phone || tc('retail_customers.no_phone')}</div>
                 <span style={{ display: 'inline-block', marginTop: 8, background: segMeta[selected.segment].color + '22', color: segMeta[selected.segment].color, padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{segMeta[selected.segment].label} · {segMeta[selected.segment].desc}</span>
               </div>
-              <button onClick={closeDrawer} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>✕</button>
+              <Button variant="ghost" onClick={closeDrawer} style={{ fontSize: 22, padding: 4 }}>✕</Button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
@@ -297,15 +315,15 @@ export default function RetailCustomers() {
               {selected.txns.map((t, idx) => {
                 const items = (t.pos_items || [])
                 return (
-                  <div key={t.id} className="pos-item" style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 10, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <div key={t.id} className="pos-item" style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 10, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: items.length ? 8 : 0 }}>
-                      <span style={{ fontSize: 12, color: '#94a3b8' }}>{t.created_at ? new Date(t.created_at).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <span style={{ fontSize: 12, color: tokens.muted }}>{t.created_at ? new Date(t.created_at).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: ACC }}>{sym}{(t.total || 0).toFixed(2)}</span>
                     </div>
                     {items.map((it, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#cbd5e1' }}>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: tokens.muted }}>
                         <span>{(it.qty || it.quantity || 1)}× {it.name || tc('retail_customers.item_fallback')}</span>
-                        {it.price != null && <span style={{ color: '#64748b' }}>{sym}{it.price.toFixed(2)}</span>}
+                        {it.price != null && <span style={{ color: tokens.hint }}>{sym}{it.price.toFixed(2)}</span>}
                       </div>
                     ))}
                   </div>
@@ -314,42 +332,38 @@ export default function RetailCustomers() {
             </div>
 
             {/* GDPR data-subject actions */}
-            <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid #334155' }}>
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: `1px solid ${tokens.border}` }}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{tc('retail_customers.gdpr_title')}</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>{tc('retail_customers.gdpr_subtitle')}</div>
+              <div style={{ fontSize: 12, color: tokens.hint, marginBottom: 14 }}>{tc('retail_customers.gdpr_subtitle')}</div>
 
-              {gdprMsg && (
-                <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, fontSize: 12, background: gdprMsg.error ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)', color: gdprMsg.error ? '#fca5a5' : '#86efac', border: `1px solid ${gdprMsg.error ? '#ef4444' : '#22c55e'}33` }}>
-                  {gdprMsg.text}
-                </div>
-              )}
+              {gdprMsg && <Banner tone={gdprMsg.error ? 'danger' : 'success'}>{gdprMsg.text}</Banner>}
 
               <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                <button onClick={() => exportData('json')} disabled={exporting} style={{ flex: 1, background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 12px', borderRadius: 8, cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: exporting ? 0.6 : 1 }}>
-                  {exporting ? tc('retail_customers.exporting') : tc('retail_customers.export_json')}
-                </button>
-                <button onClick={() => exportData('csv')} disabled={exporting} style={{ flex: 1, background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 12px', borderRadius: 8, cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: exporting ? 0.6 : 1 }}>
-                  {exporting ? tc('retail_customers.exporting') : tc('retail_customers.export_csv')}
-                </button>
+                <Button variant="secondary" onClick={() => exportData('json')} loading={exporting} loadingLabel={tc('retail_customers.exporting')} style={{ flex: 1 }}>
+                  {tc('retail_customers.export_json')}
+                </Button>
+                <Button variant="secondary" onClick={() => exportData('csv')} loading={exporting} loadingLabel={tc('retail_customers.exporting')} style={{ flex: 1 }}>
+                  {tc('retail_customers.export_csv')}
+                </Button>
               </div>
 
               {!confirmDelete ? (
-                <button onClick={() => { setConfirmDelete(true); setGdprMsg(null) }} disabled={selected.id == null && !selected.phone} style={{ width: '100%', background: 'rgba(239,68,68,0.12)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                <Button variant="danger" onClick={() => { setConfirmDelete(true); setGdprMsg(null) }} disabled={selected.id == null && !selected.phone} style={{ width: '100%', background: 'var(--pos-danger-pale)', color: tokens.danger }}>
                   {tc('retail_customers.delete_anonymize')}
-                </button>
+                </Button>
               ) : (
-                <div style={{ background: '#0f172a', border: '1px solid #ef4444', borderRadius: 10, padding: 14 }}>
-                  <div style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 600, marginBottom: 6 }}>{tc('retail_customers.anonymize_confirm_title')}</div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 14, lineHeight: 1.5 }}>
+                <div style={{ background: tokens.bg, border: `1px solid ${tokens.danger}`, borderRadius: 10, padding: 14 }}>
+                  <div style={{ fontSize: 13, color: tokens.ink, fontWeight: 600, marginBottom: 6 }}>{tc('retail_customers.anonymize_confirm_title')}</div>
+                  <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 14, lineHeight: 1.5 }}>
                     {tc('retail_customers.anonymize_confirm_body')}
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1, background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                    <Button variant="secondary" onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1 }}>
                       {tc('retail_customers.cancel')}
-                    </button>
-                    <button onClick={anonymizeCustomer} disabled={deleting} style={{ flex: 1, background: '#ef4444', border: 'none', color: '#fff', padding: '10px 12px', borderRadius: 8, cursor: deleting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700, opacity: deleting ? 0.6 : 1 }}>
-                      {deleting ? tc('retail_customers.anonymizing') : tc('retail_customers.confirm_anonymize')}
-                    </button>
+                    </Button>
+                    <Button variant="danger" onClick={anonymizeCustomer} loading={deleting} loadingLabel={tc('retail_customers.anonymizing')} style={{ flex: 1 }}>
+                      {tc('retail_customers.confirm_anonymize')}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -363,7 +377,7 @@ export default function RetailCustomers() {
 
 function Chip({ label, active, color, onClick }: { label: string; active: boolean; color: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ background: active ? color : '#1e293b', border: `1px solid ${active ? color : '#334155'}`, color: active ? '#0f172a' : '#94a3b8', padding: '8px 16px', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+    <button onClick={onClick} style={{ background: active ? color : tokens.surface, border: `1px solid ${active ? color : tokens.border}`, color: active ? '#fff' : tokens.muted, padding: '8px 16px', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
       {label}
     </button>
   )
@@ -371,9 +385,9 @@ function Chip({ label, active, color, onClick }: { label: string; active: boolea
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 10, padding: '12px 10px', textAlign: 'center' }}>
-      <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{label}</div>
-      <div style={{ fontSize: 17, fontWeight: 700, color: accent ? ACC : '#f1f5f9', marginTop: 4 }}>{value}</div>
+    <div style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 10, padding: '12px 10px', textAlign: 'center' }}>
+      <div style={{ fontSize: 10, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</div>
+      <div style={{ fontSize: 17, fontWeight: 700, color: accent ? ACC : tokens.ink, marginTop: 4 }}>{value}</div>
     </div>
   )
 }

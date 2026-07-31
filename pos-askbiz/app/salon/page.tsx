@@ -3,13 +3,18 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { tokens, Button, Card } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
-const ACC = '#ec4899' // salon pink accent
-
+// Status → token color/ring pairs (ring used for the KPI card border tint).
+// 'neutral' has no color association of its own, so it borrows the ambient
+// border/muted tokens rather than a semantic color.
 const statusColor: Record<string, string> = {
-  good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', neutral: '#94a3b8',
+  good: tokens.success, warn: tokens.warning, bad: tokens.danger, neutral: tokens.muted,
+}
+const statusRing: Record<string, string> = {
+  good: tokens.successRing, warn: 'rgba(249,115,22,.25)', bad: tokens.dangerRing, neutral: tokens.border,
 }
 
 interface KPI {
@@ -172,74 +177,73 @@ export default function SalonHub() {
   ]
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon.header_title')}</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('salon.header_subtitle')}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: tokens.accent }}>{tc('salon.header_title')}</div>
+          <div style={{ fontSize: 12, color: tokens.muted }}>{tc('salon.header_subtitle')}</div>
         </div>
-        <button onClick={() => router.push('/pos')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          {tc('salon.back_pos')}
-        </button>
+        <Button variant="secondary" onClick={() => router.push('/pos')}>{tc('salon.back_pos')}</Button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12, marginBottom: 24 }}>
           {kpis.length === 0 && loading && (
-            <div style={{ color: '#64748b', fontSize: 13 }}>{tc('salon.loading')}</div>
+            <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('salon.loading')}</div>
           )}
           {kpis.map(kpi => (
-            <div key={kpi.label} className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px' }}>
-              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : '#f1f5f9', margin: '4px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kpi.value}</div>
-              {kpi.sub && <div style={{ fontSize: 11, color: '#64748b' }}>{kpi.sub}</div>}
+            <div key={kpi.label} className="pos-reveal" style={{ background: tokens.surface, border: `1px solid ${kpi.status ? statusRing[kpi.status] : tokens.border}`, borderRadius: 12, padding: '14px 16px' }}>
+              <div style={{ fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : tokens.ink, margin: '4px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kpi.value}</div>
+              {kpi.sub && <div style={{ fontSize: 11, color: tokens.hint }}>{kpi.sub}</div>}
             </div>
           ))}
         </div>
 
         {/* Navigation tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 24 }}>
-          {nav.map(n => (
+          {nav.map((n, idx) => (
             <button key={n.href} onClick={() => router.push(n.href)}
-              style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '20px 18px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#334155')}
+              className="pos-item"
+              style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: '20px 18px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = tokens.accent)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = tokens.border)}
             >
               <div style={{ fontSize: 26, marginBottom: 6 }}>{n.label.split(' ')[0]}</div>
-              <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 15 }}>{n.label.split(' ').slice(1).join(' ')}</div>
-              <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{n.desc}</div>
+              <div style={{ fontWeight: 600, color: tokens.ink, fontSize: 15 }}>{n.label.split(' ').slice(1).join(' ')}</div>
+              <div style={{ color: tokens.hint, fontSize: 12, marginTop: 2 }}>{n.desc}</div>
             </button>
           ))}
         </div>
 
         {/* Today's schedule preview */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
+        <Card>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ fontWeight: 700, fontSize: 15 }}>{tc('salon.schedule_title')}</div>
-            <button onClick={() => router.push('/salon/bookings')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
+            <Button variant="secondary" size="md" onClick={() => router.push('/salon/bookings')} style={{ padding: '6px 12px', fontSize: 12 }}>
               {tc('salon.all_bookings')}
-            </button>
+            </Button>
           </div>
           {schedule.length === 0 && (
-            <div style={{ color: '#64748b', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>
+            <div style={{ color: tokens.hint, fontSize: 13, padding: '20px 0', textAlign: 'center' }}>
               {loading ? tc('salon.loading') : tc('salon.schedule_empty')}
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {schedule.map((tx, idx) => (
-              <div key={tx.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: ACC, width: 56 }}>{fmtTime(tx.created_at)}</div>
+              <div key={tx.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.bg, borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: tokens.accent, width: 56 }}>{fmtTime(tx.created_at)}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{tx.pos_customers?.name || tx.pos_customers?.phone || tc('salon.walk_in')}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{serviceLabel(tc, tx)} · {tx.cashier?.name || tc('salon.unassigned')}</div>
+                  <div style={{ fontSize: 11, color: tokens.hint }}>{serviceLabel(tc, tx)} · {tx.cashier?.name || tc('salon.unassigned')}</div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{sym}{(tx.total || 0).toFixed(2)}</div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )

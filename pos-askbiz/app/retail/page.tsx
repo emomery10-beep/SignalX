@@ -3,12 +3,27 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { ListItem } from '@/components/ui'
 
-const ACC = '#22c55e'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:    'var(--pos-accent)',
+  danger:    'var(--pos-danger)',
+  success:   'var(--pos-success)',
+  warning:   'var(--pos-warning)',
+}
+
+const ACC = tokens.accent
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const statusColor: Record<string, string> = {
-  good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', neutral: '#94a3b8',
+  good: tokens.success, warn: tokens.warning, bad: tokens.danger, neutral: tokens.hint,
 }
 
 interface KPI { label: string; value: string; sub?: string; status?: 'good' | 'warn' | 'bad' | 'neutral' }
@@ -111,13 +126,13 @@ export default function RetailHub() {
   ]
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('retail.header_title')}</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail.header_subtitle')}</div>
+          <div style={{ fontSize: 12, color: tokens.hint }}>{tc('retail.header_subtitle')}</div>
         </div>
-        <button onClick={() => router.push('/pos')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+        <button onClick={() => router.push('/pos')} style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
           {tc('retail.back_pos')}
         </button>
       </div>
@@ -126,76 +141,77 @@ export default function RetailHub() {
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
           {kpis.map((kpi, idx) => (
-            <div key={kpi.label} className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : '#f1f5f9', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{kpi.value}</div>
-              {kpi.sub && <div style={{ fontSize: 11, color: '#64748b' }}>{kpi.sub}</div>}
+            <div key={kpi.label} className="pos-reveal" style={{ background: tokens.surface, border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : tokens.border}`, borderRadius: 12, padding: '14px 16px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+              <div style={{ fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : tokens.ink, margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{kpi.value}</div>
+              {kpi.sub && <div style={{ fontSize: 11, color: tokens.hint }}>{kpi.sub}</div>}
             </div>
           ))}
         </div>
 
         {/* Navigation tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 24 }}>
-          {nav.map(n => (
+          {nav.map((n, idx) => (
             <button key={n.href} onClick={() => router.push(n.href)}
-              style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '20px 18px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}
+              className="pos-reveal"
+              style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: '20px 18px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#334155')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = tokens.border)}
             >
               <div style={{ fontSize: 26, marginBottom: 6 }}>{n.label.split(' ')[0]}</div>
-              <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 15 }}>{n.label.split(' ').slice(1).join(' ')}</div>
-              <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{n.desc}</div>
+              <div style={{ fontWeight: 600, color: tokens.ink, fontSize: 15 }}>{n.label.split(' ').slice(1).join(' ')}</div>
+              <div style={{ color: tokens.hint, fontSize: 12, marginTop: 2 }}>{n.desc}</div>
             </button>
           ))}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {/* Recent Sales */}
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
+          <div style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: 20 }}>
             <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>{tc('retail.recent_sales_title')}</div>
-            {loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail.loading')}</div>}
-            {!loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail.no_sales_yet')}</div>}
+            {loading && recent.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail.loading')}</div>}
+            {!loading && recent.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail.no_sales_yet')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recent.map((t, idx) => {
                 const count = (t.pos_items || []).reduce((s, it) => s + (it.qty || it.quantity || 1), 0)
                 return (
-                  <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <ListItem key={t.id} index={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: tokens.bg, padding: '10px 14px', borderRadius: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{t.pos_customers?.name || tc('retail.walk_in')}</div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>
+                      <div style={{ fontSize: 11, color: tokens.hint }}>
                         {tc('retail.sale_items' + (count !== 1 ? '_other' : '_one'), { count })}{t.cashier ? ` · ${t.cashier}` : ''}{t.created_at ? ` · ${new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                       </div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: ACC }}>{sym}{(t.total || 0).toFixed(2)}</div>
-                  </div>
+                  </ListItem>
                 )
               })}
             </div>
           </div>
 
           {/* Low Stock Alert */}
-          <div style={{ background: '#1e293b', border: `1px solid ${lowStock.length ? '#f59e0b' : '#334155'}`, borderRadius: 12, padding: 20 }}>
-            <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15, color: lowStock.length ? '#f59e0b' : '#f1f5f9' }}>
+          <div style={{ background: tokens.surface, border: `1px solid ${lowStock.length ? tokens.warning : tokens.border}`, borderRadius: 12, padding: 20 }}>
+            <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15, color: lowStock.length ? tokens.warning : tokens.ink }}>
               {lowStock.length ? tc('retail.low_stock_title') : tc('retail.stock_levels_title')}
             </div>
-            {lowStock.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail.all_well_stocked')}</div>}
+            {lowStock.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail.all_well_stocked')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {lowStock.map((i, idx) => {
                 const q = i.stock_qty ?? 0
-                const col = q <= 0 ? '#ef4444' : '#f59e0b'
+                const col = q <= 0 ? tokens.danger : tokens.warning
                 return (
-                  <div key={i.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <ListItem key={i.id} index={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: tokens.bg, padding: '10px 14px', borderRadius: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{i.name}</div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{i.sku || i.category || '—'}</div>
+                      <div style={{ fontSize: 11, color: tokens.hint }}>{i.sku || i.category || '—'}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: col }}>{tc('retail.stock_left', { count: q })}</div>
-                  </div>
+                  </ListItem>
                 )
               })}
             </div>
             {lowStock.length > 0 && (
-              <button onClick={() => router.push('/retail/products?low=1')} style={{ width: '100%', marginTop: 14, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+              <button onClick={() => router.push('/retail/products?low=1')} style={{ width: '100%', marginTop: 14, background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '10px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
                 {tc('retail.manage_products')}
               </button>
             )}

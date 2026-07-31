@@ -3,8 +3,23 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { Button, Banner, Input } from '@/components/ui'
 
-const ACC = '#22c55e'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:    'var(--pos-accent)',
+  danger:    'var(--pos-danger)',
+  success:   'var(--pos-success)',
+  warning:   'var(--pos-warning)',
+}
+
+const ACC = tokens.accent
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface InvItem {
@@ -195,23 +210,23 @@ export default function RetailStocktake() {
     } finally { setSubmitting(false) }
   }
 
-  const inp: React.CSSProperties = { background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#f1f5f9', padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }
-  const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '1px solid #334155' }
-  const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: '1px solid #1e293b' }
+  const inp: React.CSSProperties = { background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 8, color: tokens.ink, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }
+  const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1, borderBottom: `1px solid ${tokens.border}` }
+  const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: `1px solid ${tokens.border}` }
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
+          <Button variant="secondary" onClick={() => router.push('/retail')}>←</Button>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 {tc('retail_stocktake.header_title')}</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_stocktake.header_subtitle')}</div>
+            <div style={{ fontSize: 12, color: tokens.muted }}>{tc('retail_stocktake.header_subtitle')}</div>
           </div>
         </div>
-        <button onClick={() => { setShowScan(true); setStage('idle'); setScanMsg('') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+        <Button variant="primary" onClick={() => { setShowScan(true); setStage('idle'); setScanMsg('') }}>
           📷 {tc('retail_stocktake.scan_shelf_btn')}
-        </button>
+        </Button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1100, margin: '0 auto' }}>
@@ -223,18 +238,18 @@ export default function RetailStocktake() {
           <SummaryCard label={tc('retail_stocktake.summary_variance_value')} value={`${varianceValue < 0 ? '-' : ''}${sym}${Math.abs(varianceValue).toFixed(2)}`} status={varianceValue === 0 ? 'good' : 'bad'} />
         </div>
 
-        {scanMsg && <div className="pos-banner" style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#e2e8f0' }}>{scanMsg}</div>}
+        {scanMsg && <Banner tone="info">{scanMsg}</Banner>}
 
         {/* Add products */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <div style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
           <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>{tc('retail_stocktake.add_products_title')}</div>
-          <input placeholder={tc('retail_stocktake.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%' }} />
+          <Input placeholder={tc('retail_stocktake.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} />
           {search && (
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {candidates.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_stocktake.search_no_matches')}</div>}
-              {candidates.map(i => (
-                <button key={i.id} onClick={() => { addRow(i); setSearch('') }} style={{ textAlign: 'left', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 14px', cursor: 'pointer', color: '#f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{i.name} <span style={{ color: '#64748b' }}>{i.sku || ''}</span></span>
+              {candidates.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail_stocktake.search_no_matches')}</div>}
+              {candidates.map((i, idx) => (
+                <button key={i.id} className="pos-item" onClick={() => { addRow(i); setSearch('') }} style={{ textAlign: 'left', background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 8, padding: '10px 14px', cursor: 'pointer', color: tokens.ink, display: 'flex', justifyContent: 'space-between', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <span>{i.name} <span style={{ color: tokens.hint }}>{i.sku || ''}</span></span>
                   <span style={{ color: ACC }}>{tc('retail_stocktake.add_btn')}</span>
                 </button>
               ))}
@@ -243,25 +258,25 @@ export default function RetailStocktake() {
         </div>
 
         {/* Count table */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+        <div style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
               <th style={th}>{tc('retail_stocktake.col_product')}</th><th style={th}>{tc('retail_stocktake.col_system')}</th><th style={th}>{tc('retail_stocktake.col_counted')}</th><th style={th}>{tc('retail_stocktake.col_variance')}</th><th style={th}></th>
             </tr></thead>
             <tbody>
-              {rows.length === 0 && <tr><td style={td} colSpan={5}><span style={{ color: '#64748b' }}>{loading ? tc('retail_stocktake.loading') : tc('retail_stocktake.empty_rows')}</span></td></tr>}
+              {rows.length === 0 && <tr><td style={td} colSpan={5}><span style={{ color: tokens.hint }}>{loading ? tc('retail_stocktake.loading') : tc('retail_stocktake.empty_rows')}</span></td></tr>}
               {rows.map((r, idx) => {
                 const sys = r.item.stock_qty ?? 0
                 const cnt = r.counted === '' ? null : parseInt(r.counted)
                 const diff = cnt == null || isNaN(cnt) ? null : cnt - sys
                 const mismatch = diff != null && diff !== 0
                 return (
-                  <tr key={r.item.id} className="pos-item" style={{ background: mismatch ? 'rgba(239,68,68,0.07)' : 'transparent', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                    <td style={{ ...td, fontWeight: 600 }}>{r.item.name}<div style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>{r.item.sku || r.item.category || ''}</div></td>
+                  <tr key={r.item.id} className="pos-item" style={{ background: mismatch ? 'var(--pos-danger-pale)' : 'transparent', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                    <td style={{ ...td, fontWeight: 600 }}>{r.item.name}<div style={{ fontSize: 11, color: tokens.hint, fontWeight: 400 }}>{r.item.sku || r.item.category || ''}</div></td>
                     <td style={td}>{sys}</td>
                     <td style={td}><input value={r.counted} onChange={e => setCount(r.item.id, e.target.value)} placeholder="—" inputMode="numeric" style={{ ...inp, width: 80, padding: '6px 8px' }} /></td>
-                    <td style={td}>{diff == null ? <span style={{ color: '#64748b' }}>—</span> : <span style={{ fontWeight: 700, color: diff === 0 ? '#22c55e' : '#ef4444' }}>{diff > 0 ? '+' : ''}{diff}</span>}</td>
-                    <td style={td}><button onClick={() => removeRow(r.item.id)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_stocktake.remove_btn')}</button></td>
+                    <td style={td}>{diff == null ? <span style={{ color: tokens.hint }}>—</span> : <span style={{ fontWeight: 700, color: diff === 0 ? tokens.success : tokens.danger }}>{diff > 0 ? '+' : ''}{diff}</span>}</td>
+                    <td style={td}><Button variant="secondary" size="md" onClick={() => removeRow(r.item.id)} style={{ padding: '6px 10px', fontSize: 12 }}>{tc('retail_stocktake.remove_btn')}</Button></td>
                   </tr>
                 )
               })}
@@ -269,11 +284,11 @@ export default function RetailStocktake() {
           </table>
         </div>
 
-        {submitMsg && <div className="pos-banner" style={{ marginBottom: 12, fontSize: 13, color: submitMsg.includes('✓') ? '#22c55e' : '#f59e0b' }}>{submitMsg}</div>}
+        {submitMsg && <Banner tone={submitMsg.includes('✓') ? 'success' : 'warning'}>{submitMsg}</Banner>}
 
-        <button className="pos-btn-primary" onClick={submitAdjustments} disabled={submitting || countedRows.length === 0} style={{ width: '100%', background: countedRows.length === 0 ? '#334155' : ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: countedRows.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15, opacity: submitting || countedRows.length === 0 ? 0.5 : 1 }}>
-          {submitting ? tc('retail_stocktake.saving') : tc('retail_stocktake.submit_adjustments', { count: countedRows.length })}
-        </button>
+        <Button variant="primary" size="lg" onClick={submitAdjustments} disabled={submitting || countedRows.length === 0} loading={submitting} loadingLabel={tc('retail_stocktake.saving')} style={{ width: '100%' }}>
+          {tc('retail_stocktake.submit_adjustments', { count: countedRows.length })}
+        </Button>
       </div>
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -282,27 +297,27 @@ export default function RetailStocktake() {
       {/* Scan modal */}
       {showScan && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }} onClick={closeScan}>
-          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480 }}>
+          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 480 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>{tc('retail_stocktake.scan_modal_title')}</div>
-              <button onClick={closeScan} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <Button variant="ghost" onClick={closeScan} style={{ fontSize: 20, padding: 4 }}>✕</Button>
             </div>
 
             {stage === 'idle' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>📷 {tc('retail_stocktake.open_camera')}</button>
-                <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>🖼️ {tc('retail_stocktake.choose_photo')}</button>
-                <div style={{ color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 4 }}>{tc('retail_stocktake.scan_hint')}</div>
+                <Button variant="primary" size="lg" onClick={startCamera} style={{ width: '100%' }}>📷 {tc('retail_stocktake.open_camera')}</Button>
+                <Button variant="secondary" size="lg" onClick={() => fileRef.current?.click()} style={{ width: '100%' }}>🖼️ {tc('retail_stocktake.choose_photo')}</Button>
+                <div style={{ color: tokens.hint, fontSize: 12, textAlign: 'center', marginTop: 4 }}>{tc('retail_stocktake.scan_hint')}</div>
               </div>
             )}
 
             {stage === 'camera' && (
               <div>
                 <video ref={videoRef} playsInline muted style={{ width: '100%', borderRadius: 12, background: '#000', maxHeight: 360, objectFit: 'cover' }} />
-                {camError && <div style={{ color: '#f59e0b', fontSize: 13, marginTop: 10 }}>{camError}</div>}
+                {camError && <div style={{ color: tokens.warning, fontSize: 13, marginTop: 10 }}>{camError}</div>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-                  <button onClick={captureFrame} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 }}>{tc('retail_stocktake.capture')}</button>
-                  <button onClick={() => { stopCamera(); setStage('idle') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>{tc('retail_stocktake.cancel')}</button>
+                  <Button variant="primary" size="lg" onClick={captureFrame} style={{ flex: 1 }}>{tc('retail_stocktake.capture')}</Button>
+                  <Button variant="secondary" size="lg" onClick={() => { stopCamera(); setStage('idle') }}>{tc('retail_stocktake.cancel')}</Button>
                 </div>
               </div>
             )}
@@ -310,15 +325,15 @@ export default function RetailStocktake() {
             {stage === 'scanning' && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                <div style={{ color: '#f1f5f9', fontWeight: 600 }}>{scanMsg || tc('retail_stocktake.scanning_fallback')}</div>
+                <div style={{ color: tokens.ink, fontWeight: 600 }}>{scanMsg || tc('retail_stocktake.scanning_fallback')}</div>
               </div>
             )}
 
             {stage === 'error' && (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-                <div style={{ color: '#f59e0b', fontSize: 14, marginBottom: 16 }}>{camError}</div>
-                <button onClick={() => setStage('idle')} style={{ background: ACC, border: 'none', color: '#fff', padding: '12px 24px', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>{tc('retail_stocktake.try_again')}</button>
+                <div style={{ color: tokens.warning, fontSize: 14, marginBottom: 16 }}>{camError}</div>
+                <Button variant="primary" onClick={() => setStage('idle')}>{tc('retail_stocktake.try_again')}</Button>
               </div>
             )}
           </div>
@@ -329,11 +344,11 @@ export default function RetailStocktake() {
 }
 
 function SummaryCard({ label, value, status }: { label: string; value: string; status?: 'good' | 'warn' | 'bad' }) {
-  const colors: Record<string, string> = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444' }
-  const col = status ? colors[status] : '#f1f5f9'
+  const colors: Record<string, string> = { good: tokens.success, warn: tokens.warning, bad: tokens.danger }
+  const col = status ? colors[status] : tokens.ink
   return (
-    <div style={{ background: '#1e293b', border: `1px solid ${status ? col + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px' }}>
-      <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{label}</div>
+    <div style={{ background: tokens.surface, border: `1px solid ${status ? col + '40' : tokens.border}`, borderRadius: 12, padding: '14px 16px' }}>
+      <div style={{ fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 700, color: col, margin: '4px 0' }}>{value}</div>
     </div>
   )

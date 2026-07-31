@@ -189,7 +189,7 @@ export default function GetListedPage() {
 
   // ══ SCREEN: INTRO ═════════════════════════════════════════════════════════
   if (stage === 'intro') return (
-    <div style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, textAlign: 'center' }}>
+    <div className="pos-screen" style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, textAlign: 'center' }}>
       <button onClick={() => router.push('/restaurant')} style={{ position: 'absolute', top: 44, left: 20, width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <IconArrowLeft size={18} />
       </button>
@@ -248,7 +248,7 @@ export default function GetListedPage() {
 
   // ══ SCREEN: READING (AI extraction spinner) ═══════════════════════════════
   if (stage === 'reading' || stage === 'saving') return (
-    <div style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+    <div className="pos-screen" style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
       {photoUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={photoUrl} alt="" style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 18, border: `2px solid ${ACCENT}40`, marginBottom: 28, opacity: 0.85 }} />
@@ -261,7 +261,7 @@ export default function GetListedPage() {
 
   // ══ SCREEN: REVIEW (extracted items, tap price to edit) ═══════════════════
   if (stage === 'review') return (
-    <div style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '48px 20px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
         <button onClick={retake} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconArrowLeft size={18} /></button>
         <div style={{ flex: 1 }}>
@@ -279,7 +279,7 @@ export default function GetListedPage() {
         )}
 
         {items.map((it, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '10px 12px', marginBottom: 10 }}>
+          <div key={i} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '10px 12px', marginBottom: 10, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <input value={it.name} onChange={e => setName(i, e.target.value)} placeholder={tc('onboarding_listing.item_name_placeholder')} aria-label={tc('onboarding_listing.item_name_placeholder')}
               style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', color: '#f1f5f9', fontSize: 17, fontWeight: 600, outline: 'none' }} />
             <button onClick={() => openPrice(i)} aria-label={tc('onboarding_listing.price_title')}
@@ -349,7 +349,7 @@ export default function GetListedPage() {
   ]
   const R = 84, C = 2 * Math.PI * R
   return (
-    <div style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ minHeight: '100dvh', background: BG, color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '48px 20px 8px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={() => router.push('/restaurant')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconArrowLeft size={18} /></button>
         <div style={{ fontWeight: 700, fontSize: 18 }}>{tc('onboarding_listing.gauge_title')}</div>
@@ -357,7 +357,7 @@ export default function GetListedPage() {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Ring gauge */}
-        <div style={{ position: 'relative', width: 200, height: 200, margin: '12px 0 8px' }}>
+        <div className="pos-reveal" style={{ position: 'relative', width: 200, height: 200, margin: '12px 0 8px' }}>
           <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
             <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="16" />
             <circle cx="100" cy="100" r={R} fill="none" stroke={score >= 100 ? GREEN : ACCENT} strokeWidth="16" strokeLinecap="round"
@@ -371,11 +371,11 @@ export default function GetListedPage() {
 
         {/* Gate list */}
         <div style={{ width: '100%', maxWidth: 380, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {GATES.map(g => {
+          {GATES.map((g, i) => {
             const st = readiness?.[g.key]
             const done = st === 'confirmed' || st === 'not_applicable'
             return (
-              <div key={g.key} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.05)', border: `1px solid ${done ? GREEN + '40' : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '14px 16px' }}>
+              <div key={g.key} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.05)', border: `1px solid ${done ? GREEN + '40' : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '14px 16px', animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                 <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: done ? GREEN : 'rgba(255,255,255,0.08)', border: done ? 'none' : '1.5px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {done && <IconCheck size={16} color="#052e16" />}
                 </div>

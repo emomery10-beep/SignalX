@@ -6,8 +6,9 @@ import { useLang } from '@/components/LanguageProvider'
 import MenuMatrix from '@/components/MenuMatrix'
 import ShiftProfitability from '@/components/ShiftProfitability'
 import WhatsAppAutopilot from '@/components/WhatsAppAutopilot'
+import { tokens, Button, Card, ListItem } from '@/components/ui'
 
-const ACC = '#d08a59'
+const ACC = tokens.accent
 
 interface KPI {
   label: string
@@ -131,7 +132,10 @@ export default function RestaurantHub() {
   }
 
   const statusColor: Record<string, string> = {
-    good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', neutral: '#94a3b8',
+    good: tokens.success, warn: tokens.warning, bad: tokens.danger, neutral: tokens.hint,
+  }
+  const statusRing: Record<string, string> = {
+    good: tokens.successRing, warn: 'rgba(249,115,22,.25)', bad: tokens.dangerRing, neutral: tokens.border,
   }
 
   const nav = [
@@ -149,22 +153,22 @@ export default function RestaurantHub() {
   ]
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('restaurant.header_title')}</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('restaurant.header_subtitle')}</div>
+          <div style={{ fontSize: 12, color: tokens.hint }}>{tc('restaurant.header_subtitle')}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {pendingOnline.length > 0 && (
-            <div style={{ background: '#ef4444', color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 700, animation: 'pulse 1s infinite' }}>
+            <div style={{ background: tokens.danger, color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 700, animation: 'pulse 1s infinite' }}>
               {tc('restaurant.online_orders_pending_' + (pendingOnline.length === 1 ? 'one' : 'other'), { count: pendingOnline.length })}
             </div>
           )}
-          <button onClick={() => router.push('/pos')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+          <Button variant="secondary" onClick={() => router.push('/pos')}>
             {tc('restaurant.back_pos')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -172,25 +176,26 @@ export default function RestaurantHub() {
 
         {/* Pending Online Orders — top alert */}
         {pendingOnline.length > 0 && (
-          <div className="pos-banner" style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, color: '#fca5a5', marginBottom: 12 }}>{tc('restaurant.online_awaiting')}</div>
+          <div className="pos-banner" style={{ background: tokens.dangerPale, border: `1px solid ${tokens.dangerRing}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+            <div style={{ fontWeight: 700, color: tokens.danger, marginBottom: 12 }}>{tc('restaurant.online_awaiting')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {pendingOnline.map((o, idx) => (
-                <div key={o.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                <ListItem key={o.id} index={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: tokens.surface, padding: '10px 14px', borderRadius: 8 }}>
                   <div>
-                    <span style={{ fontWeight: 600, color: '#fff' }}>{o.customer_name || tc('restaurant.customer_fallback')}</span>
-                    <span style={{ color: '#fca5a5', marginLeft: 8 }}>{sym}{o.total?.toFixed(2)}</span>
-                    <span style={{ color: '#94a3b8', marginLeft: 8, fontSize: 12 }}>{tc('restaurant.via_source', { source: o.source })}</span>
+                    <span style={{ fontWeight: 600, color: tokens.ink }}>{o.customer_name || tc('restaurant.customer_fallback')}</span>
+                    <span style={{ color: tokens.danger, marginLeft: 8 }}>{sym}{o.total?.toFixed(2)}</span>
+                    <span style={{ color: tokens.hint, marginLeft: 8, fontSize: 12 }}>{tc('restaurant.via_source', { source: o.source })}</span>
                   </div>
-                  <button
+                  <Button
+                    variant="primary"
+                    size="md"
                     onClick={() => acceptOnline(o.id)}
                     disabled={accepting === o.id}
-                    className="pos-btn-primary"
-                    style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 16px', borderRadius: 6, cursor: accepting === o.id ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13, opacity: accepting === o.id ? 0.5 : 1 }}
+                    style={{ padding: '6px 16px', borderRadius: 6 }}
                   >
                     {accepting === o.id ? '...' : tc('restaurant.accept')}
-                  </button>
-                </div>
+                  </Button>
+                </ListItem>
               ))}
             </div>
           </div>
@@ -199,11 +204,11 @@ export default function RestaurantHub() {
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
           {kpis.map(kpi => (
-            <div key={kpi.label} style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px' }}>
-              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : '#f1f5f9', margin: '4px 0' }}>{kpi.value}</div>
-              {kpi.sub && <div style={{ fontSize: 11, color: '#64748b' }}>{kpi.sub}</div>}
-            </div>
+            <Card key={kpi.label} style={{ border: `1px solid ${kpi.status ? statusRing[kpi.status] : tokens.border}`, borderRadius: 12, padding: '14px 16px' }}>
+              <div style={{ fontSize: 11, color: tokens.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : tokens.ink, margin: '4px 0' }}>{kpi.value}</div>
+              {kpi.sub && <div style={{ fontSize: 11, color: tokens.muted }}>{kpi.sub}</div>}
+            </Card>
           ))}
         </div>
 
@@ -211,19 +216,19 @@ export default function RestaurantHub() {
         {anomalies.length > 0 && (
           <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {anomalies.map((a, i) => {
-              const bg = a.severity === 'critical' ? '#7f1d1d' : a.severity === 'warning' ? '#451a03' : '#1e1b4b'
-              const border = a.severity === 'critical' ? '#ef4444' : a.severity === 'warning' ? '#f59e0b' : '#6366f1'
+              const bg = a.severity === 'critical' ? tokens.dangerPale : a.severity === 'warning' ? 'rgba(249,115,22,.08)' : tokens.accentPale
+              const border = a.severity === 'critical' ? tokens.dangerRing : a.severity === 'warning' ? 'rgba(249,115,22,.25)' : tokens.accentRing
               const icon = a.severity === 'critical' ? '🚨' : a.severity === 'warning' ? '⚠️' : 'ℹ️'
               return (
                 <div key={i} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 8, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, maxWidth: 420 }}>
                   <span>{icon}</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#f1f5f9' }}>{a.title}</div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: tokens.ink }}>{a.title}</div>
                   </div>
                   {a.prompt && (
                     <button
                       onClick={() => router.push(`/pos?q=${encodeURIComponent(a.prompt)}`)}
-                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#94a3b8', padding: '3px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}
+                      style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '3px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}
                     >
                       {tc('restaurant.ask_ai')}
                     </button>
@@ -234,7 +239,7 @@ export default function RestaurantHub() {
                       await fetch('/api/pos/restaurant/anomalies', { method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: (a as any).id }) })
                       setAnomalies(prev => prev.filter((_, idx) => idx !== i))
                     }}
-                    style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}
+                    style={{ background: 'none', border: 'none', color: tokens.muted, cursor: 'pointer', fontSize: 14, padding: '0 2px' }}
                   >
                     ✕
                   </button>
@@ -246,117 +251,118 @@ export default function RestaurantHub() {
 
         {/* Daily Brief card */}
         {brief && (
-          <div className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: '18px 20px', marginBottom: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div className="pos-reveal" style={{ background: tokens.surface, border: `1px solid ${tokens.accentRing}`, borderRadius: 12, padding: '18px 20px', marginBottom: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
             {/* Health score ring */}
             <div style={{ flexShrink: 0, textAlign: 'center' }}>
               <svg width={64} height={64} viewBox="0 0 64 64">
-                <circle cx={32} cy={32} r={26} fill="none" stroke="#334155" strokeWidth={6} />
+                <circle cx={32} cy={32} r={26} fill="none" stroke={tokens.border} strokeWidth={6} />
                 <circle
                   cx={32} cy={32} r={26} fill="none"
-                  stroke={brief.health_score >= 75 ? '#22c55e' : brief.health_score >= 50 ? '#f59e0b' : '#ef4444'}
+                  stroke={brief.health_score >= 75 ? tokens.success : brief.health_score >= 50 ? tokens.warning : tokens.danger}
                   strokeWidth={6} strokeLinecap="round"
                   strokeDasharray={`${(brief.health_score / 100) * 163.4} 163.4`}
                   transform="rotate(-90 32 32)"
                 />
-                <text x={32} y={37} textAnchor="middle" fill="#f1f5f9" fontSize={14} fontWeight={700}>{brief.health_score}</text>
+                <text x={32} y={37} textAnchor="middle" fill={tokens.ink} fontSize={14} fontWeight={700}>{brief.health_score}</text>
               </svg>
-              <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{tc('restaurant.brief_health')}</div>
+              <div style={{ fontSize: 10, color: tokens.muted, marginTop: 2 }}>{tc('restaurant.brief_health')}</div>
             </div>
             {/* Brief text */}
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               <div>
-                <div style={{ fontSize: 10, color: '#22c55e', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_going_well')}</div>
-                <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.4 }}>{brief.improved}</div>
+                <div style={{ fontSize: 10, color: tokens.success, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_going_well')}</div>
+                <div style={{ fontSize: 13, color: tokens.ink, lineHeight: 1.4 }}>{brief.improved}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_watch_out')}</div>
-                <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.4 }}>{brief.worsened}</div>
+                <div style={{ fontSize: 10, color: tokens.warning, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_watch_out')}</div>
+                <div style={{ fontSize: 13, color: tokens.ink, lineHeight: 1.4 }}>{brief.worsened}</div>
               </div>
               <div>
                 <div style={{ fontSize: 10, color: ACC, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_action')}</div>
-                <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.4 }}>{brief.action}</div>
+                <div style={{ fontSize: 13, color: tokens.ink, lineHeight: 1.4 }}>{brief.action}</div>
               </div>
             </div>
-            <button
+            <Button
+              variant="secondary"
               onClick={() => router.push('/pos?q=Give+me+a+full+restaurant+performance+analysis+for+today')}
-              style={{ flexShrink: 0, background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}
+              style={{ flexShrink: 0 }}
             >
               {tc('restaurant.brief_deep_dive')}
-            </button>
+            </Button>
           </div>
         )}
 
         {/* 86 Board */}
         {eightySix.length > 0 && (
-          <div style={{ background: '#1e293b', border: '1px solid #f59e0b', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: tokens.surface, border: `1px solid ${tokens.warning}`, borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 18 }}>🚫</span>
             <div>
-              <div style={{ fontWeight: 700, color: '#f59e0b', fontSize: 13 }}>{tc('restaurant.eighty_six_title')}</div>
-              <div style={{ color: '#e2e8f0', fontSize: 13, marginTop: 2 }}>{eightySix.join(' · ')}</div>
+              <div style={{ fontWeight: 700, color: tokens.warning, fontSize: 13 }}>{tc('restaurant.eighty_six_title')}</div>
+              <div style={{ color: tokens.ink, fontSize: 13, marginTop: 2 }}>{eightySix.join(' · ')}</div>
             </div>
-            <button onClick={() => router.push('/restaurant/menu')} style={{ marginLeft: 'auto', background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
+            <Button variant="secondary" onClick={() => router.push('/restaurant/menu')} style={{ marginLeft: 'auto' }}>
               {tc('restaurant.manage_menu')}
-            </button>
+            </Button>
           </div>
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
           {/* Table Status */}
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
+          <Card>
             <div style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>{tc('restaurant.table_status')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               {[
-                { label: tc('restaurant.table_occupied'), count: tablesByStatus.occupied, color: '#ef4444' },
-                { label: tc('restaurant.table_available'), count: tablesByStatus.available, color: '#22c55e' },
-                { label: tc('restaurant.table_cleaning'), count: tablesByStatus.cleaning, color: '#f59e0b' },
-                { label: tc('restaurant.table_reserved'), count: tablesByStatus.reserved, color: '#8b5cf6' },
+                { label: tc('restaurant.table_occupied'), count: tablesByStatus.occupied, color: tokens.danger },
+                { label: tc('restaurant.table_available'), count: tablesByStatus.available, color: tokens.success },
+                { label: tc('restaurant.table_cleaning'), count: tablesByStatus.cleaning, color: tokens.warning },
+                { label: tc('restaurant.table_reserved'), count: tablesByStatus.reserved, color: 'var(--factory-dispatch)' },
               ].map(s => (
-                <div key={s.label} style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 13, color: '#94a3b8' }}>{s.label}</span>
+                <div key={s.label} style={{ background: tokens.bg, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, color: tokens.hint }}>{s.label}</span>
                   <span style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.count}</span>
                 </div>
               ))}
             </div>
-            <button onClick={() => router.push('/restaurant/floor')} className="pos-btn-primary" style={{ width: '100%', background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+            <Button variant="primary" onClick={() => router.push('/restaurant/floor')} style={{ width: '100%' }}>
               {tc('restaurant.open_floor_plan')}
-            </button>
-          </div>
+            </Button>
+          </Card>
 
           {/* Top Dishes */}
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
+          <Card>
             <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>{tc('restaurant.top_dishes_title')}</div>
-            {topDishes.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('restaurant.no_orders_yet')}</div>}
+            {topDishes.length === 0 && <div style={{ color: tokens.muted, fontSize: 13 }}>{tc('restaurant.no_orders_yet')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {topDishes.map((dish, i) => (
-                <div key={dish.name} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 10, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
-                  <span style={{ color: '#64748b', fontSize: 12, width: 16, textAlign: 'right' }}>{i + 1}</span>
+                <ListItem key={dish.name} index={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ color: tokens.muted, fontSize: 12, width: 16, textAlign: 'right' }}>{i + 1}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{dish.name}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>{tc('restaurant.dish_sold_revenue', { qty: dish.qty, sym, revenue: dish.revenue?.toFixed(2) ?? '0.00' })}</div>
+                    <div style={{ fontSize: 11, color: tokens.muted }}>{tc('restaurant.dish_sold_revenue', { qty: dish.qty, sym, revenue: dish.revenue?.toFixed(2) ?? '0.00' })}</div>
                   </div>
-                  <div style={{ fontSize: 12, color: dish.margin_pct >= 65 ? '#22c55e' : dish.margin_pct >= 50 ? '#f59e0b' : '#ef4444', fontWeight: 700 }}>
+                  <div style={{ fontSize: 12, color: dish.margin_pct >= 65 ? tokens.success : dish.margin_pct >= 50 ? tokens.warning : tokens.danger, fontWeight: 700 }}>
                     {dish.margin_pct}%
                   </div>
-                </div>
+                </ListItem>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Menu Engineering Matrix */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <MenuMatrix sym={sym} />
-        </div>
+        </Card>
 
         {/* Shift Profitability */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <ShiftProfitability sym={sym} />
-        </div>
+        </Card>
 
         {/* WhatsApp Autopilot */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <WhatsAppAutopilot />
-        </div>
+        </Card>
 
         {/* Navigation tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
@@ -369,14 +375,14 @@ export default function RestaurantHub() {
             return (
             <button key={n.href} onClick={() => router.push(n.href)}
               className="pos-item"
-              style={{ position: 'relative', background: '#1e293b', border: `1px solid ${isGetListed ? ACC + '80' : '#334155'}`, borderRadius: 12, padding: '18px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
+              style={{ position: 'relative', background: tokens.surface, border: `1px solid ${isGetListed ? tokens.accentRing : tokens.border}`, borderRadius: 12, padding: '18px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = isGetListed ? ACC + '80' : '#334155')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = isGetListed ? tokens.accentRing : tokens.border)}
             >
-              {badge && <span style={{ position: 'absolute', top: 12, right: 12, background: done ? '#16a34a' : ACC, color: '#0f172a', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 100, fontVariantNumeric: 'tabular-nums' }}>{badge}</span>}
+              {badge && <span style={{ position: 'absolute', top: 12, right: 12, background: done ? tokens.success : ACC, color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 100, fontVariantNumeric: 'tabular-nums' }}>{badge}</span>}
               <div style={{ fontSize: 22, marginBottom: 6 }}>{n.label.split(' ')[0]}</div>
-              <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 14 }}>{n.label.split(' ').slice(1).join(' ')}</div>
-              <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{n.desc}</div>
+              <div style={{ fontWeight: 600, color: tokens.ink, fontSize: 14 }}>{n.label.split(' ').slice(1).join(' ')}</div>
+              <div style={{ color: tokens.muted, fontSize: 12, marginTop: 2 }}>{n.desc}</div>
             </button>
           )})}
         </div>

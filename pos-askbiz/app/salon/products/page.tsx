@@ -3,9 +3,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
-
-const ACC = '#ec4899' // salon pink accent
-const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
+import { tokens, Button, Banner, Input, Card } from '@/components/ui'
 
 interface InvItem {
   id: string
@@ -222,129 +220,103 @@ export default function SalonProducts() {
     setScanActive(false)
   }
 
-  const inputStyle: React.CSSProperties = { background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit' }
-  const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }
+  // Compact inline controls (search box in the table header, the usage-log
+  // product/amount/service row) stay hand-styled — wrapping them in the shared
+  // FormField components would inject a 16px margin-bottom wrapper that breaks
+  // these tight single-line layouts.
+  const inputStyle: React.CSSProperties = { background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.ink, borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit' }
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => router.push('/salon')} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← {tc('salon_products.back_salon')}</button>
+          <Button variant="secondary" onClick={() => router.push('/salon')}>← {tc('salon_products.back_salon')}</Button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon_products.header_title')}</div>
-            <div style={{ fontSize: 12, color: C.muted }}>{tc('salon_products.header_subtitle')}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: tokens.accent }}>{tc('salon_products.header_title')}</div>
+            <div style={{ fontSize: 12, color: tokens.muted }}>{tc('salon_products.header_subtitle')}</div>
           </div>
         </div>
-        <button onClick={() => { setShowForm(s => !s); setFormError('') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+        <Button variant="primary" onClick={() => { setShowForm(s => !s); setFormError('') }}>
           {showForm ? tc('salon_products.cancel') : tc('salon_products.add_product')}
-        </button>
+        </Button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* Add product form */}
         {showForm && (
-          <div style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+          <div className="pos-reveal" style={{ marginBottom: 20 }}>
+          <Card style={{ border: `1px solid ${tokens.accentRing}` }}>
             <div style={{ fontWeight: 700, marginBottom: 14 }}>{tc('salon_products.form_title')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_name')}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={tc('salon_products.placeholder_name')} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_sku')}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} value={productForm.sku} onChange={e => setProductForm(f => ({ ...f, sku: e.target.value }))} placeholder={tc('salon_products.placeholder_sku')} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_stock')}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="numeric" value={productForm.stock_qty} onChange={e => setProductForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="0" />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_cost', { sym })}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="decimal" value={productForm.cost_price} onChange={e => setProductForm(f => ({ ...f, cost_price: e.target.value }))} placeholder="0.00" />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_price', { sym })}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="decimal" value={productForm.sale_price} onChange={e => setProductForm(f => ({ ...f, sale_price: e.target.value }))} placeholder="0.00" />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_unit')}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} value={productForm.unit} onChange={e => setProductForm(f => ({ ...f, unit: e.target.value }))} placeholder={tc('salon_products.placeholder_unit')} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: C.muted, marginBottom: 4, display: 'block' }}>{tc('salon_products.label_reorder')}</label>
-                <input style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} inputMode="numeric" value={productForm.low_stock_threshold} onChange={e => setProductForm(f => ({ ...f, low_stock_threshold: e.target.value }))} placeholder="5" />
-              </div>
+              <Input label={tc('salon_products.label_name')} value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={tc('salon_products.placeholder_name')} />
+              <Input label={tc('salon_products.label_sku')} value={productForm.sku} onChange={e => setProductForm(f => ({ ...f, sku: e.target.value }))} placeholder={tc('salon_products.placeholder_sku')} />
+              <Input label={tc('salon_products.label_stock')} inputMode="numeric" value={productForm.stock_qty} onChange={e => setProductForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="0" />
+              <Input label={tc('salon_products.label_cost', { sym })} inputMode="decimal" value={productForm.cost_price} onChange={e => setProductForm(f => ({ ...f, cost_price: e.target.value }))} placeholder="0.00" />
+              <Input label={tc('salon_products.label_price', { sym })} inputMode="decimal" value={productForm.sale_price} onChange={e => setProductForm(f => ({ ...f, sale_price: e.target.value }))} placeholder="0.00" />
+              <Input label={tc('salon_products.label_unit')} value={productForm.unit} onChange={e => setProductForm(f => ({ ...f, unit: e.target.value }))} placeholder={tc('salon_products.placeholder_unit')} />
+              <Input label={tc('salon_products.label_reorder')} inputMode="numeric" value={productForm.low_stock_threshold} onChange={e => setProductForm(f => ({ ...f, low_stock_threshold: e.target.value }))} placeholder="5" />
             </div>
-            {formError && (
-              <div style={{ marginTop: 12, background: '#450a0a', border: `1px solid ${C.bad}`, borderRadius: 8, padding: '8px 12px', color: '#fca5a5', fontSize: 12.5 }}>
-                ⚠️ {formError}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button onClick={addProduct} disabled={saving} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: saving ? 'default' : 'pointer', fontWeight: 600, fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? tc('salon_products.saving') : tc('salon_products.save_product')}</button>
-              <button type="button" onClick={() => { setShowForm(false); setFormError('') }} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_products.cancel')}</button>
+            {formError && <Banner tone="danger">{formError}</Banner>}
+            <div style={{ display: 'flex', gap: 10, marginTop: -4 }}>
+              <Button variant="primary" onClick={addProduct} loading={saving} loadingLabel={tc('salon_products.saving')}>{tc('salon_products.save_product')}</Button>
+              <Button type="button" variant="secondary" onClick={() => { setShowForm(false); setFormError('') }}>{tc('salon_products.cancel')}</Button>
             </div>
+          </Card>
           </div>
         )}
 
         {/* Low stock alerts */}
         {lowStock.length > 0 && (
-          <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
-            <div>
-              <div style={{ fontWeight: 700, color: C.warn, fontSize: 13 }}>{lowStock.length === 1 ? tc('salon_products.low_stock_one', { count: lowStock.length }) : tc('salon_products.low_stock_many', { count: lowStock.length })}</div>
-              <div style={{ color: '#e2e8f0', fontSize: 13, marginTop: 2 }}>
-                {lowStock.map(p => `${p.name} (${p.stock_qty})`).join(' · ')}
-              </div>
-            </div>
-          </div>
+          <Banner tone="warning">
+            <strong>{lowStock.length === 1 ? tc('salon_products.low_stock_one', { count: lowStock.length }) : tc('salon_products.low_stock_many', { count: lowStock.length })}</strong>
+            <br />
+            {lowStock.map(p => `${p.name} (${p.stock_qty})`).join(' · ')}
+          </Banner>
         )}
 
         {/* Retail products table */}
-        <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #334155' }}>
+        <Card style={{ padding: 0, overflow: 'hidden', marginBottom: 20 }}>
+          <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${tokens.border}` }}>
             <div style={{ fontWeight: 700, fontSize: 15 }}>{tc('salon_products.retail_products')}</div>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('salon_products.search_placeholder')} style={{ ...inputStyle, width: 200 }} />
           </div>
           <div style={{ overflowX: 'auto' }}>
             <div style={{ minWidth: 720 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: `1px solid ${tokens.border}`, fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>
                 <div>{tc('salon_products.col_name')}</div><div>{tc('salon_products.col_stock')}</div><div>{tc('salon_products.col_price')}</div><div>{tc('salon_products.col_cost')}</div><div>{tc('salon_products.col_margin')}</div><div>{tc('salon_products.col_units_sold')}</div>
               </div>
-              {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>{tc('salon_products.loading')}</div>}
-              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{search.trim() ? tc('salon_products.empty_search') : tc('salon_products.empty_products')}</div>}
+              {loading && <div style={{ padding: 20, color: tokens.hint, fontSize: 13 }}>{tc('salon_products.loading')}</div>}
+              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: tokens.hint, fontSize: 13, textAlign: 'center' }}>{search.trim() ? tc('salon_products.empty_search') : tc('salon_products.empty_products')}</div>}
               {filtered.map((p, idx) => {
                 const m = margin(p)
                 const low = p.stock_qty <= (p.low_stock_threshold || 5)
                 return (
-                  <div key={p.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                    <div style={{ fontWeight: 600 }}>{p.name}{p.sku && <span style={{ color: C.dim, fontWeight: 400, marginLeft: 6, fontSize: 11 }}>{p.sku}</span>}</div>
-                    <div style={{ color: low ? C.bad : '#e2e8f0', fontWeight: low ? 700 : 400 }}>{p.stock_qty}{low && ' ⚠️'}</div>
+                  <div key={p.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: `1px solid ${tokens.border}`, fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                    <div style={{ fontWeight: 600 }}>{p.name}{p.sku && <span style={{ color: tokens.hint, fontWeight: 400, marginLeft: 6, fontSize: 11 }}>{p.sku}</span>}</div>
+                    <div style={{ color: low ? tokens.danger : tokens.ink, fontWeight: low ? 700 : 400 }}>{p.stock_qty}{low && ' ⚠️'}</div>
                     <div>{sym}{(p.sale_price || 0).toFixed(2)}</div>
-                    <div style={{ color: C.muted }}>{sym}{(p.cost_price || 0).toFixed(2)}</div>
-                    <div style={{ color: m >= 50 ? C.good : m >= 30 ? C.warn : C.bad, fontWeight: 700 }}>{m.toFixed(0)}%</div>
-                    <div style={{ color: C.muted }}>{soldMap[p.id] || 0}</div>
+                    <div style={{ color: tokens.muted }}>{sym}{(p.cost_price || 0).toFixed(2)}</div>
+                    <div style={{ color: m >= 50 ? tokens.success : m >= 30 ? tokens.warning : tokens.danger, fontWeight: 700 }}>{m.toFixed(0)}%</div>
+                    <div style={{ color: tokens.muted }}>{soldMap[p.id] || 0}</div>
                   </div>
                 )
               })}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Backbar usage logging */}
-        <div style={card}>
+        <Card>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('salon_products.backbar_title')}</div>
-          <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>{tc('salon_products.backbar_subtitle')}</div>
+          <div style={{ fontSize: 12, color: tokens.hint, marginBottom: 14 }}>{tc('salon_products.backbar_subtitle')}</div>
 
-          {scanError && (
-            <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>⚠️ {scanError}</div>
-          )}
+          {scanError && <Banner tone="warning">{scanError}</Banner>}
           {scanActive && (
-            <div style={{ marginBottom: 14 }}>
+            <div className="pos-reveal" style={{ marginBottom: 14 }}>
               <video ref={videoRef} playsInline muted style={{ width: '100%', maxWidth: 360, borderRadius: 10, background: '#000', display: 'block' }} />
-              <div style={{ fontSize: 12, color: C.dim, margin: '8px 0' }}>{tc('salon_products.scan_hint')}</div>
-              <button onClick={stopScan} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_products.stop_camera')}</button>
+              <div style={{ fontSize: 12, color: tokens.hint, margin: '8px 0' }}>{tc('salon_products.scan_hint')}</div>
+              <Button variant="secondary" onClick={stopScan}>{tc('salon_products.stop_camera')}</Button>
             </div>
           )}
 
@@ -354,24 +326,24 @@ export default function SalonProducts() {
             <input style={inputStyle} placeholder={tc('salon_products.form_amount')} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
             <input style={inputStyle} placeholder={tc('salon_products.form_service')} value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
             <div style={{ display: 'flex', gap: 8 }}>
-              {!scanActive && <button type="button" onClick={startScan} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '9px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_products.scan')}</button>}
-              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc('salon_products.log')}</button>
+              {!scanActive && <Button type="button" variant="secondary" onClick={startScan}>{tc('salon_products.scan')}</Button>}
+              <Button type="submit" variant="primary">{tc('salon_products.log')}</Button>
             </div>
           </form>
 
           {usage.length > 0 && (
             <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {usage.map((u, idx) => (
-                <div key={u.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                <div key={u.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.bg, borderRadius: 8, padding: '10px 14px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <span style={{ fontWeight: 600, flex: 1 }}>{u.product_name}</span>
-                  <span style={{ color: C.muted }}>{u.amount_used ? `${u.amount_used}${u.unit || ''}` : tc('salon_products.usage_dash')}</span>
-                  <span style={{ color: C.muted }}>{u.service_name || tc('salon_products.usage_general')}</span>
-                  <span style={{ color: ACC, fontWeight: 700 }}>{tc('salon_products.usage_per_svc', { sym, cost: (u.cost || 0).toFixed(2) })}</span>
+                  <span style={{ color: tokens.muted }}>{u.amount_used ? `${u.amount_used}${u.unit || ''}` : tc('salon_products.usage_dash')}</span>
+                  <span style={{ color: tokens.muted }}>{u.service_name || tc('salon_products.usage_general')}</span>
+                  <span style={{ color: tokens.accent, fontWeight: 700 }}>{tc('salon_products.usage_per_svc', { sym, cost: (u.cost || 0).toFixed(2) })}</span>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )

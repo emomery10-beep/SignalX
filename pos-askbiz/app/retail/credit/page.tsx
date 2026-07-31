@@ -3,8 +3,23 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { Button, Banner, Input } from '@/components/ui'
 
-const ACC = '#22c55e'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:    'var(--pos-accent)',
+  danger:    'var(--pos-danger)',
+  success:   'var(--pos-success)',
+  warning:   'var(--pos-warning)',
+}
+
+const ACC = tokens.accent
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface Customer { id: string; name: string | null; phone: string | null; balance_owed: number }
@@ -196,47 +211,43 @@ export default function CreditPage() {
     finally { setImportBusy(false) }
   }
 
-  const inp: React.CSSProperties = { background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#f1f5f9', padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }
-  const bigBtn: React.CSSProperties = { width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: ACC, color: '#052e16', fontWeight: 700, fontSize: 15, cursor: 'pointer' }
-  const ghostBtn: React.CSSProperties = { width: '100%', padding: '13px', borderRadius: 10, border: '1px solid #334155', background: 'transparent', color: '#94a3b8', fontWeight: 600, fontSize: 14, cursor: 'pointer' }
+  const inp: React.CSSProperties = { background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 8, color: tokens.ink, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => (screen === 'list' ? router.push('/retail') : setScreen('list'))} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Button variant="secondary" onClick={() => (screen === 'list' ? router.push('/retail') : setScreen('list'))}>←</Button>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>🧾 {tc('retail_credit.header_title')}</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_credit.header_subtitle')}</div>
+          <div style={{ fontSize: 12, color: tokens.muted }}>{tc('retail_credit.header_subtitle')}</div>
         </div>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 640, margin: '0 auto' }}>
-        {error && (
-          <div role="alert" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>
-        )}
+        {error && <Banner tone="danger">{error}</Banner>}
 
         {/* ── LIST: who owes me ── */}
         {screen === 'list' && (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-              <button style={bigBtn} onClick={openImportCamera}>{tc('retail_credit.import_cta')}</button>
-              <button style={ghostBtn} onClick={() => { setManualName(''); setManualPhone(''); setManualAmount(''); setError(''); setScreen('add-manual') }}>
+              <Button variant="primary" size="lg" onClick={openImportCamera} style={{ width: '100%' }}>{tc('retail_credit.import_cta')}</Button>
+              <Button variant="secondary" size="lg" onClick={() => { setManualName(''); setManualPhone(''); setManualAmount(''); setError(''); setScreen('add-manual') }} style={{ width: '100%' }}>
                 {tc('retail_credit.add_manual_cta')}
-              </button>
+              </Button>
             </div>
 
-            {loading && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_credit.loading')}</div>}
+            {loading && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail_credit.loading')}</div>}
             {!loading && !error && customers.length === 0 && (
-              <div style={{ color: '#64748b', fontSize: 13, textAlign: 'center', padding: '30px 0' }}>{tc('retail_credit.no_one_owes')}</div>
+              <div style={{ color: tokens.hint, fontSize: 13, textAlign: 'center', padding: '30px 0' }}>{tc('retail_credit.no_one_owes')}</div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {customers.map(c => (
-                <button key={c.id} onClick={() => openDetail(c)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}>
+              {customers.map((c, idx) => (
+                <button key={c.id} className="pos-item" onClick={() => openDetail(c)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 15 }}>{c.name || c.phone || tc('retail_customers.unknown_customer')}</div>
-                    {c.name && c.phone && <div style={{ fontSize: 12, color: '#64748b' }}>{c.phone}</div>}
+                    {c.name && c.phone && <div style={{ fontSize: 12, color: tokens.hint }}>{c.phone}</div>}
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#f59e0b' }}>{sym}{c.balance_owed.toFixed(2)}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: tokens.warning }}>{sym}{c.balance_owed.toFixed(2)}</div>
                 </button>
               ))}
             </div>
@@ -246,29 +257,29 @@ export default function CreditPage() {
         {/* ── DETAIL: history + record a repayment ── */}
         {screen === 'detail' && selected && (
           <>
-            <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 18, marginBottom: 20, textAlign: 'center' }}>
+            <div className="pos-reveal" style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: 18, marginBottom: 20, textAlign: 'center' }}>
               <div style={{ fontSize: 15, fontWeight: 600 }}>{selected.name || selected.phone}</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{tc('retail_credit.owes_you')}</div>
-              <div style={{ fontSize: 30, fontWeight: 700, color: '#f59e0b', marginTop: 4 }}>{sym}{selected.balance_owed.toFixed(2)}</div>
+              <div style={{ fontSize: 12, color: tokens.hint, marginTop: 2 }}>{tc('retail_credit.owes_you')}</div>
+              <div style={{ fontSize: 30, fontWeight: 700, color: tokens.warning, marginTop: 4 }}>{sym}{selected.balance_owed.toFixed(2)}</div>
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
               <input value={payAmount} onChange={e => setPayAmount(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder={tc('retail_credit.payment_placeholder')} style={{ ...inp, flex: 1 }} />
-              <button onClick={recordPayment} disabled={paying} style={{ ...bigBtn, width: 'auto', padding: '10px 20px', opacity: paying ? 0.7 : 1 }}>
-                {paying ? tc('retail_credit.saving') : tc('retail_credit.record_payment')}
-              </button>
+              <Button variant="primary" onClick={recordPayment} loading={paying} loadingLabel={tc('retail_credit.saving')}>
+                {tc('retail_credit.record_payment')}
+              </Button>
             </div>
 
-            <div style={{ fontWeight: 700, fontSize: 13, color: '#94a3b8', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{tc('retail_credit.history')}</div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: tokens.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{tc('retail_credit.history')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ledger.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_credit.no_history')}</div>}
-              {ledger.map(e => (
-                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
-                  <span style={{ color: '#94a3b8' }}>
+              {ledger.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('retail_credit.no_history')}</div>}
+              {ledger.map((e, idx) => (
+                <div key={e.id} className="pos-item" style={{ display: 'flex', justifyContent: 'space-between', background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <span style={{ color: tokens.muted }}>
                     {e.kind === 'payment' ? tc('retail_credit.entry_payment') : e.kind === 'opening' ? tc('retail_credit.entry_opening') : tc('retail_credit.entry_debt')}
                     {' · '}{new Date(e.created_at).toLocaleDateString([], { day: '2-digit', month: 'short' })}
                   </span>
-                  <span style={{ fontWeight: 700, color: e.kind === 'payment' ? ACC : '#f59e0b' }}>
+                  <span style={{ fontWeight: 700, color: e.kind === 'payment' ? ACC : tokens.warning }}>
                     {e.kind === 'payment' ? '−' : '+'}{sym}{e.amount.toFixed(2)}
                   </span>
                 </div>
@@ -279,23 +290,21 @@ export default function CreditPage() {
 
         {/* ── ADD MANUAL: one straggler not in the photographed book ── */}
         {screen === 'add-manual' && (
-          <>
-            <label style={{ fontSize: 13, color: '#94a3b8', display: 'block', marginBottom: 6 }}>{tc('retail_credit.who_label')}</label>
-            <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder={tc('retail_credit.name_placeholder')} style={{ ...inp, width: '100%', marginBottom: 10 }} />
-            <input value={manualPhone} onChange={e => setManualPhone(e.target.value)} placeholder={tc('retail_credit.phone_placeholder')} style={{ ...inp, width: '100%', marginBottom: 16 }} />
-            <label style={{ fontSize: 13, color: '#94a3b8', display: 'block', marginBottom: 6 }}>{tc('retail_credit.amount_owed_label')}</label>
-            <input value={manualAmount} onChange={e => setManualAmount(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder="0" style={{ ...inp, width: '100%', marginBottom: 20 }} />
-            <button style={{ ...bigBtn, opacity: manualSaving ? 0.7 : 1, marginBottom: 10 }} onClick={saveManual} disabled={manualSaving}>
-              {manualSaving ? tc('retail_credit.saving') : tc('retail_credit.save')}
-            </button>
-            <button style={ghostBtn} onClick={() => setScreen('list')}>{tc('retail_credit.cancel')}</button>
-          </>
+          <div className="pos-reveal">
+            <Input label={tc('retail_credit.who_label')} value={manualName} onChange={e => setManualName(e.target.value)} placeholder={tc('retail_credit.name_placeholder')} />
+            <Input value={manualPhone} onChange={e => setManualPhone(e.target.value)} placeholder={tc('retail_credit.phone_placeholder')} />
+            <Input label={tc('retail_credit.amount_owed_label')} value={manualAmount} onChange={e => setManualAmount(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder="0" />
+            <Button variant="primary" size="lg" onClick={saveManual} loading={manualSaving} loadingLabel={tc('retail_credit.saving')} style={{ width: '100%', marginBottom: 10 }}>
+              {tc('retail_credit.save')}
+            </Button>
+            <Button variant="secondary" size="lg" onClick={() => setScreen('list')} style={{ width: '100%' }}>{tc('retail_credit.cancel')}</Button>
+          </div>
         )}
 
         {/* ── IMPORT CAMERA: snap the debt book ── */}
         {screen === 'import-camera' && (
-          <>
-            <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>{tc('retail_credit.import_subtitle')}</p>
+          <div className="pos-reveal">
+            <p style={{ fontSize: 14, color: tokens.muted, lineHeight: 1.6, marginBottom: 16 }}>{tc('retail_credit.import_subtitle')}</p>
             <div style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', borderRadius: 16, overflow: 'hidden', background: '#000', marginBottom: 16 }}>
               <video ref={videoRef} playsInline muted autoPlay style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               {importBusy && (
@@ -305,34 +314,34 @@ export default function CreditPage() {
               )}
             </div>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
-            <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? 0.7 : 1 }} onClick={captureDebtBook} disabled={importBusy}>
-              {importBusy ? tc('retail_credit.import_reading') : tc('retail_credit.import_snap')}
-            </button>
-            <button style={ghostBtn} onClick={() => { stopCamera(); setScreen('list') }} disabled={importBusy}>{tc('retail_credit.cancel')}</button>
-          </>
+            <Button variant="primary" size="lg" onClick={captureDebtBook} loading={importBusy} loadingLabel={tc('retail_credit.import_reading')} style={{ width: '100%', marginBottom: 10 }}>
+              {tc('retail_credit.import_snap')}
+            </Button>
+            <Button variant="secondary" size="lg" onClick={() => { stopCamera(); setScreen('list') }} disabled={importBusy} style={{ width: '100%' }}>{tc('retail_credit.cancel')}</Button>
+          </div>
         )}
 
         {/* ── IMPORT REVIEW: confirm every line before saving ── */}
         {screen === 'import-review' && (
-          <>
-            <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
+          <div className="pos-reveal">
+            <p style={{ fontSize: 14, color: tokens.muted, lineHeight: 1.6, marginBottom: 16 }}>
               {tc('retail_credit.import_review', { count: importItems.length })}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
               {importItems.map((it, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: 8 }}>
+                <div key={i} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 8, background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 10, padding: 8, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <input value={it.name} onChange={e => editImportItem(i, { name: e.target.value })} placeholder={tc('retail_credit.name_placeholder')} style={{ ...inp, flex: 1, minWidth: 0 }} />
-                  <span style={{ color: '#64748b', fontWeight: 700 }}>{sym}</span>
+                  <span style={{ color: tokens.hint, fontWeight: 700 }}>{sym}</span>
                   <input value={it.amount ? String(it.amount) : ''} onChange={e => editImportItem(i, { amount: parseFloat(e.target.value.replace(/[^\d.]/g, '')) || 0 })} inputMode="decimal" placeholder="0" style={{ ...inp, width: 80, textAlign: 'right' }} />
-                  <button onClick={() => removeImportItem(i)} aria-label={tc('retail_credit.remove')} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, padding: '0 4px' }}>✕</button>
+                  <Button variant="ghost" onClick={() => removeImportItem(i)} aria-label={tc('retail_credit.remove')} style={{ fontSize: 18, padding: '0 4px' }}>✕</Button>
                 </div>
               ))}
             </div>
-            <button style={{ ...bigBtn, marginBottom: 10, opacity: importBusy ? 0.7 : 1 }} onClick={commitImport} disabled={importBusy}>
-              {importBusy ? tc('retail_credit.saving') : tc('retail_credit.import_save', { count: importItems.filter(it => it.name.trim() || it.phone.trim()).length })}
-            </button>
-            <button style={ghostBtn} onClick={openImportCamera} disabled={importBusy}>{tc('retail_credit.import_retake')}</button>
-          </>
+            <Button variant="primary" size="lg" onClick={commitImport} loading={importBusy} loadingLabel={tc('retail_credit.saving')} style={{ width: '100%', marginBottom: 10 }}>
+              {tc('retail_credit.import_save', { count: importItems.filter(it => it.name.trim() || it.phone.trim()).length })}
+            </Button>
+            <Button variant="secondary" size="lg" onClick={openImportCamera} disabled={importBusy} style={{ width: '100%' }}>{tc('retail_credit.import_retake')}</Button>
+          </div>
         )}
       </div>
     </div>

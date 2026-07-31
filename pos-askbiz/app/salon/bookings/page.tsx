@@ -3,10 +3,12 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { tokens, Button, Banner, Input, Select, Card } from '@/components/ui'
 
-const ACC = '#ec4899' // salon pink accent
-
-const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
+// Local warning pale/ring pair — tokens.ts only ships a solid `warning`,
+// same convention Banner.tsx uses for its own warning tone.
+const warningPale = 'rgba(249,115,22,.08)'
+const warningRing = 'rgba(249,115,22,.25)'
 
 interface Appointment {
   id: string
@@ -27,9 +29,9 @@ function dayKey(iso: string) { return new Date(iso).toISOString().slice(0, 10) }
 function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
 
 const buildStatusBadge = (tc: (key: string, vars?: Record<string, string | number>) => string): Record<string, { bg: string; fg: string; label: string }> => ({
-  completed: { bg: '#14532d', fg: '#22c55e', label: tc('salon_bookings.status_completed') },
-  voided: { bg: '#7f1d1d', fg: '#ef4444', label: tc('salon_bookings.status_voided') },
-  refunded: { bg: '#451a03', fg: '#f59e0b', label: tc('salon_bookings.status_refunded') },
+  completed: { bg: tokens.successPale, fg: tokens.success, label: tc('salon_bookings.status_completed') },
+  voided: { bg: tokens.dangerPale, fg: tokens.danger, label: tc('salon_bookings.status_voided') },
+  refunded: { bg: warningPale, fg: tokens.warning, label: tc('salon_bookings.status_refunded') },
 })
 
 export default function SalonBookings() {
@@ -199,65 +201,68 @@ export default function SalonBookings() {
     return tlPad + (clamped - startHour) * hourW
   }
 
+  // Compact inline controls (filter bar, per-row status select) stay hand-styled —
+  // wrapping them in the shared FormField components would inject a 16px
+  // margin-bottom wrapper that breaks these tight single-line layouts.
   const inputStyle: React.CSSProperties = {
-    background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9',
+    background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.ink,
     borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit',
   }
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => router.push('/salon')} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← {tc('salon_bookings.back_salon')}</button>
+          <Button variant="secondary" onClick={() => router.push('/salon')}>← {tc('salon_bookings.back_salon')}</Button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon_bookings.header_title')}</div>
-            <div style={{ fontSize: 12, color: C.muted }}>{tc('salon_bookings.header_subtitle')}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: tokens.accent }}>{tc('salon_bookings.header_title')}</div>
+            <div style={{ fontSize: 12, color: tokens.muted }}>{tc('salon_bookings.header_subtitle')}</div>
           </div>
         </div>
-        <button onClick={() => setShowForm(s => !s)} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+        <Button variant="primary" onClick={() => setShowForm(s => !s)}>
           {tc('salon_bookings.new_booking_btn')}
-        </button>
+        </Button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* New booking form */}
         {showForm && (
-          <form onSubmit={submitBooking} style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>{tc('salon_bookings.form_title')}</div>
-            <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>{tc('salon_bookings.form_subtitle', { date })}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-              <input style={inputStyle} placeholder={tc('salon_bookings.client_name_placeholder')} value={form.client} onChange={e => setForm({ ...form, client: e.target.value })} />
-              <input style={inputStyle} placeholder={tc('salon_bookings.phone_placeholder')} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-              <input style={inputStyle} placeholder={tc('salon_bookings.service_placeholder')} value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
-              <select style={inputStyle} value={form.stylist_id} onChange={e => setForm({ ...form, stylist_id: e.target.value })}>
-                <option value="">{tc('salon_bookings.stylist_placeholder')}</option>
-                {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              <input style={inputStyle} type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
-            </div>
-            {formError && (
-              <div style={{ marginTop: 12, background: '#450a0a', border: `1px solid ${C.bad}`, borderRadius: 8, padding: '8px 12px', color: '#fca5a5', fontSize: 12.5 }}>
-                ⚠️ {formError}
+          <div className="pos-reveal" style={{ marginBottom: 24 }}>
+          <Card style={{ border: `1px solid ${tokens.accentRing}` }}>
+            <form onSubmit={submitBooking}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>{tc('salon_bookings.form_title')}</div>
+              <div style={{ fontSize: 12, color: tokens.hint, marginBottom: 14 }}>{tc('salon_bookings.form_subtitle', { date })}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+                <Input placeholder={tc('salon_bookings.client_name_placeholder')} value={form.client} onChange={e => setForm({ ...form, client: e.target.value })} />
+                <Input placeholder={tc('salon_bookings.phone_placeholder')} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                <Input placeholder={tc('salon_bookings.service_placeholder')} value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
+                <Select value={form.stylist_id} onChange={e => setForm({ ...form, stylist_id: e.target.value })}>
+                  <option value="">{tc('salon_bookings.stylist_placeholder')}</option>
+                  {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </Select>
+                <Input type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
               </div>
-            )}
-            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button type="submit" disabled={saving} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: saving ? 'default' : 'pointer', fontWeight: 600, fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? tc('salon_bookings.saving') : tc('salon_bookings.save_booking')}</button>
-              <button type="button" onClick={() => { setShowForm(false); setFormError(null) }} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_bookings.cancel')}</button>
-            </div>
-          </form>
+              {formError && <Banner tone="danger">{formError}</Banner>}
+              <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                <Button type="submit" variant="primary" loading={saving} loadingLabel={tc('salon_bookings.saving')}>{tc('salon_bookings.save_booking')}</Button>
+                <Button type="button" variant="secondary" onClick={() => { setShowForm(false); setFormError(null) }}>{tc('salon_bookings.cancel')}</Button>
+              </div>
+            </form>
+          </Card>
+          </div>
         )}
 
         {/* Scheduled appointments for the day (persisted) */}
         {dayAppointments.length > 0 && (
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <Card style={{ padding: 16, marginBottom: 24 }}>
             <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>{tc('salon_bookings.scheduled_appointments_title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {dayAppointments.map((a, idx) => (
-                <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                  <span style={{ color: ACC, fontWeight: 700, width: 48 }}>{fmtTime(a.scheduled_at)}</span>
-                  <span style={{ flex: 1, fontSize: 13 }}>{a.client?.name || tc('salon_bookings.walk_in')} {a.client?.phone && <span style={{ color: C.dim }}>· {a.client.phone}</span>}</span>
-                  <span style={{ fontSize: 12, color: C.muted }}>{a.service_name} · {a.stylist?.name || tc('salon_bookings.unassigned')}</span>
+                <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.bg, borderRadius: 8, padding: '8px 12px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <span style={{ color: tokens.accent, fontWeight: 700, width: 48 }}>{fmtTime(a.scheduled_at)}</span>
+                  <span style={{ flex: 1, fontSize: 13 }}>{a.client?.name || tc('salon_bookings.walk_in')} {a.client?.phone && <span style={{ color: tokens.hint }}>· {a.client.phone}</span>}</span>
+                  <span style={{ fontSize: 12, color: tokens.muted }}>{a.service_name} · {a.stylist?.name || tc('salon_bookings.unassigned')}</span>
                   <select value={a.status} onChange={e => updateStatus(a.id, e.target.value)} style={{ ...inputStyle, padding: '4px 8px', fontSize: 12 }}>
                     {['booked', 'confirmed', 'in_progress', 'completed', 'no_show', 'cancelled'].map(s => (
                       <option key={s} value={s}>{tc('salon_bookings.status_' + s)}</option>
@@ -266,7 +271,7 @@ export default function SalonBookings() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Filters */}
@@ -280,12 +285,12 @@ export default function SalonBookings() {
             <option value="all">{tc('salon_bookings.all_services')}</option>
             {services.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <button onClick={() => setDate(todayStr)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_bookings.today')}</button>
-          <div style={{ marginLeft: 'auto', fontSize: 13, color: C.dim }}>{tc(dayAppointments.length === 1 ? 'salon_bookings.appointments_count_one' : 'salon_bookings.appointments_count_other', { count: dayAppointments.length })}</div>
+          <Button variant="secondary" size="md" onClick={() => setDate(todayStr)} style={{ padding: '8px 14px' }}>{tc('salon_bookings.today')}</Button>
+          <div style={{ marginLeft: 'auto', fontSize: 13, color: tokens.hint }}>{tc(dayAppointments.length === 1 ? 'salon_bookings.appointments_count_one' : 'salon_bookings.appointments_count_other', { count: dayAppointments.length })}</div>
         </div>
 
         {/* SVG Timeline */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 24, overflowX: 'auto' }}>
+        <Card style={{ marginBottom: 24, overflowX: 'auto' }}>
           <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>{tc('salon_bookings.day_timeline_title')}</div>
           <svg width={tlWidth} height={110} style={{ minWidth: tlWidth }}>
             {/* hour gridlines + labels */}
@@ -293,13 +298,13 @@ export default function SalonBookings() {
               const x = tlPad + i * hourW
               return (
                 <g key={i}>
-                  <line x1={x} y1={tlBarY - 8} x2={x} y2={tlBarY + tlBarH + 8} stroke="#334155" strokeWidth={1} />
-                  <text x={x} y={tlBarY - 14} textAnchor="middle" fill={C.dim} fontSize={11}>{startHour + i}:00</text>
+                  <line x1={x} y1={tlBarY - 8} x2={x} y2={tlBarY + tlBarH + 8} stroke={tokens.border} strokeWidth={1} />
+                  <text x={x} y={tlBarY - 14} textAnchor="middle" fill={tokens.hint} fontSize={11}>{startHour + i}:00</text>
                 </g>
               )
             })}
             {/* baseline */}
-            <line x1={tlPad} y1={tlBarY + tlBarH + 8} x2={tlWidth - tlPad} y2={tlBarY + tlBarH + 8} stroke="#334155" strokeWidth={1} />
+            <line x1={tlPad} y1={tlBarY + tlBarH + 8} x2={tlWidth - tlPad} y2={tlBarY + tlBarH + 8} stroke={tokens.border} strokeWidth={1} />
             {/* appointment markers — real salon appointments only */}
             {dayAppointments.map((a, idx) => {
               const x = xForTime(a.scheduled_at)
@@ -307,50 +312,50 @@ export default function SalonBookings() {
               const cy = tlBarY + (row === 0 ? 0 : tlBarH) + tlBarH / 2
               return (
                 <g key={a.id}>
-                  <line x1={x} y1={tlBarY - 8} x2={x} y2={cy} stroke={`${ACC}55`} strokeWidth={1} />
-                  <circle cx={x} cy={cy} r={7} fill={ACC} stroke="#0f172a" strokeWidth={2}>
+                  <line x1={x} y1={tlBarY - 8} x2={x} y2={cy} stroke={tokens.accentRing} strokeWidth={1} />
+                  <circle cx={x} cy={cy} r={7} fill={tokens.accent} stroke={tokens.bg} strokeWidth={2}>
                     <title>{`${fmtTime(a.scheduled_at)} — ${a.client?.name || tc('salon_bookings.walk_in')} (${a.service_name})`}</title>
                   </circle>
-                  <text x={x} y={cy - 11} textAnchor="middle" fill="#e2e8f0" fontSize={10}>{fmtTime(a.scheduled_at)}</text>
+                  <text x={x} y={cy - 11} textAnchor="middle" fill={tokens.ink} fontSize={10}>{fmtTime(a.scheduled_at)}</text>
                 </g>
               )
             })}
             {dayAppointments.length === 0 && (
-              <text x={tlWidth / 2} y={tlBarY + tlBarH} textAnchor="middle" fill={C.dim} fontSize={13}>{tc('salon_bookings.no_appointments_day')}</text>
+              <text x={tlWidth / 2} y={tlBarY + tlBarH} textAnchor="middle" fill={tokens.hint} fontSize={13}>{tc('salon_bookings.no_appointments_day')}</text>
             )}
           </svg>
-        </div>
+        </Card>
 
         {/* List view */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Card style={{ padding: 0, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${tokens.border}`, fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>
             <div>{tc('salon_bookings.col_time')}</div><div>{tc('salon_bookings.col_client')}</div><div>{tc('salon_bookings.col_services')}</div><div>{tc('salon_bookings.col_stylist')}</div><div>{tc('salon_bookings.col_price')}</div><div>{tc('salon_bookings.col_status')}</div>
           </div>
-          {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>{tc('salon_bookings.loading')}</div>}
-          {!loading && dayAppointments.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{tc('salon_bookings.no_appointments_filters')}</div>}
+          {loading && <div style={{ padding: 20, color: tokens.hint, fontSize: 13 }}>{tc('salon_bookings.loading')}</div>}
+          {!loading && dayAppointments.length === 0 && <div style={{ padding: 20, color: tokens.hint, fontSize: 13, textAlign: 'center' }}>{tc('salon_bookings.no_appointments_filters')}</div>}
           {dayAppointments.map((a, idx) => {
             const statusBadge = buildStatusBadge(tc)
-            const badge = statusBadge[a.status] || { bg: '#334155', fg: C.muted, label: a.status ? tc('salon_bookings.status_' + a.status) : tc('salon_bookings.dash') }
+            const badge = statusBadge[a.status] || { bg: tokens.border, fg: tokens.muted, label: a.status ? tc('salon_bookings.status_' + a.status) : tc('salon_bookings.dash') }
             return (
-              <div key={a.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                <div style={{ color: ACC, fontWeight: 700 }}>{fmtTime(a.scheduled_at)}</div>
-                <div>{a.client?.name || a.client?.phone || <span style={{ color: C.dim }}>{tc('salon_bookings.walk_in')}</span>}</div>
-                <div style={{ color: '#e2e8f0' }}>{a.service_name}</div>
-                <div style={{ color: C.muted }}>{a.stylist?.name || tc('salon_bookings.dash')}</div>
+              <div key={a.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${tokens.border}`, fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                <div style={{ color: tokens.accent, fontWeight: 700 }}>{fmtTime(a.scheduled_at)}</div>
+                <div>{a.client?.name || a.client?.phone || <span style={{ color: tokens.hint }}>{tc('salon_bookings.walk_in')}</span>}</div>
+                <div style={{ color: tokens.ink }}>{a.service_name}</div>
+                <div style={{ color: tokens.muted }}>{a.stylist?.name || tc('salon_bookings.dash')}</div>
                 <div style={{ fontWeight: 700 }}>{sym}{(a.price || 0).toFixed(2)}</div>
                 <div><span style={{ background: badge.bg, color: badge.fg, borderRadius: 12, padding: '3px 10px', fontSize: 11, fontWeight: 600 }}>{badge.label}</span></div>
               </div>
             )
           })}
-        </div>
+        </Card>
 
         {/* No-show tracking */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
+        <Card>
           <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>{tc('salon_bookings.no_show_title')}</div>
           {(() => {
             const noShows = appointments.filter(a => a.status === 'no_show')
             if (noShows.length === 0) {
-              return <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{tc('salon_bookings.no_show_empty')}</div>
+              return <div style={{ fontSize: 13, color: tokens.muted, lineHeight: 1.5 }}>{tc('salon_bookings.no_show_empty')}</div>
             }
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -358,17 +363,17 @@ export default function SalonBookings() {
                   .slice()
                   .sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at))
                   .map((a, idx) => (
-                    <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                      <span style={{ color: C.bad, fontWeight: 700, width: 110 }}>{new Date(a.scheduled_at).toLocaleDateString([], { day: '2-digit', month: 'short' })} {fmtTime(a.scheduled_at)}</span>
+                    <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.bg, borderRadius: 8, padding: '8px 12px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                      <span style={{ color: tokens.danger, fontWeight: 700, width: 110 }}>{new Date(a.scheduled_at).toLocaleDateString([], { day: '2-digit', month: 'short' })} {fmtTime(a.scheduled_at)}</span>
                       <span style={{ flex: 1 }}>{a.client?.name || tc('salon_bookings.walk_in')}</span>
-                      <span style={{ color: C.muted }}>{a.service_name} · {a.stylist?.name || tc('salon_bookings.unassigned')}</span>
+                      <span style={{ color: tokens.muted }}>{a.service_name} · {a.stylist?.name || tc('salon_bookings.unassigned')}</span>
                       <span style={{ fontWeight: 700 }}>{sym}{(a.price || 0).toFixed(2)}</span>
                     </div>
                   ))}
               </div>
             )
           })()}
-        </div>
+        </Card>
       </div>
     </div>
   )

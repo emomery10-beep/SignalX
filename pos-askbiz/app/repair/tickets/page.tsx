@@ -6,11 +6,34 @@ import { useLang } from '@/components/LanguageProvider'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
 import { getOfflineResourceTypesForRole } from '@/lib/pos-offline-manifest'
+import { Banner } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
-const ACC = '#6366f1'
-const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+// Mirrors app/factory/page.tsx's pattern.
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:      'var(--pos-accent)',
+  accentPale:  'var(--pos-accent-pale)',
+  danger:      'var(--pos-danger)',
+  dangerPale:  'var(--pos-danger-pale)',
+  success:     'var(--pos-success)',
+  successPale: 'var(--pos-success-pale)',
+  warning:   'var(--pos-warning)',
+  // "in_progress" status re-uses the existing factory dispatch-purple var
+  // rather than inventing a new colour for this vertical.
+  purple:    'var(--factory-dispatch)',
+}
+// globals.css has no --pos-warning-pale var (Banner.tsx hardcodes the same
+// literal for the same reason) — mirrored here rather than invented.
+const WARN_PALE = 'rgba(249,115,22,.08)'
+const PURPLE_PALE = 'rgba(139,92,246,.14)'
 
 interface Job {
   id: string
@@ -40,8 +63,15 @@ const buildColumns = (tc: Tc): { key: string; label: string }[] =>
   COLUMN_KEYS.map(key => ({ key, label: tc('repair_tickets.col_' + key) }))
 const statusLabel = (tc: Tc, status: string) => tc('repair_tickets.status_' + status)
 const STATUS_COLOR: Record<string, string> = {
-  intake: MUTED, quoted: WARN, accepted: ACC, in_progress: '#8b5cf6',
-  completed: GOOD, collected: GOOD, cancelled: BAD,
+  intake: tokens.muted, quoted: tokens.warning, accepted: tokens.accent, in_progress: tokens.purple,
+  completed: tokens.success, collected: tokens.success, cancelled: tokens.danger,
+}
+// Pale badge backgrounds for each status colour above — kept as a separate
+// map because CSS var() strings can't be alpha-suffixed the way the old
+// hex + '22' hack did.
+const STATUS_BG: Record<string, string> = {
+  intake: 'rgba(120,115,109,.14)', quoted: WARN_PALE, accepted: tokens.accentPale, in_progress: PURPLE_PALE,
+  completed: tokens.successPale, collected: tokens.successPale, cancelled: tokens.dangerPale,
 }
 // Valid forward transitions (mirrors the API); label key suffix → tc('repair_tickets.action_*')
 const NEXT_STATUS: Record<string, { value: string; labelKey: string }[]> = {
@@ -192,23 +222,23 @@ export default function RepairTickets() {
       .filter(Boolean).some(v => (v as string).toLowerCase().includes(q))
   })
 
-  const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 12 }
+  const card: React.CSSProperties = { background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12 }
   const COLUMNS = buildColumns(tc)
 
-  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_tickets.loading')}</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg, color: tokens.muted, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_tickets.loading')}</div>
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.push('/repair')} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.push('/repair')} style={{ background: tokens.border, border: 'none', color: tokens.muted, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>{tc('repair_tickets.header_title')}</div>
-          <div style={{ fontSize: 12, color: MUTED }}>{filtered.length === 1 ? tc('repair_tickets.ticket_count_one', { count: filtered.length }) : tc('repair_tickets.ticket_count_other', { count: filtered.length })}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: tokens.accent }}>{tc('repair_tickets.header_title')}</div>
+          <div style={{ fontSize: 12, color: tokens.muted }}>{filtered.length === 1 ? tc('repair_tickets.ticket_count_one', { count: filtered.length }) : tc('repair_tickets.ticket_count_other', { count: filtered.length })}</div>
         </div>
-        <div style={{ display: 'flex', background: '#0f172a', borderRadius: 8, padding: 3, gap: 2 }}>
+        <div style={{ display: 'flex', background: tokens.bg, borderRadius: 8, padding: 3, gap: 2 }}>
           {(['board', 'list'] as const).map(v => (
-            <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: view === v ? ACC : 'transparent', color: view === v ? '#fff' : MUTED, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: view === v ? tokens.accent : 'transparent', color: view === v ? '#fff' : tokens.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               {v === 'board' ? tc('repair_tickets.view_board') : tc('repair_tickets.view_list')}
             </button>
           ))}
@@ -218,12 +248,12 @@ export default function RepairTickets() {
       {/* Search */}
       <div style={{ padding: '14px 20px 0' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('repair_tickets.search_placeholder')}
-          style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid #334155', background: '#1e293b', color: '#f1f5f9', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+          style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: `1px solid ${tokens.border}`, background: tokens.surface, color: tokens.ink, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
       </div>
 
       <div style={{ padding: 20 }}>
-        {loading && jobs.length === 0 && <div style={{ color: DIM, fontSize: 13 }}>{tc('repair_tickets.loading_tickets')}</div>}
-        {!loading && filtered.length === 0 && <div style={{ color: DIM, fontSize: 13, textAlign: 'center', padding: '40px 0' }}>{tc('repair_tickets.no_tickets_match')} <button onClick={() => router.push('/repair/intake')} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13 }}>{tc('repair_tickets.start_new_intake')}</button></div>}
+        {loading && jobs.length === 0 && <div style={{ color: tokens.hint, fontSize: 13 }}>{tc('repair_tickets.loading_tickets')}</div>}
+        {!loading && filtered.length === 0 && <div style={{ color: tokens.hint, fontSize: 13, textAlign: 'center', padding: '40px 0' }}>{tc('repair_tickets.no_tickets_match')} <button onClick={() => router.push('/repair/intake')} style={{ background: 'none', border: 'none', color: tokens.accent, cursor: 'pointer', fontSize: 13 }}>{tc('repair_tickets.start_new_intake')}</button></div>}
 
         {/* BOARD VIEW */}
         {view === 'board' && filtered.length > 0 && (
@@ -235,21 +265,21 @@ export default function RepairTickets() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
                     <span style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[col.key] }} />
                     <span style={{ fontSize: 13, fontWeight: 700 }}>{col.label}</span>
-                    <span style={{ fontSize: 12, color: DIM }}>{colJobs.length}</span>
+                    <span style={{ fontSize: 12, color: tokens.hint }}>{colJobs.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {colJobs.map((j, idx) => (
                       <button key={j.id} onClick={() => openDetail(j)} className="pos-item" style={{ ...card, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>{j.device_model || tc('repair_tickets.unknown_device')}</div>
-                        <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{j.customer_name || tc('repair_tickets.walk_in')} · #{j.ticket_number}</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: DIM }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: tokens.ink }}>{j.device_model || tc('repair_tickets.unknown_device')}</div>
+                        <div style={{ fontSize: 11, color: tokens.muted, marginTop: 3 }}>{j.customer_name || tc('repair_tickets.walk_in')} · #{j.ticket_number}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: tokens.hint }}>
                           <span>{tc('repair_tickets.days_open', { days: daysOpen(j.created_at) })}</span>
-                          {j.quoted_price ? <span style={{ color: ACC }}>{sym}{Number(j.quoted_price).toFixed(2)}</span> : null}
+                          {j.quoted_price ? <span style={{ color: tokens.accent }}>{sym}{Number(j.quoted_price).toFixed(2)}</span> : null}
                         </div>
-                        {j.assigned_staff && <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>👤 {j.assigned_staff.name}</div>}
+                        {j.assigned_staff && <div style={{ fontSize: 10, color: tokens.hint, marginTop: 4 }}>👤 {j.assigned_staff.name}</div>}
                       </button>
                     ))}
-                    {colJobs.length === 0 && <div style={{ fontSize: 11, color: DIM, textAlign: 'center', padding: '12px 0' }}>{tc('repair_tickets.no_tickets_here')}</div>}
+                    {colJobs.length === 0 && <div style={{ fontSize: 11, color: tokens.hint, textAlign: 'center', padding: '12px 0' }}>{tc('repair_tickets.no_tickets_here')}</div>}
                   </div>
                 </div>
               )
@@ -263,12 +293,12 @@ export default function RepairTickets() {
             {filtered.map((j, idx) => (
               <button key={j.id} onClick={() => openDetail(j)} className="pos-item" style={{ ...card, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || tc('repair_tickets.unknown_device')} <span style={{ color: DIM, fontWeight: 400 }}>#{j.ticket_number}</span></div>
-                  <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{j.customer_name || tc('repair_tickets.walk_in')} · {j.fault_description?.slice(0, 60) || '—'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || tc('repair_tickets.unknown_device')} <span style={{ color: tokens.hint, fontWeight: 400 }}>#{j.ticket_number}</span></div>
+                  <div style={{ fontSize: 12, color: tokens.muted, marginTop: 2 }}>{j.customer_name || tc('repair_tickets.walk_in')} · {j.fault_description?.slice(0, 60) || '—'}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: (STATUS_COLOR[j.status] || DIM) + '22', color: STATUS_COLOR[j.status] || DIM }}>{statusLabel(tc, j.status)}</span>
-                  <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>{daysOpen(j.created_at)}d · {j.assigned_staff?.name || tc('repair_tickets.unassigned_short')}{j.quoted_price ? ` · ${sym}${Number(j.quoted_price).toFixed(2)}` : ''}</div>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: STATUS_BG[j.status] || STATUS_BG.intake, color: STATUS_COLOR[j.status] || tokens.hint }}>{statusLabel(tc, j.status)}</span>
+                  <div style={{ fontSize: 11, color: tokens.hint, marginTop: 4 }}>{daysOpen(j.created_at)}d · {j.assigned_staff?.name || tc('repair_tickets.unassigned_short')}{j.quoted_price ? ` · ${sym}${Number(j.quoted_price).toFixed(2)}` : ''}</div>
                 </div>
               </button>
             ))}
@@ -279,33 +309,33 @@ export default function RepairTickets() {
       {/* DETAIL DRAWER */}
       {selected && (
         <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 50, display: 'flex', justifyContent: 'flex-end' }}>
-          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ width: 'min(480px, 100%)', height: '100%', background: '#0f172a', borderLeft: '1px solid #334155', overflowY: 'auto' }}>
+          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ width: 'min(480px, 100%)', height: '100%', background: tokens.bg, borderLeft: `1px solid ${tokens.border}`, overflowY: 'auto' }}>
             {/* drawer header */}
-            <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 2 }}>
+            <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 2 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{selected.device_model || tc('repair_tickets.unknown_device')}</div>
-                <div style={{ fontSize: 12, color: MUTED }}>#{selected.ticket_number}</div>
+                <div style={{ fontSize: 12, color: tokens.muted }}>#{selected.ticket_number}</div>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: '#334155', border: 'none', color: MUTED, width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>×</button>
+              <button onClick={() => setSelected(null)} style={{ background: tokens.border, border: 'none', color: tokens.muted, width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>×</button>
             </div>
 
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* status + actions */}
               <div>
-                <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: (STATUS_COLOR[selected.status] || DIM) + '22', color: STATUS_COLOR[selected.status] || DIM }}>{statusLabel(tc, selected.status)}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: STATUS_BG[selected.status] || STATUS_BG.intake, color: STATUS_COLOR[selected.status] || tokens.hint }}>{statusLabel(tc, selected.status)}</span>
                 {pendingJobTx[selected.id] && (
-                  <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, background: WARN + '22', color: WARN }}>{tc('repair_tickets.sync_pending')}</span>
+                  <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, background: WARN_PALE, color: tokens.warning }}>{tc('repair_tickets.sync_pending')}</span>
                 )}
-                {detailError && <div style={{ color: BAD, fontSize: 13, marginTop: 10 }}>{detailError}</div>}
+                {detailError && <div style={{ marginTop: 10 }}><Banner tone="danger">{detailError}</Banner></div>}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                   {(NEXT_STATUS[selected.status] || []).map(t => (
                     <button key={t.value} onClick={() => changeStatus(t.value)} disabled={updating}
                       className={t.value === 'cancelled' ? undefined : 'pos-btn-primary'}
-                      style={{ padding: '9px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', opacity: updating ? 0.6 : 1, background: t.value === 'cancelled' ? '#334155' : ACC, color: t.value === 'cancelled' ? MUTED : '#fff' }}>
+                      style={{ padding: '9px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', opacity: updating ? 0.6 : 1, background: t.value === 'cancelled' ? tokens.border : tokens.accent, color: t.value === 'cancelled' ? tokens.muted : '#fff' }}>
                       {tc('repair_tickets.action_' + t.labelKey)}
                     </button>
                   ))}
-                  {(NEXT_STATUS[selected.status] || []).length === 0 && <span style={{ fontSize: 12, color: DIM }}>{tc('repair_tickets.no_further_actions')}</span>}
+                  {(NEXT_STATUS[selected.status] || []).length === 0 && <span style={{ fontSize: 12, color: tokens.hint }}>{tc('repair_tickets.no_further_actions')}</span>}
                 </div>
               </div>
 
@@ -322,34 +352,34 @@ export default function RepairTickets() {
 
               {/* fault */}
               <div style={{ ...card, padding: 16 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>{tc('repair_tickets.fault_description')}</div>
-                <div style={{ fontSize: 13, color: '#f1f5f9', lineHeight: 1.5 }}>{selected.fault_description || '—'}</div>
+                <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 6 }}>{tc('repair_tickets.fault_description')}</div>
+                <div style={{ fontSize: 13, color: tokens.ink, lineHeight: 1.5 }}>{selected.fault_description || '—'}</div>
                 {selected.engineer_notes && <>
-                  <div style={{ fontSize: 12, color: MUTED, margin: '12px 0 6px' }}>{tc('repair_tickets.engineer_notes')}</div>
-                  <div style={{ fontSize: 13, color: '#f1f5f9', lineHeight: 1.5 }}>{selected.engineer_notes}</div>
+                  <div style={{ fontSize: 12, color: tokens.muted, margin: '12px 0 6px' }}>{tc('repair_tickets.engineer_notes')}</div>
+                  <div style={{ fontSize: 13, color: tokens.ink, lineHeight: 1.5 }}>{selected.engineer_notes}</div>
                 </>}
               </div>
 
               {/* photos */}
               {(selected.intake_photo_url || selected.checkout_photo_url) && (
                 <div style={{ ...card, padding: 16 }}>
-                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>{tc('repair_tickets.photos')}</div>
+                  <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 10 }}>{tc('repair_tickets.photos')}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {selected.intake_photo_url && <img src={selected.intake_photo_url} alt="intake" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />}
-                    {selected.checkout_photo_url && <img src={selected.checkout_photo_url} alt="checkout" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />}
+                    {selected.intake_photo_url && <img src={selected.intake_photo_url} alt="intake" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />}
+                    {selected.checkout_photo_url && <img src={selected.checkout_photo_url} alt="checkout" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />}
                   </div>
                 </div>
               )}
 
               {/* parts */}
               <div style={{ ...card, padding: 16 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>{tc('repair_tickets.parts_used')}</div>
-                {parts.length === 0 ? <div style={{ fontSize: 13, color: DIM }}>{tc('repair_tickets.no_parts_logged')}</div> : (
+                <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 10 }}>{tc('repair_tickets.parts_used')}</div>
+                {parts.length === 0 ? <div style={{ fontSize: 13, color: tokens.hint }}>{tc('repair_tickets.no_parts_logged')}</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {parts.map(p => (
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                         <span>{p.name} ×{p.qty}</span>
-                        <span style={{ color: MUTED }}>{sym}{Number(p.line_total).toFixed(2)}</span>
+                        <span style={{ color: tokens.muted }}>{sym}{Number(p.line_total).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -358,16 +388,16 @@ export default function RepairTickets() {
 
               {/* timeline */}
               <div style={{ ...card, padding: 16 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 12 }}>{tc('repair_tickets.timeline')}</div>
-                {detailLoading && <div style={{ fontSize: 13, color: DIM }}>{tc('repair_tickets.loading')}</div>}
-                {!detailLoading && history.length === 0 && <div style={{ fontSize: 13, color: DIM }}>{tc('repair_tickets.no_history_yet')}</div>}
+                <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 12 }}>{tc('repair_tickets.timeline')}</div>
+                {detailLoading && <div style={{ fontSize: 13, color: tokens.hint }}>{tc('repair_tickets.loading')}</div>}
+                {!detailLoading && history.length === 0 && <div style={{ fontSize: 13, color: tokens.hint }}>{tc('repair_tickets.no_history_yet')}</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {history.map(h => (
-                    <div key={h.id} style={{ display: 'flex', gap: 10 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[h.to_status] || DIM, marginTop: 5, flexShrink: 0 }} />
+                  {history.map((h, idx) => (
+                    <div key={h.id} className="pos-item" style={{ display: 'flex', gap: 10, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[h.to_status] || tokens.hint, marginTop: 5, flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: '#f1f5f9' }}>{statusLabel(tc, h.to_status)}{h.notes ? ` — ${h.notes}` : ''}</div>
-                        <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{fmtDate(h.created_at)}</div>
+                        <div style={{ fontSize: 13, color: tokens.ink }}>{statusLabel(tc, h.to_status)}{h.notes ? ` — ${h.notes}` : ''}</div>
+                        <div style={{ fontSize: 11, color: tokens.hint, marginTop: 2 }}>{fmtDate(h.created_at)}</div>
                       </div>
                     </div>
                   ))}
@@ -384,8 +414,8 @@ export default function RepairTickets() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '5px 0', fontSize: 13 }}>
-      <span style={{ color: MUTED, flexShrink: 0 }}>{label}</span>
-      <span style={{ color: '#f1f5f9', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
+      <span style={{ color: tokens.muted, flexShrink: 0 }}>{label}</span>
+      <span style={{ color: tokens.ink, textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
     </div>
   )
 }

@@ -3,9 +3,11 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import { tokens, Button, Banner, Input, Textarea, Card, ListItem } from '@/components/ui'
 
-const ACC = '#ec4899' // salon pink accent
-const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
+// Local warning pale — tokens.ts only ships a solid `warning`, same
+// convention Banner.tsx uses for its own warning tone.
+const warningPale = 'rgba(249,115,22,.08)'
 
 interface TxItem { name: string; qty: number; unit_price: number }
 interface Tx {
@@ -68,11 +70,11 @@ function fmtDate(iso: string) { return new Date(iso).toLocaleDateString([], { da
 function daysSince(iso: string) { return Math.floor((Date.now() - +new Date(iso)) / 86400000) }
 
 // Client segmentation: VIP (5+ visits), Regular (2-4), New (1), Lapsed (>90 days since last visit)
-function segment(c: Client, tc: (key: string) => string): { label: string; color: string } {
-  if (daysSince(c.lastVisit) > 90) return { label: tc('salon_clients.seg_lapsed'), color: C.bad }
-  if (c.visits >= 5) return { label: tc('salon_clients.seg_vip'), color: ACC }
-  if (c.visits >= 2) return { label: tc('salon_clients.seg_regular'), color: C.good }
-  return { label: tc('salon_clients.seg_new'), color: C.warn }
+function segment(c: Client, tc: (key: string) => string): { label: string; color: string; bg: string } {
+  if (daysSince(c.lastVisit) > 90) return { label: tc('salon_clients.seg_lapsed'), color: tokens.danger, bg: tokens.dangerPale }
+  if (c.visits >= 5) return { label: tc('salon_clients.seg_vip'), color: tokens.accent, bg: tokens.accentPale }
+  if (c.visits >= 2) return { label: tc('salon_clients.seg_regular'), color: tokens.success, bg: tokens.successPale }
+  return { label: tc('salon_clients.seg_new'), color: tokens.warning, bg: warningPale }
 }
 
 export default function SalonClients() {
@@ -176,16 +178,16 @@ export default function SalonClients() {
   const current = useMemo(() => clients.find(c => c.key === selected) || null, [clients, selected])
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => (current ? setSelected(null) : router.push('/salon'))} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+          <Button variant="secondary" onClick={() => (current ? setSelected(null) : router.push('/salon'))}>
             ← {current ? tc('salon_clients.back_clients') : tc('salon_clients.back_salon')}
-          </button>
+          </Button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon_clients.header_title')}</div>
-            <div style={{ fontSize: 12, color: C.muted }}>{current ? current.name : tc('salon_clients.header_subtitle')}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: tokens.accent }}>{tc('salon_clients.header_title')}</div>
+            <div style={{ fontSize: 12, color: tokens.muted }}>{current ? current.name : tc('salon_clients.header_subtitle')}</div>
           </div>
         </div>
       </div>
@@ -193,36 +195,36 @@ export default function SalonClients() {
       <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
         {!current && (
           <>
-            <input
+            <Input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={tc('salon_clients.search_placeholder')}
-              style={{ width: '100%', background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', borderRadius: 10, padding: '12px 16px', fontSize: 14, marginBottom: 20, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ fontSize: 14, padding: '12px 16px', marginBottom: 4 }}
             />
-            <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Card style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${tokens.border}`, fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>
                 <div>{tc('salon_clients.col_name')}</div><div>{tc('salon_clients.col_phone')}</div><div>{tc('salon_clients.col_visits')}</div><div>{tc('salon_clients.col_spend')}</div><div>{tc('salon_clients.col_last_visit')}</div><div>{tc('salon_clients.col_tier')}</div>
               </div>
-              {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>{tc('salon_clients.loading')}</div>}
-              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{tc('salon_clients.empty_clients')}</div>}
+              {loading && <div style={{ padding: 20, color: tokens.hint, fontSize: 13 }}>{tc('salon_clients.loading')}</div>}
+              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: tokens.hint, fontSize: 13, textAlign: 'center' }}>{tc('salon_clients.empty_clients')}</div>}
               {filtered.map((c, idx) => {
                 const seg = segment(c, tc)
                 return (
                   <button key={c.key} type="button" className="pos-item" onClick={() => setSelected(c.key)}
-                    style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms`, width: '100%', background: 'transparent', border: 'none', color: 'inherit', textAlign: 'left', fontFamily: 'inherit' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#243044')}
+                    style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${tokens.border}`, fontSize: 13, alignItems: 'center', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms`, width: '100%', background: 'transparent', border: 'none', color: 'inherit', textAlign: 'left', fontFamily: 'inherit' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = tokens.accentPale)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    <div style={{ color: C.muted }}>{c.phone || tc('salon_clients.no_phone_dash')}</div>
+                    <div style={{ color: tokens.muted }}>{c.phone || tc('salon_clients.no_phone_dash')}</div>
                     <div>{c.visits}</div>
                     <div style={{ fontWeight: 700 }}>{sym}{c.totalSpend.toFixed(2)}</div>
-                    <div style={{ color: C.muted }}>{fmtDate(c.lastVisit)}</div>
-                    <div><span style={{ background: seg.color + '22', color: seg.color, borderRadius: 12, padding: '3px 9px', fontSize: 11, fontWeight: 700 }}>{seg.label}</span></div>
+                    <div style={{ color: tokens.muted }}>{fmtDate(c.lastVisit)}</div>
+                    <div><span style={{ background: seg.bg, color: seg.color, borderRadius: 12, padding: '3px 9px', fontSize: 11, fontWeight: 700 }}>{seg.label}</span></div>
                   </button>
                 )
               })}
-            </div>
+            </Card>
           </>
         )}
 
@@ -438,24 +440,21 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
     }
   }
 
-  const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }
-  const taArea: React.CSSProperties = { width: '100%', background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', borderRadius: 8, padding: '10px 12px', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', minHeight: 70 }
-
   const befores = photos.filter(p => p.tag === 'Before')
   const afters = photos.filter(p => p.tag === 'After')
 
   return (
-    <div>
+    <div className="pos-screen">
       {/* Summary */}
-      <div style={{ ...card, display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ width: 56, height: 56, borderRadius: '50%', background: ACC + '22', color: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700 }}>
+      <Card style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', background: tokens.accentPale, color: tokens.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700 }}>
           {client.name.charAt(0).toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 180 }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{client.name}</div>
-          <div style={{ fontSize: 13, color: C.muted }}>{client.phone || tc('salon_clients.summary_no_phone')}</div>
+          <div style={{ fontSize: 13, color: tokens.muted }}>{client.phone || tc('salon_clients.summary_no_phone')}</div>
         </div>
-        <span style={{ background: seg.color + '22', color: seg.color, borderRadius: 12, padding: '5px 14px', fontSize: 13, fontWeight: 700 }}>{seg.label}</span>
+        <span style={{ background: seg.bg, color: seg.color, borderRadius: 12, padding: '5px 14px', fontSize: 13, fontWeight: 700 }}>{seg.label}</span>
         {[
           { label: tc('salon_clients.stat_visits'), value: `${client.visits}` },
           { label: tc('salon_clients.stat_total_spend'), value: `${sym}${client.totalSpend.toFixed(2)}` },
@@ -463,50 +462,48 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
           { label: tc('salon_clients.stat_last_visit'), value: fmtDate(client.lastVisit) },
         ].map(s => (
           <div key={s.label} style={{ minWidth: 90 }}>
-            <div style={{ fontSize: 10, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: tokens.ink }}>{s.value}</div>
           </div>
         ))}
-      </div>
+      </Card>
 
       {/* Before/After capture — the camera-first feature */}
-      <div style={card}>
+      <Card style={{ marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('salon_clients.capture_title')}</div>
-        <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>{tc('salon_clients.capture_subtitle')}</div>
+        <div style={{ fontSize: 12, color: tokens.hint, marginBottom: 14 }}>{tc('salon_clients.capture_subtitle')}</div>
 
         {/* Tag + service selectors */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {(['Before', 'After'] as const).map(t => (
-              <button key={t} onClick={() => setPendingTag(t)}
-                style={{ background: pendingTag === t ? ACC : '#334155', border: 'none', color: pendingTag === t ? '#fff' : C.muted, padding: '8px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+              <Button key={t} variant={pendingTag === t ? 'primary' : 'secondary'} onClick={() => setPendingTag(t)} style={{ padding: '8px 18px' }}>
                 {t === 'Before' ? tc('salon_clients.tag_before') : tc('salon_clients.tag_after')}
-              </button>
+              </Button>
             ))}
           </div>
+          {/* Kept as a hand-styled input — sits inline with the Before/After button
+              group and the shared Input's 16px bottom-margin wrapper would break
+              this row's vertical centering. */}
           <input value={pendingService} onChange={e => setPendingService(e.target.value)} placeholder={tc('salon_clients.service_placeholder')}
-            style={{ flex: 1, minWidth: 160, background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit' }} />
+            style={{ flex: 1, minWidth: 160, background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.ink, borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit' }} />
         </div>
 
         {/* Camera viewport */}
-        {camError && (
-          <div className="pos-banner" role="alert" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>
-            ⚠️ {camError}
-          </div>
-        )}
+        {camError && <Banner tone="warning">{camError}</Banner>}
 
         {camActive ? (
-          <div style={{ marginBottom: 12 }}>
+          <div className="pos-reveal" style={{ marginBottom: 12 }}>
             <video ref={videoRef} playsInline muted style={{ width: '100%', maxWidth: 420, borderRadius: 10, background: '#000', display: 'block' }} />
             <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-              <button onClick={capture} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>{tc('salon_clients.cam_capture', { tag: pendingTag === 'Before' ? tc('salon_clients.tag_before') : tc('salon_clients.tag_after') })}</button>
-              <button onClick={stopCamera} style={{ background: '#334155', border: 'none', color: C.muted, padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_clients.cam_stop')}</button>
+              <Button variant="primary" onClick={capture}>{tc('salon_clients.cam_capture', { tag: pendingTag === 'Before' ? tc('salon_clients.tag_before') : tc('salon_clients.tag_after') })}</Button>
+              <Button variant="secondary" onClick={stopCamera}>{tc('salon_clients.cam_stop')}</Button>
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-            <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>{tc('salon_clients.cam_open')}</button>
-            <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_clients.cam_upload')}</button>
+            <Button variant="primary" onClick={startCamera}>{tc('salon_clients.cam_open')}</Button>
+            <Button variant="secondary" onClick={() => fileRef.current?.click()}>{tc('salon_clients.cam_upload')}</Button>
           </div>
         )}
 
@@ -519,51 +516,51 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
             {[{ title: tc('salon_clients.tag_before'), list: befores }, { title: tc('salon_clients.tag_after'), list: afters }].map(col => (
               <div key={col.title}>
-                <div style={{ fontSize: 12, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{tc('salon_clients.gallery_count', { title: col.title, count: col.list.length })}</div>
+                <div style={{ fontSize: 12, color: tokens.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{tc('salon_clients.gallery_count', { title: col.title, count: col.list.length })}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {col.list.length === 0 && <div style={{ fontSize: 12, color: C.dim }}>{tc('salon_clients.gallery_no_photos', { label: col.title.toLowerCase() })}</div>}
-                  {col.list.map(p => (
-                    <div key={p.id} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid #334155' }}>
+                  {col.list.length === 0 && <div style={{ fontSize: 12, color: tokens.hint }}>{tc('salon_clients.gallery_no_photos', { label: col.title.toLowerCase() })}</div>}
+                  {col.list.map((p, idx) => (
+                    <ListItem key={p.id} index={idx} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: `1px solid ${tokens.border}` }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={p.dataUrl} alt={`${p.tag} ${p.service}`} style={{ width: '100%', display: 'block' }} />
                       <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, padding: '2px 8px', borderRadius: 6 }}>{p.service}</div>
-                      <div style={{ fontSize: 10, color: C.dim, padding: '4px 6px' }}>{new Date(p.at).toLocaleString()}</div>
-                    </div>
+                      <div style={{ fontSize: 10, color: tokens.hint, padding: '4px 6px' }}>{new Date(p.at).toLocaleString()}</div>
+                    </ListItem>
                   ))}
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Color formula + notes */}
-      <div style={card}>
+      <Card style={{ marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('salon_clients.formula_title')}</div>
-        <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tc('salon_clients.formula_label')}</div>
-        <textarea value={formula} onChange={e => setFormula(e.target.value)} placeholder={tc('salon_clients.formula_placeholder')} style={{ ...taArea, marginBottom: 14 }} />
-        <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tc('salon_clients.notes_label')}</div>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={tc('salon_clients.notes_placeholder')} style={taArea} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-          <button className="pos-btn-primary" onClick={saveNotes} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc('salon_clients.save')}</button>
-          {savedFlash && <span className="pos-success-icon" style={{ color: C.good, fontSize: 13 }}>{tc('salon_clients.saved')}</span>}
+        <div style={{ fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tc('salon_clients.formula_label')}</div>
+        <Textarea value={formula} onChange={e => setFormula(e.target.value)} placeholder={tc('salon_clients.formula_placeholder')} />
+        <div style={{ fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tc('salon_clients.notes_label')}</div>
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={tc('salon_clients.notes_placeholder')} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: -4 }}>
+          <Button variant="primary" onClick={saveNotes}>{tc('salon_clients.save')}</Button>
+          {savedFlash && <span className="pos-success-icon" style={{ color: tokens.success, fontSize: 13 }}>{tc('salon_clients.saved')}</span>}
         </div>
-      </div>
+      </Card>
 
       {/* Visit history */}
-      <div style={card}>
+      <Card>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('salon_clients.visit_history_title')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {client.txs.slice().sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).map((t, idx) => (
-            <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-              <div style={{ fontSize: 13, color: ACC, fontWeight: 600, width: 110 }}>{fmtDate(t.created_at)}</div>
-              <div style={{ flex: 1, fontSize: 13, color: '#e2e8f0' }}>{(t.pos_items || []).map(i => i.name).join(', ') || tc('salon_clients.visit_service_fallback')}</div>
-              <div style={{ fontSize: 12, color: C.muted }}>{t.cashier?.name || tc('salon_clients.no_phone_dash')}</div>
+            <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.bg, borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+              <div style={{ fontSize: 13, color: tokens.accent, fontWeight: 600, width: 110 }}>{fmtDate(t.created_at)}</div>
+              <div style={{ flex: 1, fontSize: 13, color: tokens.ink }}>{(t.pos_items || []).map(i => i.name).join(', ') || tc('salon_clients.visit_service_fallback')}</div>
+              <div style={{ fontSize: 12, color: tokens.muted }}>{t.cashier?.name || tc('salon_clients.no_phone_dash')}</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{sym}{(t.total || 0).toFixed(2)}</div>
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

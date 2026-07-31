@@ -4,10 +4,25 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
+import { Button, Input } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
-const ACC = '#22c55e'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:    'var(--pos-accent)',
+  danger:    'var(--pos-danger)',
+  success:   'var(--pos-success)',
+  warning:   'var(--pos-warning)',
+}
+
+const ACC = tokens.accent
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface InvItem {
@@ -25,7 +40,7 @@ interface Draft {
 const emptyDraft: Draft = { name: '', category: '', sku: '', sale_price: '', cost_price: '', stock_qty: '0', low_stock_threshold: '5' }
 
 export default function RetailProductsPage() {
-  return <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0f172a' }} />}><RetailProducts /></Suspense>
+  return <Suspense fallback={<div style={{ minHeight: '100vh', background: tokens.bg }} />}><RetailProducts /></Suspense>
 }
 
 function RetailProducts() {
@@ -222,27 +237,27 @@ function RetailProducts() {
     await load()
   }
 
-  const inp: React.CSSProperties = { background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#f1f5f9', padding: '10px 12px', fontSize: 14, width: '100%', boxSizing: 'border-box' }
-  const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '1px solid #334155' }
-  const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: '1px solid #1e293b' }
+  const inp: React.CSSProperties = { background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 8, color: tokens.ink, padding: '10px 12px', fontSize: 14, width: '100%', boxSizing: 'border-box' }
+  const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', fontSize: 11, color: tokens.hint, textTransform: 'uppercase', letterSpacing: 1, borderBottom: `1px solid ${tokens.border}` }
+  const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: `1px solid ${tokens.border}` }
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
+          <button onClick={() => router.push('/retail')} style={{ background: tokens.border, border: 'none', color: tokens.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 {tc('retail_products.header_title')}</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_products.header_subtitle')}</div>
+            <div style={{ fontSize: 12, color: tokens.muted }}>{tc('retail_products.header_subtitle')}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => { setShowAdd(true); setDraft(emptyDraft); setScanMsg(''); setStage('review') }} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          <Button variant="secondary" onClick={() => { setShowAdd(true); setDraft(emptyDraft); setScanMsg(''); setStage('review') }}>
             ✏️ {tc('retail_products.add_manually')}
-          </button>
-          <button className="pos-btn-primary" onClick={() => { setShowAdd(true); setStage('idle') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          </Button>
+          <Button variant="primary" onClick={() => { setShowAdd(true); setStage('idle') }}>
             📷 {tc('retail_products.add_by_photo')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -254,22 +269,22 @@ function RetailProducts() {
             <option value="all">{tc('retail_products.all_categories')}</option>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <button onClick={() => setLowOnly(v => !v)} style={{ background: lowOnly ? '#f59e0b' : '#334155', border: 'none', color: lowOnly ? '#0f172a' : '#94a3b8', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+          <button onClick={() => setLowOnly(v => !v)} style={{ background: lowOnly ? tokens.warning : tokens.border, border: 'none', color: lowOnly ? tokens.bg : tokens.muted, padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
             ⚠️ {tc('retail_products.low_stock')}
           </button>
-          <div style={{ marginLeft: 'auto', color: '#64748b', fontSize: 13 }}>{tc('retail_products.count_of', { shown: filtered.length, total: items.length })}</div>
+          <div style={{ marginLeft: 'auto', color: tokens.hint, fontSize: 13 }}>{tc('retail_products.count_of', { shown: filtered.length, total: items.length })}</div>
         </div>
 
         {/* Table */}
-        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 12, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
               <th style={th}>{tc('retail_products.col_name')}</th><th style={th}>{tc('retail_products.col_sku')}</th><th style={th}>{tc('retail_products.col_category')}</th>
               <th style={th}>{tc('retail_products.col_stock')}</th><th style={th}>{tc('retail_products.col_price')}</th><th style={th}>{tc('retail_products.col_cost')}</th><th style={th}>{tc('retail_products.col_margin')}</th><th style={th}></th>
             </tr></thead>
             <tbody>
-              {loading && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>{tc('retail_products.loading')}</span></td></tr>}
-              {!loading && filtered.length === 0 && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>{tc('retail_products.no_products')}</span></td></tr>}
+              {loading && <tr><td style={td} colSpan={8}><span style={{ color: tokens.hint }}>{tc('retail_products.loading')}</span></td></tr>}
+              {!loading && filtered.length === 0 && <tr><td style={td} colSpan={8}><span style={{ color: tokens.hint }}>{tc('retail_products.no_products')}</span></td></tr>}
               {filtered.map((i, idx) => {
                 const low = typeof i.stock_qty === 'number' && i.stock_qty <= (i.low_stock_threshold ?? 5)
                 const m = margin(i)
@@ -277,27 +292,27 @@ function RetailProducts() {
                 return (
                   <tr key={i.id} className="pos-item" style={{ background: low ? 'rgba(245,158,11,0.06)' : 'transparent', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <td style={{ ...td, fontWeight: 600 }}>{i.name}</td>
-                    <td style={{ ...td, color: '#94a3b8' }}>{i.sku || '—'}</td>
-                    <td style={{ ...td, color: '#94a3b8' }}>{i.category || '—'}</td>
+                    <td style={{ ...td, color: tokens.muted }}>{i.sku || '—'}</td>
+                    <td style={{ ...td, color: tokens.muted }}>{i.category || '—'}</td>
                     <td style={td}>
                       {editing
                         ? <input value={editStock} onChange={e => setEditStock(e.target.value)} style={{ ...inp, width: 70, padding: '6px 8px' }} />
-                        : <span style={{ fontWeight: 700, color: low ? (i.stock_qty! <= 0 ? '#ef4444' : '#f59e0b') : '#f1f5f9' }}>{i.stock_qty ?? '—'}</span>}
+                        : <span style={{ fontWeight: 700, color: low ? (i.stock_qty! <= 0 ? tokens.danger : tokens.warning) : tokens.ink }}>{i.stock_qty ?? '—'}</span>}
                     </td>
                     <td style={td}>
                       {editing
                         ? <input value={editPrice} onChange={e => setEditPrice(e.target.value)} style={{ ...inp, width: 80, padding: '6px 8px' }} />
                         : <span>{i.sale_price != null ? `${sym}${i.sale_price.toFixed(2)}` : '—'}</span>}
                     </td>
-                    <td style={{ ...td, color: '#94a3b8' }}>{i.cost_price != null ? `${sym}${i.cost_price.toFixed(2)}` : '—'}</td>
-                    <td style={td}>{m != null ? <span style={{ color: m >= 50 ? '#22c55e' : m >= 25 ? '#f59e0b' : '#ef4444', fontWeight: 700 }}>{m}%</span> : '—'}</td>
+                    <td style={{ ...td, color: tokens.muted }}>{i.cost_price != null ? `${sym}${i.cost_price.toFixed(2)}` : '—'}</td>
+                    <td style={td}>{m != null ? <span style={{ color: m >= 50 ? tokens.success : m >= 25 ? tokens.warning : tokens.danger, fontWeight: 700 }}>{m}%</span> : '—'}</td>
                     <td style={td}>
                       {editing
                         ? <span style={{ display: 'flex', gap: 6 }}>
                             <button onClick={() => saveEdit(i)} style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_products.save')}</button>
-                            <button onClick={() => setEditId(null)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>✕</button>
+                            <button onClick={() => setEditId(null)} style={{ background: tokens.border, border: 'none', color: tokens.muted, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>✕</button>
                           </span>
-                        : <button onClick={() => beginEdit(i)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_products.edit')}</button>}
+                        : <button onClick={() => beginEdit(i)} style={{ background: tokens.border, border: 'none', color: tokens.muted, padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_products.edit')}</button>}
                     </td>
                   </tr>
                 )
@@ -314,10 +329,10 @@ function RetailProducts() {
       {/* Add / Camera modal */}
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }} onClick={closeAdd}>
-          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>{tc('retail_products.add_product')}</div>
-              <button onClick={closeAdd} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <Button variant="ghost" onClick={closeAdd} style={{ fontSize: 20, padding: 4 }}>✕</Button>
             </div>
 
             {/* Stage progress */}
@@ -328,34 +343,34 @@ function RetailProducts() {
                   const cur = order.indexOf(stage === 'saving' ? 'review' : stage)
                   const idx = order.indexOf(s === 'review' ? 'review' : s)
                   const active = cur >= idx
-                  return <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: active ? ACC : '#334155' }} />
+                  return <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: active ? ACC : tokens.border }} />
                 })}
               </div>
             )}
 
             {stage === 'idle' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>
+                <Button variant="primary" size="lg" onClick={startCamera} style={{ width: '100%' }}>
                   📷 {tc('retail_products.take_photo')}
-                </button>
-                <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>
+                </Button>
+                <Button variant="secondary" size="lg" onClick={() => fileRef.current?.click()} style={{ width: '100%' }}>
                   🖼️ {tc('retail_products.choose_photo')}
-                </button>
-                <div style={{ textAlign: 'center', color: '#64748b', fontSize: 12, margin: '4px 0' }}>{tc('retail_products.or_divider')}</div>
-                <button onClick={() => { setDraft(emptyDraft); setStage('review') }} style={{ background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>
+                </Button>
+                <div style={{ textAlign: 'center', color: tokens.hint, fontSize: 12, margin: '4px 0' }}>{tc('retail_products.or_divider')}</div>
+                <Button variant="secondary" size="lg" onClick={() => { setDraft(emptyDraft); setStage('review') }} style={{ width: '100%' }}>
                   ✏️ {tc('retail_products.enter_manually')}
-                </button>
-                <div style={{ color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 4 }}>{tc('retail_products.snap_hint')}</div>
+                </Button>
+                <div style={{ color: tokens.hint, fontSize: 12, textAlign: 'center', marginTop: 4 }}>{tc('retail_products.snap_hint')}</div>
               </div>
             )}
 
             {stage === 'camera' && (
               <div>
                 <video ref={videoRef} playsInline muted style={{ width: '100%', borderRadius: 12, background: '#000', maxHeight: 360, objectFit: 'cover' }} />
-                {camError && <div style={{ color: '#f59e0b', fontSize: 13, marginTop: 10 }}>{camError}</div>}
+                {camError && <div style={{ color: tokens.warning, fontSize: 13, marginTop: 10 }}>{camError}</div>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-                  <button onClick={captureFrame} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 }}>{tc('retail_products.capture')}</button>
-                  <button onClick={() => { stopCamera(); setStage('idle') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>{tc('retail_products.cancel')}</button>
+                  <Button variant="primary" size="lg" onClick={captureFrame} style={{ flex: 1 }}>{tc('retail_products.capture')}</Button>
+                  <Button variant="secondary" size="lg" onClick={() => { stopCamera(); setStage('idle') }}>{tc('retail_products.cancel')}</Button>
                 </div>
               </div>
             )}
@@ -363,30 +378,30 @@ function RetailProducts() {
             {stage === 'scanning' && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                <div style={{ color: '#f1f5f9', fontWeight: 600 }}>{scanMsg || tc('retail_products.analysing')}</div>
-                <div style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>{tc('retail_products.reading_details')}</div>
+                <div style={{ color: tokens.ink, fontWeight: 600 }}>{scanMsg || tc('retail_products.analysing')}</div>
+                <div style={{ color: tokens.hint, fontSize: 12, marginTop: 6 }}>{tc('retail_products.reading_details')}</div>
               </div>
             )}
 
             {(stage === 'review' || stage === 'saving') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {scanMsg && <div style={{ color: '#f59e0b', fontSize: 13 }}>{scanMsg}</div>}
-                <Field label={tc('retail_products.field_name')}><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} style={inp} /></Field>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {scanMsg && <div style={{ color: tokens.warning, fontSize: 13, marginBottom: 8 }}>{scanMsg}</div>}
+                <Input label={tc('retail_products.field_name')} value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <Field label={tc('retail_products.field_category')}><input value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} style={inp} /></Field>
-                  <Field label={tc('retail_products.field_sku')}><input value={draft.sku} onChange={e => setDraft({ ...draft, sku: e.target.value })} style={inp} /></Field>
+                  <Input label={tc('retail_products.field_category')} value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} />
+                  <Input label={tc('retail_products.field_sku')} value={draft.sku} onChange={e => setDraft({ ...draft, sku: e.target.value })} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <Field label={tc('retail_products.field_sale_price', { sym })}><input value={draft.sale_price} onChange={e => setDraft({ ...draft, sale_price: e.target.value })} style={inp} inputMode="decimal" /></Field>
-                  <Field label={tc('retail_products.field_cost_price', { sym })}><input value={draft.cost_price} onChange={e => setDraft({ ...draft, cost_price: e.target.value })} style={inp} inputMode="decimal" /></Field>
+                  <Input label={tc('retail_products.field_sale_price', { sym })} value={draft.sale_price} onChange={e => setDraft({ ...draft, sale_price: e.target.value })} inputMode="decimal" />
+                  <Input label={tc('retail_products.field_cost_price', { sym })} value={draft.cost_price} onChange={e => setDraft({ ...draft, cost_price: e.target.value })} inputMode="decimal" />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <Field label={tc('retail_products.field_stock_qty')}><input value={draft.stock_qty} onChange={e => setDraft({ ...draft, stock_qty: e.target.value })} style={inp} inputMode="numeric" /></Field>
-                  <Field label={tc('retail_products.field_low_stock_alert')}><input value={draft.low_stock_threshold} onChange={e => setDraft({ ...draft, low_stock_threshold: e.target.value })} style={inp} inputMode="numeric" /></Field>
+                  <Input label={tc('retail_products.field_stock_qty')} value={draft.stock_qty} onChange={e => setDraft({ ...draft, stock_qty: e.target.value })} inputMode="numeric" />
+                  <Input label={tc('retail_products.field_low_stock_alert')} value={draft.low_stock_threshold} onChange={e => setDraft({ ...draft, low_stock_threshold: e.target.value })} inputMode="numeric" />
                 </div>
-                <button className="pos-btn-primary" onClick={saveDraft} disabled={stage === 'saving'} style={{ background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: stage === 'saving' ? 0.6 : 1 }}>
-                  {stage === 'saving' ? tc('retail_products.saving') : tc('retail_products.save_product')}
-                </button>
+                <Button variant="primary" size="lg" onClick={saveDraft} loading={stage === 'saving'} loadingLabel={tc('retail_products.saving')} style={{ width: '100%' }}>
+                  {tc('retail_products.save_product')}
+                </Button>
               </div>
             )}
 
@@ -394,10 +409,10 @@ function RetailProducts() {
               <div className="pos-reveal" style={{ textAlign: 'center', padding: '30px 0' }}>
                 <div className="pos-success-icon" style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
                 <div style={{ fontWeight: 700, fontSize: 17 }}>{tc('retail_products.product_added')}</div>
-                <div style={{ color: '#64748b', fontSize: 13, marginTop: 6, marginBottom: 20 }}>{tc('retail_products.product_added_detail', { name: draft.name })}</div>
+                <div style={{ color: tokens.hint, fontSize: 13, marginTop: 6, marginBottom: 20 }}>{tc('retail_products.product_added_detail', { name: draft.name })}</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button className="pos-btn-primary" onClick={() => { setDraft(emptyDraft); setScanMsg(''); setStage('idle') }} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>{tc('retail_products.add_another')}</button>
-                  <button onClick={closeAdd} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>{tc('retail_products.done')}</button>
+                  <Button variant="primary" onClick={() => { setDraft(emptyDraft); setScanMsg(''); setStage('idle') }} style={{ flex: 1 }}>{tc('retail_products.add_another')}</Button>
+                  <Button variant="secondary" onClick={closeAdd}>{tc('retail_products.done')}</Button>
                 </div>
               </div>
             )}
@@ -405,14 +420,5 @@ function RetailProducts() {
         </div>
       )}
     </div>
-  )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'block' }}>
-      <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{label}</div>
-      {children}
-    </label>
   )
 }

@@ -3,8 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
-
-const ACC = '#d08a59'
+import { tokens, Button, Input, Select, Card, ListItem } from '@/components/ui'
 
 const NS = 'restaurant_labor.'
 
@@ -103,31 +102,25 @@ export default function LaborPage() {
   const completedShifts = shifts.filter(s => s.status === 'completed')
   const totalLiveCost  = activeShifts.reduce((s, sh) => s + liveCost(sh), 0) + (summary.total_cost || 0) - completedShifts.filter(s => activeShifts.some(a => a.id !== s.id)).reduce((s, sh) => s + (sh.total_cost || 0), 0)
 
-  const inp: React.CSSProperties = {
-    width: '100%', background: '#0f172a', border: '1px solid #334155', borderRadius: 6,
-    color: '#f1f5f9', padding: '8px 10px', fontSize: 13, boxSizing: 'border-box',
-  }
-
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: tokens.hint, cursor: 'pointer', fontSize: 18 }}>←</button>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>{tc(NS + 'header_title')}</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'header_subtitle')}</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: tokens.accent }}>{tc(NS + 'header_title')}</div>
+          <div style={{ fontSize: 11, color: tokens.muted }}>{tc(NS + 'header_subtitle')}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {[1, 7, 30].map(d => (
-            <button key={d} onClick={() => setPeriod(d)}
-              style={{ background: period === d ? ACC : '#1e293b', border: `1px solid ${period === d ? ACC : '#334155'}`, color: period === d ? '#fff' : '#64748b', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
+            <button key={d} className="pos-tab" onClick={() => setPeriod(d)}
+              style={{ background: period === d ? tokens.accent : tokens.surface, border: `1px solid ${period === d ? tokens.accent : tokens.border}`, color: period === d ? '#fff' : tokens.muted, padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
               {d === 1 ? tc(NS + 'period_today') : tc(NS + 'period_days', { days: d })}
             </button>
           ))}
-          <button className="pos-btn-primary" onClick={() => setShowClock(true)}
-            style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          <Button variant="primary" onClick={() => setShowClock(true)}>
             {tc(NS + 'clock_in')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -135,47 +128,46 @@ export default function LaborPage() {
         {/* Summary KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
           {[
-            { label: tc(NS + 'kpi_clocked_in_now'),  value: `${activeShifts.length}`,                   color: activeShifts.length ? '#22c55e' : '#64748b' },
-            { label: tc(NS + 'kpi_live_cost'),       value: `${sym}${summary.live_running_cost?.toFixed(2) || '0.00'}`, color: '#f59e0b' },
-            { label: tc(NS + 'kpi_total_cost_period'), value: `${sym}${summary.total_cost?.toFixed(2) || '0.00'}`, color: ACC },
-            { label: tc(NS + 'kpi_total_hours'),     value: `${summary.total_hours?.toFixed(1) || '0'}h`, color: '#94a3b8' },
+            { label: tc(NS + 'kpi_clocked_in_now'),  value: `${activeShifts.length}`,                   color: activeShifts.length ? tokens.success : tokens.muted },
+            { label: tc(NS + 'kpi_live_cost'),       value: `${sym}${summary.live_running_cost?.toFixed(2) || '0.00'}`, color: tokens.warning },
+            { label: tc(NS + 'kpi_total_cost_period'), value: `${sym}${summary.total_cost?.toFixed(2) || '0.00'}`, color: tokens.accent },
+            { label: tc(NS + 'kpi_total_hours'),     value: `${summary.total_hours?.toFixed(1) || '0'}h`, color: tokens.hint },
           ].map(kpi => (
-            <div key={kpi.label} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 16px' }}>
-              <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
+            <Card key={kpi.label} style={{ padding: '14px 16px' }}>
+              <div style={{ fontSize: 11, color: tokens.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: kpi.color, marginTop: 4 }}>{kpi.value}</div>
-            </div>
+            </Card>
           ))}
         </div>
 
         {/* Active Shifts */}
         {activeShifts.length > 0 && (
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#22c55e' }}>{tc(NS + 'currently_clocked_in')}</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: tokens.success }}>{tc(NS + 'currently_clocked_in')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {activeShifts.map((shift, idx) => {
                 const hours = liveHours(shift)
                 const cost  = liveCost(shift)
                 const elapsed = Math.floor((Date.now() - new Date(shift.clock_in).getTime()) / 60000)
                 return (
-                  <div key={shift.id} className="pos-item" style={{ background: '#1e293b', border: '1px solid #14532d', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <ListItem key={shift.id} index={idx} style={{ background: tokens.surface, border: `1px solid ${tokens.successRing}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ fontSize: 24 }}>{ROLE_ICONS[shift.role] || '👤'}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 15 }}>{shift.staff?.name || tc(NS + 'staff_fallback')}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                      <div style={{ fontSize: 12, color: tokens.hint }}>
                         {tc(NS + 'active_shift_line', { role: tc(NS + 'role_' + shift.role), sym, rate: shift.hourly_rate, time: new Date(shift.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', marginRight: 8 }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#f59e0b', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: tokens.warning, fontVariantNumeric: 'tabular-nums' }}>
                         {tc(NS + 'elapsed_hm', { hours: Math.floor(elapsed / 60), mins: elapsed % 60 })}
                       </div>
-                      <div style={{ fontSize: 13, color: ACC, fontWeight: 600 }}>{sym}{cost.toFixed(2)}</div>
+                      <div style={{ fontSize: 13, color: tokens.accent, fontWeight: 600 }}>{sym}{cost.toFixed(2)}</div>
                     </div>
-                    <button onClick={() => clockOut(shift.id)}
-                      style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                    <Button variant="danger" onClick={() => clockOut(shift.id)}>
                       {tc(NS + 'clock_out')}
-                    </button>
-                  </div>
+                    </Button>
+                  </ListItem>
                 )
               })}
             </div>
@@ -185,30 +177,30 @@ export default function LaborPage() {
         {/* Completed Shifts */}
         {completedShifts.length > 0 && (
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#64748b' }}>{tc(NS + 'completed_shifts')}</div>
-            <div style={{ background: '#1e293b', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: tokens.muted }}>{tc(NS + 'completed_shifts')}</div>
+            <div style={{ background: tokens.surface, borderRadius: 12, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ background: '#0f172a' }}>
+                  <tr style={{ background: tokens.bg }}>
                     {[tc(NS + 'col_staff'), tc(NS + 'col_role'), tc(NS + 'col_clock_in'), tc(NS + 'col_clock_out'), tc(NS + 'col_hours'), tc(NS + 'col_rate'), tc(NS + 'col_cost')].map((h, hi) => (
-                      <th key={hi} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
+                      <th key={hi} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, color: tokens.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {completedShifts.map((shift, idx) => (
-                    <tr key={shift.id} className="pos-item" style={{ borderTop: '1px solid #1e293b', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                    <tr key={shift.id} className="pos-item" style={{ borderTop: `1px solid ${tokens.surface}`, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                       <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 600 }}>{shift.staff?.name || '—'}</td>
-                      <td style={{ padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>{ROLE_ICONS[shift.role]} {tc(NS + 'role_' + shift.role)}</td>
-                      <td style={{ padding: '10px 14px', fontSize: 12, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '10px 14px', fontSize: 13, color: tokens.hint }}>{ROLE_ICONS[shift.role]} {tc(NS + 'role_' + shift.role)}</td>
+                      <td style={{ padding: '10px 14px', fontSize: 12, color: tokens.hint, fontVariantNumeric: 'tabular-nums' }}>
                         {new Date(shift.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
-                      <td style={{ padding: '10px 14px', fontSize: 12, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '10px 14px', fontSize: 12, color: tokens.hint, fontVariantNumeric: 'tabular-nums' }}>
                         {shift.clock_out ? new Date(shift.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{shift.total_hours != null ? tc(NS + 'hours_suffix', { hours: shift.total_hours.toFixed(2) }) : '—'}</td>
-                      <td style={{ padding: '10px 14px', fontSize: 13, color: '#64748b' }}>{tc(NS + 'rate_per_hr', { sym, rate: shift.hourly_rate })}</td>
-                      <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 700, color: ACC }}>{sym}{shift.total_cost?.toFixed(2) || '—'}</td>
+                      <td style={{ padding: '10px 14px', fontSize: 13, color: tokens.muted }}>{tc(NS + 'rate_per_hr', { sym, rate: shift.hourly_rate })}</td>
+                      <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 700, color: tokens.accent }}>{sym}{shift.total_cost?.toFixed(2) || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -218,7 +210,7 @@ export default function LaborPage() {
         )}
 
         {!loading && shifts.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
+          <div style={{ textAlign: 'center', padding: 60, color: tokens.muted }}>
             <div style={{ fontSize: 40, marginBottom: 8 }}>⏱️</div>
             <div style={{ fontSize: 16, marginBottom: 4 }}>{tc(NS + 'empty_no_shifts')}</div>
             <div style={{ fontSize: 13 }}>{tc(NS + 'empty_blurb')}</div>
@@ -229,37 +221,25 @@ export default function LaborPage() {
       {/* Clock In Modal */}
       {showClockIn && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 380 }}>
+          <div className="pos-sheet" style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 16, padding: 24, width: 380 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{tc(NS + 'modal_title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_staff_member')}</label>
-                <select value={clockInForm.staff_id} onChange={e => setForm(p => ({ ...p, staff_id: e.target.value }))} style={inp}>
-                  <option value="">{tc(NS + 'select_staff')}</option>
-                  {staffList.map(s => <option key={s.id} value={s.id}>{tc(NS + 'staff_option', { name: s.name, role: s.role })}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_role_for_shift')}</label>
-                <select value={clockInForm.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={inp}>
-                  {ROLES.map(r => <option key={r} value={r}>{ROLE_ICONS[r]} {tc(NS + 'role_' + r)}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_hourly_rate', { sym })}</label>
-                <input type="number" step="0.01" value={clockInForm.hourly_rate}
-                  onChange={e => setForm(p => ({ ...p, hourly_rate: e.target.value }))} style={inp} />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_notes')}</label>
-                <input value={clockInForm.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                  placeholder={tc(NS + 'placeholder_notes')} style={inp} />
-              </div>
+              <Select label={tc(NS + 'label_staff_member')} value={clockInForm.staff_id} onChange={e => setForm(p => ({ ...p, staff_id: e.target.value }))}>
+                <option value="">{tc(NS + 'select_staff')}</option>
+                {staffList.map(s => <option key={s.id} value={s.id}>{tc(NS + 'staff_option', { name: s.name, role: s.role })}</option>)}
+              </Select>
+              <Select label={tc(NS + 'label_role_for_shift')} value={clockInForm.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
+                {ROLES.map(r => <option key={r} value={r}>{ROLE_ICONS[r]} {tc(NS + 'role_' + r)}</option>)}
+              </Select>
+              <Input label={tc(NS + 'label_hourly_rate', { sym })} type="number" step="0.01" value={clockInForm.hourly_rate}
+                onChange={e => setForm(p => ({ ...p, hourly_rate: e.target.value }))} />
+              <Input label={tc(NS + 'label_notes')} value={clockInForm.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
+                placeholder={tc(NS + 'placeholder_notes')} />
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowClock(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
+              <Button variant="secondary" style={{ flex: 1 }} onClick={() => setShowClock(false)}>{tc(NS + 'cancel')}</Button>
               <button className="pos-btn-primary" onClick={clockIn} disabled={saving || !clockInForm.staff_id}
-                style={{ flex: 1, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !clockInForm.staff_id ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !clockInForm.staff_id ? 0.5 : 1 }}>
+                style={{ flex: 1, background: tokens.success, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !clockInForm.staff_id ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !clockInForm.staff_id ? 0.5 : 1 }}>
                 {saving ? tc(NS + 'saving') : tc(NS + 'clock_in_now')}
               </button>
             </div>

@@ -7,11 +7,33 @@ import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
 import { getOfflineResourceTypesForRole } from '@/lib/pos-offline-manifest'
+import { Banner } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
-const ACC = '#6366f1'
-const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
+// Mirrors app/factory/page.tsx's pattern — this vertical previously hardcoded
+// its own dark slate palette instead of drawing from the shared system.
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:      'var(--pos-accent)',
+  accentPale:  'var(--pos-accent-pale)',
+  danger:      'var(--pos-danger)',
+  dangerPale:  'var(--pos-danger-pale)',
+  dangerRing:  'var(--pos-danger-ring)',
+  success:     'var(--pos-success)',
+  successPale: 'var(--pos-success-pale)',
+  successRing: 'var(--pos-success-ring)',
+  warning:   'var(--pos-warning)',
+}
+// globals.css has no --pos-warning-pale/-ring var (Banner.tsx hardcodes the
+// same literal for the same reason) — mirrored here rather than invented.
+const WARN_PALE = 'rgba(249,115,22,.08)'
 
 type Stage = 'device_scan' | 'condition_photos' | 'details' | 'done'
 
@@ -340,29 +362,29 @@ export default function RepairIntake() {
   }
 
   // ── Styles ──────────────────────────────────────────────
-  const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #334155', fontSize: 15, fontFamily: 'inherit', background: '#0f172a', color: '#f1f5f9', boxSizing: 'border-box', outline: 'none' }
-  const labelStyle: React.CSSProperties = { fontSize: 12, color: MUTED, marginBottom: 5, display: 'block' }
-  const btnPrimary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
-  const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: '#334155', color: MUTED, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
-  const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 18 }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${tokens.border}`, fontSize: 15, fontFamily: 'inherit', background: tokens.bg, color: tokens.ink, boxSizing: 'border-box', outline: 'none' }
+  const labelStyle: React.CSSProperties = { fontSize: 12, color: tokens.muted, marginBottom: 5, display: 'block' }
+  const btnPrimary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: tokens.accent, color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
+  const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: tokens.border, color: tokens.muted, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
+  const card: React.CSSProperties = { background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 14, padding: 18 }
 
-  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_intake.loading')}</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg, color: tokens.muted, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_intake.loading')}</div>
 
   const stageIndex = ['device_scan', 'condition_photos', 'details', 'done'].indexOf(stage)
   const stageLabels = [tc('repair_intake.stage_scan'), tc('repair_intake.stage_condition'), tc('repair_intake.stage_details'), tc('repair_intake.stage_done')]
 
   return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
       {/* shared hidden elements */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileInput} style={{ display: 'none' }} />
 
       {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { stopCamera(); router.push('/repair') }} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => { stopCamera(); router.push('/repair') }} style={{ background: tokens.border, border: 'none', color: tokens.muted, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>{tc('repair_intake.header_title')}</div>
-          <div style={{ fontSize: 12, color: MUTED }}>{tc('repair_intake.header_subtitle')}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: tokens.accent }}>{tc('repair_intake.header_title')}</div>
+          <div style={{ fontSize: 12, color: tokens.muted }}>{tc('repair_intake.header_subtitle')}</div>
         </div>
       </div>
 
@@ -370,8 +392,8 @@ export default function RepairIntake() {
       <div style={{ display: 'flex', gap: 6, padding: '14px 20px 0', maxWidth: 640, margin: '0 auto' }}>
         {stageLabels.map((lbl, i) => (
           <div key={lbl} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ height: 4, borderRadius: 2, background: i <= stageIndex ? ACC : '#334155', marginBottom: 4 }} />
-            <div style={{ fontSize: 10, color: i <= stageIndex ? ACC : DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>{lbl}</div>
+            <div style={{ height: 4, borderRadius: 2, background: i <= stageIndex ? tokens.accent : tokens.border, marginBottom: 4 }} />
+            <div style={{ fontSize: 10, color: i <= stageIndex ? tokens.accent : tokens.hint, textTransform: 'uppercase', letterSpacing: 0.5 }}>{lbl}</div>
           </div>
         ))}
       </div>
@@ -383,30 +405,30 @@ export default function RepairIntake() {
           <>
             <div style={card}>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('repair_intake.scan_title')}</div>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>{tc('repair_intake.scan_subtitle')}</div>
+              <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 14 }}>{tc('repair_intake.scan_subtitle')}</div>
 
               {/* viewfinder */}
               <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#000', aspectRatio: '4 / 3', marginBottom: 12 }}>
                 <video ref={videoRef} playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: cameraActive ? 'block' : 'none' }} />
                 {!cameraActive && (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: DIM, gap: 8 }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: tokens.hint, gap: 8 }}>
                     <div style={{ fontSize: 40 }}>📷</div>
                     <div style={{ fontSize: 13 }}>{scanning ? tc('repair_intake.reading_label_short') : tc('repair_intake.camera_off')}</div>
                   </div>
                 )}
                 {scanning && (
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                    <div style={{ width: 40, height: 40, border: '3px solid #fff', borderTopColor: ACC, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <div style={{ width: 40, height: 40, border: '3px solid #fff', borderTopColor: tokens.accent, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                     <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('repair_intake.reading_device_label')}</span>
                   </div>
                 )}
                 {cameraActive && !scanning && (
-                  <button onClick={captureForScan} style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', width: 60, height: 60, borderRadius: 30, border: '4px solid #fff', background: ACC, cursor: 'pointer' }} aria-label="Capture" />
+                  <button onClick={captureForScan} style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', width: 76, height: 76, borderRadius: 38, border: '4px solid #fff', background: tokens.accent, cursor: 'pointer' }} aria-label="Capture" />
                 )}
               </div>
 
-              {cameraError && <div style={{ color: WARN, fontSize: 12, marginBottom: 10 }}>{cameraError}</div>}
-              {scanError && <div style={{ color: BAD, fontSize: 13, marginBottom: 10 }}>{scanError}</div>}
+              {cameraError && <div style={{ color: tokens.warning, fontSize: 12, marginBottom: 10 }}>{cameraError}</div>}
+              {scanError && <div style={{ color: tokens.danger, fontSize: 13, marginBottom: 10 }}>{scanError}</div>}
 
               <div style={{ display: 'flex', gap: 10 }}>
                 {!cameraActive
@@ -418,11 +440,11 @@ export default function RepairIntake() {
 
             {/* warranty alert */}
             {warrantyInfo && (
-              <div className="pos-banner" style={{ ...card, borderColor: warrantyInfo.is_under_warranty ? GOOD : WARN, background: warrantyInfo.is_under_warranty ? 'rgba(34,197,94,.08)' : 'rgba(245,158,11,.08)' }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: warrantyInfo.is_under_warranty ? GOOD : WARN }}>
+              <div className="pos-banner" style={{ ...card, borderColor: warrantyInfo.is_under_warranty ? tokens.success : tokens.warning, background: warrantyInfo.is_under_warranty ? tokens.successPale : WARN_PALE }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: warrantyInfo.is_under_warranty ? tokens.success : tokens.warning }}>
                   {warrantyInfo.is_under_warranty ? tc('repair_intake.under_warranty') : tc('repair_intake.warranty_expired')}
                 </div>
-                <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: tokens.muted, marginTop: 4 }}>
                   {tc('repair_intake.previous_repair_line', { ticket: warrantyInfo.previous_ticket, repair: warrantyInfo.previous_repair })}
                   {warrantyInfo.is_under_warranty ? tc('repair_intake.days_remaining_suffix', { days: warrantyInfo.days_remaining }) : ''}
                 </div>
@@ -434,7 +456,7 @@ export default function RepairIntake() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{tc('repair_intake.device_details')}</div>
                 {scanConfidence != null && (
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: (scanConfidence >= 80 ? GOOD : scanConfidence >= 50 ? WARN : BAD) + '22', color: scanConfidence >= 80 ? GOOD : scanConfidence >= 50 ? WARN : BAD }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: scanConfidence >= 80 ? tokens.successPale : scanConfidence >= 50 ? WARN_PALE : tokens.dangerPale, color: scanConfidence >= 80 ? tokens.success : scanConfidence >= 50 ? tokens.warning : tokens.danger }}>
                     {tc('repair_intake.percent_match', { percent: scanConfidence })}
                   </span>
                 )}
@@ -473,22 +495,22 @@ export default function RepairIntake() {
           <>
             <div style={card}>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('repair_intake.condition_title')}</div>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>{tc('repair_intake.condition_subtitle')}</div>
+              <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 14 }}>{tc('repair_intake.condition_subtitle')}</div>
 
               <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#000', aspectRatio: '4 / 3', marginBottom: 12 }}>
                 <video ref={videoRef} playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: cameraActive ? 'block' : 'none' }} />
                 {!cameraActive && (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: DIM, gap: 8 }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: tokens.hint, gap: 8 }}>
                     <div style={{ fontSize: 40 }}>📸</div>
                     <div style={{ fontSize: 13 }}>{tc('repair_intake.capture_view', { view: conditionSlots[photos.length] || tc('repair_intake.extra') })}</div>
                   </div>
                 )}
                 {cameraActive && (
-                  <button onClick={captureCondition} style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', width: 60, height: 60, borderRadius: 30, border: '4px solid #fff', background: ACC, cursor: 'pointer' }} aria-label="Capture" />
+                  <button onClick={captureCondition} style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', width: 76, height: 76, borderRadius: 38, border: '4px solid #fff', background: tokens.accent, cursor: 'pointer' }} aria-label="Capture" />
                 )}
               </div>
 
-              {cameraError && <div style={{ color: WARN, fontSize: 12, marginBottom: 10 }}>{cameraError}</div>}
+              {cameraError && <div style={{ color: tokens.warning, fontSize: 12, marginBottom: 10 }}>{cameraError}</div>}
 
               <div style={{ display: 'flex', gap: 10 }}>
                 {!cameraActive
@@ -502,9 +524,9 @@ export default function RepairIntake() {
                 <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                   {photos.map((p, i) => (
                     <div key={i} className="pos-item" style={{ position: 'relative', width: 76, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
-                      <img src={p.dataUrl} alt={p.label} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />
-                      <div style={{ fontSize: 9, color: MUTED, textAlign: 'center', marginTop: 2 }}>{p.label}</div>
-                      <button onClick={() => removePhoto(i)} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, background: BAD, color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, lineHeight: 1 }}>×</button>
+                      <img src={p.dataUrl} alt={p.label} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />
+                      <div style={{ fontSize: 9, color: tokens.muted, textAlign: 'center', marginTop: 2 }}>{p.label}</div>
+                      <button onClick={() => removePhoto(i)} aria-label="Remove photo" style={{ position: 'absolute', top: -10, right: -10, width: 40, height: 40, borderRadius: 20, background: tokens.danger, color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                     </div>
                   ))}
                 </div>
@@ -514,16 +536,20 @@ export default function RepairIntake() {
             {/* pre-repair checklist */}
             <div style={card}>
               <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{tc('repair_intake.checklist_title')}</div>
-              <div style={{ fontSize: 11, color: DIM, marginBottom: 12 }}>{tc('repair_intake.checklist_hint')}</div>
+              <div style={{ fontSize: 11, color: tokens.hint, marginBottom: 12 }}>{tc('repair_intake.checklist_hint')}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {checklist.map(c => {
-                  const col = c.result === 'pass' ? GOOD : c.result === 'fail' ? BAD : DIM
+                  // pass/fail/untested → tone color + its matching pale/ring
+                  // background+border, same idiom as Banner.tsx's tone map.
+                  const col  = c.result === 'pass' ? tokens.success : c.result === 'fail' ? tokens.danger : tokens.hint
+                  const ring = c.result === 'pass' ? tokens.successRing : c.result === 'fail' ? tokens.dangerRing : tokens.border
+                  const pale = c.result === 'pass' ? tokens.successPale : c.result === 'fail' ? tokens.dangerPale : 'rgba(120,115,109,.14)'
                   const txt = c.result === 'pass' ? tc('repair_intake.result_pass') : c.result === 'fail' ? tc('repair_intake.result_fail') : tc('repair_intake.result_untested')
                   return (
                     <button key={c.key} onClick={() => cycleChecklist(c.key)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', border: `1px solid ${c.result === 'untested' ? '#334155' : col + '66'}`, borderRadius: 8, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                      <span style={{ fontSize: 13, color: '#f1f5f9' }}>{c.label}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: col, padding: '3px 10px', borderRadius: 12, background: col + '22' }}>{txt}</span>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: tokens.bg, border: `1px solid ${ring}`, borderRadius: 8, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <span style={{ fontSize: 13, color: tokens.ink }}>{c.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: col, padding: '3px 10px', borderRadius: 12, background: pale }}>{txt}</span>
                     </button>
                   )
                 })}
@@ -596,13 +622,13 @@ export default function RepairIntake() {
             </div>
 
             {/* summary */}
-            <div style={{ ...card, background: '#0f172a' }}>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>{tc('repair_intake.summary')}</div>
-              <div style={{ fontSize: 13, color: '#f1f5f9' }}>{device.model || tc('repair_intake.unknown_device')}{device.serial ? ' · ' + device.serial : ''}</div>
-              <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{tc('repair_intake.photos_checks_line', { photos: photos.length, photoWord: photos.length === 1 ? tc('repair_intake.photo_singular') : tc('repair_intake.photo_plural'), done: checklist.filter(c => c.result !== 'untested').length, total: checklist.length })}</div>
+            <div style={{ ...card, background: tokens.bg }}>
+              <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 8 }}>{tc('repair_intake.summary')}</div>
+              <div style={{ fontSize: 13, color: tokens.ink }}>{device.model || tc('repair_intake.unknown_device')}{device.serial ? ' · ' + device.serial : ''}</div>
+              <div style={{ fontSize: 12, color: tokens.hint, marginTop: 4 }}>{tc('repair_intake.photos_checks_line', { photos: photos.length, photoWord: photos.length === 1 ? tc('repair_intake.photo_singular') : tc('repair_intake.photo_plural'), done: checklist.filter(c => c.result !== 'untested').length, total: checklist.length })}</div>
             </div>
 
-            {submitError && <div className="pos-banner" style={{ color: BAD, fontSize: 13 }}>{submitError}</div>}
+            {submitError && <Banner tone="danger">{submitError}</Banner>}
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setStage('condition_photos')} style={btnSecondary}>{tc('repair_intake.back')}</button>
@@ -615,15 +641,15 @@ export default function RepairIntake() {
         {stage === 'done' && (
           <div className="pos-sheet pos-reveal" style={{ ...card, textAlign: 'center', padding: '40px 24px' }}>
             <div className="pos-success-icon" style={{ width: 72, height: 72, borderRadius: 36, background: 'rgba(34,197,94,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GOOD} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={tokens.success} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{tc('repair_intake.ticket_created')}</div>
             {pendingSync ? (
-              <div style={{ fontSize: 13, color: WARN, fontWeight: 600, marginBottom: 6 }}>{tc('repair_intake.pending_sync')}</div>
+              <div style={{ fontSize: 13, color: tokens.warning, fontWeight: 600, marginBottom: 6 }}>{tc('repair_intake.pending_sync')}</div>
             ) : ticketNumber ? (
-              <div style={{ fontSize: 18, color: ACC, fontWeight: 700, marginBottom: 6 }}>#{ticketNumber}</div>
+              <div style={{ fontSize: 18, color: tokens.accent, fontWeight: 700, marginBottom: 6 }}>#{ticketNumber}</div>
             ) : null}
-            <div style={{ fontSize: 13, color: MUTED, marginBottom: 24 }}>{tc('repair_intake.checked_in_for', { device: device.model || tc('repair_intake.device_fallback'), customer: customerName || tc('repair_intake.walk_in_customer') })}{customerPhone ? tc('repair_intake.sms_sent') : ''}</div>
+            <div style={{ fontSize: 13, color: tokens.muted, marginBottom: 24 }}>{tc('repair_intake.checked_in_for', { device: device.model || tc('repair_intake.device_fallback'), customer: customerName || tc('repair_intake.walk_in_customer') })}{customerPhone ? tc('repair_intake.sms_sent') : ''}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
               <button onClick={() => window.print()} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.print_ticket')}</button>
               <button onClick={() => router.push('/repair/tickets')} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.view_tickets')}</button>
