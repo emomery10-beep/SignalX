@@ -24,6 +24,18 @@ export async function GET(request: NextRequest) {
 
     if (profilesError) console.error('Profiles query error:', profilesError)
 
+    // last_active_at (migration 20260731000001_profiles_last_active_at.sql) is queried
+    // separately from the main profiles select above — if that migration hasn't been
+    // applied yet in an environment, this query errors in isolation and users just show
+    // as offline, instead of failing the entire admin Users list like is_suspicious does.
+    const lastActiveMap: Record<string, string> = {}
+    const { data: activityRows, error: activityError } = await supabase
+      .from('profiles')
+      .select('id, last_active_at')
+    if (activityError) console.error('last_active_at query error (migration applied?):', activityError)
+    activityRows?.forEach((r: any) => { if (r.last_active_at) lastActiveMap[r.id] = r.last_active_at })
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000
+
     // Get all auth users for emails
     const { data: authData, error: authError } = await supabase.auth.admin.listUsers()
     if (authError) console.error('Auth listUsers error:', authError)
@@ -101,6 +113,7 @@ export async function GET(request: NextRequest) {
         const sub = subsByUser[p.id]
         const userTrials = trialsByUser[p.id] || []
         const planId = subsMap[p.id] || p.plan_id || 'free'
+        const lastActiveAt = lastActiveMap[p.id] || null
         return {
           id: p.id,
           email: emailMap[p.id] || '',
@@ -114,29 +127,36 @@ export async function GET(request: NextRequest) {
           pos_enabled: !!p.pos_enabled,
           pos_seat_count: p.pos_seat_count || 0,
           created_at: p.created_at,
+          last_active_at: lastActiveAt,
+          is_online: !!lastActiveAt && (now2 - new Date(lastActiveAt).getTime()) < ONLINE_WINDOW_MS,
           is_suspicious: false,
           plan_payment_status: planId === 'free' ? 'free' : paymentStatus(p, sub, userTrials.filter((t: any) => t.trial_type === 'growth'), !!sub?.stripe_subscription_id),
           pos_payment_status: !p.pos_enabled ? 'free' : paymentStatus(p, sub, userTrials.filter((t: any) => t.trial_type === 'pos'), !!p.pos_stripe_subscription_id),
         }
       })
     } else {
-      users = (authData?.users || []).map((u: any) => ({
-        id: u.id,
-        email: u.email || '',
-        full_name: u.user_metadata?.full_name || u.email?.split('@')[0] || '',
-        plan_id: subsMap[u.id] || 'free',
-        business_type: null,
-        registration_country: null,
-        questions_used: usageMap[u.id] || 0,
-        pos_tx_count: posMap[u.id]?.txCount || 0,
-        pos_revenue: posMap[u.id]?.revenue || 0,
-        pos_enabled: false,
-        pos_seat_count: 0,
-        created_at: u.created_at,
-        is_suspicious: false,
-        plan_payment_status: 'free',
-        pos_payment_status: 'free',
-      }))
+      users = (authData?.users || []).map((u: any) => {
+        const lastActiveAt = lastActiveMap[u.id] || null
+        return {
+          id: u.id,
+          email: u.email || '',
+          full_name: u.user_metadata?.full_name || u.email?.split('@')[0] || '',
+          plan_id: subsMap[u.id] || 'free',
+          business_type: null,
+          registration_country: null,
+          questions_used: usageMap[u.id] || 0,
+          pos_tx_count: posMap[u.id]?.txCount || 0,
+          pos_revenue: posMap[u.id]?.revenue || 0,
+          pos_enabled: false,
+          pos_seat_count: 0,
+          created_at: u.created_at,
+          last_active_at: lastActiveAt,
+          is_online: !!lastActiveAt && (now2 - new Date(lastActiveAt).getTime()) < ONLINE_WINDOW_MS,
+          is_suspicious: false,
+          plan_payment_status: 'free',
+          pos_payment_status: 'free',
+        }
+      })
     }
 
     // Stats
@@ -159,6 +179,7 @@ export async function GET(request: NextRequest) {
       newThisWeek: users.filter(u => new Date(u.created_at) > weekAgo).length,
       newThisMonth: users.filter(u => new Date(u.created_at) > monthStart).length,
       suspiciousCount: users.filter(u => u.is_suspicious).length,
+      onlineCount: users.filter(u => u.is_online).length,
     }
 
     // Upgrade candidates — 7-9 questions used on free plan

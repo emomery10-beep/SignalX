@@ -234,6 +234,16 @@ export default function AppShellClient({ user, conversations, children }: {
     fetch('/api/alerts').then(r => r.json()).then(d => setAlertCount(Array.isArray(d) ? d.filter((a: { is_active: boolean }) => a.is_active).length : 0)).catch(() => {})
   }, [])
 
+  // Keeps profiles.last_active_at fresh so the admin Users tab can show who's
+  // online now. Pings on mount, then every 2 min while this tab has focus —
+  // well inside the 5 min "online" window the admin UI checks against.
+  useEffect(() => {
+    const ping = () => { fetch('/api/heartbeat', { method: 'POST' }).catch(() => {}) }
+    ping()
+    const id = setInterval(() => { if (document.visibilityState === 'visible') ping() }, 2 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
   useEffect(() => { setSidebarOpen(false); setMoreOpen(false) }, [pathname])
   useMotion()
 

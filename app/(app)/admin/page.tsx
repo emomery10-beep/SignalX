@@ -57,11 +57,16 @@ const initialsOf = (name?: string | null, email?: string | null) => {
   }
   return (email || '?').slice(0, 2).toUpperCase()
 }
-function Avatar({ name, email, size = 34 }: { name?: string | null; email?: string | null; size?: number }) {
+function Avatar({ name, email, size = 34, online = false }: { name?: string | null; email?: string | null; size?: number; online?: boolean }) {
   const color = AVATAR_COLORS[hashStr(name || email || '') % AVATAR_COLORS.length]
   return (
-    <div aria-hidden style={{width:size,height:size,borderRadius:'50%',background:color+'1f',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:Math.round(size*0.38),fontWeight:700,fontFamily:'var(--font-sora)',flexShrink:0,letterSpacing:'-.02em'}}>
-      {initialsOf(name, email)}
+    <div style={{position:'relative',flexShrink:0}}>
+      <div aria-hidden style={{width:size,height:size,borderRadius:'50%',background:color+'1f',color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:Math.round(size*0.38),fontWeight:700,fontFamily:'var(--font-sora)',letterSpacing:'-.02em'}}>
+        {initialsOf(name, email)}
+      </div>
+      {online && (
+        <span title="Online now" aria-label="Online now" style={{position:'absolute',bottom:-1,right:-1,width:10,height:10,borderRadius:'50%',background:'#22c55e',border:'2px solid var(--sf)'}} />
+      )}
     </div>
   )
 }
@@ -225,7 +230,7 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
       <div onClick={onClose} className="overlay-enter" style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',zIndex:999,backdropFilter:'blur(2px)',animation:(closing?'fadeOut':'fadeIn')+' 180ms var(--ease-out) both'}} />
       <div style={{position:'fixed',top:0,right:0,bottom:0,width:'100%',maxWidth:440,background:'var(--bg)',zIndex:1000,display:'flex',flexDirection:'column',boxShadow:'-6px 0 40px rgba(0,0,0,.2)',animation:(closing?'userDrawerOut':'userDrawerIn')+' 200ms var(--ease-out) both'}}>
         <div style={{padding:'20px 22px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'flex-start',gap:14,flexShrink:0}}>
-          <Avatar name={u.full_name} email={u.email} size={48} />
+          <Avatar name={u.full_name} email={u.email} size={48} online={!!u.is_online} />
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:17,fontWeight:700,fontFamily:'var(--font-sora)',display:'flex',alignItems:'center',gap:8,letterSpacing:'-.01em',flexWrap:'wrap'}}>
               {u.full_name || tc('admin.empty_dash')}
@@ -273,6 +278,7 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
               { label: 'Questions asked', value: u.questions_used || 0 },
               { label: 'Business type', value: bizTypeLabel(u.business_type) || tc('admin.empty_dash') },
               { label: 'Country', value: u.registration_country || tc('admin.empty_dash') },
+              { label: 'Last active', value: u.is_online ? '🟢 Online now' : (u.last_active_at ? formatDate(lang, u.last_active_at, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : tc('admin.empty_dash')) },
               { label: 'Joined', value: u.created_at ? formatDate(lang, u.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) : tc('admin.empty_dash') },
             ].map(({ label, value }) => (
               <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:'1px solid var(--b)',fontSize:14}}>
@@ -324,7 +330,7 @@ export default function AdminPage() {
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
   const [resettingPinFor, setResettingPinFor] = useState<string | null>(null)
   const [grantingPosFor, setGrantingPosFor] = useState<string | null>(null)
-  const [userFilter, setUserFilter] = useState<'all' | 'suspicious' | 'paying' | 'pos'>('all')
+  const [userFilter, setUserFilter] = useState<'all' | 'suspicious' | 'paying' | 'pos' | 'online'>('all')
   const [userSortKey, setUserSortKey] = useState<'created_at' | 'questions_used' | 'pos_revenue' | 'full_name'>('created_at')
   const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('desc')
   const [userPage, setUserPage] = useState(0)
@@ -490,10 +496,12 @@ export default function AdminPage() {
   const suspiciousUserCount = users.filter(u => u.is_suspicious).length
   const payingUserCount = users.filter(u => u.plan_id && u.plan_id !== 'free').length
   const posEnabledUserCount = users.filter(u => u.pos_enabled).length
+  const onlineUserCount = users.filter(u => u.is_online).length
   const filteredUsers = fu.filter(u => {
     if (userFilter === 'suspicious') return !!u.is_suspicious
     if (userFilter === 'paying') return !!u.plan_id && u.plan_id !== 'free'
     if (userFilter === 'pos') return !!u.pos_enabled
+    if (userFilter === 'online') return !!u.is_online
     return true
   })
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -950,6 +958,7 @@ export default function AdminPage() {
                   {key:'suspicious' as const,label:'Suspicious',n:suspiciousUserCount,color:'#dc2626'},
                   {key:'paying' as const,label:'Paying',n:payingUserCount,color:'#047857'},
                   {key:'pos' as const,label:'POS enabled',n:posEnabledUserCount,color:'#0891b2'},
+                  {key:'online' as const,label:'Online now',n:onlineUserCount,color:'#22c55e'},
                 ].map(f => (
                   <button key={f.key} className="no-tap-target" onClick={()=>{setUserFilter(f.key); setUserPage(0)}}
                     style={{padding:'6px 12px',borderRadius:9999,border:'1px solid '+(userFilter===f.key?f.color:'var(--b)'),background:userFilter===f.key?f.color+'14':'transparent',color:userFilter===f.key?f.color:'var(--tx2)',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
@@ -984,7 +993,7 @@ export default function AdminPage() {
                           style={{borderTop:'1px solid var(--b)',cursor:'pointer',borderLeft:'3px solid '+(suspicious?'#dc2626':'transparent')}}>
                           <td style={{padding:'10px 14px'}}>
                             <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
-                              <Avatar name={u.full_name} email={u.email} />
+                              <Avatar name={u.full_name} email={u.email} online={!!u.is_online} />
                               <div style={{minWidth:0}}>
                                 <div style={{fontWeight:600,fontSize:14.5,display:'flex',alignItems:'center',gap:6,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:220}}>
                                   {u.full_name || tc('admin.empty_dash')}
