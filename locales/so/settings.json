@@ -124,6 +124,15 @@
   "notif_info": "AskBiz wuxuu hubiyaa xogtaada 4 saac kasta wuxuuna diraa digniino ku saabsan kayd hooseeya, hoos-u-dhac dakhli, shixnado daahay, iyo warar qeybeed oo khuseeya ganacsigaaga iyo gobolkaaga.",
   "save_preferences": "Kaydi doorbidyada",
 
+  "notif_customer_title": "Rasiidhada iyo cusboonaysiinta WhatsApp ee macaamiisha",
+  "notif_customer_desc": "Waxa macaamiishaadu ka helayaan ganacsigaaga: xaqiijinta buugsiga, cusboonaysiinta dalabka, xaalada dayactirka, iyo ogeysiisyada gaarsiinta. Waa ka duwan yahay digniinahaaga gaarka ah ee kore.",
+  "notif_customer_whatsapp": "Rasiidhada iyo cusboonaysiinta WhatsApp",
+  "notif_customer_whatsapp_desc": "U dir macaamiisha fariin WhatsApp ah oo ku saabsan xaqiijinta buugsiga, cusboonaysiinta dalabka iyo dayactirka, iyo xaalada gaarsiinta.",
+  "notif_customer_whatsapp_number": "Lambarka WhatsApp ee ganacsiga",
+  "notif_customer_whatsapp_hint": "Ku dar koodhka dalka (tusaale +44 UK, +252 Somalia). Waa lagama maarmaan si loo diro fariimaha macaamiisha.",
+  "notif_customer_info": "Lambarkan waxa loo isticmaalaa in lagu diro xaqiijinta iyo cusboonaysiinta macaamiishaada — ka duwan digniinahaaga gaarka ah ee kore. Waxba lama dirayo ilaa aad shaqaaliso tan oo aad kaydiso lambar sax ah.",
+  "notif_customer_save_error": "Lama kaydin karin. Hubi lambarka WhatsApp oo isku day mar kale.",
+
   "api_title": "Gelitaanka API",
   "api_desc": "Abuur oo maamul furayaasha API si aad AskBiz ugu darto badeecooyinkaaga iyo hab-shaqeedkaaga.",
 

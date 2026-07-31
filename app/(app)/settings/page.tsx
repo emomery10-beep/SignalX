@@ -1189,6 +1189,21 @@ function NotificationsPanel() {
   const [saving, setSaving] = useState(false)
   const [saved,  setSaved]  = useState(false)
 
+  // Customer-facing notifications (pos_notification_settings) — distinct table,
+  // distinct feature from the merchant's own alert preferences above: this is
+  // what CUSTOMERS receive (booking confirmations, order/repair/delivery
+  // updates) via the POS apps' WhatsApp send routes. Kept as its own
+  // fetch/save cycle against its own API route so the two features never get
+  // conflated in one PATCH body.
+  const [custForm, setCustForm] = useState({
+    whatsapp_enabled: false,
+    whatsapp_phone:   '',
+  })
+  const [custLoaded, setCustLoaded] = useState(false)
+  const [custSaving, setCustSaving] = useState(false)
+  const [custSaved,  setCustSaved]  = useState(false)
+  const [custError,  setCustError]  = useState('')
+
   useEffect(() => {
     fetch('/api/profile').then(r => r.json()).then(d => {
       if (d && !d.error) setForm({
@@ -1197,6 +1212,13 @@ function NotificationsPanel() {
         notify_email_alerts: d.notify_email_alerts ?? true,
       })
     })
+    fetch('/api/pos/notification-settings').then(r => r.json()).then(d => {
+      if (d && !d.error) setCustForm({
+        whatsapp_enabled: d.whatsapp_enabled ?? false,
+        whatsapp_phone:   d.whatsapp_phone   || '',
+      })
+      setCustLoaded(true)
+    }).catch(() => setCustLoaded(true))
   }, [])
 
   const save = async () => {
@@ -1209,6 +1231,24 @@ function NotificationsPanel() {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const saveCustomer = async () => {
+    setCustError('')
+    setCustSaving(true)
+    const res = await fetch('/api/pos/notification-settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(custForm),
+    })
+    setCustSaving(false)
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      setCustError(d.error || tc('settings.notif_customer_save_error'))
+      return
+    }
+    setCustSaved(true)
+    setTimeout(() => setCustSaved(false), 2000)
   }
 
   const inp: React.CSSProperties = {
@@ -1274,6 +1314,59 @@ function NotificationsPanel() {
         style={{ padding: '10px 22px', borderRadius: 9999, border: 'none', background: '#d08a59', color: '#fff', fontSize: 15, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
       >
         {saved ? `${tc('settings.saved')} ✓` : saving ? tc('settings.saving') : tc('settings.save_preferences')}
+      </button>
+
+      {/* Divider — everything above is the merchant's own alert preferences
+          (profiles.notify_whatsapp etc). Everything below is a distinct
+          feature: what CUSTOMERS receive from this business. */}
+      <div style={{ height: 1, background: 'var(--b)', margin: '36px 0 28px' }}/>
+
+      <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{tc('settings.notif_customer_title')}</h2>
+      <p style={{ margin: '0 0 28px', fontSize: 15, color: 'var(--tx3)' }}>{tc('settings.notif_customer_desc')}</p>
+
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{tc('settings.notif_channels')}</div>
+        {row(
+          tc('settings.notif_customer_whatsapp'),
+          tc('settings.notif_customer_whatsapp_desc'),
+          custForm.whatsapp_enabled,
+          () => setCustForm(f => ({ ...f, whatsapp_enabled: !f.whatsapp_enabled }))
+        )}
+      </div>
+
+      {custForm.whatsapp_enabled && (
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.notif_customer_whatsapp_number')}</label>
+          <input
+            style={inp}
+            value={custForm.whatsapp_phone}
+            onChange={e => setCustForm(f => ({ ...f, whatsapp_phone: e.target.value }))}
+            placeholder="+44 7700 900000"
+          />
+          <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--tx3)' }}>
+            {tc('settings.notif_customer_whatsapp_hint')}
+          </p>
+        </div>
+      )}
+
+      {custError && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', marginBottom: 20 }}>
+          <p style={{ margin: 0, fontSize: 14, color: '#dc2626', lineHeight: 1.5 }}>{custError}</p>
+        </div>
+      )}
+
+      <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)', marginBottom: 24 }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--tx2)', lineHeight: 1.6 }}>
+          {tc('settings.notif_customer_info')}
+        </p>
+      </div>
+
+      <button
+        onClick={saveCustomer}
+        disabled={custSaving || !custLoaded}
+        style={{ padding: '10px 22px', borderRadius: 9999, border: 'none', background: '#d08a59', color: '#fff', fontSize: 15, fontWeight: 600, cursor: custSaving ? 'default' : 'pointer', fontFamily: 'inherit' }}
+      >
+        {custSaved ? `${tc('settings.saved')} ✓` : custSaving ? tc('settings.saving') : tc('settings.save_preferences')}
       </button>
     </div>
   )

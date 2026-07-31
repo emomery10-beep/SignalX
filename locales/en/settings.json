@@ -125,6 +125,15 @@
   "notif_info": "AskBiz checks your data every 4 hours and sends alerts for low stock, revenue drops, delayed shipments, and sector news relevant to your business and region.",
   "save_preferences": "Save preferences",
 
+  "notif_customer_title": "Customer WhatsApp receipts & updates",
+  "notif_customer_desc": "What customers receive from your business — booking confirmations, order updates, repair status, and delivery notifications. Separate from your own alerts above.",
+  "notif_customer_whatsapp": "WhatsApp receipts & updates",
+  "notif_customer_whatsapp_desc": "Send customers a WhatsApp message for booking confirmations, order and repair updates, and delivery status.",
+  "notif_customer_whatsapp_number": "Business WhatsApp number",
+  "notif_customer_whatsapp_hint": "Include country code (e.g. +44 for UK, +234 for Nigeria). Required to send customer messages.",
+  "notif_customer_info": "This number is used to send confirmations and updates to your customers — separate from your own personal alerts above. Nothing sends until you enable this and save a valid number.",
+  "notif_customer_save_error": "Couldn't save — check the WhatsApp number and try again.",
+
   "api_title": "API access",
   "api_desc": "Create and manage API keys to integrate AskBiz into your own products and workflows.",
 
