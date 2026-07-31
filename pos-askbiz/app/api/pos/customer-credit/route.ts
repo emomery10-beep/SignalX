@@ -159,15 +159,41 @@ Reply with ONLY valid JSON, no other text:
   if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   const service = createServiceClient()
 
+  // Idempotency: a client_tx_id makes a retried/double-tapped submit safe —
+  // this is real money (debt/repayment), so a duplicate write here is a
+  // correctness bug, not just an annoyance. Dedupe before inserting.
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
+
   if (action === 'payment') {
     const amount = parseAmount(body.amount)
     const customerId = String(body.customer_id || '')
     if (!customerId || amount <= 0) return NextResponse.json({ error: 'customer_id and a positive amount are required' }, { status: 400 })
 
-    const { error } = await service.from('pos_customer_credit').insert({
+    if (clientTxId) {
+      const { data: dupe } = await service.from('pos_customer_credit')
+        .select('id').eq('owner_id', auth.ownerId).eq('client_tx_id', clientTxId).maybeSingle()
+      if (dupe) {
+        const { data: customer } = await service.from('pos_customers').select('name, balance_owed').eq('id', customerId).maybeSingle()
+        return NextResponse.json({ balance_owed: customer?.balance_owed ?? 0, name: customer?.name ?? null, deduped: true })
+      }
+    }
+
+    let { error } = await service.from('pos_customer_credit').insert({
       owner_id: auth.ownerId, customer_id: customerId, kind: 'payment',
       amount, note: body.note || null, created_by: auth.staffId || auth.ownerId,
+      client_tx_id: clientTxId,
     })
+    if (error && clientTxId && (error as any).code === '23505') {
+      // Concurrent retry already recorded this — not an error.
+      error = null as any
+    } else if (error && /client_tx_id|column|schema cache/i.test(error.message || '')) {
+      // Live schema may predate the client_tx_id migration.
+      const retry = await service.from('pos_customer_credit').insert({
+        owner_id: auth.ownerId, customer_id: customerId, kind: 'payment',
+        amount, note: body.note || null, created_by: auth.staffId || auth.ownerId,
+      })
+      error = retry.error
+    }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     const { data: customer } = await service.from('pos_customers').select('name, balance_owed').eq('id', customerId).maybeSingle()
@@ -181,13 +207,29 @@ Reply with ONLY valid JSON, no other text:
     if (!name && !phone) return NextResponse.json({ error: 'name or phone required' }, { status: 400 })
     if (amount <= 0) return NextResponse.json({ error: 'a positive amount is required' }, { status: 400 })
 
+    if (clientTxId) {
+      const { data: dupe } = await service.from('pos_customer_credit')
+        .select('customer_id').eq('owner_id', auth.ownerId).eq('client_tx_id', clientTxId).maybeSingle()
+      if (dupe) return NextResponse.json({ customer_id: dupe.customer_id, deduped: true })
+    }
+
     const customerId = await findOrCreateCustomer(service, auth.ownerId, name, phone)
     if (!customerId) return NextResponse.json({ error: 'could not create customer' }, { status: 500 })
 
-    const { error } = await service.from('pos_customer_credit').insert({
+    let { error } = await service.from('pos_customer_credit').insert({
       owner_id: auth.ownerId, customer_id: customerId, kind: 'opening',
       amount, note: 'Migrated balance', created_by: auth.staffId || auth.ownerId,
+      client_tx_id: clientTxId,
     })
+    if (error && clientTxId && (error as any).code === '23505') {
+      error = null as any
+    } else if (error && /client_tx_id|column|schema cache/i.test(error.message || '')) {
+      const retry = await service.from('pos_customer_credit').insert({
+        owner_id: auth.ownerId, customer_id: customerId, kind: 'opening',
+        amount, note: 'Migrated balance', created_by: auth.staffId || auth.ownerId,
+      })
+      error = retry.error
+    }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ customer_id: customerId })
   }

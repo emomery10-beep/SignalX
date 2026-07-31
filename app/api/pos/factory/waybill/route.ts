@@ -3,6 +3,17 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 
+// DEAD CODE WARNING (confirmed 2026-07-31, data-eng audit): zero callers
+// anywhere in the monorepo — root has no app/factory/waybill page. The live
+// pos_factory_waybills table matches pos-askbiz's schema instead (its own
+// 20260724000008_factory_waybills.sql migration), which has no `status`
+// column, a settable (not generated) `is_on_time`, and a `client_tx_id`
+// idempotency column this route knows nothing about. If this route is ever
+// wired up to a real caller, it WILL break immediately (its GET filters
+// `.eq('status','dispatched')` against a column that doesn't exist live) —
+// same drift class already hit and fixed for pos_factory_batches. Reconcile
+// against pos-askbiz's shape (or retire this route) before reviving it.
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }

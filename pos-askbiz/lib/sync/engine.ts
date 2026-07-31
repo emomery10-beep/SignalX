@@ -33,10 +33,11 @@ async function upsertRecords(
   userId: string,
   sourceId: string,
   records: UnifiedRecord[]
-): Promise<{ inserted: number; updated: number }> {
-  if (!records.length) return { inserted: 0, updated: 0 }
+): Promise<{ inserted: number; updated: number; failed: number; error?: string }> {
+  if (!records.length) return { inserted: 0, updated: 0, failed: 0 }
 
-  let inserted = 0, updated = 0
+  let inserted = 0, updated = 0, failed = 0
+  let lastError: string | undefined
 
   // Batch in chunks of 100 to avoid payload limits
   for (let i = 0; i < records.length; i += 100) {
@@ -57,10 +58,19 @@ async function upsertRecords(
 
     if (!error && data) {
       inserted += data.length
+    } else if (error) {
+      // Don't swallow this — a batch can fail here on a constraint unrelated
+      // to this call's own onConflict target (e.g. unified_data_pos_daily_uniq
+      // vs a per-line-item POS write in root's syncAskBizPOS — see the
+      // data-eng audit). Silently dropping it made sync_log/connected_sources
+      // report 'success' while rows never landed.
+      failed += batch.length
+      lastError = error.message
+      console.error(`[sync] unified_data upsert failed for user ${userId} source ${sourceId}: ${error.message}`)
     }
   }
 
-  return { inserted, updated }
+  return { inserted, updated, failed, error: lastError }
 }
 
 // ── Shopify sync ──────────────────────────────────────────────
@@ -657,16 +667,20 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
       syncError = e instanceof Error ? e.message : 'Unknown sync error'
     }
 
-    const { inserted, updated } = records.length
+    const { inserted, updated, failed, error: upsertError } = records.length
       ? await upsertRecords(supabase, source.user_id, source.id, records)
-      : { inserted: 0, updated: 0 }
+      : { inserted: 0, updated: 0, failed: 0, error: undefined as string | undefined }
 
-    const status = syncError ? (records.length ? 'partial' : 'error') : 'success'
+    if (failed > 0 && !syncError) {
+      syncError = `${failed} of ${records.length} records failed to write to unified_data: ${upsertError}`
+    }
+
+    const status = syncError ? (inserted > 0 ? 'partial' : 'error') : 'success'
 
     // Update source last_synced_at
     await supabase.from('connected_sources').update({
       last_synced_at: new Date().toISOString(),
-      status: syncError && !records.length ? 'error' : 'active',
+      status: syncError && inserted === 0 ? 'error' : 'active',
       error_message: syncError || null,
     }).eq('id', source.id)
 

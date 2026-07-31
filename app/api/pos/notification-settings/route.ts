@@ -10,11 +10,13 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 // intentionally separate from /api/profile's `notify_whatsapp`, which is the
 // merchant's own personal alert preference on a different table/column.
 //
-// owner_id has a UNIQUE constraint but the table only ships SELECT/UPDATE RLS
-// policies — no INSERT policy exists yet, so a first-time save can't go
-// through the user's own RLS-scoped session. We authenticate the request with
-// the normal session client, then perform the actual write with the service
-// client, always forcing owner_id to the authenticated user's id (never taken
+// owner_id has a UNIQUE constraint but the table shipped with only SELECT/
+// UPDATE RLS policies — no INSERT policy, so a first-time save couldn't go
+// through the user's own RLS-scoped session. The missing policy is now added
+// in 20260731000002_pos_notification_settings_insert_rls.sql, but this route
+// still authenticates with the normal session client and performs the actual
+// write with the service client, always forcing owner_id to the authenticated
+// user's id (never taken
 // from the request body).
 
 const DEFAULTS = {

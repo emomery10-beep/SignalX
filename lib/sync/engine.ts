@@ -43,10 +43,11 @@ async function upsertRecords(
   userId: string,
   sourceId: string,
   records: UnifiedRecord[]
-): Promise<{ inserted: number; updated: number }> {
-  if (!records.length) return { inserted: 0, updated: 0 }
+): Promise<{ inserted: number; updated: number; failed: number; error?: string }> {
+  if (!records.length) return { inserted: 0, updated: 0, failed: 0 }
 
-  let inserted = 0, updated = 0
+  let inserted = 0, updated = 0, failed = 0
+  let lastError: string | undefined
 
   // Batch in chunks of 100 to avoid payload limits
   for (let i = 0; i < records.length; i += 100) {
@@ -67,10 +68,19 @@ async function upsertRecords(
 
     if (!error && data) {
       inserted += data.length
+    } else if (error) {
+      // Don't swallow this: a batch can fail here even when the source fetch
+      // above succeeded (e.g. a unique-constraint collision unrelated to this
+      // batch's own onConflict target — see unified_data_pos_daily_uniq vs
+      // syncAskBizPOS in the data-eng audit). Silently dropping it made
+      // sync_log/connected_sources report 'success' while rows never landed.
+      failed += batch.length
+      lastError = error.message
+      console.error(`[sync] unified_data upsert failed for user ${userId} source ${sourceId}: ${error.message}`)
     }
   }
 
-  return { inserted, updated }
+  return { inserted, updated, failed, error: lastError }
 }
 
 // ── Shopify: refresh expired access token ─────────────────────
@@ -459,6 +469,19 @@ async function syncSquare(
 // ── AskBiz POS sync ────────────────────────────────────────────
 // Same Supabase project as pos.askbiz.co — no external API call, just a
 // direct read of this user's own pos_transactions/pos_items/inventory rows.
+// Only runs for a user with a connected_sources row where source_type='askbiz_pos' —
+// nothing in the current codebase creates that row (checked: no auth/callback/setup
+// route inserts it), so this path is currently dormant/unreachable for new activity.
+// DO NOT wire up a UI to create that row without first resolving the collision below:
+// its per-line-item unified_data writes (source_type='askbiz_pos') target channel='pos'
+// record_date=today, the same bucket `sync_pos_to_unified_data()` (018_pos.sql +
+// 20260725 fixes) maintains as one aggregated row per user/day under source_type
+// 'askbiz_pos_daily_agg'. Postgres enforces the unified_data_pos_daily_uniq partial
+// index regardless of which onConflict target this function's caller (upsertRecords)
+// specifies, so once the trigger's row exists for a day, every later line-item insert
+// here 23505s and is now surfaced (not silently dropped) via upsertRecords' returned
+// `failed` count — but it still never lands. Needs a product decision (keep one
+// mechanism, or key the two under fully separate buckets) before re-enabling.
 async function syncAskBizPOS(
   supabase: ReturnType<typeof createServiceClient>,
   userId: string
@@ -2231,16 +2254,20 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
       syncError = e instanceof Error ? e.message : 'Unknown sync error'
     }
 
-    const { inserted, updated } = records.length
+    const { inserted, updated, failed, error: upsertError } = records.length
       ? await upsertRecords(supabase, source.user_id, source.id, records)
-      : { inserted: 0, updated: 0 }
+      : { inserted: 0, updated: 0, failed: 0, error: undefined as string | undefined }
 
-    const status = syncError ? (records.length ? 'partial' : 'error') : 'success'
+    if (failed > 0 && !syncError) {
+      syncError = `${failed} of ${records.length} records failed to write to unified_data: ${upsertError}`
+    }
+
+    const status = syncError ? (inserted > 0 ? 'partial' : 'error') : 'success'
 
     // Update source last_synced_at
     await supabase.from('connected_sources').update({
       last_synced_at: new Date().toISOString(),
-      status: syncError && !records.length ? 'error' : 'active',
+      status: syncError && inserted === 0 ? 'error' : 'active',
       error_message: syncError || null,
     }).eq('id', source.id)
 

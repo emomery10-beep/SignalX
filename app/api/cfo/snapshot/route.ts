@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, gross_margin, cost_price, units_sold, product_name, category, source_type')
       .eq('user_id', user.id)
-      .neq('source_type', 'pos')                    // POS revenue captured via pos_transactions — exclude to prevent double-counting
+      .neq('channel', 'pos')                    // POS revenue captured via pos_transactions — exclude to prevent double-counting (channel, not source_type: POS rows use source_type 'askbiz_pos'/'askbiz_pos_daily_agg', never the literal 'pos')
       .gte('record_date', start)
       .lte('record_date', end)
       .order('record_date', { ascending: true })
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, cost_price, units_sold, source_type')
       .eq('user_id', user.id)
-      .neq('source_type', 'pos')                    // same guard for comparison period
+      .neq('channel', 'pos')                    // same guard for comparison period
       .gte('record_date', compStart)
       .lte('record_date', compEnd)
       .limit(5000),
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, cost_price, units_sold')
       .eq('user_id', user.id)
-      .neq('source_type', 'pos')                    // exclude POS — captured via pos_transactions
+      .neq('channel', 'pos')                    // exclude POS — captured via pos_transactions
       .gte('record_date', sixMonthsAgo)
       .lte('record_date', todayStr)
       .order('record_date', { ascending: true })

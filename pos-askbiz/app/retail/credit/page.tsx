@@ -103,9 +103,10 @@ export default function CreditPage() {
     if (!(amt > 0)) { setError(tc('retail_credit.err_amount')); return }
     setPaying(true); setError('')
     try {
+      const clientTxId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `credit_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
       const res = await fetch(`${API}/api/pos/customer-credit`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
-        body: JSON.stringify({ action: 'payment', customer_id: selected.id, amount: amt }),
+        body: JSON.stringify({ action: 'payment', customer_id: selected.id, amount: amt, client_tx_id: clientTxId }),
       })
       const d = await res.json()
       if (!res.ok) { setError(d.error || tc('retail_credit.err_save')); setPaying(false); return }
@@ -123,9 +124,10 @@ export default function CreditPage() {
     if (!(amt > 0)) { setError(tc('retail_credit.err_amount')); return }
     setManualSaving(true); setError('')
     try {
+      const clientTxId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `credit_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
       const res = await fetch(`${API}/api/pos/customer-credit`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
-        body: JSON.stringify({ action: 'opening', name: manualName.trim(), phone: manualPhone.trim(), amount: amt }),
+        body: JSON.stringify({ action: 'opening', name: manualName.trim(), phone: manualPhone.trim(), amount: amt, client_tx_id: clientTxId }),
       })
       const d = await res.json()
       if (!res.ok) { setError(d.error || tc('retail_credit.err_save')); setManualSaving(false); return }
