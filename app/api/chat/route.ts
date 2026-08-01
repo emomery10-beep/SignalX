@@ -460,6 +460,16 @@ export async function POST(request: NextRequest) {
     const growthDurationMatch = q.match(/last\s*(\d+)\s*(day|week|month|year)s?/i)
     const growthWordMatch = /\b(grown|growth|grew|growing|increase[d]?|decrease[d]?|compared?\s+to|vs\.?\s+(last|previous)|versus)\b/i.test(q)
 
+    // Absolute calendar month name (e.g. "how was my expenses for the month of July") — a
+    // named month is a stronger, more specific signal than any relative-window keyword below,
+    // so it's checked right after growth phrasing and before the generic relative branches.
+    const MONTH_NAMES = ['january','february','march','april','may','june','july','august','september','october','november','december']
+    const monthNameMatch = q.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i)
+
+    // Expense/spending question — distinct from the broad cost/margin detector above, which
+    // covers product-level COGS, not general business outgoings (rent, vendor bills, etc.).
+    const isExpenseQuestion = /\bexpense(s)?\b|\bspending\b|\bspent\b|\boutgoing(s)?\b|\bhow much.*\b(pay|paid)\b/i.test(q)
+
     if (growthWordMatch) {
       // Growth / period-over-period comparison question (e.g. "how much has my retail grown in last 2 months")
       isGrowthQuery = true
@@ -476,6 +486,16 @@ export async function POST(request: NextRequest) {
         periodLabel = 'Last 30 days'
       }
       from = new Date(now); from.setDate(from.getDate() - growthSpanDays); from.setHours(0,0,0,0)
+    } else if (monthNameMatch) {
+      const monthIdx = MONTH_NAMES.indexOf(monthNameMatch[1].toLowerCase())
+      const yearMatch = q.match(/\b(20\d{2})\b/)
+      let year = yearMatch ? parseInt(yearMatch[1], 10) : now.getFullYear()
+      // No year given and the named month hasn't happened yet this year (e.g. asking about
+      // "July" in January) — assume the most recent past occurrence, i.e. last year's.
+      if (!yearMatch && monthIdx > now.getMonth()) year -= 1
+      from = new Date(year, monthIdx, 1); from.setHours(0, 0, 0, 0)
+      to = new Date(year, monthIdx + 1, 0); to.setHours(23, 59, 59, 999)
+      periodLabel = `${monthNameMatch[1][0].toUpperCase()}${monthNameMatch[1].slice(1).toLowerCase()} ${year}`
     } else if (/yesterday/.test(q)) {
       const d = new Date(now); d.setDate(d.getDate() - 1); d.setHours(0,0,0,0)
       from = d
@@ -897,6 +917,42 @@ export async function POST(request: NextRequest) {
       } else {
         posContext += `Revenue change: no revenue recorded in either period — there is nothing to compare yet.\n`
         posContext += `IMPORTANT: State plainly that there were no transactions in either period, so growth cannot be measured yet. Do not invent a percentage.\n`
+      }
+    }
+
+    // Expenses — query the real cfo_expenses tracker (manually-entered / receipt-scanned
+    // business outgoings) for the resolved date window. Previously an expense question got
+    // no expense data at all and the LLM either fabricated "expense tracking isn't available"
+    // (false — it exists, this route just never queried it) or substituted irrelevant revenue
+    // KPI cards. Deterministic, same pattern as the growth comparison above.
+    if (isExpenseQuestion) {
+      const expFrom = from.toISOString().slice(0, 10)
+      const expTo = to.toISOString().slice(0, 10)
+      const { data: expenseRows, error: expError } = await service
+        .from('cfo_expenses')
+        .select('vendor, date, amount, category')
+        .eq('user_id', user.id)
+        .gte('date', expFrom)
+        .lte('date', expTo)
+        .order('date', { ascending: false })
+        .limit(500)
+      if (expError) console.error('cfo_expenses query error:', expError.message)
+      const expenses = expenseRows || []
+      const totalExpenses = expenses.reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0)
+
+      posContext += `\nEXPENSES (${periodLabel}):\n`
+      if (expenses.length > 0) {
+        const byCategory: Record<string, number> = {}
+        for (const e of expenses as any[]) {
+          const cat = e.category || 'Other'
+          byCategory[cat] = (byCategory[cat] || 0) + (Number(e.amount) || 0)
+        }
+        posContext += `${expenses.length} recorded expense(s) totaling ${finalSymbol}${totalExpenses.toFixed(2)}.\n`
+        posContext += `By category: ${Object.entries(byCategory).map(([c, v]) => `${c}: ${finalSymbol}${v.toFixed(2)}`).join(', ')}.\n`
+        posContext += `IMPORTANT: State this exact total (${finalSymbol}${totalExpenses.toFixed(2)}) plainly as the answer. Use it as the primary kpi_card (label "Expenses (${periodLabel})", value "${finalSymbol}${totalExpenses.toFixed(2)}"). Do not substitute unrelated revenue or transaction-count figures for this — the user asked about expenses specifically.\n`
+      } else {
+        posContext += `No expenses recorded in the CFO Expenses tracker for ${periodLabel}.\n`
+        posContext += `IMPORTANT: State plainly that no expenses are recorded for ${periodLabel} yet, and that they can add them from the CFO Expenses tab. This platform DOES track expenses (the feature exists) — do not claim expense tracking "isn't happening" or "isn't available", only that none are recorded for this specific period. Do NOT show unrelated revenue or transaction-count KPI cards as if they answer this expense question — omit kpi_cards/stat tiles entirely rather than substituting revenue figures.\n`
       }
     }
   }
