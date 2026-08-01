@@ -21,6 +21,7 @@ export const POS_FUNNEL_EVENTS = [
   'activate_trial_started',
   'activate_trial_failed',
   'activate_payment_clicked',
+  'coach_mark_shown',
 ] as const
 
 export type PosFunnelEvent = typeof POS_FUNNEL_EVENTS[number]

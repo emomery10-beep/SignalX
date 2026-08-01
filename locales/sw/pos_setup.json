@@ -99,5 +99,7 @@
   "team_pending_note": "Lipa {price}/mwezi zaidi ili kuwapaingia",
   "team_pending_badge": "Wanasubiri",
   "team_pay_pending": "Lipa {price}/mwezi — shughulikia {count}",
-  "team_done": "Imemaliza"
+  "team_done": "Imemaliza",
+  "coach_fork": "Piga picha ya kitu cha kwanza unachouza.",
+  "coach_capture": "Elekeza kamera, kisha gusa kitufe kupiga picha."
 }

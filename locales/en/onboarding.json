@@ -116,5 +116,8 @@
   "whatsapp_help_title": "Need help along the way?",
   "whatsapp_help_body": "Join our WhatsApp customer care group — ask us anything, anytime.",
   "whatsapp_help_cta": "Join WhatsApp group →",
-  "helper_hint": "Tap the speaker, or ask for help."
+  "helper_hint": "Tap the speaker, or ask for help.",
+  "coach_business": "Tap the picture of your shop.",
+  "coach_location": "We found your country. Tap the orange button if this is right.",
+  "coach_trial": "Tap here to start your free trial. No card needed."
 }

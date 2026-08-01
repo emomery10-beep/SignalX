@@ -6,6 +6,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { posSeatPrice } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
 import { trackFunnelEvent } from '@/lib/funnel-track'
+import CoachMark from '@/components/CoachMark'
 
 // ── AskBiz tokens (match onboarding / setup) ─────────────────
 const ACC = '#d08a59'
@@ -22,7 +23,7 @@ type Phase = 'loading' | 'pay' | 'redirecting' | 'checking' | 'pending' | 'activ
 export default function PosActivatePage() {
   const router = useRouter()
   const supabase = createClient()
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
 
   const [phase, setPhase]       = useState<Phase>('loading')
   const [currency, setCurrency] = useState('GBP')
@@ -250,16 +251,18 @@ export default function PosActivatePage() {
               <>
                 {trialAvailable && (
                   <>
-                    <button
-                      style={{ ...bigBtn, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: trialLoading ? .7 : 1, cursor: trialLoading ? 'wait' : 'pointer' }}
-                      onClick={startTrial}
-                      disabled={trialLoading}
-                    >
-                      {trialLoading ? spinner : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
-                      )}
-                      {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
-                    </button>
+                    <CoachMark id="pos-activate-trial" text={tc('onboarding.coach_trial')} lang={lang}>
+                      <button
+                        style={{ ...bigBtn, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: trialLoading ? .7 : 1, cursor: trialLoading ? 'wait' : 'pointer' }}
+                        onClick={startTrial}
+                        disabled={trialLoading}
+                      >
+                        {trialLoading ? spinner : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+                        )}
+                        {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
+                      </button>
+                    </CoachMark>
                     <div style={{ fontSize: 13, color: TX3, marginBottom: 18 }}>{tc('billing.pos_no_card')}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
                       <div style={{ flex: 1, height: 1, background: B2 }} />

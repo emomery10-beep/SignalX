@@ -8,6 +8,7 @@ import PasskeyNudge from '@/components/PasskeyNudge'
 import { FACTORY_TYPE_OPTIONS, FACTORY_TYPE_OTHER } from '@/lib/factory-type-options'
 import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 import { trackFunnelEvent } from '@/lib/funnel-track'
+import CoachMark from '@/components/CoachMark'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
 
@@ -591,6 +592,7 @@ export default function OnboardingPage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 <span style={{ fontSize: 10.5, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.helper_hint')}</span>
               </div>
+              <CoachMark id="onboarding-business" text={tc('onboarding.coach_business')} lang={lang} variant="none">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, marginBottom: 28 }}>
                 {BIZ_TYPES.map(bt => (
                   <button
@@ -613,6 +615,7 @@ export default function OnboardingPage() {
                   </button>
                 ))}
               </div>
+              </CoachMark>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button style={{ ...btn, opacity: canNext.business ? 1 : .5 }} onClick={next} disabled={!canNext.business}>{tc('onboarding.continue')}</button>
               </div>
@@ -647,9 +650,11 @@ export default function OnboardingPage() {
                     <div style={{ fontSize: 11, color: TX3, marginTop: 10 }}>{tc('onboarding.location_confirm_question')}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button style={btn} onClick={() => { setCurrency(geo.currency); setRegion(geo.region); setCountryCode(geo.countryCode); next() }}>
-                      {tc('onboarding.location_confirm_yes')}
-                    </button>
+                    <CoachMark id="onboarding-location" text={tc('onboarding.coach_location')} lang={lang}>
+                      <button style={btn} onClick={() => { setCurrency(geo.currency); setRegion(geo.region); setCountryCode(geo.countryCode); next() }}>
+                        {tc('onboarding.location_confirm_yes')}
+                      </button>
+                    </CoachMark>
                     <button style={ghostBtn} onClick={() => setManualLocation(true)}>
                       {tc('onboarding.location_confirm_change')}
                     </button>
@@ -933,13 +938,15 @@ export default function OnboardingPage() {
               </p>
               {isPosPersona && (
                 <div style={{ maxWidth: 340, margin: '0 auto 20px' }}>
-                  <button
-                    onClick={startTrialAndContinue}
-                    disabled={trialLoading || saving}
-                    style={{ ...btn, width: '100%', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (trialLoading || saving) ? .7 : 1, cursor: (trialLoading || saving) ? 'wait' : 'pointer' }}
-                  >
-                    {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
-                  </button>
+                  <CoachMark id="onboarding-trial" text={tc('onboarding.coach_trial')} lang={lang}>
+                    <button
+                      onClick={startTrialAndContinue}
+                      disabled={trialLoading || saving}
+                      style={{ ...btn, width: '100%', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (trialLoading || saving) ? .7 : 1, cursor: (trialLoading || saving) ? 'wait' : 'pointer' }}
+                    >
+                      {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
+                    </button>
+                  </CoachMark>
                   <div style={{ fontSize: 12, color: TX2 }}>{tc('billing.pos_no_card')}</div>
                 </div>
               )}

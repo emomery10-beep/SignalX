@@ -7,6 +7,7 @@ import { COUNTRY_DIAL, toE164, posSeatPrice } from '@/lib/geo'
 import { speak } from '@/lib/speak'
 import SpeakButton from '@/components/SpeakButton'
 import { trackFunnelEvent } from '@/lib/funnel-track'
+import CoachMark from '@/components/CoachMark'
 
 // ── AskBiz tokens (match onboarding) ──────────────────────────
 const ACC = '#d08a59'
@@ -663,17 +664,19 @@ export default function PosSetupPage() {
                 </button>
 
                 {/* Nothing digital yet → add each item with the camera */}
-                <button onClick={openCapture}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: '16px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 13, background: EV, color: TX, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                  </span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 18, fontWeight: 700, color: TX }}>{tc('pos_setup.fork_fresh_title')}</span>
-                    <span style={{ display: 'block', fontSize: 15, color: TX2, marginTop: 2, lineHeight: 1.45 }}>{tc('pos_setup.fork_fresh_desc')}</span>
-                  </span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m9 18 6-6-6-6"/></svg>
-                </button>
+                <CoachMark id="pos-setup-fork" text={tc('pos_setup.coach_fork')} lang={lang}>
+                  <button onClick={openCapture}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: '16px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 13, background: EV, color: TX, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 18, fontWeight: 700, color: TX }}>{tc('pos_setup.fork_fresh_title')}</span>
+                      <span style={{ display: 'block', fontSize: 15, color: TX2, marginTop: 2, lineHeight: 1.45 }}>{tc('pos_setup.fork_fresh_desc')}</span>
+                    </span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m9 18 6-6-6-6"/></svg>
+                  </button>
+                </CoachMark>
               </>
             ) : (
               /* ── Have items: the working list ── */
@@ -744,13 +747,15 @@ export default function PosSetupPage() {
             <canvas ref={canvasRef} style={{ display: 'none' }} />
 
             {!photo ? (
-              <button style={{ ...bigBtn, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={takePhoto}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-                  <circle cx="12" cy="13" r="3"/>
-                </svg>
-                {tc('pos_setup.take_photo')}
-              </button>
+              <CoachMark id="pos-setup-capture" text={tc('pos_setup.coach_capture')} lang={lang}>
+                <button style={{ ...bigBtn, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={takePhoto}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                  </svg>
+                  {tc('pos_setup.take_photo')}
+                </button>
+              </CoachMark>
             ) : (
               <button style={{ ...ghostBtn, marginBottom: 20 }} onClick={retakePhoto}>
                 {tc('pos_setup.retake')}

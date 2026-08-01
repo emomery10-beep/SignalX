@@ -108,5 +108,7 @@
   "team_pending_note": "Pay {price}/mo more to give them a login.",
   "team_pending_badge": "Pending",
   "team_pay_pending": "Pay {price}/mo — activate {count}",
-  "team_done": "Done"
+  "team_done": "Done",
+  "coach_fork": "Take a photo of the first thing you sell.",
+  "coach_capture": "Point the camera, then tap the button to take the photo."
 }
