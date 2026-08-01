@@ -12,6 +12,7 @@ interface Props {
   summary: string | null | undefined
   metrics: CfoMetric[] | null | undefined
   onExportPdf?: () => void
+  modeActive?: boolean
 }
 
 const dirStyle = {
@@ -20,9 +21,27 @@ const dirStyle = {
   flat: { color: '#94a3b8', icon: '–' },
 }
 
-export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
+export default function CFOBlock({ summary, metrics, onExportPdf, modeActive }: Props) {
   const { tc } = useLang()
-  if (!summary && !metrics?.length) return null
+
+  if (!summary && !metrics?.length) {
+    if (!modeActive) return null
+
+    return (
+      <div style={{
+        borderRadius: 16,
+        border: '1px solid rgba(99,102,241,.25)',
+        background: 'rgba(99,102,241,.03)',
+        overflow: 'hidden',
+        marginBottom: 14,
+        padding: '14px',
+      }}>
+        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--tx3)', lineHeight: 1.5 }}>
+          {tc('chat_cfoblock.noCfoDataMessage')}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{

@@ -1,5 +1,11 @@
 {
   "chartLabelFallback": "Trend",
   "recommendationsHeader": "🎯 Recommendations",
-  "shareInsightFallback": "Business insight from AskBiz"
+  "shareInsightFallback": "Business insight from AskBiz",
+  "feedbackHelpfulLabel": "This was helpful",
+  "feedbackNotHelpfulLabel": "This was not helpful",
+  "feedbackThanks": "Thanks for the feedback",
+  "feedbackCommentPlaceholder": "What was wrong? (optional)",
+  "feedbackSkip": "Skip",
+  "feedbackSend": "Send"
 }

@@ -103,6 +103,7 @@ export default function AskPage() {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<{ name: string; summary: string; sample: unknown[] } | null>(null)
   const [connectedSources, setConnectedSources] = useState<{ source_type: string; status: string; last_synced_at?: string }[]>([])
+  const [sourcesLoadError, setSourcesLoadError] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [isLoading, setIsLoadingLocal] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -143,7 +144,10 @@ export default function AskPage() {
     fetch('/api/sources', { credentials: 'include' })
       .then(r => r.ok ? r.json() : [])
       .then(sources => { if (Array.isArray(sources) && sources.length > 0) setConnectedSources(sources) })
-      .catch(() => {})
+      .catch(err => {
+        setSourcesLoadError(true)
+        console.warn('[ask] failed to load connected sources — status bar may show "no data" even if sources exist', err)
+      })
   }, [])
 
   // Load saved prompts from localStorage
@@ -211,10 +215,17 @@ export default function AskPage() {
         if (data.health) {
           window.dispatchEvent(new CustomEvent('askbiz:health_updated', { detail: data.health }))
         }
-      }).catch(() => {})
+      }).catch(err => {
+        console.warn('[ask] /api/health check failed after file upload — health widget will not update for this file', err)
+      })
 
     } catch (e) {
-      alert(e instanceof Error ? e.message : tc('ask.file_upload_failed'))
+      const errMsg: Message = {
+        id: Date.now().toString(), role: 'assistant',
+        content: `__FILE_ERROR__:${e instanceof Error ? e.message : tc('ask.file_upload_failed')}`,
+        timestamp: new Date()
+      }
+      setMessages(m => [...m, errMsg])
     } finally { setUploading(false) }
   }
 
@@ -246,10 +257,10 @@ export default function AskPage() {
           s.last_location ? `${tc('ask.track_location')}: ${s.last_location}` : '',
           s.supplier_name ? `${tc('ask.track_supplier')}: ${s.supplier_name}` : '',
           s.sku ? `${tc('ask.track_product')}: ${s.sku}${s.quantity ? ' ×' + s.quantity : ''}` : '',
-          s.expected_arrival ? `${tc('ask.track_expected_arrival')}: ${new Date(s.expected_arrival).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : '',
+          s.expected_arrival ? `${tc('ask.track_expected_arrival')}: ${new Date(s.expected_arrival).toLocaleDateString(lang, { day: 'numeric', month: 'short', year: 'numeric' })}` : '',
           s.delay_days > 0 ? `⚠️ ${tc('ask.track_delayed', { days: s.delay_days })}` : '',
-          s.total_value ? `${tc('ask.track_shipment_value')}: £${s.total_value.toLocaleString()}` : '',
-          s.financial_impact > 0 ? `💰 ${tc('ask.track_financial_impact')}: £${s.financial_impact.toFixed(0)}` : '',
+          s.total_value ? `${tc('ask.track_shipment_value')}: ${geo?.currencySymbol || '$'}${s.total_value.toLocaleString()}` : '',
+          s.financial_impact > 0 ? `💰 ${tc('ask.track_financial_impact')}: ${geo?.currencySymbol || '$'}${s.financial_impact.toFixed(0)}` : '',
           '',
           `[${tc('ask.track_view_on_17track')}](https://www.17track.net/en/track?nums=${s.tracking_number})`,
         ].filter(Boolean).join('\n')
@@ -505,7 +516,7 @@ export default function AskPage() {
         </div>
 
         {/* Chat area */}
-        <div ref={chatRef} onScroll={handleChatScroll} style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
+        <div ref={chatRef} onScroll={handleChatScroll} role="log" aria-live="polite" aria-label={tc('ask.transcript_aria_label')} style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
           <div style={{ maxWidth: 680, margin: '0 auto', padding: `16px ${isMobile ? '12px' : '18px'} 8px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
 
             {isEmpty && (
@@ -651,12 +662,20 @@ export default function AskPage() {
                           {tc('ask.try_again')}
                         </button>
                       </div>
+                    ) : msg.content.startsWith('__FILE_ERROR__') ? (
+                      <div className="animate-fade-up" style={{ padding: '14px 16px', borderRadius: 16, borderBottomLeftRadius: 3, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)' }}>
+                        <div style={{ fontSize: 'var(--fs-md)', color: '#ef4444' }}>
+                          {msg.content.slice('__FILE_ERROR__:'.length)}
+                        </div>
+                      </div>
                     ) : msg.result ? (
                       <ResultBlock
                         result={msg.result}
                         question={msg.content}
                         onFollowUp={q => sendMessage(q)}
                         cfoMode={settings.cfoMode}
+                        simulateMode={session.simulateMode}
+                        conversationId={conversationId}
                       />
                     ) : (
                       <div style={{ padding: '10px 14px', borderRadius: 16, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 'var(--fs-md)', lineHeight: 1.6, color: 'var(--tx)' }}>
@@ -721,6 +740,11 @@ export default function AskPage() {
               <span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
                 {tc('ask.status_connected_file', { name: uploadedFile.name })}
+              </span>
+            ) : sourcesLoadError && connectedSources.length === 0 ? (
+              <span style={{ color: '#F59E0B', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', display: 'inline-block' }}/>
+                {tc('ask.status_sources_check_failed')}
               </span>
             ) : connectedSources.length > 0 ? (
               <span style={{ color: syncStale ? '#F59E0B' : '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>

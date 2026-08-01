@@ -153,7 +153,8 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
         <button
           className="no-tap-target"
           onClick={e => { e.stopPropagation(); setSignal(null); setVisible(false); setTimeout(() => setVisible(true), 30000) }}
-          title={tc('chat_pulsebar.clickToAsk')}
+          title={tc('chat_pulsebar.dismiss')}
+          aria-label={tc('chat_pulsebar.dismiss')}
           style={{
             width: 20, height: 20, borderRadius: '50%',
             border: 'none', background: 'transparent',

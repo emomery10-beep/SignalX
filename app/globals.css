@@ -960,6 +960,17 @@ img {
   }
 }
 
+/* Scenario block before/after grid — stack on very small screens */
+@media (max-width: 480px) {
+  .scenario-block-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .scenario-block-before {
+    border-right: none !important;
+    border-bottom: 1px solid var(--b);
+  }
+}
+
 /* Page shell — consistent layout for app pages */
 .page-shell {
   display: flex;

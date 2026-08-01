@@ -5,5 +5,6 @@
   "verdictProblem": "✕ Not recommended",
   "columnCurrent": "Current",
   "columnAfter": "After Change",
-  "wasBadge": "← was {value}"
+  "wasBadge": "← was {value}",
+  "noScenarioMessage": "This question doesn't have a before/after comparison — try asking a \"what if\" question, e.g. \"what if I raised prices 10%?\""
 }

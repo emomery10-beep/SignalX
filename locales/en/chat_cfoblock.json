@@ -1,4 +1,5 @@
 {
   "headerLabel": "CFO Summary",
-  "exportButton": "Export report"
+  "exportButton": "Export report",
+  "noCfoDataMessage": "This question doesn't have board-level financial detail — try asking about margin, revenue, or costs."
 }

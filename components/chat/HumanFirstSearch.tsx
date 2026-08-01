@@ -303,6 +303,7 @@ export default function HumanFirstSearch({
           <button
             onClick={onVoiceToggle}
             title={isRecording ? tc('chat_humanfirst.voiceStopTitle') : tc('chat_humanfirst.voiceSpeakTitle')}
+            aria-label={isRecording ? tc('chat_humanfirst.voiceStopTitle') : tc('chat_humanfirst.voiceSpeakTitle')}
             style={{
               position: 'absolute',
               right: 56,
@@ -343,6 +344,7 @@ export default function HumanFirstSearch({
           onClick={() => onSend(inputValue)}
           disabled={!canSend}
           aria-disabled={!canSend}
+          aria-label={tc('chat_humanfirst.sendButtonLabel')}
           style={{
             position: 'absolute',
             right: 6,

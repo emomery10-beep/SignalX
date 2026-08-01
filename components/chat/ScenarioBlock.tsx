@@ -8,6 +8,7 @@ interface Props {
   after: ScenarioItem[]
   summary: string | null | undefined
   verdict: 'act' | 'watch' | 'problem' | null | undefined
+  modeActive?: boolean
 }
 
 function buildVerdictStyle(tc: (k: string) => string) {
@@ -18,9 +19,26 @@ function buildVerdictStyle(tc: (k: string) => string) {
   }
 }
 
-export default function ScenarioBlock({ before, after, summary, verdict }: Props) {
+export default function ScenarioBlock({ before, after, summary, verdict, modeActive }: Props) {
   const { tc } = useLang()
-  if (!before?.length || !after?.length) return null
+
+  if (!before?.length || !after?.length) {
+    if (!modeActive) return null
+
+    return (
+      <div style={{
+        borderRadius: 16,
+        border: '1px solid var(--b)',
+        overflow: 'hidden',
+        marginBottom: 14,
+        padding: '14px',
+      }}>
+        <div style={{ fontSize: 'var(--fs-md)', color: 'var(--tx3)', lineHeight: 1.5 }}>
+          {tc('chat_scenarioblock.noScenarioMessage')}
+        </div>
+      </div>
+    )
+  }
 
   const verdictStyle = buildVerdictStyle(tc)
   const vs = verdict ? verdictStyle[verdict] : verdictStyle.watch
@@ -55,9 +73,9 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
       </div>
 
       {/* Before / After grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+      <div className="scenario-block-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
         {/* Before */}
-        <div style={{ padding: '14px', borderRight: '1px solid var(--b)' }}>
+        <div className="scenario-block-before" style={{ padding: '14px', borderRight: '1px solid var(--b)' }}>
           <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
             {tc('chat_scenarioblock.columnCurrent')}
           </div>

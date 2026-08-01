@@ -156,6 +156,7 @@
   "status_resync": "Re-sync",
   "status_manage": "Manage",
   "status_no_data": "No data connected · ",
+  "status_sources_check_failed": "Couldn't check your connections — try refreshing",
   "status_connect_link": "Connect your shop or upload a file",
   "status_personalised_suffix": " for personalised answers",
   "sync_just_now": "just now",
@@ -166,5 +167,6 @@
   "save_prompt_placeholder": "e.g. Weekly revenue check",
   "already_saved": "Already saved",
   "save_this_prompt": "Save this prompt",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "transcript_aria_label": "Conversation with AskBiz assistant"
 }

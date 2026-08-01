@@ -75,6 +75,7 @@ export default function CompetitorWatch({ data, marketPosition }: Props) {
             <div key={i} style={{
               display: 'flex',
               alignItems: 'center',
+              flexWrap: 'wrap',
               gap: 10,
               padding: '8px 12px',
               borderRadius: 10,
@@ -86,12 +87,22 @@ export default function CompetitorWatch({ data, marketPosition }: Props) {
                 fontSize: 'var(--fs-xs)', fontWeight: 600,
                 color: 'var(--tx2)',
                 minWidth: 60,
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}>
                 {item.source}
               </span>
 
               {/* Price */}
-              <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: 'var(--tx)', flex: 1 }}>
+              <span style={{
+                fontSize: 'var(--fs-lg)', fontWeight: 700, color: 'var(--tx)', flex: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
                 {item.price}
               </span>
 
@@ -102,6 +113,7 @@ export default function CompetitorWatch({ data, marketPosition }: Props) {
                 background: ps.bg,
                 padding: '3px 9px',
                 borderRadius: 9999,
+                whiteSpace: 'nowrap',
               }}>
                 {ps.icon} {item.delta}
               </span>

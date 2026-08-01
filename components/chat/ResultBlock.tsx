@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import ShareableInsight from './ShareableInsight'
 import VerdictBar from './VerdictBar'
@@ -41,6 +41,8 @@ interface Props {
   onFollowUp: (s: string) => void
   geo?: { currencySymbol?: string } | null
   cfoMode?: boolean
+  simulateMode?: boolean
+  conversationId?: string | null
 }
 
 // Renders **bold** and newlines without dangerouslySetInnerHTML
@@ -75,11 +77,12 @@ function MiniLineChart({ labels, values, label, symbol }: { labels: string[]; va
   }).join(' ')
 
   const fillPts = `${pad},${h - pad} ` + pts + ` ${w - pad},${h - pad}`
+  const chartSummary = `${label}: ranges from ${symbol}${Math.round(min).toLocaleString()} to ${symbol}${Math.round(max).toLocaleString()}`
 
   return (
     <div style={{ margin: '0 0 16px', padding: '16px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
       <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
-      <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }} role="img" aria-label={chartSummary}>
         <defs>
           <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#d08a59" stopOpacity="0.2"/>
@@ -135,8 +138,115 @@ function KpiCardBlock({ cards }: { cards: KpiCard[] }) {
   )
 }
 
+// ── FEEDBACK ──────────────────────────────────────────────────────────────────
+function FeedbackBlock({ question, conversationId }: { question?: string; conversationId?: string | null }) {
+  const { tc } = useLang()
+  const [rating, setRating] = useState<'helpful' | 'not_helpful' | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [comment, setComment] = useState('')
+
+  const submit = async (r: 'helpful' | 'not_helpful', c?: string) => {
+    if (submitting || submitted) return
+    setSubmitting(true)
+    try {
+      await fetch('/api/chat/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: question || '',
+          rating: r,
+          comment: c || undefined,
+          conversationId: conversationId || undefined,
+        }),
+      })
+    } catch {
+      // best-effort — feedback is non-critical, fail silently
+    } finally {
+      setSubmitting(false)
+      setSubmitted(true)
+    }
+  }
+
+  const iconStyle = (color: string): CSSProperties => ({
+    width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color,
+    transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)',
+  })
+
+  if (submitted) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--tx3)' }}>{tc('chat_resultblock.feedbackThanks')}</span>
+      </div>
+    )
+  }
+
+  if (rating === 'not_helpful') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginTop: 6 }}>
+        <input
+          type="text"
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          placeholder={tc('chat_resultblock.feedbackCommentPlaceholder')}
+          style={{
+            width: '100%', maxWidth: 320, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--b)',
+            background: 'var(--sf)', color: 'var(--tx)', fontSize: 'var(--fs-xs)', fontFamily: 'inherit',
+          }}
+        />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => submit('not_helpful')}
+            disabled={submitting}
+            style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 'var(--fs-xs)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {tc('chat_resultblock.feedbackSkip')}
+          </button>
+          <button
+            onClick={() => submit('not_helpful', comment.trim() || undefined)}
+            disabled={submitting}
+            style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 'var(--fs-xs)', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {tc('chat_resultblock.feedbackSend')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 6 }}>
+      <button
+        aria-label={tc('chat_resultblock.feedbackHelpfulLabel')}
+        onClick={() => submit('helpful')}
+        disabled={submitting}
+        style={iconStyle('#22c55e')}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,.08)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--sf)' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 10v12M15 5.88 14 10h6.31a2 2 0 0 1 1.94 2.5l-2.36 9A2 2 0 0 1 17.94 23H7a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h1.76a2 2 0 0 0 1.79-1.11L14 3a3.13 3.13 0 0 1 3 3.88Z"/>
+        </svg>
+      </button>
+      <button
+        aria-label={tc('chat_resultblock.feedbackNotHelpfulLabel')}
+        onClick={() => setRating('not_helpful')}
+        disabled={submitting}
+        style={iconStyle('#ef4444')}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,.08)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--sf)' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 14V2M9 18.12 10 14H3.69a2 2 0 0 1-1.94-2.5l2.36-9A2 2 0 0 1 6.06 1H17a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-1.76a2 2 0 0 0-1.79 1.11L10 21a3.13 3.13 0 0 1-3-3.88Z"/>
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 // ── MAIN RESULT BLOCK ─────────────────────────────────────────────────────────
-export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode }: Props) {
+export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode, simulateMode, conversationId }: Props) {
   const { tc } = useLang()
   const sym = geo?.currencySymbol || '$'
 
@@ -191,12 +301,13 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         marketPosition={result.market_position}
       />
 
-      {/* 1. CFO block (CFO mode only) */}
-      {hasCfo && (
+      {/* 1. CFO block (CFO mode only) — renders even with no data so the user sees why nothing showed up */}
+      {cfoMode && (
         <CFOBlock
           summary={result.cfo_summary}
           metrics={result.cfo_metrics}
           onExportPdf={handleExportReport}
+          modeActive={cfoMode}
         />
       )}
 
@@ -226,13 +337,14 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         {renderText(result.answer_text)}
       </div>
 
-      {/* 5a. Scenario block */}
-      {hasScenario && (
+      {/* 5a. Scenario block — renders even with no data so the user sees why nothing showed up */}
+      {(hasScenario || simulateMode) && (
         <ScenarioBlock
-          before={result.scenario_before!}
-          after={result.scenario_after!}
+          before={result.scenario_before || []}
+          after={result.scenario_after || []}
           summary={result.scenario_summary}
           verdict={result.verdict}
+          modeActive={simulateMode}
         />
       )}
 
@@ -323,6 +435,9 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
           ))}
         </div>
       )}
+
+      {/* 10. Feedback */}
+      <FeedbackBlock question={question} conversationId={conversationId} />
 
     </div>
   )
