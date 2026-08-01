@@ -37,6 +37,12 @@ interface Props {
   selectedLocation: string
   notify: (msg: string, ok?: boolean) => void
   t: Translate
+  // PIN-staff auth headers (x-owner-id/x-staff-id). Omit when rendered from a
+  // Supabase-session (owner) page — those calls authenticate via cookie instead.
+  authHeaders?: Record<string, string>
+  // Hides the "Send to supplier" action for viewers without purchase_order.send
+  // (e.g. the `inventory` role, which can create/receive/pay but not send).
+  canSend?: boolean
 }
 
 // Colours only — the label comes from t('poui_status_<status>').
@@ -50,7 +56,7 @@ const STATUS_STYLE: Record<PurchaseOrderStatus, { bg: string; text: string }> = 
 const statusStyle = (s: PurchaseOrderStatus) => STATUS_STYLE[s] ?? STATUS_STYLE.draft
 const statusLabel = (t: Translate, s: PurchaseOrderStatus) => t(`poui_status_${s}`)
 
-export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, notify, t }: Props) {
+export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, notify, t, authHeaders = {}, canSend = true }: Props) {
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
   const [orders, setOrders] = useState<PurchaseOrderWithItems[]>([])
@@ -69,7 +75,7 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
 
   const loadOrders = useCallback(async () => {
     try {
-      const res = await fetch('/api/pos/purchase-orders')
+      const res = await fetch('/api/pos/purchase-orders', { headers: authHeaders })
       if (!res.ok) throw new Error(String(res.status))
       const json = await res.json()
       setOrders(json.purchase_orders || [])
@@ -78,26 +84,39 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
     } finally {
       setLoading(false)
     }
-  }, [notify, t])
+  }, [notify, t, authHeaders])
 
   const loadPickers = useCallback(async () => {
     try {
       const locParam = selectedLocation !== 'all' ? `?location_id=${selectedLocation}` : ''
       const [supRes, invRes] = await Promise.all([
-        fetch('/api/pos/suppliers'),
-        fetch(`/api/pos/inventory${locParam}`),
+        fetch('/api/pos/suppliers', { headers: authHeaders }),
+        fetch(`/api/pos/inventory${locParam}`, { headers: authHeaders }),
       ])
       if (supRes.ok) setSuppliers((await supRes.json()).suppliers || [])
       if (invRes.ok) setInventory((await invRes.json()).inventory || [])
     } catch {
       /* pickers are best-effort; create modal still opens */
     }
-  }, [selectedLocation])
+  }, [selectedLocation, authHeaders])
 
   useEffect(() => { loadOrders(); loadPickers() }, [loadOrders, loadPickers])
 
   const lowStock = inventory.filter((i) => (i.stock_qty ?? 0) <= (i.low_stock_threshold ?? 0))
   const backorderCount = orders.filter((o) => o.status === 'partial').length
+
+  // Quantity of each inventory item already sitting on an outstanding (not yet
+  // fully received) order, so the "New order" prefill doesn't re-suggest stock
+  // that's already in transit — see the data-eng audit finding on double-ordering.
+  const alreadyOnOrder = new Map<string, number>()
+  for (const o of orders) {
+    if (o.status === 'received' || o.status === 'cancelled') continue
+    for (const it of o.items || []) {
+      if (!it.inventory_id) continue
+      const outstanding = Math.max(0, Number(it.qty_ordered) - Number(it.qty_received))
+      if (outstanding > 0) alreadyOnOrder.set(it.inventory_id, (alreadyOnOrder.get(it.inventory_id) || 0) + outstanding)
+    }
+  }
   const filtered =
     filter === 'backorders' ? orders.filter((o) => o.status === 'partial')
     : filter === 'received' ? orders.filter((o) => o.status === 'received')
@@ -218,8 +237,10 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
           suppliers={suppliers}
           lowStock={lowStock}
           allInventory={inventory}
+          alreadyOnOrder={alreadyOnOrder}
           currencySymbol={currencySymbol}
           t={t}
+          authHeaders={authHeaders}
           onClose={() => setShowCreate(false)}
           onCreated={(po) => {
             setOrders((prev) => [po, ...prev])
@@ -236,6 +257,8 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
           po={detailPo}
           currencySymbol={currencySymbol}
           t={t}
+          authHeaders={authHeaders}
+          canSend={canSend}
           onClose={() => setDetailPo(null)}
           onUpdated={upsertOrder}
           notify={notify}
@@ -246,13 +269,15 @@ export default function PurchaseOrdersTab({ currencySymbol, selectedLocation, no
 }
 
 // ── Detail sheet (view + Send to supplier + Receive stock) ───
-function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
+function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify, authHeaders = {}, canSend: sendPermitted = true }: {
   po: PurchaseOrderWithItems
   currencySymbol: string
   t: Translate
   onClose: () => void
   onUpdated: (po: PurchaseOrderWithItems) => void
   notify: (msg: string, ok?: boolean) => void
+  authHeaders?: Record<string, string>
+  canSend?: boolean
 }) {
   const [sending, setSending] = useState(false)
   const [receiveMode, setReceiveMode] = useState(false)
@@ -262,7 +287,7 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
   const style = statusStyle(po.status)
   const supplierPhone = po.supplier?.phone
-  const canSend = po.status !== 'received' && po.status !== 'cancelled'
+  const canSend = sendPermitted && po.status !== 'received' && po.status !== 'cancelled'
   const canReceive = po.status !== 'received' && po.status !== 'cancelled'
   const canPay = po.status === 'received' && po.payment_status !== 'paid'
   const receiveInput: CSSProperties = {
@@ -289,7 +314,7 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
     try {
       const res = await fetch(`/api/pos/purchase-orders/${po.id}/receive`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({ receipts, client_tx_id: `recv-${crypto.randomUUID()}` }),
       })
       if (!res.ok) { notify(t('poui_toast_receive_err'), false); setReceiving(false); return }
@@ -307,7 +332,7 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
   async function handlePay() {
     setPaying(true)
     try {
-      const res = await fetch(`/api/pos/purchase-orders/${po.id}/pay`, { method: 'POST' })
+      const res = await fetch(`/api/pos/purchase-orders/${po.id}/pay`, { method: 'POST', headers: authHeaders })
       if (!res.ok) { notify(t('poui_toast_pay_err'), false); setPaying(false); return }
       const data = await res.json()
       onUpdated(data.purchase_order)
@@ -326,7 +351,7 @@ function PODetailModal({ po, currencySymbol, t, onClose, onUpdated, notify }: {
     // is the common path until the Meta template is approved (link fallback).
     const pending = window.open('', '_blank')
     try {
-      const res = await fetch(`/api/pos/purchase-orders/${po.id}/send`, { method: 'POST' })
+      const res = await fetch(`/api/pos/purchase-orders/${po.id}/send`, { method: 'POST', headers: authHeaders })
       if (!res.ok) {
         pending?.close()
         const j = await res.json().catch(() => ({}))
@@ -477,15 +502,17 @@ interface ModalProps {
   suppliers: Supplier[]
   lowStock: InventoryLite[]
   allInventory: InventoryLite[]
+  alreadyOnOrder: Map<string, number>
   currencySymbol: string
   t: Translate
+  authHeaders?: Record<string, string>
   onClose: () => void
   onCreated: (po: PurchaseOrderWithItems) => void
   onSupplierAdded: (s: Supplier) => void
   notify: (msg: string, ok?: boolean) => void
 }
 
-function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t, onClose, onCreated, onSupplierAdded, notify }: ModalProps) {
+function CreateOrderModal({ suppliers, lowStock, allInventory, alreadyOnOrder, currencySymbol, t, authHeaders = {}, onClose, onCreated, onSupplierAdded, notify }: ModalProps) {
   const fmt = (n: number) => `${currencySymbol}${(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
 
   const [supplierId, setSupplierId] = useState('')
@@ -495,14 +522,24 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Prefill with low-stock items — suggested qty tops each back up to 2× threshold.
+  // Prefill with low-stock items — suggested qty tops each back up to 2×
+  // threshold, netted against whatever's already outstanding on another
+  // order so a still-in-transit delivery isn't re-suggested from scratch.
+  // Items fully covered by an outstanding order are left out of the draft
+  // entirely (tracked in `skippedOnOrder` for the summary note below).
+  const skippedOnOrder = lowStock.filter((i) => {
+    const target = Math.max(1, Math.ceil((i.low_stock_threshold || 1) * 2 - (i.stock_qty || 0)))
+    return target - (alreadyOnOrder.get(i.id) || 0) <= 0
+  }).length
+
   const [items, setItems] = useState<DraftItem[]>(() =>
-    lowStock.map((i) => ({
-      inventory_id: i.id,
-      name: i.name,
-      qty_ordered: Math.max(1, Math.ceil((i.low_stock_threshold || 1) * 2 - (i.stock_qty || 0))),
-      unit_cost: i.cost_price || 0,
-    })),
+    lowStock
+      .map((i) => {
+        const target = Math.max(1, Math.ceil((i.low_stock_threshold || 1) * 2 - (i.stock_qty || 0)))
+        const qty = Math.max(0, target - (alreadyOnOrder.get(i.id) || 0))
+        return { inventory_id: i.id, name: i.name, qty_ordered: qty, unit_cost: i.cost_price || 0 }
+      })
+      .filter((it) => it.qty_ordered > 0),
   )
 
   const total = items.reduce((sum, it) => sum + (Number(it.qty_ordered) || 0) * (Number(it.unit_cost) || 0), 0)
@@ -521,7 +558,7 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
     if (!newSupName.trim()) return null
     const res = await fetch('/api/pos/suppliers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newSupName.trim(), phone: newSupPhone.trim() || null }),
     })
     if (!res.ok) { notify(t('poui_toast_supplier_err'), false); return null }
@@ -540,7 +577,7 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
       const resolvedSupplierId = await ensureSupplier()
       const res = await fetch('/api/pos/purchase-orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           supplier_id: resolvedSupplierId,
           notes: notes.trim() || null,
@@ -602,20 +639,31 @@ function CreateOrderModal({ suppliers, lowStock, allInventory, currencySymbol, t
 
         {/* Items */}
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', display: 'block', margin: '14px 0 6px' }}>
-          {t('poui_items')} {lowStock.length > 0 && <span style={{ fontWeight: 400 }}>{t(lowStock.length === 1 ? 'poui_prefilled_one' : 'poui_prefilled_other', { count: lowStock.length })}</span>}
+          {t('poui_items')} {lowStock.length > 0 && <span style={{ fontWeight: 400 }}>{t(items.length === 1 ? 'poui_prefilled_one' : 'poui_prefilled_other', { count: items.length })}</span>}
         </label>
+        {skippedOnOrder > 0 && (
+          <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 8 }}>
+            {t(skippedOnOrder === 1 ? 'poui_skipped_on_order_one' : 'poui_skipped_on_order_other', { count: skippedOnOrder })}
+          </div>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.length === 0 && (
             <div style={{ fontSize: 12, color: 'var(--tx3)', padding: '8px 0' }}>{t('poui_no_items')}</div>
           )}
-          {items.map((it, idx) => (
-            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 84px 28px', gap: 6, alignItems: 'center' }}>
-              <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>{it.name}</div>
-              <input style={{ ...inputStyle, textAlign: 'center' }} type="number" min={0} inputMode="decimal" value={it.qty_ordered} onChange={(e) => updateItem(idx, { qty_ordered: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_qty', { name: it.name })} />
-              <input style={{ ...inputStyle, textAlign: 'right' }} type="number" min={0} inputMode="decimal" value={it.unit_cost} onChange={(e) => updateItem(idx, { unit_cost: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_cost', { name: it.name })} />
-              <button onClick={() => removeItem(idx)} aria-label={t('poui_aria_remove', { name: it.name })} style={{ background: 'none', border: 'none', color: RED, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
-            </div>
-          ))}
+          {items.map((it, idx) => {
+            const onOrderQty = it.inventory_id ? alreadyOnOrder.get(it.inventory_id) || 0 : 0
+            return (
+              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 64px 84px 28px', gap: 6, alignItems: 'center' }}>
+                <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={it.name}>
+                  {it.name}
+                  {onOrderQty > 0 && <span style={{ fontSize: 11, color: 'var(--tx3)', marginLeft: 6 }}>({onOrderQty} {t('poui_already_on_order')})</span>}
+                </div>
+                <input style={{ ...inputStyle, textAlign: 'center' }} type="number" min={0} inputMode="decimal" value={it.qty_ordered} onChange={(e) => updateItem(idx, { qty_ordered: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_qty', { name: it.name })} />
+                <input style={{ ...inputStyle, textAlign: 'right' }} type="number" min={0} inputMode="decimal" value={it.unit_cost} onChange={(e) => updateItem(idx, { unit_cost: parseFloat(e.target.value) || 0 })} aria-label={t('poui_aria_cost', { name: it.name })} />
+                <button onClick={() => removeItem(idx)} aria-label={t('poui_aria_remove', { name: it.name })} style={{ background: 'none', border: 'none', color: RED, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
+              </div>
+            )
+          })}
         </div>
 
         {notAdded.length > 0 && (

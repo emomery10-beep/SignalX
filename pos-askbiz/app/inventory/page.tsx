@@ -440,6 +440,14 @@ export default function InventoryPage() {
             {tc('inventory.add_product_button')}
           </button>
 
+          <button onClick={() => router.push('/inventory/purchase-orders')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            {tc('inventory.purchase_orders_button')}
+            {lowCount > 0 && (
+              <span style={{ background: 'rgba(255,255,255,.25)', borderRadius: 9999, padding: '1px 7px', fontSize: 11, fontWeight: 700 }}>{lowCount}</span>
+            )}
+          </button>
+
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>
             {tc('inventory.sign_out')}

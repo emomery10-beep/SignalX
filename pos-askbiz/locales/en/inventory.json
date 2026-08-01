@@ -2,6 +2,7 @@
   "loading": "Loading inventory…",
   "title": "Inventory",
   "add_product_button": "📷 Add product",
+  "purchase_orders_button": "📋 Orders",
   "sign_out": "Sign out",
   "daily_brief_title": "Today's brief",
   "alert_out_of_stock": "{count} out of stock",
