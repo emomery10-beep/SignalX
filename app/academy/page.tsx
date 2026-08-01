@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { academyArticles } from "@/lib/academy-content";
 import { getLocale } from "@/lib/i18n-server";
 import { ACTIVE_LOCALES, localePath } from "@/lib/i18n-locale";
+import { getLocalizedSlug } from "@/lib/academy-i18n-loader";
 import AcademyClient from "./AcademyClient";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -55,8 +56,18 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function AcademyPage() {
-  // ItemList schema — all article URLs for Google
+export default async function AcademyPage() {
+  const locale = getLocale();
+
+  // Build a map of article English slugs to their locale-specific slugs for
+  // the client to use when building links. This ensures links throughout the
+  // Academy use the appropriate slugs for the current locale.
+  const articleSlugMap: Record<string, string> = {};
+  for (const article of academyArticles) {
+    articleSlugMap[article.slug] = await getLocalizedSlug(article.slug, locale);
+  }
+
+  // ItemList schema — all article URLs for Google using locale-specific slugs
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -69,7 +80,7 @@ export default function AcademyPage() {
       "@type": "ListItem",
       position: i + 1,
       name: article.title,
-      url: `https://askbiz.co/academy/${article.slug}`,
+      url: `https://askbiz.co/academy/${articleSlugMap[article.slug] ?? article.slug}`,
       description: article.description,
     })),
   };
@@ -99,7 +110,7 @@ export default function AcademyPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
-      <AcademyClient />
+      <AcademyClient slugMap={articleSlugMap} />
     </>
   );
 }

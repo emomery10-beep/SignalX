@@ -4,7 +4,7 @@ import { cookies, headers } from "next/headers";
 import { academyArticles } from "@/lib/academy-content";
 import { getAllPosts } from "@/lib/blog-content";
 import { parseYoutubeId } from "@/lib/youtube-feed";
-import { getLocalizedArticle } from "@/lib/academy-i18n-loader";
+import { getLocalizedArticle, getLocalizedSlug } from "@/lib/academy-i18n-loader";
 import { resolveLocale, localePath, ACTIVE_LOCALES, type Locale } from "@/lib/i18n-locale";
 import AcademyArticleClient from "./AcademyArticleClient";
 
@@ -13,7 +13,24 @@ interface Props {
 }
 
 export async function generateStaticParams() {
-  return academyArticles.map((a) => ({ article: a.slug }));
+  const params: { article: string }[] = [];
+
+  // Generate params for English slugs (base case — no locale prefix)
+  for (const article of academyArticles) {
+    params.push({ article: article.slug });
+  }
+
+  // Generate params for each non-English locale's translated slugs
+  for (const locale of ACTIVE_LOCALES.filter((l) => l !== "en")) {
+    for (const article of academyArticles) {
+      const translatedSlug = await getLocalizedSlug(article.slug, locale);
+      if (translatedSlug !== article.slug) {
+        params.push({ article: translatedSlug });
+      }
+    }
+  }
+
+  return params;
 }
 
 // Same locale-resolution pattern as app/academy/category/[slug]/page.tsx and
@@ -26,6 +43,30 @@ function getRequestLocale(): Locale {
     urlLocale: headers().get("x-locale"),
     cookie: cookies().get("askbiz_lang")?.value,
   });
+}
+
+// Looks up an article by either English slug or locale-specific translated slug.
+// Returns the article if found, or undefined if no match in any form.
+async function findArticleByAnySlug(paramSlug: string, locale: Locale) {
+  // First, try direct English slug match
+  let article = academyArticles.find((a) => a.slug === paramSlug);
+  if (article) return article;
+
+  // If not found and we're in a non-English locale, check if paramSlug
+  // is a translated slug that maps to an English one
+  if (locale !== "en") {
+    const { slugMap } = await import(`@/lib/academy-slugs/${locale}/index`)
+      .catch(() => ({ slugMap: {} }));
+
+    // slugMap is English -> translated, so we need the reverse lookup
+    for (const [englishSlug, translatedSlug] of Object.entries(slugMap)) {
+      if (translatedSlug === paramSlug) {
+        return academyArticles.find((a) => a.slug === englishSlug);
+      }
+    }
+  }
+
+  return undefined;
 }
 
 // Transforms plain academy descriptions into click-worthy SERP hooks
@@ -50,27 +91,29 @@ function enhanceAcademyDescription(article: { title: string; description: string
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = academyArticles.find((a) => a.slug === params.article);
+  const locale = getRequestLocale();
+  const article = await findArticleByAnySlug(params.article, locale);
   if (!article) return {};
 
-  const locale = getRequestLocale();
   const localized = await getLocalizedArticle(article, locale);
 
-  const canonicalUrl = `https://askbiz.co${localePath(`/academy/${article.slug}`, locale)}`;
+  // Build locale-specific URLs using translated slugs
+  const localizedSlug = await getLocalizedSlug(article.slug, locale);
+  const canonicalUrl = `https://askbiz.co${localePath(`/academy/${localizedSlug}`, locale)}`;
   const ogImageUrl = `https://askbiz.co/api/og?title=${encodeURIComponent(localized.title)}&category=${encodeURIComponent(article.category)}&difficulty=${encodeURIComponent(article.difficulty)}&readTime=${article.readTime}`;
   const enhancedDesc = enhanceAcademyDescription({ ...article, title: localized.title, description: localized.description });
 
-  // hreflang alternates — one per ACTIVE_LOCALES entry for this article's URL
-  // (mirroring the reciprocal-map approach used for the Somali/Swahili entries
-  // in app/layout.tsx, adapted here to a generic per-locale loop via
-  // localePath() instead of hand-listed country variants), plus x-default
-  // pointing at the unprefixed English URL.
-  const languages: Record<string, string> = {
-    "x-default": `https://askbiz.co/academy/${article.slug}`,
-  };
-  ACTIVE_LOCALES.forEach((l) => {
-    languages[l] = `https://askbiz.co${localePath(`/academy/${article.slug}`, l)}`;
-  });
+  // hreflang alternates — one per ACTIVE_LOCALES entry using locale-specific slugs
+  const languages: Record<string, string> = {};
+
+  // x-default points to the English unprefixed URL with the English slug
+  languages["x-default"] = `https://askbiz.co/academy/${article.slug}`;
+
+  // For each locale, build the URL with that locale's translated slug
+  for (const l of ACTIVE_LOCALES) {
+    const altSlug = await getLocalizedSlug(article.slug, l);
+    languages[l] = `https://askbiz.co${localePath(`/academy/${altSlug}`, l)}`;
+  }
 
   return {
     title: `${localized.title} | AskBiz Academy`,
@@ -98,12 +141,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const article = academyArticles.find((a) => a.slug === params.article);
+  const locale = getRequestLocale();
+  const article = await findArticleByAnySlug(params.article, locale);
   if (!article) notFound();
 
-  const locale = getRequestLocale();
   const localizedArticle = await getLocalizedArticle(article, locale);
-  const canonicalUrl = `https://askbiz.co${localePath(`/academy/${article.slug}`, locale)}`;
+
+  // Build the canonical URL with the locale-specific slug
+  const localizedSlug = await getLocalizedSlug(article.slug, locale);
+  const canonicalUrl = `https://askbiz.co${localePath(`/academy/${localizedSlug}`, locale)}`;
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -251,6 +297,14 @@ export default async function ArticlePage({ params }: Props) {
   const relatedRaw = academyArticles.filter((a) => article.relatedSlugs.includes(a.slug));
   const relatedArticles = await Promise.all(relatedRaw.map((a) => getLocalizedArticle(a, locale)));
 
+  // Build a map of English slugs to their locale-specific slugs for the client
+  // to use when building links. This ensures related article links use the
+  // appropriate slugs for the current locale.
+  const relatedSlugMap: Record<string, string> = {};
+  for (const relArticle of relatedRaw) {
+    relatedSlugMap[relArticle.slug] = await getLocalizedSlug(relArticle.slug, locale);
+  }
+
   return (
     <>
       <script
@@ -279,7 +333,7 @@ export default async function ArticlePage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
-      <AcademyArticleClient article={localizedArticle} blogCrossLinks={blogCrossLinks} relatedArticles={relatedArticles} />
+      <AcademyArticleClient article={localizedArticle} blogCrossLinks={blogCrossLinks} relatedArticles={relatedArticles} relatedSlugMap={relatedSlugMap} />
     </>
   );
 }

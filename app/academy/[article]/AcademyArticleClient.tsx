@@ -23,9 +23,11 @@ interface Props {
   // getLocalizedArticle, one per article.relatedSlugs entry — this component
   // stays a plain renderer and never dynamic-imports locale content itself.
   relatedArticles?: AcademyArticle[];
+  // Map of English slugs to locale-specific slugs for building related article links
+  relatedSlugMap?: Record<string, string>;
 }
 
-export default function AcademyArticleClient({ article, blogCrossLinks = [], relatedArticles = [] }: Props) {
+export default function AcademyArticleClient({ article, blogCrossLinks = [], relatedArticles = [], relatedSlugMap = {} }: Props) {
   const { lang, tc } = useLang()
 
   // Reddit-style visited tracking — any real visit counts as "read", not just
@@ -180,28 +182,32 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [], rel
                 {tc('academy.art_related_articles')}
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
-                {related.map((rel) => (
-                  <Link
-                    key={rel.slug}
-                    href={localePath(`/academy/${rel.slug}`, toLocale(lang))}
-                    style={{
-                      display: "block",
-                      padding: "14px 16px",
-                      background: "#fff",
-                      borderRadius: 10,
-                      border: "1px solid #eee",
-                      textDecoration: "none",
-                      color: "#171512",
-                      fontSize: 12,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {rel.title}
-                    <span style={{ display: "block", color: "#6a655c", fontSize: 9, marginTop: 6 }}>
-                      {rel.readTime} {tc('academy.art_min_read')} · {rel.difficulty}
-                    </span>
-                  </Link>
-                ))}
+                {related.map((rel) => {
+                  // Use the locale-specific slug if available, otherwise fall back to the English slug
+                  const slugForLocale = relatedSlugMap[rel.slug] ?? rel.slug;
+                  return (
+                    <Link
+                      key={rel.slug}
+                      href={localePath(`/academy/${slugForLocale}`, toLocale(lang))}
+                      style={{
+                        display: "block",
+                        padding: "14px 16px",
+                        background: "#fff",
+                        borderRadius: 10,
+                        border: "1px solid #eee",
+                        textDecoration: "none",
+                        color: "#171512",
+                        fontSize: 12,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {rel.title}
+                      <span style={{ display: "block", color: "#6a655c", fontSize: 9, marginTop: 6 }}>
+                        {rel.readTime} {tc('academy.art_min_read')} · {rel.difficulty}
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}

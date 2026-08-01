@@ -20,9 +20,28 @@ import { SECTORS } from "@/lib/pos-sectors";
 import { POS_FEATURES } from "@/lib/pos-features";
 import { LEARNING_PATHS } from "@/lib/learning-paths-content";
 import { STATIC_LOCALE_SEO_SLUGS, READY_SEO_LOCALES } from "@/lib/seo-i18n-slugs";
-import { localePath, PREFIXED_LOCALES } from "@/lib/i18n-locale";
+import { localePath, PREFIXED_LOCALES, ACTIVE_LOCALES } from "@/lib/i18n-locale";
+import { getLocalizedSlug } from "@/lib/academy-i18n-loader";
+import { slugMap as slugMapEs } from "@/lib/academy-slugs/es";
+import { slugMap as slugMapFr } from "@/lib/academy-slugs/fr";
+import { slugMap as slugMapDe } from "@/lib/academy-slugs/de";
+import { slugMap as slugMapNl } from "@/lib/academy-slugs/nl";
+import { slugMap as slugMapAr } from "@/lib/academy-slugs/ar";
+import { slugMap as slugMapSw } from "@/lib/academy-slugs/sw";
+import { slugMap as slugMapSo } from "@/lib/academy-slugs/so";
 
 const base = "https://askbiz.co";
+
+// Locale-specific slug registries — maps English slugs to their translated equivalents
+const localeSlugMaps: Record<string, Record<string, string>> = {
+  es: slugMapEs,
+  fr: slugMapFr,
+  de: slugMapDe,
+  nl: slugMapNl,
+  ar: slugMapAr,
+  sw: slugMapSw,
+  so: slugMapSo,
+};
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
@@ -209,13 +228,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: article.difficulty === "Beginner" ? 0.8 : 0.7,
     })),
-    // Localized article-detail variants (same pattern as above)
-    ...academyArticles.flatMap((article) => PREFIXED_LOCALES.map(l => ({
-      url: `${base}${localePath(`/academy/${article.slug}`, l)}`,
-      lastModified: hashModifiedDate(article.slug),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    }))),
+    // Localized article-detail variants with translated slugs (per-locale native URLs)
+    ...academyArticles.flatMap((article) =>
+      Object.entries(localeSlugMaps)
+        .filter(([locale]) => PREFIXED_LOCALES.includes(locale as any))
+        .map(([locale, slugMap]) => {
+          const translatedSlug = slugMap[article.slug];
+          // Only generate URL if this article has a translation for this locale
+          if (!translatedSlug) return null;
+          return {
+            url: `${base}/${locale}/academy/${translatedSlug}`,
+            lastModified: hashModifiedDate(article.slug),
+            changeFrequency: "monthly" as const,
+            priority: 0.6,
+          };
+        })
+        .filter((entry): entry is MetadataRoute.Sitemap[number] => entry !== null)
+    ),
 
     // ── HELP: topics + articles ──────────────────────────────────────────────────
     { url: `${base}/help`,          lastModified: now, changeFrequency: "weekly", priority: 0.9 },

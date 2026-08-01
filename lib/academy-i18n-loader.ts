@@ -160,3 +160,96 @@ export function getLocalizedListFields(
     description: overlay?.description ?? article.description,
   }
 }
+
+// Module-level cache for slug maps: one per locale, so multiple articles
+// in the same request don't trigger multiple dynamic imports of the same map
+const slugMapCache = new Map<Locale, Promise<Record<string, string>>>()
+
+/**
+ * Loads (and memoizes) the slug map for one non-English locale via a dynamic
+ * import of `./academy-slugs/<locale>/index`. Returns `{}` for DEFAULT_LOCALE
+ * and for locales with no slugs module yet.
+ *
+ * Used to translate English article slugs to their locale-specific URL slugs
+ * for routing and hreflang generation.
+ */
+async function getSlugMap(locale: Locale): Promise<Record<string, string>> {
+  if (locale === DEFAULT_LOCALE) return {}
+
+  let cached = slugMapCache.get(locale)
+  if (!cached) {
+    cached = import(`./academy-slugs/${locale}/index`)
+      .then((mod: { slugMap?: Record<string, string> }) => mod?.slugMap ?? {})
+      .catch(() => ({} as Record<string, string>))
+    slugMapCache.set(locale, cached)
+  }
+  return cached
+}
+
+/**
+ * Gets the locale-specific slug for an article in a given locale.
+ * - locale === DEFAULT_LOCALE: returns the English slug unchanged
+ * - other locales: looks up the translated slug from the slug map
+ * - fallback: if no translation exists, returns the English slug
+ */
+export async function getLocalizedSlug(
+  englishSlug: string,
+  locale: Locale
+): Promise<string> {
+  const slugMap = await getSlugMap(locale)
+  return slugMap[englishSlug] ?? englishSlug
+}
+
+/**
+ * Creates a reverse mapping from translated slugs back to English slugs
+ * for URL parameter parsing. Handles the case where a URL might use either
+ * an English or translated slug.
+ *
+ * Used by getLocalizedArticleByAnySlug to resolve URLs with either slug format.
+ */
+async function getSlugMapReverse(locale: Locale): Promise<Record<string, string>> {
+  if (locale === DEFAULT_LOCALE) return {}
+
+  const slugMap = await getSlugMap(locale)
+  const reverse: Record<string, string> = {}
+  for (const [englishSlug, translatedSlug] of Object.entries(slugMap)) {
+    reverse[translatedSlug] = englishSlug
+  }
+  return reverse
+}
+
+/**
+ * Extended version of getLocalizedArticle that accepts either an English slug
+ * or a locale-specific translated slug in the URL. Used by the route parameter
+ * to handle both /academy/what-is-a-pos (English) and
+ * /sw/academy/pos-ni-nini-mwongozo (Swahili) transparently.
+ *
+ * Returns the article if found via either slug format, or undefined if neither
+ * matches any known article.
+ */
+export async function getLocalizedArticleByAnySlug(
+  anySlug: string,
+  article: AcademyArticle | undefined,
+  locale: Locale
+): Promise<AcademyArticle | undefined> {
+  // Direct match: the slug is the English slug
+  if (article) {
+    return getLocalizedArticle(article, locale)
+  }
+
+  // No direct match — check if anySlug is a translated slug that maps to an English one
+  if (locale !== DEFAULT_LOCALE) {
+    const reverseMap = await getSlugMapReverse(locale)
+    const englishSlug = reverseMap[anySlug]
+    if (englishSlug) {
+      // Re-exported from lib/academy-content for this dynamic lookup
+      const { academyArticles } = await import('./academy-content')
+      const foundArticle = academyArticles.find((a) => a.slug === englishSlug)
+      if (foundArticle) {
+        return getLocalizedArticle(foundArticle, locale)
+      }
+    }
+  }
+
+  return undefined
+}

@@ -1,0 +1,46 @@
+// Academy article slug registry — Français (fr).
+//
+// Auto-generated from lib/academy-i18n/fr translations.
+// Mapping: English article slug → French URL slug (lowercased, ASCII-safe)
+
+export const slugMap: Record<string, string> = {
+  "what-is-a-pos-system": "quest-ce-quun-systeme-de-point-de-vente-pdv-le-guide-complet-pour-les-petits-commercants",
+  "askbiz-pos-overview": "askbiz-pos-comment-fonctionne-notre-point-de-vente-integre",
+  "pos-staff-management": "gerer-le-personnel-du-pdv-roles-autorisations-et-connexion-par-lien-magique",
+  "pos-camera-scanning": "scan-par-appareil-photo-et-reconnaissance-de-codes-barres-dans-askbiz-pos",
+  "pos-processing-a-sale": "traiter-une-vente-du-scan-au-recu-en-moins-de-60-secondes",
+  "pos-cart-management": "gestion-du-panier-ajouter-modifier-et-retirer-des-articles",
+  "pos-cash-vs-card-payments": "especes-contre-carte-choisir-la-bonne-combinaison-pour-votre-entreprise",
+  "pos-whatsapp-receipts": "recus-whatsapp-envoyez-une-preuve-dachat-numerique-instantanement",
+  "pos-daily-revenue-tracking": "suivi-du-chiffre-daffaires-quotidien-connaissez-vos-chiffres-avant-midi",
+  "pos-inventory-management": "gestion-des-stocks-du-pdv-niveaux-de-stock-alertes-et-reapprovisionnement",
+  "pos-low-stock-alerts": "alertes-de-stock-faible-et-de-rupture-de-stock-ne-manquez-jamais-un-reapprovisionnement",
+  "pos-refunds-guide": "gerer-les-remboursements-total-partiel-et-tout-ce-qui-se-trouve-entre-les-deux",
+  "pos-transaction-amendments": "modifications-et-corrections-de-transactions-dans-askbiz-pos",
+  "pos-vat-calculations": "calcul-de-la-tva-et-conformite-fiscale-pour-les-transactions-pdv",
+  "pos-audit-trail": "piste-daudit-chaque-transaction-tracee-et-infalsifiable",
+  "pos-multi-staff-performance": "indicateurs-de-performance-du-personnel-ventes-par-caissier-chiffre-daffaires-par-role",
+  "pos-security-best-practices": "securite-du-pdv-proteger-les-transactions-et-les-donnees-clients",
+  "pos-pwa-mobile-setup": "installer-askbiz-pos-sur-mobile-guide-dinstallation-pwa",
+  "pos-troubleshooting": "depannage-du-pdv-problemes-de-camera-de-connexion-et-de-synchronisation",
+  "pos-data-in-dashboards": "comment-les-donnees-pdv-alimentent-votre-tableau-de-bord-askbiz",
+  "pos-ai-chat-questions": "interrogez-askbiz-sur-vos-donnees-pdv-25-questions-qui-revelent-des-insights-sur-votre-commerce",
+  "pos-daily-brief-integration": "comment-les-donnees-pdv-apparaissent-dans-votre-daily-brief",
+  "pos-business-pulse-impact": "comment-les-transactions-pdv-affectent-votre-score-business-pulse",
+  "pos-offline-mode": "mode-hors-ligne-que-se-passe-t-il-quand-votre-connexion-internet-coupe-en-pleine-vente",
+  "multi-location-retail-management": "gestion-multi-sites-du-commerce-de-detail-le-guide-complet",
+  "purchase-orders-guide-askbiz": "bons-de-commande-creer-envoyer-et-receptionner-des-commandes-fournisseurs-dans-askbiz-pos",
+  "connect-marketing-ads-sources-askbiz": "connecter-vos-donnees-marketing-meta-ads-google-ads-google-analytics-mailchimp-et-klaviyo",
+  "connect-gocardless-askbiz": "connecter-gocardless-a-askbiz-pour-les-prelevements-automatiques-et-les-paiements-par-abonnement",
+  "connect-linnworks-askbiz": "connecter-linnworks-a-askbiz-pour-la-synchronisation-multicanal-des-stocks",
+  "connect-xero-freeagent-askbiz": "connecter-xero-ou-freeagent-a-askbiz",
+  "connect-jumia-marketplace-askbiz": "connecter-jumia-a-askbiz-commandes-versements-et-stock-pour-les-marketplaces-africaines",
+  "pos-receipt-design-vat-askbiz": "le-nouveau-recu-de-caisse-askbiz-mise-en-page-detaillee-et-tva-dynamique",
+  "whatsapp-daily-pl-brief-askbiz": "votre-bilan-quotidien-arrive-desormais-sous-forme-de-rapport-de-resultats-whatsapp",
+  "forgot-pin-reset-whatsapp-askbiz": "code-pin-askbiz-oublie-reinitialisez-le-vous-meme-via-whatsapp",
+  "zakat-calculator-charity-askbiz": "le-calculateur-de-zakat-daskbiz-comment-il-fonctionne-et-ou-le-trouver",
+  "factory-sector-guide-askbiz": "gerer-une-usine-dans-askbiz-lots-qualite-arrets-de-production-equipes-et-lettres-de-voiture",
+  "pos-free-trial-explained-askbiz": "comment-fonctionne-lessai-gratuit-daskbiz-pos",
+  "what-is-predictive-analytics": "quest-ce-que-lanalytique-predictive",
+  "what-is-prescriptive-analytics": "quest-ce-que-lanalytique-prescriptive"
+};

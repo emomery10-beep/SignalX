@@ -4,7 +4,7 @@ import Link from "next/link";
 import { cookies, headers } from 'next/headers';
 import { resolveLocale, localePath, ACTIVE_LOCALES, isRTL } from '@/lib/i18n-locale';
 import { academyCategories, academyArticles } from "@/lib/academy-content";
-import { preloadLocaleTranslations, getLocalizedListFields } from "@/lib/academy-i18n-loader";
+import { preloadLocaleTranslations, getLocalizedListFields, getLocalizedSlug } from "@/lib/academy-i18n-loader";
 import LanguageToggle from '@/components/LanguageToggle';
 
 interface Props {
@@ -72,6 +72,12 @@ export default async function CategoryPage({ params }: Props) {
   // content. See lib/academy-i18n-loader.ts.
   const translations = await preloadLocaleTranslations(lang);
 
+  // Build a map of article English slugs to their locale-specific slugs
+  const articleSlugMap: Record<string, string> = {};
+  for (const article of articles) {
+    articleSlugMap[article.slug] = await getLocalizedSlug(article.slug, lang);
+  }
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -94,7 +100,7 @@ export default async function CategoryPage({ params }: Props) {
       "@type": "Article",
       headline: a.title,
       description: a.description,
-      url: `https://askbiz.co/academy/${a.slug}`,
+      url: `https://askbiz.co/academy/${articleSlugMap[a.slug]}`,
     })),
   };
 
@@ -147,10 +153,11 @@ export default async function CategoryPage({ params }: Props) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
             {articles.map((article) => {
               const { title, description } = getLocalizedListFields(article, lang, translations);
+              const localizedSlug = articleSlugMap[article.slug] ?? article.slug;
               return (
                 <Link
                   key={article.slug}
-                  href={localePath(`/academy/${article.slug}`, lang)}
+                  href={localePath(`/academy/${localizedSlug}`, lang)}
                   style={{
                     display: "block",
                     background: "#fff",
