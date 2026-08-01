@@ -27,6 +27,10 @@ import { waveB3Translations } from './wave-b-batch3'
 import { waveB4Translations } from './wave-b-batch4'
 import { waveB5Translations } from './wave-b-batch5'
 import { waveB6Translations } from './wave-b-batch6'
+import { waveC2Translations } from './wave-c-batch2'
+import { waveC3Translations } from './wave-c-batch3'
+import { waveC5Translations } from './wave-c-batch5'
+import { waveC6Translations } from './wave-c-batch6'
 
 export const translations: LocaleTranslations = {
   ...waveABatch1Translations,
@@ -39,4 +43,8 @@ export const translations: LocaleTranslations = {
   ...waveB4Translations,
   ...waveB5Translations,
   ...waveB6Translations,
+  ...waveC2Translations,
+  ...waveC3Translations,
+  ...waveC5Translations,
+  ...waveC6Translations,
 }
