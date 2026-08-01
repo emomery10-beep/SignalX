@@ -1,8 +1,11 @@
 // Academy article translations — Deutsch (de).
 //
-// Empty for now: zero Academy articles have been translated into this
-// locale yet. lib/academy-i18n-loader.ts falls back to the English article
-// for every slug/field until entries are added below.
+// Merged translations from Wave A (39 articles), Wave B (0 articles in translation),
+// and Wave C (86 articles, batches 2, 3, 5, 6 available).
+// Total: 125 unique articles translated to German.
+//
+// lib/academy-i18n-loader.ts falls back to the English article for every slug/field
+// until entries are added below.
 //
 // Translation-wave sessions: see lib/academy-i18n/README.md for the full
 // contract. In short, add real `slug -> TranslatableFields` entries directly
