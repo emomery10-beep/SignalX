@@ -45,7 +45,7 @@ export default function VerdictBar({ verdict, sentence, marketPosition }: Props)
       `}</style>
       <div className="verdict-bar" style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: '10px 14px', borderRadius: 12,
+        padding: '10px 14px', borderRadius: 10,
         background: c.bg, border: `1px solid ${c.border}`,
         marginBottom: 14, boxShadow: `0 2px 12px ${c.glow}`,
       }}>
@@ -66,7 +66,7 @@ export default function VerdictBar({ verdict, sentence, marketPosition }: Props)
         </div>
 
         {/* Label */}
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', color: c.labelColor, flexShrink: 0, fontFamily: 'var(--font-sora)' }}>
+        <span style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, letterSpacing: '.1em', color: c.labelColor, flexShrink: 0, fontFamily: 'var(--font-sora)' }}>
           {c.label}
         </span>
 
@@ -74,14 +74,14 @@ export default function VerdictBar({ verdict, sentence, marketPosition }: Props)
         <div style={{ width: 1, height: 14, background: c.border, flexShrink: 0 }}></div>
 
         {/* Sentence */}
-        <span style={{ fontSize: 11, color: 'var(--tx)', lineHeight: 1.4, flex: 1, fontWeight: 500 }}>
+        <span style={{ fontSize: 'var(--fs-md)', color: 'var(--tx)', lineHeight: 1.4, flex: 1, fontWeight: 500 }}>
           {sentence}
         </span>
 
         {/* Market position badge */}
         {market && (
           <span style={{
-            fontSize: 9, fontWeight: 600, color: market.color,
+            fontSize: 'var(--fs-xs)', fontWeight: 600, color: market.color,
             background: market.bg, padding: '3px 8px',
             borderRadius: 9999, flexShrink: 0, whiteSpace: 'nowrap',
           }}>

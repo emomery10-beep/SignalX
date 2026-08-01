@@ -454,8 +454,29 @@ export async function POST(request: NextRequest) {
     let from: Date
     let to: Date = now
     let periodLabel = "Today's"
+    let isGrowthQuery = false
+    let growthSpanDays = 0
 
-    if (/yesterday/.test(q)) {
+    const growthDurationMatch = q.match(/last\s*(\d+)\s*(day|week|month|year)s?/i)
+    const growthWordMatch = /\b(grown|growth|grew|growing|increase[d]?|decrease[d]?|compared?\s+to|vs\.?\s+(last|previous)|versus)\b/i.test(q)
+
+    if (growthWordMatch) {
+      // Growth / period-over-period comparison question (e.g. "how much has my retail grown in last 2 months")
+      isGrowthQuery = true
+      if (growthDurationMatch) {
+        const n = parseInt(growthDurationMatch[1], 10)
+        const unit = growthDurationMatch[2].toLowerCase()
+        growthSpanDays = n * (unit === 'day' ? 1 : unit === 'week' ? 7 : unit === 'year' ? 365 : 30)
+        periodLabel = `Last ${n} ${unit}${n > 1 ? 's' : ''}`
+      } else if (/last\s*(7|seven)\s*days?|past\s*week|this\s*week/i.test(q)) {
+        growthSpanDays = 7
+        periodLabel = 'Last 7 days'
+      } else {
+        growthSpanDays = 30
+        periodLabel = 'Last 30 days'
+      }
+      from = new Date(now); from.setDate(from.getDate() - growthSpanDays); from.setHours(0,0,0,0)
+    } else if (/yesterday/.test(q)) {
       const d = new Date(now); d.setDate(d.getDate() - 1); d.setHours(0,0,0,0)
       from = d
       to = new Date(d); to.setHours(23,59,59,999)
@@ -524,8 +545,6 @@ export async function POST(request: NextRequest) {
     const brief     = briefRes.data?.[0] || null
     const locations = locRes.data || []
 
-    console.log('[POS DEBUG] user.id:', user.id, 'from:', from.toISOString(), 'to:', to.toISOString(), 'period:', periodLabel)
-    console.log('[POS DEBUG] txs:', txs.length, 'inv:', inv.length, 'staff:', staffList.length, 'txErr:', txRes.error?.message || 'none')
     if (txRes.error) console.error('POS tx query error:', txRes.error.message)
     if (invRes.error) console.error('POS inv query error:', invRes.error.message)
     if (shiftRes.error) console.error('Shift query error:', shiftRes.error.message)
@@ -598,7 +617,6 @@ export async function POST(request: NextRequest) {
       .limit(1000)
     const unifiedRows: any[] = (udData || []).filter((r: any) => (r.gross_revenue || 0) > 0)
     if (udError) console.error('[unified_data] query error:', udError.message)
-    console.log('[unified_data] rows:', unifiedRows.length, 'user:', user.id)
     // ── End unified data ─────────────────────────────────────────────────────
 
     posContext = `\n\nLIVE POS DATA (${periodLabel}):\n`
@@ -645,7 +663,8 @@ export async function POST(request: NextRequest) {
       posContext += `Low/out of stock (${lowStock.length} items): ${lowStock.slice(0, 10).map((i: any) => `${i.name} (${i.stock_qty} left)`).join(', ')}.\n`
     }
     // If this period has no transactions, add a broader 90-day window so the AI can answer historical questions
-    if (completed.length === 0) {
+    // (skipped for growth queries — the dedicated comparison block below covers that case instead)
+    if (completed.length === 0 && !isGrowthQuery) {
       const broad90From = new Date(now); broad90From.setDate(broad90From.getDate() - 90); broad90From.setHours(0, 0, 0, 0)
       const { data: broadTxs } = await service
         .from('pos_transactions')
@@ -843,6 +862,41 @@ export async function POST(request: NextRequest) {
       posContext += decisions.slice(0, 5).map((d: any) => `- ${d.title} (${d.decision_type}${d.before_value ? `, ${d.before_value} → ${d.after_value}` : ''}${d.review_verdict ? `, verdict: ${d.review_verdict}` : ''}) — ${new Date(d.created_at).toLocaleDateString()}`).join('\n') + '\n'
       if (pending.length > 0) {
         posContext += `⚠ ${pending.length} decision(s) overdue for review.\n`
+      }
+    }
+
+    // Growth / period-over-period comparison — deterministic calculation, not left for the LLM to eyeball
+    if (isGrowthQuery && growthSpanDays > 0) {
+      const compTo = new Date(from.getTime() - 1)
+      const compFrom = new Date(compTo); compFrom.setDate(compFrom.getDate() - growthSpanDays); compFrom.setHours(0, 0, 0, 0)
+      const { data: compTxs, error: compErr } = await service
+        .from('pos_transactions')
+        .select('total,status,created_at')
+        .eq('owner_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', compFrom.toISOString())
+        .lte('created_at', compTo.toISOString())
+        .limit(500)
+      if (compErr) console.error('Growth comparison query error:', compErr.message)
+      const compCompleted = compTxs || []
+      const compRevenue = compCompleted.reduce((s: number, t: any) => s + (t.total || 0), 0)
+      const currentRevenue = revenue
+      const currentCount = completed.length
+
+      posContext += `\nGROWTH COMPARISON (${periodLabel} vs prior ${growthSpanDays}-day period, ${compFrom.toISOString().slice(0, 10)} to ${compTo.toISOString().slice(0, 10)}):\n`
+      posContext += `Current period: ${finalSymbol}${currentRevenue.toFixed(2)} revenue, ${currentCount} transactions.\n`
+      posContext += `Prior period: ${finalSymbol}${compRevenue.toFixed(2)} revenue, ${compCompleted.length} transactions.\n`
+
+      if (compRevenue > 0) {
+        const revChangePct = ((currentRevenue - compRevenue) / compRevenue) * 100
+        posContext += `Revenue change: ${revChangePct >= 0 ? '+' : ''}${revChangePct.toFixed(1)}% ${revChangePct >= 0 ? 'growth' : 'decline'}.\n`
+        posContext += `IMPORTANT: State this exact growth percentage and direction plainly in the answer. Use it as the primary kpi_card (label "Revenue Growth", value "${revChangePct >= 0 ? '+' : ''}${revChangePct.toFixed(1)}%", trend "${revChangePct >= 0 ? 'up' : 'down'}", status "${revChangePct >= 0 ? 'good' : 'warning'}"). Do not say there is insufficient data — the numbers above are the full calculation.\n`
+      } else if (currentRevenue > 0) {
+        posContext += `Revenue change: cannot compute a percentage (no revenue in the prior period), but the current period has ${finalSymbol}${currentRevenue.toFixed(2)} in new revenue versus zero before.\n`
+        posContext += `IMPORTANT: State plainly that revenue went from ${finalSymbol}0 to ${finalSymbol}${currentRevenue.toFixed(2)} — describe this as new/first revenue in the period, not as "insufficient data".\n`
+      } else {
+        posContext += `Revenue change: no revenue recorded in either period — there is nothing to compare yet.\n`
+        posContext += `IMPORTANT: State plainly that there were no transactions in either period, so growth cannot be measured yet. Do not invent a percentage.\n`
       }
     }
   }

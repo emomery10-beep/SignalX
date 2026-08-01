@@ -245,12 +245,13 @@ export default function HumanFirstSearch({
   }, [userState])
 
   const hasVoice = !!onVoiceToggle
+  const canSend = !!inputValue.trim() && !isLoading
 
   return (
     <div style={{ width: '100%' }}>
       <div style={{
         position: 'relative',
-        borderRadius: 12,
+        borderRadius: 10,
         border: '1px solid var(--b2)',
         background: 'var(--sf)',
         transition: 'border-color .18s var(--ease-out), box-shadow .18s var(--ease-out)',
@@ -286,10 +287,12 @@ export default function HumanFirstSearch({
             background: 'transparent',
             outline: 'none',
             fontFamily: 'var(--font-dm, DM Sans, sans-serif)',
-            fontSize: 12,
+            /* 16px, not a scale token — this is the chat's primary input; anything
+               smaller triggers iOS Safari's automatic zoom-on-focus. */
+            fontSize: 16,
             color: 'var(--tx)',
             lineHeight: 1.6,
-            padding: hasVoice ? '16px 90px 16px 18px' : '16px 52px 16px 18px',
+            padding: hasVoice ? '16px 112px 16px 18px' : '16px 60px 16px 18px',
             boxSizing: 'border-box',
             minHeight: 56,
           }}
@@ -302,11 +305,11 @@ export default function HumanFirstSearch({
             title={isRecording ? tc('chat_humanfirst.voiceStopTitle') : tc('chat_humanfirst.voiceSpeakTitle')}
             style={{
               position: 'absolute',
-              right: 48,
-              bottom: 10,
-              width: 32,
-              height: 32,
-              borderRadius: 9,
+              right: 56,
+              bottom: 6,
+              width: 44,
+              height: 44,
+              borderRadius: 10,
               border: isRecording ? '1px solid rgba(99,102,241,.4)' : 'none',
               background: isRecording ? 'rgba(99,102,241,.12)' : 'transparent',
               color: isRecording ? '#6366F1' : 'var(--tx3)',
@@ -317,6 +320,8 @@ export default function HumanFirstSearch({
               transition: 'all 150ms var(--ease-out)',
               flexShrink: 0,
             }}
+            onMouseEnter={e => { if (!isRecording) e.currentTarget.style.background = 'var(--ev)' }}
+            onMouseLeave={e => { if (!isRecording) e.currentTarget.style.background = 'transparent' }}
           >
             {isRecording ? (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="#6366F1" stroke="none">
@@ -336,26 +341,32 @@ export default function HumanFirstSearch({
         {/* Send button */}
         <button
           onClick={() => onSend(inputValue)}
-          disabled={!inputValue.trim() || !!isLoading}
+          disabled={!canSend}
+          aria-disabled={!canSend}
           style={{
             position: 'absolute',
-            right: 10,
-            bottom: 10,
-            width: 32,
-            height: 32,
-            borderRadius: 9,
+            right: 6,
+            bottom: 6,
+            width: 44,
+            height: 44,
+            borderRadius: 10,
             border: 'none',
-            background: inputValue.trim() && !isLoading ? '#6366F1' : 'var(--b)',
-            color: inputValue.trim() && !isLoading ? '#fff' : 'var(--tx3)',
-            cursor: inputValue.trim() && !isLoading ? 'pointer' : 'default',
+            background: '#6366F1',
+            color: '#fff',
+            cursor: canSend ? 'pointer' : 'default',
+            opacity: canSend ? 1 : 0.5,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'background .15s var(--ease-out), color .15s var(--ease-out), transform .15s var(--ease-out)',
+            transition: 'opacity .15s var(--ease-out), transform .15s var(--ease-out)',
             flexShrink: 0,
           }}
+          onMouseEnter={e => { if (canSend) e.currentTarget.style.transform = 'translateY(-1px)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+          onMouseDown={e => { if (canSend) e.currentTarget.style.transform = 'translateY(0) scale(.94)' }}
+          onMouseUp={e => { if (canSend) e.currentTarget.style.transform = 'translateY(-1px) scale(1)' }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
             <line x1="22" y1="2" x2="11" y2="13"/>
             <polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>

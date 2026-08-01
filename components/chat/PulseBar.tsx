@@ -136,7 +136,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
       }}/>
 
       <span style={{
-        fontSize: 10,
+        fontSize: 'var(--fs-xs)',
         color: style.text,
         flex: 1,
         lineHeight: 1.4,
@@ -147,18 +147,23 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
         {active.text}
       </span>
 
-      <span style={{ fontSize: 9, color: 'var(--tx3)', flexShrink: 0, opacity: 0.6 }}>→</span>
+      <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--tx3)', flexShrink: 0, opacity: 0.6 }}>→</span>
 
       {signal && (
         <button
+          className="no-tap-target"
           onClick={e => { e.stopPropagation(); setSignal(null); setVisible(false); setTimeout(() => setVisible(true), 30000) }}
+          title={tc('chat_pulsebar.clickToAsk')}
           style={{
-            width: 16, height: 16, borderRadius: '50%',
+            width: 20, height: 20, borderRadius: '50%',
             border: 'none', background: 'transparent',
             color: 'var(--tx3)', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 9, flexShrink: 0, padding: 0,
+            fontSize: 'var(--fs-xs)', flexShrink: 0, padding: 0,
+            transition: 'background .15s var(--ease-out), color .15s var(--ease-out)',
           }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,.06)'; e.currentTarget.style.color = 'var(--tx2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--tx3)' }}
         >
           ✕
         </button>

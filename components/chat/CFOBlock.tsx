@@ -26,7 +26,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
 
   return (
     <div style={{
-      borderRadius: 14,
+      borderRadius: 16,
       border: '1px solid rgba(99,102,241,.25)',
       background: 'rgba(99,102,241,.03)',
       overflow: 'hidden',
@@ -45,7 +45,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
             <rect x="2" y="3" width="20" height="14" rx="2"/>
             <path d="M8 21h8M12 17v4"/>
           </svg>
-          <span style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', textTransform: 'uppercase' }}>
             {tc('chat_cfoblock.headerLabel')}
           </span>
         </div>
@@ -54,12 +54,14 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
             onClick={onExportPdf}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '4px 10px', borderRadius: 7,
+              padding: '4px 10px', borderRadius: 6,
               border: '1px solid rgba(99,102,241,.25)',
               background: 'transparent', color: '#6366F1',
-              fontSize: 9, fontWeight: 600, cursor: 'pointer',
-              fontFamily: 'inherit',
+              fontSize: 'var(--fs-xs)', fontWeight: 600, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'background .15s var(--ease-out), border-color .15s var(--ease-out)',
             }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,.08)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
@@ -73,7 +75,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
       {summary && (
         <div style={{
           padding: '14px',
-          fontSize: 11,
+          fontSize: 'var(--fs-md)',
           color: 'var(--tx)',
           lineHeight: 1.65,
           fontStyle: 'normal',
@@ -98,13 +100,13 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
                 padding: '12px 14px',
                 background: 'var(--sf)',
               }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>
                   {m.label}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)', letterSpacing: '-.02em', marginBottom: 3 }}>
+                <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 800, color: 'var(--tx)', letterSpacing: '-.02em', marginBottom: 3 }}>
                   {m.value}
                 </div>
-                <div style={{ fontSize: 9, color: ds.color, fontWeight: 600 }}>
+                <div style={{ fontSize: 'var(--fs-xs)', color: ds.color, fontWeight: 600 }}>
                   {ds.icon} {m.change}
                 </div>
               </div>

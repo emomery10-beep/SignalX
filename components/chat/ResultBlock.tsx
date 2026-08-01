@@ -77,8 +77,8 @@ function MiniLineChart({ labels, values, label, symbol }: { labels: string[]; va
   const fillPts = `${pad},${h - pad} ` + pts + ` ${w - pad},${h - pad}`
 
   return (
-    <div style={{ margin: '0 0 16px', padding: '14px 16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
+    <div style={{ margin: '0 0 16px', padding: '16px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
+      <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
       <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
         <defs>
           <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
@@ -105,23 +105,32 @@ function MiniLineChart({ labels, values, label, symbol }: { labels: string[]; va
 }
 
 // ── KPI CARD ──────────────────────────────────────────────────────────────────
+// Growth-style cards (percentage value + trend) fall back to a status derived
+// from the trend direction, so the whole tile is colored even when the
+// backend doesn't send an explicit `status` — no more gray/generic tiles.
 function KpiCardBlock({ cards }: { cards: KpiCard[] }) {
+  const effectiveStatus = (c: KpiCard): 'good' | 'warning' | 'risk' | undefined =>
+    c.status || (c.trend === 'up' ? 'good' : c.trend === 'down' ? 'warning' : undefined)
   const statusColor = (s?: string) => s === 'good' ? '#22c55e' : s === 'warning' ? '#f59e0b' : s === 'risk' ? '#ef4444' : 'var(--tx3)'
   const statusBg = (s?: string) => s === 'good' ? 'rgba(34,197,94,.08)' : s === 'warning' ? 'rgba(245,158,11,.08)' : s === 'risk' ? 'rgba(239,68,68,.08)' : 'var(--ev)'
   const trendIcon = (t?: string) => t === 'up' ? '↑' : t === 'down' ? '↓' : ''
-  const trendColor = (t?: string) => t === 'up' ? '#22c55e' : t === 'down' ? '#ef4444' : 'var(--tx3)'
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 8, marginBottom: 16 }}>
-      {cards.map((c, i) => (
-        <div key={i} className="kpi-card" style={{ padding: '10px 12px', borderRadius: 12, background: statusBg(c.status), border: `1px solid ${c.status ? statusColor(c.status) + '40' : 'var(--b)'}` }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.label}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: c.status ? statusColor(c.status) : 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{c.value}</span>
-            {c.trend && <span style={{ fontSize: 9, color: trendColor(c.trend) }}>{trendIcon(c.trend)}</span>}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 10, marginBottom: 16 }}>
+      {cards.map((c, i) => {
+        const st = effectiveStatus(c)
+        return (
+          <div key={i} className="kpi-card" style={{ padding: '10px 12px', borderRadius: 10, background: statusBg(st), border: `1px solid ${st ? statusColor(st) + '40' : 'var(--b)'}` }}>
+            <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--tx3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.06em' }}>{c.label}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: st ? statusColor(st) : 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{c.value}</span>
+              {c.trend && c.trend !== 'neutral' && (
+                <span style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: st ? statusColor(st) : 'var(--tx3)' }}>{trendIcon(c.trend)}</span>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -133,7 +142,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
 
   if (result.scope_violation) {
     return (
-      <div style={{ padding: '12px 14px', borderRadius: 13, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 11, color: 'var(--tx2)', lineHeight: 1.6 }}>
+      <div style={{ padding: '12px 14px', borderRadius: 16, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 'var(--fs-md)', color: 'var(--tx2)', lineHeight: 1.6 }}>
         {result.answer_text}
       </div>
     )
@@ -173,7 +182,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
   }
 
   return (
-    <div style={{ fontSize: 11, lineHeight: 1.65 }}>
+    <div style={{ fontSize: 'var(--fs-md)', lineHeight: 1.65 }}>
 
       {/* 0. Verdict bar — always first */}
       <VerdictBar
@@ -193,9 +202,9 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
 
       {/* 2. Insight header */}
       {hasInsightHeader && !hasCfo && (
-        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(99,102,241,.05)', border: '1px solid rgba(99,102,241,.15)', marginBottom: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 16, background: 'rgba(99,102,241,.05)', border: '1px solid rgba(99,102,241,.15)', marginBottom: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 14, flexShrink: 0 }}>💡</span>
-          <p style={{ margin: 0, fontSize: 11, fontWeight: 500, color: 'var(--tx)', lineHeight: 1.6 }}>{result.insight_header}</p>
+          <p style={{ margin: 0, fontSize: 'var(--fs-md)', fontWeight: 500, color: 'var(--tx)', lineHeight: 1.6 }}>{result.insight_header}</p>
         </div>
       )}
 
@@ -213,7 +222,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
       )}
 
       {/* 5. Answer text */}
-      <div style={{ padding: '12px 14px', borderRadius: 13, background: 'var(--ev)', border: '1px solid var(--b)', marginBottom: hasRecs || hasTable || hasActions || hasFollowUps || hasScenario || hasCompetitor ? 12 : 0 }}>
+      <div style={{ padding: '12px 14px', borderRadius: 16, background: 'var(--ev)', border: '1px solid var(--b)', marginBottom: hasRecs || hasTable || hasActions || hasFollowUps || hasScenario || hasCompetitor ? 12 : 0 }}>
         {renderText(result.answer_text)}
       </div>
 
@@ -237,9 +246,9 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
 
       {/* 6. Table — CFO mode only (accountant-level detail) */}
       {cfoMode && hasTable && (
-        <div style={{ marginBottom: 12, borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden' }}>
+        <div style={{ marginBottom: 12, borderRadius: 10, border: '1px solid var(--b)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-xs)' }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
                   {result.table_headers!.map((h, i) => (
@@ -263,13 +272,13 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
 
       {/* 7. Recommendations */}
       {hasRecs && (
-        <div style={{ padding: '12px 14px', borderRadius: 13, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 12 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('chat_resultblock.recommendationsHeader')}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ padding: '12px 14px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 12 }}>
+          <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('chat_resultblock.recommendationsHeader')}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {result.recommendations!.map((r, i) => (
-              <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(208,138,89,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: 'var(--acc)', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-                <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.55 }}>{r}</span>
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(208,138,89,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--fs-xs)', fontWeight: 700, color: 'var(--acc)', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                <span style={{ fontSize: 'var(--fs-md)', color: 'var(--tx2)', lineHeight: 1.55 }}>{r}</span>
               </div>
             ))}
           </div>
@@ -281,9 +290,11 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
           {result.action_buttons!.map((btn, i) => (
             <button key={i} onClick={() => onFollowUp(btn.query)}
-              style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)', display: 'flex', alignItems: 'center', gap: 5 }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--ev)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--sf)'}>
+              style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 'var(--fs-xs)', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out), box-shadow .15s var(--ease-out)', display: 'flex', alignItems: 'center', gap: 5 }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--ev)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--sf)'; e.currentTarget.style.transform = 'translateY(0)' }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'translateY(0) scale(.97)' }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-1px) scale(1)' }}>
               {btn.label}
             </button>
           ))}
@@ -303,9 +314,9 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {result.follow_up_suggestions!.slice(0, 2).map((s, i) => (
             <button key={i} onClick={() => onFollowUp(s)}
-              style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(208,138,89,.25)', background: 'rgba(208,138,89,.04)', color: 'var(--acc)', fontSize: 10, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)', display: 'flex', alignItems: 'center', gap: 7 }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(208,138,89,.08)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(208,138,89,.04)'}>
+              style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(208,138,89,.25)', background: 'rgba(208,138,89,.04)', color: 'var(--acc)', fontSize: 'var(--fs-xs)', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background .15s var(--ease-out), transform .15s var(--ease-out)', display: 'flex', alignItems: 'center', gap: 7 }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(208,138,89,.08)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(208,138,89,.04)' }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               {s}
             </button>
