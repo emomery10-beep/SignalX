@@ -327,6 +327,7 @@ export default function AdminPage() {
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
   const [apiUsage, setApiUsage] = useState<any>(null)
+  const [posFunnel, setPosFunnel] = useState<any>(null)
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
   const [resettingPinFor, setResettingPinFor] = useState<string | null>(null)
   const [grantingPosFor, setGrantingPosFor] = useState<string | null>(null)
@@ -361,6 +362,7 @@ export default function AdminPage() {
         setXActivity(d.xActivity || [])
         setStripeData(d.stripe || null)
         setApiUsage(d.apiUsage || null)
+        setPosFunnel(d.posFunnel || null)
         const days: Record<string, number> = {}
         const now = new Date()
         for (let i = 29; i >= 0; i--) {
@@ -1326,6 +1328,48 @@ export default function AdminPage() {
                 ))}
               </div>
             </div>
+            {posFunnel && (
+              <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+                <div style={{fontSize:15,fontWeight:600,marginBottom:4}}>POS trial funnel</div>
+                <div style={{fontSize:13,color:'var(--tx3)',marginBottom:16}}>Distinct users per step, last {posFunnel.windowDays} days — onboarding done through trial claim</div>
+                {(() => {
+                  const LABELS: Record<string,string> = {
+                    onboarding_done_pos_shown: 'Onboarding done (POS persona)',
+                    onboarding_trial_clicked: 'Clicked "Start free trial" (done screen)',
+                    onboarding_trial_started: 'Trial started from done screen',
+                    onboarding_trial_failed: 'Trial claim failed on done screen',
+                    onboarding_trial_skipped: 'Skipped trial, continued to setup',
+                    onboarding_finish_clicked: 'Continued to catalogue setup',
+                    setup_fork_shown: 'Reached catalogue setup',
+                    setup_capture_opened: 'Opened camera capture',
+                    setup_import_opened: 'Opened bulk import',
+                    setup_item_added: 'Added ≥1 item',
+                    setup_ready_clicked: '"I’m ready" clicked',
+                    setup_ready_screen_shown: 'Reached "ready" screen',
+                    setup_activate_clicked: 'Clicked through to activate',
+                    activate_screen_shown: 'Reached activate screen (fallback path)',
+                    activate_trial_button_shown: 'Saw "Start free trial" button (fallback)',
+                    activate_trial_clicked: 'Clicked "Start free trial" (fallback)',
+                    activate_trial_started: 'Trial started from activate (fallback)',
+                    activate_trial_failed: 'Trial start failed (fallback)',
+                    activate_payment_clicked: 'Clicked a payment option instead',
+                  }
+                  const first = posFunnel.steps?.[0]?.users || 0
+                  return (posFunnel.steps || []).map((s: any) => {
+                    const pct = first ? Math.round((s.users / first) * 100) : 0
+                    return (
+                      <div key={s.event} style={{display:'flex',alignItems:'center',gap:12,padding:'6px 0',borderBottom:'1px solid var(--b)'}}>
+                        <div style={{flex:1,fontSize:14}}>{LABELS[s.event] || s.event}</div>
+                        <div style={{width:120,height:8,borderRadius:4,background:'var(--ev)',overflow:'hidden',flexShrink:0}}>
+                          <div style={{width:pct+'%',height:'100%',background:'#6366F1'}} />
+                        </div>
+                        <div style={{width:80,textAlign:'right',fontSize:14,fontWeight:600,flexShrink:0}}>{s.users} <span style={{color:'var(--tx3)',fontWeight:400}}>({pct}%)</span></div>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+            )}
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
               <div style={{fontSize:15,fontWeight:600,marginBottom:12}}>{tc('admin.growth_levers')}</div>
               {[

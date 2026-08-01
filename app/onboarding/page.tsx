@@ -7,6 +7,7 @@ import SpeakButton from '@/components/SpeakButton'
 import PasskeyNudge from '@/components/PasskeyNudge'
 import { FACTORY_TYPE_OPTIONS, FACTORY_TYPE_OTHER } from '@/lib/factory-type-options'
 import { CUSTOMER_CARE_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
+import { trackFunnelEvent } from '@/lib/funnel-track'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
 
@@ -208,6 +209,9 @@ export default function OnboardingPage() {
   const [step,         setStep]         = useState<Step>('business')
   const [saving,       setSaving]       = useState(false)
   const [saveError,    setSaveError]    = useState('')
+  // POS trial claim from the done screen — see startTrialAndContinue() below.
+  const [trialLoading, setTrialLoading] = useState(false)
+  const [trialError,   setTrialError]   = useState('')
   // Signup passkey nudge — shown once after onboarding actually completes
   // (finish() or the top-level skip()), not before it starts. Setting this
   // swaps the whole step content for <PasskeyNudge>, which itself decides
@@ -326,6 +330,14 @@ export default function OnboardingPage() {
   const stepIndex = visibleSteps.indexOf(step)
   const progress  = (stepIndex / (visibleSteps.length - 1)) * 100
   const isPosPersona = POS_LANDING_TYPES.has(bizType)
+
+  // Funnel instrumentation: the done screen is the trial banner's only
+  // showing — track it once per arrival so drop-off after this point is
+  // measurable against what actually claims the trial later.
+  useEffect(() => {
+    if (step === 'done' && isPosPersona) trackFunnelEvent('onboarding_done_pos_shown', { businessType: bizType })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, isPosPersona])
 
   // Text the read-aloud button speaks for the current step (heading + guidance).
   const spokenText = (() => {
@@ -462,6 +474,38 @@ export default function OnboardingPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Claim the free POS trial right from the done screen (Shopify-pattern:
+  // trial starts at signup, catalogue setup happens after/during it — not
+  // gated behind it). Claiming must never block finishing onboarding, so
+  // finish() always runs after, whether the claim succeeded or not.
+  const startTrialAndContinue = async () => {
+    trackFunnelEvent('onboarding_trial_clicked', { businessType: bizType })
+    setTrialLoading(true)
+    setTrialError('')
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        trackFunnelEvent('onboarding_trial_started', { businessType: bizType })
+      } else {
+        // Most likely already claimed (e.g. a double-click) — not fatal,
+        // continuing to setup still works either way.
+        trackFunnelEvent('onboarding_trial_failed', { businessType: bizType, metadata: { error: d.error || null } })
+        setTrialError(d.error || tc('pos_setup.activate_err'))
+      }
+    } catch {
+      trackFunnelEvent('onboarding_trial_failed', { businessType: bizType, metadata: { error: 'network' } })
+      setTrialError(tc('pos_setup.activate_err'))
+    } finally {
+      setTrialLoading(false)
+    }
+    await finish()
   }
 
   const canNext: Record<Step, boolean> = {
@@ -888,21 +932,20 @@ export default function OnboardingPage() {
                 {isPosPersona ? tc('onboarding.done_subtitle_pos') : tc('onboarding.done_subtitle')}
               </p>
               {isPosPersona && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', maxWidth: 340, margin: '0 auto 20px', padding: '14px 16px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.25)' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(208,138,89,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: TX, marginBottom: 2 }}>{tc('onboarding.done_pos_trial_title')}</div>
-                    <div style={{ fontSize: 12, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.done_pos_trial_body')}</div>
-                  </div>
+                <div style={{ maxWidth: 340, margin: '0 auto 20px' }}>
+                  <button
+                    onClick={startTrialAndContinue}
+                    disabled={trialLoading || saving}
+                    style={{ ...btn, width: '100%', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (trialLoading || saving) ? .7 : 1, cursor: (trialLoading || saving) ? 'wait' : 'pointer' }}
+                  >
+                    {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
+                  </button>
+                  <div style={{ fontSize: 12, color: TX2 }}>{tc('billing.pos_no_card')}</div>
                 </div>
               )}
-              {saveError && (
+              {(saveError || trialError) && (
                 <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 11, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
-                  {saveError}
+                  {saveError || trialError}
                 </div>
               )}
               <a
@@ -921,9 +964,15 @@ export default function OnboardingPage() {
                 </div>
               </a>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-                <button style={btn} onClick={() => finish()} disabled={saving}>
-                  {saving ? tc('onboarding.done_saving') : (isPosPersona ? tc('onboarding.done_cta_pos') : tc('onboarding.done_cta'))}
-                </button>
+                {isPosPersona ? (
+                  <button style={ghostBtn} onClick={() => { trackFunnelEvent('onboarding_trial_skipped', { businessType: bizType }); trackFunnelEvent('onboarding_finish_clicked', { businessType: bizType }); finish() }} disabled={saving || trialLoading}>
+                    {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta_pos')}
+                  </button>
+                ) : (
+                  <button style={btn} onClick={() => finish()} disabled={saving}>
+                    {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta')}
+                  </button>
+                )}
               </div>
             </div>
           )}

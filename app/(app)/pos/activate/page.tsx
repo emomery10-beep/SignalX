@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { posSeatPrice } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
+import { trackFunnelEvent } from '@/lib/funnel-track'
 
 // ── AskBiz tokens (match onboarding / setup) ─────────────────
 const ACC = '#d08a59'
@@ -29,6 +30,7 @@ export default function PosActivatePage() {
   const [error, setError]       = useState('')
   const [trialAvailable, setTrialAvailable] = useState(false)
   const [trialLoading, setTrialLoading]     = useState(false)
+  const [bizType, setBizType]               = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Turn any staff drafts into real accounts once payment is confirmed.
@@ -70,12 +72,14 @@ export default function PosActivatePage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('currency, pos_enabled')
+        .select('currency, pos_enabled, business_type')
         .eq('id', user.id)
         .maybeSingle()
       if (cancelled) return
 
       if (profile?.currency) setCurrency(profile.currency)
+      if (profile?.business_type) setBizType(profile.business_type)
+      trackFunnelEvent('activate_screen_shown', { businessType: profile?.business_type })
 
       // Seats = the owner's own seat + one per team draft.
       try {
@@ -95,7 +99,10 @@ export default function PosActivatePage() {
           .eq('user_id', user.id)
           .eq('trial_type', 'pos')
           .maybeSingle()
-        if (!cancelled) setTrialAvailable(!existingTrial)
+        if (!cancelled) {
+          setTrialAvailable(!existingTrial)
+          if (!existingTrial) trackFunnelEvent('activate_trial_button_shown', { businessType: profile?.business_type })
+        }
       } catch { /* default: trial option stays hidden, payment still works */ }
 
       // Read query params in-effect (avoids the useSearchParams Suspense
@@ -116,6 +123,7 @@ export default function PosActivatePage() {
   const price = posSeatPrice(currency, seats)
 
   const payMpesa = async () => {
+    trackFunnelEvent('activate_payment_clicked', { businessType: bizType, metadata: { method: 'mpesa' } })
     setPhase('redirecting'); setError('')
     try {
       const res = await fetch('/api/pesapal', {
@@ -130,6 +138,7 @@ export default function PosActivatePage() {
   }
 
   const payCard = async () => {
+    trackFunnelEvent('activate_payment_clicked', { businessType: bizType, metadata: { method: 'card' } })
     setPhase('redirecting'); setError('')
     try {
       const res = await fetch('/api/billing', {
@@ -144,6 +153,7 @@ export default function PosActivatePage() {
   }
 
   const startTrial = async () => {
+    trackFunnelEvent('activate_trial_clicked', { businessType: bizType })
     setTrialLoading(true); setError('')
     try {
       const res = await fetch('/api/billing', {
@@ -153,15 +163,20 @@ export default function PosActivatePage() {
       })
       const d = await res.json()
       if (d.success) {
+        trackFunnelEvent('activate_trial_started', { businessType: bizType })
         await provisionTeam()
         setPhase('active')
       } else {
         // Most likely already claimed elsewhere (e.g. the billing page) since
         // this screen loaded — hide the option rather than offer a dead retry.
+        trackFunnelEvent('activate_trial_failed', { businessType: bizType, metadata: { error: d.error || null } })
         setTrialAvailable(false)
         setError(d.error || tc('pos_setup.activate_err'))
       }
-    } catch { setError(tc('pos_setup.activate_err')) }
+    } catch {
+      trackFunnelEvent('activate_trial_failed', { businessType: bizType, metadata: { error: 'network' } })
+      setError(tc('pos_setup.activate_err'))
+    }
     finally { setTrialLoading(false) }
   }
 

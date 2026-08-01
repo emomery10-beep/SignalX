@@ -300,10 +300,40 @@ export async function GET(request: NextRequest) {
       if (day) apiUsage.byDay[day] = (apiUsage.byDay[day] || 0) + (r.cost_usd || 0)
     })
 
+    // POS trial funnel — lightweight instrumentation (pos_trial_funnel_events,
+    // migration 20260801000001). Distinct users per event over the window, so
+    // a step that can fire more than once per user (e.g. an item added per
+    // product) doesn't inflate that step's count relative to a one-shot step.
+    const FUNNEL_STEPS = [
+      'onboarding_done_pos_shown',
+      'onboarding_trial_clicked', 'onboarding_trial_started', 'onboarding_trial_failed', 'onboarding_trial_skipped',
+      'onboarding_finish_clicked',
+      'setup_fork_shown', 'setup_capture_opened', 'setup_import_opened', 'setup_item_added',
+      'setup_ready_clicked', 'setup_ready_screen_shown', 'setup_activate_clicked',
+      // Fallback path — reached directly, or by anyone who skipped/failed the trial claim above.
+      'activate_screen_shown', 'activate_trial_button_shown', 'activate_trial_clicked',
+      'activate_trial_started', 'activate_trial_failed', 'activate_payment_clicked',
+    ]
+    const funnelWindowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: funnelRows, error: funnelError } = await supabase
+      .from('pos_trial_funnel_events')
+      .select('event, user_id')
+      .gte('created_at', funnelWindowStart)
+    if (funnelError) console.error('pos_trial_funnel_events query error (migration applied?):', funnelError)
+    const usersByEvent: Record<string, Set<string>> = {}
+    ;(funnelRows || []).forEach((r: any) => {
+      if (!usersByEvent[r.event]) usersByEvent[r.event] = new Set()
+      usersByEvent[r.event].add(r.user_id)
+    })
+    const posFunnel = {
+      windowDays: 14,
+      steps: FUNNEL_STEPS.map(event => ({ event, users: usersByEvent[event]?.size || 0 })),
+    }
+
     return NextResponse.json({
       stats, users, candidates, stripe: stripeData,
       xActivity: xActivity || [], agentContent: agentContent || [],
-      apiUsage,
+      apiUsage, posFunnel,
     })
   } catch (error) {
     console.error('Admin error:', error)

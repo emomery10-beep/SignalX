@@ -6,6 +6,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { COUNTRY_DIAL, toE164, posSeatPrice } from '@/lib/geo'
 import { speak } from '@/lib/speak'
 import SpeakButton from '@/components/SpeakButton'
+import { trackFunnelEvent } from '@/lib/funnel-track'
 
 // ── AskBiz tokens (match onboarding) ──────────────────────────
 const ACC = '#d08a59'
@@ -241,6 +242,16 @@ export default function PosSetupPage() {
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Funnel instrumentation: the two screens that mark real progress/loss
+  // points — the empty-catalogue fork (first real friction after onboarding)
+  // and the "ready to activate" screen (last step before the trial button).
+  useEffect(() => {
+    if (loading) return
+    if (screen === 'list' && items.length === 0) trackFunnelEvent('setup_fork_shown', { businessType: bizType })
+    if (screen === 'ready') trackFunnelEvent('setup_ready_screen_shown', { businessType: bizType, metadata: { item_count: items.length } })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, loading])
+
   // ── Camera ────────────────────────────────────────────────────
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -259,6 +270,7 @@ export default function PosSetupPage() {
   }, [])
 
   const openCapture = async () => {
+    trackFunnelEvent('setup_capture_opened', { businessType: bizType })
     setPhoto(null); setName(''); setPrice(''); setQty(''); setError('')
     setScreen('capture')
     await startCamera()
@@ -329,6 +341,7 @@ export default function PosSetupPage() {
       const d = await res.json()
       if (!res.ok) { feedback('err'); setError(d.error || tc('pos_setup.err_save')); setSaving(false); return }
       feedback('ok')
+      trackFunnelEvent('setup_item_added', { businessType: bizType, metadata: { source: 'capture' } })
       // Read the saved item + price back aloud — confirmation for a vendor who
       // can't read the row they just created (research: always confirm amounts).
       speak(`${resolvedName()}. ${currencySymbol}${priceNum}`, lang)
@@ -345,6 +358,7 @@ export default function PosSetupPage() {
 
   // ── Bulk import ───────────────────────────────────────────────
   const openImport = async () => {
+    trackFunnelEvent('setup_import_opened', { businessType: bizType })
     setImportItems([]); setImportPhase('camera'); setImportError('')
     setScreen('import')
     await startCamera()
@@ -432,6 +446,7 @@ export default function PosSetupPage() {
       const d = await res.json()
       if (!res.ok) { feedback('err'); setImportError(d.error || tc('pos_setup.err_save')); setImportBusy(false); return }
       feedback('ok')
+      trackFunnelEvent('setup_item_added', { businessType: bizType, metadata: { source: 'import', count: d.added || 0 } })
       // Reload from the server — commit dedups, so the authoritative catalogue
       // may differ from what was on screen (some rows skipped as duplicates).
       try {
@@ -708,7 +723,7 @@ export default function PosSetupPage() {
                   {tc('pos_setup.import_cta')}
                 </button>
 
-                <button style={ghostBtn} onClick={() => setScreen(TEAM_STEP_TYPES.has(bizType) ? 'team' : 'ready')}>
+                <button style={ghostBtn} onClick={() => { trackFunnelEvent('setup_ready_clicked', { businessType: bizType, metadata: { item_count: items.length } }); setScreen(TEAM_STEP_TYPES.has(bizType) ? 'team' : 'ready') }}>
                   {tc('pos_setup.im_ready')}
                 </button>
               </>
@@ -1038,7 +1053,7 @@ export default function PosSetupPage() {
             <p style={{ fontSize: 17, color: TX2, lineHeight: 1.6, marginBottom: 28 }}>
               {items.length === 1 ? tc('pos_setup.ready_subtitle_one') : tc('pos_setup.ready_subtitle', { count: items.length })}
             </p>
-            <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={() => router.push('/pos/activate')}>
+            <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={() => { trackFunnelEvent('setup_activate_clicked', { businessType: bizType }); router.push('/pos/activate') }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               {tc('pos_setup.ready_cta')}
             </button>
