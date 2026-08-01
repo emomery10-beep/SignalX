@@ -6,7 +6,7 @@ import { countryFromPhone, COUNTRY_CURRENCY, COUNTRY_NAMES, CURRENCIES as CURREN
 import SpeakButton from '@/components/SpeakButton'
 import PasskeyNudge from '@/components/PasskeyNudge'
 import { FACTORY_TYPE_OPTIONS, FACTORY_TYPE_OTHER } from '@/lib/factory-type-options'
-import { CUSTOMER_CARE_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
+import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 import { trackFunnelEvent } from '@/lib/funnel-track'
 
 type TC = (key: string, vars?: Record<string, string | number>) => string
@@ -949,7 +949,7 @@ export default function OnboardingPage() {
                 </div>
               )}
               <a
-                href={CUSTOMER_CARE_WHATSAPP_GROUP_URL}
+                href={ONBOARDING_WHATSAPP_GROUP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', maxWidth: 340, margin: '0 auto 20px', padding: '14px 16px', borderRadius: 14, background: 'rgba(37,211,102,.08)', border: '1px solid rgba(37,211,102,.25)', textDecoration: 'none' }}

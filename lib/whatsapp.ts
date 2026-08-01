@@ -12,9 +12,13 @@
 
 const BASE = 'https://graph.facebook.com/v19.0'
 
-// Public customer-care group invite — linked from onboarding and the landing
-// page footer. Safe to import from client components (no server-only code).
+// Public customer-care group invite — linked from the landing page footer.
+// Safe to import from client components (no server-only code).
 export const CUSTOMER_CARE_WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/FDAPXQIRVQqL2DE0pU3o6L?s=hd&p=i&ilr=4'
+
+// Same group, separately-tagged invite link (s=cl) so onboarding joins can
+// be attributed apart from the landing-page footer link above.
+export const ONBOARDING_WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/FDAPXQIRVQqL2DE0pU3o6L?s=cl&p=i&ilr=4'
 
 function headers() {
   return {
