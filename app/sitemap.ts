@@ -228,16 +228,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: article.difficulty === "Beginner" ? 0.8 : 0.7,
     })),
-    // Localized article-detail variants with translated slugs (per-locale native URLs)
+    // Localized article variants with translated slugs (middleware-routed, no locale prefix)
     ...academyArticles.flatMap((article) =>
       Object.entries(localeSlugMaps)
-        .filter(([locale]) => PREFIXED_LOCALES.includes(locale as any))
         .map(([locale, slugMap]) => {
           const translatedSlug = slugMap[article.slug];
           // Only generate URL if this article has a translation for this locale
           if (!translatedSlug) return null;
           return {
-            url: `${base}/${locale}/academy/${translatedSlug}`,
+            url: `${base}/academy/${translatedSlug}`,
             lastModified: hashModifiedDate(article.slug),
             changeFrequency: "monthly" as const,
             priority: 0.6,
