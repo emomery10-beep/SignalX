@@ -225,6 +225,14 @@ export async function POST(request: NextRequest) {
             "- " + s.tracking_number + ": " + s.track_status + (s.delay_days > 0 ? " (" + s.delay_days + "d delayed)" : "") + (s.customs_hold ? " [CUSTOMS HOLD]" : "") + (s.sku ? " | " + s.sku : "") + (s.financial_impact > 0 ? " | Impact: " + finalSymbol + s.financial_impact : "")
           ).join("\n")
         }
+        // Unread shipment alerts — the UI surfaces these with specific alert text/reason that
+        // the shipment row itself doesn't carry (previously never queried by this route).
+        const { data: shipAlerts } = await supabase.from("shipment_alerts").select("alert_type, alert_level, message, financial_impact, delay_days, tracking_number").eq("user_id", user.id).eq("is_read", false).order("created_at", { ascending: false }).limit(10)
+        if (shipAlerts?.length) {
+          trackingContext += (trackingContext ? "\n\n" : "") + "UNREAD SHIPMENT ALERTS:\n" + shipAlerts.map((a: any) =>
+            "- [" + (a.alert_level || a.alert_type || "alert").toUpperCase() + "] " + (a.tracking_number ? a.tracking_number + ": " : "") + (a.message || a.alert_type) + (a.financial_impact > 0 ? " | Impact: " + finalSymbol + a.financial_impact : "")
+          ).join("\n")
+        }
       }
     } catch (e) {}
   }
@@ -468,7 +476,22 @@ export async function POST(request: NextRequest) {
 
     // Expense/spending question — distinct from the broad cost/margin detector above, which
     // covers product-level COGS, not general business outgoings (rent, vendor bills, etc.).
-    const isExpenseQuestion = /\bexpense(s)?\b|\bspending\b|\bspent\b|\boutgoing(s)?\b|\bhow much.*\b(pay|paid)\b/i.test(q)
+    const isExpenseQuestion = /\bexpense(s)?\b|\bspending\b|\bspend\b|\bspent\b|\boutgoing(s)?\b|\bhow much.*\b(pay|paid)\b/i.test(q)
+
+    // Additional real-feature intents — each queries a live table this route previously never
+    // looked at, following the same "compute deterministically, don't let the LLM guess" pattern
+    // as the growth/expense blocks above. Gated behind intent so ordinary questions don't pay for
+    // 9 extra queries most users' business type will never touch.
+    const isReceivablesQuestion = /\breceivable(s)?\b|\bpayable(s)?\b|who owes me|owed to me|outstanding invoice|overdue (invoice|payment|bill)|unpaid invoice|what do i owe|money i owe|bills i owe/i.test(q)
+    const isPurchaseOrderQuestion = /purchase order|\bPOs?\b|supplier order|order(ed)? from (my )?supplier|restock order/i.test(q)
+    const isRestaurantOpsQuestion = /\bcovers?\b|dine.?in|takeaway|\bkitchen\b|\bwaiter(s)?\b|\bchef(s)?\b|food waste|wasted (food|ingredients)|menu item|table turn/i.test(q)
+    const isRepairJobQuestion = /repair (job|ticket)|service (job|ticket)|device (repair|drop.?off)|turnaround time|fix(ed)? (a |the )?(phone|device|laptop)/i.test(q)
+    const isLogisticsFleetQuestion = /\bmy (truck|trucks|fleet)\b|which driver|undelivered parcel|parcel(s)?\s+.*\b(undelivered|in transit|delivered|status)\b|route (efficiency|performance)/i.test(q)
+    const isFactoryQuestion = /\bfactory\b|production batch|\bbatch(es)?\b|\bwaybill(s)?\b|manufactur|production (yield|output)/i.test(q)
+    const isSalonQuestion = /\bsalon\b|\bappointment(s)?\b|\bbooking(s)?\b|\bstylist(s)?\b|no.?show|haircut|client visit/i.test(q)
+    const isPaymentIssuesQuestion = /failed payment|payment(s)?\s+.*\bfailed\b|payment link|dunning|abandoned (payment|checkout)|stuck payment/i.test(q)
+    const isStocktakeQuestion = /stocktake|shrinkage|stock (count|variance)|missing stock|inventory (count|variance)/i.test(q)
+    const isZakatQuestion = /\bzakat\b/i.test(q)
 
     if (growthWordMatch) {
       // Growth / period-over-period comparison question (e.g. "how much has my retail grown in last 2 months")
@@ -527,11 +550,13 @@ export async function POST(request: NextRequest) {
       periodLabel = 'Last 30 days'
     }
 
-    const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes] = await Promise.all([
+    const [txRes, invRes, staffRes, custRes, debtorRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes] = await Promise.all([
       service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
       service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price,location_id').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(100),
       service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
       service.from('pos_customers').select('id,name,phone,total_spent,visit_count,last_seen_at').eq('owner_id', user.id).order('total_spent', { ascending: false }).limit(10),
+      // Customers who owe money (deni/book-credit ledger cache column, indexed for this exact lookup)
+      service.from('pos_customers').select('name,phone,balance_owed').eq('owner_id', user.id).neq('balance_owed', 0).order('balance_owed', { ascending: false }).limit(10),
       service.from('anomalies').select('type,severity,title,body,product,metric,created_at').eq('user_id', user.id).eq('seen', false).order('created_at', { ascending: false }).limit(10),
       service.from('alerts').select('name,type,condition,last_triggered_at,enabled').eq('user_id', user.id).eq('enabled', true).limit(10),
       service.from('forecasts').select('metric,value,period,confidence,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
@@ -554,6 +579,7 @@ export async function POST(request: NextRequest) {
     const inv       = invRes.data || []
     const staffList = staffRes.data || []
     const customers = custRes.data || []
+    const debtors   = debtorRes.data || []
     const anomalies = anomalyRes.data || []
     const alerts    = alertRes.data || []
     const forecasts = forecastRes.data || []
@@ -755,6 +781,10 @@ export async function POST(request: NextRequest) {
     if (customers.length > 0) {
       posContext += `Top customers: ${customers.slice(0, 5).map((c: any) => `${c.name || c.phone || 'Anonymous'} (${finalSymbol}${(c.total_spent || 0).toFixed(2)} spent, ${c.visit_count || 0} visits)`).join(', ')}.\n`
     }
+    if (debtors.length > 0) {
+      const totalOwed = debtors.reduce((s: number, d: any) => s + (d.balance_owed || 0), 0)
+      posContext += `CUSTOMER CREDIT (deni/book debt) — customers who owe money: ${finalSymbol}${totalOwed.toFixed(2)} total across ${debtors.length} customer(s): ${debtors.slice(0, 5).map((d: any) => `${d.name || d.phone || 'Anonymous'} (${finalSymbol}${(d.balance_owed || 0).toFixed(2)})`).join(', ')}.\n`
+    }
     if (anomalies.length > 0) {
       posContext += `\nACTIVE ANOMALIES (${anomalies.length}):\n${anomalies.map((a: any) => `- [${a.severity.toUpperCase()}] ${a.title}: ${a.body}`).join('\n')}\n`
     }
@@ -953,6 +983,282 @@ export async function POST(request: NextRequest) {
       } else {
         posContext += `No expenses recorded in the CFO Expenses tracker for ${periodLabel}.\n`
         posContext += `IMPORTANT: State plainly that no expenses are recorded for ${periodLabel} yet, and that they can add them from the CFO Expenses tab. This platform DOES track expenses (the feature exists) — do not claim expense tracking "isn't happening" or "isn't available", only that none are recorded for this specific period. Do NOT show unrelated revenue or transaction-count KPI cards as if they answer this expense question — omit kpi_cards/stat tiles entirely rather than substituting revenue figures.\n`
+      }
+    }
+
+    // Receivables & payables — cfo_receivables (CFO dashboard's "who owes me / who do I owe"
+    // tracker). Not date-windowed — these are live outstanding balances, not period transactions.
+    if (isReceivablesQuestion) {
+      const { data: recRows, error: recErr } = await service
+        .from('cfo_receivables')
+        .select('type, counterparty, amount, due_date, status')
+        .eq('user_id', user.id)
+        .order('due_date', { ascending: true })
+        .limit(200)
+      if (recErr) console.error('cfo_receivables query error:', recErr.message)
+      const receivables = (recRows || []).filter((r: any) => r.type === 'receivable')
+      const payables = (recRows || []).filter((r: any) => r.type === 'payable')
+      const totalReceivable = receivables.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0)
+      const totalPayable = payables.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0)
+      const overdueReceivable = receivables.filter((r: any) => r.status && r.status !== 'current')
+
+      posContext += `\nRECEIVABLES & PAYABLES (live balances, not period-scoped):\n`
+      if (receivables.length > 0) {
+        posContext += `Owed TO the business: ${finalSymbol}${totalReceivable.toFixed(2)} across ${receivables.length} invoice(s)${overdueReceivable.length > 0 ? `, ${overdueReceivable.length} overdue` : ''}: ${receivables.slice(0, 5).map((r: any) => `${r.counterparty} ${finalSymbol}${(Number(r.amount) || 0).toFixed(2)} (due ${r.due_date}${r.status !== 'current' ? `, ${r.status}` : ''})`).join(', ')}.\n`
+      } else {
+        posContext += `No receivables recorded.\n`
+      }
+      if (payables.length > 0) {
+        posContext += `Owed BY the business: ${finalSymbol}${totalPayable.toFixed(2)} across ${payables.length} bill(s): ${payables.slice(0, 5).map((r: any) => `${r.counterparty} ${finalSymbol}${(Number(r.amount) || 0).toFixed(2)} (due ${r.due_date})`).join(', ')}.\n`
+      } else {
+        posContext += `No payables recorded.\n`
+      }
+      posContext += `IMPORTANT: Use these exact figures. "Who owes me" = receivables. "What do I owe" = payables. Do not confuse this with expenses or revenue.\n`
+    }
+
+    // Purchase orders — supplier ordering flow (create → send → receive → pay).
+    if (isPurchaseOrderQuestion) {
+      const { data: poRows, error: poErr } = await service
+        .from('purchase_orders')
+        .select('status, total_cost, expected_at, received_at, created_at, pos_suppliers(name)')
+        .eq('owner_id', user.id)
+        .gte('created_at', from.toISOString())
+        .lte('created_at', to.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(100)
+      if (poErr) console.error('purchase_orders query error:', poErr.message)
+      const pos = poRows || []
+      const totalPoSpend = pos.reduce((s: number, p: any) => s + (Number(p.total_cost) || 0), 0)
+      const byStatus: Record<string, number> = {}
+      for (const p of pos as any[]) byStatus[p.status] = (byStatus[p.status] || 0) + 1
+
+      posContext += `\nPURCHASE ORDERS (${periodLabel}):\n`
+      if (pos.length > 0) {
+        posContext += `${pos.length} purchase order(s) totaling ${finalSymbol}${totalPoSpend.toFixed(2)}. Status: ${Object.entries(byStatus).map(([s, c]) => `${c} ${s}`).join(', ')}.\n`
+        const unpaid = pos.filter((p: any) => p.status !== 'received' && p.status !== 'cancelled')
+        if (unpaid.length > 0) {
+          posContext += `Still open: ${unpaid.slice(0, 5).map((p: any) => `${p.pos_suppliers?.name || 'Unknown supplier'} — ${finalSymbol}${(Number(p.total_cost) || 0).toFixed(2)} (${p.status})`).join(', ')}.\n`
+        }
+      } else {
+        posContext += `No purchase orders in ${periodLabel}.\n`
+      }
+      posContext += `IMPORTANT: This is supplier/restock spend, separate from cfo_expenses and separate from revenue — do not conflate them.\n`
+    }
+
+    // Restaurant operations — covers, order mix, food waste, labour cost. Only relevant to
+    // restaurant-type businesses; empty results are expected and fine for other business types.
+    if (isRestaurantOpsQuestion) {
+      const [ordRes, wasteRes, laborRes] = await Promise.all([
+        service.from('restaurant_orders').select('status, order_type, covers, total, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(500),
+        service.from('restaurant_waste_log').select('item_name, qty, unit, total_cost, reason, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
+        service.from('restaurant_labor_shifts').select('role, total_hours, total_cost, clock_in').eq('owner_id', user.id).gte('clock_in', from.toISOString()).lte('clock_in', to.toISOString()).limit(200),
+      ])
+      if (ordRes.error) console.error('restaurant_orders query error:', ordRes.error.message)
+      const orders = ordRes.data || []
+      const waste = wasteRes.data || []
+      const labor = laborRes.data || []
+
+      if (orders.length > 0 || waste.length > 0 || labor.length > 0) {
+        posContext += `\nRESTAURANT OPERATIONS (${periodLabel}):\n`
+        if (orders.length > 0) {
+          const paidOrders = orders.filter((o: any) => o.status === 'paid')
+          const totalCovers = paidOrders.reduce((s: number, o: any) => s + (o.covers || 0), 0)
+          const totalOrderRevenue = paidOrders.reduce((s: number, o: any) => s + (Number(o.total) || 0), 0)
+          const byType: Record<string, number> = {}
+          for (const o of paidOrders as any[]) byType[o.order_type] = (byType[o.order_type] || 0) + 1
+          posContext += `${paidOrders.length} paid order(s), ${totalCovers} covers, ${finalSymbol}${totalOrderRevenue.toFixed(2)} revenue. By type: ${Object.entries(byType).map(([t, c]) => `${c} ${t}`).join(', ')}.\n`
+        }
+        if (waste.length > 0) {
+          const totalWasteCost = waste.reduce((s: number, w: any) => s + (Number(w.total_cost) || 0), 0)
+          posContext += `Food waste: ${waste.length} log(s) totaling ${finalSymbol}${totalWasteCost.toFixed(2)}: ${waste.slice(0, 5).map((w: any) => `${w.item_name} (${w.qty}${w.unit}, ${w.reason || 'unspecified'})`).join(', ')}.\n`
+        }
+        if (labor.length > 0) {
+          const totalLaborCost = labor.reduce((s: number, l: any) => s + (Number(l.total_cost) || 0), 0)
+          posContext += `Labour: ${labor.length} shift(s), ${finalSymbol}${totalLaborCost.toFixed(2)} total cost.\n`
+        }
+      } else {
+        posContext += `\nRESTAURANT OPERATIONS: No restaurant order/waste/labour data for ${periodLabel} — this business may not use the restaurant module.\n`
+      }
+    }
+
+    // Repair/service jobs — device repair intake through completion.
+    if (isRepairJobQuestion) {
+      const { data: jobRows, error: jobErr } = await service
+        .from('pos_service_jobs')
+        .select('status, quoted_price, created_at, updated_at')
+        .eq('owner_id', user.id)
+        .gte('created_at', from.toISOString())
+        .lte('created_at', to.toISOString())
+        .limit(200)
+      if (jobErr) console.error('pos_service_jobs query error:', jobErr.message)
+      const jobs = jobRows || []
+      posContext += `\nREPAIR/SERVICE JOBS (${periodLabel}):\n`
+      if (jobs.length > 0) {
+        const byStatus: Record<string, number> = {}
+        for (const j of jobs as any[]) byStatus[j.status] = (byStatus[j.status] || 0) + 1
+        const completed = jobs.filter((j: any) => j.status === 'completed' || j.status === 'collected')
+        const totalQuoted = completed.reduce((s: number, j: any) => s + (Number(j.quoted_price) || 0), 0)
+        posContext += `${jobs.length} job(s). Status: ${Object.entries(byStatus).map(([s, c]) => `${c} ${s}`).join(', ')}. Completed jobs value: ${finalSymbol}${totalQuoted.toFixed(2)}.\n`
+      } else {
+        posContext += `No repair/service jobs in ${periodLabel}.\n`
+      }
+    }
+
+    // Logistics fleet — the user's own trucks/parcels/routes. Distinct from `shipments`
+    // (inbound/outbound freight tracking) and from the parcel-quote intent (outbound rate shopping).
+    if (isLogisticsFleetQuestion) {
+      const [truckRes, parcelRes] = await Promise.all([
+        service.from('pos_trucks').select('plate_number, status').eq('owner_id', user.id).limit(100),
+        service.from('pos_parcels').select('tracking_number, status, destination_city, fee_charged, payment_status, created_at').eq('owner_id', user.id).not('status', 'in', '("delivered","collected","returned")').order('created_at', { ascending: false }).limit(50),
+      ])
+      if (truckRes.error) console.error('pos_trucks query error:', truckRes.error.message)
+      const trucks = truckRes.data || []
+      const activeParcels = parcelRes.data || []
+
+      if (trucks.length > 0 || activeParcels.length > 0) {
+        posContext += `\nLOGISTICS FLEET:\n`
+        if (trucks.length > 0) {
+          const byTruckStatus: Record<string, number> = {}
+          for (const t of trucks as any[]) byTruckStatus[t.status] = (byTruckStatus[t.status] || 0) + 1
+          posContext += `${trucks.length} truck(s): ${Object.entries(byTruckStatus).map(([s, c]) => `${c} ${s}`).join(', ')}.\n`
+        }
+        if (activeParcels.length > 0) {
+          const unpaidParcels = activeParcels.filter((p: any) => p.payment_status !== 'paid')
+          posContext += `${activeParcels.length} parcel(s) not yet delivered: ${activeParcels.slice(0, 5).map((p: any) => `${p.tracking_number} (${p.status}${p.destination_city ? `, to ${p.destination_city}` : ''})`).join(', ')}.${unpaidParcels.length > 0 ? ` ${unpaidParcels.length} still unpaid.` : ''}\n`
+        }
+      } else {
+        posContext += `\nLOGISTICS FLEET: No trucks or active parcels found — this business may not use the logistics module.\n`
+      }
+    }
+
+    // Factory/manufacturing — batches, intake/output/wastage captures, dispatch waybills.
+    // Only pos_factory_batches, pos_factory_captures, pos_factory_waybills are queried here —
+    // these three table names are confirmed identical between the root and pos-askbiz migration
+    // histories; other factory tables (downtime/quality/shift) diverged in shape between the two
+    // apps and need a product decision before wiring, not queried here.
+    if (isFactoryQuestion) {
+      const [batchRes, captureRes, waybillRes] = await Promise.all([
+        service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
+        service.from('pos_factory_captures').select('type, quantity, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(300),
+        service.from('pos_factory_waybills').select('destination, product_name, quantity, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(100),
+      ])
+      if (batchRes.error) console.error('pos_factory_batches query error:', batchRes.error.message)
+      const batches = batchRes.data || []
+      const captures = captureRes.data || []
+      const waybills = waybillRes.data || []
+
+      if (batches.length > 0 || captures.length > 0 || waybills.length > 0) {
+        posContext += `\nFACTORY / PRODUCTION (${periodLabel}):\n`
+        if (batches.length > 0) {
+          const byBatchStatus: Record<string, number> = {}
+          for (const b of batches as any[]) byBatchStatus[b.status] = (byBatchStatus[b.status] || 0) + 1
+          posContext += `${batches.length} batch(es): ${Object.entries(byBatchStatus).map(([s, c]) => `${c} ${s}`).join(', ')}.\n`
+        }
+        if (captures.length > 0) {
+          const byType: Record<string, number> = {}
+          const qtyByType: Record<string, number> = {}
+          for (const c of captures as any[]) {
+            byType[c.type] = (byType[c.type] || 0) + 1
+            qtyByType[c.type] = (qtyByType[c.type] || 0) + (Number(c.quantity) || 0)
+          }
+          posContext += `Production captures: ${Object.entries(byType).map(([t, c]) => `${c} ${t}${qtyByType[t] ? ` (${qtyByType[t]} units)` : ''}`).join(', ')}.\n`
+          if (qtyByType.wastage > 0) posContext += `⚠ Wastage recorded: ${qtyByType.wastage} units across ${byType.wastage} log(s).\n`
+        }
+        if (waybills.length > 0) {
+          posContext += `${waybills.length} dispatch waybill(s) totaling ${waybills.reduce((s: number, w: any) => s + (Number(w.quantity) || 0), 0)} units.\n`
+        }
+      } else {
+        posContext += `\nFACTORY / PRODUCTION: No batch/capture/waybill data for ${periodLabel} — this business may not use the factory module.\n`
+      }
+    }
+
+    // Salon appointments/bookings.
+    if (isSalonQuestion) {
+      const { data: apptRows, error: apptErr } = await service
+        .from('salon_appointments')
+        .select('service_name, scheduled_at, price, status')
+        .eq('owner_id', user.id)
+        .gte('scheduled_at', from.toISOString())
+        .lte('scheduled_at', to.toISOString())
+        .order('scheduled_at', { ascending: false })
+        .limit(200)
+      if (apptErr) console.error('salon_appointments query error:', apptErr.message)
+      const appts = apptRows || []
+      posContext += `\nSALON APPOINTMENTS (${periodLabel}):\n`
+      if (appts.length > 0) {
+        const completed = appts.filter((a: any) => a.status === 'completed')
+        const noShows = appts.filter((a: any) => a.status === 'no_show')
+        const totalRevenue = completed.reduce((s: number, a: any) => s + (Number(a.price) || 0), 0)
+        posContext += `${appts.length} appointment(s), ${completed.length} completed (${finalSymbol}${totalRevenue.toFixed(2)}), ${noShows.length} no-show(s).\n`
+      } else {
+        posContext += `No salon appointments in ${periodLabel}.\n`
+      }
+    }
+
+    // Payment issues — failed/pending payment links and dunning. Distinct from mpesa_payments
+    // (subscription billing) — this is customer-sale payment collection.
+    if (isPaymentIssuesQuestion) {
+      const { data: payRows, error: payErr } = await service
+        .from('pos_payments')
+        .select('amount, status, payment_method, error_message, created_at')
+        .eq('owner_id', user.id)
+        .in('status', ['pending', 'failed'])
+        .order('created_at', { ascending: false })
+        .limit(100)
+      if (payErr) console.error('pos_payments query error:', payErr.message)
+      const stuckPayments = payRows || []
+      posContext += `\nSTUCK/FAILED PAYMENTS (current, not period-scoped):\n`
+      if (stuckPayments.length > 0) {
+        const totalStuck = stuckPayments.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0)
+        const failed = stuckPayments.filter((p: any) => p.status === 'failed')
+        posContext += `${stuckPayments.length} payment(s) totaling ${finalSymbol}${totalStuck.toFixed(2)} stuck (${failed.length} failed, ${stuckPayments.length - failed.length} pending).\n`
+      } else {
+        posContext += `No stuck or failed payments right now.\n`
+      }
+    }
+
+    // Stocktake / shrinkage variance.
+    if (isStocktakeQuestion) {
+      const { data: adjRows, error: adjErr } = await service
+        .from('pos_stock_adjustments')
+        .select('product_name, system_qty, counted_qty, variance, variance_value, reason, session_ref, created_at')
+        .eq('owner_id', user.id)
+        .gte('created_at', from.toISOString())
+        .lte('created_at', to.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(200)
+      if (adjErr) console.error('pos_stock_adjustments query error:', adjErr.message)
+      const adjustments = adjRows || []
+      posContext += `\nSTOCKTAKE / SHRINKAGE (${periodLabel}):\n`
+      if (adjustments.length > 0) {
+        const totalVarianceValue = adjustments.reduce((s: number, a: any) => s + (Number(a.variance_value) || 0), 0)
+        const sessions = new Set(adjustments.map((a: any) => a.session_ref).filter(Boolean)).size
+        posContext += `${adjustments.length} item(s) counted across ${sessions || 1} session(s), net variance value ${finalSymbol}${totalVarianceValue.toFixed(2)} (negative = shrinkage/loss).\n`
+        const biggestLosses = adjustments.filter((a: any) => a.variance_value < 0).sort((a: any, b: any) => a.variance_value - b.variance_value).slice(0, 5)
+        if (biggestLosses.length > 0) {
+          posContext += `Biggest losses: ${biggestLosses.map((a: any) => `${a.product_name} (${finalSymbol}${Math.abs(a.variance_value).toFixed(2)})`).join(', ')}.\n`
+        }
+      } else {
+        posContext += `No stocktake sessions recorded in ${periodLabel}.\n`
+      }
+    }
+
+    // Zakat — most recent saved calculation, if any. Not date-windowed (a point-in-time calc).
+    if (isZakatQuestion) {
+      const { data: zakatRow, error: zakatErr } = await service
+        .from('zakat_calculations')
+        .select('calculated_at, cash_value, inventory_value, receivables_value, zakat_base, nisab_value, amount_due, currency')
+        .eq('owner_id', user.id)
+        .order('calculated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (zakatErr) console.error('zakat_calculations query error:', zakatErr.message)
+      posContext += `\nZAKAT:\n`
+      if (zakatRow) {
+        posContext += `Most recent calculation (${new Date(zakatRow.calculated_at).toLocaleDateString()}): zakat base ${zakatRow.currency}${(Number(zakatRow.zakat_base) || 0).toFixed(2)}, nisab ${zakatRow.currency}${(Number(zakatRow.nisab_value) || 0).toFixed(2)}, amount due ${zakatRow.currency}${(Number(zakatRow.amount_due) || 0).toFixed(2)}.\n`
+        posContext += `IMPORTANT: State this saved figure plainly rather than saying no calculation exists.\n`
+      } else {
+        posContext += `No saved zakat calculation found. Suggest using the Zakat Calculator in the Intelligence tab.\n`
       }
     }
   }
