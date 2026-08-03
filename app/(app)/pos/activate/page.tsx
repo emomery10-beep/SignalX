@@ -31,6 +31,9 @@ export default function PosActivatePage() {
   const [error, setError]       = useState('')
   const [trialAvailable, setTrialAvailable] = useState(false)
   const [trialLoading, setTrialLoading]     = useState(false)
+  // One-time PIN reveal for a fresh owner pos_staff row — only set when
+  // start_trial actually created one (empty for paid/webhook confirmations).
+  const [ownerPin, setOwnerPin] = useState('')
   const [bizType, setBizType]               = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -165,6 +168,7 @@ export default function PosActivatePage() {
       const d = await res.json()
       if (d.success) {
         trackFunnelEvent('activate_trial_started', { businessType: bizType })
+        if (d.owner_pin) setOwnerPin(String(d.owner_pin))
         await provisionTeam()
         setPhase('active')
       } else {
@@ -331,6 +335,13 @@ export default function PosActivatePage() {
             <p style={{ fontSize: 17, color: TX2, lineHeight: 1.6, marginBottom: 28 }}>
               {tc('pos_setup.activate_success_subtitle')}
             </p>
+            {ownerPin && (
+              <div style={{ maxWidth: 340, margin: '0 auto 28px', padding: '18px 20px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: `1.5px solid ${ACC}` }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: TX, marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{ownerPin}</div>
+                <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6 }}>{tc('onboarding.till_pin_body')}</div>
+              </div>
+            )}
             <button style={bigBtn} onClick={() => router.push('/pos')}>{tc('pos_setup.activate_success_cta')}</button>
           </div>
         )}

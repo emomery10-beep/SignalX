@@ -213,6 +213,11 @@ export default function OnboardingPage() {
   // POS trial claim from the done screen — see startTrialAndContinue() below.
   const [trialLoading, setTrialLoading] = useState(false)
   const [trialError,   setTrialError]   = useState('')
+  // One-time PIN reveal — only the hash is stored, so this is the only chance
+  // the owner ever gets to see it. Set only when the API actually created a
+  // fresh pos_staff row (undefined/null otherwise), which holds finish() until
+  // they've seen it instead of navigating them away immediately.
+  const [ownerPin, setOwnerPin] = useState('')
   // Signup passkey nudge — shown once after onboarding actually completes
   // (finish() or the top-level skip()), not before it starts. Setting this
   // swaps the whole step content for <PasskeyNudge>, which itself decides
@@ -494,6 +499,15 @@ export default function OnboardingPage() {
       const d = await res.json()
       if (d.success) {
         trackFunnelEvent('onboarding_trial_started', { businessType: bizType })
+        // Hold here instead of finishing immediately — the PIN is only ever
+        // shown this once, so the owner needs to actually see it before we
+        // move them on. If no pin came back (they already had a staff row),
+        // there's nothing to show, so continue straight through as before.
+        if (d.owner_pin) {
+          setTrialLoading(false)
+          setOwnerPin(String(d.owner_pin))
+          return
+        }
       } else {
         // Most likely already claimed (e.g. a double-click) — not fatal,
         // continuing to setup still works either way.
@@ -936,7 +950,17 @@ export default function OnboardingPage() {
               <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
                 {isPosPersona ? tc('onboarding.done_subtitle_pos') : tc('onboarding.done_subtitle')}
               </p>
-              {isPosPersona && (
+              {isPosPersona && ownerPin && (
+                <div style={{ maxWidth: 340, margin: '0 auto 20px', padding: '18px 20px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: `1.5px solid ${ACC}` }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: TX, marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
+                  <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{ownerPin}</div>
+                  <div style={{ fontSize: 11, color: TX2, lineHeight: 1.6, marginBottom: 14 }}>{tc('onboarding.till_pin_body')}</div>
+                  <button onClick={() => finish()} disabled={saving} style={{ ...btn, width: '100%' }}>
+                    {saving ? tc('onboarding.done_saving') : tc('onboarding.till_pin_continue')}
+                  </button>
+                </div>
+              )}
+              {isPosPersona && !ownerPin && (
                 <div style={{ maxWidth: 340, margin: '0 auto 20px' }}>
                   <CoachMark id="onboarding-trial" text={tc('onboarding.coach_trial')} lang={lang}>
                     <button
@@ -970,17 +994,19 @@ export default function OnboardingPage() {
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#128C7E' }}>{tc('onboarding.whatsapp_help_cta')}</div>
                 </div>
               </a>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-                {isPosPersona ? (
-                  <button style={ghostBtn} onClick={() => { trackFunnelEvent('onboarding_trial_skipped', { businessType: bizType }); trackFunnelEvent('onboarding_finish_clicked', { businessType: bizType }); finish() }} disabled={saving || trialLoading}>
-                    {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta_pos')}
-                  </button>
-                ) : (
-                  <button style={btn} onClick={() => finish()} disabled={saving}>
-                    {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta')}
-                  </button>
-                )}
-              </div>
+              {!ownerPin && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
+                  {isPosPersona ? (
+                    <button style={ghostBtn} onClick={() => { trackFunnelEvent('onboarding_trial_skipped', { businessType: bizType }); trackFunnelEvent('onboarding_finish_clicked', { businessType: bizType }); finish() }} disabled={saving || trialLoading}>
+                      {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta_pos')}
+                    </button>
+                  ) : (
+                    <button style={btn} onClick={() => finish()} disabled={saving}>
+                      {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta')}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

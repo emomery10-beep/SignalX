@@ -119,5 +119,8 @@
   "helper_hint": "Tap the speaker, or ask for help.",
   "coach_business": "Tap the picture of your shop.",
   "coach_location": "We found your country. Tap the orange button if this is right.",
-  "coach_trial": "Tap here to start your free trial. No card needed."
+  "coach_trial": "Tap here to start your free trial. No card needed.",
+  "till_pin_title": "Your till login PIN",
+  "till_pin_body": "Use your phone number and this PIN to log in at the till (Sell). Write it down — you won't see it again, but you can change it later in Staff settings.",
+  "till_pin_continue": "Got it, continue →"
 }

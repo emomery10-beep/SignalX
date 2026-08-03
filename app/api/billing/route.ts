@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 import { getOrCreateStripeCustomer } from '@/lib/stripe-customer'
 import { resolvePriceId as resolvePriceIdShared } from '@/lib/stripe-pricing'
+import { hashPin } from '@/lib/pin'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
@@ -211,7 +212,41 @@ async function handlePost(request: NextRequest) {
       return NextResponse.json({ error: 'Could not start trial' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString() })
+    // The till (/sell) only accepts pos_staff PIN login — with no pos_staff
+    // row for the owner, nobody (not even the owner) can ever log in to sell.
+    // Give the owner their own PIN now, once, since it can't be recovered
+    // later (only the hash is stored) — the frontend must show it immediately.
+    let ownerPin: string | null = null
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('full_name, phone')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const orFilters = [
+      ownerProfile?.phone ? `phone.eq.${ownerProfile.phone}` : null,
+      user.email ? `email.eq.${user.email}` : null,
+    ].filter(Boolean).join(',')
+
+    const { data: existingStaff } = orFilters
+      ? await supabase.from('pos_staff').select('id').eq('owner_id', user.id).or(orFilters).maybeSingle()
+      : { data: null }
+
+    if (!existingStaff) {
+      ownerPin = String(Math.floor(1000 + Math.random() * 9000))
+      const { error: staffErr } = await supabase.from('pos_staff').insert({
+        owner_id: user.id,
+        name: ownerProfile?.full_name || 'Owner',
+        phone: ownerProfile?.phone || null,
+        email: ownerProfile?.phone ? null : (user.email || null),
+        role: 'manager',
+        pin_hash: hashPin(ownerPin),
+        active: true,
+      })
+      if (staffErr) ownerPin = null // don't claim success on a silent failure
+    }
+
+    return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString(), owner_pin: ownerPin })
   }
 
   // Get or create Stripe customer — shared across main plan, POS seats, and

@@ -119,5 +119,8 @@
   "helper_hint": "Gusa spika, au omba msaada.",
   "coach_business": "Gusa picha ya duka lako.",
   "coach_location": "Tumepata nchi yako. Gusa kitufe cha rangi ya machungwa kama ni sahihi.",
-  "coach_trial": "Gusa hapa kuanza jaribio lako bure. Hakuna kadi inahitajika."
+  "coach_trial": "Gusa hapa kuanza jaribio lako bure. Hakuna kadi inahitajika.",
+  "till_pin_title": "PIN yako ya kuingia kwenye kaunta",
+  "till_pin_body": "Tumia nambari yako ya simu na PIN hii kuingia kwenye kaunta (Uza). Iandike — hutaiona tena, lakini unaweza kuibadilisha baadaye kwenye mipangilio ya Wafanyakazi.",
+  "till_pin_continue": "Nimeelewa, endelea →"
 }
