@@ -1119,7 +1119,7 @@ export default function POSPage() {
             const label = t === 'services' ? serviceLabel : tc('pos_app.tab_' + t)
             const icon = t === 'services' ? TAB_ICONS[s] : TAB_ICONS[t]
             return (
-              <button key={t} onClick={() => handleSetTab(t)} title={isMobile ? label : undefined} aria-label={isMobile ? label : undefined} style={{
+              <button key={t} onClick={() => handleSetTab(t)} style={{
                 padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
                 background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
                 fontSize: 15, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
@@ -1127,20 +1127,21 @@ export default function POSPage() {
                 display: 'flex', alignItems: 'center', gap: 5,
                 flexShrink: 0,
               }}>
-                {isMobile ? icon : label}
+                {icon}
+                {label}
                 {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
               </button>
             )
           })}
           {(selectedSector === 'all' || selectedSector === 'logistics') && (
-            <button onClick={() => handleSetTab('logistics')} title={isMobile ? tc('pos_app.tab_logistics') : undefined} aria-label={isMobile ? tc('pos_app.tab_logistics') : undefined} style={{
+            <button onClick={() => handleSetTab('logistics')} style={{
               padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
               fontSize: 15, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === 'logistics' ? '2px solid #0891b2' : '2px solid transparent',
               display: 'flex', alignItems: 'center', gap: 5,
               flexShrink: 0,
-            }}>{isMobile ? TAB_ICONS.logistics : tc('pos_app.tab_logistics')}</button>
+            }}>{TAB_ICONS.logistics}{tc('pos_app.tab_logistics')}</button>
           )}
           {([
             { id: 'restaurant' as Tab, label: tc('pos_app.sector_restaurant'), color: '#d08a59' },
@@ -1149,14 +1150,14 @@ export default function POSPage() {
             { id: 'retail' as Tab,     label: tc('pos_app.sector_retail'),     color: '#22c55e' },
             { id: 'factory' as Tab,    label: tc('pos_app.sector_factory'),    color: '#f59e0b' },
           ]).filter(s => selectedSector === s.id).map(s => (
-            <button key={s.id} onClick={() => handleSetTab(s.id)} title={isMobile ? s.label : undefined} aria-label={isMobile ? s.label : undefined} style={{
+            <button key={s.id} onClick={() => handleSetTab(s.id)} style={{
               padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === s.id ? 'var(--sf)' : 'transparent', color: tab === s.id ? s.color : 'var(--tx3)',
               fontSize: 15, fontWeight: tab === s.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === s.id ? `2px solid ${s.color}` : '2px solid transparent',
               display: 'flex', alignItems: 'center', gap: 5,
               flexShrink: 0,
-            }}>{isMobile ? TAB_ICONS[s.id] : s.label}</button>
+            }}>{TAB_ICONS[s.id]}{s.label}</button>
           ))}
           {/* Push action icons to the far right of the tab strip */}
           <div style={{ flex: 1 }} />

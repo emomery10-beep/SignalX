@@ -354,8 +354,6 @@ export default function IntelligencePage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              title={isMobile ? t.label : undefined}
-              aria-label={isMobile ? t.label : undefined}
               style={{
                 padding: isMobile ? '8px 10px' : '8px 12px',
                 border: 'none',
@@ -375,7 +373,8 @@ export default function IntelligencePage() {
                 flexShrink: 0,
               }}
             >
-              {isMobile ? t.icon : t.label}
+              {t.icon}
+              {t.label}
               {t.locked && !planLoading && (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
