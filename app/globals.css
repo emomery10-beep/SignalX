@@ -526,9 +526,6 @@ img {
   .mobile-header {
     display: none !important;
   }
-  .mobile-bottom-nav {
-    display: none !important;
-  }
 }
 
 /* Hide collapse UI on mobile — mobile uses its own hamburger */
@@ -545,16 +542,13 @@ img {
   .main-content {
     margin-left: 0 !important;
     padding-top: 0;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .desktop-sidebar {
     display: flex !important;
   }
   .mobile-header {
     display: block !important;
-  }
-  .mobile-bottom-nav {
-    display: flex !important;
   }
   /* Larger tap targets on mobile */
   button:not(.no-tap-target), a:not(.no-tap-target) {
