@@ -78,6 +78,15 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
     return () => window.removeEventListener('resize', check)
   }, [])
 
+  // The global help/voice-nav FAB (bottom-right, fixed) can end up sitting right
+  // on top of this sheet's Save button on short mobile viewports. Hide it for the
+  // duration this modal is open rather than relying on z-index math alone.
+  useEffect(() => {
+    if (!showManual) return
+    document.body.classList.add('modal-hide-fab')
+    return () => document.body.classList.remove('modal-hide-fab')
+  }, [showManual])
+
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
@@ -293,11 +302,11 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
       {showManual && (
         <div
           onClick={() => setShowManual(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 999, backdropFilter: 'blur(2px)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 9990, backdropFilter: 'blur(2px)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', padding: isMobile ? 0 : 20 }}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '88vh' : '90vh', overflowY: 'auto', background: 'var(--bg)', border: `1px solid ${INDIGO}30`, borderRadius: isMobile ? '16px 16px 0 0' : 14, boxShadow: '0 12px 40px rgba(0,0,0,.3)', zIndex: 1000, padding: 16, boxSizing: 'border-box' }}
+            style={{ width: '100%', maxWidth: isMobile ? '100%' : 440, maxHeight: isMobile ? '88vh' : '90vh', overflowY: 'auto', background: 'var(--bg)', border: `1px solid ${INDIGO}30`, borderRadius: isMobile ? '16px 16px 0 0' : 14, boxShadow: '0 12px 40px rgba(0,0,0,.3)', zIndex: 9991, padding: 16, paddingBottom: isMobile ? 'calc(16px + env(safe-area-inset-bottom, 0px))' : 16, boxSizing: 'border-box' }}
           >
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('cfo_expenses.add_manually_title')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>

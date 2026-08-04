@@ -19,6 +19,13 @@
   z-index: 990;
 }
 
+/* Mobile bottom-sheet modals toggle this on <body> while open — the FAB is
+   fixed to the same bottom-right corner these sheets anchor their action
+   buttons in, so on short viewports it can sit on/near the Save button. */
+body.modal-hide-fab .help-widget-fab {
+  display: none;
+}
+
 @media (max-width: 768px) {
   /* Clear the mobile bottom nav (60px + safe-area) so the "?" button
      doesn't sit on top of the rightmost nav tab. */
