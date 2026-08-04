@@ -10,6 +10,7 @@ import {
   getTemplateById,
   type StaffTemplateType,
 } from '@/lib/staff-templates'
+import { hashPin } from '@/lib/pin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -102,7 +103,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create staff record with template permissions
+    // Create staff record — template permissions are re-derived from the
+    // stored template id (role) via getTemplateById(), not persisted here;
+    // pos_staff has no metadata column.
     const { data: staffData, error: staffError } = await supabase
       .from('pos_staff')
       .insert({
@@ -114,15 +117,6 @@ export async function POST(request: NextRequest) {
         active: true,
         location_id: location_id || null,
         sector: sector || 'retail',
-        metadata: {
-          template_id: templateId,
-          template_name: template.name,
-          permissions: template.defaultPermissions,
-          responsibilities: template.responsibilities,
-          icon: template.icon,
-          color: template.color,
-          pin: pin ? parseInt(pin) : null,
-        },
       })
       .select('*, location:pos_locations!location_id(id, name)')
       .single()
@@ -132,6 +126,12 @@ export async function POST(request: NextRequest) {
         { error: staffError.message },
         { status: 400 }
       )
+    }
+
+    // Hash and store PIN so the staff member can actually log in at the till
+    if (pin && staffData) {
+      const pin_hash = hashPin(String(pin))
+      await supabase.from('pos_staff').update({ pin_hash }).eq('id', staffData.id)
     }
 
     return NextResponse.json({
