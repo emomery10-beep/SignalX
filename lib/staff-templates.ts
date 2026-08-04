@@ -328,12 +328,11 @@ export function getTemplateById(
   id: string,
   type: StaffTemplateType
 ): StaffTemplate | undefined {
-  const templates = type === 'factory' ? FACTORY_TEMPLATES : RESTAURANT_TEMPLATES
-  return templates.find(t => t.id === id)
+  return TEMPLATES_BY_TYPE[type]?.find(t => t.id === id)
 }
 
 export function getTemplatesByType(type: StaffTemplateType): StaffTemplate[] {
-  return type === 'factory' ? FACTORY_TEMPLATES : RESTAURANT_TEMPLATES
+  return TEMPLATES_BY_TYPE[type] ?? []
 }
 
 export function getTemplateColor(template: StaffTemplate): string {
@@ -766,3 +765,12 @@ export const ALL_STAFF_TEMPLATES = [
   ...RETAIL_TEMPLATES,
   ...LOGISTICS_TEMPLATES,
 ]
+
+const TEMPLATES_BY_TYPE: Record<StaffTemplateType, StaffTemplate[]> = {
+  factory: FACTORY_TEMPLATES,
+  restaurant: RESTAURANT_TEMPLATES,
+  repair: REPAIR_TEMPLATES,
+  salon: SALON_TEMPLATES,
+  retail: RETAIL_TEMPLATES,
+  logistics: LOGISTICS_TEMPLATES,
+}
