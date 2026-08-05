@@ -18,19 +18,22 @@ interface PeriodRange {
   start: string; end: string; key: string
 }
 
-interface Budget {
+export interface Budget {
   revenue: number; cogs: number; fixed_costs: number; net_profit: number
 }
 
 // v3: stored values are always a MONTHLY figure (see `factor` below) — bumped
 // from v2, which stored whatever period happened to be on screen when the user
 // last edited, so Variance silently broke on every other period tab.
-const STORAGE_KEY = 'cfo_budget_v3'
-const DEFAULT_BUDGET: Budget = { revenue: 0, cogs: 0, fixed_costs: 0, net_profit: 0 }
+// Exported so CfoReportExport.tsx can read the same stored budget (and apply
+// the same period-scaling below) for the consolidated report's Budget section,
+// instead of a second, driftable copy of this scaling logic.
+export const STORAGE_KEY = 'cfo_budget_v3'
+export const DEFAULT_BUDGET: Budget = { revenue: 0, cogs: 0, fixed_costs: 0, net_profit: 0 }
 
 // Mirrors the day-count math app/api/cfo/snapshot/route.ts already uses to scale
 // monthly_fixed_costs to the selected period, so Budget and Actual stay consistent.
-function daysBetween(a: string, b: string): number {
+export function daysBetween(a: string, b: string): number {
   return Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 86400000) + 1
 }
 

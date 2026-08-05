@@ -319,6 +319,11 @@ function WaterfallChart({ items, width, height, sym }: {
   return <canvas ref={canvasRef} style={{ width: '100%', maxWidth: width, display: 'block' }} />
 }
 
+// NOTE: the headline projected-revenue / projected-net-profit / cash-runway /
+// accuracy numbers below are mirrored (not imported) in
+// lib/cfoForecastSummary.ts, which powers the same KPIs inside the
+// consolidated CFO report export (CfoReportExport.tsx). If the forecasting
+// approach here changes, update that file too.
 // ── Main Component ───────────────────────────────────────────
 export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, currencySymbol: sym, monthlyBaseline, onAsk }: Props) {
   const { tc } = useLang()

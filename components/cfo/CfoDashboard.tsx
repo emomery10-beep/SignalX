@@ -248,7 +248,14 @@ export default function CfoDashboard({ onAsk }: Props) {
           </div>
           {!loading && data?.totals && data.totals.revenue > 0 && (
             <button
-              onClick={() => changeSubTab('reports')}
+              onClick={() => {
+                changeSubTab('reports')
+                // The Export button lives in the persistent header above the
+                // sub-tab content, so switching tabs alone is easy to miss if
+                // the user was scrolled deep into a long tab (e.g. Forecasts)
+                // — jump to top so the new Reports content is visible.
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 fontSize: 11, color: '#6366F1', background: 'rgba(99,102,241,.08)',

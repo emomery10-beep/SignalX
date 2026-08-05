@@ -1,17 +1,27 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { computeForecastSummary } from '@/lib/cfoForecastSummary'
+import { computeTax } from './TaxEstimator'
+import { STORAGE_KEY as BUDGET_STORAGE_KEY, DEFAULT_BUDGET, daysBetween, type Budget } from './BudgetVsActual'
 
 type Tc = (k: string, vars?: Record<string, string | number>) => string
 
 interface Props {
   data: {
+    period: { start: string; end: string; compStart: string; compEnd: string; key: string }
+    country_code?: string | null
     totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
     comparison: { revenue: number; gross_profit: number; net_profit: number; gross_margin_pct: number }
     inventory: { total_products: number; low_or_oos: number; stockout_rate: number; value_at_cost: number }
-    cash: { balance: number; runway_months: number | null; runway_status: string; daily_net_burn: number }
+    cash: { balance: number; runway_months: number | null; runway_status: string; daily_net_burn: number; monthly_fixed?: number }
     alerts: Array<{ type: string; severity: string; message: string }>
     kpis: any[]
+    pnl_monthly?: Array<{ month: string; revenue: number; cogs: number; fixed: number; net: number; gross_margin_pct: number; net_margin_pct: number }>
+    margin_by_product?: Array<{ name: string; category: string; revenue: number; cogs: number; margin_pct: number; units: number; contribution: number }>
+    margin_by_channel?: Array<{ source: string; label: string; revenue: number; cogs: number; gross_profit: number; margin_pct: number; orders: number; pct_of_total: number }>
+    receivables_summary?: { total_receivables: number; total_payables: number; overdue_receivables: number }
+    receivables_aging?: { current: number; overdue_30: number; overdue_60: number; overdue_90: number }
   }
   currencySymbol: string
   period: string
@@ -21,6 +31,11 @@ function fmt(n: number, sym: string): string {
   if (Math.abs(n) >= 1_000_000) return `${sym}${(n / 1_000_000).toFixed(1)}M`
   if (Math.abs(n) >= 1_000) return `${sym}${(n / 1_000).toFixed(0)}K`
   return `${sym}${Math.round(n).toLocaleString()}`
+}
+
+function fmtSigned(n: number, sym: string): string {
+  const s = fmt(Math.abs(n), sym)
+  return n > 0 ? `+${s}` : n < 0 ? `-${s}` : s
 }
 
 function pctChange(curr: number, prev: number): string {
@@ -46,8 +61,42 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
   const t = data.totals
   const c = data.comparison
 
+  // Budget is stored client-side only (see components/cfo/CostConfigDrawer.tsx-
+  // adjacent BudgetVsActual.tsx) — loaded here the same way that component
+  // loads it, so the report's Budget section shows the same numbers.
+  const [budgetState, setBudgetState] = useState<{ budget: Budget; hasBudget: boolean }>({ budget: DEFAULT_BUDGET, hasBudget: false })
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(BUDGET_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setBudgetState({ budget: parsed, hasBudget: Object.values(parsed).some((v: any) => Number(v) > 0) })
+      }
+    } catch {}
+  }, [])
+
   const criticalAlerts = data.alerts.filter(a => a.severity === 'critical')
   const warningAlerts = data.alerts.filter(a => a.severity === 'warning')
+
+  // ── Forecast (mirrors the Forecasts tab's KPI row — see lib/cfoForecastSummary.ts) ──
+  const forecastSummary = computeForecastSummary(data.pnl_monthly, data.cash, 6)
+
+  // ── Margins — top products/channels by revenue ──
+  const topProducts = [...(data.margin_by_product || [])].sort((a, b) => b.revenue - a.revenue).slice(0, 8)
+  const channels = [...(data.margin_by_channel || [])].sort((a, b) => b.revenue - a.revenue)
+
+  // ── Budget vs Actual — same period-scaling as BudgetVsActual.tsx ──
+  const periodDays = Math.max(daysBetween(data.period.start, data.period.end), 1)
+  const budgetFactor = periodDays / 30
+  const scaledBudget: Budget = {
+    revenue: budgetState.budget.revenue * budgetFactor,
+    cogs: budgetState.budget.cogs * budgetFactor,
+    fixed_costs: budgetState.budget.fixed_costs * budgetFactor,
+    net_profit: budgetState.budget.net_profit * budgetFactor,
+  }
+
+  // ── Tax — reuses the exact math behind the Tax Estimator tab ──
+  const tax = computeTax(t.revenue, t.net_profit, tc, data.country_code)
 
   const exportPdf = async () => {
     setExporting(true)
@@ -83,6 +132,230 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
   const statusColor = criticalAlerts.length > 0 ? '#EF4444' :
     warningAlerts.length > 0 ? '#F59E0B' :
     t.net_profit >= 0 ? '#22C55E' : '#F97316'
+
+  // Section list is built as plain data first (rather than hard-coded
+  // ReportSection number={N} props) so numbering stays correct no matter
+  // which optional sections (Forecast/Margins/Receivables/Budget) are
+  // present for a given business — adding/removing a section here can't
+  // leave a gap or duplicate number in what's rendered.
+  const sections: { title: string; node: React.ReactNode }[] = []
+
+  sections.push({
+    title: tc('cfo_report.section_executive_summary'),
+    node: (
+      <>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <MetricBox label={tc('cfo_report.metric_revenue')} value={fmt(t.revenue, sym)} change={pctChange(t.revenue, c.revenue)} positive={t.revenue >= c.revenue} />
+          <MetricBox label={tc('cfo_report.metric_gross_profit')} value={fmt(t.gross_profit, sym)} change={tc('cfo_report.margin_suffix', { pct: t.gross_margin_pct })} positive={t.gross_margin_pct >= 30} />
+          <MetricBox label={tc('cfo_report.metric_net_profit')} value={fmt(t.net_profit, sym)} change={tc('cfo_report.margin_suffix', { pct: t.net_margin_pct })} positive={t.net_profit >= 0} />
+        </div>
+        <div style={{ fontSize: 12, color: '#555', lineHeight: 1.7 }}>
+          {t.net_profit >= 0
+            ? tc('cfo_report.summary_profit', { revenue: fmt(t.revenue, sym), net: fmt(t.net_profit, sym), margin: t.net_margin_pct, trend: t.revenue >= c.revenue ? tc('cfo_report.revenue_up') : tc('cfo_report.revenue_declined'), change: pctChange(t.revenue, c.revenue) })
+            : tc('cfo_report.summary_loss', { revenue: fmt(t.revenue, sym), loss: fmt(Math.abs(t.net_profit), sym) })
+          }
+        </div>
+      </>
+    ),
+  })
+
+  sections.push({
+    title: tc('cfo_report.section_pnl'),
+    node: (
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #e5e5e5' }}>
+            <th style={{ textAlign: 'left', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}></th>
+            <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{tc('cfo_report.col_amount')}</th>
+            <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{tc('cfo_report.col_pct_revenue')}</th>
+            <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{tc('cfo_report.col_vs_prior')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <PnlLine label={tc('cfo_report.pnl_revenue')} amount={t.revenue} pctRev={100} change={pctChange(t.revenue, c.revenue)} sym={sym} bold />
+          <PnlLine label={tc('cfo_report.pnl_cogs')} amount={-t.cogs} pctRev={t.revenue > 0 ? (t.cogs / t.revenue) * 100 : 0} sym={sym} />
+          <PnlLine label={tc('cfo_report.pnl_gross_profit')} amount={t.gross_profit} pctRev={t.gross_margin_pct} change={pctChange(t.gross_profit, c.gross_profit)} sym={sym} bold border highlight={t.gross_profit > 0} />
+          <PnlLine label={tc('cfo_report.pnl_opex')} amount={-t.fixed_costs} pctRev={t.revenue > 0 ? (t.fixed_costs / t.revenue) * 100 : 0} sym={sym} />
+          <PnlLine label={tc('cfo_report.pnl_net_profit')} amount={t.net_profit} pctRev={t.net_margin_pct} change={pctChange(t.net_profit, c.net_profit)} sym={sym} bold border highlight={t.net_profit >= 0} />
+        </tbody>
+      </table>
+    ),
+  })
+
+  if (forecastSummary) {
+    const runwayValue = forecastSummary.cashRunwayUnconfigured
+      ? tc('cfo_report.not_set')
+      : forecastSummary.cashRunwayMonths != null
+      ? tc('cfo_report.months_value', { n: forecastSummary.cashRunwayMonths })
+      : tc('cfo_report.forecast_runway_sustainable')
+    sections.push({
+      title: tc('cfo_report.section_forecast'),
+      node: (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+            <SmallMetric label={tc('cfo_report.forecast_projected_revenue')} value={fmt(forecastSummary.projectedRevenue || 0, sym)} />
+            <SmallMetric label={tc('cfo_report.forecast_projected_net_profit')} value={fmt(forecastSummary.projectedNetProfit || 0, sym)} alert={(forecastSummary.projectedNetProfit || 0) < 0} />
+            <SmallMetric label={tc('cfo_report.forecast_cash_runway')} value={runwayValue} alert={!forecastSummary.cashRunwayUnconfigured && forecastSummary.cashRunwayMonths != null && forecastSummary.cashRunwayMonths <= 3} />
+            <SmallMetric label={tc('cfo_report.forecast_accuracy')} value={forecastSummary.accuracyLabel} />
+          </div>
+          <div style={{ fontSize: 11, color: '#888', marginTop: 10 }}>
+            {tc('cfo_report.forecast_footnote', { n: forecastSummary.completedMonths })}
+          </div>
+        </>
+      ),
+    })
+  }
+
+  sections.push({
+    title: tc('cfo_report.section_cash'),
+    node: (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+        <MetricBox label={tc('cfo_report.metric_cash_balance')} value={data.cash.balance > 0 ? fmt(data.cash.balance, sym) : tc('cfo_report.not_set')} positive={data.cash.balance > 0} />
+        <MetricBox label={tc('cfo_report.metric_monthly_burn')} value={fmt(Math.abs(data.cash.daily_net_burn * 30), sym)} positive={data.cash.daily_net_burn >= 0} change={data.cash.daily_net_burn >= 0 ? tc('cfo_report.cash_positive') : tc('cfo_report.negative_burn')} />
+        <MetricBox label={tc('cfo_report.metric_cash_runway')} value={data.cash.runway_months != null ? tc('cfo_report.months_value', { n: data.cash.runway_months }) : data.cash.daily_net_burn >= 0 ? tc('cfo_report.cash_positive_short') : '—'} positive={data.cash.runway_months == null || data.cash.runway_months >= 3} />
+      </div>
+    ),
+  })
+
+  if (topProducts.length > 0 || channels.length > 0) {
+    sections.push({
+      title: tc('cfo_report.section_margins'),
+      node: (
+        <>
+          {topProducts.length > 0 && (
+            <div style={{ marginBottom: channels.length > 0 ? 18 : 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.margins_by_product')}</div>
+              <DataTable
+                columns={[tc('cfo_report.margin_col_name'), tc('cfo_report.margin_col_revenue'), tc('cfo_report.margin_col_margin')]}
+                rows={topProducts.map(p => [p.name, fmt(p.revenue, sym), `${p.margin_pct.toFixed(1)}%`])}
+              />
+            </div>
+          )}
+          {channels.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.margins_by_channel')}</div>
+              <DataTable
+                columns={[tc('cfo_report.margin_col_name'), tc('cfo_report.margin_col_revenue'), tc('cfo_report.margin_col_margin')]}
+                rows={channels.map(ch => [ch.label, fmt(ch.revenue, sym), `${ch.margin_pct.toFixed(1)}%`])}
+              />
+            </div>
+          )}
+        </>
+      ),
+    })
+  }
+
+  if (data.receivables_summary || data.receivables_aging) {
+    sections.push({
+      title: tc('cfo_report.section_receivables'),
+      node: (
+        <>
+          {data.receivables_summary && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: data.receivables_aging ? 16 : 0 }}>
+              <SmallMetric label={tc('cfo_report.recv_total_receivables')} value={fmt(data.receivables_summary.total_receivables, sym)} />
+              <SmallMetric label={tc('cfo_report.recv_total_payables')} value={fmt(data.receivables_summary.total_payables, sym)} />
+              <SmallMetric label={tc('cfo_report.recv_overdue')} value={fmt(data.receivables_summary.overdue_receivables, sym)} alert={data.receivables_summary.overdue_receivables > 0} />
+            </div>
+          )}
+          {data.receivables_aging && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+              <SmallMetric label={tc('cfo_report.recv_aging_current')} value={fmt(data.receivables_aging.current, sym)} />
+              <SmallMetric label={tc('cfo_report.recv_aging_30')} value={fmt(data.receivables_aging.overdue_30, sym)} alert={data.receivables_aging.overdue_30 > 0} />
+              <SmallMetric label={tc('cfo_report.recv_aging_60')} value={fmt(data.receivables_aging.overdue_60, sym)} alert={data.receivables_aging.overdue_60 > 0} />
+              <SmallMetric label={tc('cfo_report.recv_aging_90')} value={fmt(data.receivables_aging.overdue_90, sym)} alert={data.receivables_aging.overdue_90 > 0} />
+            </div>
+          )}
+        </>
+      ),
+    })
+  }
+
+  if (budgetState.hasBudget) {
+    sections.push({
+      title: tc('cfo_report.section_budget'),
+      node: (
+        <DataTable
+          columns={['', tc('cfo_report.budget_col_budget'), tc('cfo_report.budget_col_actual'), tc('cfo_report.budget_col_variance')]}
+          rows={[
+            [tc('cfo_report.budget_row_revenue'), fmt(scaledBudget.revenue, sym), fmt(t.revenue, sym), fmtSigned(t.revenue - scaledBudget.revenue, sym)],
+            [tc('cfo_report.budget_row_cogs'), fmt(scaledBudget.cogs, sym), fmt(t.cogs, sym), fmtSigned(scaledBudget.cogs - t.cogs, sym)],
+            [tc('cfo_report.budget_row_fixed'), fmt(scaledBudget.fixed_costs, sym), fmt(t.fixed_costs, sym), fmtSigned(scaledBudget.fixed_costs - t.fixed_costs, sym)],
+            [tc('cfo_report.budget_row_net'), fmt(scaledBudget.net_profit, sym), fmt(t.net_profit, sym), fmtSigned(t.net_profit - scaledBudget.net_profit, sym)],
+          ]}
+        />
+      ),
+    })
+  }
+
+  sections.push({
+    title: tc('cfo_report.section_inventory'),
+    node: (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+        <SmallMetric label={tc('cfo_report.inv_total_products')} value={`${data.inventory.total_products}`} />
+        <SmallMetric label={tc('cfo_report.inv_stock_value')} value={fmt(data.inventory.value_at_cost, sym)} />
+        <SmallMetric label={tc('cfo_report.inv_low_oos')} value={`${data.inventory.low_or_oos}`} alert={data.inventory.low_or_oos > 0} />
+        <SmallMetric label={tc('cfo_report.inv_stockout_rate')} value={`${data.inventory.stockout_rate}%`} alert={data.inventory.stockout_rate > 30} />
+      </div>
+    ),
+  })
+
+  sections.push({
+    title: tc('cfo_report.section_tax'),
+    node: (
+      <>
+        <div style={{ display: 'grid', gridTemplateColumns: tax.turnoverTax.applicable ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: 12 }}>
+          <SmallMetric label={tax.vat.name} value={fmt(tax.vat.amount, sym)} />
+          <SmallMetric label={tc('cfo_report.tax_income')} value={fmt(tax.incomeTax.amount, sym)} />
+          {tax.turnoverTax.applicable && <SmallMetric label={tc('cfo_report.tax_turnover')} value={fmt(tax.turnoverTax.amount, sym)} />}
+          <SmallMetric label={tc('cfo_report.tax_total_set_aside')} value={fmt(tax.totalSetAside, sym)} alert={tax.totalSetAside > 0} />
+        </div>
+        <div style={{ fontSize: 11, color: '#888', marginTop: 10 }}>
+          {tc('cfo_report.tax_pct_revenue', { pct: Math.round(tax.pctOfRevenue) })}
+        </div>
+      </>
+    ),
+  })
+
+  if (criticalAlerts.length > 0 || warningAlerts.length > 0) {
+    sections.push({
+      title: tc('cfo_report.section_risks'),
+      node: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {criticalAlerts.map((a, i) => (
+            <div key={`c${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fef2f2', border: '1px solid #fca5a5' }}>
+              <strong style={{ color: '#EF4444' }}>{tc('cfo_report.label_critical')}</strong> {a.message}
+            </div>
+          ))}
+          {warningAlerts.map((a, i) => (
+            <div key={`w${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fffbeb', border: '1px solid #fcd34d' }}>
+              <strong style={{ color: '#F59E0B' }}>{tc('cfo_report.label_warning')}</strong> {a.message}
+            </div>
+          ))}
+        </div>
+      ),
+    })
+  }
+
+  if (data.kpis && data.kpis.length > 0) {
+    sections.push({
+      title: tc('cfo_report.section_kpi'),
+      node: (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          {data.kpis.map((kpi: any) => (
+            <div key={kpi.key} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e5e5', textAlign: 'center' }}>
+              <div style={{ fontSize: 10, color: '#888', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{kpi.label}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#333', marginTop: 4 }}>{kpi.valueLabel || (kpi.value != null ? `${kpi.value}` : '—')}</div>
+              {kpi.change != null && (
+                <div style={{ fontSize: 10, color: kpi.change > 0 ? '#22C55E' : kpi.change < 0 ? '#EF4444' : '#888', fontWeight: 600, marginTop: 2 }}>
+                  {kpi.change > 0 ? '▲' : kpi.change < 0 ? '▼' : '–'} {Math.abs(kpi.change)}%
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ),
+    })
+  }
 
   return (
     <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
@@ -125,97 +398,9 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
           </div>
         </div>
 
-        {/* Section 1: Executive Summary */}
-        <ReportSection number={1} title={tc('cfo_report.section_executive_summary')}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
-            <MetricBox label={tc('cfo_report.metric_revenue')} value={fmt(t.revenue, sym)} change={pctChange(t.revenue, c.revenue)} positive={t.revenue >= c.revenue} />
-            <MetricBox label={tc('cfo_report.metric_gross_profit')} value={fmt(t.gross_profit, sym)} change={tc('cfo_report.margin_suffix', { pct: t.gross_margin_pct })} positive={t.gross_margin_pct >= 30} />
-            <MetricBox label={tc('cfo_report.metric_net_profit')} value={fmt(t.net_profit, sym)} change={tc('cfo_report.margin_suffix', { pct: t.net_margin_pct })} positive={t.net_profit >= 0} />
-          </div>
-          <div style={{ fontSize: 12, color: '#555', lineHeight: 1.7 }}>
-            {t.net_profit >= 0
-              ? tc('cfo_report.summary_profit', { revenue: fmt(t.revenue, sym), net: fmt(t.net_profit, sym), margin: t.net_margin_pct, trend: t.revenue >= c.revenue ? tc('cfo_report.revenue_up') : tc('cfo_report.revenue_declined'), change: pctChange(t.revenue, c.revenue) })
-              : tc('cfo_report.summary_loss', { revenue: fmt(t.revenue, sym), loss: fmt(Math.abs(t.net_profit), sym) })
-            }
-          </div>
-        </ReportSection>
-
-        {/* Section 2: Profit & Loss */}
-        <ReportSection number={2} title={tc('cfo_report.section_pnl')}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #e5e5e5' }}>
-                <th style={{ textAlign: 'left', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}></th>
-                <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{tc('cfo_report.col_amount')}</th>
-                <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{tc('cfo_report.col_pct_revenue')}</th>
-                <th style={{ textAlign: 'right', padding: '8px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{tc('cfo_report.col_vs_prior')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <PnlLine label={tc('cfo_report.pnl_revenue')} amount={t.revenue} pctRev={100} change={pctChange(t.revenue, c.revenue)} sym={sym} bold />
-              <PnlLine label={tc('cfo_report.pnl_cogs')} amount={-t.cogs} pctRev={t.revenue > 0 ? (t.cogs / t.revenue) * 100 : 0} sym={sym} />
-              <PnlLine label={tc('cfo_report.pnl_gross_profit')} amount={t.gross_profit} pctRev={t.gross_margin_pct} change={pctChange(t.gross_profit, c.gross_profit)} sym={sym} bold border highlight={t.gross_profit > 0} />
-              <PnlLine label={tc('cfo_report.pnl_opex')} amount={-t.fixed_costs} pctRev={t.revenue > 0 ? (t.fixed_costs / t.revenue) * 100 : 0} sym={sym} />
-              <PnlLine label={tc('cfo_report.pnl_net_profit')} amount={t.net_profit} pctRev={t.net_margin_pct} change={pctChange(t.net_profit, c.net_profit)} sym={sym} bold border highlight={t.net_profit >= 0} />
-            </tbody>
-          </table>
-        </ReportSection>
-
-        {/* Section 3: Cash Position */}
-        <ReportSection number={3} title={tc('cfo_report.section_cash')}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            <MetricBox label={tc('cfo_report.metric_cash_balance')} value={data.cash.balance > 0 ? fmt(data.cash.balance, sym) : tc('cfo_report.not_set')} positive={data.cash.balance > 0} />
-            <MetricBox label={tc('cfo_report.metric_monthly_burn')} value={fmt(Math.abs(data.cash.daily_net_burn * 30), sym)} positive={data.cash.daily_net_burn >= 0} change={data.cash.daily_net_burn >= 0 ? tc('cfo_report.cash_positive') : tc('cfo_report.negative_burn')} />
-            <MetricBox label={tc('cfo_report.metric_cash_runway')} value={data.cash.runway_months != null ? tc('cfo_report.months_value', { n: data.cash.runway_months }) : data.cash.daily_net_burn >= 0 ? tc('cfo_report.cash_positive_short') : '—'} positive={data.cash.runway_months == null || data.cash.runway_months >= 3} />
-          </div>
-        </ReportSection>
-
-        {/* Section 4: Inventory */}
-        <ReportSection number={4} title={tc('cfo_report.section_inventory')}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-            <SmallMetric label={tc('cfo_report.inv_total_products')} value={`${data.inventory.total_products}`} />
-            <SmallMetric label={tc('cfo_report.inv_stock_value')} value={fmt(data.inventory.value_at_cost, sym)} />
-            <SmallMetric label={tc('cfo_report.inv_low_oos')} value={`${data.inventory.low_or_oos}`} alert={data.inventory.low_or_oos > 0} />
-            <SmallMetric label={tc('cfo_report.inv_stockout_rate')} value={`${data.inventory.stockout_rate}%`} alert={data.inventory.stockout_rate > 30} />
-          </div>
-        </ReportSection>
-
-        {/* Section 5: Risks & Alerts */}
-        {(criticalAlerts.length > 0 || warningAlerts.length > 0) && (
-          <ReportSection number={5} title={tc('cfo_report.section_risks')}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {criticalAlerts.map((a, i) => (
-                <div key={`c${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fef2f2', border: '1px solid #fca5a5' }}>
-                  <strong style={{ color: '#EF4444' }}>{tc('cfo_report.label_critical')}</strong> {a.message}
-                </div>
-              ))}
-              {warningAlerts.map((a, i) => (
-                <div key={`w${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fffbeb', border: '1px solid #fcd34d' }}>
-                  <strong style={{ color: '#F59E0B' }}>{tc('cfo_report.label_warning')}</strong> {a.message}
-                </div>
-              ))}
-            </div>
-          </ReportSection>
-        )}
-
-        {/* Section 6: KPI Summary */}
-        {data.kpis && data.kpis.length > 0 && (
-          <ReportSection number={criticalAlerts.length > 0 || warningAlerts.length > 0 ? 6 : 5} title={tc('cfo_report.section_kpi')}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-              {data.kpis.map((kpi: any) => (
-                <div key={kpi.key} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e5e5', textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, color: '#888', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{kpi.label}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#333', marginTop: 4 }}>{kpi.valueLabel || (kpi.value != null ? `${kpi.value}` : '—')}</div>
-                  {kpi.change != null && (
-                    <div style={{ fontSize: 10, color: kpi.change > 0 ? '#22C55E' : kpi.change < 0 ? '#EF4444' : '#888', fontWeight: 600, marginTop: 2 }}>
-                      {kpi.change > 0 ? '▲' : kpi.change < 0 ? '▼' : '–'} {Math.abs(kpi.change)}%
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </ReportSection>
-        )}
+        {sections.map((s, i) => (
+          <ReportSection key={i} number={i + 1} title={s.title}>{s.node}</ReportSection>
+        ))}
 
         {/* Footer */}
         <div style={{ borderTop: '2px solid #e5e5e5', paddingTop: 14, marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -259,6 +444,29 @@ function SmallMetric({ label, value, alert }: { label: string; value: string; al
       <div style={{ fontSize: 9, color: '#888', fontWeight: 500, textTransform: 'uppercase' }}>{label}</div>
       <div style={{ fontSize: 15, fontWeight: 700, color: alert ? '#EF4444' : '#333', marginTop: 2 }}>{value}</div>
     </div>
+  )
+}
+
+function DataTable({ columns, rows }: { columns: string[]; rows: (string | number)[][] }) {
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+      <thead>
+        <tr style={{ borderBottom: '2px solid #e5e5e5' }}>
+          {columns.map((col, i) => (
+            <th key={i} style={{ textAlign: i === 0 ? 'left' : 'right', padding: '6px 0', fontSize: 11, color: '#888', fontWeight: 600 }}>{col}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, ri) => (
+          <tr key={ri} style={{ borderBottom: '1px solid #f0f0f0' }}>
+            {row.map((cell, ci) => (
+              <td key={ci} style={{ textAlign: ci === 0 ? 'left' : 'right', padding: '6px 0', color: '#333' }}>{cell}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 

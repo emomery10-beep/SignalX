@@ -5,7 +5,7 @@ import { useLang } from '@/components/LanguageProvider'
 
 type TcFn = (k: string, vars?: Record<string, string | number>) => string
 
-interface TaxEstimate {
+export interface TaxEstimate {
   vat: { amount: number; rate: number; due: string; daysUntil: number; name: string }
   incomeTax: { amount: number; bracket: string; due: string; daysUntil: number }
   turnoverTax: { amount: number; rate: number; applicable: boolean }
@@ -46,7 +46,9 @@ function getNextIncomeTaxDue(quarters: number[]): { due: string; daysUntil: numb
   return { due: next.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), daysUntil }
 }
 
-function computeTax(revenue: number, netProfit: number, tc: TcFn, countryCode?: string | null): TaxEstimate {
+// Exported so CfoReportExport.tsx can reuse the exact same tax math for the
+// consolidated report's Tax section, instead of a second, driftable copy.
+export function computeTax(revenue: number, netProfit: number, tc: TcFn, countryCode?: string | null): TaxEstimate {
   const region = getRegionConfig(countryCode)
   const cfg = region.taxConfig
   const annualRevenue = revenue * 12
