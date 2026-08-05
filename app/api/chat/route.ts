@@ -225,9 +225,16 @@ export async function POST(request: NextRequest) {
             "- " + s.tracking_number + ": " + s.track_status + (s.delay_days > 0 ? " (" + s.delay_days + "d delayed)" : "") + (s.customs_hold ? " [CUSTOMS HOLD]" : "") + (s.sku ? " | " + s.sku : "") + (s.financial_impact > 0 ? " | Impact: " + finalSymbol + s.financial_impact : "")
           ).join("\n")
         }
-        // Unread shipment alerts — the UI surfaces these with specific alert text/reason that
-        // the shipment row itself doesn't carry (previously never queried by this route).
-        const { data: shipAlerts } = await supabase.from("shipment_alerts").select("alert_type, alert_level, message, financial_impact, delay_days, tracking_number").eq("user_id", user.id).eq("is_read", false).order("created_at", { ascending: false }).limit(10)
+      }
+      // Unread shipment alerts — the UI surfaces these with specific alert text/reason that the
+      // shipment row itself doesn't carry. Runs for BOTH branches above (a specific tracking
+      // number or a general tracking question) — previously this only ran in the general branch,
+      // so pasting an actual tracking number (arguably the most relevant case for "any alerts on
+      // this parcel?") never surfaced them at all.
+      {
+        let alertsQuery = supabase.from("shipment_alerts").select("alert_type, alert_level, message, financial_impact, delay_days, tracking_number").eq("user_id", user.id).eq("is_read", false).order("created_at", { ascending: false }).limit(10)
+        if (trackingNumberMatch?.[1]) alertsQuery = alertsQuery.eq("tracking_number", trackingNumberMatch[1].toUpperCase())
+        const { data: shipAlerts } = await alertsQuery
         if (shipAlerts?.length) {
           trackingContext += (trackingContext ? "\n\n" : "") + "UNREAD SHIPMENT ALERTS:\n" + shipAlerts.map((a: any) =>
             "- [" + (a.alert_level || a.alert_type || "alert").toUpperCase() + "] " + (a.tracking_number ? a.tracking_number + ": " : "") + (a.message || a.alert_type) + (a.financial_impact > 0 ? " | Impact: " + finalSymbol + a.financial_impact : "")
@@ -476,14 +483,18 @@ export async function POST(request: NextRequest) {
 
     // Expense/spending question — distinct from the broad cost/margin detector above, which
     // covers product-level COGS, not general business outgoings (rent, vendor bills, etc.).
-    const isExpenseQuestion = /\bexpense(s)?\b|\bspending\b|\bspend\b|\bspent\b|\boutgoing(s)?\b|\bhow much.*\b(pay|paid)\b/i.test(q)
+    // Negative lookbehind excludes "customer/client spend" — that's basket-size language, not
+    // a business-expense question, and was previously hijacking it (e.g. "average customer spend").
+    const isExpenseQuestion = /\bexpense(s)?\b|\bspending\b|\boutgoing(s)?\b|\bhow much.*\b(pay|paid)\b|(?<!customer |customers |client |clients |shopper |shoppers |their )\b(spend|spent)\b/i.test(q)
 
     // Additional real-feature intents — each queries a live table this route previously never
     // looked at, following the same "compute deterministically, don't let the LLM guess" pattern
     // as the growth/expense blocks above. Gated behind intent so ordinary questions don't pay for
     // 9 extra queries most users' business type will never touch.
     const isReceivablesQuestion = /\breceivable(s)?\b|\bpayable(s)?\b|who owes me|owed to me|outstanding invoice|overdue (invoice|payment|bill)|unpaid invoice|what do i owe|money i owe|bills i owe/i.test(q)
-    const isPurchaseOrderQuestion = /purchase order|\bPOs?\b|supplier order|order(ed)? from (my )?supplier|restock order/i.test(q)
+    // Dropped the old bare \bPOs?\b shorthand — case-insensitively it matched "POS" itself
+    // (this product's own name), spuriously firing on ordinary sales questions.
+    const isPurchaseOrderQuestion = /purchase order|\bPO\s*#\s*\d|supplier order|order(ed)? from (my )?supplier|restock order/i.test(q)
     const isRestaurantOpsQuestion = /\bcovers?\b|dine.?in|takeaway|\bkitchen\b|\bwaiter(s)?\b|\bchef(s)?\b|food waste|wasted (food|ingredients)|menu item|table turn/i.test(q)
     const isRepairJobQuestion = /repair (job|ticket)|service (job|ticket)|device (repair|drop.?off)|turnaround time|fix(ed)? (a |the )?(phone|device|laptop)/i.test(q)
     const isLogisticsFleetQuestion = /\bmy (truck|trucks|fleet)\b|which driver|undelivered parcel|parcel(s)?\s+.*\b(undelivered|in transit|delivered|status)\b|route (efficiency|performance)/i.test(q)
@@ -551,7 +562,10 @@ export async function POST(request: NextRequest) {
     }
 
     const [txRes, invRes, staffRes, custRes, debtorRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes] = await Promise.all([
-      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
+      // pos_transactions has TWO FKs to pos_staff (cashier_id, amended_by) — a bare `pos_staff(name)`
+      // embed is ambiguous and PostgREST returns PGRST201 (data: null), silently zeroing every
+      // period-scoped number below. Must disambiguate to the cashier relationship explicitly.
+      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff!cashier_id(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
       service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price,location_id').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(100),
       service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
       service.from('pos_customers').select('id,name,phone,total_spent,visit_count,last_seen_at').eq('owner_id', user.id).order('total_spent', { ascending: false }).limit(10),
@@ -1134,8 +1148,11 @@ export async function POST(request: NextRequest) {
     // Factory/manufacturing — batches, intake/output/wastage captures, dispatch waybills.
     // Only pos_factory_batches, pos_factory_captures, pos_factory_waybills are queried here —
     // these three table names are confirmed identical between the root and pos-askbiz migration
-    // histories; other factory tables (downtime/quality/shift) diverged in shape between the two
-    // apps and need a product decision before wiring, not queried here.
+    // histories. Correction to an earlier version of this comment: the downtime/quality/shift
+    // tables aren't shape-diverged, they're just differently NAMED per app (root:
+    // pos_factory_downtime/_quality/_shifts, pos-askbiz: pos_factory_downtime_events/
+    // _quality_checks/_production_shifts) — both sets are live with real API routes, nothing
+    // blocks wiring them, they just aren't wired yet (open follow-up, not a blocker).
     if (isFactoryQuestion) {
       const [batchRes, captureRes, waybillRes] = await Promise.all([
         service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
