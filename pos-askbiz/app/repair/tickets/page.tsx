@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
@@ -90,8 +91,8 @@ function fmtDate(iso: string) { return new Date(iso).toLocaleString('en-GB', { d
 export default function RepairTickets() {
   const router = useRouter()
   const { session, ready: authReady } = usePosAuth()
+  const { config, sym } = usePosConfig(session, authReady)
   const { tc } = useLang()
-  const [sym, setSym] = useState('£')
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -109,12 +110,8 @@ export default function RepairTickets() {
   const [pendingJobTx, setPendingJobTx] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-    }).catch(() => {})
-  }, [authReady, session])
+    if (config?.staff_sector && config.staff_sector !== 'repair') router.push('/pos')
+  }, [config, router])
 
   const loadJobs = useCallback(async () => {
     if (!session) return

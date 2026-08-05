@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { Button, Banner, Input, Card } from '@/components/ui'
 
@@ -36,7 +37,7 @@ export default function RepairParts() {
   const router = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym] = useState('£')
+  const { config, sym } = usePosConfig(session, authReady)
   const [parts, setParts] = useState<Part[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -48,12 +49,8 @@ export default function RepairParts() {
   const [form, setForm] = useState({ name: '', sku: '', stock_qty: '', cost_price: '', sale_price: '', low_stock_threshold: '', supplier: '' })
 
   useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-    }).catch(() => {})
-  }, [authReady, session])
+    if (config?.staff_sector && config.staff_sector !== 'repair') router.push('/pos')
+  }, [config, router])
 
   const loadParts = useCallback(async () => {
     if (!session) return

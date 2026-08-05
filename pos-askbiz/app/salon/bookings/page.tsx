@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Banner, Input, Select, Card } from '@/components/ui'
 
@@ -38,7 +39,7 @@ export default function SalonBookings() {
   const router = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym] = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [loading, setLoading] = useState(true)
 
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -52,13 +53,6 @@ export default function SalonBookings() {
   const [form, setForm] = useState({ client: '', phone: '', service: '', stylist_id: '', time: '' })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   useEffect(() => {
     if (!authReady || !session) return

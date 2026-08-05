@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Banner, Input, Card } from '@/components/ui'
 
@@ -34,7 +35,7 @@ export default function SalonProducts() {
   const router = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym] = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [loading, setLoading] = useState(true)
   const [inventory, setInventory] = useState<InvItem[]>([])
   const [soldMap, setSoldMap] = useState<Record<string, number>>({})
@@ -55,13 +56,6 @@ export default function SalonProducts() {
   const streamRef = useRef<MediaStream | null>(null)
   const [scanActive, setScanActive] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   useEffect(() => {
     if (!authReady || !session) return

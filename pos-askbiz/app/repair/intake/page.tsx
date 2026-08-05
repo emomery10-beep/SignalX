@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
@@ -74,8 +75,8 @@ function toBase64(dataUrl: string) {
 export default function RepairIntake() {
   const router = useRouter()
   const { session, ready: authReady } = usePosAuth()
+  const { config, sym } = usePosConfig(session, authReady)
   const { tc } = useLang()
-  const [sym, setSym] = useState('£')
 
   const [stage, setStage] = useState<Stage>('device_scan')
 
@@ -120,11 +121,11 @@ export default function RepairIntake() {
   const [pendingClientTxId, setPendingClientTxId] = useState('')
 
   useEffect(() => {
+    if (config?.staff_sector && config.staff_sector !== 'repair') router.push('/pos')
+  }, [config, router])
+
+  useEffect(() => {
     if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-    }).catch(() => {})
     // Load engineers for assignment dropdown
     fetch('/api/pos/staff/list', { headers: { ...session.headers } })
       .then(r => r.json()).then(d => {

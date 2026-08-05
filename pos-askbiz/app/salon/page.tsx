@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Card } from '@/components/ui'
 
@@ -70,17 +71,10 @@ export default function SalonHub() {
   const router = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym] = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [metrics, setMetrics] = useState<RawMetrics | null>(null)
   const [schedule, setSchedule] = useState<Tx[]>([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   useEffect(() => {
     if (!authReady || !session) return
