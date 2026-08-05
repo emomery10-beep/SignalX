@@ -67,7 +67,7 @@ export default function DeliveriesPage() {
   // Image capture
   const fileInputRef   = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
-  const videoRef       = useRef<HTMLVideoElement>(null)
+  const videoRef       = useRef<HTMLVideoElement | null>(null)
   const canvasRef      = useRef<HTMLCanvasElement>(null)
   const streamRef      = useRef<MediaStream | null>(null)
   const [showCamera, setShowCamera] = useState(false)
@@ -100,12 +100,16 @@ export default function DeliveriesPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
       setShowCamera(true)
-      setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) } }, 100)
     } catch {
       // Fallback to file picker if camera denied
       cameraInputRef.current?.click()
     }
   }
+
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el
+    if (el && streamRef.current) { el.srcObject = streamRef.current; el.play().catch(() => {}) }
+  }, [])
 
   function closeCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -533,7 +537,7 @@ export default function DeliveriesPage() {
             </div>
           </div>
 
-          <video ref={videoRef} playsInline muted
+          <video ref={attachVideo} autoPlay playsInline muted
             style={{ flex: 1, objectFit: 'cover', width: '100%' }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
 

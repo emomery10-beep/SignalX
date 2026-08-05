@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
@@ -356,8 +356,6 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
       setCamActive(true)
-      // attach after render
-      setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) } }, 50)
     } catch (err: any) {
       const name = err?.name || ''
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
@@ -376,6 +374,11 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
     if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null }
     setCamActive(false)
   }
+
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el
+    if (el && streamRef.current) { el.srcObject = streamRef.current; el.play().catch(() => {}) }
+  }, [])
 
   function capture() {
     const video = videoRef.current, canvas = canvasRef.current
@@ -494,7 +497,7 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
 
         {camActive ? (
           <div className="pos-reveal" style={{ marginBottom: 12 }}>
-            <video ref={videoRef} playsInline muted style={{ width: '100%', maxWidth: 420, borderRadius: 10, background: '#000', display: 'block' }} />
+            <video ref={attachVideo} autoPlay playsInline muted style={{ width: '100%', maxWidth: 420, borderRadius: 10, background: '#000', display: 'block' }} />
             <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
               <Button variant="primary" onClick={capture}>{tc('salon_clients.cam_capture', { tag: pendingTag === 'Before' ? tc('salon_clients.tag_before') : tc('salon_clients.tag_after') })}</Button>
               <Button variant="secondary" onClick={stopCamera}>{tc('salon_clients.cam_stop')}</Button>

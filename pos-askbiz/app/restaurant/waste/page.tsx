@@ -50,7 +50,7 @@ export default function WastePage() {
   const [loading, setLoading] = useState(true)
 
   // Camera / recognition
-  const videoRef    = useRef<HTMLVideoElement>(null)
+  const videoRef    = useRef<HTMLVideoElement | null>(null)
   const canvasRef   = useRef<HTMLCanvasElement>(null)
   const streamRef   = useRef<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -90,11 +90,15 @@ export default function WastePage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
       setStage('camera')
-      setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) } }, 100)
     } catch {
       fileInputRef.current?.click()
     }
   }
+
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el
+    if (el && streamRef.current) { el.srcObject = streamRef.current; el.play().catch(() => {}) }
+  }, [])
 
   function closeCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -414,7 +418,7 @@ export default function WastePage() {
               </button>
               <div style={{ flex: 1, textAlign: 'center', color: '#fff', fontSize: 13 }}>{tc(NS + 'camera_point')}</div>
             </div>
-            <video ref={videoRef} playsInline muted style={{ flex: 1, objectFit: 'cover', width: '100%' }} />
+            <video ref={attachVideo} autoPlay playsInline muted style={{ flex: 1, objectFit: 'cover', width: '100%' }} />
             <canvas ref={canvasRef} style={{ display: 'none' }} />
             <div style={{ padding: 24, display: 'flex', justifyContent: 'center' }}>
               <button onClick={captureAndRecognize}

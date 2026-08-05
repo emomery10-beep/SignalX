@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
@@ -206,7 +206,6 @@ export default function SalonProducts() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
       setScanActive(true)
-      setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) } }, 50)
     } catch (err: any) {
       const name = err?.name || ''
       if (name === 'NotAllowedError') setScanError(tc('salon_products.scan_err_denied'))
@@ -219,6 +218,11 @@ export default function SalonProducts() {
     if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null }
     setScanActive(false)
   }
+
+  const attachVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el
+    if (el && streamRef.current) { el.srcObject = streamRef.current; el.play().catch(() => {}) }
+  }, [])
 
   // Compact inline controls (search box in the table header, the usage-log
   // product/amount/service row) stay hand-styled — wrapping them in the shared
@@ -314,7 +318,7 @@ export default function SalonProducts() {
           {scanError && <Banner tone="warning">{scanError}</Banner>}
           {scanActive && (
             <div className="pos-reveal" style={{ marginBottom: 14 }}>
-              <video ref={videoRef} playsInline muted style={{ width: '100%', maxWidth: 360, borderRadius: 10, background: '#000', display: 'block' }} />
+              <video ref={attachVideo} autoPlay playsInline muted style={{ width: '100%', maxWidth: 360, borderRadius: 10, background: '#000', display: 'block' }} />
               <div style={{ fontSize: 12, color: tokens.hint, margin: '8px 0' }}>{tc('salon_products.scan_hint')}</div>
               <Button variant="secondary" onClick={stopScan}>{tc('salon_products.stop_camera')}</Button>
             </div>
