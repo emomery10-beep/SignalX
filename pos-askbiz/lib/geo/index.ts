@@ -52,6 +52,45 @@ export const COUNTRY_CURRENCY: Record<string, string> = {
   PT: 'EUR', AT: 'EUR', IE: 'EUR', FI: 'EUR',
 }
 
+// ── Country → phone dial code (E.164 prefix), Africa-first ─────
+// Mirrors lib/geo/index.ts (root app) — used to derive a currency for
+// accounts whose profile row never got one written (e.g. onboarding was
+// never completed), instead of guessing a fixed default like GBP.
+const COUNTRY_DIAL: { code: string; dial: string }[] = [
+  { code: 'KE', dial: '+254' }, { code: 'NG', dial: '+234' }, { code: 'UG', dial: '+256' },
+  { code: 'TZ', dial: '+255' }, { code: 'GH', dial: '+233' }, { code: 'ZA', dial: '+27' },
+  { code: 'RW', dial: '+250' }, { code: 'ZM', dial: '+260' }, { code: 'ET', dial: '+251' },
+  { code: 'ZW', dial: '+263' }, { code: 'MW', dial: '+265' }, { code: 'MZ', dial: '+258' },
+  { code: 'US', dial: '+1' },   { code: 'CA', dial: '+1' },   { code: 'GB', dial: '+44' },
+  { code: 'IE', dial: '+353' }, { code: 'DE', dial: '+49' },  { code: 'FR', dial: '+33' },
+  { code: 'ES', dial: '+34' },  { code: 'IT', dial: '+39' },  { code: 'NL', dial: '+31' },
+  { code: 'BE', dial: '+32' },  { code: 'PT', dial: '+351' }, { code: 'AT', dial: '+43' },
+  { code: 'FI', dial: '+358' }, { code: 'AE', dial: '+971' }, { code: 'IN', dial: '+91' },
+  { code: 'SG', dial: '+65' },  { code: 'AU', dial: '+61' },  { code: 'MX', dial: '+52' },
+  { code: 'BR', dial: '+55' },
+]
+
+// E.164 phone → ISO country code, by longest matching dial prefix.
+// Returns null when nothing matches (malformed / not +-prefixed).
+export function countryFromPhone(e164: string | null | undefined): string | null {
+  if (!e164) return null
+  const n = e164.replace(/[^\d+]/g, '')
+  if (!n.startsWith('+')) return null
+  const sorted = [...COUNTRY_DIAL].sort((a, b) => b.dial.length - a.dial.length)
+  for (const c of sorted) {
+    if (n.startsWith(c.dial)) return c.code
+  }
+  return null
+}
+
+/** Best-effort currency for an account whose profile has none stored yet. */
+export function currencyFromPhone(e164: string | null | undefined): { currency: string; symbol: string } | null {
+  const country = countryFromPhone(e164)
+  const currency = country ? COUNTRY_CURRENCY[country] : null
+  if (!currency) return null
+  return { currency, symbol: CURRENCIES[currency]?.sym || currency }
+}
+
 // ── Sector hints per country ──────────────────────────────────
 export const SECTOR_HINTS: Record<string, string> = {
   KE: 'FMCG distribution, M-Pesa mobile payments, tea & coffee export, horticulture, construction materials',

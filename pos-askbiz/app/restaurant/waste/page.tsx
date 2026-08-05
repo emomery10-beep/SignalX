@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Input, Select, ListItem } from '@/components/ui'
 
@@ -42,7 +43,7 @@ export default function WastePage() {
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const REASONS = buildReasons(tc)
-  const [sym, setSym]     = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [period, setPeriod] = useState(7)
   const [stage, setStage] = useState<Stage>('list')
   const [logs, setLogs]   = useState<WasteLog[]>([])
@@ -64,13 +65,6 @@ export default function WastePage() {
     cost_per_unit: '', reason: 'overcooked', notes: '',
   })
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   const load = useCallback(async () => {
     if (!session) return

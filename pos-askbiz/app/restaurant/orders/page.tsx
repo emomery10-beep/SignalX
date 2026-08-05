@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Input, ListItem } from '@/components/ui'
 
@@ -60,8 +61,8 @@ function OrdersPage() {
   const searchParams = useSearchParams()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
+  const { sym } = usePosConfig(session, authReady)
 
-  const [sym, setSym]           = useState('£')
   const [orders, setOrders]     = useState<Order[]>([])
   const [selected, setSelected] = useState<Order | null>(null)
   const [menu, setMenu]         = useState<MenuCategory[]>([])
@@ -75,12 +76,6 @@ function OrdersPage() {
   const [paying, setPaying]     = useState(false)
   const [saving, setSaving]     = useState(false)
 
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   const loadOrders = useCallback(async () => {
     if (!session) return

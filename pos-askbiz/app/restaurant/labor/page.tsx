@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Input, Select, Card, ListItem } from '@/components/ui'
 
@@ -35,7 +36,7 @@ export default function LaborPage() {
   const router   = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]             = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [shifts, setShifts]       = useState<Shift[]>([])
   const [summary, setSummary]     = useState<any>({})
   const [staffList, setStaffList] = useState<StaffMember[]>([])
@@ -49,12 +50,6 @@ export default function LaborPage() {
   // Force re-render every 10s for live cost counter
   useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 10000); return () => clearInterval(t) }, [])
 
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   const load = useCallback(async () => {
     if (!session) return

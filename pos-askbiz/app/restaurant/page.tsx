@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import MenuMatrix from '@/components/MenuMatrix'
 import ShiftProfitability from '@/components/ShiftProfitability'
@@ -25,7 +26,7 @@ export default function RestaurantHub() {
   const router  = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]                   = useState('£')
+  const { config, sym } = usePosConfig(session, authReady)
   const [kpis, setKpis]                 = useState<KPI[]>([])
   const [tables, setTables]             = useState<TableSummary[]>([])
   const [topDishes, setTopDishes]       = useState<TopDish[]>([])
@@ -46,15 +47,11 @@ export default function RestaurantHub() {
   }, [authReady, session])
 
   useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-      // If staff_sector is set, this is a staff session — redirect to appropriate section
-      if (c.staff_sector && c.staff_sector !== 'restaurant') {
-        router.push('/pos')
-      }
-    }).catch(() => {})
-  }, [authReady, session])
+    // If staff_sector is set, this is a staff session — redirect to appropriate section
+    if (config?.staff_sector && config.staff_sector !== 'restaurant') {
+      router.push('/pos')
+    }
+  }, [config, router])
 
   useEffect(() => {
     if (!authReady || !session) return

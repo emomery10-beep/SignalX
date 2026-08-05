@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Banner, Input, Select } from '@/components/ui'
 
@@ -40,7 +41,7 @@ export default function FloorPlan() {
   const router  = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]               = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [tables, setTables]         = useState<Table[]>([])
   const [sections, setSections]     = useState<string[]>([])
   const [activeSection, setSection] = useState('All')
@@ -55,12 +56,6 @@ export default function FloorPlan() {
   const [loadError, setLoadError]   = useState<string | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   useEffect(() => {
     if (!authReady || !session) return

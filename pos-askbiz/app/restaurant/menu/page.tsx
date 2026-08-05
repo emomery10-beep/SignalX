@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Banner, Input, Select, ListItem } from '@/components/ui'
 
@@ -27,7 +28,7 @@ export default function MenuPage() {
   const router   = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]             = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [menu, setMenu]           = useState<MenuCategory[]>([])
   const [eightySix, setEightySix] = useState<EightySixEntry[]>([])
   const [activeCat, setActiveCat] = useState('')
@@ -44,13 +45,6 @@ export default function MenuPage() {
   })
   const [newItem, setNewItem] = useState<Partial<MenuItem>>(blankItem())
   const [newCat, setNewCat]   = useState({ name: '', icon: '🍽️', color: DEFAULT_CAT_COLOR })
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   useEffect(() => { if (authReady && session) { loadMenu(); load86() } }, [authReady, session])
 

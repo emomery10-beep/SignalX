@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Input, Select, ListItem } from '@/components/ui'
 
@@ -40,7 +41,7 @@ export default function OnlineOrdersPage() {
   const router   = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]     = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [orders, setOrders]   = useState<OnlineOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('pending')
@@ -53,13 +54,6 @@ export default function OnlineOrdersPage() {
     customer_name: '', customer_phone: '', source: 'phone', notes: '',
     items: [{ name: '', qty: '1', price: '' }],
   })
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   const load = useCallback(async () => {
     if (!session) return

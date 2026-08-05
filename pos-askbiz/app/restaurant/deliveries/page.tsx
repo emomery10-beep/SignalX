@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 import { tokens, Button, Banner, Input, Card, ListItem } from '@/components/ui'
 
@@ -61,7 +62,7 @@ export default function DeliveriesPage() {
   const router   = useRouter()
   const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
-  const [sym, setSym]     = useState('£')
+  const { sym } = usePosConfig(session, authReady)
   const [stage, setStage] = useState<Stage>('capture')
 
   // Image capture
@@ -86,13 +87,6 @@ export default function DeliveriesPage() {
   // Confirm
   const [confirming, setConfirming] = useState(false)
   const [doneMsg, setDoneMsg]       = useState('')
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
-      if (c.currency_symbol) setSym(c.currency_symbol)
-    }).catch(() => {})
-  }, [authReady, session])
 
   // Camera helpers
   async function openCamera() {
