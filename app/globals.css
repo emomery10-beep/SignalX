@@ -66,6 +66,26 @@ label:not(.no-tap-target),
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Leaflet ships its own precisely-sized <a> controls (zoom +/-, attribution
+   links, popup close button) — the tap-target rule above was bleeding into
+   them: min-height:44px overrode Leaflet's 26/30px button height, and
+   inline-flex fought Leaflet's own line-height centering, turning the zoom
+   control into oversized, misaligned pills. Let Leaflet size + center its
+   own chrome; every other button/link on the site is unaffected. */
+.leaflet-container .leaflet-bar a {
+  min-height: 0;
+  display: block;
+}
+.leaflet-container .leaflet-control-attribution a {
+  /* stays inline — these are text links running in a sentence
+     ("Leaflet | © OpenStreetMap"), not stacked buttons */
+  min-height: 0;
+  display: inline;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  min-height: 0;
+}
+
 /* dot grid removed — was an AI template tell */
 
 /* ── Scrollbars ─────────────────────────────────────────────── */
