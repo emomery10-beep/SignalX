@@ -113,6 +113,12 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'inventory.view', 'inventory.manage',
     'service.view', 'service.manage', 'service.parts',
     'shift.open', 'shift.close', 'shift.view',
+    // Same class of gap as sales.create above: managers are the ones the
+    // in-app "Add Staff" screens are shown to (e.g. app/factory/staff), but
+    // only 'owner' carried staff.manage, so every one of those screens 401'd
+    // for any PIN-authenticated manager and only ever worked for the owner's
+    // own Supabase-cookie session on the separate owner dashboard.
+    'staff.manage',
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
     'capture.approve',
     'reports.view', 'reports.financial',

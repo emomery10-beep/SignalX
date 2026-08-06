@@ -100,7 +100,11 @@ export default function FactoryCapturePage() {
   // ── Auth + inventory load ──────────────────────────────────────────────
   useEffect(() => {
     if (!authReady || !session) return
-    fetchInventory({ ownerId: session.ownerId, staffId: session.staffId || '' })
+    // Scope to the factory sector — without this the query returns the
+    // owner's whole catalog (see app/api/pos/inventory/route.ts), which is
+    // how retail products (coffee, rice, tea...) were showing up as raw
+    // material choices here.
+    fetchInventory({ ownerId: session.ownerId, staffId: session.staffId || '', sector: 'factory' })
       .then(d => setInventory((d.inventory || []).slice(0, 60)))
       .catch(() => {})
     openCamera()
