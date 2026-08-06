@@ -32,6 +32,20 @@ export interface CashSummary {
   daily_net_burn?: number
 }
 
+export interface ForecastMonth {
+  month: string   // 'YYYY-MM'
+  revenue: number
+  cogs: number
+  fixed: number
+  net: number
+  net_margin_pct: number
+}
+
+export interface CashTrajectoryPoint {
+  label: string   // 'Now' or the forecast month
+  balance: number
+}
+
 export interface ForecastSummary {
   horizonMonths: number
   projectedRevenue: number | null
@@ -42,6 +56,8 @@ export interface ForecastSummary {
   accuracyLabel: string             // e.g. "82%" or "N/A"
   accuracySub: string               // method name, or reason for N/A
   completedMonths: number
+  monthlyBreakdown: ForecastMonth[]      // the actual month-by-month P&L forecast
+  cashTrajectory: CashTrajectoryPoint[]  // empty when cashRunwayUnconfigured
 }
 
 /**
@@ -76,12 +92,28 @@ export function computeForecastSummary(
   const recentFixed = completedMonths.slice(-3).map(m => m.fixed)
   const avgFixed = recentFixed.length ? recentFixed.reduce((a, b) => a + b, 0) / recentFixed.length : 0
 
-  const futureMonths: { revenue: number; net: number }[] = []
+  // Anchor future month labels off the last completed (or partial) month,
+  // same convention as CfoForecasts.tsx's futureMonthLabel().
+  const anchorMonth = currentPartial ? currentPartial.month : completedMonths[n - 1].month
+  const nextMonthLabel = (base: string, offset: number): string => {
+    try {
+      const d = new Date(base + '-01')
+      d.setMonth(d.getMonth() + offset)
+      return d.toISOString().slice(0, 7)
+    } catch { return `${base}+${offset}` }
+  }
+
+  const futureMonths: ForecastMonth[] = []
   for (let i = 0; i < horizonMonths; i++) {
     const rev = Math.max(0, revF.predicted[n + partialOffset + i] || 0)
     const cog = Math.max(0, rev * avgCogsRatio)
     const fix = Math.max(0, avgFixed)
-    futureMonths.push({ revenue: rev, net: rev - cog - fix })
+    const net = rev - cog - fix
+    futureMonths.push({
+      month: nextMonthLabel(anchorMonth, i + 1),
+      revenue: rev, cogs: cog, fixed: fix, net,
+      net_margin_pct: rev > 0 ? (net / rev) * 100 : 0,
+    })
   }
 
   const projectedRevenue = futureMonths.reduce((s, m) => s + m.revenue, 0)
@@ -92,13 +124,16 @@ export function computeForecastSummary(
   let cashRunwayMonths: number | null = null
   let cashRunwayUnconfigured = false
   let cashRunwaySustainable = false
+  const cashTrajectory: CashTrajectoryPoint[] = []
   if (cash.balance <= 0) {
     cashRunwayUnconfigured = true
   } else {
     let balance = cash.balance
     let zeroMonth = -1
+    cashTrajectory.push({ label: 'Now', balance })
     futureMonths.forEach((m, i) => {
       balance += m.net
+      cashTrajectory.push({ label: m.month, balance })
       if (zeroMonth === -1 && balance <= 0) zeroMonth = i + 1 // +1: point 0 is "Now"
     })
     if (zeroMonth === -1) cashRunwaySustainable = true
@@ -129,5 +164,7 @@ export function computeForecastSummary(
     accuracyLabel,
     accuracySub,
     completedMonths: completedMonths.length,
+    monthlyBreakdown: futureMonths,
+    cashTrajectory,
   }
 }

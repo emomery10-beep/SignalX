@@ -22,10 +22,31 @@ interface Props {
     margin_by_channel?: Array<{ source: string; label: string; revenue: number; cogs: number; gross_profit: number; margin_pct: number; orders: number; pct_of_total: number }>
     receivables_summary?: { total_receivables: number; total_payables: number; overdue_receivables: number }
     receivables_aging?: { current: number; overdue_30: number; overdue_60: number; overdue_90: number }
+    daily_cashflow?: Array<{ date: string; inflow: number; outflow: number; net: number }>
   }
   currencySymbol: string
   period: string
 }
+
+interface ExpenseRow {
+  id: string
+  vendor: string
+  date: string
+  amount: number
+  category: string
+}
+
+interface ReceivableRow {
+  id: string
+  type: 'receivable' | 'payable'
+  counterparty: string
+  amount: number
+  due_date: string
+  days_overdue: number
+  status: string
+}
+
+const MAX_TABLE_ROWS = 30
 
 function fmt(n: number, sym: string): string {
   if (Math.abs(n) >= 1_000_000) return `${sym}${(n / 1_000_000).toFixed(1)}M`
@@ -75,6 +96,41 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
     } catch {}
   }, [])
 
+  // Expenses and Receivables/Payables detail live in their own tables, not the
+  // shared snapshot (see ExpensesTab.tsx / ReceivablesTracker.tsx) — fetched
+  // here the same way those tabs do, so the report can show real line items
+  // instead of just the summary numbers already in `data`. Fetched on mount
+  // (not on click) so they're normally ready before the user hits Download;
+  // the button stays disabled until both resolve either way, so the export
+  // never silently ships without this data.
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([])
+  const [expensesLoading, setExpensesLoading] = useState(true)
+  const [receivables, setReceivables] = useState<ReceivableRow[]>([])
+  const [receivablesLoading, setReceivablesLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/cfo/expenses')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!cancelled) setExpenses(d?.expenses || []) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setExpensesLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/cfo/receivables?period=${period}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!cancelled) setReceivables((d?.items || []).map((r: any) => ({
+        id: r.id, type: r.type === 'payable' ? 'payable' : 'receivable', counterparty: r.counterparty,
+        amount: r.amount, due_date: r.due_date, days_overdue: r.days_overdue || 0, status: r.status || 'current',
+      }))) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setReceivablesLoading(false) })
+    return () => { cancelled = true }
+  }, [period])
+
   const criticalAlerts = data.alerts.filter(a => a.severity === 'critical')
   const warningAlerts = data.alerts.filter(a => a.severity === 'warning')
 
@@ -97,6 +153,38 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
 
   // ── Tax — reuses the exact math behind the Tax Estimator tab ──
   const tax = computeTax(t.revenue, t.net_profit, tc, data.country_code)
+
+  // ── Expenses — scoped to the selected period, like the KPI cards above ──
+  const expensesInPeriod = expenses
+    .filter(e => e.date >= data.period.start && e.date <= data.period.end)
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+  const expensesTotal = expensesInPeriod.reduce((s, e) => s + e.amount, 0)
+  const expensesShown = expensesInPeriod.slice(0, MAX_TABLE_ROWS)
+
+  // ── Receivables/payables — already period-scoped server-side ──
+  const receivablesList = receivables.filter(r => r.type === 'receivable')
+  const payablesList = receivables.filter(r => r.type === 'payable')
+
+  // ── Cash flow — daily rows for a short period, weekly rollup once it gets
+  // long (e.g. YTD), so the report stays a sane length either way. ──
+  const dailyCashflow = data.daily_cashflow || []
+  const cashflowRows: { label: string; inflow: number; outflow: number; net: number }[] =
+    dailyCashflow.length <= 31
+      ? dailyCashflow.map(d => ({ label: d.date, inflow: d.inflow, outflow: d.outflow, net: d.net }))
+      : (() => {
+          const weeks = new Map<string, { inflow: number; outflow: number; net: number }>()
+          for (const d of dailyCashflow) {
+            const dt = new Date(d.date)
+            const weekStart = new Date(dt)
+            weekStart.setDate(dt.getDate() - dt.getDay())
+            const key = weekStart.toISOString().slice(0, 10)
+            const cur = weeks.get(key) || { inflow: 0, outflow: 0, net: 0 }
+            weeks.set(key, { inflow: cur.inflow + d.inflow, outflow: cur.outflow + d.outflow, net: cur.net + d.net })
+          }
+          return [...weeks.entries()].map(([weekStart, v]) => ({ label: tc('cfo_report.cashflow_week_of', { date: weekStart }), ...v }))
+        })()
+  const cashflowShown = cashflowRows.slice(-MAX_TABLE_ROWS)
+  const cashflowTotals = dailyCashflow.reduce((s, d) => ({ inflow: s.inflow + d.inflow, outflow: s.outflow + d.outflow, net: s.net + d.net }), { inflow: 0, outflow: 0, net: 0 })
 
   const exportPdf = async () => {
     setExporting(true)
@@ -192,15 +280,83 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
       title: tc('cfo_report.section_forecast'),
       node: (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 18 }}>
             <SmallMetric label={tc('cfo_report.forecast_projected_revenue')} value={fmt(forecastSummary.projectedRevenue || 0, sym)} />
             <SmallMetric label={tc('cfo_report.forecast_projected_net_profit')} value={fmt(forecastSummary.projectedNetProfit || 0, sym)} alert={(forecastSummary.projectedNetProfit || 0) < 0} />
             <SmallMetric label={tc('cfo_report.forecast_cash_runway')} value={runwayValue} alert={!forecastSummary.cashRunwayUnconfigured && forecastSummary.cashRunwayMonths != null && forecastSummary.cashRunwayMonths <= 3} />
             <SmallMetric label={tc('cfo_report.forecast_accuracy')} value={forecastSummary.accuracyLabel} />
           </div>
+
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.forecast_monthly_title')}</div>
+          <DataTable
+            columns={[tc('cfo_report.forecast_col_month'), tc('cfo_report.pnl_revenue'), tc('cfo_report.pnl_cogs'), tc('cfo_report.forecast_col_net'), tc('cfo_report.forecast_col_margin')]}
+            rows={forecastSummary.monthlyBreakdown.map(m => [
+              m.month, fmt(m.revenue, sym), fmt(m.cogs, sym), fmt(m.net, sym), `${m.net_margin_pct.toFixed(1)}%`,
+            ])}
+          />
+
+          {forecastSummary.cashTrajectory.length > 0 && (
+            <div style={{ marginTop: 18 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.forecast_cash_trajectory_title')}</div>
+              <DataTable
+                columns={[tc('cfo_report.forecast_col_month'), tc('cfo_report.forecast_col_cash_balance')]}
+                rows={forecastSummary.cashTrajectory.map(p => [p.label, fmt(p.balance, sym)])}
+              />
+            </div>
+          )}
+
           <div style={{ fontSize: 11, color: '#888', marginTop: 10 }}>
             {tc('cfo_report.forecast_footnote', { n: forecastSummary.completedMonths })}
           </div>
+        </>
+      ),
+    })
+  }
+
+  // ── Cash Flow — separate from the "Cash Position" KPI section above so it
+  // maps 1:1 to the CFO dashboard's own Cash Flow sub-tab. ──
+  if (dailyCashflow.length > 0) {
+    sections.push({
+      title: tc('cfo_report.section_cashflow'),
+      node: (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <SmallMetric label={tc('cfo_report.cashflow_total_inflow')} value={fmt(cashflowTotals.inflow, sym)} />
+            <SmallMetric label={tc('cfo_report.cashflow_total_outflow')} value={fmt(cashflowTotals.outflow, sym)} />
+            <SmallMetric label={tc('cfo_report.cashflow_net_change')} value={fmtSigned(cashflowTotals.net, sym)} alert={cashflowTotals.net < 0} />
+          </div>
+          <DataTable
+            columns={[dailyCashflow.length <= 31 ? tc('cfo_report.cashflow_col_date') : tc('cfo_report.cashflow_col_week'), tc('cfo_report.cashflow_col_inflow'), tc('cfo_report.cashflow_col_outflow'), tc('cfo_report.cashflow_col_net')]}
+            rows={cashflowShown.map(r => [r.label, fmt(r.inflow, sym), fmt(r.outflow, sym), fmtSigned(r.net, sym)])}
+          />
+          {cashflowRows.length > cashflowShown.length && (
+            <div style={{ fontSize: 11, color: '#888', marginTop: 8 }}>
+              {tc('cfo_report.cashflow_truncated_note', { shown: cashflowShown.length, total: cashflowRows.length })}
+            </div>
+          )}
+        </>
+      ),
+    })
+  }
+
+  // ── Expenses — itemized, capped so the report stays a sane length ──
+  if (!expensesLoading && expensesInPeriod.length > 0) {
+    sections.push({
+      title: tc('cfo_report.section_expenses'),
+      node: (
+        <>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 10 }}>
+            {tc('cfo_report.expenses_total_note', { count: expensesInPeriod.length, total: fmt(expensesTotal, sym) })}
+          </div>
+          <DataTable
+            columns={[tc('cfo_report.expenses_col_date'), tc('cfo_report.expenses_col_vendor'), tc('cfo_report.expenses_col_category'), tc('cfo_report.expenses_col_amount')]}
+            rows={expensesShown.map(e => [e.date, e.vendor, e.category, fmt(e.amount, sym)])}
+          />
+          {expensesInPeriod.length > expensesShown.length && (
+            <div style={{ fontSize: 11, color: '#888', marginTop: 8 }}>
+              {tc('cfo_report.expenses_truncated_note', { shown: expensesShown.length, total: expensesInPeriod.length })}
+            </div>
+          )}
         </>
       ),
     })
@@ -245,24 +401,48 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
     })
   }
 
-  if (data.receivables_summary || data.receivables_aging) {
+  if (data.receivables_summary || data.receivables_aging || (!receivablesLoading && receivables.length > 0)) {
     sections.push({
       title: tc('cfo_report.section_receivables'),
       node: (
         <>
           {data.receivables_summary && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: data.receivables_aging ? 16 : 0 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
               <SmallMetric label={tc('cfo_report.recv_total_receivables')} value={fmt(data.receivables_summary.total_receivables, sym)} />
               <SmallMetric label={tc('cfo_report.recv_total_payables')} value={fmt(data.receivables_summary.total_payables, sym)} />
               <SmallMetric label={tc('cfo_report.recv_overdue')} value={fmt(data.receivables_summary.overdue_receivables, sym)} alert={data.receivables_summary.overdue_receivables > 0} />
             </div>
           )}
           {data.receivables_aging && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: (!receivablesLoading && receivables.length > 0) ? 18 : 0 }}>
               <SmallMetric label={tc('cfo_report.recv_aging_current')} value={fmt(data.receivables_aging.current, sym)} />
               <SmallMetric label={tc('cfo_report.recv_aging_30')} value={fmt(data.receivables_aging.overdue_30, sym)} alert={data.receivables_aging.overdue_30 > 0} />
               <SmallMetric label={tc('cfo_report.recv_aging_60')} value={fmt(data.receivables_aging.overdue_60, sym)} alert={data.receivables_aging.overdue_60 > 0} />
               <SmallMetric label={tc('cfo_report.recv_aging_90')} value={fmt(data.receivables_aging.overdue_90, sym)} alert={data.receivables_aging.overdue_90 > 0} />
+            </div>
+          )}
+          {!receivablesLoading && receivablesList.length > 0 && (
+            <div style={{ marginBottom: payablesList.length > 0 ? 18 : 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.recv_outstanding_title')}</div>
+              <DataTable
+                columns={[tc('cfo_report.recv_col_customer'), tc('cfo_report.recv_col_due'), tc('cfo_report.recv_col_status'), tc('cfo_report.recv_col_amount')]}
+                rows={receivablesList.slice(0, MAX_TABLE_ROWS).map(r => [r.counterparty, r.due_date, r.days_overdue > 0 ? tc('cfo_report.recv_days_overdue', { n: r.days_overdue }) : tc('cfo_report.recv_current'), fmt(r.amount, sym)])}
+              />
+              {receivablesList.length > MAX_TABLE_ROWS && (
+                <div style={{ fontSize: 11, color: '#888', marginTop: 8 }}>{tc('cfo_report.recv_truncated_note', { shown: MAX_TABLE_ROWS, total: receivablesList.length })}</div>
+              )}
+            </div>
+          )}
+          {!receivablesLoading && payablesList.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.pay_outstanding_title')}</div>
+              <DataTable
+                columns={[tc('cfo_report.recv_col_customer'), tc('cfo_report.recv_col_due'), tc('cfo_report.recv_col_status'), tc('cfo_report.recv_col_amount')]}
+                rows={payablesList.slice(0, MAX_TABLE_ROWS).map(r => [r.counterparty, r.due_date, r.days_overdue > 0 ? tc('cfo_report.recv_days_overdue', { n: r.days_overdue }) : tc('cfo_report.recv_current'), fmt(r.amount, sym)])}
+              />
+              {payablesList.length > MAX_TABLE_ROWS && (
+                <div style={{ fontSize: 11, color: '#888', marginTop: 8 }}>{tc('cfo_report.pay_truncated_note', { shown: MAX_TABLE_ROWS, total: payablesList.length })}</div>
+              )}
             </div>
           )}
         </>
@@ -368,18 +548,19 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
         </div>
         <button
           onClick={exportPdf}
-          disabled={exporting}
+          disabled={exporting || expensesLoading || receivablesLoading}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             fontSize: 11, color: '#fff', background: '#6366F1',
             border: 'none', borderRadius: 8, padding: '8px 16px',
-            cursor: exporting ? 'wait' : 'pointer', fontWeight: 600, fontFamily: 'inherit',
+            cursor: (exporting || expensesLoading || receivablesLoading) ? 'wait' : 'pointer', fontWeight: 600, fontFamily: 'inherit',
+            opacity: (expensesLoading || receivablesLoading) ? 0.7 : 1,
           }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
           </svg>
-          {exporting ? tc('cfo_report.btn_generating') : tc('cfo_report.btn_download')}
+          {exporting ? tc('cfo_report.btn_generating') : (expensesLoading || receivablesLoading) ? tc('cfo_report.btn_loading') : tc('cfo_report.btn_download')}
         </button>
       </div>
 
