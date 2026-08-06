@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -26,7 +27,7 @@ export default function IntelligencePage() {
   const { tc } = useLang()
 
   const [ready, setReady]       = useState(false)
-  const [sym, setSym]           = useState('£')
+  const { sym } = usePosConfig({ headers: {} }, ready)
   const [loading, setLoading]   = useState(true)
   const [period, setPeriod]     = useState<Period>('30')
   const [geoPoints, setGeoPoints] = useState<GeoSale[]>([])
@@ -45,10 +46,6 @@ export default function IntelligencePage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/pos'); return }
       setReady(true)
-      // Fetch currency from owner profile
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
     })
   }, [])
 

@@ -1,6 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react'
-import type { PosAuthSession } from './usePosAuth'
+
+// Structurally compatible with PosAuthSession (which has `.headers` plus
+// other fields this hook doesn't need) — loosened so pages with their own
+// hand-rolled staff-header state (e.g. retail/*) can pass a plain
+// `{ headers }` object instead of a full PosAuthSession.
+export interface PosConfigSession {
+  headers: Record<string, string>
+}
 
 export interface PosConfig {
   currency_symbol: string | null
@@ -29,7 +36,7 @@ const CACHE_KEY = 'pos_config_v1'
  *     only the very first load of a session shows a blank symbol while it
  *     resolves — every navigation after that is correct on first paint.
  */
-export function usePosConfig(session: PosAuthSession | null, ready: boolean): { config: PosConfig | null; sym: string } {
+export function usePosConfig(session: PosConfigSession | null, ready: boolean): { config: PosConfig | null; sym: string } {
   const [config, setConfig] = useState<PosConfig | null>(() => {
     if (typeof window === 'undefined') return null
     try {
@@ -37,6 +44,13 @@ export function usePosConfig(session: PosAuthSession | null, ready: boolean): { 
       return raw ? JSON.parse(raw) : null
     } catch { return null }
   })
+
+  // Keyed on a stringified snapshot of the headers, not the session object's
+  // reference — some callers (e.g. retail/* pages using a hand-rolled
+  // `{ headers: staffHeaders }`) pass a literal that's recreated every
+  // render, which would otherwise re-fire this effect (and re-hit the
+  // backfill write in /api/pos/config) on every unrelated re-render.
+  const headersKey = session ? JSON.stringify(session.headers) : ''
 
   useEffect(() => {
     if (!ready || !session) return
@@ -47,7 +61,8 @@ export function usePosConfig(session: PosAuthSession | null, ready: boolean): { 
         try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(c)) } catch {}
       })
       .catch(() => {})
-  }, [ready, session])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, headersKey])
 
   return { config, sym: config?.currency_symbol || '' }
 }

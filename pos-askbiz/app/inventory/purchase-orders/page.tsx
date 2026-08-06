@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { isInventoryLevel, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
 import PurchaseOrdersTab from '@/components/pos/PurchaseOrdersTab'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -13,7 +14,7 @@ export default function InventoryPurchaseOrdersPage() {
   const router = useRouter()
   const { tc } = useLang()
   const [staff, setStaff] = useState<StaffSession | null>(null)
-  const [sym, setSym] = useState('£')
+  const { sym } = usePosConfig(staff ? { headers: { 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id } } : null, !!staff)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
 
   const notify = useCallback((msg: string, ok = true) => {
@@ -27,12 +28,6 @@ export default function InventoryPurchaseOrdersPage() {
     const s = JSON.parse(session) as StaffSession
     if (!isInventoryLevel(s.role) && !isManagerOrAboveLevel(s.role)) { router.push('/sell'); return }
     setStaff(s)
-    setSym(s.currency_symbol || '£')
-    fetch(`${API}/api/pos/config`, {
-      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
-    }).then(r => r.json()).then(cfg => {
-      if (cfg.currency_symbol) setSym(cfg.currency_symbol)
-    }).catch(() => {})
   }, [])
 
   if (!staff) return null

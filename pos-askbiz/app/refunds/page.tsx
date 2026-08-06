@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import { hasPermission } from '@/lib/pos-permissions'
 import { getRoleHomeRoute } from '@/lib/pos-role-client'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 const ACC = 'var(--pos-accent)'
@@ -39,7 +40,7 @@ export default function RefundsPage() {
   const router = useRouter()
   const { tc, fmtDateTime } = useLang()
   const [staff, setStaff] = useState<StaffSession | null>(null)
-  const [sym, setSym] = useState('£')
+  const { sym } = usePosConfig(staff ? { headers: { 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id } } : null, !!staff)
   const [txns, setTxns] = useState<Tx[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -76,7 +77,6 @@ export default function RefundsPage() {
     // Refunds are manager/owner only — same permission the API enforces
     if (!hasPermission(s.role, 'refund.approve')) { router.push(getRoleHomeRoute(s.role)); return }
     setStaff(s)
-    setSym(s.currency_symbol || '£')
     loadTxns(s)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { Button, Banner, Input } from '@/components/ui'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
@@ -35,7 +36,6 @@ export default function RetailStocktake() {
   const { tc } = useLang()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
-  const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState<InvItem[]>([])
   const [rows, setRows] = useState<CountRow[]>([])
@@ -54,6 +54,7 @@ export default function RetailStocktake() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+  const { sym } = usePosConfig({ headers: staffHeaders }, ready)
 
   useEffect(() => {
     // Support both staff PIN-auth (localStorage) and owner Supabase auth
@@ -62,9 +63,7 @@ export default function RetailStocktake() {
       if (raw) {
         const s = JSON.parse(raw)
         if (s?.id && s?.owner_id) {
-          const h = { 'x-staff-id': s.id, 'x-owner-id': s.owner_id }
-          setStaffHeaders(h)
-          if (s.currency_symbol) setSym(s.currency_symbol)
+          setStaffHeaders({ 'x-staff-id': s.id, 'x-owner-id': s.owner_id })
           setReady(true)
           return
         }
@@ -74,9 +73,6 @@ export default function RetailStocktake() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/'); return }
       setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
     })
   }, [])
 

@@ -5,6 +5,7 @@ import { isInventoryLevel, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 import { useLang } from '@/components/LanguageProvider'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 
 const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)' }
 const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
@@ -25,7 +26,7 @@ export default function InventoryPage() {
   const router = useRouter()
   const { tc } = useLang()
   const [staff, setStaff]         = useState<StaffSession | null>(null)
-  const [sym, setSym]             = useState('£')
+  const { sym } = usePosConfig(staff ? { headers: { 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id } } : null, !!staff)
   const [items, setItems]         = useState<InventoryItem[]>([])
   const [loading, setLoading]     = useState(true)
   const [restocking, setRestocking] = useState<string | null>(null)
@@ -89,14 +90,7 @@ export default function InventoryPage() {
     const s = JSON.parse(session) as StaffSession
     if (!isInventoryLevel(s.role) && !isManagerOrAboveLevel(s.role)) { router.push('/sell'); return }
     setStaff(s)
-    setSym(s.currency_symbol || '£')
     loadInventory(s)
-    // Fetch fresh currency from owner profile
-    fetch(`${API}/api/pos/config`, {
-      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
-    }).then(r => r.json()).then(cfg => {
-      if (cfg.currency_symbol) setSym(cfg.currency_symbol)
-    }).catch(() => {})
   }, [])
 
   // Replay any offline-queued restocks/edits on mount and when connectivity

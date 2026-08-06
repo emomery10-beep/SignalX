@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { ListItem } from '@/components/ui'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
@@ -42,7 +43,7 @@ export default function RetailHub() {
   const { tc } = useLang()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
-  const [sym, setSym] = useState('£')
+  const { sym } = usePosConfig({ headers: {} }, ready)
   const [loading, setLoading] = useState(true)
   const [kpis, setKpis] = useState<KPI[]>([])
   const [recent, setRecent] = useState<Txn[]>([])
@@ -52,9 +53,6 @@ export default function RetailHub() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/pos'); return }
       setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
     })
   }, [])
 

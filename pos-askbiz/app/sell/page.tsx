@@ -11,6 +11,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
 import { bulkUpsertFromApi, isCacheStale, decrementLocalStock } from '@/lib/pos-inventory-cache'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 
 const ACC = 'var(--pos-accent)'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -91,13 +92,18 @@ export default function SellPage() {
   const { tc } = useLang()
   const online = useOnlineStatus()
   const [staff, setStaff]   = useState<StaffSession | null>(null)
+  const { config, sym } = usePosConfig(staff ? { headers: { 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id } } : null, !!staff)
   const [screen, setScreen] = useState<Screen>('home')
   const [cart, setCart]     = useState<CartItem[]>([])
   const [todaySales, setTodaySales]     = useState(0)
   const [todayRevenue, setTodayRevenue] = useState(0)
-  const [sym, setSym]       = useState('£')
   const [biz, setBiz]       = useState(() => bizLabel('retail', tc))
   const [businessName, setBusinessName] = useState('')
+
+  useEffect(() => {
+    if (config?.business_type) setBiz(bizLabel(config.business_type, tc))
+    if (config?.business_name) setBusinessName(config.business_name)
+  }, [config, tc])
 
   // Add-item mode
   const [addMode, setAddMode]           = useState<AddMode>('camera')
@@ -209,19 +215,10 @@ export default function SellPage() {
     const home = getRoleHomeRoute(s.role)
     if (home !== '/sell') { router.push(home); return }
     setStaff(s)
-    setSym(s.currency_symbol || '£')
     setBiz(bizLabel(s.business_type || 'retail', tc))
     try { if (!localStorage.getItem(`pos_practice_done_${s.id}`)) setShowPracticeCard(true) } catch {}
     loadTodayStats(s)
     if (s.location_id) checkShift(s)  // sync localStorage check
-    // Fetch fresh owner config to get correct currency symbol
-    fetch(`${API}/api/pos/config`, {
-      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
-    }).then(r => r.json()).then(cfg => {
-      if (cfg.currency_symbol) setSym(cfg.currency_symbol)
-      if (cfg.business_type)   setBiz(bizLabel(cfg.business_type, tc))
-      if (cfg.business_name)   setBusinessName(cfg.business_name)
-    }).catch(() => {})
 
     // Fetch payment config to know if Stripe is verified (for Apple Pay sub-option)
     // and whether card/M-Pesa are available at all (surfaced on home + checkout)

@@ -269,6 +269,11 @@ export default function POSPage() {
         setStaffSector(config.staff_sector)
         setSectorOverride(config.staff_sector)
       }
+      // profiles.currency_symbol is null for accounts that never finished
+      // onboarding — /api/pos/config derives+backfills a real value from the
+      // signup phone in that case, so prefer it over the hardcoded '£' default
+      // when the direct profile read above came back empty.
+      if (!profile?.currency_symbol && config.currency_symbol) setCurrencySymbol(config.currency_symbol)
 
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)

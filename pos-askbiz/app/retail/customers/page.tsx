@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { Button, Banner, Input } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
@@ -60,7 +61,6 @@ export default function RetailCustomers() {
   const segMeta = buildSegMeta(tc)
   const supabase = createClient()
   const [ready, setReady] = useState(false)
-  const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [search, setSearch] = useState('')
@@ -72,6 +72,7 @@ export default function RetailCustomers() {
   const [gdprMsg, setGdprMsg] = useState<{ text: string; error?: boolean } | null>(null)
 
   const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+  const { sym } = usePosConfig({ headers: staffHeaders }, ready)
 
   useEffect(() => {
     try {
@@ -79,9 +80,7 @@ export default function RetailCustomers() {
       if (raw) {
         const s = JSON.parse(raw)
         if (s?.id && s?.owner_id) {
-          const h = { 'x-staff-id': s.id, 'x-owner-id': s.owner_id }
-          setStaffHeaders(h)
-          if (s.currency_symbol) setSym(s.currency_symbol)
+          setStaffHeaders({ 'x-staff-id': s.id, 'x-owner-id': s.owner_id })
           setReady(true)
           return
         }
@@ -90,9 +89,6 @@ export default function RetailCustomers() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/'); return }
       setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
     })
   }, [])
 

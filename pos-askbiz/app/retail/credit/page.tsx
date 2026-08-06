@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { Button, Banner, Input } from '@/components/ui'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
@@ -34,8 +35,8 @@ export default function CreditPage() {
   const supabase = createClient()
 
   const [ready, setReady] = useState(false)
-  const [sym, setSym] = useState('£')
   const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+  const { sym } = usePosConfig({ headers: staffHeaders }, ready)
   const [loading, setLoading] = useState(true)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [screen, setScreen] = useState<Screen>('list')
@@ -67,7 +68,6 @@ export default function CreditPage() {
         const s = JSON.parse(raw)
         if (s?.id && s?.owner_id) {
           setStaffHeaders({ 'x-staff-id': s.id, 'x-owner-id': s.owner_id })
-          if (s.currency_symbol) setSym(s.currency_symbol)
           setReady(true)
           return
         }
@@ -76,7 +76,6 @@ export default function CreditPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/'); return }
       setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => { if (c.currency_symbol) setSym(c.currency_symbol) }).catch(() => {})
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

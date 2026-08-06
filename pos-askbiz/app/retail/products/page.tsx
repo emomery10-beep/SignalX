@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { Button, Input } from '@/components/ui'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
@@ -49,7 +50,6 @@ function RetailProducts() {
   const supabase = createClient()
   const { tc } = useLang()
   const [ready, setReady] = useState(false)
-  const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState<InvItem[]>([])
   const [search, setSearch] = useState('')
@@ -71,6 +71,7 @@ function RetailProducts() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+  const { sym } = usePosConfig({ headers: staffHeaders }, ready)
 
   useEffect(() => {
     try {
@@ -78,9 +79,7 @@ function RetailProducts() {
       if (raw) {
         const s = JSON.parse(raw)
         if (s?.id && s?.owner_id) {
-          const h = { 'x-staff-id': s.id, 'x-owner-id': s.owner_id }
-          setStaffHeaders(h)
-          if (s.currency_symbol) setSym(s.currency_symbol)
+          setStaffHeaders({ 'x-staff-id': s.id, 'x-owner-id': s.owner_id })
           setReady(true)
           if (params.get('low') === '1') setLowOnly(true)
           return
@@ -90,9 +89,6 @@ function RetailProducts() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/'); return }
       setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
     })
     if (params.get('low') === '1') setLowOnly(true)
   }, [])

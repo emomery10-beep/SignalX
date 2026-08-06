@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
@@ -98,7 +99,7 @@ export default function RepairHub() {
   const router = useRouter()
   const { session, ready: authReady } = usePosAuth()
   const { tc } = useLang()
-  const [sym, setSym] = useState('KSh')
+  const { sym } = usePosConfig(session, authReady)
   const [jobs, setJobs] = useState<Job[]>([])
   const [lowStockCount, setLowStockCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -114,12 +115,6 @@ export default function RepairHub() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const isEngineer = session?.role === 'engineer' || (session?.role || '').includes('technician')
-
-  useEffect(() => {
-    if (!authReady || !session) return
-    fetch('/api/pos/config', { headers: { ...session.headers } })
-      .then(r => r.json()).then(c => { if (c.currency_symbol) setSym(c.currency_symbol) }).catch(() => {})
-  }, [authReady, session])
 
   const loadJobs = useCallback(async () => {
     if (!session) return
