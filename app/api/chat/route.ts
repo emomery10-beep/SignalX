@@ -197,7 +197,12 @@ export async function POST(request: NextRequest) {
   // -- 17TRACK SHIPMENT LOOKUP --
   let trackingContext = ""
   const trackingNumberMatch = questionText.match(/\b([A-Z]{2}\d{9}[A-Z]{2}|\d{12,22}|1Z[A-Z0-9]{16}|[A-Z]{3}\d{10}|JD\d{18})\b/i)
-  const trackingIntent = /where is|track|shipment|parcel|package|delivery|arrived|shipping status|in transit|customs/i.test(questionText)
+  // "deliver" (not "delivery") catches delivering/deliveries/delivered too. carrier/courier added
+  // so the carrier-performance extension below is actually reachable by its own natural phrasing
+  // ("which courier is most reliable?") — it previously required trackingIntent to ALSO be true,
+  // but neither word was in this list, so that phrasing set carrierMention=true, trackingIntent=false
+  // and the whole block was unreachable.
+  const trackingIntent = /where is|track|shipment|parcel|package|deliver|arrived|shipping status|in transit|customs|carrier|courier/i.test(questionText)
   if (trackingNumberMatch || (trackingIntent && questionText.length < 120)) {
     try {
       const trackingNum = trackingNumberMatch?.[1]
@@ -239,6 +244,53 @@ export async function POST(request: NextRequest) {
           trackingContext += (trackingContext ? "\n\n" : "") + "UNREAD SHIPMENT ALERTS:\n" + shipAlerts.map((a: any) =>
             "- [" + (a.alert_level || a.alert_type || "alert").toUpperCase() + "] " + (a.tracking_number ? a.tracking_number + ": " : "") + (a.message || a.alert_type) + (a.financial_impact > 0 ? " | Impact: " + finalSymbol + a.financial_impact : "")
           ).join("\n")
+        }
+      }
+      // Carrier reliability — a natural extension of the tracking context rather than its own
+      // top-level intent: it only makes sense once we're already answering a shipment question,
+      // and only when the user actually asked about the carrier rather than a specific parcel.
+      const carrierMention = /\bcarrier(s)?\b|\bcourier(s)?\b|which carrier|\breliable\b|\bon.?time\b/i.test(questionText)
+      if (trackingIntent && carrierMention) {
+        const { data: carrierRows, error: carrierErr } = await supabase
+          .from("carrier_performance")
+          .select("carrier_code, carrier_name, route_origin, route_destination, transit_days, on_time, had_customs_hold, recorded_at")
+          .eq("user_id", user.id)
+          .order("recorded_at", { ascending: false })
+          .limit(200)
+        if (carrierErr) console.error('carrier_performance query error:', carrierErr.message)
+        const carrierRecords = carrierRows || []
+        if (carrierRecords.length > 0) {
+          const byCarrier: Record<string, { total: number; onTime: number; holds: number; transitDays: number[] }> = {}
+          for (const r of carrierRecords as any[]) {
+            const key = r.carrier_name || r.carrier_code || 'Unknown carrier'
+            if (!byCarrier[key]) byCarrier[key] = { total: 0, onTime: 0, holds: 0, transitDays: [] }
+            byCarrier[key].total++
+            if (r.on_time) byCarrier[key].onTime++
+            if (r.had_customs_hold) byCarrier[key].holds++
+            if (r.transit_days != null) byCarrier[key].transitDays.push(Number(r.transit_days))
+          }
+          const ranked = Object.entries(byCarrier).map(([name, v]) => ({
+            name,
+            total: v.total,
+            onTimePct: v.total > 0 ? (v.onTime / v.total) * 100 : 0,
+            holds: v.holds,
+            avgTransit: v.transitDays.length > 0 ? v.transitDays.reduce((s, d) => s + d, 0) / v.transitDays.length : null,
+          })).sort((a, b) => b.onTimePct - a.onTimePct)
+
+          // carrier_performance is UNIQUE(user_id, carrier_code, route_origin, route_destination) and
+          // is upserted by the latest delivery on each lane — one row per carrier×route, overwritten
+          // each time, not an accumulating per-shipment log. So `total` below counts ROUTES tracked,
+          // not shipments, and on_time reflects only the most recent parcel on each lane.
+          const lines = ["CARRIER PERFORMANCE (this user's own shipment history, most recent delivery per route):"]
+          for (const c of ranked) {
+            lines.push(`- ${c.name}: ${c.onTimePct.toFixed(1)}% on time across ${c.total} route(s) tracked${c.avgTransit != null ? `, avg ${c.avgTransit.toFixed(1)} days transit` : ''}${c.holds > 0 ? `, ${c.holds} customs hold(s)` : ''}`)
+          }
+          if (ranked.length > 1 && ranked[ranked.length - 1].total >= 3) {
+            const worst = ranked[ranked.length - 1]
+            lines.push(`Worst performer: ${worst.name} at ${worst.onTimePct.toFixed(1)}% on time.`)
+          }
+          lines.push("IMPORTANT: Each figure reflects the most recent delivery on each route, not an average across all shipments on that route — state that distinction if asked how many shipments this covers. State the percentages exactly and do not re-rank or estimate them. Do not describe a carrier as good or bad beyond what these numbers show.")
+          trackingContext += (trackingContext ? "\n\n" : "") + lines.join("\n")
         }
       }
     } catch (e) {}
@@ -500,9 +552,30 @@ export async function POST(request: NextRequest) {
     const isLogisticsFleetQuestion = /\bmy (truck|trucks|fleet)\b|which driver|undelivered parcel|parcel(s)?\s+.*\b(undelivered|in transit|delivered|status)\b|route (efficiency|performance)/i.test(q)
     const isFactoryQuestion = /\bfactory\b|production batch|\bbatch(es)?\b|\bwaybill(s)?\b|manufactur|production (yield|output)/i.test(q)
     const isSalonQuestion = /\bsalon\b|\bappointment(s)?\b|\bbooking(s)?\b|\bstylist(s)?\b|no.?show|haircut|client visit/i.test(q)
-    const isPaymentIssuesQuestion = /failed payment|payment(s)?\s+.*\bfailed\b|payment link|dunning|abandoned (payment|checkout)|stuck payment/i.test(q)
+    // Widened to cover direct-debit collection too — gocardless mandates/payments are
+    // conceptually the same "is my money actually being collected?" question as the POS
+    // dunning data, so they share one intent and one (clearly-labelled) context section.
+    // "mandate" alone false-matched unrelated regulatory phrasing (e.g. "rules mandated by KRA") —
+    // scoped to the direct-debit sense specifically.
+    const isPaymentIssuesQuestion = /failed payment|payment(s)?\s+.*\bfailed\b|payment link|dunning|abandoned (payment|checkout)|stuck payment|direct debit|gocardless|\bmandate(s|d)?\b.{0,20}(debit|payment|collection)|(debit|payment|collection).{0,20}\bmandate(s|d)?\b/i.test(q)
     const isStocktakeQuestion = /stocktake|shrinkage|stock (count|variance)|missing stock|inventory (count|variance)/i.test(q)
     const isZakatQuestion = /\bzakat\b/i.test(q)
+    // Tax filings (pos_tax_filings) — periodic VAT/turnover returns, not daily figures.
+    // \btax(es|ed|able)?\b so "how much taxes did I pay" still fires this block — without it,
+    // that phrasing only matched isExpenseQuestion, silently skipping the anti-hallucination
+    // guard below and letting the LLM answer a tax question from raw expense data instead.
+    // Bare "filing(s)" alone false-matched unrelated phrasing (e.g. "a filing system for my
+    // receipts") — scoped to a tax-filing sense specifically; \btax(es|ed|able)?\b alone already
+    // covers the common case, this alternation only adds the filing-specific phrasing.
+    const isTaxQuestion = /\btax(es|ed|able)?\b|\bvat\b|tax\s+filing(s)?|filing(s)?\s+(status|due|deadline|submitted)|tax return|tax due|tax owed/i.test(q)
+    // Website analytics (ga_sessions) — traffic/sessions/conversion, distinct from POS sales.
+    // A bare \bsessions?\b collides with this product's own non-web uses of the word — stocktake
+    // sessions (isStocktakeQuestion, which literally groups by session_ref) and salon/training
+    // sessions — so those senses are excluded by lookbehind, the same technique isExpenseQuestion
+    // already uses to keep "customer spend" out of the business-expense intent.
+    const isTrafficQuestion = /\btraffic\b|website visitor|(?<!stocktake |stock |salon |training |therapy |counting |gym )\bsessions?\b|bounce rate|conversion rate|google analytics|\bga\b traffic/i.test(q)
+    // Email marketing (email_campaigns — mailchimp + klaviyo).
+    const isMarketingQuestion = /email campaign|\bmailchimp\b|\bklaviyo\b|open rate|click rate|campaign performance|newsletter (performance|results)/i.test(q)
 
     if (growthWordMatch) {
       // Growth / period-over-period comparison question (e.g. "how much has my retail grown in last 2 months")
@@ -1034,7 +1107,7 @@ export async function POST(request: NextRequest) {
     if (isPurchaseOrderQuestion) {
       const { data: poRows, error: poErr } = await service
         .from('purchase_orders')
-        .select('status, total_cost, expected_at, received_at, created_at, pos_suppliers(name)')
+        .select('id, status, total_cost, expected_at, received_at, created_at, pos_suppliers(name)')
         .eq('owner_id', user.id)
         .gte('created_at', from.toISOString())
         .lte('created_at', to.toISOString())
@@ -1056,23 +1129,97 @@ export async function POST(request: NextRequest) {
       } else {
         posContext += `No purchase orders in ${periodLabel}.\n`
       }
-      posContext += `IMPORTANT: This is supplier/restock spend, separate from cfo_expenses and separate from revenue — do not conflate them.\n`
+
+      // Line items for those POs — purchase_order_items has no owner_id of its own
+      // (it inherits ownership through po_id), so it is fetched by the PO ids already
+      // authorised above rather than by a direct owner filter.
+      const poIds = (pos as any[]).map(p => p.id).filter(Boolean)
+      if (poIds.length > 0) {
+        const { data: poItemRows, error: poItemErr } = await service
+          .from('purchase_order_items')
+          .select('id, po_id, name, qty_ordered, qty_received, unit_cost, line_total, created_at')
+          .in('po_id', poIds)
+          .order('line_total', { ascending: false })
+          .limit(500)
+        if (poItemErr) console.error('purchase_order_items query error:', poItemErr.message)
+        const poItems = poItemRows || []
+        if (poItems.length > 0) {
+          const poStatusById: Record<string, string> = {}
+          for (const p of pos as any[]) poStatusById[p.id] = p.status
+          const itemTotals: Record<string, { qty: number; spend: number }> = {}
+          for (const it of poItems as any[]) {
+            const key = it.name || 'Unnamed item'
+            if (!itemTotals[key]) itemTotals[key] = { qty: 0, spend: 0 }
+            itemTotals[key].qty += Number(it.qty_ordered) || 0
+            itemTotals[key].spend += Number(it.line_total) || 0
+          }
+          const topOrdered = Object.entries(itemTotals).sort((a, b) => b[1].spend - a[1].spend).slice(0, 5)
+          posContext += `Top ordered items: ${topOrdered.map(([name, t]) => `${name} (${t.qty} ordered, ${finalSymbol}${t.spend.toFixed(2)})`).join(', ')}.\n`
+
+          // Only 'ordered'/'partial' POs can genuinely be "back-ordered" — status is
+          // draft|ordered|partial|received|cancelled, and the earlier "still open" filter
+          // (line ~1117) already excludes received/cancelled but NOT draft (never sent to the
+          // supplier, so there's nothing to chase) — a plain "!== 'received'" check let both
+          // draft and cancelled POs appear here despite there being no real shortfall to report.
+          const backOrdered = (poItems as any[]).filter(it =>
+            (Number(it.qty_received) || 0) < (Number(it.qty_ordered) || 0) &&
+            (poStatusById[it.po_id] === 'ordered' || poStatusById[it.po_id] === 'partial')
+          )
+          if (backOrdered.length > 0) {
+            const shortUnits = backOrdered.reduce((s: number, it: any) => s + ((Number(it.qty_ordered) || 0) - (Number(it.qty_received) || 0)), 0)
+            posContext += `⚠ Back-ordered: ${backOrdered.length} line(s) short by ${shortUnits} unit(s) total: ${backOrdered.slice(0, 5).map((it: any) => `${it.name} (${Number(it.qty_received) || 0}/${Number(it.qty_ordered) || 0} received)`).join(', ')}.\n`
+          }
+        }
+      }
+      posContext += `IMPORTANT: This is supplier/restock spend, separate from cfo_expenses and separate from revenue — do not conflate them. State the exact item names and quantities above; do not estimate what was ordered.\n`
     }
 
     // Restaurant operations — covers, order mix, food waste, labour cost. Only relevant to
     // restaurant-type businesses; empty results are expected and fine for other business types.
     if (isRestaurantOpsQuestion) {
-      const [ordRes, wasteRes, laborRes] = await Promise.all([
-        service.from('restaurant_orders').select('status, order_type, covers, total, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(500),
+      const [ordRes, wasteRes, laborRes, menuRes, onlineRes, resvRes, delivRes] = await Promise.all([
+        service.from('restaurant_orders').select('id, status, order_type, covers, total, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(500),
         service.from('restaurant_waste_log').select('item_name, qty, unit, total_cost, reason, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
         service.from('restaurant_labor_shifts').select('role, total_hours, total_cost, clock_in').eq('owner_id', user.id).gte('clock_in', from.toISOString()).lte('clock_in', to.toISOString()).limit(200),
+        // Menu — not date-windowed (a live menu, not a period event). Only sellable items.
+        service.from('restaurant_menu_items').select('id, name, price, food_cost, station, available, eighty_sixed, created_at').eq('owner_id', user.id).eq('available', true).limit(300),
+        service.from('restaurant_online_orders').select('id, status, customer_name, subtotal, total, requested_time, source, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(300),
+        service.from('restaurant_reservations').select('id, customer_name, covers, reserved_at, duration_mins, status, created_at').eq('owner_id', user.id).gte('reserved_at', from.toISOString()).lte('reserved_at', to.toISOString()).limit(300),
+        service.from('restaurant_deliveries').select('id, supplier_name, invoice_ref, delivery_date, currency, total_value, items_count, created_at').eq('owner_id', user.id).gte('delivery_date', from.toISOString().slice(0, 10)).lte('delivery_date', to.toISOString().slice(0, 10)).order('delivery_date', { ascending: false }).limit(200),
       ])
       if (ordRes.error) console.error('restaurant_orders query error:', ordRes.error.message)
+      if (menuRes.error) console.error('restaurant_menu_items query error:', menuRes.error.message)
+      if (onlineRes.error) console.error('restaurant_online_orders query error:', onlineRes.error.message)
+      if (resvRes.error) console.error('restaurant_reservations query error:', resvRes.error.message)
+      if (delivRes.error) console.error('restaurant_deliveries query error:', delivRes.error.message)
       const orders = ordRes.data || []
       const waste = wasteRes.data || []
       const labor = laborRes.data || []
+      const menuItems = menuRes.data || []
+      const onlineOrders = onlineRes.data || []
+      const reservations = resvRes.data || []
+      const deliveries = delivRes.data || []
 
-      if (orders.length > 0 || waste.length > 0 || labor.length > 0) {
+      // Line items for the period's orders — restaurant_order_items DOES carry owner_id, but
+      // scoping by the already-authorised order ids keeps it exactly aligned to the window above.
+      // Excludes order-level 'void' (a walkout/comp'd table) — the item-level void check below only
+      // catches individual voided items, not an entire order voided after the fact, which would
+      // otherwise still count toward "top dishes by volume" despite never actually selling.
+      const orderIds = (orders as any[]).filter(o => o.status !== 'void').map(o => o.id).filter(Boolean)
+      let orderItems: any[] = []
+      if (orderIds.length > 0) {
+        const { data: oiRows, error: oiErr } = await service
+          .from('restaurant_order_items')
+          .select('id, order_id, menu_item_id, name, unit_price, food_cost, qty, status, course, created_at')
+          .eq('owner_id', user.id)
+          .in('order_id', orderIds)
+          .order('created_at', { ascending: false })
+          .limit(1000)
+        if (oiErr) console.error('restaurant_order_items query error:', oiErr.message)
+        orderItems = oiRows || []
+      }
+
+      if (orders.length > 0 || waste.length > 0 || labor.length > 0 || menuItems.length > 0 || onlineOrders.length > 0 || reservations.length > 0 || deliveries.length > 0) {
         posContext += `\nRESTAURANT OPERATIONS (${periodLabel}):\n`
         if (orders.length > 0) {
           const paidOrders = orders.filter((o: any) => o.status === 'paid')
@@ -1090,8 +1237,158 @@ export async function POST(request: NextRequest) {
           const totalLaborCost = labor.reduce((s: number, l: any) => s + (Number(l.total_cost) || 0), 0)
           posContext += `Labour: ${labor.length} shift(s), ${finalSymbol}${totalLaborCost.toFixed(2)} total cost.\n`
         }
+
+        // Menu margin + 86'd items
+        if (menuItems.length > 0) {
+          // food_cost defaults to 0 in the schema, not null — an uncosted item and a genuinely
+          // free-to-make item are indistinguishable, so require BOTH price and cost > 0. Without
+          // this, every never-costed dish scores a false 100% margin and dominates "best margin".
+          const priced = (menuItems as any[]).filter(m => Number(m.price) > 0 && Number(m.food_cost) > 0)
+          const uncosted = menuItems.length - priced.length
+          const withMargin = priced.map((m: any) => {
+            const price = Number(m.price) || 0
+            const cost = Number(m.food_cost) || 0
+            return { name: m.name, price, cost, margin: price - cost, marginPct: price > 0 ? ((price - cost) / price) * 100 : 0 }
+          })
+          const avgMarginPct = withMargin.length > 0 ? withMargin.reduce((s, m) => s + m.marginPct, 0) / withMargin.length : 0
+          const bestMargin = [...withMargin].sort((a, b) => b.marginPct - a.marginPct).slice(0, 3)
+          const worstMargin = [...withMargin].sort((a, b) => a.marginPct - b.marginPct).slice(0, 3)
+          posContext += `Menu: ${menuItems.length} available item(s)${uncosted > 0 ? ` (${uncosted} without a food cost recorded, excluded from margin below)` : ''}, average gross margin ${withMargin.length > 0 ? avgMarginPct.toFixed(1) + '%' : 'not available — no items have a recorded food cost'}.\n`
+          if (bestMargin.length > 0) {
+            posContext += `Best margin dishes: ${bestMargin.map(m => `${m.name} (${finalSymbol}${m.margin.toFixed(2)}, ${m.marginPct.toFixed(0)}%)`).join(', ')}. Worst: ${worstMargin.map(m => `${m.name} (${finalSymbol}${m.margin.toFixed(2)}, ${m.marginPct.toFixed(0)}%)`).join(', ')}.\n`
+          }
+          const eightySixed = (menuItems as any[]).filter(m => m.eighty_sixed)
+          if (eightySixed.length > 0) {
+            posContext += `⚠ 86'd right now (${eightySixed.length}): ${eightySixed.slice(0, 10).map((m: any) => m.name).join(', ')} — these cannot be sold until put back on.\n`
+          }
+          if (withMargin.length > 0) {
+            posContext += `IMPORTANT: This menu margin is per-dish (price minus food cost), a different figure from the overall business profit margin computed elsewhere in this context — do not conflate the two or answer a dish-margin question with the business-wide number.\n`
+          }
+        }
+
+        // Top-selling dishes by qty and by margin contribution
+        if (orderItems.length > 0) {
+          const dishStats: Record<string, { qty: number; revenue: number; cost: number; hasCost: boolean }> = {}
+          for (const it of orderItems) {
+            if (it.status === 'void') continue
+            const key = it.name || 'Unnamed dish'
+            if (!dishStats[key]) dishStats[key] = { qty: 0, revenue: 0, cost: 0, hasCost: false }
+            const qty = Number(it.qty) || 0
+            dishStats[key].qty += qty
+            dishStats[key].revenue += qty * (Number(it.unit_price) || 0)
+            dishStats[key].cost += qty * (Number(it.food_cost) || 0)
+            // food_cost defaults to 0 in the schema, indistinguishable from "genuinely free" —
+            // track whether ANY line for this dish actually recorded a cost, same reasoning as
+            // the menu-item margin fix above, so an uncosted dish can't fake the top margin spot.
+            if (Number(it.food_cost) > 0) dishStats[key].hasCost = true
+          }
+          const byQty = Object.entries(dishStats).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5)
+          const byMargin = Object.entries(dishStats).filter(([, s]) => s.hasCost).sort((a, b) => (b[1].revenue - b[1].cost) - (a[1].revenue - a[1].cost)).slice(0, 5)
+          posContext += `Top dishes by volume: ${byQty.map(([n, s]) => `${n} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
+          if (byMargin.length > 0) {
+            posContext += `Top dishes by gross margin contribution (only dishes with a recorded food cost): ${byMargin.map(([n, s]) => `${n} (${finalSymbol}${(s.revenue - s.cost).toFixed(2)})`).join(', ')}.\n`
+          }
+          posContext += `IMPORTANT: "Best seller" by volume and "most profitable" are different lists above — answer whichever the user actually asked for, and never merge or re-rank them yourself.\n`
+        }
+
+        // Delivery-platform vs own-channel split. Excludes 'rejected' orders — that money was
+        // never actually received. Note restaurant_online_orders.order_id links back to
+        // restaurant_orders, so an accepted online order's total may ALSO already be counted in
+        // "paid order(s) revenue" above once it's fulfilled — flagged explicitly below so the two
+        // figures never get silently added together.
+        const acceptedOnline = (onlineOrders as any[]).filter(o => o.status !== 'rejected')
+        if (acceptedOnline.length > 0) {
+          const bySource: Record<string, { count: number; revenue: number }> = {}
+          for (const o of acceptedOnline) {
+            const src = o.source || 'website'
+            if (!bySource[src]) bySource[src] = { count: 0, revenue: 0 }
+            bySource[src].count++
+            bySource[src].revenue += Number(o.total) || 0
+          }
+          const onlineTotal = Object.values(bySource).reduce((s, v) => s + v.revenue, 0)
+          posContext += `Online orders (${periodLabel}): ${acceptedOnline.length} order(s), ${finalSymbol}${onlineTotal.toFixed(2)}. By source: ${Object.entries(bySource).sort((a, b) => b[1].revenue - a[1].revenue).map(([s, v]) => `${s}: ${v.count} orders, ${finalSymbol}${v.revenue.toFixed(2)}`).join(', ')}.\n`
+          const platformRevenue = Object.entries(bySource).filter(([s]) => s === 'uber_eats' || s === 'deliveroo' || s === 'just_eat').reduce((s, [, v]) => s + v.revenue, 0)
+          const ownRevenue = onlineTotal - platformRevenue
+          posContext += `Third-party delivery platforms: ${finalSymbol}${platformRevenue.toFixed(2)} vs own website/phone: ${finalSymbol}${ownRevenue.toFixed(2)}.\n`
+          posContext += `IMPORTANT: Accepted online orders may also already appear in the paid-order revenue figure above once fulfilled — do not add these two revenue figures together as if they were separate income.\n`
+        }
+
+        // Reservations + no-show rate
+        if (reservations.length > 0) {
+          const byResvStatus: Record<string, number> = {}
+          for (const r of reservations as any[]) byResvStatus[r.status || 'unknown'] = (byResvStatus[r.status || 'unknown'] || 0) + 1
+          const resvCovers = (reservations as any[]).reduce((s: number, r: any) => s + (Number(r.covers) || 0), 0)
+          posContext += `Reservations (${periodLabel}): ${reservations.length} booking(s) for ${resvCovers} covers. Status: ${Object.entries(byResvStatus).map(([s, c]) => `${c} ${s}`).join(', ')}.\n`
+          // No-show rate against SETTLED reservations only (reserved_at already in the past) —
+          // otherwise a window that includes future bookings (e.g. "this month" asked mid-month)
+          // dilutes the rate with reservations that haven't happened yet and can't be a no-show.
+          const settled = (reservations as any[]).filter(r => new Date(r.reserved_at) <= now)
+          if (settled.length > 0) {
+            const settledNoShows = settled.filter((r: any) => r.status === 'no_show').length
+            const noShowPct = ((settledNoShows / settled.length) * 100).toFixed(1)
+            posContext += `No-show rate (past reservations only, ${settled.length} of the ${reservations.length} above have actually happened): ${noShowPct}% (${settledNoShows} of ${settled.length}).\n`
+            posContext += `IMPORTANT: State the no-show rate as exactly ${noShowPct}%, computed only from reservations whose date has passed — it is already computed, do not recalculate or round it differently, and do not include future/upcoming bookings in that percentage.\n`
+          }
+        }
+
+        // Food-cost spend from the delivery-note scanner
+        if (deliveries.length > 0) {
+          const foodSpend = deliveries.reduce((s: number, d: any) => s + (Number(d.total_value) || 0), 0)
+          const topSuppliers: Record<string, number> = {}
+          for (const d of deliveries as any[]) topSuppliers[d.supplier_name || 'Unknown supplier'] = (topSuppliers[d.supplier_name || 'Unknown supplier'] || 0) + (Number(d.total_value) || 0)
+          posContext += `Food-cost spend (scanned supplier deliveries, ${periodLabel}): ${finalSymbol}${foodSpend.toFixed(2)} across ${deliveries.length} delivery note(s). Top suppliers: ${Object.entries(topSuppliers).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([n, v]) => `${n}: ${finalSymbol}${v.toFixed(2)}`).join(', ')}.\n`
+          posContext += `IMPORTANT: This is scanned-invoice food-cost spend specifically — it may overlap with cfo_expenses, purchase_orders, or restaurant_waste_log figures elsewhere in this context if the same delivery was also logged there. Do not add this total to those without checking for overlap; if unsure, present it as its own figure.\n`
+        }
       } else {
-        posContext += `\nRESTAURANT OPERATIONS: No restaurant order/waste/labour data for ${periodLabel} — this business may not use the restaurant module.\n`
+        posContext += `\nRESTAURANT OPERATIONS: No restaurant order/waste/labour/menu/reservation data for ${periodLabel} — this business may not use the restaurant module.\n`
+      }
+
+      // Cross-tenant ingredient price benchmark — only when the question is actually about
+      // price/cost movement. ingredient_price_market is an anonymised k-anonymised VIEW
+      // (n>=3 contributors, no owner_id), so it is safe to read without an owner filter.
+      const wantsPriceTrend = isExpenseQuestion || /expensive|\bprice(s|d)?\b|\bcost(s|ing)?\b|\bcheaper\b|going up/i.test(q)
+      if (wantsPriceTrend) {
+        // Cross-reference to the ingredients this merchant actually buys/sells where we
+        // cheaply can; otherwise fall back to the broadest recent rows for their region.
+        const ownIngredients = Array.from(new Set([
+          ...(waste as any[]).map(w => (w.item_name || '').toLowerCase().trim()),
+          ...orderItems.map((i: any) => (i.name || '').toLowerCase().trim()),
+        ].filter(n => n.length >= 3))).slice(0, 8)
+
+        const baseIpmQuery = () => {
+          let q2 = service
+            .from('ingredient_price_market')
+            .select('ingredient, category, unit, currency, region, period, data_points, p25, median, p75, avg_price, min_price, max_price')
+            .order('period', { ascending: false })
+            .limit(12)
+          if (finalRegion) q2 = q2.ilike('region', `%${finalRegion}%`)
+          return q2
+        }
+        let ipm: any[] = []
+        let ipmErr: any = null
+        if (ownIngredients.length > 0) {
+          const { data, error } = await baseIpmQuery().in('ingredient', ownIngredients)
+          ipmErr = error
+          ipm = data || []
+          // Scoping to the merchant's own ingredients can legitimately return nothing (their
+          // ingredients just aren't in the k-anonymised pool yet) — fall back to the broadest
+          // recent rows for their region rather than silently showing no benchmark at all.
+          if (ipm.length === 0 && !error) {
+            const { data: fallbackData, error: fallbackErr } = await baseIpmQuery()
+            ipmErr = fallbackErr
+            ipm = fallbackData || []
+          }
+        } else {
+          const { data, error } = await baseIpmQuery()
+          ipmErr = error
+          ipm = data || []
+        }
+        if (ipmErr) console.error('ingredient_price_market query error:', ipmErr.message)
+        if (ipm.length > 0) {
+          posContext += `\nINGREDIENT PRICE BENCHMARK (anonymised cross-merchant view, minimum 3 contributors per row):\n`
+          posContext += ipm.slice(0, 8).map((r: any) => `- ${r.ingredient} (${r.unit}, ${r.region || 'all regions'}, ${r.period}): median ${r.median != null ? r.currency + r.median : 'n/a'} [p25 ${r.p25 ?? 'n/a'} – p75 ${r.p75 ?? 'n/a'}], ${r.data_points} data points`).join('\n') + '\n'
+          posContext += `IMPORTANT: This is a market comparison from other merchants, NOT this business's own spend. Never present these medians as what the user paid — the user's real spend is the food-cost/delivery figures above. Only use this to say whether they look above or below market.\n`
+        }
       }
     }
 
@@ -1099,7 +1396,7 @@ export async function POST(request: NextRequest) {
     if (isRepairJobQuestion) {
       const { data: jobRows, error: jobErr } = await service
         .from('pos_service_jobs')
-        .select('status, quoted_price, created_at, updated_at')
+        .select('id, status, quoted_price, created_at, updated_at')
         .eq('owner_id', user.id)
         .gte('created_at', from.toISOString())
         .lte('created_at', to.toISOString())
@@ -1113,6 +1410,38 @@ export async function POST(request: NextRequest) {
         const completed = jobs.filter((j: any) => j.status === 'completed' || j.status === 'collected')
         const totalQuoted = completed.reduce((s: number, j: any) => s + (Number(j.quoted_price) || 0), 0)
         posContext += `${jobs.length} job(s). Status: ${Object.entries(byStatus).map(([s, c]) => `${c} ${s}`).join(', ')}. Completed jobs value: ${finalSymbol}${totalQuoted.toFixed(2)}.\n`
+
+        // Parts consumed on COMPLETED jobs only — pos_service_parts has no owner_id (ownership is
+        // inherited via job_id), so it is fetched by job id. Must match `completed`, not all `jobs`:
+        // totalQuoted above only sums completed/collected jobs, so pulling parts from open jobs too
+        // would subtract their cost from a quoted total that doesn't include them yet, producing
+        // negative "labour" and >100% "parts" percentages on any shop with open jobs mid-repair.
+        const jobIds = (completed as any[]).map(j => j.id).filter(Boolean)
+        if (jobIds.length > 0) {
+          const { data: partRows, error: partErr } = await service
+            .from('pos_service_parts')
+            .select('id, job_id, name, qty, unit_cost, line_total, created_at')
+            .in('job_id', jobIds)
+            .limit(500)
+          if (partErr) console.error('pos_service_parts query error:', partErr.message)
+          const parts = partRows || []
+          if (parts.length > 0) {
+            const partsTotal = parts.reduce((s: number, p: any) => s + (Number(p.line_total) || 0), 0)
+            const labourTotal = totalQuoted - partsTotal
+            const partsPct = totalQuoted > 0 ? ((partsTotal / totalQuoted) * 100).toFixed(1) : '0'
+            const partTotals: Record<string, { qty: number; value: number }> = {}
+            for (const p of parts as any[]) {
+              const key = p.name || 'Unnamed part'
+              if (!partTotals[key]) partTotals[key] = { qty: 0, value: 0 }
+              partTotals[key].qty += Number(p.qty) || 0
+              partTotals[key].value += Number(p.line_total) || 0
+            }
+            const topParts = Object.entries(partTotals).sort((a, b) => b[1].value - a[1].value).slice(0, 5)
+            posContext += `Parts used on completed jobs: ${parts.length} line(s) worth ${finalSymbol}${partsTotal.toFixed(2)} — most used: ${topParts.map(([name, t]) => `${name} (${t.qty}×, ${finalSymbol}${t.value.toFixed(2)})`).join(', ')}.\n`
+            posContext += `Parts vs labour split on completed jobs: parts ${finalSymbol}${partsTotal.toFixed(2)} (${partsPct}%), labour ${finalSymbol}${labourTotal.toFixed(2)} (${totalQuoted > 0 ? (100 - Number(partsPct)).toFixed(1) : '0'}%) of the ${finalSymbol}${totalQuoted.toFixed(2)} quoted total.\n`
+            posContext += `IMPORTANT: Use this exact parts/labour split. "Labour" here is the quoted job value minus parts — say so plainly; do not present the quoted total as if it were all labour, and do not recompute these percentages yourself.\n`
+          }
+        }
       } else {
         posContext += `No repair/service jobs in ${periodLabel}.\n`
       }
@@ -1121,15 +1450,24 @@ export async function POST(request: NextRequest) {
     // Logistics fleet — the user's own trucks/parcels/routes. Distinct from `shipments`
     // (inbound/outbound freight tracking) and from the parcel-quote intent (outbound rate shopping).
     if (isLogisticsFleetQuestion) {
-      const [truckRes, parcelRes] = await Promise.all([
+      const [truckRes, parcelRes, routeRes, logInvRes] = await Promise.all([
         service.from('pos_trucks').select('plate_number, status').eq('owner_id', user.id).limit(100),
         service.from('pos_parcels').select('tracking_number, status, destination_city, fee_charged, payment_status, created_at').eq('owner_id', user.id).not('status', 'in', '("delivered","collected","returned")').order('created_at', { ascending: false }).limit(50),
+        service.from('pos_routes').select('id, name, distance_km, price_per_kg, flat_rate, estimated_hours, active, created_at').eq('owner_id', user.id).eq('active', true).limit(100),
+        // Fleet OPERATING COST (fuel/maintenance/tolls) — despite the "invoices" name these
+        // are costs the business pays out, NOT receivables owed to it.
+        service.from('pos_logistics_invoices').select('id, vendor_name, invoice_number, total_amount, currency, invoice_date, category, notes, created_at').eq('owner_id', user.id).gte('invoice_date', from.toISOString().slice(0, 10)).lte('invoice_date', to.toISOString().slice(0, 10)).order('invoice_date', { ascending: false }).limit(300),
       ])
       if (truckRes.error) console.error('pos_trucks query error:', truckRes.error.message)
+      if (parcelRes.error) console.error('pos_parcels query error:', parcelRes.error.message)
+      if (routeRes.error) console.error('pos_routes query error:', routeRes.error.message)
+      if (logInvRes.error) console.error('pos_logistics_invoices query error:', logInvRes.error.message)
       const trucks = truckRes.data || []
       const activeParcels = parcelRes.data || []
+      const routes = routeRes.data || []
+      const logInvoices = logInvRes.data || []
 
-      if (trucks.length > 0 || activeParcels.length > 0) {
+      if (trucks.length > 0 || activeParcels.length > 0 || routes.length > 0 || logInvoices.length > 0) {
         posContext += `\nLOGISTICS FLEET:\n`
         if (trucks.length > 0) {
           const byTruckStatus: Record<string, number> = {}
@@ -1140,19 +1478,33 @@ export async function POST(request: NextRequest) {
           const unpaidParcels = activeParcels.filter((p: any) => p.payment_status !== 'paid')
           posContext += `${activeParcels.length} parcel(s) not yet delivered: ${activeParcels.slice(0, 5).map((p: any) => `${p.tracking_number} (${p.status}${p.destination_city ? `, to ${p.destination_city}` : ''})`).join(', ')}.${unpaidParcels.length > 0 ? ` ${unpaidParcels.length} still unpaid.` : ''}\n`
         }
+        if (routes.length > 0) {
+          posContext += `${routes.length} active route(s): ${routes.slice(0, 6).map((r: any) => `${r.name || 'Unnamed route'} (${r.distance_km ? `${r.distance_km}km, ` : ''}${Number(r.flat_rate) > 0 ? `flat ${finalSymbol}${Number(r.flat_rate).toFixed(2)}` : `${finalSymbol}${(Number(r.price_per_kg) || 0).toFixed(2)}/kg`}${r.estimated_hours ? `, ~${r.estimated_hours}h` : ''})`).join(', ')}.\n`
+        }
+        if (logInvoices.length > 0) {
+          const totalOpCost = logInvoices.reduce((s: number, i: any) => s + (Number(i.total_amount) || 0), 0)
+          const byCategory: Record<string, number> = {}
+          for (const i of logInvoices as any[]) {
+            const cat = i.category || 'other'
+            byCategory[cat] = (byCategory[cat] || 0) + (Number(i.total_amount) || 0)
+          }
+          posContext += `Fleet OPERATING COST (${periodLabel}): ${finalSymbol}${totalOpCost.toFixed(2)} across ${logInvoices.length} invoice(s). By category: ${Object.entries(byCategory).sort((a, b) => b[1] - a[1]).map(([c, v]) => `${c}: ${finalSymbol}${v.toFixed(2)}`).join(', ')}.\n`
+          posContext += `IMPORTANT: These logistics invoices are money the business PAYS OUT for running the fleet (fuel, maintenance, tolls, loading) — they are a real cost against fleet revenue, not receivables and not the same records as cfo_expenses. State the exact ${finalSymbol}${totalOpCost.toFixed(2)} figure; do not add it to cfo_expenses totals or you will double-count.\n`
+        }
       } else {
-        posContext += `\nLOGISTICS FLEET: No trucks or active parcels found — this business may not use the logistics module.\n`
+        posContext += `\nLOGISTICS FLEET: No trucks, active parcels, routes or fleet invoices found — this business may not use the logistics module.\n`
       }
     }
 
     // Factory/manufacturing — batches, intake/output/wastage captures, dispatch waybills.
-    // Only pos_factory_batches, pos_factory_captures, pos_factory_waybills are queried here —
-    // these three table names are confirmed identical between the root and pos-askbiz migration
-    // histories. Correction to an earlier version of this comment: the downtime/quality/shift
-    // tables aren't shape-diverged, they're just differently NAMED per app (root:
-    // pos_factory_downtime/_quality/_shifts, pos-askbiz: pos_factory_downtime_events/
-    // _quality_checks/_production_shifts) — both sets are live with real API routes, nothing
-    // blocks wiring them, they just aren't wired yet (open follow-up, not a blocker).
+    // pos_factory_batches, pos_factory_captures and pos_factory_waybills are name-identical
+    // between the root and pos-askbiz migration histories. The downtime/quality/shift tables
+    // are NOT — they are differently NAMED per app (root: pos_factory_downtime/_quality/_shifts,
+    // pos-askbiz: pos_factory_downtime_events/_quality_checks/_production_shifts). Both sets are
+    // live against one shared database, and a given merchant's rows land in whichever pair the
+    // app they used writes to, so both are queried and the results merged. Each query keeps its
+    // own error check: if one table is absent in an environment, that query's `error` is set and
+    // its `data` is null, and the other five still contribute — nothing throws.
     if (isFactoryQuestion) {
       const [batchRes, captureRes, waybillRes] = await Promise.all([
         service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
@@ -1160,11 +1512,43 @@ export async function POST(request: NextRequest) {
         service.from('pos_factory_waybills').select('destination, product_name, quantity, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(100),
       ])
       if (batchRes.error) console.error('pos_factory_batches query error:', batchRes.error.message)
+      if (captureRes.error) console.error('pos_factory_captures query error:', captureRes.error.message)
+      if (waybillRes.error) console.error('pos_factory_waybills query error:', waybillRes.error.message)
       const batches = batchRes.data || []
       const captures = captureRes.data || []
       const waybills = waybillRes.data || []
 
-      if (batches.length > 0 || captures.length > 0 || waybills.length > 0) {
+      // Naming-divergent pairs — root-named table and pos-askbiz-named table queried together
+      // and merged. Same owner_id column on both sides, similar shape.
+      const [dtRootRes, dtPosRes, qcRootRes, qcPosRes, shRootRes, shPosRes] = await Promise.all([
+        // root-side
+        service.from('pos_factory_downtime').select('id, machine_name, reason, started_at, ended_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        // pos-askbiz-side
+        service.from('pos_factory_downtime_events').select('id, machine_name, reason, status, started_at, ended_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        // root-side
+        service.from('pos_factory_quality').select('id, defect_type, severity, product_name, quantity_affected, status, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
+        // pos-askbiz-side
+        service.from('pos_factory_quality_checks').select('id, outcome, defect_type, severity, quantity_affected, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
+        // root-side (no target/actual output columns on this one — count and duration only)
+        service.from('pos_factory_shifts').select('id, shift_name, started_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        // pos-askbiz-side
+        // duration_minutes exists on this table too (pos-askbiz's own factory_production_shifts
+        // migration) — omitting it here meant a pos-askbiz-only merchant's logged hours were
+        // silently dropped from the merged sum below (root-side rows would contribute, theirs never would).
+        service.from('pos_factory_production_shifts').select('id, shift_name, target_units, actual_output, duration_minutes, status, started_at').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+      ])
+      if (dtRootRes.error) console.error('pos_factory_downtime query error:', dtRootRes.error.message)
+      if (dtPosRes.error) console.error('pos_factory_downtime_events query error:', dtPosRes.error.message)
+      if (qcRootRes.error) console.error('pos_factory_quality query error:', qcRootRes.error.message)
+      if (qcPosRes.error) console.error('pos_factory_quality_checks query error:', qcPosRes.error.message)
+      if (shRootRes.error) console.error('pos_factory_shifts query error:', shRootRes.error.message)
+      if (shPosRes.error) console.error('pos_factory_production_shifts query error:', shPosRes.error.message)
+
+      const downtime: any[] = [...(dtRootRes.data || []), ...(dtPosRes.data || [])]
+      const quality: any[] = [...(qcRootRes.data || []), ...(qcPosRes.data || [])]
+      const prodShifts: any[] = [...(shRootRes.data || []), ...(shPosRes.data || [])]
+
+      if (batches.length > 0 || captures.length > 0 || waybills.length > 0 || downtime.length > 0 || quality.length > 0 || prodShifts.length > 0) {
         posContext += `\nFACTORY / PRODUCTION (${periodLabel}):\n`
         if (batches.length > 0) {
           const byBatchStatus: Record<string, number> = {}
@@ -1184,8 +1568,42 @@ export async function POST(request: NextRequest) {
         if (waybills.length > 0) {
           posContext += `${waybills.length} dispatch waybill(s) totaling ${waybills.reduce((s: number, w: any) => s + (Number(w.quantity) || 0), 0)} units.\n`
         }
+        if (downtime.length > 0) {
+          const totalDowntimeMins = downtime.reduce((s: number, d: any) => s + (Number(d.duration_minutes) || 0), 0)
+          const stillOpen = downtime.filter((d: any) => !d.ended_at).length
+          const byReason: Record<string, number> = {}
+          for (const d of downtime) byReason[d.reason || 'other'] = (byReason[d.reason || 'other'] || 0) + (Number(d.duration_minutes) || 0)
+          const byMachine: Record<string, number> = {}
+          for (const d of downtime) byMachine[d.machine_name || 'Unnamed machine'] = (byMachine[d.machine_name || 'Unnamed machine'] || 0) + (Number(d.duration_minutes) || 0)
+          const worstMachine = Object.entries(byMachine).sort((a, b) => b[1] - a[1])[0]
+          posContext += `Downtime: ${downtime.length} event(s), ${totalDowntimeMins.toFixed(0)} minutes total (${(totalDowntimeMins / 60).toFixed(1)} hours)${stillOpen > 0 ? `, ${stillOpen} still open (duration not yet counted)` : ''}. By reason: ${Object.entries(byReason).sort((a, b) => b[1] - a[1]).map(([r, m]) => `${r}: ${m.toFixed(0)}min`).join(', ')}.\n`
+          if (worstMachine) posContext += `Worst machine: ${worstMachine[0]} with ${worstMachine[1].toFixed(0)} minutes lost.\n`
+        }
+        if (quality.length > 0) {
+          // 'outcome' only exists on the pos-askbiz side; a root-side row is always a logged defect
+          // (049_factory_quality.sql has no 'outcome' column at all — every row IS a defect log, not
+          // a pass/fail check). That means fails.length === quality.length on root data by construction,
+          // so a "fail rate" here is structurally always ~100% and meaningless — report counts only,
+          // never a rate, unless a real produced-units denominator (captures/shift output) is added.
+          const fails = quality.filter((r: any) => r.outcome ? r.outcome === 'fail' : true)
+          const affected = fails.reduce((s: number, r: any) => s + (Number(r.quantity_affected) || 0), 0)
+          const bySeverity: Record<string, number> = {}
+          for (const r of fails) bySeverity[r.severity || 'unspecified'] = (bySeverity[r.severity || 'unspecified'] || 0) + 1
+          const openIssues = quality.filter((r: any) => r.status === 'open').length
+          posContext += `Quality: ${quality.length} defect log(s), ${affected} unit(s) affected. Severity: ${Object.entries(bySeverity).map(([s, c]) => `${c} ${s}`).join(', ')}.${openIssues > 0 ? ` ${openIssues} still open.` : ''}\n`
+        }
+        if (prodShifts.length > 0) {
+          const withOutput = prodShifts.filter((s: any) => s.actual_output != null)
+          const totalOutput = withOutput.reduce((s: number, sh: any) => s + (Number(sh.actual_output) || 0), 0)
+          const totalTarget = prodShifts.filter((s: any) => s.target_units != null).reduce((s: number, sh: any) => s + (Number(sh.target_units) || 0), 0)
+          const shiftMins = prodShifts.reduce((s: number, sh: any) => s + (Number(sh.duration_minutes) || 0), 0)
+          posContext += `Production shifts: ${prodShifts.length} shift(s)${shiftMins > 0 ? `, ${(shiftMins / 60).toFixed(1)} hours logged` : ''}${withOutput.length > 0 ? `, ${totalOutput} units produced across ${withOutput.length} shift(s) with recorded output` : ''}${totalTarget > 0 ? ` against a ${totalTarget}-unit target (${((totalOutput / totalTarget) * 100).toFixed(0)}% of target)` : ''}.\n`
+        }
+        if (downtime.length > 0 || quality.length > 0 || prodShifts.length > 0) {
+          posContext += `IMPORTANT: The downtime, quality and shift figures above are already totalled across every production log this business has — state them exactly as given. Do not describe any of them as unavailable, and do not estimate output or downtime from batch counts.\n`
+        }
       } else {
-        posContext += `\nFACTORY / PRODUCTION: No batch/capture/waybill data for ${periodLabel} — this business may not use the factory module.\n`
+        posContext += `\nFACTORY / PRODUCTION: No batch/capture/waybill/downtime/quality/shift data for ${periodLabel} — this business may not use the factory module.\n`
       }
     }
 
@@ -1202,13 +1620,52 @@ export async function POST(request: NextRequest) {
       if (apptErr) console.error('salon_appointments query error:', apptErr.message)
       const appts = apptRows || []
       posContext += `\nSALON APPOINTMENTS (${periodLabel}):\n`
+      let salonServiceRevenue = 0
       if (appts.length > 0) {
         const completed = appts.filter((a: any) => a.status === 'completed')
         const noShows = appts.filter((a: any) => a.status === 'no_show')
         const totalRevenue = completed.reduce((s: number, a: any) => s + (Number(a.price) || 0), 0)
+        salonServiceRevenue = totalRevenue
         posContext += `${appts.length} appointment(s), ${completed.length} completed (${finalSymbol}${totalRevenue.toFixed(2)}), ${noShows.length} no-show(s).\n`
       } else {
         posContext += `No salon appointments in ${periodLabel}.\n`
+      }
+
+      // Product cost per service + lapsed high-value clients. Product usage IS date-windowed;
+      // the client list deliberately is NOT — a lapsed client is defined by absence, so
+      // windowing it would hide exactly the people the merchant needs to see.
+      const lapsedCutoff = new Date(now); lapsedCutoff.setDate(lapsedCutoff.getDate() - 60)
+      const [usageRes, clientRes] = await Promise.all([
+        service.from('salon_product_usage').select('id, appointment_id, client_id, product_name, amount_used, unit, cost, service_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(500),
+        // .or() so clients who have NEVER visited (last_visit_at is null) aren't silently dropped —
+        // a plain .lt() comparison excludes nulls in SQL, which would hide exactly the clients most
+        // overdue for a win-back message.
+        service.from('salon_clients').select('id, name, phone, total_visits, total_spend, last_visit_at').eq('owner_id', user.id).or(`last_visit_at.is.null,last_visit_at.lt.${lapsedCutoff.toISOString()}`).order('total_spend', { ascending: false }).limit(20),
+      ])
+      if (usageRes.error) console.error('salon_product_usage query error:', usageRes.error.message)
+      if (clientRes.error) console.error('salon_clients query error:', clientRes.error.message)
+      const productUsage = usageRes.data || []
+      const lapsedClients = clientRes.data || []
+
+      if (productUsage.length > 0) {
+        const totalProductCost = productUsage.reduce((s: number, u: any) => s + (Number(u.cost) || 0), 0)
+        const byProduct: Record<string, number> = {}
+        for (const u of productUsage as any[]) byProduct[u.product_name || 'Unnamed product'] = (byProduct[u.product_name || 'Unnamed product'] || 0) + (Number(u.cost) || 0)
+        posContext += `Product cost consumed (${periodLabel}): ${finalSymbol}${totalProductCost.toFixed(2)} across ${productUsage.length} usage log(s). Biggest: ${Object.entries(byProduct).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([n, v]) => `${n}: ${finalSymbol}${v.toFixed(2)}`).join(', ')}.\n`
+        // Only claim a "real service margin" when there's completed-appointment revenue to net it
+        // against — with zero completed appointments this would print a negative margin at "0%",
+        // internally contradictory, for a period that simply hasn't had a finished appointment yet.
+        if (salonServiceRevenue > 0) {
+          const serviceMargin = salonServiceRevenue - totalProductCost
+          const marginPctSalon = ((serviceMargin / salonServiceRevenue) * 100).toFixed(1)
+          posContext += `REAL SERVICE MARGIN: ${finalSymbol}${salonServiceRevenue.toFixed(2)} completed-appointment revenue − ${finalSymbol}${totalProductCost.toFixed(2)} product cost = ${finalSymbol}${serviceMargin.toFixed(2)} (${marginPctSalon}%).\n`
+          posContext += `IMPORTANT: When asked what the salon actually makes, quote the ${finalSymbol}${serviceMargin.toFixed(2)} margin figure, not the raw appointment revenue — product cost is already deducted above. Do not recompute it.\n`
+        }
+      }
+      if (lapsedClients.length > 0) {
+        const lapsedValue = lapsedClients.reduce((s: number, c: any) => s + (Number(c.total_spend) || 0), 0)
+        posContext += `LAPSED CLIENTS (no visit in 60+ days, highest lifetime spend first): ${lapsedClients.length} client(s) worth ${finalSymbol}${lapsedValue.toFixed(2)} lifetime: ${lapsedClients.slice(0, 8).map((c: any) => `${c.name || c.phone || 'Unnamed'} (${finalSymbol}${(Number(c.total_spend) || 0).toFixed(2)}, ${c.total_visits || 0} visits, last seen ${c.last_visit_at ? new Date(c.last_visit_at).toLocaleDateString() : 'never'})`).join(', ')}.\n`
+        posContext += `IMPORTANT: These are win-back targets, listed highest-value first. Name the actual clients above — do not generalise to "some clients haven't returned".\n`
       }
     }
 
@@ -1231,6 +1688,39 @@ export async function POST(request: NextRequest) {
         posContext += `${stuckPayments.length} payment(s) totaling ${finalSymbol}${totalStuck.toFixed(2)} stuck (${failed.length} failed, ${stuckPayments.length - failed.length} pending).\n`
       } else {
         posContext += `No stuck or failed payments right now.\n`
+      }
+
+      // Direct debit (GoCardless) — a completely separate rail from the POS card/link payments
+      // above. Only non-settled states are pulled; 'confirmed'/'paid_out' money is already banked.
+      const { data: ddRows, error: ddErr } = await service
+        .from('gocardless_payments')
+        .select('payment_id, mandate_id, amount, currency, status, charge_date, description')
+        .eq('user_id', user.id)
+        .in('status', ['pending_submission', 'submitted', 'failed', 'cancelled'])
+        .order('charge_date', { ascending: false })
+        .limit(100)
+      if (ddErr) console.error('gocardless_payments query error:', ddErr.message)
+      const directDebits = ddRows || []
+      // Explicitly labelled all-time/not-period-scoped — unlike an arbitrary lookback cutoff, this
+      // doesn't risk hiding a genuinely still-unresolved old failure, but the model must say so
+      // rather than presenting a stale figure as if it reflects the requested period.
+      posContext += `\nDIRECT DEBIT COLLECTIONS (GoCardless, all-time/not period-scoped — separate from the POS card/link payments above):\n`
+      if (directDebits.length > 0) {
+        const ddTotal = directDebits.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0)
+        const byDdStatus: Record<string, { count: number; amount: number }> = {}
+        for (const p of directDebits as any[]) {
+          const st = p.status || 'unknown'
+          if (!byDdStatus[st]) byDdStatus[st] = { count: 0, amount: 0 }
+          byDdStatus[st].count++
+          byDdStatus[st].amount += Number(p.amount) || 0
+        }
+        const ddFailed = (byDdStatus['failed']?.amount || 0) + (byDdStatus['cancelled']?.amount || 0)
+        posContext += `${directDebits.length} unsettled direct debit(s) totaling ${finalSymbol}${ddTotal.toFixed(2)}. By status: ${Object.entries(byDdStatus).map(([s, v]) => `${s}: ${v.count} (${finalSymbol}${v.amount.toFixed(2)})`).join(', ')}.\n`
+        if (ddFailed > 0) posContext += `⚠ ${finalSymbol}${ddFailed.toFixed(2)} failed or cancelled and will not arrive without re-collection.\n`
+        posContext += `IMPORTANT: These are all-time, not scoped to ${periodLabel}. Keep these direct debit figures separate from the POS payment figures above — they are different payment rails and must never be added together into one "failed payments" total.\n`
+      } else {
+        posContext += `No unsettled GoCardless direct debits (nothing pending, submitted, failed or cancelled).\n`
+        posContext += `IMPORTANT: Keep this separate from the POS payment figures above even when both are empty — they are different payment rails.\n`
       }
     }
 
@@ -1276,6 +1766,136 @@ export async function POST(request: NextRequest) {
         posContext += `IMPORTANT: State this saved figure plainly rather than saying no calculation exists.\n`
       } else {
         posContext += `No saved zakat calculation found. Suggest using the Zakat Calculator in the Intelligence tab.\n`
+      }
+    }
+
+    // Tax filings — VAT/turnover returns. Deliberately NOT scoped to the resolved from/to:
+    // filings are periodic documents, so the most recent few are always the relevant ones
+    // regardless of what date window the question implied.
+    if (isTaxQuestion) {
+      const { data: filingRows, error: filingErr } = await service
+        .from('pos_tax_filings')
+        .select('jurisdiction, filing_period_start, filing_period_end, total_turnover, total_tax_due, tax_paid, net_due, status, submitted_at, submitted_to, filing_reference')
+        .eq('owner_id', user.id)
+        .order('filing_period_end', { ascending: false })
+        .limit(20)
+      if (filingErr) console.error('pos_tax_filings query error:', filingErr.message)
+      const filings = filingRows || []
+      posContext += `\nTAX FILINGS (20 most recent, not period-scoped):\n`
+      if (filings.length > 0) {
+        posContext += filings.slice(0, 5).map((f: any) => `- ${f.jurisdiction} ${f.filing_period_start} → ${f.filing_period_end}: turnover ${finalSymbol}${(Number(f.total_turnover) || 0).toFixed(2)}, tax due ${finalSymbol}${(Number(f.total_tax_due) || 0).toFixed(2)}, paid ${finalSymbol}${(Number(f.tax_paid) || 0).toFixed(2)}, NET DUE ${finalSymbol}${(Number(f.net_due) || 0).toFixed(2)} [${f.status}${f.filing_reference ? `, ref ${f.filing_reference}` : ''}]`).join('\n') + '\n'
+        const drafts = filings.filter((f: any) => f.status === 'draft')
+        const rejected = filings.filter((f: any) => f.status === 'rejected')
+        // "Still owed" = draft + submitted (awaiting the merchant's action or the authority's
+        // decision). 'rejected' filings are deliberately excluded and called out separately —
+        // a rejected filing needs correcting/resubmitting, its net_due isn't a reliable current
+        // liability figure the way an open draft/submitted one is.
+        const totalNetDue = filings.filter((f: any) => f.status === 'draft' || f.status === 'submitted').reduce((s: number, f: any) => s + (Number(f.net_due) || 0), 0)
+        if (drafts.length > 0) {
+          posContext += `⚠ ${drafts.length} filing(s) still in DRAFT and not submitted: ${drafts.map((f: any) => `${f.jurisdiction} ${f.filing_period_start}–${f.filing_period_end} (${finalSymbol}${(Number(f.net_due) || 0).toFixed(2)} net due)`).join(', ')}.\n`
+        }
+        if (rejected.length > 0) {
+          posContext += `⚠ ${rejected.length} filing(s) REJECTED and need correcting/resubmitting: ${rejected.map((f: any) => `${f.jurisdiction} ${f.filing_period_start}–${f.filing_period_end}`).join(', ')}.\n`
+        }
+        posContext += `Total net due across draft/submitted filings (excludes rejected — see above): ${finalSymbol}${totalNetDue.toFixed(2)}.\n`
+        posContext += `IMPORTANT: Quote these exact filing figures. Net due is what is still owed — do not recompute tax from revenue or margin figures elsewhere in this context, do not fold rejected filings into "still owed", and do not give tax advice beyond what these records state.\n`
+      } else {
+        posContext += `No tax filings recorded yet.\n`
+        posContext += `IMPORTANT: State plainly that no filings are saved yet. Do NOT substitute revenue or expense figures as if they answered a tax question, and do not estimate a tax liability.\n`
+      }
+    }
+
+    // Website analytics (ga_sessions) — record_date is a DATE column, so the window is
+    // sliced to YYYY-MM-DD rather than passed as a full ISO timestamp.
+    if (isTrafficQuestion) {
+      const { data: gaRows, error: gaErr } = await service
+        .from('ga_sessions')
+        .select('record_date, channel, sessions, users, conversions, conversion_rate, bounce_rate, avg_session_secs, revenue, currency')
+        .eq('user_id', user.id)
+        .gte('record_date', from.toISOString().slice(0, 10))
+        .lte('record_date', to.toISOString().slice(0, 10))
+        .order('record_date', { ascending: false })
+        .limit(3000)
+      if (gaErr) console.error('ga_sessions query error:', gaErr.message)
+      const ga = gaRows || []
+      posContext += `\nWEBSITE TRAFFIC (${periodLabel}):\n`
+      if (ga.length > 0) {
+        const totalSessions = ga.reduce((s: number, r: any) => s + (Number(r.sessions) || 0), 0)
+        const totalUsers = ga.reduce((s: number, r: any) => s + (Number(r.users) || 0), 0)
+        const totalConversions = ga.reduce((s: number, r: any) => s + (Number(r.conversions) || 0), 0)
+        const totalGaRevenue = ga.reduce((s: number, r: any) => s + (Number(r.revenue) || 0), 0)
+        const overallCvr = totalSessions > 0 ? ((totalConversions / totalSessions) * 100).toFixed(2) : '0.00'
+        // Session-weighted, not a plain average of daily rates — a day with 5 sessions shouldn't
+        // count the same as a day with 5,000. bounce_rate/avg_session_secs were being fetched and
+        // never used, despite isTrafficQuestion explicitly matching "bounce rate" as a trigger phrase.
+        const weightedBounce = totalSessions > 0 ? ga.reduce((s: number, r: any) => s + (Number(r.bounce_rate) || 0) * (Number(r.sessions) || 0), 0) / totalSessions : 0
+        const weightedAvgSecs = totalSessions > 0 ? ga.reduce((s: number, r: any) => s + (Number(r.avg_session_secs) || 0) * (Number(r.sessions) || 0), 0) / totalSessions : 0
+
+        const byChannel: Record<string, { sessions: number; conversions: number; revenue: number }> = {}
+        for (const r of ga as any[]) {
+          const ch = r.channel || 'unassigned'
+          if (!byChannel[ch]) byChannel[ch] = { sessions: 0, conversions: 0, revenue: 0 }
+          byChannel[ch].sessions += Number(r.sessions) || 0
+          byChannel[ch].conversions += Number(r.conversions) || 0
+          byChannel[ch].revenue += Number(r.revenue) || 0
+        }
+        const channelRows = Object.entries(byChannel).map(([ch, v]) => ({
+          channel: ch,
+          ...v,
+          cvr: v.sessions > 0 ? (v.conversions / v.sessions) * 100 : 0,
+        })).sort((a, b) => b.sessions - a.sessions)
+        const bestCvr = [...channelRows].filter(c => c.sessions > 0).sort((a, b) => b.cvr - a.cvr)[0]
+
+        posContext += `${totalSessions} session(s) from ${totalUsers} user(s), ${totalConversions} conversion(s) (${overallCvr}% overall conversion rate)${totalGaRevenue > 0 ? `, ${finalSymbol}${totalGaRevenue.toFixed(2)} attributed revenue` : ''}.\n`
+        posContext += `Bounce rate: ${weightedBounce.toFixed(1)}%. Avg session length: ${(weightedAvgSecs / 60).toFixed(1)} min.\n`
+        posContext += `By channel: ${channelRows.slice(0, 8).map(c => `${c.channel}: ${c.sessions} sessions, ${c.conversions} conv (${c.cvr.toFixed(2)}%)`).join(', ')}.\n`
+        if (bestCvr) {
+          posContext += `Best-converting channel: ${bestCvr.channel} at ${bestCvr.cvr.toFixed(2)}% (${bestCvr.conversions} conversions from ${bestCvr.sessions} sessions).\n`
+        }
+        posContext += `IMPORTANT: These are website analytics, not POS sales — do not mix session counts with transaction counts, or GA revenue with POS revenue. State the exact conversion rates above; they are already calculated.\n`
+      } else {
+        posContext += `No website analytics recorded for ${periodLabel} — Google Analytics may not be connected.\n`
+        posContext += `IMPORTANT: Say plainly that no traffic data exists for this period. Do NOT substitute POS transaction counts as if they were website sessions.\n`
+      }
+    }
+
+    // Email marketing campaigns (Mailchimp + Klaviyo share one table, keyed by source_type).
+    if (isMarketingQuestion) {
+      const { data: campRows, error: campErr } = await service
+        .from('email_campaigns')
+        .select('source_type, campaign_name, sent_at, recipients, opens, open_rate, clicks, click_rate, unsubscribes, revenue, currency')
+        .eq('user_id', user.id)
+        .gte('sent_at', from.toISOString())
+        .lte('sent_at', to.toISOString())
+        .order('sent_at', { ascending: false })
+        .limit(50)
+      if (campErr) console.error('email_campaigns query error:', campErr.message)
+      const campaigns = campRows || []
+      posContext += `\nEMAIL CAMPAIGNS (${periodLabel}):\n`
+      if (campaigns.length > 0) {
+        const totalRecipients = campaigns.reduce((s: number, c: any) => s + (Number(c.recipients) || 0), 0)
+        const totalCampRevenue = campaigns.reduce((s: number, c: any) => s + (Number(c.revenue) || 0), 0)
+        const totalUnsubs = campaigns.reduce((s: number, c: any) => s + (Number(c.unsubscribes) || 0), 0)
+        // Weighted average of the PLATFORM's own open_rate/click_rate (recipient-weighted), not
+        // totalOpens/totalRecipients — those are different denominators (platform rates are unique
+        // opens ÷ delivered) and would silently disagree with the per-campaign list printed right
+        // below, directly contradicting the "do not recompute or average them differently" line.
+        const avgOpen = totalRecipients > 0 ? (campaigns.reduce((s: number, c: any) => s + (Number(c.open_rate) || 0) * (Number(c.recipients) || 0), 0) / totalRecipients).toFixed(2) : '0.00'
+        const avgClick = totalRecipients > 0 ? (campaigns.reduce((s: number, c: any) => s + (Number(c.click_rate) || 0) * (Number(c.recipients) || 0), 0) / totalRecipients).toFixed(2) : '0.00'
+
+        posContext += `${campaigns.length} campaign(s) to ${totalRecipients} recipient(s): ${avgOpen}% open, ${avgClick}% click, ${totalUnsubs} unsubscribe(s)${totalCampRevenue > 0 ? `, ${finalSymbol}${totalCampRevenue.toFixed(2)} attributed revenue` : ''}.\n`
+        posContext += campaigns.slice(0, 10).map((c: any) => `- ${c.campaign_name || 'Untitled'} (${c.source_type}, sent ${c.sent_at ? new Date(c.sent_at).toLocaleDateString() : 'unknown'}): ${Number(c.recipients) || 0} sent, ${(Number(c.open_rate) || 0).toFixed(2)}% open, ${(Number(c.click_rate) || 0).toFixed(2)}% click${Number(c.revenue) > 0 ? `, ${finalSymbol}${(Number(c.revenue) || 0).toFixed(2)} revenue` : ''}`).join('\n') + '\n'
+
+        if (campaigns.length >= 3) {
+          const ranked = [...(campaigns as any[])].sort((a, b) => (Number(b.open_rate) || 0) - (Number(a.open_rate) || 0))
+          const best = ranked[0]
+          const worst = ranked[ranked.length - 1]
+          posContext += `Best performer: "${best.campaign_name || 'Untitled'}" at ${(Number(best.open_rate) || 0).toFixed(2)}% open / ${(Number(best.click_rate) || 0).toFixed(2)}% click. Worst: "${worst.campaign_name || 'Untitled'}" at ${(Number(worst.open_rate) || 0).toFixed(2)}% open / ${(Number(worst.click_rate) || 0).toFixed(2)}% click.\n`
+        }
+        posContext += `IMPORTANT: Use these exact open/click rates as given — they come from the email platform, do not recompute or average them differently. Campaign revenue is platform-attributed and is not the same money as POS revenue; do not add the two together.\n`
+      } else {
+        posContext += `No email campaigns sent in ${periodLabel} — Mailchimp/Klaviyo may not be connected.\n`
+        posContext += `IMPORTANT: State plainly that no campaigns exist for this period. Do not substitute unrelated sales or traffic figures.\n`
       }
     }
   }

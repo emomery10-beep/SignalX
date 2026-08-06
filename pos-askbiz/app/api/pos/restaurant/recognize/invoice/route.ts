@@ -137,13 +137,18 @@ Reply ONLY with valid JSON matching this shape — no markdown, no explanation:
     // Only items with a real unit_price get written — zero means not extracted
     // No PII: supplier name omitted, only type is stored
 
-    // Resolve region from owner profile for geographic intelligence
+    // Resolve region from owner profile for geographic intelligence.
+    // profiles has no 'country' column (it's country_code / region / registration_country) —
+    // .select('country') was 400ing every time, silently discarded by the destructure below,
+    // so `region` was NULL on every ingredient_price_intel row ever written. This also matches
+    // the vocabulary the /ask route reads back against (profiles.region), which the old query
+    // never sourced from at all.
     const { data: ownerProfile } = await service
       .from('profiles')
-      .select('country')
+      .select('region')
       .eq('id', auth.ownerId)
       .single()
-    const region = (ownerProfile as any)?.country || null
+    const region = (ownerProfile as any)?.region || null
 
     const intelligenceRows = extracted.items
       .filter(item => item.unit_price > 0 && item.name)
