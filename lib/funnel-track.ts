@@ -22,6 +22,9 @@ export const POS_FUNNEL_EVENTS = [
   'activate_trial_failed',
   'activate_payment_clicked',
   'coach_mark_shown',
+  // UI interaction, not funnel progress — same treatment as coach_mark_shown.
+  // Lets us later measure whether the help chip/card actually reduces drop-off.
+  'pos_help_clicked',
 ] as const
 
 export type PosFunnelEvent = typeof POS_FUNNEL_EVENTS[number]

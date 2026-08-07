@@ -8,6 +8,7 @@ import { speak } from '@/lib/speak'
 import SpeakButton from '@/components/SpeakButton'
 import { trackFunnelEvent } from '@/lib/funnel-track'
 import CoachMark from '@/components/CoachMark'
+import WhatsAppHelpChip from '@/components/WhatsAppHelpChip'
 
 // ── AskBiz tokens (match onboarding) ──────────────────────────
 const ACC = '#d08a59'
@@ -610,6 +611,9 @@ export default function PosSetupPage() {
           <SpeakButton text={screenSpokenText} size={52} />
         </div>
       )}
+      {/* Card on 'ready' instead (see below) — a floating chip there would
+          duplicate the same CTA right next to the primary decision. */}
+      {screen !== 'ready' && <WhatsAppHelpChip variant="chip" screen={screen} />}
       <div className="pos-setup-shell" style={{ width: '100%', maxWidth: 480, margin: '0 auto', padding: '20px 16px 40px', flex: 1 }}>
 
         {/* Already enabled — nudge to the real POS instead of the pre-pay flow */}
@@ -1058,6 +1062,7 @@ export default function PosSetupPage() {
             <p style={{ fontSize: 17, color: TX2, lineHeight: 1.6, marginBottom: 28 }}>
               {items.length === 1 ? tc('pos_setup.ready_subtitle_one') : tc('pos_setup.ready_subtitle', { count: items.length })}
             </p>
+            <WhatsAppHelpChip variant="card" screen="ready" />
             <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={() => { trackFunnelEvent('setup_activate_clicked', { businessType: bizType }); router.push('/pos/activate') }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               {tc('pos_setup.ready_cta')}

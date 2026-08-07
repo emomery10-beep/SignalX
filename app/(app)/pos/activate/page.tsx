@@ -7,6 +7,7 @@ import { posSeatPrice } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
 import { trackFunnelEvent } from '@/lib/funnel-track'
 import CoachMark from '@/components/CoachMark'
+import WhatsAppHelpChip from '@/components/WhatsAppHelpChip'
 
 // ── AskBiz tokens (match onboarding / setup) ─────────────────
 const ACC = '#d08a59'
@@ -204,6 +205,9 @@ export default function PosActivatePage() {
   return (
     <div style={{ minHeight: '100%', background: BG, fontFamily: 'DM Sans, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      {/* The two dead-end-feeling states — webhook stuck, payment declined —
+          are exactly where a person most needs an escape hatch. */}
+      {(phase === 'pending' || phase === 'cancelled') && <WhatsAppHelpChip variant="chip" screen={`activate_${phase}`} />}
       <div style={{ width: '100%', maxWidth: 440, margin: '0 auto', padding: '32px 16px 40px', flex: 1 }}>
 
         {phase === 'loading' && (
@@ -253,6 +257,7 @@ export default function PosActivatePage() {
               </div>
             ) : (
               <>
+                <WhatsAppHelpChip variant="card" screen="activate_pay" />
                 {trialAvailable && (
                   <>
                     <CoachMark id="pos-activate-trial" text={tc('onboarding.coach_trial')} lang={lang}>

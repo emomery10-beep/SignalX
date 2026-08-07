@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       // NOTE: is_suspicious is not selected here — migration 006_ip_fraud.sql that adds it
       // to profiles has not been applied to production, so selecting it fails the whole query.
-      .select('id, full_name, plan_id, business_type, country_code, created_at, pos_enabled, pos_seat_count, pos_stripe_subscription_id')
+      .select('id, full_name, plan_id, business_type, country_code, created_at, pos_enabled, pos_seat_count, pos_stripe_subscription_id, onboarded')
       .order('created_at', { ascending: false })
 
     if (profilesError) console.error('Profiles query error:', profilesError)
@@ -329,6 +329,67 @@ export async function GET(request: NextRequest) {
       windowDays: 14,
       steps: FUNNEL_STEPS.map(event => ({ event, users: usersByEvent[event]?.size || 0 })),
     }
+
+    // Per-user "furthest step reached" + Stuck flag — same source table as
+    // the aggregate above, but a SEPARATE rank map: FUNNEL_STEPS is a flat
+    // per-event waterfall (onboarding_trial_started/_failed/_skipped are
+    // three sequential entries there); here they're mutually-exclusive
+    // outcomes of one decision and must collapse to a single rank, or
+    // progress gets silently misordered. coach_mark_shown / pos_help_clicked
+    // are deliberately unranked — UI interactions, not funnel progress.
+    const FUNNEL_STEP_RANK: Record<string, number> = {
+      onboarding_done_pos_shown: 1,
+      onboarding_trial_clicked: 2,
+      onboarding_trial_started: 3, onboarding_trial_failed: 3, onboarding_trial_skipped: 3,
+      onboarding_finish_clicked: 4,
+      setup_fork_shown: 5,
+      setup_capture_opened: 6, setup_import_opened: 6,
+      setup_item_added: 7,
+      setup_ready_clicked: 8,
+      setup_ready_screen_shown: 9,
+      setup_activate_clicked: 10,
+      activate_screen_shown: 11,
+      activate_trial_button_shown: 12,
+      activate_trial_clicked: 13,
+      activate_trial_started: 14, activate_trial_failed: 14, activate_payment_clicked: 14,
+    }
+    // Unbounded (no created_at filter) — "furthest step reached" is a
+    // lifetime fact about a person; reusing the 14-day window above would
+    // wrongly show a quiet-but-progressed user as "never started."
+    const { data: allFunnelRows, error: allFunnelError } = await supabase
+      .from('pos_trial_funnel_events')
+      .select('user_id, event, created_at')
+    if (allFunnelError) console.error('pos_trial_funnel_events (per-user) query error (migration applied?):', allFunnelError)
+    const furthestByUser: Record<string, { event: string; rank: number; at: string }> = {}
+    ;(allFunnelRows || []).forEach((r: any) => {
+      const rank = FUNNEL_STEP_RANK[r.event]
+      if (!rank) return
+      const cur = furthestByUser[r.user_id]
+      if (!cur || rank > cur.rank || (rank === cur.rank && r.created_at > cur.at)) {
+        furthestByUser[r.user_id] = { event: r.event, rank, at: r.created_at }
+      }
+    })
+    // Stuck = reached at least the first step, hasn't reached the end of the
+    // funnel, and it's been a while since their furthest touch.
+    // Deliberately NOT gated on pos_enabled: cross-checked against live data
+    // and pos_enabled flips true the moment a *trial* is claimed (rank ~2-3,
+    // right at the start) so the POS app is usable during setup — it is not
+    // a "did they finish" signal. Almost every user in the biggest drop-off
+    // group (stuck at catalogue setup) already has pos_enabled=true, so
+    // gating on it would have hidden exactly the group this exists to
+    // surface. Rank 14 covers all three activate-flow outcomes
+    // (started/failed/payment-clicked) — anyone who got that far made it
+    // through the whole funnel, so they're excluded from "stuck" even if
+    // the specific outcome still needs its own follow-up.
+    const FUNNEL_STUCK_THRESHOLD_MS = 60 * 60 * 1000 * 60 // 60h — tune here only
+    const FUNNEL_MAX_RANK = 14
+    users.forEach((u: any) => {
+      const f = furthestByUser[u.id]
+      u.funnel_furthest_step = f?.event || null
+      u.funnel_furthest_step_rank = f?.rank || null
+      u.funnel_furthest_step_at = f?.at || null
+      u.funnel_stuck = !!f && f.rank < FUNNEL_MAX_RANK && (now.getTime() - new Date(f.at).getTime()) > FUNNEL_STUCK_THRESHOLD_MS
+    })
 
     return NextResponse.json({
       stats, users, candidates, stripe: stripeData,

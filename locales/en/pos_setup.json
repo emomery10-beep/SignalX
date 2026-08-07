@@ -110,5 +110,9 @@
   "team_pay_pending": "Pay {price}/mo — activate {count}",
   "team_done": "Done",
   "coach_fork": "Take a photo of the first thing you sell.",
-  "coach_capture": "Point the camera, then tap the button to take the photo."
+  "coach_capture": "Point the camera, then tap the button to take the photo.",
+  "whatsapp_help_title": "Need help along the way?",
+  "whatsapp_help_body": "Join our WhatsApp customer care group — ask us anything, anytime.",
+  "whatsapp_help_cta": "Join WhatsApp group →",
+  "whatsapp_help_chip": "Need help?"
 }

@@ -35,6 +35,29 @@ const bizTypeLabel = (t?: string | null) => {
   if (!t) return null
   return BIZ_TYPE_LABELS[t] || t.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
 }
+// Shared between the Growth-tab funnel panel and the per-user "furthest step"
+// field in the Users drawer/table — one label set, not duplicated.
+const FUNNEL_STEP_LABELS: Record<string, string> = {
+  onboarding_done_pos_shown: 'Onboarding done (POS persona)',
+  onboarding_trial_clicked: 'Clicked "Start free trial" (done screen)',
+  onboarding_trial_started: 'Trial started from done screen',
+  onboarding_trial_failed: 'Trial claim failed on done screen',
+  onboarding_trial_skipped: 'Skipped trial, continued to setup',
+  onboarding_finish_clicked: 'Continued to catalogue setup',
+  setup_fork_shown: 'Reached catalogue setup',
+  setup_capture_opened: 'Opened camera capture',
+  setup_import_opened: 'Opened bulk import',
+  setup_item_added: 'Added ≥1 item',
+  setup_ready_clicked: '"I’m ready" clicked',
+  setup_ready_screen_shown: 'Reached "ready" screen',
+  setup_activate_clicked: 'Clicked through to activate',
+  activate_screen_shown: 'Reached activate screen (fallback path)',
+  activate_trial_button_shown: 'Saw "Start free trial" button (fallback)',
+  activate_trial_clicked: 'Clicked "Start free trial" (fallback)',
+  activate_trial_started: 'Trial started from activate (fallback)',
+  activate_trial_failed: 'Trial start failed (fallback)',
+  activate_payment_clicked: 'Clicked a payment option instead',
+}
 const fmtCompact = (n: number) => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(Math.round(n))
 const relativeDate = (iso: string | null | undefined, lang: string) => {
   if (!iso) return '—'
@@ -278,6 +301,7 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
               { label: 'Questions asked', value: u.questions_used || 0 },
               { label: 'Business type', value: bizTypeLabel(u.business_type) || tc('admin.empty_dash') },
               { label: 'Country', value: u.registration_country || tc('admin.empty_dash') },
+              { label: 'Furthest onboarding step', value: u.funnel_furthest_step ? `${FUNNEL_STEP_LABELS[u.funnel_furthest_step] || u.funnel_furthest_step} · ${relativeDate(u.funnel_furthest_step_at, lang)}` : tc('admin.empty_dash') },
               { label: 'Last active', value: u.is_online ? '🟢 Online now' : (u.last_active_at ? formatDate(lang, u.last_active_at, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : tc('admin.empty_dash')) },
               { label: 'Joined', value: u.created_at ? formatDate(lang, u.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) : tc('admin.empty_dash') },
             ].map(({ label, value }) => (
@@ -286,6 +310,11 @@ function UserDrawer({ user, onClose, tc, onChangePlan, onGrantPos, onSendEmail, 
                 <span style={{fontWeight:600}}>{value}</span>
               </div>
             ))}
+            {u.funnel_stuck && (
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 12px',borderRadius:10,background:'#d9770614',border:'1px solid #d9770640',color:'#d97706',fontSize:13,fontWeight:600,marginTop:4}}>
+                ⚠ Stuck — no progress since their last step
+              </div>
+            )}
           </div>
 
           <SectionLabel>Send lifecycle email</SectionLabel>
@@ -331,8 +360,8 @@ export default function AdminPage() {
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
   const [resettingPinFor, setResettingPinFor] = useState<string | null>(null)
   const [grantingPosFor, setGrantingPosFor] = useState<string | null>(null)
-  const [userFilter, setUserFilter] = useState<'all' | 'suspicious' | 'paying' | 'pos' | 'online'>('all')
-  const [userSortKey, setUserSortKey] = useState<'created_at' | 'questions_used' | 'pos_revenue' | 'full_name'>('created_at')
+  const [userFilter, setUserFilter] = useState<'all' | 'suspicious' | 'paying' | 'pos' | 'online' | 'stuck'>('all')
+  const [userSortKey, setUserSortKey] = useState<'created_at' | 'questions_used' | 'pos_revenue' | 'full_name' | 'funnel_furthest_step_rank'>('created_at')
   const [userSortDir, setUserSortDir] = useState<'asc' | 'desc'>('desc')
   const [userPage, setUserPage] = useState(0)
   const [drawerUserId, setDrawerUserId] = useState<string | null>(null)
@@ -499,11 +528,13 @@ export default function AdminPage() {
   const payingUserCount = users.filter(u => u.plan_id && u.plan_id !== 'free').length
   const posEnabledUserCount = users.filter(u => u.pos_enabled).length
   const onlineUserCount = users.filter(u => u.is_online).length
+  const stuckUserCount = users.filter(u => u.funnel_stuck).length
   const filteredUsers = fu.filter(u => {
     if (userFilter === 'suspicious') return !!u.is_suspicious
     if (userFilter === 'paying') return !!u.plan_id && u.plan_id !== 'free'
     if (userFilter === 'pos') return !!u.pos_enabled
     if (userFilter === 'online') return !!u.is_online
+    if (userFilter === 'stuck') return !!u.funnel_stuck
     return true
   })
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -511,6 +542,7 @@ export default function AdminPage() {
     if (userSortKey === 'questions_used') { av = a.questions_used || 0; bv = b.questions_used || 0 }
     else if (userSortKey === 'pos_revenue') { av = a.pos_revenue || 0; bv = b.pos_revenue || 0 }
     else if (userSortKey === 'full_name') { av = (a.full_name || a.email || '').toLowerCase(); bv = (b.full_name || b.email || '').toLowerCase() }
+    else if (userSortKey === 'funnel_furthest_step_rank') { av = a.funnel_furthest_step_rank ?? -1; bv = b.funnel_furthest_step_rank ?? -1 }
     else { av = a.created_at || ''; bv = b.created_at || '' }
     if (av < bv) return userSortDir === 'asc' ? -1 : 1
     if (av > bv) return userSortDir === 'asc' ? 1 : -1
@@ -961,6 +993,7 @@ export default function AdminPage() {
                   {key:'paying' as const,label:'Paying',n:payingUserCount,color:'#047857'},
                   {key:'pos' as const,label:'POS enabled',n:posEnabledUserCount,color:'#0891b2'},
                   {key:'online' as const,label:'Online now',n:onlineUserCount,color:'#22c55e'},
+                  {key:'stuck' as const,label:'Stuck',n:stuckUserCount,color:'#d97706'},
                 ].map(f => (
                   <button key={f.key} className="no-tap-target" onClick={()=>{setUserFilter(f.key); setUserPage(0)}}
                     style={{padding:'6px 12px',borderRadius:9999,border:'1px solid '+(userFilter===f.key?f.color:'var(--b)'),background:userFilter===f.key?f.color+'14':'transparent',color:userFilter===f.key?f.color:'var(--tx2)',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
@@ -982,6 +1015,7 @@ export default function AdminPage() {
                       <SortHeader label={tc('admin.th_questions')} sortKey="questions_used" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} align="right" />
                       <SortHeader label="POS" sortKey="pos_revenue" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} align="right" />
                       <SortHeader label={tc('admin.th_joined')} sortKey="created_at" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} />
+                      <SortHeader label="Funnel" sortKey="funnel_furthest_step_rank" active={userSortKey} dir={userSortDir} onClick={toggleUserSort} align="right" />
                       <th style={{width:30}} />
                     </tr>
                   </thead>
@@ -1024,6 +1058,13 @@ export default function AdminPage() {
                             ) : <span style={{color:'var(--tx3)'}}>—</span>}
                           </td>
                           <td style={{padding:'10px 14px',color:'var(--tx3)',fontSize:13,whiteSpace:'nowrap'}} title={u.created_at ? formatDate(lang, u.created_at, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : undefined}>{relativeDate(u.created_at, lang)}</td>
+                          <td style={{padding:'10px 14px',textAlign:'right',fontSize:13,whiteSpace:'nowrap'}}>
+                            {u.funnel_furthest_step ? (
+                              <span title={`${FUNNEL_STEP_LABELS[u.funnel_furthest_step] || u.funnel_furthest_step} · ${relativeDate(u.funnel_furthest_step_at, lang)}`} style={{color:u.funnel_stuck?'#d97706':'var(--tx2)',fontWeight:u.funnel_stuck?700:400}}>
+                                {u.funnel_stuck ? '⚠ ' : ''}{u.funnel_furthest_step_rank}/14
+                              </span>
+                            ) : <span style={{color:'var(--tx3)'}}>—</span>}
+                          </td>
                           <td style={{padding:'10px 10px'}}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
                           </td>
@@ -1031,7 +1072,7 @@ export default function AdminPage() {
                       )
                     })}
                     {pagedUsers.length === 0 && (
-                      <tr><td colSpan={7}><EmptyNote text="No users match this search or filter." /></td></tr>
+                      <tr><td colSpan={8}><EmptyNote text="No users match this search or filter." /></td></tr>
                     )}
                   </tbody>
                 </table>
@@ -1333,33 +1374,12 @@ export default function AdminPage() {
                 <div style={{fontSize:15,fontWeight:600,marginBottom:4}}>POS trial funnel</div>
                 <div style={{fontSize:13,color:'var(--tx3)',marginBottom:16}}>Distinct users per step, last {posFunnel.windowDays} days — onboarding done through trial claim</div>
                 {(() => {
-                  const LABELS: Record<string,string> = {
-                    onboarding_done_pos_shown: 'Onboarding done (POS persona)',
-                    onboarding_trial_clicked: 'Clicked "Start free trial" (done screen)',
-                    onboarding_trial_started: 'Trial started from done screen',
-                    onboarding_trial_failed: 'Trial claim failed on done screen',
-                    onboarding_trial_skipped: 'Skipped trial, continued to setup',
-                    onboarding_finish_clicked: 'Continued to catalogue setup',
-                    setup_fork_shown: 'Reached catalogue setup',
-                    setup_capture_opened: 'Opened camera capture',
-                    setup_import_opened: 'Opened bulk import',
-                    setup_item_added: 'Added ≥1 item',
-                    setup_ready_clicked: '"I’m ready" clicked',
-                    setup_ready_screen_shown: 'Reached "ready" screen',
-                    setup_activate_clicked: 'Clicked through to activate',
-                    activate_screen_shown: 'Reached activate screen (fallback path)',
-                    activate_trial_button_shown: 'Saw "Start free trial" button (fallback)',
-                    activate_trial_clicked: 'Clicked "Start free trial" (fallback)',
-                    activate_trial_started: 'Trial started from activate (fallback)',
-                    activate_trial_failed: 'Trial start failed (fallback)',
-                    activate_payment_clicked: 'Clicked a payment option instead',
-                  }
                   const first = posFunnel.steps?.[0]?.users || 0
                   return (posFunnel.steps || []).map((s: any) => {
                     const pct = first ? Math.round((s.users / first) * 100) : 0
                     return (
                       <div key={s.event} style={{display:'flex',alignItems:'center',gap:12,padding:'6px 0',borderBottom:'1px solid var(--b)'}}>
-                        <div style={{flex:1,fontSize:14}}>{LABELS[s.event] || s.event}</div>
+                        <div style={{flex:1,fontSize:14}}>{FUNNEL_STEP_LABELS[s.event] || s.event}</div>
                         <div style={{width:120,height:8,borderRadius:4,background:'var(--ev)',overflow:'hidden',flexShrink:0}}>
                           <div style={{width:pct+'%',height:'100%',background:'#6366F1'}} />
                         </div>
