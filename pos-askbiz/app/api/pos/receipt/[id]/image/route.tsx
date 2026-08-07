@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { NextRequest } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { formatDateTime } from '@/lib/i18n-format'
+import { resolveLocale } from '@/lib/i18n-locale'
 
 export const runtime = 'edge'
 
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!tx) return new Response('Not found', { status: 404 })
 
   const [{ data: profile }, { data: cashier }] = await Promise.all([
-    service.from('profiles').select('business_name, currency_symbol, vat_number').eq('id', tx.owner_id).maybeSingle(),
+    service.from('profiles').select('business_name, currency_symbol, vat_number, preferred_locale, registration_country').eq('id', tx.owner_id).maybeSingle(),
     tx.cashier_id
       ? service.from('pos_staff').select('name').eq('id', tx.cashier_id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -80,7 +81,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const symbol       = profile?.currency_symbol || '£'
   const businessName = (profile?.business_name || 'The Shop').toUpperCase()
-  const date          = formatDateTime('en', tx.created_at)
+  const locale        = resolveLocale({ profile: profile?.preferred_locale, country: profile?.registration_country })
+  const date          = formatDateTime(locale, tx.created_at)
   const items = (tx.pos_items as { name: string; qty: number; line_total: number; tax_rate: number | null }[]) || []
   const discount = Number(tx.discount_amount) || 0
   // total_tax (added in the tax-automation migration, computed per line item
