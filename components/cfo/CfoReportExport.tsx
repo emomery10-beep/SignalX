@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import { computeForecastSummary } from '@/lib/cfoForecastSummary'
 import { computeTax } from './TaxEstimator'
-import { STORAGE_KEY as BUDGET_STORAGE_KEY, DEFAULT_BUDGET, daysBetween, type Budget } from './BudgetVsActual'
+import { STORAGE_KEY as BUDGET_STORAGE_KEY, DEFAULT_BUDGET, daysBetween, type Budget, fetchServerBudget } from './BudgetVsActual'
 import { computeWorkingCapital, computeBreakEven, computeBalanceSheet } from '@/lib/cfoReportMetrics'
 
 type Tc = (k: string, vars?: Record<string, string | number>) => string
@@ -83,11 +83,13 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
   const t = data.totals
   const c = data.comparison
 
-  // Budget is stored client-side only (see components/cfo/CostConfigDrawer.tsx-
-  // adjacent BudgetVsActual.tsx) — loaded here the same way that component
-  // loads it, so the report's Budget section shows the same numbers.
+  // Budget now persists server-side (see app/api/cfo/budget, and the
+  // fetchServerBudget/saveServerBudget helpers in BudgetVsActual.tsx) so a
+  // target set on one device shows up in a report downloaded from another —
+  // localStorage below is only an instant-paint cache, not the source of truth.
   const [budgetState, setBudgetState] = useState<{ budget: Budget; hasBudget: boolean }>({ budget: DEFAULT_BUDGET, hasBudget: false })
   useEffect(() => {
+    let cancelled = false
     try {
       const saved = localStorage.getItem(BUDGET_STORAGE_KEY)
       if (saved) {
@@ -95,6 +97,10 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
         setBudgetState({ budget: parsed, hasBudget: Object.values(parsed).some((v: any) => Number(v) > 0) })
       }
     } catch {}
+    fetchServerBudget().then(server => {
+      if (!cancelled && server?.hasBudget) setBudgetState(server)
+    })
+    return () => { cancelled = true }
   }, [])
 
   // Expenses and Receivables/Payables detail live in their own tables, not the

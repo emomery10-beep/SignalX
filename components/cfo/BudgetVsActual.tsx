@@ -31,6 +31,35 @@ export interface Budget {
 export const STORAGE_KEY = 'cfo_budget_v3'
 export const DEFAULT_BUDGET: Budget = { revenue: 0, cogs: 0, fixed_costs: 0, net_profit: 0 }
 
+// Server persistence (see app/api/cfo/budget) — now the source of truth.
+// localStorage above is kept as a fast local cache only (instant first paint,
+// works offline) so a budget set on one device shows up on every other one,
+// including the exported CFO report, instead of being stranded in one browser.
+export async function fetchServerBudget(): Promise<{ budget: Budget; hasBudget: boolean } | null> {
+  try {
+    const res = await fetch('/api/cfo/budget')
+    if (!res.ok) return null
+    const d = await res.json()
+    if (!d?.budget) return null
+    return { budget: d.budget, hasBudget: !!d.hasBudget }
+  } catch {
+    return null
+  }
+}
+
+export async function saveServerBudget(budget: Budget): Promise<boolean> {
+  try {
+    const res = await fetch('/api/cfo/budget', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(budget),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 // Mirrors the day-count math app/api/cfo/snapshot/route.ts already uses to scale
 // monthly_fixed_costs to the selected period, so Budget and Actual stay consistent.
 export function daysBetween(a: string, b: string): number {
@@ -67,20 +96,41 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
   const [hasBudget, setHasBudget] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
+    // 1) Instant paint from whatever's cached locally — zero latency, works offline.
+    let localBudget: Budget | null = null
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        const parsed = JSON.parse(saved)
-        setMonthlyBudget(parsed)
-        setHasBudget(Object.values(parsed).some((v: any) => Number(v) > 0))
+        localBudget = JSON.parse(saved)
+        setMonthlyBudget(localBudget!)
+        setHasBudget(Object.values(localBudget!).some((v: any) => Number(v) > 0))
       }
     } catch {}
+
+    // 2) Server is the real source of truth — reconciles across devices.
+    fetchServerBudget().then(server => {
+      if (cancelled || !server) return
+      if (server.hasBudget) {
+        setMonthlyBudget(server.budget)
+        setHasBudget(true)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(server.budget)) } catch {}
+      } else if (localBudget && Object.values(localBudget).some((v: any) => Number(v) > 0)) {
+        // Server has nothing yet but this browser has a legacy localStorage
+        // budget — push it up once so it stops being stranded on one device.
+        saveServerBudget(localBudget)
+      }
+    })
+
+    return () => { cancelled = true }
   }, [])
 
   const saveBudget = (b: Budget) => {
     setMonthlyBudget(b)
     setHasBudget(Object.values(b).some(v => Number(v) > 0))
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(b)) } catch {}
+    saveServerBudget(b) // fire-and-forget — localStorage above already made this instant
   }
 
   // How many "budget months" the active period tab represents — e.g. ~0.03 for Today,
