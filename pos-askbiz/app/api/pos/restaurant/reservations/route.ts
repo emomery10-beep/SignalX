@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { resolveLocale } from '@/lib/i18n-locale'
+import { formatDate } from '@/lib/i18n-format'
 
 export const dynamic = 'force-dynamic'
 
@@ -100,12 +102,13 @@ export async function POST(req: NextRequest) {
   if (customer_phone) {
     service
       .from('profiles')
-      .select('business_name')
+      .select('business_name, preferred_locale, registration_country')
       .eq('id', auth.ownerId)
       .single()
       .then(({ data: profile }) => {
         const businessName = profile?.business_name || 'the restaurant'
-        const reservedTime = new Date(reserved_at).toLocaleString('en-GB', {
+        const locale = resolveLocale({ profile: profile?.preferred_locale, country: profile?.registration_country })
+        const reservedTime = formatDate(locale, reserved_at, {
           weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
         })
         return fetch(new URL('/api/pos/notifications/send', req.url).toString(), {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { resolveLocale } from '@/lib/i18n-locale'
+import { formatDate } from '@/lib/i18n-format'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -94,12 +96,13 @@ export async function POST(req: NextRequest) {
   if (clientPhone) {
     service
       .from('profiles')
-      .select('business_name')
+      .select('business_name, preferred_locale, registration_country')
       .eq('id', auth.ownerId)
       .single()
       .then(({ data: profile }) => {
         const businessName = profile?.business_name || 'the salon'
-        const appointmentTime = new Date(appointment.scheduled_at).toLocaleString('en-GB', {
+        const locale = resolveLocale({ profile: profile?.preferred_locale, country: profile?.registration_country })
+        const appointmentTime = formatDate(locale, appointment.scheduled_at, {
           weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
         })
         return fetch(new URL('/api/pos/notifications/send', req.url).toString(), {

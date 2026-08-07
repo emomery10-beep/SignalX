@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getLocale } from '@/lib/i18n-server'
+import { formatDate } from '@/lib/i18n-format'
 
 export const metadata: Metadata = {
   title: 'Changelog — AskBiz POS',
@@ -95,6 +97,7 @@ function TypeBadge({ type }: { type: ChangeType }) {
 }
 
 export default function ChangelogPage() {
+  const locale = getLocale()
   return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: 'clamp(20px,4vw,48px) clamp(16px,4vw,24px) 80px' }}>
@@ -119,7 +122,7 @@ export default function ChangelogPage() {
                 <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--pos-ink)', letterSpacing: '-.01em' }}>{rel.version}</span>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--pos-hint)', flexShrink: 0 }} />
                 <span style={{ fontSize: 13, color: 'var(--pos-hint)', fontWeight: 500 }}>
-                  {new Date(rel.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {formatDate(locale, rel.date, { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
                 {i === 0 && (
                   <span style={{

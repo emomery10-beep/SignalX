@@ -570,7 +570,12 @@ const pl: T = { ...en,
   'geo.prices_in': 'Ceny w {sym} dla {country}',
 }
 
-export const TRANSLATIONS: Record<Lang, T> = { en, fr, de, es, ar, sw, pt, nl, it, pl }
+// 'so' (Somali) scaffolded English-fallback, matching the root app's identical
+// entry — native translation lands in a follow-up commit (see commit 4a57aa0ee,
+// which added 'so' to Lang/LANG_NAMES/LANG_FLAGS/COUNTRY_TO_LANG but missed this).
+const so: T = { ...en }
+
+export const TRANSLATIONS: Record<Lang, T> = { en, fr, de, es, ar, sw, so, pt, nl, it, pl }
 
 export function t(lang: Lang, key: TranslationKey, vars?: Record<string,string>): string {
   let str = TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['en'][key] ?? key
