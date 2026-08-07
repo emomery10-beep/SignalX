@@ -35,7 +35,7 @@ export async function GET() {
       supabase.from('freight_quotes').select('origin_port, destination_port, shipment_mode, cheapest_rate, quoted_at').eq('user_id', user.id),
       supabase.from('health_scores').select('score, label, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(90),
       supabase.from('anomalies').select('type, product, severity, created_at').eq('user_id', user.id).limit(100),
-      supabase.from('profiles').select('data_consent, training_consent, data_consent_at, training_consent_at').eq('id', user.id).single(),
+      supabase.from('profiles').select('data_consent, training_consent, data_consent_at, training_consent_at, camera_consent, camera_consent_at, logistics_consent, logistics_consent_at, collective_opt_in, collective_opted_at, market_intelligence_opt_in, market_intelligence_opted_at').eq('id', user.id).single(),
     ])
 
     const exportData = {

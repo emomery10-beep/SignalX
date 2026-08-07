@@ -496,6 +496,7 @@ async function checkGdprCompliance(baseUrl: string, supabase: any): Promise<Chec
     { path: '/api/pos/gdpr/delete-customer', name: 'Data deletion endpoint (Right to Erasure)' },
     { path: '/api/pos/gdpr/consent-log', name: 'Consent logging endpoint' },
     { path: '/api/pos/gdpr/data-retention-report', name: 'Data retention report endpoint' },
+    { path: '/api/pos/gdpr/transaction-history', name: 'Transaction history endpoint' },
   ]
 
   for (const ep of gdprEndpoints) {
@@ -606,6 +607,64 @@ async function checkMainAppGdpr(baseUrl: string, supabase: any): Promise<CheckRe
     })
   } catch (e: any) {
     results.push({ category: 'GDPR Compliance', name: 'Consent is demonstrable server-side', status: 'warn', detail: `Could not verify consent records: ${e.message}` })
+  }
+
+  // Camera/logistics consent accountability — added with migration
+  // 20260807000001_camera_logistics_consent. Before that migration, these
+  // toggles existed in Settings → Privacy but had no backing column at all:
+  // GET /api/consent never returned them (frontend fell back to a hardcoded
+  // `true`) and POST silently dropped them, so the toggle was a no-op that
+  // always reset to "granted" on reload — this check will correctly warn
+  // until the migration is applied in this environment.
+  try {
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .not('camera_consent_at', 'is', null)
+    if (error) throw error
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Camera/logistics consent is demonstrable server-side',
+      status: (count ?? 0) > 0 ? 'pass' : 'warn',
+      detail: (count ?? 0) > 0
+        ? `${count} profiles have a recorded camera-consent timestamp`
+        : 'No camera_consent_at recorded yet. If migration 20260807000001_camera_logistics_consent hasn\'t been applied in this environment, the columns don\'t exist — apply it, then this will populate as users interact with the toggle.',
+    })
+  } catch (e: any) {
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Camera/logistics consent is demonstrable server-side',
+      status: 'warn',
+      detail: `Could not verify — likely migration 20260807000001_camera_logistics_consent not yet applied (${e.message})`,
+    })
+  }
+
+  // Collective/market-intelligence opt-in audit trail — these toggles wrote
+  // straight to profiles from the client before the same migration, bypassing
+  // consent_log entirely, so a grant/revoke wasn't demonstrable the way
+  // data_consent/training_consent are. This checks the NEW audited path is
+  // actually being exercised, not just that the profile flags exist.
+  try {
+    const { count, error } = await supabase
+      .from('consent_log')
+      .select('*', { count: 'exact', head: true })
+      .in('consent_type', ['collective_opt_in', 'market_intelligence_opt_in'])
+    if (error) throw error
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Market-intelligence consent is audit-logged',
+      status: (count ?? 0) > 0 ? 'pass' : 'warn',
+      detail: (count ?? 0) > 0
+        ? `${count} collective/market-intelligence consent_log entries recorded`
+        : 'No consent_log entries for collective_opt_in/market_intelligence_opt_in yet. Expected until a user toggles one of these after the fix ships — existing opt-ins from before the fix were written directly and have no log entry.',
+    })
+  } catch (e: any) {
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Market-intelligence consent is audit-logged',
+      status: 'warn',
+      detail: `Could not verify: ${e.message}`,
+    })
   }
 
   return results

@@ -1749,16 +1749,20 @@ function CompliancePanel() {
   const [saved, setSaved]           = useState(false)
   const [collectiveOpt, setCollectiveOpt]       = useState(false)
   const [marketIntelOpt, setMarketIntelOpt]     = useState(false)
+  const [collectiveOptAt, setCollectiveOptAt]   = useState<string | null>(null)
+  const [marketIntelOptAt, setMarketIntelOptAt] = useState<string | null>(null)
   const [loadingOpt, setLoadingOpt] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('profiles').select('ico_number,vat_number,collective_opt_in,market_intelligence_opt_in').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('ico_number,vat_number,collective_opt_in,market_intelligence_opt_in,collective_opted_at,market_intelligence_opted_at').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setIcoNumber(data.ico_number || '')
         setVatNumber(data.vat_number || '')
         setCollectiveOpt(data.collective_opt_in || false)
         setMarketIntelOpt(data.market_intelligence_opt_in || false)
+        setCollectiveOptAt((data as any).collective_opted_at ?? null)
+        setMarketIntelOptAt((data as any).market_intelligence_opted_at ?? null)
       }
       setLoadingOpt(false)
     })
@@ -1773,18 +1777,26 @@ function CompliancePanel() {
     setTimeout(() => setSaved(false), 2500)
   }
 
+  // Both toggles now go through /api/consent (same RPC/audit-log path as the
+  // Privacy panel) instead of writing to profiles directly — that direct
+  // write bypassed consent_log entirely, so grants/revokes here weren't
+  // demonstrable server-side the way data_consent/training_consent are.
+  // update_consent() stamps the _at timestamp on any actual change (grant
+  // or revoke), so the optimistic local update below matches server truth —
+  // POST only returns { success: true }, not the row, so there's nothing to
+  // reconcile against.
   const toggleCollective = async () => {
     const next = !collectiveOpt
     setCollectiveOpt(next)
-    const supabase = createClient()
-    await supabase.from('profiles').update({ collective_opt_in: next, collective_opted_at: next ? new Date().toISOString() : null }).eq('id', user.id)
+    setCollectiveOptAt(new Date().toISOString())
+    await fetch('/api/consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collective_opt_in: next }) })
   }
 
   const toggleMarketIntel = async () => {
     const next = !marketIntelOpt
     setMarketIntelOpt(next)
-    const supabase = createClient()
-    await supabase.from('profiles').update({ market_intelligence_opt_in: next, market_intelligence_opted_at: next ? new Date().toISOString() : null }).eq('id', user.id)
+    setMarketIntelOptAt(new Date().toISOString())
+    await fetch('/api/consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ market_intelligence_opt_in: next }) })
   }
 
   const STATUS_BADGE = (label: string, ok: boolean) => (
@@ -1906,6 +1918,7 @@ function CompliancePanel() {
                   {tc('settings.comp_anon_benchmark_desc')}
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.comp_anon_benchmark_note')}</div>
+                {collectiveOptAt && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(collectiveOptAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
               </div>
               <Toggle value={collectiveOpt} onChange={toggleCollective} color="#8c6fe0"/>
             </div>
@@ -1925,6 +1938,7 @@ function CompliancePanel() {
                   {tc('settings.comp_global_price_desc')}
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.comp_global_price_note')}</div>
+                {marketIntelOptAt && <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(marketIntelOptAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
               </div>
               <Toggle value={marketIntelOpt} onChange={toggleMarketIntel} color="#d08a59"/>
             </div>
