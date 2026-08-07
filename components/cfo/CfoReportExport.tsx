@@ -4,6 +4,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { computeForecastSummary } from '@/lib/cfoForecastSummary'
 import { computeTax } from './TaxEstimator'
 import { STORAGE_KEY as BUDGET_STORAGE_KEY, DEFAULT_BUDGET, daysBetween, type Budget } from './BudgetVsActual'
+import { computeWorkingCapital, computeBreakEven, computeBalanceSheet } from '@/lib/cfoReportMetrics'
 
 type Tc = (k: string, vars?: Record<string, string | number>) => string
 
@@ -131,6 +132,31 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
     return () => { cancelled = true }
   }, [period])
 
+  // Real AI-written Executive Summary paragraph (see app/api/cfo/report-narrative)
+  // — a progressive enhancement, NOT a blocking dependency: the Download button
+  // is never gated on this, and the canned summary_profit/summary_loss sentence
+  // (below, in the Executive Summary section) is shown until/unless it resolves.
+  const [narrative, setNarrative] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 9000)
+    fetch('/api/cfo/report-narrative', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        totals: data.totals, comparison: data.comparison, cash: data.cash,
+        inventory: data.inventory, alerts: data.alerts, period, countryCode: data.country_code,
+      }),
+      signal: controller.signal,
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!cancelled && d?.narrative) setNarrative(d.narrative) })
+      .catch(() => {})
+      .finally(() => clearTimeout(timeout))
+    return () => { cancelled = true; controller.abort(); clearTimeout(timeout) }
+  }, [period])
+
   const criticalAlerts = data.alerts.filter(a => a.severity === 'critical')
   const warningAlerts = data.alerts.filter(a => a.severity === 'warning')
 
@@ -153,6 +179,25 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
 
   // ── Tax — reuses the exact math behind the Tax Estimator tab ──
   const tax = computeTax(t.revenue, t.net_profit, tc, data.country_code)
+
+  // ── Balance Sheet — current-position snapshot, see lib/cfoReportMetrics.ts ──
+  const balanceSheet = computeBalanceSheet(
+    data.cash.balance,
+    data.receivables_summary?.total_receivables || 0,
+    data.inventory.value_at_cost,
+    data.receivables_summary?.total_payables || 0,
+    tax.totalSetAside,
+  )
+
+  // ── Working Capital & Break-Even — same formulas as their live CFO tabs ──
+  const workingCapital = computeWorkingCapital(
+    t.revenue, t.cogs, data.inventory.value_at_cost,
+    data.receivables_summary?.total_receivables || 0, data.receivables_summary?.total_payables || 0,
+  )
+  const breakEven = computeBreakEven(t.revenue, t.fixed_costs, t.gross_margin_pct)
+
+  // ── 6-Month Trend — reuses the same pnl_monthly history the Forecast section is built from ──
+  const trendMonths = (data.pnl_monthly || []).slice(-6)
 
   // ── Expenses — scoped to the selected period, like the KPI cards above ──
   const expensesInPeriod = expenses
@@ -193,6 +238,8 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
       if (!el) return
 
       const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
       const canvas = await html2canvas(el, {
         scale: 2,
         backgroundColor: '#ffffff',
@@ -201,11 +248,47 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
         windowWidth: 800,
       })
 
-      const imgData = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.download = `cfo-report-${PERIOD_LABELS[period]?.replace(/\s/g, '-').toLowerCase() || period}-${new Date().toISOString().split('T')[0]}.png`
-      link.href = imgData
-      link.click()
+      // Slice the capture into real A4 pages instead of shipping one giant
+      // flattened image pretending to be a document. Page numbers are drawn
+      // with jsPDF's own vector text per page (accurate), not baked into the
+      // captured DOM — the old version hardcoded "Page 1 of 1" regardless of
+      // actual length; this computes the real count from the slice loop below.
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageWidthMm = pdf.internal.pageSize.getWidth()
+      const pageHeightMm = pdf.internal.pageSize.getHeight()
+      const marginMm = 10
+      const contentWidthMm = pageWidthMm - marginMm * 2
+      const contentHeightMm = pageHeightMm - marginMm * 2
+
+      const pxPerMm = canvas.width / contentWidthMm
+      const pageHeightPx = Math.max(1, Math.round(contentHeightMm * pxPerMm))
+      const totalPages = Math.max(1, Math.ceil(canvas.height / pageHeightPx))
+
+      for (let page = 0; page < totalPages; page++) {
+        const startPx = page * pageHeightPx
+        const sliceHeightPx = Math.min(pageHeightPx, canvas.height - startPx)
+        if (sliceHeightPx <= 0) break
+
+        const sliceCanvas = document.createElement('canvas')
+        sliceCanvas.width = canvas.width
+        sliceCanvas.height = sliceHeightPx
+        const ctx = sliceCanvas.getContext('2d')
+        if (!ctx) break
+        ctx.drawImage(canvas, 0, startPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx)
+
+        if (page > 0) pdf.addPage()
+        const sliceHeightMm = sliceHeightPx / pxPerMm
+        pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', marginMm, marginMm, contentWidthMm, sliceHeightMm)
+
+        pdf.setFontSize(8)
+        pdf.setTextColor(150)
+        // Latin-script only — jsPDF's built-in font has no Arabic/CJK glyphs,
+        // so RTL/non-Latin locales won't render correctly here. Known
+        // limitation; embedding a custom font is a separate follow-up.
+        pdf.text(tc('cfo_report.footer_page', { current: page + 1, total: totalPages }), pageWidthMm - marginMm, pageHeightMm - 4, { align: 'right' })
+      }
+
+      pdf.save(`cfo-report-${PERIOD_LABELS[period]?.replace(/\s/g, '-').toLowerCase() || period}-${new Date().toISOString().split('T')[0]}.pdf`)
     } catch {
       window.print()
     } finally {
@@ -238,10 +321,13 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
           <MetricBox label={tc('cfo_report.metric_net_profit')} value={fmt(t.net_profit, sym)} change={tc('cfo_report.margin_suffix', { pct: t.net_margin_pct })} positive={t.net_profit >= 0} />
         </div>
         <div style={{ fontSize: 12, color: '#555', lineHeight: 1.7 }}>
-          {t.net_profit >= 0
+          {/* Real AI-written narrative when it's resolved in time; the canned
+              sentence (still accurate, just less specific) covers loading and
+              any failure — Download is never blocked waiting on this. */}
+          {narrative || (t.net_profit >= 0
             ? tc('cfo_report.summary_profit', { revenue: fmt(t.revenue, sym), net: fmt(t.net_profit, sym), margin: t.net_margin_pct, trend: t.revenue >= c.revenue ? tc('cfo_report.revenue_up') : tc('cfo_report.revenue_declined'), change: pctChange(t.revenue, c.revenue) })
             : tc('cfo_report.summary_loss', { revenue: fmt(t.revenue, sym), loss: fmt(Math.abs(t.net_profit), sym) })
-          }
+          )}
         </div>
       </>
     ),
@@ -267,6 +353,73 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
           <PnlLine label={tc('cfo_report.pnl_net_profit')} amount={t.net_profit} pctRev={t.net_margin_pct} change={pctChange(t.net_profit, c.net_profit)} sym={sym} bold border highlight={t.net_profit >= 0} />
         </tbody>
       </table>
+    ),
+  })
+
+  // ── 6-Month Trend — historical trajectory, distinct from the forward-looking
+  // Forecast section below. Needs 2+ months to be a "trend" at all. ──
+  if (trendMonths.length > 1) {
+    const maxTrendRev = Math.max(...trendMonths.map(m => m.revenue), 1)
+    sections.push({
+      title: tc('cfo_report.section_trend'),
+      node: (
+        <>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 12 }}>
+            {tc('cfo_report.trend_intro', { n: trendMonths.length })}
+          </div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 74, marginBottom: 14 }}>
+            {trendMonths.map(m => (
+              <div key={m.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div style={{ fontSize: 8, color: '#888' }}>{fmt(m.revenue, sym)}</div>
+                <div style={{ width: '70%', height: Math.max((m.revenue / maxTrendRev) * 50, 2), borderRadius: 3, background: m.net >= 0 ? '#22C55E' : '#EF4444', opacity: 0.75 }} />
+                <div style={{ fontSize: 8, color: '#888' }}>{m.month}</div>
+              </div>
+            ))}
+          </div>
+          <DataTable
+            columns={[tc('cfo_report.trend_col_month'), tc('cfo_report.trend_col_revenue'), tc('cfo_report.trend_col_cogs'), tc('cfo_report.trend_col_net'), tc('cfo_report.trend_col_margin')]}
+            rows={trendMonths.map(m => [m.month, fmt(m.revenue, sym), fmt(m.cogs, sym), fmtSigned(m.net, sym), `${m.net_margin_pct.toFixed(1)}%`])}
+          />
+        </>
+      ),
+    })
+  }
+
+  // ── Balance Sheet — always shown; every input (cash, inventory, AR/AP, accrued
+  // tax) is already computed elsewhere in this file for other sections. ──
+  sections.push({
+    title: tc('cfo_report.section_balance_sheet'),
+    node: (
+      <>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.bs_assets_title')}</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <tbody>
+                <tr><td style={{ padding: '5px 0', color: '#333' }}>{tc('cfo_report.bs_cash')}</td><td style={{ padding: '5px 0', textAlign: 'right' }}>{fmt(balanceSheet.cash, sym)}</td></tr>
+                <tr><td style={{ padding: '5px 0', color: '#333' }}>{tc('cfo_report.bs_receivables')}</td><td style={{ padding: '5px 0', textAlign: 'right' }}>{fmt(balanceSheet.receivables, sym)}</td></tr>
+                <tr><td style={{ padding: '5px 0', color: '#333' }}>{tc('cfo_report.bs_inventory')}</td><td style={{ padding: '5px 0', textAlign: 'right' }}>{fmt(balanceSheet.inventory, sym)}</td></tr>
+                <tr style={{ borderTop: '2px solid #e5e5e5' }}><td style={{ padding: '6px 0', fontWeight: 700 }}>{tc('cfo_report.bs_total_assets')}</td><td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 700 }}>{fmt(balanceSheet.totalAssets, sym)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.bs_liabilities_title')}</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <tbody>
+                <tr><td style={{ padding: '5px 0', color: '#333' }}>{tc('cfo_report.bs_payables')}</td><td style={{ padding: '5px 0', textAlign: 'right' }}>{fmt(balanceSheet.payables, sym)}</td></tr>
+                <tr><td style={{ padding: '5px 0', color: '#333' }}>{tc('cfo_report.bs_tax_payable')}</td><td style={{ padding: '5px 0', textAlign: 'right' }}>{fmt(balanceSheet.taxPayable, sym)}</td></tr>
+                <tr style={{ borderTop: '2px solid #e5e5e5' }}><td style={{ padding: '6px 0', fontWeight: 700 }}>{tc('cfo_report.bs_total_liabilities')}</td><td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 700 }}>{fmt(balanceSheet.totalLiabilities, sym)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: balanceSheet.netPosition >= 0 ? '#f0fdf4' : '#fef2f2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#333' }}>{tc('cfo_report.bs_net_position')}</span>
+          <span style={{ fontSize: 15, fontWeight: 800, color: balanceSheet.netPosition >= 0 ? '#16a34a' : '#dc2626' }}>{fmtSigned(balanceSheet.netPosition, sym)}</span>
+        </div>
+        <div style={{ fontSize: 10, color: '#aaa', marginTop: 8, fontStyle: 'italic' }}>{tc('cfo_report.bs_caveat')}</div>
+      </>
     ),
   })
 
@@ -339,6 +492,47 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
     })
   }
 
+  // ── Working Capital & Break-Even — always shown; both are computable from
+  // totals alone (0 DIO/DSO/DPO is a real, good answer for a cash-only business,
+  // not a "no data" state, so this is never conditionally hidden). ──
+  sections.push({
+    title: tc('cfo_report.section_workingcap'),
+    node: (
+      <>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.wc_subtitle')}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 10 }}>
+          <SmallMetric label={tc('cfo_report.wc_dio')} value={tc('cfo_report.wc_ccc_days', { n: workingCapital.dio })} />
+          <SmallMetric label={tc('cfo_report.wc_dso')} value={tc('cfo_report.wc_ccc_days', { n: workingCapital.dso })} />
+          <SmallMetric label={tc('cfo_report.wc_dpo')} value={tc('cfo_report.wc_ccc_days', { n: workingCapital.dpo })} />
+        </div>
+        <div style={{ padding: '10px 14px', borderRadius: 8, background: workingCapital.ccc <= 0 ? '#f0fdf4' : workingCapital.ccc <= 30 ? '#fffbeb' : '#fef2f2', marginBottom: 18 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#333' }}>
+            {tc('cfo_report.wc_formula', { dio: workingCapital.dio, dso: workingCapital.dso, dpo: workingCapital.dpo, ccc: workingCapital.ccc })}
+          </span>
+          <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+            {workingCapital.ccc > 0 ? `${tc('cfo_report.wc_cash_tied_up')}: ${fmt(workingCapital.cashTiedUp, sym)}` : tc('cfo_report.wc_none_tied_up')}
+          </div>
+        </div>
+
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>{tc('cfo_report.be_subtitle')}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+          <SmallMetric label={tc('cfo_report.be_revenue_needed')} value={fmt(breakEven.breakEvenRevenue, sym)} />
+          <SmallMetric label={tc('cfo_report.be_progress')} value={`${Math.round(breakEven.progressPct)}%`} />
+          <SmallMetric label={tc('cfo_report.be_safety_margin')} value={`${breakEven.safetyMarginPct >= 0 ? '+' : ''}${breakEven.safetyMarginPct.toFixed(1)}%`} alert={breakEven.safetyMarginPct < 0} />
+          <SmallMetric
+            label={tc('cfo_report.be_days_to_be')}
+            value={breakEven.isProfitable ? tc('cfo_report.be_above') : (breakEven.daysToBreakEven != null ? tc('cfo_report.wc_ccc_days', { n: breakEven.daysToBreakEven }) : '—')}
+          />
+        </div>
+        {!breakEven.isProfitable && breakEven.breakEvenRevenue > 0 && (
+          <div style={{ fontSize: 11, color: '#dc2626', marginTop: 10 }}>
+            {tc('cfo_report.be_below', { amount: fmt(breakEven.breakEvenRevenue - t.revenue, sym) })}
+          </div>
+        )}
+      </>
+    ),
+  })
+
   // ── Expenses — itemized, capped so the report stays a sane length ──
   if (!expensesLoading && expensesInPeriod.length > 0) {
     sections.push({
@@ -401,7 +595,15 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
     })
   }
 
-  if (data.receivables_summary || data.receivables_aging || (!receivablesLoading && receivables.length > 0)) {
+  // `receivables_summary` comes back as a truthy object even when every value
+  // is 0 (cash-only businesses), so gate on real activity, not object presence,
+  // or this section renders an empty shell for the majority of accounts.
+  const hasReceivablesActivity =
+    !!(data.receivables_summary && (data.receivables_summary.total_receivables > 0 || data.receivables_summary.total_payables > 0)) ||
+    !!(data.receivables_aging && (data.receivables_aging.current > 0 || data.receivables_aging.overdue_30 > 0 || data.receivables_aging.overdue_60 > 0 || data.receivables_aging.overdue_90 > 0)) ||
+    (!receivablesLoading && receivables.length > 0)
+
+  if (hasReceivablesActivity) {
     sections.push({
       title: tc('cfo_report.section_receivables'),
       node: (
@@ -583,13 +785,13 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
           <ReportSection key={i} number={i + 1} title={s.title}>{s.node}</ReportSection>
         ))}
 
-        {/* Footer */}
-        <div style={{ borderTop: '2px solid #e5e5e5', paddingTop: 14, marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Footer — page numbers are NOT rendered here: they'd be wrong (this
+            is one continuous div, not page-broken). The real per-page count
+            is stamped directly into the exported PDF by exportPdf() above,
+            after the capture is sliced into actual pages. */}
+        <div style={{ borderTop: '2px solid #e5e5e5', paddingTop: 14, marginTop: 24 }}>
           <div style={{ fontSize: 10, color: '#aaa' }}>
             {tc('cfo_report.footer_generated', { date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) })}
-          </div>
-          <div style={{ fontSize: 10, color: '#aaa' }}>
-            {tc('cfo_report.footer_page', { current: 1, total: 1 })}
           </div>
         </div>
       </div>

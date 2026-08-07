@@ -13,7 +13,6 @@ import CostBreakdown from './CostBreakdown'
 import InventoryFinance from './InventoryFinance'
 import TaxEstimator from './TaxEstimator'
 import KpiScorecard from './KpiScorecard'
-import BoardPack from './BoardPack'
 import ReceivablesTracker from './ReceivablesTracker'
 import CreditReadiness from './CreditReadiness'
 import WorkingCapitalCycle from './WorkingCapitalCycle'
@@ -771,7 +770,6 @@ export default function CfoDashboard({ onAsk }: Props) {
                 currencySymbol={sym}
                 onAsk={onAsk}
               />
-              <BoardPack data={data} currencySymbol={sym} onAsk={onAsk} />
               <WeeklyCfoDigest data={data} currencySymbol={sym} onAsk={onAsk} />
               <CreditReadiness
                 revenue={data.totals.revenue}
