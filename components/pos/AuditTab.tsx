@@ -360,6 +360,55 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               {tc('pos_audit.highSeverityChip', { count: highCount })}
             </span>
           )}
+          {/* Export CSV — respects the current sector/group/date filters */}
+          <a
+            href={(() => {
+              const params = new URLSearchParams({ sector: selectedSector, event_group: eventGroup, format: 'csv' })
+              if (date) params.set('date', date)
+              return `/api/pos/audit-unified?${params.toString()}`
+            })()}
+            title={tc('pos_audit.exportCsvTitle')}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: '1px solid var(--b)',
+              background: 'var(--sf)',
+              color: 'var(--tx2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </a>
+
+          {/* Share access — invite an accountant/auditor/business partner from Settings > Team */}
+          <a
+            href="/settings?section=team"
+            title={tc('pos_audit.shareAccessTitle')}
+            style={{
+              padding: '0 12px',
+              height: 32,
+              borderRadius: 8,
+              border: '1px solid var(--b)',
+              background: 'var(--sf)',
+              color: 'var(--tx2)',
+              fontSize: 10,
+              fontWeight: 600,
+              fontFamily: 'var(--font-sora)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            {tc('pos_audit.shareAccessBtn')}
+          </a>
+
           {/* Re-fetch button */}
           <button
             onClick={() => fetchEvents(true)}

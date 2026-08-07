@@ -13,11 +13,13 @@ interface InviteData {
 }
 
 const buildRoleLabels = (tc: (key: string) => string): Record<string, { label: string; desc: string }> => ({
-  admin:      { label: tc('invite.role_admin_label'),      desc: tc('invite.role_admin_desc') },
-  analyst:    { label: tc('invite.role_analyst_label'),    desc: tc('invite.role_analyst_desc') },
-  accountant: { label: tc('invite.role_accountant_label'), desc: tc('invite.role_accountant_desc') },
-  buyer:      { label: tc('invite.role_buyer_label'),      desc: tc('invite.role_buyer_desc') },
-  viewer:     { label: tc('invite.role_viewer_label'),     desc: tc('invite.role_viewer_desc') },
+  admin:            { label: tc('invite.role_admin_label'),            desc: tc('invite.role_admin_desc') },
+  analyst:          { label: tc('invite.role_analyst_label'),          desc: tc('invite.role_analyst_desc') },
+  accountant:       { label: tc('invite.role_accountant_label'),       desc: tc('invite.role_accountant_desc') },
+  auditor:          { label: tc('invite.role_auditor_label'),          desc: tc('invite.role_auditor_desc') },
+  business_partner: { label: tc('invite.role_business_partner_label'), desc: tc('invite.role_business_partner_desc') },
+  buyer:            { label: tc('invite.role_buyer_label'),            desc: tc('invite.role_buyer_desc') },
+  viewer:           { label: tc('invite.role_viewer_label'),           desc: tc('invite.role_viewer_desc') },
 })
 
 export default function InvitePage({ params }: { params: { token: string } }) {
@@ -75,12 +77,22 @@ export default function InvitePage({ params }: { params: { token: string } }) {
     load()
   }, [params.token])
 
+  // Delegated accountant/auditor/business-partner roles have no reason to land
+  // on the Business/Intelligence dashboard — they'd hit an empty page with no
+  // data they're allowed to see. Send them straight to what they were invited for.
+  const POST_ACCEPT_PATH: Record<string, string> = {
+    accountant:       '/pos?tab=audit',
+    auditor:          '/pos?tab=audit',
+    business_partner: '/pos',
+  }
+
   const acceptInvite = async (token: any) => {
     const res = await fetch(`/api/team/invite/${token}`, { method: 'POST' })
     const data = await res.json()
     if (data.success) {
       setStep('done')
-      setTimeout(() => router.push('/intelligence'), 2000)
+      const dest = POST_ACCEPT_PATH[data.role as string] || '/intelligence'
+      setTimeout(() => router.push(dest), 2000)
     } else {
       setError(data.error || tc('invite.error_accept_failed'))
       setStep('review')

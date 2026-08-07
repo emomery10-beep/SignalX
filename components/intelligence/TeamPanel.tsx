@@ -16,31 +16,37 @@ interface TeamMember {
 /* ─── Role system ─── */
 
 const ROLE_META: Record<string, { color: string; bg: string; label: string; short: string }> = {
-  owner:      { color: '#d08a59', bg: 'rgba(208,138,89,.1)',  label: 'Owner',      short: 'Full control' },
-  admin:      { color: '#7c3aed', bg: 'rgba(124,58,237,.08)', label: 'Admin',      short: 'Full + can invite' },
-  analyst:    { color: '#0284c7', bg: 'rgba(2,132,199,.08)',  label: 'Analyst',    short: 'Read & write, view billing' },
-  accountant: { color: '#059669', bg: 'rgba(5,150,105,.08)',  label: 'Accountant', short: 'Financial data & CFO reports' },
-  buyer:      { color: '#b45309', bg: 'rgba(180,83,9,.08)',   label: 'Buyer',      short: 'Inventory & POS only' },
-  viewer:     { color: '#5a5652', bg: 'rgba(90,86,82,.07)',   label: 'Viewer',     short: 'Read-only access' },
+  owner:            { color: '#d08a59', bg: 'rgba(208,138,89,.1)',  label: 'Owner',            short: 'Full control' },
+  admin:            { color: '#7c3aed', bg: 'rgba(124,58,237,.08)', label: 'Admin',            short: 'Full + can invite' },
+  analyst:          { color: '#0284c7', bg: 'rgba(2,132,199,.08)',  label: 'Analyst',          short: 'Read & write, view billing' },
+  accountant:       { color: '#059669', bg: 'rgba(5,150,105,.08)',  label: 'Accountant',       short: 'Financial data, CFO reports & Audit Log' },
+  auditor:          { color: '#0d9488', bg: 'rgba(13,148,136,.08)', label: 'Auditor',          short: 'Audit Log only, read-only' },
+  business_partner: { color: '#be123c', bg: 'rgba(190,18,60,.08)',  label: 'Business Partner', short: 'Full POS access' },
+  buyer:            { color: '#b45309', bg: 'rgba(180,83,9,.08)',   label: 'Buyer',            short: 'Inventory & POS only' },
+  viewer:           { color: '#5a5652', bg: 'rgba(90,86,82,.07)',   label: 'Viewer',           short: 'Read-only access' },
 }
 
 const ROLE_PERMS: Record<string, Record<string, 'full' | 'edit' | 'view' | 'none'>> = {
-  owner:      { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'full', 'Data sources': 'full', POS: 'full', Team: 'full', Settings: 'full', Billing: 'full' },
-  admin:      { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'full', 'Data sources': 'full', POS: 'full', Team: 'edit', Settings: 'edit', Billing: 'view' },
-  analyst:    { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'view', 'Data sources': 'view', POS: 'view', Team: 'none', Settings: 'view', Billing: 'view' },
-  accountant: { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'none', 'CFO reports': 'full', 'Data sources': 'none', POS: 'none', Team: 'none', Settings: 'none', Billing: 'none' },
-  buyer:      { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'view', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
-  viewer:     { Dashboards: 'view', 'AI chat': 'view', 'Business tools': 'view', 'CFO reports': 'view', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
+  owner:            { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'full', 'Data sources': 'full', POS: 'full', Team: 'full', Settings: 'full', Billing: 'full' },
+  admin:            { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'full', 'Data sources': 'full', POS: 'full', Team: 'edit', Settings: 'edit', Billing: 'view' },
+  analyst:          { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'view', 'Data sources': 'view', POS: 'view', Team: 'none', Settings: 'view', Billing: 'view' },
+  accountant:       { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'none', 'CFO reports': 'full', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
+  auditor:          { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'none', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
+  business_partner: { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
+  buyer:            { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'view', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
+  viewer:           { Dashboards: 'view', 'AI chat': 'view', 'Business tools': 'view', 'CFO reports': 'view', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
 }
 
 const AREAS = ['Dashboards', 'AI chat', 'Business tools', 'CFO reports', 'Data sources', 'POS', 'Team', 'Settings', 'Billing']
-const ROLES_ORDER = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer']
+const ROLES_ORDER = ['owner', 'admin', 'analyst', 'accountant', 'auditor', 'business_partner', 'buyer', 'viewer']
 
 const ROLE_ICONS: Record<string, string> = {
   owner: 'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z',
   admin: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
   analyst: 'M3 3v18h18M9 17V9M13 17v-5M17 17V5',
   accountant: 'M9 7H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M9 7h6M12 12v4M10 14h4',
+  auditor: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35',
+  business_partner: 'M20 7h-3V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM9 5h6v2H9z',
   buyer: 'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM1 3h22M1 21h22',
   viewer: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 0 1 0 6 3 3 0 0 1 0-6z',
 }

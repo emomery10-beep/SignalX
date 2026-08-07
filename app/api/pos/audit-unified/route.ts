@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosAuth } from '@/lib/pos-auth'
+import { resolvePosAuditAccess } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 
 export async function OPTIONS() {
@@ -33,6 +33,8 @@ const EVENT_SECTOR: Record<string, string> = {
   'staff.pin_changed':   'all',
   'shift.opened':        'all',
   'shift.closed':        'all',
+  'access.granted':      'all',
+  'access.revoked':      'all',
 }
 
 export type UnifiedAuditEvent = {
@@ -58,6 +60,8 @@ function severityFromEvent(event: string, meta: Record<string, unknown>): 'high'
   if (event === 'transaction.amended')   return 'high'
   if (event === 'capture.rejected')      return 'high'
   if (event === 'staff.deactivated')     return 'high'
+  if (event === 'access.granted')        return 'medium'
+  if (event === 'access.revoked')        return 'info'
   if (event === 'job.status_change') {
     const to = String(meta?.to_status || '')
     if (to === 'completed' || to === 'collected') return 'info'
@@ -92,6 +96,8 @@ function titleFromEvent(event: string, meta: Record<string, unknown>, from: stri
     case 'staff.created':        return `Staff added — ${meta?.staff_name || to || ''}`
     case 'staff.updated':        return `Staff profile updated — ${meta?.staff_name || ''}`
     case 'staff.deactivated':    return `Staff deactivated — ${meta?.staff_name || ''}`
+    case 'access.granted':       return `Access granted — ${meta?.role || ''} (${meta?.grantee_name || meta?.grantee_email || ''})`
+    case 'access.revoked':       return `Access revoked — ${meta?.grantee_name || meta?.grantee_email || ''}`
     case 'staff.pin_changed':    return 'PIN changed'
     case 'shift.opened':         return 'Shift opened'
     case 'shift.closed':         return `Shift closed${meta?.total ? ` — ${meta.total}` : ''}`
@@ -125,6 +131,10 @@ function detailFromEvent(event: string, meta: Record<string, unknown>, from: str
       return from && to ? `${from} → ${to} units` : (meta?.reason ? String(meta.reason) : '')
     case 'inventory.restocked':
       return to ? `+${to} units added` : ''
+    case 'access.granted':
+      return from && to ? `${from} → ${to}` : `Invited as ${to || meta?.role || ''}`
+    case 'access.revoked':
+      return from ? `Was: ${from}` : ''
     case 'shift.closed':
       return [
         meta?.cash_total    ? `Cash: ${meta.cash_total}` : null,
@@ -141,7 +151,7 @@ function detailFromEvent(event: string, meta: Record<string, unknown>, from: str
 // &event_group=transactions|jobs|captures|inventory|staff|deliveries|all
 // &date=YYYY-MM-DD  &page=0  &limit=50
 export async function GET(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
+  const auth = await resolvePosAuditAccess(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
   if (!hasPermission(auth.role, 'reports.view')) {
     return json({ error: 'Requires manager or owner access' }, 403)
@@ -178,7 +188,7 @@ export async function GET(req: NextRequest) {
     if (eventGroup === 'jobs')        q = q.in('event', ['job.created','job.status_change','job.updated','job.part_added','job.part_removed','job.photo_uploaded','job.device_scanned'])
     if (eventGroup === 'captures')    q = q.in('event', ['capture.submitted','capture.approved','capture.rejected'])
     if (eventGroup === 'inventory')   q = q.in('event', ['inventory.adjusted','inventory.restocked'])
-    if (eventGroup === 'staff')       q = q.in('event', ['staff.created','staff.updated','staff.deactivated','staff.pin_changed','shift.opened','shift.closed'])
+    if (eventGroup === 'staff')       q = q.in('event', ['staff.created','staff.updated','staff.deactivated','staff.pin_changed','shift.opened','shift.closed','access.granted','access.revoked'])
 
     // Sector filter for known-sector events
     if (sector !== 'all') {
@@ -308,8 +318,36 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Sort all events newest-first, paginate
+  // Sort all events newest-first
   events.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  // CSV export — same filters as the tab, no pagination (capped at 5000 rows).
+  // Note: this covers the same lookback window the tab already loads (up to
+  // 500 recent pos_audit_log rows plus 300 each of job/parcel history when no
+  // date filter is set) — not an unbounded full-history export.
+  if (searchParams.get('format') === 'csv') {
+    const escape = (v: unknown) => {
+      const s = String(v ?? '')
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const csvRows = events.slice(0, 5000).map(e => [
+      e.created_at, e.event, e.title, e.detail, e.actor || '', e.actor_role || '',
+      e.sector, e.severity, e.from_value || '', e.to_value || '',
+    ].map(escape).join(','))
+    const csv = [
+      ['Date', 'Event', 'Title', 'Detail', 'Actor', 'Actor Role', 'Sector', 'Severity', 'From', 'To'].join(','),
+      ...csvRows,
+    ].join('\n')
+
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="audit-log-${new Date().toISOString().slice(0, 10)}.csv"`,
+      },
+    })
+  }
+
   const total   = events.length
   const paged   = events.slice(page * limit, (page + 1) * limit)
 

@@ -172,6 +172,18 @@ export default function POSPage() {
   const [loading, setLoading] = useState(true)
   const [currencySymbol, setCurrencySymbol] = useState('£')
   const [posEnabled, setPosEnabled] = useState<boolean | null>(null)
+  // Delegated accountant/auditor team members (see lib/pos-auth.ts
+  // resolvePosAuditAccess) only ever get the Audit tab — resolved once from
+  // the same /api/me/role endpoint Settings > Team already uses.
+  const [posScope, setPosScope] = useState<'full' | 'audit_only'>('full')
+  useEffect(() => {
+    fetch('/api/me/role').then(r => r.json()).then(d => {
+      if (d?.role === 'accountant' || d?.role === 'auditor') setPosScope('audit_only')
+    }).catch(() => {})
+  }, [])
+  useEffect(() => {
+    if (posScope === 'audit_only' && tab !== 'audit') handleSetTab('audit')
+  }, [posScope, tab, handleSetTab])
   const [seatCount, setSeatCount] = useState(0)
   const [businessType, setBusinessType] = useState('')
   const [sectorOverride, setSectorOverride] = useState<string | null>(null)
@@ -1109,7 +1121,7 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs + action icons in one flush row */}
         <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, alignItems: 'stretch' }}>
-          {(['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[]).filter(Boolean).map(t => {
+          {(posScope === 'audit_only' ? (['audit'] as Tab[]) : (['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[])).filter(Boolean).map(t => {
             const bt = (businessType || '').toLowerCase()
             const d = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
               : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
@@ -1133,7 +1145,7 @@ export default function POSPage() {
               </button>
             )
           })}
-          {(selectedSector === 'all' || selectedSector === 'logistics') && (
+          {posScope !== 'audit_only' && (selectedSector === 'all' || selectedSector === 'logistics') && (
             <button onClick={() => handleSetTab('logistics')} style={{
               padding: isMobile ? '8px 10px' : '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
@@ -1143,7 +1155,7 @@ export default function POSPage() {
               flexShrink: 0,
             }}>{TAB_ICONS.logistics}{tc('pos_app.tab_logistics')}</button>
           )}
-          {([
+          {posScope !== 'audit_only' && ([
             { id: 'restaurant' as Tab, label: tc('pos_app.sector_restaurant'), color: '#d08a59' },
             { id: 'repair' as Tab,     label: tc('pos_app.sector_repair'),     color: '#6366f1' },
             { id: 'salon' as Tab,      label: tc('pos_app.sector_salon'),      color: '#ec4899' },
@@ -1161,24 +1173,29 @@ export default function POSPage() {
           ))}
           {/* Push action icons to the far right of the tab strip */}
           <div style={{ flex: 1 }} />
-          <div style={{ display: 'flex', gap: 2, alignItems: 'center', paddingBottom: 2 }}>
-            <button onClick={handleExportVAT} title={tc('pos_app.action_vat_export')} style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </button>
-            <button onClick={handleExport} title={tc('pos_app.action_export_csv')} style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <a href="https://pos.askbiz.co" target="_blank" rel="noopener noreferrer" title={tc('pos_app.action_open_till')} style={{ width: 28, height: 28, borderRadius: 7, background: 'transparent', color: 'var(--tx3)', opacity: 0.4, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </a>
-          </div>
+          {posScope !== 'audit_only' && (
+            <div style={{ display: 'flex', gap: 2, alignItems: 'center', paddingBottom: 2 }}>
+              <button onClick={handleExportVAT} title={tc('pos_app.action_vat_export')} style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </button>
+              <button onClick={handleExport} title={tc('pos_app.action_export_csv')} style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
+              <a href="https://pos.askbiz.co" target="_blank" rel="noopener noreferrer" title={tc('pos_app.action_open_till')} style={{ width: 28, height: 28, borderRadius: 7, background: 'transparent', color: 'var(--tx3)', opacity: 0.4, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </a>
+            </div>
+          )}
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <GettingStartedChecklist />
-        </div>
+        {posScope !== 'audit_only' && (
+          <div style={{ marginBottom: 16 }}>
+            <GettingStartedChecklist />
+          </div>
+        )}
 
         {/* ── Branch + Sector filters ── */}
+        {posScope !== 'audit_only' && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <span style={{ fontSize: 14, color: 'var(--tx3)', fontWeight: 500 }}>{tc('pos_app.filter_branch')}</span>
@@ -1210,6 +1227,7 @@ export default function POSPage() {
             </select>
           </div>
         </div>
+        )}
 
         {/* ── Date Range Selector ── */}
         {(tab === 'overview' || tab === 'map') && (

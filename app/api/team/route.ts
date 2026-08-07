@@ -3,10 +3,16 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, teamInviteEmail } from '@/lib/email'
 import { randomBytes } from 'crypto'
 import { getCallerContext, can } from '@/lib/team-auth'
+import { logPosAudit } from '@/lib/pos-audit'
 
 export const runtime = 'nodejs'
 
-const VALID_ROLES = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer']
+const VALID_ROLES = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer', 'auditor', 'business_partner']
+
+// Roles that resolve to real POS access (see lib/pos-auth.ts resolvePosAuth /
+// resolvePosAuditAccess) — granting or revoking one of these is logged to the
+// POS audit log itself, same as any other access-affecting change there.
+const POS_RELEVANT_ROLES = new Set(['admin', 'business_partner', 'accountant', 'auditor'])
 
 export async function GET() {
   const supabase = createClient()
@@ -101,6 +107,18 @@ export async function POST(request: NextRequest) {
     }),
   })
 
+  if (POS_RELEVANT_ROLES.has(inviteRole)) {
+    await logPosAudit({
+      auth: { ownerId: orgId, locationId: null, staffId: null, role: 'owner' },
+      event: 'access.granted',
+      entityType: 'team_member',
+      entityId: member?.id,
+      toValue: inviteRole,
+      staffName: inviterName,
+      metadata: { grantee_email: email, grantee_name: name || email.split('@')[0], role: inviteRole },
+    })
+  }
+
   return NextResponse.json({
     member,
     emailSent,
@@ -127,7 +145,7 @@ export async function PATCH(request: NextRequest) {
   // Fetch the target member to prevent privilege escalation
   const { data: target } = await supabase
     .from('team_members')
-    .select('role')
+    .select('role, email, name')
     .eq('id', id)
     .eq('org_id', orgId)
     .single()
@@ -152,5 +170,32 @@ export async function PATCH(request: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Mirror any grant/revoke of POS-relevant access into the POS audit log
+  // itself — same pattern as every other access change there.
+  const wasPosRelevant = POS_RELEVANT_ROLES.has(target.role)
+  const removed = update.status === 'removed'
+  const isPosRelevantNow = !removed && POS_RELEVANT_ROLES.has(update.role || target.role)
+  if (removed && wasPosRelevant) {
+    await logPosAudit({
+      auth: { ownerId: orgId, locationId: null, staffId: null, role: 'owner' },
+      event: 'access.revoked',
+      entityType: 'team_member',
+      entityId: id,
+      fromValue: target.role,
+      metadata: { grantee_email: target.email, grantee_name: target.name },
+    })
+  } else if (update.role && update.role !== target.role && (wasPosRelevant || isPosRelevantNow)) {
+    await logPosAudit({
+      auth: { ownerId: orgId, locationId: null, staffId: null, role: 'owner' },
+      event: isPosRelevantNow ? 'access.granted' : 'access.revoked',
+      entityType: 'team_member',
+      entityId: id,
+      fromValue: target.role,
+      toValue: update.role,
+      metadata: { grantee_email: target.email, grantee_name: target.name },
+    })
+  }
+
   return NextResponse.json({ member: data })
 }

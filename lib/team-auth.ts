@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type CallerRole = 'owner' | 'admin' | 'analyst' | 'accountant' | 'buyer' | 'viewer'
+export type CallerRole = 'owner' | 'admin' | 'analyst' | 'accountant' | 'buyer' | 'viewer' | 'auditor' | 'business_partner'
 
 export interface CallerContext {
   orgId: string

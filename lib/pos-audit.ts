@@ -41,6 +41,10 @@ export type PosAuditEvent =
   | 'purchase_order.received'
   | 'purchase_order.paid'
   | 'purchase_order.cancelled'
+  // Delegated access (accountant / auditor / business partner) — logged from
+  // app/api/team/route.ts on invite, role-change, and removal
+  | 'access.granted'
+  | 'access.revoked'
 
 export interface PosAuditPayload {
   auth:        PosAuthResult
@@ -61,8 +65,10 @@ export async function logPosAudit(payload: PosAuditPayload): Promise<void> {
   try {
     const service = createServiceClient()
 
-    // Resolve staff name if not provided
-    let staffName = payload.staffName || null
+    // Resolve staff name if not provided — prefer an already-resolved delegate
+    // label (business partner/accountant/auditor acting via a web session)
+    // before falling back to a pos_staff PIN lookup.
+    let staffName = payload.staffName || payload.auth.actorLabel || null
     if (!staffName && payload.auth.staffId) {
       const { data: staff } = await service
         .from('pos_staff')

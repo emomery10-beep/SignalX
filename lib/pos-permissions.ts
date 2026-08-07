@@ -125,6 +125,15 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'sales.view',
     'camera.dispatch',
   ],
+  // Delegated web-session roles (see lib/pos-auth.ts resolvePosAuditAccess) —
+  // read-only reporting access only. They never PIN-authenticate, so they
+  // don't participate in the operational ROLE_LEVEL hierarchy in pos-auth.ts.
+  accountant: [
+    'reports.view', 'reports.financial',
+  ],
+  auditor: [
+    'reports.view', 'reports.financial',
+  ],
 }
 
 // ── Template role → legacy role mapping ─────────────────────
