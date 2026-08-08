@@ -216,7 +216,11 @@ function buildMessage(template: string, data: Record<string, any>): string {
 
     service_intake: `🔧 Repair Intake Confirmation\nHi ${data.customer_name},\n\nYour device (${data.device_model}) has been checked in for repair.\n\nTicket: ${data.ticket_number}\nIssue: ${data.fault_description}\nEstimate: ${data.quoted_price}\nETA: ${data.estimated_time}\n\nWe'll notify you when it's ready.\n— ${data.business_name}`,
 
-    service_ready: `✅ Repair Complete\nHi ${data.customer_name},\n\nYour ${data.device_model} is ready for collection!\n\nTicket: ${data.ticket_number}\n\nPlease collect at your earliest convenience.\n— ${data.business_name || 'Repair Centre'}`,
+    // photo_note (optional) — one or two "Photo: <url>" / "Replaced part: <url>"
+    // lines built by service-jobs/route.ts's completed-transition handler from
+    // whatever was captured in the "Mark Ready" photo step. Plain text links,
+    // not a template image header — see that handler for why.
+    service_ready: `✅ Repair Complete\nHi ${data.customer_name},\n\nYour ${data.device_model} is ready for collection!\n\nTicket: ${data.ticket_number}\n${data.photo_note ? '\n' + data.photo_note + '\n' : ''}\nPlease collect at your earliest convenience.\n— ${data.business_name || 'Repair Centre'}`,
 
     service_quote: `💬 Repair Quote\nHi ${data.customer_name},\n\nQuote for your ${data.device_model}:\n${data.fault_description}\n\nPrice: ${data.quoted_price}\nETA: ${data.estimated_time}\n\nReply YES to approve or call us to discuss.\n— ${data.business_name}`,
 

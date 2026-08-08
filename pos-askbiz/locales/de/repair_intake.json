@@ -102,5 +102,15 @@
   "walk_in_customer": "Laufkundschaft",
   "print_ticket": "🖨 Ticket drucken",
   "view_tickets": "🎫 Tickets anzeigen",
-  "new_intake": "📸 Neue Aufnahme"
+  "new_intake": "📸 Neue Aufnahme",
+  "pending_sync": "Auf diesem Gerät gespeichert — wird hochgeladen, sobald du wieder online bist.",
+  "whatsapp_quote_heading": "{customer} über den Kostenvoranschlag benachrichtigen",
+  "whatsapp_quote_sent_at_intake": "Eine Bestätigung mit diesem Kostenvoranschlag wurde bereits per WhatsApp an {phone} gesendet.",
+  "whatsapp_quote_resend": "Erneut senden",
+  "whatsapp_quote_phone_placeholder": "WhatsApp-Nummer des Kunden",
+  "whatsapp_quote_send": "📲 Kostenvoranschlag per WhatsApp senden",
+  "whatsapp_quote_sending": "Wird gesendet…",
+  "whatsapp_quote_sent": "✓ Per WhatsApp gesendet",
+  "whatsapp_quote_opted_out": "Dieser Kunde hat WhatsApp-Nachrichten abgelehnt.",
+  "whatsapp_quote_failed": "Senden fehlgeschlagen: {error}"
 }

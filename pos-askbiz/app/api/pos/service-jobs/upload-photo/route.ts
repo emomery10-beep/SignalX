@@ -12,7 +12,10 @@ function json(data: unknown, status = 200) {
 }
 
 // POST — upload a service job photo to Supabase Storage
-// Body: { image: base64, job_id: string, type: 'intake' | 'checkout' }
+// Body: { image: base64, job_id: string, type: 'intake' | 'checkout' | 'replaced_part' }
+// 'replaced_part' is the swapped-out component (e.g. old broken screen) —
+// captured alongside 'checkout' (the repaired device) when the engineer
+// marks a job ready, so the customer can see proof of what was replaced.
 export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
@@ -23,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const { image, job_id, type } = await req.json()
   if (!image || !job_id || !type) return json({ error: 'image, job_id, and type required' }, 400)
-  if (!['intake', 'checkout'].includes(type)) return json({ error: 'type must be intake or checkout' }, 400)
+  if (!['intake', 'checkout', 'replaced_part'].includes(type)) return json({ error: 'type must be intake, checkout, or replaced_part' }, 400)
 
   const service = createServiceClient()
 
@@ -57,7 +60,7 @@ export async function POST(req: NextRequest) {
       console.error('Storage upload failed (bucket may not exist):', uploadErr.message)
       // Store as data URL fallback
       const dataUrl = `data:image/jpeg;base64,${base64Data}`
-      const field = type === 'intake' ? 'intake_photo_url' : 'checkout_photo_url'
+      const field = type === 'intake' ? 'intake_photo_url' : type === 'checkout' ? 'checkout_photo_url' : 'replaced_part_photo_url'
       await service.from('pos_service_jobs').update({ [field]: dataUrl }).eq('id', job_id)
       return json({ url: dataUrl, storage: 'fallback' })
     }
@@ -70,7 +73,7 @@ export async function POST(req: NextRequest) {
     const publicUrl = urlData.publicUrl
 
     // Update the job record
-    const field = type === 'intake' ? 'intake_photo_url' : 'checkout_photo_url'
+    const field = type === 'intake' ? 'intake_photo_url' : type === 'checkout' ? 'checkout_photo_url' : 'replaced_part_photo_url'
     await service.from('pos_service_jobs').update({ [field]: publicUrl }).eq('id', job_id)
 
     return json({ url: publicUrl, storage: 'supabase' })

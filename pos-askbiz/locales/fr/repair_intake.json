@@ -102,5 +102,15 @@
   "walk_in_customer": "client de passage",
   "print_ticket": "🖨 Imprimer le ticket",
   "view_tickets": "🎫 Voir les tickets",
-  "new_intake": "📸 Nouvelle entrée"
+  "new_intake": "📸 Nouvelle entrée",
+  "pending_sync": "Enregistré sur cet appareil — sera envoyé dès que vous serez de nouveau en ligne.",
+  "whatsapp_quote_heading": "Notifier {customer} du devis",
+  "whatsapp_quote_sent_at_intake": "Une confirmation avec ce devis a déjà été envoyée à {phone} par WhatsApp.",
+  "whatsapp_quote_resend": "Renvoyer",
+  "whatsapp_quote_phone_placeholder": "Numéro WhatsApp du client",
+  "whatsapp_quote_send": "📲 Envoyer le devis par WhatsApp",
+  "whatsapp_quote_sending": "Envoi…",
+  "whatsapp_quote_sent": "✓ Envoyé par WhatsApp",
+  "whatsapp_quote_opted_out": "Ce client a refusé les messages WhatsApp.",
+  "whatsapp_quote_failed": "Échec de l'envoi : {error}"
 }

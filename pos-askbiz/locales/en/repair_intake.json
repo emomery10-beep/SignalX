@@ -103,5 +103,14 @@
   "print_ticket": "🖨 Print ticket",
   "view_tickets": "🎫 View tickets",
   "new_intake": "📸 New intake",
-  "pending_sync": "Saved on this device — will upload once you're back online."
+  "pending_sync": "Saved on this device — will upload once you're back online.",
+  "whatsapp_quote_heading": "Notify {customer} of the quote",
+  "whatsapp_quote_sent_at_intake": "A confirmation with this quote was already sent to {phone} via WhatsApp.",
+  "whatsapp_quote_resend": "Send again",
+  "whatsapp_quote_phone_placeholder": "Customer's WhatsApp number",
+  "whatsapp_quote_send": "📲 Send quote via WhatsApp",
+  "whatsapp_quote_sending": "Sending…",
+  "whatsapp_quote_sent": "✓ Sent via WhatsApp",
+  "whatsapp_quote_opted_out": "This customer has opted out of WhatsApp messages.",
+  "whatsapp_quote_failed": "Couldn't send: {error}"
 }

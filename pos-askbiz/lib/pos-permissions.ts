@@ -152,7 +152,12 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'shift.view',
   ],
   engineer: [
-    'service.view', 'service.execute', 'service.parts',
+    // service.upload_photo added alongside the "Mark Ready" photo-capture
+    // step (repair/tickets' completed transition) — without it, engineers
+    // (the role that actually marks jobs ready) got a silent 403 from
+    // upload-photo while every other action on the same screen worked,
+    // since job status PATCHes aren't permission-gated the same way.
+    'service.view', 'service.execute', 'service.parts', 'service.upload_photo',
   ],
   inventory: [
     'inventory.view', 'inventory.manage',

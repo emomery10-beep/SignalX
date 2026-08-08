@@ -102,5 +102,15 @@
   "walk_in_customer": "زبون عابر",
   "print_ticket": "🖨 طباعة التذكرة",
   "view_tickets": "🎫 عرض التذاكر",
-  "new_intake": "📸 استلام جديد"
+  "new_intake": "📸 استلام جديد",
+  "pending_sync": "تم الحفظ على هذا الجهاز — سيتم الرفع بمجرد الاتصال بالإنترنت مجددًا.",
+  "whatsapp_quote_heading": "إخطار {customer} بعرض السعر",
+  "whatsapp_quote_sent_at_intake": "تم بالفعل إرسال تأكيد بعرض السعر هذا إلى {phone} عبر واتساب.",
+  "whatsapp_quote_resend": "إعادة الإرسال",
+  "whatsapp_quote_phone_placeholder": "رقم واتساب الخاص بالعميل",
+  "whatsapp_quote_send": "📲 إرسال عرض السعر عبر واتساب",
+  "whatsapp_quote_sending": "جارٍ الإرسال…",
+  "whatsapp_quote_sent": "✓ تم الإرسال عبر واتساب",
+  "whatsapp_quote_opted_out": "رفض هذا العميل تلقي رسائل واتساب.",
+  "whatsapp_quote_failed": "تعذر الإرسال: {error}"
 }

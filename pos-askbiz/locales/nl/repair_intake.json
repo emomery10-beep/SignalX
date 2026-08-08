@@ -102,5 +102,15 @@
   "walk_in_customer": "loopklant",
   "print_ticket": "🖨 Ticket afdrukken",
   "view_tickets": "🎫 Tickets bekijken",
-  "new_intake": "📸 Nieuwe intake"
+  "new_intake": "📸 Nieuwe intake",
+  "pending_sync": "Opgeslagen op dit apparaat — wordt geüpload zodra je weer online bent.",
+  "whatsapp_quote_heading": "{customer} op de hoogte stellen van de offerte",
+  "whatsapp_quote_sent_at_intake": "Er is al een bevestiging met deze offerte verstuurd naar {phone} via WhatsApp.",
+  "whatsapp_quote_resend": "Opnieuw versturen",
+  "whatsapp_quote_phone_placeholder": "WhatsApp-nummer van de klant",
+  "whatsapp_quote_send": "📲 Offerte versturen via WhatsApp",
+  "whatsapp_quote_sending": "Versturen…",
+  "whatsapp_quote_sent": "✓ Verstuurd via WhatsApp",
+  "whatsapp_quote_opted_out": "Deze klant heeft WhatsApp-berichten geweigerd.",
+  "whatsapp_quote_failed": "Versturen mislukt: {error}"
 }

@@ -363,7 +363,7 @@ export async function PATCH(req: NextRequest) {
   const updates: Record<string, unknown> = {}
   const allowedFields = [
     'status', 'quoted_price', 'assigned_to', 'engineer_notes',
-    'additional_issues', 'checkout_photo_url', 'checked_out_by',
+    'additional_issues', 'checkout_photo_url', 'replaced_part_photo_url', 'checked_out_by',
     'paid_by_transaction', 'cancel_reason', 'due_by', 'estimated_minutes',
     'fault_description', 'device_model', 'device_serial', 'device_description',
     'customer_phone', 'customer_name', 'preset_id', 'intake_photo_url',
@@ -433,6 +433,20 @@ export async function PATCH(req: NextRequest) {
   if (fields.status === 'completed' && current.status !== 'completed') {
     const phone = updated.customer_phone || (updated as any).customer?.phone
     if (phone) {
+      // Photos captured just before this transition (repair/tickets' "Mark
+      // Ready" modal uploads via upload-photo, which writes straight to the
+      // job row — so by the time we're here, `updated` already carries
+      // them). Linked as plain URLs in the text body rather than sent as a
+      // WhatsApp template image header: that mechanism (see
+      // sendReceiptImage in lib/whatsapp.ts) is confirmed live-broken —
+      // Meta accepts the send with a 200 OK but the message never actually
+      // delivers, root cause undiagnosed. A URL inside an ordinary text
+      // message instead relies on WhatsApp's own client-side link preview,
+      // which doesn't share that failure mode.
+      const photoLines: string[] = []
+      if (updated.checkout_photo_url) photoLines.push(`Photo: ${updated.checkout_photo_url}`)
+      if (updated.replaced_part_photo_url) photoLines.push(`Replaced part: ${updated.replaced_part_photo_url}`)
+
       await fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
         method: 'POST',
         headers: {
@@ -448,6 +462,7 @@ export async function PATCH(req: NextRequest) {
             ticket_number: updated.ticket_number,
             device_model: updated.device_model || 'your device',
             customer_name: updated.customer_name || 'Customer',
+            photo_note: photoLines.join('\n'),
           },
         }),
       }).catch(err => console.error('Failed to send service notification:', err))

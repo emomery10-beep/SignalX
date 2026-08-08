@@ -53,5 +53,17 @@
   "timeline": "Cronología",
   "no_history_yet": "Sin historial aún",
   "failed_to_update": "Error al actualizar",
-  "failed_to_update_conn": "Error al actualizar. Verifica la conexión."
+  "failed_to_update_conn": "Error al actualizar. Verifica la conexión.",
+  "sync_pending": "Sincronización pendiente",
+  "ready_modal_title": "Fotos antes de marcar como listo",
+  "ready_modal_subtitle": "Muestra al cliente lo que se reparó — estas fotos se envían con la notificación de WhatsApp de \"listo\".",
+  "ready_modal_repaired_label": "Artículo reparado",
+  "ready_modal_replaced_label": "Pieza reemplazada (opcional)",
+  "ready_modal_take_photo": "📷 Tomar foto",
+  "ready_modal_retake": "Repetir foto",
+  "ready_modal_skip": "Omitir fotos y marcar como listo",
+  "ready_modal_confirm": "✓ Marcar como listo",
+  "ready_modal_uploading": "Subiendo fotos…",
+  "ready_modal_cancel": "Cancelar",
+  "ready_modal_upload_failed": "Error al subir la foto"
 }

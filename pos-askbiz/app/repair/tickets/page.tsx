@@ -1,9 +1,10 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
+import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
 import { getOfflineResourceTypesForRole } from '@/lib/pos-offline-manifest'
@@ -50,6 +51,7 @@ interface Job {
   quoted_price: number | null
   intake_photo_url: string | null
   checkout_photo_url: string | null
+  replaced_part_photo_url: string | null
   created_at: string
   estimated_minutes: number | null
   assigned_staff?: { id: string; name: string; role: string } | null
@@ -108,6 +110,18 @@ export default function RepairTickets() {
   // job id -> client_tx_id of its most recent not-yet-synced status change,
   // used to show a "sync pending" badge and clear it once replay resolves.
   const [pendingJobTx, setPendingJobTx] = useState<Record<string, string>>({})
+
+  // "Mark Ready" photo capture — repaired item (checkout_photo_url) +
+  // optional replaced part (replaced_part_photo_url). Uploaded before the
+  // completed-status PATCH so the job row already carries the URLs when
+  // that PATCH's own completion notification reads them back (see
+  // service-jobs/route.ts's completed-transition block).
+  const [readyPhotoOpen, setReadyPhotoOpen] = useState(false)
+  const [readyPhotos, setReadyPhotos] = useState<{ checkout: string | null; replaced_part: string | null }>({ checkout: null, replaced_part: null })
+  const [readySubmitting, setReadySubmitting] = useState(false)
+  const [readyError, setReadyError] = useState('')
+  const readyFileRef = useRef<HTMLInputElement>(null)
+  const readyPurpose = useRef<'checkout' | 'replaced_part'>('checkout')
 
   useEffect(() => {
     if (config?.staff_sector && config.staff_sector !== 'repair') router.push('/pos')
@@ -212,6 +226,59 @@ export default function RepairTickets() {
     setUpdating(false)
   }
 
+  // ── "Mark Ready" photo capture ──────────────────────────
+  const openReadyPhotoModal = () => {
+    setReadyPhotos({ checkout: null, replaced_part: null })
+    setReadyError('')
+    setReadyPhotoOpen(true)
+  }
+
+  const triggerReadyCapture = (purpose: 'checkout' | 'replaced_part') => {
+    readyPurpose.current = purpose
+    readyFileRef.current?.click()
+  }
+
+  const handleReadyFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    compressImageToDataUrl(file, { maxEdge: 1800, quality: 0.85 }).then(dataUrl => {
+      setReadyPhotos(prev => ({ ...prev, [readyPurpose.current]: dataUrl }))
+    }).catch(() => {})
+    e.target.value = ''
+  }
+
+  const uploadReadyPhoto = async (type: 'checkout' | 'replaced_part', dataUrl: string) => {
+    if (!selected || !session) return
+    const res = await fetch('/api/pos/service-jobs/upload-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...session.headers },
+      body: JSON.stringify({ image: dataUrl, job_id: selected.id, type }),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err?.error || tc('repair_tickets.ready_modal_upload_failed'))
+    }
+  }
+
+  const confirmMarkReady = async () => {
+    if (!selected) return
+    setReadySubmitting(true); setReadyError('')
+    try {
+      if (readyPhotos.checkout) await uploadReadyPhoto('checkout', readyPhotos.checkout)
+      if (readyPhotos.replaced_part) await uploadReadyPhoto('replaced_part', readyPhotos.replaced_part)
+      setReadyPhotoOpen(false)
+      await changeStatus('completed')
+    } catch (err: any) {
+      setReadyError(err?.message || tc('repair_tickets.ready_modal_upload_failed'))
+    }
+    setReadySubmitting(false)
+  }
+
+  const skipAndMarkReady = async () => {
+    setReadyPhotoOpen(false)
+    await changeStatus('completed')
+  }
+
   const filtered = jobs.filter(j => {
     if (!search.trim()) return true
     const q = search.toLowerCase()
@@ -226,6 +293,8 @@ export default function RepairTickets() {
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif' }}>
+      <input ref={readyFileRef} type="file" accept="image/*" capture="environment" onChange={handleReadyFileInput} style={{ display: 'none' }} />
+
       {/* Header */}
       <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/repair')} style={{ background: tokens.border, border: 'none', color: tokens.muted, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
@@ -326,7 +395,7 @@ export default function RepairTickets() {
                 {detailError && <div style={{ marginTop: 10 }}><Banner tone="danger">{detailError}</Banner></div>}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                   {(NEXT_STATUS[selected.status] || []).map(t => (
-                    <button key={t.value} onClick={() => changeStatus(t.value)} disabled={updating}
+                    <button key={t.value} onClick={() => t.value === 'completed' ? openReadyPhotoModal() : changeStatus(t.value)} disabled={updating}
                       className={t.value === 'cancelled' ? undefined : 'pos-btn-primary'}
                       style={{ padding: '9px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', opacity: updating ? 0.6 : 1, background: t.value === 'cancelled' ? tokens.border : tokens.accent, color: t.value === 'cancelled' ? tokens.muted : '#fff' }}>
                       {tc('repair_tickets.action_' + t.labelKey)}
@@ -358,12 +427,13 @@ export default function RepairTickets() {
               </div>
 
               {/* photos */}
-              {(selected.intake_photo_url || selected.checkout_photo_url) && (
+              {(selected.intake_photo_url || selected.checkout_photo_url || selected.replaced_part_photo_url) && (
                 <div style={{ ...card, padding: 16 }}>
                   <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 10 }}>{tc('repair_tickets.photos')}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {selected.intake_photo_url && <img src={selected.intake_photo_url} alt="intake" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />}
                     {selected.checkout_photo_url && <img src={selected.checkout_photo_url} alt="checkout" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />}
+                    {selected.replaced_part_photo_url && <img src={selected.replaced_part_photo_url} alt="replaced part" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />}
                   </div>
                 </div>
               )}
@@ -400,6 +470,55 @@ export default function RepairTickets() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* "MARK READY" PHOTO CAPTURE — repaired item + optional replaced part.
+          Uploads first, then proceeds with the normal completed-status PATCH
+          (changeStatus), so this never blocks the transition if a photo
+          fails — staff can always fall back to "Skip photos & mark ready". */}
+      {readyPhotoOpen && selected && (
+        <div onClick={() => !readySubmitting && setReadyPhotoOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ width: 'min(420px, 100%)', background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 16, padding: 20, maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{tc('repair_tickets.ready_modal_title')}</div>
+            <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 16 }}>{tc('repair_tickets.ready_modal_subtitle')}</div>
+
+            {(['checkout', 'replaced_part'] as const).map(slot => (
+              <div key={slot} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 6 }}>
+                  {slot === 'checkout' ? tc('repair_tickets.ready_modal_repaired_label') : tc('repair_tickets.ready_modal_replaced_label')}
+                </div>
+                {readyPhotos[slot] ? (
+                  <div>
+                    <img src={readyPhotos[slot] as string} alt={slot} style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: `1px solid ${tokens.border}` }} />
+                    <div>
+                      <button onClick={() => triggerReadyCapture(slot)} disabled={readySubmitting} style={{ marginTop: 6, background: 'none', border: 'none', color: tokens.accent, fontSize: 12, cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+                        {tc('repair_tickets.ready_modal_retake')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => triggerReadyCapture(slot)} disabled={readySubmitting} style={{ width: '100%', padding: '12px', borderRadius: 10, border: `1px dashed ${tokens.border}`, background: tokens.surface, color: tokens.muted, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', boxSizing: 'border-box' }}>
+                    {tc('repair_tickets.ready_modal_take_photo')}
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {readyError && <div style={{ marginBottom: 10 }}><Banner tone="danger">{readyError}</Banner></div>}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+              <button onClick={confirmMarkReady} disabled={readySubmitting} className="pos-btn-primary" style={{ padding: '12px', borderRadius: 10, border: 'none', background: tokens.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: readySubmitting ? 0.6 : 1 }}>
+                {readySubmitting ? tc('repair_tickets.ready_modal_uploading') : tc('repair_tickets.ready_modal_confirm')}
+              </button>
+              <button onClick={skipAndMarkReady} disabled={readySubmitting} style={{ padding: '10px', borderRadius: 10, border: 'none', background: 'none', color: tokens.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                {tc('repair_tickets.ready_modal_skip')}
+              </button>
+              <button onClick={() => setReadyPhotoOpen(false)} disabled={readySubmitting} style={{ padding: '8px', borderRadius: 10, border: 'none', background: 'none', color: tokens.hint, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                {tc('repair_tickets.ready_modal_cancel')}
+              </button>
             </div>
           </div>
         </div>

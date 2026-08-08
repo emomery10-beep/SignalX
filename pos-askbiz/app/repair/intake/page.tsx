@@ -120,6 +120,15 @@ export default function RepairIntake() {
   const [pendingSync, setPendingSync] = useState(false)
   const [pendingClientTxId, setPendingClientTxId] = useState('')
 
+  // Whether a phone was already on file at creation time — if so, POST
+  // /api/pos/service-jobs already fired the automatic service_intake
+  // confirmation (which itself carries the quote inline), so the button
+  // below reads as "send again" rather than "send" for that case.
+  const [quoteAlreadySent, setQuoteAlreadySent] = useState(false)
+  const [sendingQuote, setSendingQuote] = useState(false)
+  const [quoteSendStatus, setQuoteSendStatus] = useState<'idle' | 'sent' | 'opted_out' | 'error'>('idle')
+  const [quoteSendError, setQuoteSendError] = useState('')
+
   useEffect(() => {
     if (config?.staff_sector && config.staff_sector !== 'repair') router.push('/pos')
   }, [config, router])
@@ -333,6 +342,7 @@ export default function RepairIntake() {
       const job = data.job
       setTicketNumber(job?.ticket_number || '')
       setCreatedJobId(job?.id || '')
+      setQuoteAlreadySent(!!customerPhone.trim())
       setStage('done')
     } catch {
       // Network failure — queue for replay when back online. Ticket
@@ -345,6 +355,7 @@ export default function RepairIntake() {
         })
         setPendingSync(true)
         setPendingClientTxId(clientTxId)
+        setQuoteAlreadySent(!!customerPhone.trim())
         setStage('done')
       } catch (queueErr) {
         setSubmitError(queueErr instanceof OfflineQueueQuotaError ? queueErr.message : tc('repair_intake.create_ticket_failed_conn'))
@@ -360,6 +371,49 @@ export default function RepairIntake() {
     setCustomerName(''); setCustomerPhone(''); setIssue(''); setDeviceType('Phone'); setEstCost(''); setPriority('normal'); setAssignedTo('')
     setSubmitError(''); setTicketNumber(''); setCreatedJobId('')
     setPendingSync(false); setPendingClientTxId('')
+    setQuoteAlreadySent(false); setQuoteSendStatus('idle'); setQuoteSendError('')
+  }
+
+  // ── Stage 4: send the quote over WhatsApp ───────────────
+  // Reuses the "service_quote" template — already defined in
+  // buildMessage() (app/api/pos/notifications/send/route.ts) but not
+  // wired to any UI action before this. Goes through the same
+  // WhatsApp-primary/email-fallback/GDPR-consent-gated dispatcher every
+  // other POS notification uses (lib/whatsapp.ts's sendNotification).
+  const sendQuoteWhatsApp = async () => {
+    const phone = customerPhone.trim()
+    if (!phone || !session) return
+    setSendingQuote(true); setQuoteSendStatus('idle'); setQuoteSendError('')
+    try {
+      const res = await fetch('/api/pos/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify({
+          notification_type: 'service_quote',
+          recipient_phone: phone,
+          message_template: 'service_quote',
+          data: {
+            customer_name: customerName.trim() || tc('repair_intake.walk_in_customer'),
+            device_model: device.model?.trim() || deviceTypeLabel(tc, deviceType),
+            fault_description: buildFaultDescription(),
+            quoted_price: estCost ? `${sym}${Number(estCost).toFixed(2)}` : 'TBC',
+            estimated_time: 'TBC',
+            business_name: config?.business_name || 'Repair Centre',
+          },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.status === 'failed') {
+        setQuoteSendStatus('error'); setQuoteSendError(data.error || '')
+      } else if (data.skipped) {
+        setQuoteSendStatus('opted_out')
+      } else {
+        setQuoteSendStatus('sent')
+      }
+    } catch {
+      setQuoteSendStatus('error'); setQuoteSendError('')
+    }
+    setSendingQuote(false)
   }
 
   // ── Styles ──────────────────────────────────────────────
@@ -651,6 +705,43 @@ export default function RepairIntake() {
               <div style={{ fontSize: 18, color: tokens.accent, fontWeight: 700, marginBottom: 6 }}>#{ticketNumber}</div>
             ) : null}
             <div style={{ fontSize: 13, color: tokens.muted, marginBottom: 24 }}>{tc('repair_intake.checked_in_for', { device: device.model || tc('repair_intake.device_fallback'), customer: customerName || tc('repair_intake.walk_in_customer') })}{customerPhone ? tc('repair_intake.sms_sent') : ''}</div>
+
+            {/* Send the quote over WhatsApp — only makes sense once there's
+                actually a quote on the ticket. */}
+            {!pendingSync && estCost && (
+              <div style={{ textAlign: 'left', background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 12, padding: 14, marginBottom: 20, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: tokens.ink, marginBottom: 8 }}>
+                  {tc('repair_intake.whatsapp_quote_heading', { customer: customerName || tc('repair_intake.walk_in_customer') })}
+                </div>
+                {quoteAlreadySent && quoteSendStatus === 'idle' && (
+                  <div style={{ fontSize: 12, color: tokens.muted, marginBottom: 10 }}>
+                    {tc('repair_intake.whatsapp_quote_sent_at_intake', { phone: customerPhone })}
+                  </div>
+                )}
+                {!customerPhone.trim() && (
+                  <input
+                    style={{ ...inputStyle, marginBottom: 10 }}
+                    inputMode="tel"
+                    value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)}
+                    placeholder={tc('repair_intake.whatsapp_quote_phone_placeholder')}
+                  />
+                )}
+                {quoteSendStatus === 'sent' && <div style={{ fontSize: 12, color: tokens.success, fontWeight: 600, marginBottom: 8 }}>{tc('repair_intake.whatsapp_quote_sent')}</div>}
+                {quoteSendStatus === 'opted_out' && <div style={{ fontSize: 12, color: tokens.warning, marginBottom: 8 }}>{tc('repair_intake.whatsapp_quote_opted_out')}</div>}
+                {quoteSendStatus === 'error' && <div style={{ fontSize: 12, color: tokens.danger, marginBottom: 8 }}>{tc('repair_intake.whatsapp_quote_failed', { error: quoteSendError || '—' })}</div>}
+                <button
+                  onClick={sendQuoteWhatsApp}
+                  disabled={sendingQuote || !customerPhone.trim()}
+                  style={{ ...btnSecondary, flex: 'none', width: '100%', boxSizing: 'border-box', opacity: sendingQuote || !customerPhone.trim() ? 0.6 : 1 }}
+                >
+                  {sendingQuote
+                    ? tc('repair_intake.whatsapp_quote_sending')
+                    : quoteAlreadySent ? tc('repair_intake.whatsapp_quote_resend') : tc('repair_intake.whatsapp_quote_send')}
+                </button>
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
               <button onClick={() => window.print()} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.print_ticket')}</button>
               <button onClick={() => router.push('/repair/tickets')} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.view_tickets')}</button>

@@ -103,5 +103,14 @@
   "print_ticket": "🖨 Chapisha tiketi",
   "view_tickets": "🎫 Ona tiketi",
   "new_intake": "📸 Mapokezi mapya",
-  "pending_sync": "Imehifadhiwa kwenye kifaa hiki — itapakiwa ukiungana na mtandao."
+  "pending_sync": "Imehifadhiwa kwenye kifaa hiki — itapakiwa ukiungana na mtandao.",
+  "whatsapp_quote_heading": "Mjulishe {customer} kuhusu bei iliyokadiriwa",
+  "whatsapp_quote_sent_at_intake": "Uthibitisho wenye bei hii tayari ulitumwa kwa {phone} kupitia WhatsApp.",
+  "whatsapp_quote_resend": "Tuma tena",
+  "whatsapp_quote_phone_placeholder": "Nambari ya WhatsApp ya mteja",
+  "whatsapp_quote_send": "📲 Tuma bei kupitia WhatsApp",
+  "whatsapp_quote_sending": "Inatuma…",
+  "whatsapp_quote_sent": "✓ Imetumwa kupitia WhatsApp",
+  "whatsapp_quote_opted_out": "Mteja huyu amekataa kupokea ujumbe wa WhatsApp.",
+  "whatsapp_quote_failed": "Imeshindwa kutuma: {error}"
 }

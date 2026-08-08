@@ -102,5 +102,15 @@
   "walk_in_customer": "cliente sin cita",
   "print_ticket": "🖨 Imprimir ticket",
   "view_tickets": "🎫 Ver tickets",
-  "new_intake": "📸 Nueva entrada"
+  "new_intake": "📸 Nueva entrada",
+  "pending_sync": "Guardado en este dispositivo — se subirá cuando vuelvas a estar en línea.",
+  "whatsapp_quote_heading": "Notificar a {customer} del presupuesto",
+  "whatsapp_quote_sent_at_intake": "Ya se envió una confirmación con este presupuesto a {phone} por WhatsApp.",
+  "whatsapp_quote_resend": "Enviar de nuevo",
+  "whatsapp_quote_phone_placeholder": "Número de WhatsApp del cliente",
+  "whatsapp_quote_send": "📲 Enviar presupuesto por WhatsApp",
+  "whatsapp_quote_sending": "Enviando…",
+  "whatsapp_quote_sent": "✓ Enviado por WhatsApp",
+  "whatsapp_quote_opted_out": "Este cliente ha rechazado los mensajes de WhatsApp.",
+  "whatsapp_quote_failed": "No se pudo enviar: {error}"
 }

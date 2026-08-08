@@ -103,5 +103,14 @@
   "print_ticket": "🖨 Daabac tigidhka",
   "view_tickets": "🎫 Fiiri tigidhada",
   "new_intake": "📸 Qaabilaad cusub",
-  "pending_sync": "Waxaa lagu kaydiyay qalabkan — waxaa la soo geli doonaa marka aad online noqoto."
+  "pending_sync": "Waxaa lagu kaydiyay qalabkan — waxaa la soo geli doonaa marka aad online noqoto.",
+  "whatsapp_quote_heading": "U ogeysii {customer} qiimaha",
+  "whatsapp_quote_sent_at_intake": "Xaqiijin qiimahan wata ayaa hore loogu diray {phone} WhatsApp.",
+  "whatsapp_quote_resend": "Dib u dir",
+  "whatsapp_quote_phone_placeholder": "Lambarka WhatsApp ee macmiilka",
+  "whatsapp_quote_send": "📲 U dir qiimaha WhatsApp",
+  "whatsapp_quote_sending": "Waa la dirayaa…",
+  "whatsapp_quote_sent": "✓ Waa lagu diray WhatsApp",
+  "whatsapp_quote_opted_out": "Macmiilkani wuu diiday farriimaha WhatsApp.",
+  "whatsapp_quote_failed": "Lama dirin: {error}"
 }

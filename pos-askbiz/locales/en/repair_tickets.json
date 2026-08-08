@@ -54,5 +54,16 @@
   "no_history_yet": "No history yet",
   "failed_to_update": "Failed to update",
   "failed_to_update_conn": "Failed to update. Check connection.",
-  "sync_pending": "Sync pending"
+  "sync_pending": "Sync pending",
+  "ready_modal_title": "Photos before marking ready",
+  "ready_modal_subtitle": "Show the customer what was fixed — these are sent with the WhatsApp ready notification.",
+  "ready_modal_repaired_label": "Repaired item",
+  "ready_modal_replaced_label": "Replaced part (optional)",
+  "ready_modal_take_photo": "📷 Take photo",
+  "ready_modal_retake": "Retake",
+  "ready_modal_skip": "Skip photos & mark ready",
+  "ready_modal_confirm": "✓ Mark Ready",
+  "ready_modal_uploading": "Uploading photos…",
+  "ready_modal_cancel": "Cancel",
+  "ready_modal_upload_failed": "Photo upload failed"
 }

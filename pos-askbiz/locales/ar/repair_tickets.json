@@ -53,5 +53,17 @@
   "timeline": "الجدول الزمني",
   "no_history_yet": "لا يوجد سجل حتى الآن",
   "failed_to_update": "فشل التحديث",
-  "failed_to_update_conn": "فشل التحديث. تحقق من الاتصال."
+  "failed_to_update_conn": "فشل التحديث. تحقق من الاتصال.",
+  "sync_pending": "المزامنة معلّقة",
+  "ready_modal_title": "صور قبل التمييز كجاهز",
+  "ready_modal_subtitle": "أظهر للعميل ما تم إصلاحه — تُرسل هذه الصور مع إشعار الجاهزية عبر واتساب.",
+  "ready_modal_repaired_label": "الجهاز المُصلَح",
+  "ready_modal_replaced_label": "القطعة المستبدلة (اختياري)",
+  "ready_modal_take_photo": "📷 التقاط صورة",
+  "ready_modal_retake": "إعادة الالتقاط",
+  "ready_modal_skip": "تخطي الصور والتمييز كجاهز",
+  "ready_modal_confirm": "✓ تمييز كجاهز",
+  "ready_modal_uploading": "جارٍ رفع الصور…",
+  "ready_modal_cancel": "إلغاء",
+  "ready_modal_upload_failed": "فشل رفع الصورة"
 }

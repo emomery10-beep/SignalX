@@ -54,5 +54,16 @@
   "no_history_yet": "Hakuna historia bado",
   "failed_to_update": "Imeshindwa kusasisha",
   "failed_to_update_conn": "Imeshindwa kusasisha. Angalia muunganisho.",
-  "sync_pending": "Usawazishaji unasubiri"
+  "sync_pending": "Usawazishaji unasubiri",
+  "ready_modal_title": "Picha kabla ya kuweka tayari",
+  "ready_modal_subtitle": "Mwonyeshe mteja kilichorekebishwa — picha hizi hutumwa pamoja na arifa ya WhatsApp ya \"tayari\".",
+  "ready_modal_repaired_label": "Kifaa kilichorekebishwa",
+  "ready_modal_replaced_label": "Sehemu iliyobadilishwa (si lazima)",
+  "ready_modal_take_photo": "📷 Piga picha",
+  "ready_modal_retake": "Piga tena",
+  "ready_modal_skip": "Ruka picha na uweke tayari",
+  "ready_modal_confirm": "✓ Weka Tayari",
+  "ready_modal_uploading": "Inapakia picha…",
+  "ready_modal_cancel": "Ghairi",
+  "ready_modal_upload_failed": "Kupakia picha kumeshindwa"
 }

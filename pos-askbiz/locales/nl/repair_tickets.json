@@ -53,5 +53,17 @@
   "timeline": "Tijdlijn",
   "no_history_yet": "Nog geen geschiedenis",
   "failed_to_update": "Bijwerken mislukt",
-  "failed_to_update_conn": "Bijwerken mislukt. Controleer de verbinding."
+  "failed_to_update_conn": "Bijwerken mislukt. Controleer de verbinding.",
+  "sync_pending": "Synchronisatie in behandeling",
+  "ready_modal_title": "Foto's voordat je als klaar markeert",
+  "ready_modal_subtitle": "Laat de klant zien wat er is gerepareerd — deze foto's worden meegestuurd met de WhatsApp-klaarmelding.",
+  "ready_modal_repaired_label": "Gerepareerd item",
+  "ready_modal_replaced_label": "Vervangen onderdeel (optioneel)",
+  "ready_modal_take_photo": "📷 Foto maken",
+  "ready_modal_retake": "Opnieuw maken",
+  "ready_modal_skip": "Foto's overslaan & als klaar markeren",
+  "ready_modal_confirm": "✓ Markeer als klaar",
+  "ready_modal_uploading": "Foto's uploaden…",
+  "ready_modal_cancel": "Annuleren",
+  "ready_modal_upload_failed": "Uploaden van foto mislukt"
 }

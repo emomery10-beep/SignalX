@@ -53,5 +53,17 @@
   "timeline": "Zeitverlauf",
   "no_history_yet": "Noch kein Verlauf vorhanden",
   "failed_to_update": "Aktualisierung fehlgeschlagen",
-  "failed_to_update_conn": "Aktualisierung fehlgeschlagen. Verbindung prüfen."
+  "failed_to_update_conn": "Aktualisierung fehlgeschlagen. Verbindung prüfen.",
+  "sync_pending": "Synchronisierung ausstehend",
+  "ready_modal_title": "Fotos vor der Fertigmeldung",
+  "ready_modal_subtitle": "Zeigen Sie dem Kunden, was repariert wurde — diese Fotos werden mit der WhatsApp-Bereit-Benachrichtigung gesendet.",
+  "ready_modal_repaired_label": "Repariertes Gerät",
+  "ready_modal_replaced_label": "Ausgetauschtes Teil (optional)",
+  "ready_modal_take_photo": "📷 Foto aufnehmen",
+  "ready_modal_retake": "Erneut aufnehmen",
+  "ready_modal_skip": "Fotos überspringen & als fertig markieren",
+  "ready_modal_confirm": "✓ Als fertig markieren",
+  "ready_modal_uploading": "Fotos werden hochgeladen…",
+  "ready_modal_cancel": "Abbrechen",
+  "ready_modal_upload_failed": "Foto-Upload fehlgeschlagen"
 }
