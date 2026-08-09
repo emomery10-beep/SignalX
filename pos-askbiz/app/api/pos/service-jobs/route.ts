@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
-import { hasPermission } from '@/lib/pos-permissions'
+import { hasPermission, isTechnicianRole } from '@/lib/pos-permissions'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -33,10 +33,10 @@ const PHOTO_ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
 // role for PERMISSION purposes but should still see pricing) has
 // auth.role === 'repair-technician', not 'engineer'. Checking against
 // 'engineer' alone missed every templated technician account — confirmed
-// live 08-09 (quoted_price still visible under "Test Repair Tech").
-const TECHNICIAN_ROLES = new Set(['engineer', 'repair-technician'])
+// live 08-09 (quoted_price still visible under "Test Repair Tech"). See
+// isTechnicianRole in lib/pos-permissions.ts.
 function redactPricingForEngineer<T extends Record<string, any>>(job: T, role: string): T {
-  if (!TECHNICIAN_ROLES.has(role) || !job) return job
+  if (!isTechnicianRole(role) || !job) return job
   const redacted: Record<string, any> = { ...job, quoted_price: null, original_quoted_price: null }
   if (redacted.transaction) redacted.transaction = { ...redacted.transaction, total: null }
   return redacted as T
@@ -114,8 +114,8 @@ export async function GET(req: NextRequest) {
   if (assigned_to) query = query.eq('assigned_to', assigned_to)
   if (location_id) query = query.eq('location_id', location_id)
 
-  // Engineer view: only see own jobs
-  if (auth.role === 'engineer' && auth.staffId) {
+  // Engineer/technician view: only see own jobs
+  if (isTechnicianRole(auth.role) && auth.staffId) {
     query = query.eq('assigned_to', auth.staffId)
   }
 
@@ -431,8 +431,8 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  // Engineer can only update their assigned jobs
-  if (auth.role === 'engineer' && auth.staffId && current.assigned_to !== auth.staffId) {
+  // Engineer/technician can only update their assigned jobs
+  if (isTechnicianRole(auth.role) && auth.staffId && current.assigned_to !== auth.staffId) {
     return json({ error: 'Engineers can only update their assigned jobs' }, 403)
   }
 

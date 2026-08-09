@@ -333,6 +333,58 @@ export async function sendNotification(phone: string, message: string, dialHint?
   return { ok: true, messageId: body?.messages?.[0]?.id }
 }
 
+// ── Send a repair photo update, link via a URL BUTTON not body text ────────
+// Template "askbiz_photo_update" should be:
+//   Category: Utility
+//   Body:     "Hi {{1}}, here's a photo update on your repair (ticket {{2}})."
+//   Button:   URL type, base "https://pos.askbiz.co/repair/photos/",
+//             dynamic suffix {{1}} (the job id)
+//
+// Confirmed live 2026-08-09: a raw URL substituted into a body TEXT
+// parameter is rejected by Meta ("(#132018) There's an issue with the
+// parameters in your template") — Meta explicitly disallows full URLs in
+// body placeholders for anti-phishing/quality reasons (this is why
+// sendReceipt's v2 body-param link, above, is also expected to fail once
+// that template is actually submitted/used — flagged, not fixed here,
+// that's a different in-flight change). A URL BUTTON component's dynamic
+// suffix parameter is the Meta-sanctioned mechanism for a per-send dynamic
+// link — same pattern sendOTP already uses for its "Copy code" button.
+export async function sendPhotoUpdate(phone: string, customerName: string, ticketNumber: string, jobId: string, dialHint?: string): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.META_WHATSAPP_TOKEN
+  const numId = phoneId()
+  if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
+
+  const template = process.env.META_PHOTO_UPDATE_TEMPLATE || 'askbiz_photo_update'
+  const lang     = process.env.META_TEMPLATE_LANG || 'en_GB'
+
+  const res = await fetch(`${BASE}/${numId}/messages`, {
+    method:  'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to:   normalisePhone(phone, dialHint),
+      type: 'template',
+      template: {
+        name:     template,
+        language: { code: lang },
+        components: [
+          { type: 'body', parameters: [{ type: 'text', text: customerName }, { type: 'text', text: ticketNumber }] },
+          { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: jobId }] },
+        ],
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    const msg = err?.error?.message || `Meta API error ${res.status}`
+    console.error('[whatsapp] sendPhotoUpdate failed:', msg)
+    return { ok: false, error: msg }
+  }
+
+  return { ok: true }
+}
+
 // Build a click-to-chat wa.me link with prefilled text — the fallback that
 // works with no approved template and no prior conversation with the supplier.
 export function waLink(phone: string, text: string): string {

@@ -258,6 +258,26 @@ export function hasPermission(role: string | null | undefined, permission: PosPe
 }
 
 /**
+ * Is this the hands-on repair technician persona — the raw legacy 'engineer'
+ * role, or any templated role ending in "technician" (currently just
+ * repair-technician, but written to cover any future sector's equivalent)?
+ * Distinct from hasPermission's templateToLegacyRole mapping, which
+ * deliberately collapses repair-technician/repair-intake-specialist/
+ * repair-manager all down to the same base 'repair' role for coarse
+ * permission checks — too coarse for anything that needs to single out
+ * just the technician (e.g. "only see/act on your own assigned jobs",
+ * "don't show this persona the price"). Mirrors the inline check
+ * app/repair/page.tsx already used for its own dashboard-scoping — added
+ * here as the shared, single-source-of-truth version after the same
+ * mistake (checking role === 'engineer' alone) got made independently in
+ * four other places (service-jobs' GET/PATCH assigned-job scoping, its
+ * price redaction, and the photos routes) — confirmed live 08-09.
+ */
+export function isTechnicianRole(role: string | null | undefined): boolean {
+  return role === 'engineer' || (role || '').includes('technician')
+}
+
+/**
  * Get all permissions for a role (useful for client-side UI gating).
  * Handles both legacy PosRole values and template roles.
  */

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
-import { hasPermission } from '@/lib/pos-permissions'
+import { hasPermission, isTechnicianRole } from '@/lib/pos-permissions'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
   if (!job) return json({ error: 'Job not found' }, 404)
-  if (auth.role === 'engineer' && auth.staffId && job.assigned_to !== auth.staffId) {
+  if (isTechnicianRole(auth.role) && auth.staffId && job.assigned_to !== auth.staffId) {
     return json({ error: 'Engineers can only share photos on their assigned jobs' }, 403)
   }
 
@@ -56,29 +56,22 @@ export async function POST(req: NextRequest) {
   if (photosErr) return json({ error: photosErr.message }, 500)
   if (!photos || photos.length === 0) return json({ sent: false, reason: 'nothing_new' })
 
-  const { data: profile } = await service
-    .from('profiles')
-    .select('business_name')
-    .eq('id', auth.ownerId)
-    .maybeSingle()
-
-  const photoLines = photos
-    .map(p => `${p.stage === 'completed' ? 'Completed' : 'Update'}: ${p.photo_url}`)
-    .join('\n')
-
+  // The link travels as the template's URL BUTTON dynamic suffix (job_id),
+  // not embedded in body text — Meta rejects a raw URL substituted into a
+  // body parameter (error 132018, confirmed live 08-09). See
+  // lib/whatsapp.ts's sendPhotoUpdate.
   const notifRes = await fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
     body: JSON.stringify({
-      notification_type: 'service_progress_photos',
+      notification_type: 'service_photo_update',
       recipient_phone: phone,
-      message_template: 'service_progress_photos',
+      message_template: 'service_photo_update',
       data: {
+        job_id: job.id,
         ticket_number: job.ticket_number,
         device_model: job.device_model || 'your device',
         customer_name: job.customer_name || 'Customer',
-        business_name: profile?.business_name || 'Repair Centre',
-        photo_links: photoLines,
       },
     }),
   })

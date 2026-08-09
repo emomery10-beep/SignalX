@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
-import { sendNotification } from '@/lib/whatsapp'
+import { sendNotification, sendPhotoUpdate } from '@/lib/whatsapp'
 import { COUNTRY_DIAL } from '@/lib/phone'
 
 type ConsentChannel = 'whatsapp' | 'sms' | 'email'
@@ -75,7 +75,7 @@ async function isCustomerOptedOut(
 // the original internal-alert types keep their existing strict opt-in gate.
 const CUSTOMER_FACING_TYPES = new Set([
   'service_intake', 'service_ready', 'service_quote', 'service_collected', 'service_warranty',
-  'service_progress_photos',
+  'service_photo_update',
   'salon_booking_confirmed',
   'restaurant_order_confirmed', 'restaurant_reservation_confirmed',
   'logistics_dispatched_sender', 'logistics_dispatched_receiver',
@@ -169,9 +169,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ sent: false, skipped: true, reason: 'customer opted out' })
     }
 
-    // Try WhatsApp first (primary channel)
+    // Try WhatsApp first (primary channel). service_photo_update is
+    // special-cased: its link travels as a template URL BUTTON's dynamic
+    // suffix, not a body-text parameter — Meta rejects a raw URL substituted
+    // into body text (confirmed live 08-09, error 132018). See
+    // lib/whatsapp.ts's sendPhotoUpdate for the full explanation.
     if (whatsappEnabled && recipient_phone && !whatsappOptedOut) {
-      const whatsappResult = await sendWhatsApp(recipient_phone, message, dialHint)
+      const whatsappResult = notification_type === 'service_photo_update'
+        ? await sendPhotoUpdate(recipient_phone, data?.customer_name || 'Customer', data?.ticket_number || '', data?.job_id || '', dialHint)
+            .then(r => ({ success: r.ok, error: r.error, message_id: undefined as string | undefined }))
+        : await sendWhatsApp(recipient_phone, message, dialHint)
       notificationResult.methods_attempted.push('whatsapp')
 
       if (whatsappResult.success) {
@@ -261,11 +268,10 @@ function buildMessage(template: string, data: Record<string, any>): string {
 
     service_quote: `💬 Repair Quote\nHi ${data.customer_name},\n\nQuote for your ${data.device_model}:\n${data.fault_description}\n\nPrice: ${data.quoted_price}\nETA: ${data.estimated_time}\n\nReply YES to approve or call us to discuss.\n— ${data.business_name}`,
 
-    // photo_links — one "Update: <url>" / "Completed: <url>" line per photo
-    // shared since the last share (see /api/pos/service-jobs/photos/share).
-    // Plain text links, not a template image header — same reasoning as
-    // service_ready above.
-    service_progress_photos: `📷 Photo Update\nHi ${data.customer_name},\n\n${data.photo_links}\n\nTicket: ${data.ticket_number} — ${data.device_model}\n— ${data.business_name}`,
+    // Not actually what gets sent for this type (see the sendPhotoUpdate
+    // special-case above) — this string only ends up in pos_notification_log
+    // for a human-readable record of what went out.
+    service_photo_update: `📷 Photo update shared for ticket ${data.ticket_number} — view at https://pos.askbiz.co/repair/photos/${data.job_id}`,
 
     service_collected: `🧾 Repair Receipt\nHi ${data.customer_name},\n\nThank you for collecting your ${data.device_model}.\n\nTicket: ${data.ticket_number}\nTotal paid: ${data.total_paid}\n\nThank you for choosing ${data.business_name}!`,
 
