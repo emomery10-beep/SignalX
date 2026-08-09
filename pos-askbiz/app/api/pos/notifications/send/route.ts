@@ -75,6 +75,7 @@ async function isCustomerOptedOut(
 // the original internal-alert types keep their existing strict opt-in gate.
 const CUSTOMER_FACING_TYPES = new Set([
   'service_intake', 'service_ready', 'service_quote', 'service_collected', 'service_warranty',
+  'service_progress_photos',
   'salon_booking_confirmed',
   'restaurant_order_confirmed', 'restaurant_reservation_confirmed',
   'logistics_dispatched_sender', 'logistics_dispatched_receiver',
@@ -256,13 +257,15 @@ function buildMessage(template: string, data: Record<string, any>): string {
 
     service_intake: `🔧 Repair Intake Confirmation\nHi ${data.customer_name},\n\nYour device (${data.device_model}) has been checked in for repair.\n\nTicket: ${data.ticket_number}\nIssue: ${data.fault_description}\nEstimate: ${data.quoted_price}\nETA: ${data.estimated_time}\n\nWe'll notify you when it's ready.\n— ${data.business_name}`,
 
-    // photo_note (optional) — one or two "Photo: <url>" / "Replaced part: <url>"
-    // lines built by service-jobs/route.ts's completed-transition handler from
-    // whatever was captured in the "Mark Ready" photo step. Plain text links,
-    // not a template image header — see that handler for why.
-    service_ready: `✅ Repair Complete\nHi ${data.customer_name},\n\nYour ${data.device_model} is ready for collection!\n\nTicket: ${data.ticket_number}\n${data.photo_note ? '\n' + data.photo_note + '\n' : ''}\nPlease collect at your earliest convenience.\n— ${data.business_name || 'Repair Centre'}`,
+    service_ready: `✅ Repair Complete\nHi ${data.customer_name},\n\nYour ${data.device_model} is ready for collection!\n\nTicket: ${data.ticket_number}\n\nPlease collect at your earliest convenience.\n— ${data.business_name || 'Repair Centre'}`,
 
     service_quote: `💬 Repair Quote\nHi ${data.customer_name},\n\nQuote for your ${data.device_model}:\n${data.fault_description}\n\nPrice: ${data.quoted_price}\nETA: ${data.estimated_time}\n\nReply YES to approve or call us to discuss.\n— ${data.business_name}`,
+
+    // photo_links — one "Update: <url>" / "Completed: <url>" line per photo
+    // shared since the last share (see /api/pos/service-jobs/photos/share).
+    // Plain text links, not a template image header — same reasoning as
+    // service_ready above.
+    service_progress_photos: `📷 Photo Update\nHi ${data.customer_name},\n\n${data.photo_links}\n\nTicket: ${data.ticket_number} — ${data.device_model}\n— ${data.business_name}`,
 
     service_collected: `🧾 Repair Receipt\nHi ${data.customer_name},\n\nThank you for collecting your ${data.device_model}.\n\nTicket: ${data.ticket_number}\nTotal paid: ${data.total_paid}\n\nThank you for choosing ${data.business_name}!`,
 
