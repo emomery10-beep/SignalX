@@ -23,6 +23,7 @@ const OK  = '#2e7d54'
 
 type Item = { id: string; name: string; sale_price: number; stock_qty: number; image_url?: string | null }
 type Draft = { id: string; name: string; role: string; phone?: string | null; email?: string | null }
+type Job = { id: string; ticket_number: string; fault_description: string; customer_name?: string | null; quoted_price?: number | null; intake_photo_url?: string | null }
 type Screen = 'list' | 'capture' | 'import' | 'team' | 'team-add' | 'ready'
 
 // An item on its way into the catalogue. Camera extraction fills name+price;
@@ -98,6 +99,17 @@ function mapLoyverseCsv(rows: string[][]): ImportItem[] {
 // shops run on technicians/engineers, same as the other staffed types.
 const TEAM_STEP_TYPES = new Set(['retail', 'food_bev', 'salon', 'repair'])
 
+// Business types whose first-run task is logging a JOB, not stocking a
+// product catalogue. The fork/capture screens branch their whole content
+// for these — different question, different fields, different save target.
+// Deliberately doesn't collect a customer phone number here: the service-jobs
+// API auto-fires a real "intake confirmation" WhatsApp/SMS the moment a job
+// is created WITH a phone attached (see app/api/pos/service-jobs/route.ts) —
+// fine for a real check-in, wrong for a first-run screen someone might be
+// using to just try the app out. Full customer contact capture stays in the
+// real intake flow, which is built for that deliberately.
+const JOB_BASED_TYPES = new Set(['repair'])
+
 // Sound + haptic feedback — a channel beyond sight and text for users who
 // can't lean on reading. Best-effort everywhere: silently no-ops when the
 // device/browser doesn't support it.
@@ -164,6 +176,15 @@ export default function PosSetupPage() {
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState('')
   const [aiNaming, setAiNaming] = useState(false)
+
+  // Job-based first run (repair): a separate catalogue — reuses photo/
+  // saving/error above (already generic), adds its own fields. jobDesc is
+  // the one required field; customer/price are optional. No customer phone
+  // field by design — see JOB_BASED_TYPES comment.
+  const [jobs, setJobs]             = useState<Job[]>([])
+  const [jobDesc, setJobDesc]       = useState('')
+  const [jobCustomer, setJobCustomer] = useState('')
+  const [jobPrice, setJobPrice]     = useState('')
 
   // Bulk import — bring a whole existing list in from ONE photo (wall/notebook
   // price list, another POS's item screen, an IG/TikTok shop grid) or a gallery
@@ -239,6 +260,18 @@ export default function PosSetupPage() {
         }
       } catch { /* empty catalogue is the expected first-run state */ }
 
+      // Job-based types (repair) load their existing jobs instead — same
+      // resume-safe idea, different catalogue.
+      if (profile?.business_type && JOB_BASED_TYPES.has(profile.business_type)) {
+        try {
+          const res = await fetch('/api/pos/service-jobs?limit=200')
+          if (res.ok) {
+            const d = await res.json()
+            if (!cancelled) setJobs((d.jobs || []).map((j: any) => ({ id: j.id, ticket_number: j.ticket_number, fault_description: j.fault_description, customer_name: j.customer_name || null, quoted_price: j.quoted_price ?? null, intake_photo_url: j.intake_photo_url || null })))
+          }
+        } catch { /* no jobs yet is the expected first-run state */ }
+      }
+
       if (!cancelled) setLoading(false)
     })()
     return () => { cancelled = true }
@@ -274,6 +307,13 @@ export default function PosSetupPage() {
   const openCapture = async () => {
     trackFunnelEvent('setup_capture_opened', { businessType: bizType })
     setPhoto(null); setName(''); setPrice(''); setQty(''); setError('')
+    setScreen('capture')
+    await startCamera()
+  }
+
+  const openJobCapture = async () => {
+    trackFunnelEvent('setup_capture_opened', { businessType: bizType, metadata: { source: 'job' } })
+    setPhoto(null); setJobDesc(''); setJobCustomer(''); setJobPrice(''); setError('')
     setScreen('capture')
     await startCamera()
   }
@@ -348,6 +388,56 @@ export default function PosSetupPage() {
       // can't read the row they just created (research: always confirm amounts).
       speak(`${resolvedName()}. ${currencySymbol}${priceNum}`, lang)
       setItems(prev => [...prev, { id: d.product.id, name: d.product.name, sale_price: d.product.sale_price, stock_qty: d.product.stock_qty, image_url: d.product.image_url || null }])
+      stopCamera()
+      setScreen('list')
+    } catch {
+      feedback('err')
+      setError(tc('pos_setup.err_save'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Job-based first run (repair): same shape as saveItem, different target
+  // and validation (description required, not price). Photo is a second
+  // step here — service-jobs is created first to get a job id, then the
+  // photo (if any) is attached via the dedicated upload endpoint, since
+  // that's the only way the real API accepts a job photo. A failed photo
+  // upload never blocks the job itself from saving — the description is
+  // what matters, the photo is a bonus.
+  const saveJob = async () => {
+    if (!jobDesc.trim()) { setError(tc('pos_setup.err_desc')); return }
+    setSaving(true); setError('')
+    try {
+      const priceNum = jobPrice.trim() ? parseFloat(jobPrice) : undefined
+      const res = await fetch('/api/pos/service-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fault_description: jobDesc.trim(),
+          customer_name: jobCustomer.trim() || undefined,
+          quoted_price: priceNum && priceNum > 0 ? priceNum : undefined,
+        }),
+      })
+      const d = await res.json()
+      if (!res.ok) { feedback('err'); setError(d.error || tc('pos_setup.err_save')); setSaving(false); return }
+
+      let photoUrl: string | null = null
+      if (photo) {
+        try {
+          const up = await fetch('/api/pos/service-jobs/upload-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: photo, job_id: d.job.id, type: 'intake' }),
+          })
+          if (up.ok) { const ud = await up.json(); photoUrl = ud.url || null }
+        } catch { /* job is already saved — a missing photo isn't a failure */ }
+      }
+
+      feedback('ok')
+      trackFunnelEvent('setup_item_added', { businessType: bizType, metadata: { source: 'job' } })
+      speak(jobDesc.trim(), lang)
+      setJobs(prev => [...prev, { id: d.job.id, ticket_number: d.job.ticket_number, fault_description: d.job.fault_description, customer_name: d.job.customer_name || null, quoted_price: d.job.quoted_price ?? null, intake_photo_url: photoUrl }])
       stopCamera()
       setScreen('list')
     } catch {
@@ -640,7 +730,74 @@ export default function PosSetupPage() {
               </div>
             )}
 
-            {items.length === 0 ? (
+            {JOB_BASED_TYPES.has(bizType) ? (
+              /* ── Job-based (repair): log a job, not a product catalogue.
+                 No "I already have a list" fork — there's no equivalent for
+                 a first repair job, so it's one clear action, not a choice. ── */
+              jobs.length === 0 ? (
+                <>
+                  <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 8 }}>
+                    {firstName ? tc('pos_setup.repair_fork_title_named', { name: firstName }) : tc('pos_setup.repair_fork_title')}
+                  </h1>
+                  <p style={{ fontSize: 17, color: TX2, lineHeight: 1.6, marginBottom: 24 }}>
+                    {tc('pos_setup.repair_fork_subtitle')}
+                  </p>
+                  <CoachMark id="pos-setup-fork" text={tc('pos_setup.coach_repair_fork')} lang={lang}>
+                    <button onClick={openJobCapture}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: '16px', borderRadius: 16, border: `1.5px solid ${B2}`, background: SF, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 13, background: EV, color: TX, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: 18, fontWeight: 700, color: TX }}>{tc('pos_setup.repair_fork_cta_title')}</span>
+                        <span style={{ display: 'block', fontSize: 15, color: TX2, marginTop: 2, lineHeight: 1.45 }}>{tc('pos_setup.repair_fork_cta_desc')}</span>
+                      </span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  </CoachMark>
+                </>
+              ) : (
+                <>
+                  <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,5vw,28px)', fontWeight: 700, color: TX, letterSpacing: '-.02em', marginBottom: 6 }}>
+                    {jobs.length === 1 ? tc('pos_setup.job_title_count_one') : tc('pos_setup.job_title_count', { count: jobs.length })}
+                  </h1>
+                  <p style={{ fontSize: 17, color: TX2, lineHeight: 1.6, marginBottom: 24 }}>
+                    {tc('pos_setup.job_list_subtitle')}
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                    {jobs.map(j => (
+                      <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, background: SF, border: `1px solid ${B}` }}>
+                        {j.intake_photo_url ? (
+                          <img src={j.intake_photo_url} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0, background: EV }} />
+                        ) : (
+                          <div aria-hidden style={{ width: 44, height: 44, borderRadius: 10, background: EV, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 17, fontWeight: 600, color: TX, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.customer_name || j.ticket_number}</div>
+                          <div style={{ fontSize: 13, color: TX2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.fault_description}</div>
+                        </div>
+                        {j.quoted_price != null && <span style={{ fontSize: 17, fontWeight: 700, color: ACC, flexShrink: 0 }}>{currencySymbol}{j.quoted_price}</span>}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button style={{ ...bigBtn, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={openJobCapture}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                      <circle cx="12" cy="13" r="3"/>
+                    </svg>
+                    {tc('pos_setup.add_another_job')}
+                  </button>
+
+                  <button style={ghostBtn} onClick={() => { trackFunnelEvent('setup_ready_clicked', { businessType: bizType, metadata: { item_count: jobs.length } }); setScreen(TEAM_STEP_TYPES.has(bizType) ? 'team' : 'ready') }}>
+                    {tc('pos_setup.im_ready')}
+                  </button>
+                </>
+              )
+            ) : items.length === 0 ? (
               /* ── First run: how do you keep track today? Migration and start-
                  fresh are equal first choices — both are camera-first. ── */
               <>
@@ -740,7 +897,7 @@ export default function PosSetupPage() {
           <>
             <div style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', borderRadius: 16, overflow: 'hidden', background: '#000', marginBottom: 16 }}>
               {photo ? (
-                <img src={photo} alt={tc('pos_setup.photo_alt')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={photo} alt={tc(JOB_BASED_TYPES.has(bizType) ? 'pos_setup.photo_alt_job' : 'pos_setup.photo_alt')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <video ref={videoRef} playsInline muted autoPlay style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
@@ -763,32 +920,65 @@ export default function PosSetupPage() {
               </button>
             )}
 
-            <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>
-              {tc('pos_setup.name_label')}
-              {aiNaming && <span style={{ marginLeft: 8, color: ACC, fontWeight: 500 }}>{tc('pos_setup.ai_naming')}</span>}
-            </label>
-            <input
-              value={name} onChange={e => setName(e.target.value)}
-              placeholder={tc('pos_setup.name_placeholder')}
-              style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 16 }}
-            />
+            {JOB_BASED_TYPES.has(bizType) ? (
+              /* ── Job fields: description is the one required field. No
+                 customer phone number — see JOB_BASED_TYPES comment above. ── */
+              <>
+                <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.job_desc_label')}</label>
+                <textarea
+                  value={jobDesc} onChange={e => setJobDesc(e.target.value)}
+                  placeholder={tc('pos_setup.job_desc_placeholder')}
+                  rows={3}
+                  style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 16, resize: 'vertical' }}
+                />
 
-            <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.price_label')}</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <span style={{ fontSize: 28, fontWeight: 700, color: TX }}>{currencySymbol}</span>
-              <input
-                value={price} onChange={e => setPrice(e.target.value.replace(/[^\d.]/g, ''))}
-                inputMode="decimal" placeholder="0"
-                style={{ flex: 1, padding: '14px 16px', fontSize: 28, fontWeight: 700, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-              />
-            </div>
+                <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.job_customer_label')}</label>
+                <input
+                  value={jobCustomer} onChange={e => setJobCustomer(e.target.value)}
+                  placeholder={tc('pos_setup.job_customer_placeholder')}
+                  style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 16 }}
+                />
 
-            <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.qty_label')}</label>
-            <input
-              value={qty} onChange={e => setQty(e.target.value.replace(/[^\d.]/g, ''))}
-              inputMode="decimal" placeholder={tc('pos_setup.qty_placeholder')}
-              style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 20 }}
-            />
+                <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.job_price_label')}</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: TX }}>{currencySymbol}</span>
+                  <input
+                    value={jobPrice} onChange={e => setJobPrice(e.target.value.replace(/[^\d.]/g, ''))}
+                    inputMode="decimal" placeholder="0"
+                    style={{ flex: 1, padding: '14px 16px', fontSize: 28, fontWeight: 700, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>
+                  {tc('pos_setup.name_label')}
+                  {aiNaming && <span style={{ marginLeft: 8, color: ACC, fontWeight: 500 }}>{tc('pos_setup.ai_naming')}</span>}
+                </label>
+                <input
+                  value={name} onChange={e => setName(e.target.value)}
+                  placeholder={tc('pos_setup.name_placeholder')}
+                  style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 16 }}
+                />
+
+                <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.price_label')}</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: TX }}>{currencySymbol}</span>
+                  <input
+                    value={price} onChange={e => setPrice(e.target.value.replace(/[^\d.]/g, ''))}
+                    inputMode="decimal" placeholder="0"
+                    style={{ flex: 1, padding: '14px 16px', fontSize: 28, fontWeight: 700, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <label style={{ fontSize: 15, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('pos_setup.qty_label')}</label>
+                <input
+                  value={qty} onChange={e => setQty(e.target.value.replace(/[^\d.]/g, ''))}
+                  inputMode="decimal" placeholder={tc('pos_setup.qty_placeholder')}
+                  style={{ width: '100%', padding: '13px 15px', fontSize: 18, background: EV, border: `1.5px solid ${B2}`, borderRadius: 12, color: TX, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 20 }}
+                />
+              </>
+            )}
 
             {error && (
               <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
@@ -797,9 +987,9 @@ export default function PosSetupPage() {
               </div>
             )}
 
-            <button style={{ ...bigBtn, marginBottom: 10, opacity: saving ? .7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={saveItem} disabled={saving}>
+            <button style={{ ...bigBtn, marginBottom: 10, opacity: saving ? .7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={JOB_BASED_TYPES.has(bizType) ? saveJob : saveItem} disabled={saving}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              {saving ? tc('pos_setup.saving') : tc('pos_setup.save_item')}
+              {saving ? tc('pos_setup.saving') : tc(JOB_BASED_TYPES.has(bizType) ? 'pos_setup.save_job' : 'pos_setup.save_item')}
             </button>
             <button style={ghostBtn} onClick={() => { stopCamera(); setScreen('list') }} disabled={saving}>
               {tc('pos_setup.cancel')}
