@@ -661,23 +661,34 @@ export async function POST(request: NextRequest) {
       // 30 days had its oldest 114 (36%) dropped from every "last 30 days" figure below —
       // revenue, margin, top products, busiest hour, day-of-week — not just product lookups.
       service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff!cashier_id(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(1000),
-      service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price,location_id').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(100),
+      // 100→1000: `inv.length` is stated as fact ("Inventory (N products)" and per-branch counts
+      // below) — a catalogue over 100 active SKUs would undercount both. The `.slice(0, 60)` that
+      // actually builds the AI-facing text stays as-is; this only affects the underlying fetch.
+      service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price,location_id').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(1000),
       service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
+      // Top spenders — display-only, each row's total_spent is already its own complete
+      // lifetime figure, so showing only the top 10 is correct by design, not truncation.
       service.from('pos_customers').select('id,name,phone,total_spent,visit_count,last_seen_at').eq('owner_id', user.id).order('total_spent', { ascending: false }).limit(10),
-      // Customers who owe money (deni/book-credit ledger cache column, indexed for this exact lookup)
-      service.from('pos_customers').select('name,phone,balance_owed').eq('owner_id', user.id).neq('balance_owed', 0).order('balance_owed', { ascending: false }).limit(10),
-      service.from('anomalies').select('type,severity,title,body,product,metric,created_at').eq('user_id', user.id).eq('seen', false).order('created_at', { ascending: false }).limit(10),
+      // Customers who owe money (deni/book-credit ledger cache column, indexed for this exact
+      // lookup). Unlike the top-spenders query above, the total owed IS summed across these rows
+      // and stated as "across N customers" — a real credit-heavy shop can plausibly have more
+      // than 10 people on the book, so this one needs the full 1000, not a display-sized cap.
+      service.from('pos_customers').select('name,phone,balance_owed').eq('owner_id', user.id).neq('balance_owed', 0).order('balance_owed', { ascending: false }).limit(1000),
+      service.from('anomalies').select('type,severity,title,body,product,metric,created_at').eq('user_id', user.id).eq('seen', false).order('created_at', { ascending: false }).limit(1000),
       service.from('alerts').select('name,type,condition,last_triggered_at,enabled').eq('user_id', user.id).eq('enabled', true).limit(10),
       service.from('forecasts').select('metric,value,period,confidence,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       service.from('health_scores').select('score,label,summary,components,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1),
-      // Shift management
-      service.from('pos_shifts').select('cashier_id,opening_balance,closing_balance,expected_balance,variance_amount,variance_reason,status,opened_at,closed_at').eq('owner_id', user.id).gte('opened_at', from.toISOString()).lte('opened_at', to.toISOString()).order('opened_at', { ascending: false }).limit(20),
+      // Shift management — cash variance total and reconciliation rate % are both computed by
+      // summing across every fetched shift and stated as exact figures below, so (like
+      // pos_transactions above) this needs the full 1000: a multi-till, multi-staff shop can
+      // easily log more than 20 shifts in a month.
+      service.from('pos_shifts').select('cashier_id,opening_balance,closing_balance,expected_balance,variance_amount,variance_reason,status,opened_at,closed_at').eq('owner_id', user.id).gte('opened_at', from.toISOString()).lte('opened_at', to.toISOString()).order('opened_at', { ascending: false }).limit(1000),
       // Decisions log
       service.from('decisions').select('title,decision_type,product,before_value,after_value,review_at,reviewed,review_verdict,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
       // Connected integrations
       service.from('connected_sources').select('source_type,name,status,last_synced_at,error_message').eq('user_id', user.id),
-      // M-Pesa payments
-      service.from('mpesa_payments').select('amount,status,mpesa_receipt,plan,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      // M-Pesa payments — "Total received" is summed across every fetched row below.
+      service.from('mpesa_payments').select('amount,status,mpesa_receipt,plan,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1000),
       // Latest daily brief
       service.from('daily_briefs').select('improved,worsened,action,health_score,date,created_at').eq('user_id', user.id).order('date', { ascending: false }).limit(1),
       // Locations
@@ -1093,6 +1104,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Every `.limit(N)` from here to the end of this section was raised to 1000 (same fix and
+    // same reasoning as the main pos_transactions query near the top of this block — see its
+    // comment) wherever the fetched rows feed a sum/count/rate that gets stated in posContext
+    // as an exact fact — a shrinkage %, a downtime total, a reconciliation rate, a "totalling
+    // £X" line, etc. A low cap there doesn't just hide a row, it silently corrupts a number the
+    // model is then told to state with full confidence. Left alone: caps on queries whose rows
+    // are individually complete and already sorted by relevance for display (e.g. top-10
+    // customers by their own cached total_spent) — showing only the top N of those is correct
+    // by design, not truncation, since no aggregate is being summed across the cut rows.
+
     // Expenses — query the real cfo_expenses tracker (manually-entered / receipt-scanned
     // business outgoings) for the resolved date window. Previously an expense question got
     // no expense data at all and the LLM either fabricated "expense tracking isn't available"
@@ -1108,7 +1129,7 @@ export async function POST(request: NextRequest) {
         .gte('date', expFrom)
         .lte('date', expTo)
         .order('date', { ascending: false })
-        .limit(500)
+        .limit(1000)
       if (expError) console.error('cfo_expenses query error:', expError.message)
       const expenses = expenseRows || []
       const totalExpenses = expenses.reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0)
@@ -1137,7 +1158,7 @@ export async function POST(request: NextRequest) {
         .select('type, counterparty, amount, due_date, status')
         .eq('user_id', user.id)
         .order('due_date', { ascending: true })
-        .limit(200)
+        .limit(1000)
       if (recErr) console.error('cfo_receivables query error:', recErr.message)
       const receivables = (recRows || []).filter((r: any) => r.type === 'receivable')
       const payables = (recRows || []).filter((r: any) => r.type === 'payable')
@@ -1168,7 +1189,7 @@ export async function POST(request: NextRequest) {
         .gte('created_at', from.toISOString())
         .lte('created_at', to.toISOString())
         .order('created_at', { ascending: false })
-        .limit(100)
+        .limit(1000)
       if (poErr) console.error('purchase_orders query error:', poErr.message)
       const pos = poRows || []
       const totalPoSpend = pos.reduce((s: number, p: any) => s + (Number(p.total_cost) || 0), 0)
@@ -1196,7 +1217,7 @@ export async function POST(request: NextRequest) {
           .select('id, po_id, name, qty_ordered, qty_received, unit_cost, line_total, created_at')
           .in('po_id', poIds)
           .order('line_total', { ascending: false })
-          .limit(500)
+          .limit(1000)
         if (poItemErr) console.error('purchase_order_items query error:', poItemErr.message)
         const poItems = poItemRows || []
         if (poItems.length > 0) {
@@ -1234,14 +1255,14 @@ export async function POST(request: NextRequest) {
     // restaurant-type businesses; empty results are expected and fine for other business types.
     if (isRestaurantOpsQuestion) {
       const [ordRes, wasteRes, laborRes, menuRes, onlineRes, resvRes, delivRes] = await Promise.all([
-        service.from('restaurant_orders').select('id, status, order_type, covers, total, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(500),
-        service.from('restaurant_waste_log').select('item_name, qty, unit, total_cost, reason, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
-        service.from('restaurant_labor_shifts').select('role, total_hours, total_cost, clock_in').eq('owner_id', user.id).gte('clock_in', from.toISOString()).lte('clock_in', to.toISOString()).limit(200),
+        service.from('restaurant_orders').select('id, status, order_type, covers, total, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
+        service.from('restaurant_waste_log').select('item_name, qty, unit, total_cost, reason, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
+        service.from('restaurant_labor_shifts').select('role, total_hours, total_cost, clock_in').eq('owner_id', user.id).gte('clock_in', from.toISOString()).lte('clock_in', to.toISOString()).limit(1000),
         // Menu — not date-windowed (a live menu, not a period event). Only sellable items.
-        service.from('restaurant_menu_items').select('id, name, price, food_cost, station, available, eighty_sixed, created_at').eq('owner_id', user.id).eq('available', true).limit(300),
-        service.from('restaurant_online_orders').select('id, status, customer_name, subtotal, total, requested_time, source, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(300),
-        service.from('restaurant_reservations').select('id, customer_name, covers, reserved_at, duration_mins, status, created_at').eq('owner_id', user.id).gte('reserved_at', from.toISOString()).lte('reserved_at', to.toISOString()).limit(300),
-        service.from('restaurant_deliveries').select('id, supplier_name, invoice_ref, delivery_date, currency, total_value, items_count, created_at').eq('owner_id', user.id).gte('delivery_date', from.toISOString().slice(0, 10)).lte('delivery_date', to.toISOString().slice(0, 10)).order('delivery_date', { ascending: false }).limit(200),
+        service.from('restaurant_menu_items').select('id, name, price, food_cost, station, available, eighty_sixed, created_at').eq('owner_id', user.id).eq('available', true).limit(1000),
+        service.from('restaurant_online_orders').select('id, status, customer_name, subtotal, total, requested_time, source, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
+        service.from('restaurant_reservations').select('id, customer_name, covers, reserved_at, duration_mins, status, created_at').eq('owner_id', user.id).gte('reserved_at', from.toISOString()).lte('reserved_at', to.toISOString()).limit(1000),
+        service.from('restaurant_deliveries').select('id, supplier_name, invoice_ref, delivery_date, currency, total_value, items_count, created_at').eq('owner_id', user.id).gte('delivery_date', from.toISOString().slice(0, 10)).lte('delivery_date', to.toISOString().slice(0, 10)).order('delivery_date', { ascending: false }).limit(1000),
       ])
       if (ordRes.error) console.error('restaurant_orders query error:', ordRes.error.message)
       if (menuRes.error) console.error('restaurant_menu_items query error:', menuRes.error.message)
@@ -1456,7 +1477,7 @@ export async function POST(request: NextRequest) {
         .eq('owner_id', user.id)
         .gte('created_at', from.toISOString())
         .lte('created_at', to.toISOString())
-        .limit(200)
+        .limit(1000)
       if (jobErr) console.error('pos_service_jobs query error:', jobErr.message)
       const jobs = jobRows || []
       posContext += `\nREPAIR/SERVICE JOBS (${periodLabel}):\n`
@@ -1478,7 +1499,7 @@ export async function POST(request: NextRequest) {
             .from('pos_service_parts')
             .select('id, job_id, name, qty, unit_cost, line_total, created_at')
             .in('job_id', jobIds)
-            .limit(500)
+            .limit(1000)
           if (partErr) console.error('pos_service_parts query error:', partErr.message)
           const parts = partRows || []
           if (parts.length > 0) {
@@ -1507,12 +1528,12 @@ export async function POST(request: NextRequest) {
     // (inbound/outbound freight tracking) and from the parcel-quote intent (outbound rate shopping).
     if (isLogisticsFleetQuestion) {
       const [truckRes, parcelRes, routeRes, logInvRes] = await Promise.all([
-        service.from('pos_trucks').select('plate_number, status').eq('owner_id', user.id).limit(100),
-        service.from('pos_parcels').select('tracking_number, status, destination_city, fee_charged, payment_status, created_at').eq('owner_id', user.id).not('status', 'in', '("delivered","collected","returned")').order('created_at', { ascending: false }).limit(50),
-        service.from('pos_routes').select('id, name, distance_km, price_per_kg, flat_rate, estimated_hours, active, created_at').eq('owner_id', user.id).eq('active', true).limit(100),
+        service.from('pos_trucks').select('plate_number, status').eq('owner_id', user.id).limit(1000),
+        service.from('pos_parcels').select('tracking_number, status, destination_city, fee_charged, payment_status, created_at').eq('owner_id', user.id).not('status', 'in', '("delivered","collected","returned")').order('created_at', { ascending: false }).limit(1000),
+        service.from('pos_routes').select('id, name, distance_km, price_per_kg, flat_rate, estimated_hours, active, created_at').eq('owner_id', user.id).eq('active', true).limit(1000),
         // Fleet OPERATING COST (fuel/maintenance/tolls) — despite the "invoices" name these
         // are costs the business pays out, NOT receivables owed to it.
-        service.from('pos_logistics_invoices').select('id, vendor_name, invoice_number, total_amount, currency, invoice_date, category, notes, created_at').eq('owner_id', user.id).gte('invoice_date', from.toISOString().slice(0, 10)).lte('invoice_date', to.toISOString().slice(0, 10)).order('invoice_date', { ascending: false }).limit(300),
+        service.from('pos_logistics_invoices').select('id, vendor_name, invoice_number, total_amount, currency, invoice_date, category, notes, created_at').eq('owner_id', user.id).gte('invoice_date', from.toISOString().slice(0, 10)).lte('invoice_date', to.toISOString().slice(0, 10)).order('invoice_date', { ascending: false }).limit(1000),
       ])
       if (truckRes.error) console.error('pos_trucks query error:', truckRes.error.message)
       if (parcelRes.error) console.error('pos_parcels query error:', parcelRes.error.message)
@@ -1563,9 +1584,9 @@ export async function POST(request: NextRequest) {
     // its `data` is null, and the other five still contribute — nothing throws.
     if (isFactoryQuestion) {
       const [batchRes, captureRes, waybillRes] = await Promise.all([
-        service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
-        service.from('pos_factory_captures').select('type, quantity, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(300),
-        service.from('pos_factory_waybills').select('destination, product_name, quantity, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(100),
+        service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
+        service.from('pos_factory_captures').select('type, quantity, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
+        service.from('pos_factory_waybills').select('destination, product_name, quantity, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
       ])
       if (batchRes.error) console.error('pos_factory_batches query error:', batchRes.error.message)
       if (captureRes.error) console.error('pos_factory_captures query error:', captureRes.error.message)
@@ -1578,20 +1599,20 @@ export async function POST(request: NextRequest) {
       // and merged. Same owner_id column on both sides, similar shape.
       const [dtRootRes, dtPosRes, qcRootRes, qcPosRes, shRootRes, shPosRes] = await Promise.all([
         // root-side
-        service.from('pos_factory_downtime').select('id, machine_name, reason, started_at, ended_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        service.from('pos_factory_downtime').select('id, machine_name, reason, started_at, ended_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(1000),
         // pos-askbiz-side
-        service.from('pos_factory_downtime_events').select('id, machine_name, reason, status, started_at, ended_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        service.from('pos_factory_downtime_events').select('id, machine_name, reason, status, started_at, ended_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(1000),
         // root-side
-        service.from('pos_factory_quality').select('id, defect_type, severity, product_name, quantity_affected, status, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
+        service.from('pos_factory_quality').select('id, defect_type, severity, product_name, quantity_affected, status, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
         // pos-askbiz-side
-        service.from('pos_factory_quality_checks').select('id, outcome, defect_type, severity, quantity_affected, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(200),
+        service.from('pos_factory_quality_checks').select('id, outcome, defect_type, severity, quantity_affected, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
         // root-side (no target/actual output columns on this one — count and duration only)
-        service.from('pos_factory_shifts').select('id, shift_name, started_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        service.from('pos_factory_shifts').select('id, shift_name, started_at, duration_minutes').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(1000),
         // pos-askbiz-side
         // duration_minutes exists on this table too (pos-askbiz's own factory_production_shifts
         // migration) — omitting it here meant a pos-askbiz-only merchant's logged hours were
         // silently dropped from the merged sum below (root-side rows would contribute, theirs never would).
-        service.from('pos_factory_production_shifts').select('id, shift_name, target_units, actual_output, duration_minutes, status, started_at').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(200),
+        service.from('pos_factory_production_shifts').select('id, shift_name, target_units, actual_output, duration_minutes, status, started_at').eq('owner_id', user.id).gte('started_at', from.toISOString()).lte('started_at', to.toISOString()).limit(1000),
       ])
       if (dtRootRes.error) console.error('pos_factory_downtime query error:', dtRootRes.error.message)
       if (dtPosRes.error) console.error('pos_factory_downtime_events query error:', dtPosRes.error.message)
@@ -1672,7 +1693,7 @@ export async function POST(request: NextRequest) {
         .gte('scheduled_at', from.toISOString())
         .lte('scheduled_at', to.toISOString())
         .order('scheduled_at', { ascending: false })
-        .limit(200)
+        .limit(1000)
       if (apptErr) console.error('salon_appointments query error:', apptErr.message)
       const appts = apptRows || []
       posContext += `\nSALON APPOINTMENTS (${periodLabel}):\n`
@@ -1692,7 +1713,7 @@ export async function POST(request: NextRequest) {
       // windowing it would hide exactly the people the merchant needs to see.
       const lapsedCutoff = new Date(now); lapsedCutoff.setDate(lapsedCutoff.getDate() - 60)
       const [usageRes, clientRes] = await Promise.all([
-        service.from('salon_product_usage').select('id, appointment_id, client_id, product_name, amount_used, unit, cost, service_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(500),
+        service.from('salon_product_usage').select('id, appointment_id, client_id, product_name, amount_used, unit, cost, service_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
         // .or() so clients who have NEVER visited (last_visit_at is null) aren't silently dropped —
         // a plain .lt() comparison excludes nulls in SQL, which would hide exactly the clients most
         // overdue for a win-back message.
@@ -1734,7 +1755,7 @@ export async function POST(request: NextRequest) {
         .eq('owner_id', user.id)
         .in('status', ['pending', 'failed'])
         .order('created_at', { ascending: false })
-        .limit(100)
+        .limit(1000)
       if (payErr) console.error('pos_payments query error:', payErr.message)
       const stuckPayments = payRows || []
       posContext += `\nSTUCK/FAILED PAYMENTS (current, not period-scoped):\n`
@@ -1754,7 +1775,7 @@ export async function POST(request: NextRequest) {
         .eq('user_id', user.id)
         .in('status', ['pending_submission', 'submitted', 'failed', 'cancelled'])
         .order('charge_date', { ascending: false })
-        .limit(100)
+        .limit(1000)
       if (ddErr) console.error('gocardless_payments query error:', ddErr.message)
       const directDebits = ddRows || []
       // Explicitly labelled all-time/not-period-scoped — unlike an arbitrary lookback cutoff, this
@@ -1789,7 +1810,7 @@ export async function POST(request: NextRequest) {
         .gte('created_at', from.toISOString())
         .lte('created_at', to.toISOString())
         .order('created_at', { ascending: false })
-        .limit(200)
+        .limit(1000)
       if (adjErr) console.error('pos_stock_adjustments query error:', adjErr.message)
       const adjustments = adjRows || []
       posContext += `\nSTOCKTAKE / SHRINKAGE (${periodLabel}):\n`
@@ -1924,7 +1945,7 @@ export async function POST(request: NextRequest) {
         .gte('sent_at', from.toISOString())
         .lte('sent_at', to.toISOString())
         .order('sent_at', { ascending: false })
-        .limit(50)
+        .limit(1000)
       if (campErr) console.error('email_campaigns query error:', campErr.message)
       const campaigns = campRows || []
       posContext += `\nEMAIL CAMPAIGNS (${periodLabel}):\n`
