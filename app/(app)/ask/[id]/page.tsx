@@ -177,6 +177,17 @@ export default function ChatConversationPage() {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
   }
 
+  // autoResize above grows the textarea by writing `style.height` straight onto the DOM node —
+  // `height` is never in the React `style` prop below, so React never re-asserts it on render.
+  // That's fine while typing, but nothing ever shrank it back: sendMessage() clears `input`
+  // without going through onChange, so a box grown tall for a multi-line question stayed stuck
+  // at that height — the placeholder ends up sitting near the bottom of an oversized bar.
+  // Tying the reset to `input` itself (rather than patching sendMessage) self-corrects however
+  // the value became empty.
+  useEffect(() => {
+    if (!input && inputRef.current) inputRef.current.style.height = 'auto'
+  }, [input])
+
   const suggestions = BIZ_QUESTIONS[settings.bizType] || BIZ_QUESTIONS.retail
   const isEmpty = messages.length === 0
   const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)

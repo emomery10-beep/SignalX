@@ -244,6 +244,19 @@ export default function HumanFirstSearch({
     setIsDeleting(false)
   }, [userState])
 
+  // The onChange handler below grows the textarea by writing `style.height` directly to the
+  // DOM node (a plain imperative mutation — `height` is never in the React `style` prop, so
+  // React never re-asserts it on render). That's fine while the user is typing, but nothing
+  // ever shrank it back: sending a message clears `inputValue` without going through onChange,
+  // so a box grown tall for a multi-line question stayed stuck at that height indefinitely,
+  // leaving the (now empty) placeholder sitting near the bottom of an oversized bar — reported
+  // as "the search bar is too big, not dynamic, the writing is too low". Tying the reset to
+  // `inputValue` itself (rather than patching every call site that clears it) means it
+  // self-corrects however the value became empty — sent, cleared, voice input, anything.
+  useEffect(() => {
+    if (!inputValue && inputRef.current) inputRef.current.style.height = 'auto'
+  }, [inputValue, inputRef])
+
   const hasVoice = !!onVoiceToggle
   const canSend = !!inputValue.trim() && !isLoading
 
