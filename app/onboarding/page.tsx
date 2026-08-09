@@ -422,7 +422,13 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
-      setPendingNudge(POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home')
+      // Straight to the real dashboard now, not a separate setup wizard —
+      // /pos itself handles both the not-yet-enabled paywall/trial-claim
+      // state and, once enabled, the first-run product tour (see
+      // app/(app)/pos/page.tsx's tourStep). /pos/setup still exists as a
+      // redirect for anyone with an old link, it just no longer does
+      // anything on its own.
+      setPendingNudge(POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home')
     } catch (e) { console.error(e) } finally { setSaving(false) }
   }
 
@@ -477,7 +483,7 @@ export default function OnboardingPage() {
       // pay), not straight to the paywalled dashboard. Show the passkey nudge
       // once here, now that onboarding is actually done, instead of before
       // signup even started.
-      setPendingNudge(dest ?? (POS_LANDING_TYPES.has(bizType) ? '/pos/setup' : '/home'))
+      setPendingNudge(dest ?? (POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home'))
       return true
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Something went wrong — please try again.')
@@ -961,6 +967,35 @@ export default function OnboardingPage() {
               <p style={{ fontSize: 12, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
                 {isPosPersona ? tc('onboarding.done_subtitle_pos') : tc('onboarding.done_subtitle')}
               </p>
+              {/* At-a-glance map of what's left — a substitute for a proper
+                  tutorial video, which needs real production we don't have.
+                  Cheap to build, doesn't need hosting, and answers "where do
+                  I go next" up front instead of leaving each screen to
+                  explain only itself. market_stall skips the team step
+                  (TEAM_STEP_TYPES doesn't include it), so it gets 2 steps,
+                  not 3 — a step that never actually appears would be worse
+                  than no map at all. */}
+              {isPosPersona && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6, maxWidth: 380, margin: '0 auto 24px' }}>
+                  {[
+                    bizType === 'repair' ? tc('onboarding.next_step_job') : tc('onboarding.next_step_catalog'),
+                    // market_stall is the one POS type that skips the team
+                    // step (TEAM_STEP_TYPES in app/(app)/pos/setup/page.tsx
+                    // excludes it) — mirrored here, not imported, since this
+                    // is a route-boundary client/server split, not a shared module.
+                    ...(bizType !== 'market_stall' ? [tc('onboarding.next_step_team')] : []),
+                    tc('onboarding.next_step_sell'),
+                  ].map((label, i, arr) => (
+                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 9999, background: EV, fontSize: 11, fontWeight: 600, color: TX2, whiteSpace: 'nowrap' }}>
+                        <span style={{ width: 15, height: 15, borderRadius: '50%', background: ACC, color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                        {label}
+                      </span>
+                      {i < arr.length - 1 && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m9 18 6-6-6-6"/></svg>}
+                    </span>
+                  ))}
+                </div>
+              )}
               {isPosPersona && ownerPin && (
                 <div style={{ maxWidth: 340, margin: '0 auto 20px', padding: '18px 20px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: `1.5px solid ${ACC}` }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: TX, marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
@@ -996,8 +1031,12 @@ export default function OnboardingPage() {
                 rel="noopener noreferrer"
                 style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', maxWidth: 340, margin: '0 auto 20px', padding: '14px 16px', borderRadius: 14, background: 'rgba(37,211,102,.08)', border: '1px solid rgba(37,211,102,.25)', textDecoration: 'none' }}
               >
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(37,211,102,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2.13c-5.45 0-9.9 4.45-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2 22l5.15-1.35a9.9 9.9 0 0 0 4.89 1.28h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.64-1.03-5.13-2.9-7-1.86-1.87-4.35-2.9-7-2.9Zm5.8 14.14c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.8-.11a16 16 0 0 1-1.62-.6c-2.85-1.23-4.7-4.1-4.85-4.3-.14-.2-1.15-1.53-1.15-2.92 0-1.4.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.65.5.24.55.82 1.9.89 2.04.07.14.12.3.02.49-.1.19-.15.3-.3.46-.14.17-.3.37-.43.5-.14.14-.3.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.28.14.45.12.62-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.66-.17 1.3Z"/></svg>
+                {/* Solid brand-green circle + white glyph — the pale 16%-tint
+                    version read as washed out and hard to place at a glance;
+                    this is the same treatment WhatsApp's own share/contact
+                    buttons use everywhere, so it reads instantly. */}
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,211,102,.35)' }} aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2.13c-5.45 0-9.9 4.45-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2 22l5.15-1.35a9.9 9.9 0 0 0 4.89 1.28h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.64-1.03-5.13-2.9-7-1.86-1.87-4.35-2.9-7-2.9Zm5.8 14.14c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.8-.11a16 16 0 0 1-1.62-.6c-2.85-1.23-4.7-4.1-4.85-4.3-.14-.2-1.15-1.53-1.15-2.92 0-1.4.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.65.5.24.55.82 1.9.89 2.04.07.14.12.3.02.49-.1.19-.15.3-.3.46-.14.17-.3.37-.43.5-.14.14-.3.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.28.14.45.12.62-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.66-.17 1.3Z"/></svg>
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: TX, marginBottom: 2 }}>{tc('onboarding.whatsapp_help_title')}</div>

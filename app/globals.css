@@ -55,7 +55,15 @@ body {
 /* Tap targets — minimum 44px on mobile.
    Opt out with className="no-tap-target" on any element that manages its
    own compact sizing (e.g. a dense form) — otherwise min-height always wins
-   over an inline height/padding, silently re-inflating anything you shrink. */
+   over an inline height/padding, silently re-inflating anything you shrink.
+   justify-content:center was missing here — align-items only centers
+   vertically, so switching every button to inline-flex silently left-aligned
+   any plain-text button that used to get free centering from the browser's
+   default block-button behavior (no visible symptom until a button had no
+   icon-row override of its own, e.g. onboarding's ghostBtn and
+   PasskeyNudge's two buttons). A component's own inline justify-content
+   still wins over this — this only sets the default for buttons that don't
+   specify one. */
 button:not(.no-tap-target),
 a:not(.no-tap-target),
 label:not(.no-tap-target),
@@ -63,6 +71,7 @@ label:not(.no-tap-target),
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
 

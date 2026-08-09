@@ -17,6 +17,8 @@ import StaffTemplatesTab from '@/components/pos/StaffTemplatesTab'
 import GettingStartedChecklist from '@/components/onboarding/GettingStartedChecklist'
 import { getTemplateById } from '@/lib/staff-templates'
 import { useLang } from '@/components/LanguageProvider'
+import CoachMark from '@/components/CoachMark'
+import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 
 // ── Module-level builder functions (called inside the component with tc) ──
 // Sector option lists (id = logic key, label = displayed)
@@ -149,7 +151,7 @@ type TxDetailType = Transaction | null
 const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2', factory: '#64748b' }
 
 export default function POSPage() {
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
   const supabase = createClient()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -238,6 +240,80 @@ export default function POSPage() {
   const [newPin, setNewPin] = useState('')
   const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
+
+  // First-run product tour — walks a new owner through the REAL Add Staff
+  // flow on this same page (spotlight + voice via CoachMark, one step at a
+  // time) instead of a separate wizard page. 0 = not touring. 1-5 map to
+  // the steps below; each advances automatically when its real action
+  // actually happens, never on a timer or a "Next" click.
+  const [tourStep, setTourStep] = useState(0)
+  const POS_TOUR_DONE_KEY = 'askbiz_pos_tour_done'
+
+  // Trial claim, for anyone who lands on this page's paywall without having
+  // claimed it during onboarding (e.g. they picked "Set up my till" and
+  // skipped it, or are just returning to an old bookmark). Same API action
+  // and one-time PIN pattern as onboarding/page.tsx and pos/setup/page.tsx.
+  const [posTrialLoading, setPosTrialLoading] = useState(false)
+  const [posTrialError, setPosTrialError]     = useState('')
+  const [posOwnerPin, setPosOwnerPin]         = useState('')
+  const claimTrialFromPos = async () => {
+    setPosTrialLoading(true)
+    setPosTrialError('')
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        setPosEnabled(true)
+        if (d.owner_pin) setPosOwnerPin(String(d.owner_pin))
+      } else {
+        setPosTrialError(d.error || tc('pos_app.toast_staff_add_failed'))
+      }
+    } catch {
+      setPosTrialError(tc('pos_app.toast_staff_add_failed'))
+    } finally {
+      setPosTrialLoading(false)
+    }
+  }
+
+  const skipTour = () => {
+    setTourStep(0)
+    try { localStorage.setItem(POS_TOUR_DONE_KEY, '1') } catch { /* best-effort */ }
+  }
+
+  // Start the tour once we actually know posEnabled is true (not the null
+  // "still loading" state) and it hasn't been done/skipped on this device
+  // before. Forces the Staff tab open too — the Add Staff button this tour
+  // targets only exists in the DOM there.
+  useEffect(() => {
+    if (posEnabled !== true) return
+    let done = true
+    try { done = localStorage.getItem(POS_TOUR_DONE_KEY) === '1' } catch { /* fail open to "done" — never nag if storage is blocked */ }
+    if (!done) {
+      setTab('staff')
+      setTourStep(1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posEnabled])
+
+  // Each effect advances exactly one step, gated on the real state change
+  // that step is actually about. No timers, no "Next" button — the tour
+  // moves at the pace the owner actually moves at.
+  useEffect(() => {
+    if (tourStep === 1 && showAddStaff) setTourStep(2)
+  }, [tourStep, showAddStaff])
+  useEffect(() => {
+    if (tourStep === 2 && newName.trim()) setTourStep(3)
+  }, [tourStep, newName])
+  useEffect(() => {
+    if (tourStep === 3 && (newPhone.trim() || newEmail.trim())) setTourStep(4)
+  }, [tourStep, newPhone, newEmail])
+  useEffect(() => {
+    if (tourStep === 4 && newPin.length >= 4) setTourStep(5)
+  }, [tourStep, newPin])
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
   const [editPhone, setEditPhone] = useState('')
   const [editEmail, setEditEmail] = useState('')
@@ -665,6 +741,7 @@ export default function POSPage() {
           setNewPin('')
           setNewLocationId('')
           setShowAddStaff(false)
+          if (tourStep > 0) skipTour() // real completion, not a skip — same end state either way
           notify(tc('pos_app.toast_staff_added_template', { name: data.staff.name, template: data.staff.template?.name }))
         } else {
           notify(data.error || tc('pos_app.toast_staff_add_failed'), false)
@@ -1066,49 +1143,86 @@ export default function POSPage() {
   if (!posEnabled) return (
     <div className="page-shell">
       <div className="page-shell-body" style={{ display: 'flex', flexDirection: 'column' }}>
-        {/* Resume banner: a POS-persona vendor who onboarded but hasn't finished
-            setup + payment gets sent back into the guided flow, not left on this
-            generic paywall. Shares the page-shell-body gutter with the card below
-            so the two pieces of this state read as one page, not two. */}
-        {['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase()) && (
-          <a href="/pos/setup" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', marginBottom: 24, padding: '16px 18px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, color: 'inherit' }}>
-            <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 10, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_app.resume_setup_title')}</div>
-              <div style={{ fontSize: 15, color: 'var(--tx2)', marginTop: 2 }}>{tc('pos_app.resume_setup_desc')}</div>
-            </div>
-            <span style={{ flexShrink: 0, fontSize: 16, fontWeight: 700, color: ACC }}>{tc('pos_app.resume_setup_cta')}</span>
-          </a>
-        )}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-          <div style={{ maxWidth: 480, textAlign: 'center' }}>
-            <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
-            <p style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
-              {tc('pos_app.disabled_desc')}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 28 }}>
-              {[tc('pos_app.disabled_feature_1'), tc('pos_app.disabled_feature_2'), tc('pos_app.disabled_feature_3'), tc('pos_app.disabled_feature_4'), tc('pos_app.disabled_feature_5'), tc('pos_app.disabled_feature_6')].map(f => (
-                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, color: 'var(--tx2)' }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                  {f}
+        {/* POS-persona businesses get a direct trial claim right here instead
+            of a link out to a separate setup wizard (that page now just
+            redirects back to this exact spot anyway — see
+            app/(app)/pos/setup/page.tsx). Claiming flips posEnabled locally,
+            so the page falls straight through to the real dashboard below
+            and the tour picks up from there. Everyone else (Business
+            Intelligence types, which don't get a free POS trial) keeps the
+            original paid-seats paywall unchanged. */}
+        {['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase()) ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
+            <div style={{ maxWidth: 400, width: '100%' }}>
+              {posOwnerPin ? (
+                <div style={{ padding: '20px 22px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, textAlign: 'center' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
+                  <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{posOwnerPin}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 16 }}>{tc('onboarding.till_pin_body')}</div>
+                  <button onClick={() => setPosOwnerPin('')} style={{ padding: '12px 28px', borderRadius: 12, border: 'none', background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', width: '100%' }}>
+                    {tc('onboarding.till_pin_continue')}
+                  </button>
                 </div>
-              ))}
+              ) : (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
+                  <p style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 24 }}>{tc('pos_app.disabled_desc')}</p>
+                  <button onClick={claimTrialFromPos} disabled={posTrialLoading} style={{ width: '100%', padding: '13px 28px', borderRadius: 12, border: 'none', background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', cursor: posTrialLoading ? 'wait' : 'pointer', opacity: posTrialLoading ? .7 : 1, marginBottom: 8, boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
+                    {posTrialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
+                  </button>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: posTrialError ? 8 : 20 }}>{tc('billing.pos_no_card')}</div>
+                  {posTrialError && <div role="alert" style={{ fontSize: 13, color: '#b91c1c', marginBottom: 20 }}>{posTrialError}</div>}
+                  <a
+                    href={ONBOARDING_WHATSAPP_GROUP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', padding: '14px 16px', borderRadius: 14, background: 'rgba(37,211,102,.08)', border: '1px solid rgba(37,211,102,.25)', textDecoration: 'none' }}
+                  >
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,211,102,.35)' }} aria-hidden="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2.13c-5.45 0-9.9 4.45-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2 22l5.15-1.35a9.9 9.9 0 0 0 4.89 1.28h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.64-1.03-5.13-2.9-7-1.86-1.87-4.35-2.9-7-2.9Zm5.8 14.14c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.8-.11a16 16 0 0 1-1.62-.6c-2.85-1.23-4.7-4.1-4.85-4.3-.14-.2-1.15-1.53-1.15-2.92 0-1.4.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.65.5.24.55.82 1.9.89 2.04.07.14.12.3.02.49-.1.19-.15.3-.3.46-.14.17-.3.37-.43.5-.14.14-.3.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.28.14.45.12.62-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.66-.17 1.3Z"/></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{tc('onboarding.whatsapp_help_title')}</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5, marginBottom: 4 }}>{tc('onboarding.whatsapp_help_body')}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#128C7E' }}>{tc('onboarding.whatsapp_help_cta')}</div>
+                    </div>
+                  </a>
+                </div>
+              )}
             </div>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 800 }}>£5</span>
-              <span style={{ fontSize: 16, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos_app.disabled_per_seat')}</span>
-            </div>
-            <p style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.disabled_owner_note')}</p>
-            <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
-              {tc('pos_app.disabled_add_seats')}
-            </a>
           </div>
-        </div>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
+            <div style={{ maxWidth: 480, textAlign: 'center' }}>
+              <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
+              <p style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
+                {tc('pos_app.disabled_desc')}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 28 }}>
+                {[tc('pos_app.disabled_feature_1'), tc('pos_app.disabled_feature_2'), tc('pos_app.disabled_feature_3'), tc('pos_app.disabled_feature_4'), tc('pos_app.disabled_feature_5'), tc('pos_app.disabled_feature_6')].map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, color: 'var(--tx2)' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    {f}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 800 }}>£5</span>
+                <span style={{ fontSize: 16, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos_app.disabled_per_seat')}</span>
+              </div>
+              <p style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos_app.disabled_owner_note')}</p>
+              <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
+                {tc('pos_app.disabled_add_seats')}
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1888,9 +2002,17 @@ export default function POSPage() {
                     {tc('pos_app.seats_used', { used: activeStaff, total: seatCount })}
                     {atLimit && <span style={{ marginLeft: 8, color: RED, fontWeight: 600 }}>· <a href="/billing" style={{ color: RED }}>{tc('pos_app.add_seats_link')}</a></span>}
                   </div>
-                  <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
-                    {atLimit ? tc('pos_app.upgrade_seats') : tc('pos_app.add_staff')}
-                  </button>
+                  {tourStep === 1 ? (
+                    <CoachMark id="pos-tour-add-staff" text={tc('pos_app.tour_step1')} lang={lang}>
+                      <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
+                        {atLimit ? tc('pos_app.upgrade_seats') : tc('pos_app.add_staff')}
+                      </button>
+                    </CoachMark>
+                  ) : (
+                    <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
+                      {atLimit ? tc('pos_app.upgrade_seats') : tc('pos_app.add_staff')}
+                    </button>
+                  )}
                 </div>
               )
             })()}
@@ -1900,10 +2022,26 @@ export default function POSPage() {
               <div style={{ ...cardStyle, marginBottom: 16 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_staff_member')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
-                  <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
-                  <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
+                  {tourStep === 2 ? (
+                    <CoachMark id="pos-tour-name" text={tc('pos_app.tour_step2')} lang={lang}>
+                      <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} autoFocus />
+                    </CoachMark>
+                  ) : (
+                    <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
+                  )}
+                  {tourStep === 3 ? (
+                    <CoachMark id="pos-tour-contact" text={tc('pos_app.tour_step3')} lang={lang}>
+                      <div>
+                        <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={{ ...inputStyle, marginBottom: 10 }} />
+                        <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', marginBottom: 10 }}>{tc('pos_app.or_divider')}</div>
+                        <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
+                      </div>
+                    </CoachMark>
+                  ) : (<>
+                    <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
+                    <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
+                    <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
+                  </>)}
                   <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
                     <optgroup label={'🏭 ' + tc('pos_app.role_group_factory')}>
                       <option value="factory-line-operator">👷 {tc('pos_app.role_factory_line_operator')}</option>
@@ -1955,11 +2093,28 @@ export default function POSPage() {
                       {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
                     </select>
                   )}
-                  <input placeholder={tc('pos_app.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                  {tourStep === 4 ? (
+                    <CoachMark id="pos-tour-pin" text={tc('pos_app.tour_step4')} lang={lang}>
+                      <input placeholder={tc('pos_app.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                    </CoachMark>
+                  ) : (
+                    <input placeholder={tc('pos_app.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                  )}
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
-                    <button onClick={() => setShowAddStaff(false)} style={btnSecondary}>{tc('pos_app.cancel')}</button>
+                    {tourStep === 5 ? (
+                      <CoachMark id="pos-tour-save" text={tc('pos_app.tour_step5')} lang={lang}>
+                        <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
+                      </CoachMark>
+                    ) : (
+                      <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
+                    )}
+                    <button onClick={() => { setShowAddStaff(false); if (tourStep > 0) skipTour() }} style={btnSecondary}>{tc('pos_app.cancel')}</button>
                   </div>
+                  {tourStep > 0 && (
+                    <button onClick={skipTour} style={{ background: 'none', border: 'none', color: 'var(--tx3)', fontSize: 13, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginTop: 4, alignSelf: 'center' }}>
+                      {tc('pos_app.tour_skip')}
+                    </button>
+                  )}
                   <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.staff_login_hint_pre')}<strong>pos.askbiz.co</strong>{tc('pos_app.staff_login_hint_post')}</div>
                 </div>
               </div>

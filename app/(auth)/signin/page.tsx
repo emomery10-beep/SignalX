@@ -573,11 +573,14 @@ function AuthPage() {
           )
         })()}
 
-        {/* Inline consent details for signup */}
+        {/* Age confirmation only — this used to also repeat a second Privacy
+            Policy link right under the checkbox that already has one. Age
+            verification (GDPR Art. 8) is a genuinely separate requirement
+            from data-processing consent, so the statement stays; the
+            redundant second link to the same page didn't need to. */}
         {mode === 'signup' && (
           <p style={{ fontSize: 'clamp(10px,1vw,11px)', color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.4, marginTop: 2 }}>
-            {tc('auth.age_confirm')}{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ minHeight: 0, display: 'inline', color: 'var(--tx2)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>.
+            {tc('auth.age_confirm')}
           </p>
         )}
 
@@ -602,9 +605,18 @@ function AuthPage() {
         </>)}
       </div>
 
-      <p style={{ fontSize: 'clamp(10px,1vw,11px)', color: 'var(--tx3)', marginTop: 4, textAlign: 'center', flexShrink: 0 }}>
-        {tc('auth.footer_consent_prefix')} <Link href="/terms" style={{ minHeight: 0, display: 'inline', color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.terms_short')}</Link> {tc('auth.and')} <Link href="/privacy" style={{ minHeight: 0, display: 'inline', color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.privacy_policy')}</Link>
-      </p>
+      {/* Signup already has one clear consent moment — the checkbox above,
+          with its own Terms/Privacy links. Showing this generic "by
+          continuing you agree" line again underneath it was a 3rd mention
+          of the same two links on one screen (plus a redundant Privacy
+          Policy repeat that used to sit between them, removed above) — the
+          exact "too many privacies to agree to" confusion this was causing.
+          Sign-in isn't a new consent event, so it keeps the one reminder. */}
+      {mode === 'signin' && (
+        <p style={{ fontSize: 'clamp(10px,1vw,11px)', color: 'var(--tx3)', marginTop: 4, textAlign: 'center', flexShrink: 0 }}>
+          {tc('auth.footer_consent_prefix')} <Link href="/terms" style={{ minHeight: 0, display: 'inline', color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.terms_short')}</Link> {tc('auth.and')} <Link href="/privacy" style={{ minHeight: 0, display: 'inline', color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.privacy_policy')}</Link>
+        </p>
+      )}
       </div>
 
       {/* Visual column — brand panel, desktop only (>=900px, see globals.css) */}

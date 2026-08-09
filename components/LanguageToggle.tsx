@@ -102,23 +102,30 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
           ...(dropUp ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
           ...(lang === 'ar' ? { left: 0 } : { right: 0 }),
           background: 'var(--sf, #1a1a2e)', border: '1px solid var(--b, rgba(255,255,255,.12))',
-          borderRadius: 12, padding: 6, minWidth: 160,
+          borderRadius: 12, padding: 6,
+          // Single column, not a 2-up grid: the long names (Kiswahili,
+          // Soomaali) forced each cell wider than minWidth under
+          // whiteSpace:nowrap, which is what was pushing the whole menu past
+          // the viewport edge near the button. A vertical list has no such
+          // per-row width negotiation, and the maxWidth clamp below is a
+          // hard backstop regardless of content length.
+          width: 'max-content', minWidth: 150, maxWidth: 'min(220px, calc(100vw - 24px))',
           boxShadow: '0 8px 32px rgba(0,0,0,.4)',
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2,
-          maxHeight: 'min(60vh, 340px)', overflowY: 'auto',
+          display: 'flex', flexDirection: 'column', gap: 2,
+          maxHeight: 'min(60vh, 340px)', overflowY: 'auto', overflowX: 'hidden',
         }}>
           {LANGS.map(l => (
             <button
               key={l}
               onClick={() => choose(l)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '7px 10px', borderRadius: 8, border: 'none',
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 10px', borderRadius: 8, border: 'none',
                 background: lang === l ? 'rgba(99,102,241,.15)' : 'transparent',
                 color: lang === l ? '#6366F1' : 'var(--tx, #fff)',
                 fontSize: 14, fontWeight: lang === l ? 600 : 400,
                 cursor: 'pointer', fontFamily: 'inherit',
-                textAlign: 'left', whiteSpace: 'nowrap',
+                justifyContent: 'flex-start', textAlign: 'left', whiteSpace: 'nowrap',
                 transition: 'background 120ms',
               }}
               onMouseEnter={e => { if (lang !== l) e.currentTarget.style.background = 'rgba(255,255,255,.06)' }}

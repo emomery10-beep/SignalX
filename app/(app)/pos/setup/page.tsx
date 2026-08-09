@@ -8,6 +8,7 @@ import { speak } from '@/lib/speak'
 import SpeakButton from '@/components/SpeakButton'
 import { trackFunnelEvent } from '@/lib/funnel-track'
 import CoachMark from '@/components/CoachMark'
+import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 
 // ── AskBiz tokens (match onboarding) ──────────────────────────
 const ACC = '#d08a59'
@@ -144,7 +145,15 @@ export default function PosSetupPage() {
   const supabase = createClient()
   const { tc, lang } = useLang()
 
-  const [screen, setScreen]     = useState<Screen>('list')
+  // First-run gate is now team setup, not a product/job catalogue — every
+  // sector lands on 'team' first. 'list'/'capture'/'import'/'ready' still
+  // exist below (nothing deletes their code or their data — adding an item
+  // or job still works exactly as before) but nothing routes into them as
+  // the entry point anymore. The real catalogue/job tools already live in
+  // the POS admin dashboard itself, fuller-featured than anything a setup
+  // wizard would rebuild — this stops asking people to do it twice, once
+  // roughly here and once for real after.
+  const [screen, setScreen]     = useState<Screen>('team')
   const [items, setItems]       = useState<Item[]>([])
   const [loading, setLoading]   = useState(true)
   const [firstName, setFirstName] = useState('')
@@ -152,6 +161,15 @@ export default function PosSetupPage() {
   const [currency, setCurrency] = useState('GBP')
   const [bizType, setBizType]   = useState('')
   const [alreadyEnabled, setAlreadyEnabled] = useState(false)
+
+  // Trial claim, now surfaced on the team screen itself instead of only on
+  // the separate onboarding "done" screen — someone who skipped it there
+  // (or is resuming a half-finished setup) shouldn't have to hunt for it.
+  // Same API action, same one-time PIN-reveal pattern, mirrored from
+  // app/onboarding/page.tsx's startTrialAndContinue().
+  const [trialLoading, setTrialLoading] = useState(false)
+  const [trialError, setTrialError]     = useState('')
+  const [ownerPin, setOwnerPin]         = useState('')
 
   // Team (ghost staff) — built during setup, provisioned into real accounts
   // on payment. seats = 1 (owner/operator) + one per team member.
@@ -205,6 +223,14 @@ export default function PosSetupPage() {
   const videoRef  = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  // ── Retired as a real destination: first-run setup lives on /pos itself
+  // now (team-first screen replaced by a real-dashboard product tour — see
+  // app/(app)/pos/page.tsx). Nothing below this effect runs anymore; kept
+  // in the file rather than deleted, since it's working, tested code that
+  // isn't costing anything sitting unreachable, and this is a safe landing
+  // spot for anyone with an old bookmark/link rather than a 404. ──
+  useEffect(() => { router.replace('/pos') }, [router])
 
   // ── Load profile + ensure a "Main" branch exists (idempotent) ──
   useEffect(() => {
@@ -282,7 +308,10 @@ export default function PosSetupPage() {
   // and the "ready to activate" screen (last step before the trial button).
   useEffect(() => {
     if (loading) return
-    if (screen === 'list' && items.length === 0) trackFunnelEvent('setup_fork_shown', { businessType: bizType })
+    // Same event name as before (avoids also having to touch the admin
+    // funnel dashboard's step labels) — just fires for the new actual first
+    // screen now instead of the retired catalogue fork.
+    if (screen === 'team') trackFunnelEvent('setup_fork_shown', { businessType: bizType })
     if (screen === 'ready') trackFunnelEvent('setup_ready_screen_shown', { businessType: bizType, metadata: { item_count: items.length } })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, loading])
@@ -584,6 +613,38 @@ export default function PosSetupPage() {
   // ── Team (ghost staff) ────────────────────────────────────────
   const seatCount = drafts.length + 1 // +1 for the owner/operator's own seat
 
+  // Mirrors app/onboarding/page.tsx's startTrialAndContinue() exactly — same
+  // API action, same one-time PIN handling. Doesn't navigate anywhere on
+  // success (unlike the onboarding version): claiming the trial here just
+  // flips alreadyEnabled so the rest of this screen reflects it immediately,
+  // team setup continues right on the same screen.
+  const claimTrial = async () => {
+    trackFunnelEvent('onboarding_trial_clicked', { businessType: bizType })
+    setTrialLoading(true)
+    setTrialError('')
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        trackFunnelEvent('onboarding_trial_started', { businessType: bizType })
+        setAlreadyEnabled(true)
+        if (d.owner_pin) { setOwnerPin(String(d.owner_pin)) }
+      } else {
+        trackFunnelEvent('onboarding_trial_failed', { businessType: bizType, metadata: { error: d.error || null } })
+        setTrialError(d.error || tc('pos_setup.err_save'))
+      }
+    } catch {
+      trackFunnelEvent('onboarding_trial_failed', { businessType: bizType, metadata: { error: 'network' } })
+      setTrialError(tc('pos_setup.err_save'))
+    } finally {
+      setTrialLoading(false)
+    }
+  }
+
   const openAddMember = () => {
     setMemberName(''); setMemberRole('cashier'); setMemberMethod('phone')
     setMemberPhone(''); setMemberEmail(''); setMemberPin(''); setTeamError('')
@@ -704,7 +765,7 @@ export default function PosSetupPage() {
       <div className="pos-setup-shell" style={{ width: '100%', maxWidth: 480, margin: '0 auto', padding: '20px 16px 40px', flex: 1 }}>
 
         {/* Already enabled — nudge to the real POS instead of the pre-pay flow */}
-        {alreadyEnabled && screen === 'list' && (
+        {alreadyEnabled && screen === 'team' && (
           <div role="status" style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(46,125,84,.08)', border: '1px solid rgba(46,125,84,.25)', color: OK, fontSize: 15, marginBottom: 16 }}>
             {tc('pos_setup.already_active')}{' '}
             <button onClick={() => router.push('/pos')} style={{ background: 'none', border: 'none', color: OK, fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, padding: 0 }}>
@@ -1111,6 +1172,58 @@ export default function PosSetupPage() {
               {tc('pos_setup.team_subtitle')}
             </p>
 
+            {/* Trial claim + WhatsApp help, clearly visible on the very
+                first screen instead of buried behind team setup + a
+                separate "ready" step. Reuses the exact onboarding.* i18n
+                keys (already translated in all 8 locales) rather than
+                duplicating them under pos_setup.* — same copy, same PIN
+                card, same WhatsApp card, just also reachable from here for
+                anyone who skipped it or is resuming a half-finished setup. */}
+            {ownerPin ? (
+              <div style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: `1.5px solid ${ACC}`, marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TX, marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{ownerPin}</div>
+                <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6, marginBottom: 14 }}>{tc('onboarding.till_pin_body')}</div>
+                <button onClick={() => setOwnerPin('')} style={{ ...bigBtn, width: '100%' }}>
+                  {tc('onboarding.till_pin_continue')}
+                </button>
+              </div>
+            ) : !alreadyEnabled && (
+              <div style={{ padding: '16px 18px', borderRadius: 14, background: SF, border: `1.5px solid ${ACC}`, marginBottom: 16 }}>
+                <button
+                  onClick={claimTrial}
+                  disabled={trialLoading}
+                  style={{ ...bigBtn, width: '100%', marginBottom: 8, opacity: trialLoading ? .7 : 1, cursor: trialLoading ? 'wait' : 'pointer' }}
+                >
+                  {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
+                </button>
+                <div style={{ fontSize: 13, color: TX2, textAlign: 'center' }}>{tc('billing.pos_no_card')}</div>
+                {trialError && <div role="alert" style={{ marginTop: 10, fontSize: 13, color: '#b91c1c' }}>{trialError}</div>}
+              </div>
+            )}
+            <a
+              href={ONBOARDING_WHATSAPP_GROUP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', marginBottom: 20, padding: '14px 16px', borderRadius: 14, background: 'rgba(37,211,102,.08)', border: '1px solid rgba(37,211,102,.25)', textDecoration: 'none' }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,211,102,.35)' }} aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2.13c-5.45 0-9.9 4.45-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2 22l5.15-1.35a9.9 9.9 0 0 0 4.89 1.28h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.64-1.03-5.13-2.9-7-1.86-1.87-4.35-2.9-7-2.9Zm5.8 14.14c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.8-.11a16 16 0 0 1-1.62-.6c-2.85-1.23-4.7-4.1-4.85-4.3-.14-.2-1.15-1.53-1.15-2.92 0-1.4.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.65.5.24.55.82 1.9.89 2.04.07.14.12.3.02.49-.1.19-.15.3-.3.46-.14.17-.3.37-.43.5-.14.14-.3.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.28.14.45.12.62-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.66-.17 1.3Z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TX, marginBottom: 2 }}>{tc('onboarding.whatsapp_help_title')}</div>
+                <div style={{ fontSize: 12, color: TX2, lineHeight: 1.5, marginBottom: 4 }}>{tc('onboarding.whatsapp_help_body')}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#128C7E' }}>{tc('onboarding.whatsapp_help_cta')}</div>
+              </div>
+            </a>
+
+            {/* market_stall is a solo vendor by definition — the original
+                TEAM_STEP_TYPES exclusion for it was deliberate, not an
+                oversight, so it's preserved here even though 'team' is
+                everyone's entry screen now. Trial claim + WhatsApp help
+                above still apply to them same as anyone else — only the
+                actually team-specific UI below is skipped. */}
+            {bizType !== 'market_stall' && (<>
             {/* First-time: live seat count + running total.
                 Already paid + pending drafts: the extra cost to activate them. */}
             {!alreadyEnabled ? (
@@ -1158,16 +1271,15 @@ export default function PosSetupPage() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
               {drafts.length === 0 ? tc('pos_setup.team_add_first') : tc('pos_setup.team_add_another')}
             </button>
+            </>)}
 
-            {alreadyEnabled ? (
-              <button style={ghostBtn} onClick={() => router.push('/pos')}>
-                {tc('pos_setup.team_done')}
-              </button>
-            ) : (
-              <button style={ghostBtn} onClick={() => setScreen('ready')}>
-                {drafts.length === 0 ? tc('pos_setup.team_no_staff') : tc('pos_setup.team_continue')}
-              </button>
-            )}
+            {/* Always the admin dashboard now, paid or not — /pos already
+                has its own graceful "not enabled yet" paywall/resume view,
+                so this never bypasses payment, it just always lands
+                somewhere real instead of a wizard-only "ready" screen. */}
+            <button style={ghostBtn} onClick={() => router.push('/pos')}>
+              {bizType === 'market_stall' ? tc('pos_setup.team_no_staff') : alreadyEnabled ? tc('pos_setup.team_done') : (drafts.length === 0 ? tc('pos_setup.team_no_staff') : tc('pos_setup.team_continue'))}
+            </button>
           </>
         )}
 
