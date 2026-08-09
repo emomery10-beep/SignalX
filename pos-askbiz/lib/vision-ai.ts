@@ -73,12 +73,28 @@ export async function visionAI(
   }
 
   // Fallback 1: Groq qwen3.6-27b
+  //
+  // reasoning_effort/reasoning_format matter here: qwen3.6-27b is a hybrid
+  // thinking model that defaults to thinking-mode-on (reasoning_format
+  // "raw") when these are omitted, and reasoning tokens count against
+  // max_tokens — same class of bug as Gemini's thinkingBudget above.
+  // Confirmed in production: every Groq-fallback scan in the last 30 days
+  // hit the max_tokens cap exactly (4/4), vs. 25-40 tokens for Gemini/Haiku
+  // on the same short JSON-answer task — the model was very likely burning
+  // the whole budget on hidden <think> content and never reaching the
+  // actual JSON, which then fails all of route.ts's parse strategies.
+  // reasoning_effort:'none' is Groq's documented setting for this kind of
+  // quick-extraction task (vs. 'default' for math/coding); reasoning_format
+  // 'hidden' is kept too so any reasoning that still happens doesn't get
+  // returned as part of the answer text.
   const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
     body: JSON.stringify({
       model: GROQ_VISION_MODEL,
       max_tokens: maxTokens,
+      reasoning_effort: 'none',
+      reasoning_format: 'hidden',
       messages: [{
         role: 'user',
         content: [
