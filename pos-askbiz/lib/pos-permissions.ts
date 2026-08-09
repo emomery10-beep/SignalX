@@ -111,7 +111,13 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'sales.view', 'sales.view_all',
     'refund.approve', 'amend.approve',
     'inventory.view', 'inventory.manage',
-    'service.view', 'service.manage', 'service.parts',
+    // Same class of gap as sales.create above, found 08-09: manager was
+    // missing service.scan_device/service.upload_photo even though the
+    // lower-privileged 'repair' role already has both — a manager (or a
+    // "tech repair manager" doing intake themselves) hit "you don't have
+    // right to upload images" on device-scan/photo-upload during repair
+    // intake, from an account that otherwise owns service.manage.
+    'service.view', 'service.manage', 'service.parts', 'service.scan_device', 'service.upload_photo',
     'shift.open', 'shift.close', 'shift.view',
     // Same class of gap as sales.create above: managers are the ones the
     // in-app "Add Staff" screens are shown to (e.g. app/factory/staff), but
