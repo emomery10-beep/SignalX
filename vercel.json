@@ -1,5 +1,5 @@
 {
-  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)pos-askbiz' ':(exclude)developer-askbiz'",
+  "ignoreCommand": "git cat-file -e ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} 2>/dev/null && git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)pos-askbiz' ':(exclude)developer-askbiz' || exit 1",
   "git": {
     "deploymentEnabled": {
       "*": false,
