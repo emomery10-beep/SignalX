@@ -18,6 +18,7 @@
   "checkout": "Passer à la caisse",
   "yes": "Oui",
   "no": "Non",
+  "sign_out": "Se déconnecter",
   "consent_aria": "Avis de confidentialité",
   "consent_notice": "AskBiz POS stocke votre session et les données de vente localement sur cet appareil pour faire fonctionner l'application. Avec votre consentement, nous utilisons aussi Google Analytics de façon respectueuse de la vie privée pour comprendre l'usage de l'application — pas de publicité, pas de vente de données.",
   "consent_reject": "Essentiels uniquement",

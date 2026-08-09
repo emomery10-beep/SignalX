@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -220,6 +221,18 @@ export default function BatchPage() {
         </div>
         <button onClick={loadBatches} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+        </button>
+      </div>
+
+      {/* Account bar — language + sign out, same slim row on every factory screen.
+          Only on the 'hub' stage of this multi-stage page — the viewfinder/
+          batch_ref/checkpoint/submitting/success stages are a fast camera-driven
+          task flow, not a standalone screen; their back buttons return here. */}
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { stopCamera(); localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
         </button>
       </div>
 

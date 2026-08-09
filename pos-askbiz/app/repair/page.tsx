@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -238,6 +239,15 @@ export default function RepairHub() {
           </div>
         </div>
         <button onClick={loadJobs} style={{ background: tokens.border, border: 'none', color: tokens.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('repair.refresh')}</button>
+      </div>
+
+      {/* Account bar — language + sign out, same slim row on every repair screen */}
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
+        </button>
       </div>
 
       <div style={{ padding: '20px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>

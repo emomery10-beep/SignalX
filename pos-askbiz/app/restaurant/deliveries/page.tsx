@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { usePosConfig } from '@/lib/hooks/usePosConfig'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 import { tokens, Button, Banner, Input, Card, ListItem } from '@/components/ui'
 
 const NS = 'restaurant_deliveries.'
@@ -271,6 +272,15 @@ export default function DeliveriesPage() {
             {tc(NS + 'new_scan')}
           </Button>
         )}
+      </div>
+
+      {/* Account bar — language + sign out, same slim row on every restaurant screen */}
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { closeCamera(); localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
+        </button>
       </div>
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px' }}>

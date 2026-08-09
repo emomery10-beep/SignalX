@@ -18,6 +18,7 @@
   "checkout": "Pagar",
   "yes": "Sí",
   "no": "No",
+  "sign_out": "Cerrar sesión",
   "consent_aria": "Aviso de privacidad",
   "consent_notice": "AskBiz POS guarda tu sesión y los datos de venta localmente en este dispositivo para que la app funcione. Con tu consentimiento, también usamos Google Analytics de forma respetuosa con la privacidad para entender el uso de la app — sin publicidad, sin venta de datos.",
   "consent_reject": "Solo esenciales",

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 
 // ── Design tokens (match the POS dark theme / factory-capture language) ──────
@@ -270,6 +271,19 @@ export default function GetListedPage() {
         </div>
       </div>
 
+      {/* Account bar — language + sign out, same slim row on every restaurant screen.
+          This screen has no shared `tokens` object (bespoke dark theme with local
+          hex/rgba constants), so it reuses this file's own equivalents (MUTED +
+          the same rgba(255,255,255,..) chip styling used by the buttons above)
+          in place of tokens.surface/border/bg/muted, which don't exist here. */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexShrink: 0 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { stopCamera(); localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: MUTED, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
+        </button>
+      </div>
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 120px' }}>
         {items.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: MUTED }}>
@@ -353,6 +367,17 @@ export default function GetListedPage() {
       <div style={{ padding: '48px 20px 8px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={() => router.push('/restaurant')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconArrowLeft size={18} /></button>
         <div style={{ fontWeight: 700, fontSize: 18 }}>{tc('onboarding_listing.gauge_title')}</div>
+      </div>
+
+      {/* Account bar — language + sign out, same slim row on every restaurant screen.
+          No shared `tokens` object on this screen — see the review-stage header
+          above for why this reuses local MUTED / rgba(255,255,255,..) literals. */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { stopCamera(); localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: MUTED, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
+        </button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

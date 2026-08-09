@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -238,6 +239,18 @@ export default function DowntimePage() {
           <div style={{ fontWeight: 800, fontSize: 18, color: tokens.danger }}>{tc('factory_downtime.active_title')}</div>
           <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('factory_downtime.active_subtitle')}</div>
         </div>
+      </div>
+
+      {/* Account bar — language + sign out, same slim row on every factory screen.
+          Only on the 'active_check' (landing) stage of this multi-stage page —
+          the viewfinder/reason/machine_name/submitting/success/close_* stages
+          are a fast camera-driven task flow; their back buttons return here. */}
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { stopCamera(); localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, color: tokens.muted, padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
+        </button>
       </div>
 
       <div style={{ padding: '20px', maxWidth: 600, margin: '0 auto' }}>

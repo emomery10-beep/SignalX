@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 import { getPermissions } from '@/lib/pos-permissions'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
@@ -262,6 +263,18 @@ export default function FactoryStaffPage() {
         >
           <IconPlus size={18} />
           {tc('factory_staff.add_staff')}
+        </button>
+      </div>
+
+      {/* Account bar — language + sign out, same slim row on every factory screen.
+          This file has no `tokens` object (unlike most factory screens); it uses
+          literal hex colors throughout, so the bar mirrors that convention
+          (#1e293b/#334155/#0f172a/#94a3b8 match this file's own surface/border/bg/muted). */}
+      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '6px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+        <LanguageToggle inline />
+        <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
+          style={{ background: '#0f172a', border: '1px solid #334155', color: '#94a3b8', padding: '5px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+          {tc('common.sign_out')}
         </button>
       </div>
 
