@@ -15,17 +15,28 @@ function json(data: unknown, status = 200) {
 const PHOTO_BUCKET = 'service-photos'
 const PHOTO_ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
 
-// Technicians (engineer role) shouldn't see what the customer is being
-// charged for a repair. repair/tickets' UI only ever renders a price when
-// the field is truthy (board cards, list rows, the detail drawer's Quote
-// row), so stripping it at the API layer is enough on its own — no
-// client-side role check needed, and it can't be recovered via the network
-// tab either. Also nulls the joined transaction's `total` (same figure,
-// different door — pos_transactions.total is shown once a job is collected)
-// and original_quoted_price (not currently rendered anywhere, stripped for
+// Technicians shouldn't see what the customer is being charged for a
+// repair. repair/tickets' UI only ever renders a price when the field is
+// truthy (board cards, list rows, the detail drawer's Quote row), so
+// stripping it at the API layer is enough on its own — no client-side role
+// check needed, and it can't be recovered via the network tab either. Also
+// nulls the joined transaction's `total` (same figure, different door —
+// pos_transactions.total is shown once a job is collected) and
+// original_quoted_price (not currently rendered anywhere, stripped for
 // defense in depth since select('*') returns it).
+//
+// auth.role here is the RAW pos_staff.role value, not a role already
+// normalised through hasPermission's internal templateToLegacyRole — a
+// staff row created from the "repair-technician" template (this sector's
+// actual hands-on technician persona, distinct from repair-intake-
+// specialist/repair-manager, which both collapse to the same base 'repair'
+// role for PERMISSION purposes but should still see pricing) has
+// auth.role === 'repair-technician', not 'engineer'. Checking against
+// 'engineer' alone missed every templated technician account — confirmed
+// live 08-09 (quoted_price still visible under "Test Repair Tech").
+const TECHNICIAN_ROLES = new Set(['engineer', 'repair-technician'])
 function redactPricingForEngineer<T extends Record<string, any>>(job: T, role: string): T {
-  if (role !== 'engineer' || !job) return job
+  if (!TECHNICIAN_ROLES.has(role) || !job) return job
   const redacted: Record<string, any> = { ...job, quoted_price: null, original_quoted_price: null }
   if (redacted.transaction) redacted.transaction = { ...redacted.transaction, total: null }
   return redacted as T
