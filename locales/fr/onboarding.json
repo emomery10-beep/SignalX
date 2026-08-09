@@ -20,6 +20,8 @@
   "biz_retail_label": "Commerce de détail",
   "biz_salon_desc": "Salon ou barbier",
   "biz_salon_label": "Salon / Coiffure",
+  "biz_repair_desc": "Réparation de téléphones, ordinateurs ou électroménager",
+  "biz_repair_label": "Atelier de réparation",
   "biz_services_desc": "Services professionnels ou numériques",
   "biz_services_label": "Services",
   "business_subtitle": "Pour adapter AskBiz à vous.",

@@ -1070,7 +1070,7 @@ export default function POSPage() {
             setup + payment gets sent back into the guided flow, not left on this
             generic paywall. Shares the page-shell-body gutter with the card below
             so the two pieces of this state read as one page, not two. */}
-        {['retail', 'market_stall', 'food_bev', 'salon'].includes((businessType || '').toLowerCase()) && (
+        {['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase()) && (
           <a href="/pos/setup" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', marginBottom: 24, padding: '16px 18px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, color: 'inherit' }}>
             <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 10, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>

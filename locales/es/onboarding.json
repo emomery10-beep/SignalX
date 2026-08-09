@@ -20,6 +20,8 @@
   "biz_retail_label": "Minorista",
   "biz_salon_desc": "Salón o barbería",
   "biz_salon_label": "Salón / Barbería",
+  "biz_repair_desc": "Reparación de móviles, ordenadores o electrodomésticos",
+  "biz_repair_label": "Taller de reparación",
   "biz_services_desc": "Servicios profesionales o digitales",
   "biz_services_label": "Servicios",
   "business_subtitle": "Para adaptar AskBiz a ti.",

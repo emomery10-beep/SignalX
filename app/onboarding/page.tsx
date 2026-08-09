@@ -40,7 +40,7 @@ const NEEDS_FACTORY_TYPE = new Set(['manufacturer'])
 // Business types that run a till day-to-day — land them straight in the POS.
 // These are also the "simple setup" persona: no business-name typing, no
 // Connect Data Sources step — straight from business type to done.
-const POS_LANDING_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon'])
+const POS_LANDING_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon', 'repair'])
 
 // Consistent stroke-based icon set (no emoji as functional icons — emoji
 // render inconsistently across devices/fonts and can't be themed/sized).
@@ -53,6 +53,10 @@ const bizIcon = (id: string) => {
     case 'food_bev': return <svg {...p}><path d="M3 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7"/></svg>
     case 'retail': return <svg {...p}><path d="M3 9 4.8 4h14.4L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 21v-8h6v8"/></svg>
     case 'salon': return <svg {...p}><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="m14.47 14.48 5.53 5.52"/><path d="M8.12 8.12 12 12"/></svg>
+    // Same wrench glyph already used for the 'repair' persona on the marketing
+    // homepage widget (components/layout/LandingClient.tsx) — reused verbatim
+    // so the icon matches between the marketing promise and real onboarding.
+    case 'repair': return <svg {...p}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
     case 'courier': return <svg {...p}><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
     case 'ecommerce': return <svg {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 3h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57L22 8H6"/></svg>
     case 'services': return <svg {...p}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
@@ -92,6 +96,7 @@ const buildBizTypes = (tc: TC) => [
   { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     desc: tc('onboarding.biz_food_bev_desc') },
   { id: 'retail',       label: tc('onboarding.biz_retail_label'),       desc: tc('onboarding.biz_retail_desc') },
   { id: 'salon',        label: tc('onboarding.biz_salon_label'),        desc: tc('onboarding.biz_salon_desc') },
+  { id: 'repair',       label: tc('onboarding.biz_repair_label'),       desc: tc('onboarding.biz_repair_desc') },
   { id: 'courier',      label: tc('onboarding.biz_courier_label'),      desc: tc('onboarding.biz_courier_desc') },
   { id: 'ecommerce',    label: tc('onboarding.biz_ecommerce_label'),    desc: tc('onboarding.biz_ecommerce_desc') },
   { id: 'services',     label: tc('onboarding.biz_services_label'),     desc: tc('onboarding.biz_services_desc') },

@@ -16,7 +16,7 @@ type ChecklistStep = {
 }
 
 // Business types that run the till day-to-day — steps point at selling/inventory.
-const POS_SELLER_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon'])
+const POS_SELLER_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon', 'repair'])
 const COURIER_TYPES = new Set(['courier', 'distributor'])
 // Everyone else (ecommerce, services, manufacturer, importer, exporter) — data/BI-first.
 

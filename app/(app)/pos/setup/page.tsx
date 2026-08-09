@@ -94,8 +94,9 @@ function mapLoyverseCsv(rows: string[][]): ImportItem[] {
 }
 
 // Business types that get the "add your team" step. market_stall (solo
-// street vendor) is deliberately excluded — it stays items → pay.
-const TEAM_STEP_TYPES = new Set(['retail', 'food_bev', 'salon'])
+// street vendor) is deliberately excluded — it stays items → pay. repair
+// shops run on technicians/engineers, same as the other staffed types.
+const TEAM_STEP_TYPES = new Set(['retail', 'food_bev', 'salon', 'repair'])
 
 // Sound + haptic feedback — a channel beyond sight and text for users who
 // can't lean on reading. Best-effort everywhere: silently no-ops when the

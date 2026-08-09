@@ -20,6 +20,8 @@
   "biz_retail_label": "البيع بالتجزئة",
   "biz_salon_desc": "صالون أو محل حلاقة",
   "biz_salon_label": "صالون / حلاقة",
+  "biz_repair_desc": "إصلاح الهواتف والحواسيب والأجهزة",
+  "biz_repair_label": "ورشة إصلاح",
   "biz_services_desc": "خدمات مهنية أو رقمية",
   "biz_services_label": "الخدمات",
   "business_subtitle": "ليتوافق AskBiz مع نشاطك.",

@@ -15,6 +15,7 @@ const SECTOR_ALIASES: Record<string, string> = {
   food_bev: 'food-bev',
   retail: 'retail',
   salon: 'salon',
+  repair: 'repair',
   courier: 'courier',
   ecommerce: 'ecommerce',
   services: 'services',
