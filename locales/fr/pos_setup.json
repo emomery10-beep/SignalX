@@ -6,7 +6,7 @@
   "title_empty_named": "Ajoutez ce que vous vendez, {name}",
   "title_count_one": "1 article prêt",
   "title_count": "{count} articles prêts",
-  "subtitle": "Pointez la caméra vers chaque produit que vous vendez et fixez le prix. Vous pourrez en ajouter à tout moment.",
+  "subtitle": "Pointez la caméra vers chaque produit que vous vendez ou utilisez et fixez le prix. Vous pourrez en ajouter à tout moment.",
   "add_first_item": "Ajoutez votre premier article",
   "add_another_item": "Ajouter un autre article",
   "im_ready": "J'ai terminé — finaliser la configuration",

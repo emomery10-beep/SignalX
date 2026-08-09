@@ -6,7 +6,7 @@
   "title_empty_named": "Ongeza kile unauza, {name}",
   "title_count_one": "Kifungu 1 kimepangwa",
   "title_count": "{count} vitu vimepangwa",
-  "subtitle": "Elekeza kamera yako kwenye kila kitu unachouza na weka bei. Unaweza kuongeza zaidi wakati wowote.",
+  "subtitle": "Elekeza kamera yako kwenye kila kitu unachouza au unachotumia na weka bei. Unaweza kuongeza zaidi wakati wowote.",
   "add_first_item": "Ongeza bidhaa yako ya kwanza",
   "add_another_item": "Ongeza bidhaa nyingine",
   "im_ready": "Nimekwisha — maliza mpangilio",
@@ -100,6 +100,6 @@
   "team_pending_badge": "Wanasubiri",
   "team_pay_pending": "Lipa {price}/mwezi — shughulikia {count}",
   "team_done": "Imemaliza",
-  "coach_fork": "Piga picha ya kitu cha kwanza unachouza.",
+  "coach_fork": "Piga picha ya kitu cha kwanza unachouza au unachotumia.",
   "coach_capture": "Elekeza kamera, kisha gusa kitufe kupiga picha."
 }

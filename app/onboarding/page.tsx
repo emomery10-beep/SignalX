@@ -606,10 +606,16 @@ export default function OnboardingPage() {
                 {tc('onboarding.business_subtitle')}
               </p>
               {/* Helper-mode: acknowledge a helper/family member is often present
-                  (the real driver of M-Pesa-style adoption for low-literacy users). */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(208,138,89,.08)', marginBottom: 24 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                <span style={{ fontSize: 10.5, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.helper_hint')}</span>
+                  (the real driver of M-Pesa-style adoption for low-literacy users).
+                  "ask for help" used to be plain text with nothing to tap — this is
+                  the one screen people actually get stuck on (no business type fits),
+                  so it now carries a real link, not just the promise of one. */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(208,138,89,.08)', marginBottom: 24 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <div>
+                  <span style={{ fontSize: 10.5, color: TX2, lineHeight: 1.5 }}>{tc('onboarding.helper_hint')} </span>
+                  <a href={ONBOARDING_WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, color: ACC, fontWeight: 700, textDecoration: 'underline' }}>{tc('onboarding.ask_whatsapp_link')}</a>
+                </div>
               </div>
               <CoachMark id="onboarding-business" text={tc('onboarding.coach_business')} lang={lang} variant="none">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, marginBottom: 28 }}>
