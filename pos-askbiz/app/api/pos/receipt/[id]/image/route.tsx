@@ -72,7 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!tx) return new Response('Not found', { status: 404 })
 
   const [{ data: profile }, { data: cashier }] = await Promise.all([
-    service.from('profiles').select('business_name, currency_symbol, vat_number').eq('id', tx.owner_id).maybeSingle(),
+    service.from('profiles').select('business_name, currency_symbol, vat_number, phone, address, town').eq('id', tx.owner_id).maybeSingle(),
     tx.cashier_id
       ? service.from('pos_staff').select('name').eq('id', tx.cashier_id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -103,6 +103,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const taxRate     = itemRates.length === 1 ? itemRates[0] : null
   const taxLabel    = isVat ? (taxRate != null ? `VAT (${taxRate}%)` : 'VAT') : 'Tax'
 
+  // Real till receipts show where/how to find the shop again — both are
+  // optional profile fields (Settings → Business address, added for parcel
+  // quotes/logistics) so only render what the merchant actually filled in.
+  const addressLine = [profile?.address?.trim(), profile?.town?.trim()].filter(Boolean).join(', ') || null
+  const phoneLine    = profile?.phone?.trim() || null
+
   const fontUrl = (name: string) => new URL(`/fonts/${name}`, req.url).toString()
   const [regular, bold] = await Promise.all([
     fetch(fontUrl('CourierPrime-Regular.ttf')).then(r => r.arrayBuffer()),
@@ -119,6 +125,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     + (tax > 0 ? 30 : 0)
     + (cashier?.name ? 26 : 0)
     + (vatNumber ? 26 : 0)
+    + (addressLine ? 22 : 0)
+    + (phoneLine ? 22 : 0)
 
   return new ImageResponse(
     (
@@ -137,6 +145,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
               <div style={{ display: 'flex', fontSize: '27px', fontWeight: 700, letterSpacing: '2px', textAlign: 'center' }}>
                 {businessName}
               </div>
+              {addressLine && (
+                <div style={{ display: 'flex', fontSize: '12px', color: MUTED, marginTop: '10px', textAlign: 'center' }}>
+                  {addressLine}
+                </div>
+              )}
+              {phoneLine && (
+                <div style={{ display: 'flex', fontSize: '12px', color: MUTED, marginTop: '2px', textAlign: 'center' }}>
+                  Tel: {phoneLine}
+                </div>
+              )}
               <div style={{ display: 'flex', fontSize: '13px', color: MUTED, letterSpacing: '5px', marginTop: '8px' }}>
                 R E C E I P T
               </div>

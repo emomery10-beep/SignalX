@@ -114,12 +114,17 @@ export async function POST(req: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pos.askbiz.co'
+  // Same derivation as the image receipt's receiptNo (app/api/pos/receipt/[id]/image/route.tsx)
+  // so the number on the WhatsApp text line matches the one printed on the itemised image.
+  const receiptNo = String(tx.id).replace(/-/g, '').slice(0, 8).toUpperCase()
+  const paymentType = String(tx.payment_type || '')
   const { ok, error: waError } = await sendReceipt(phone, {
     total: `${symbol}${Number(tx.total).toFixed(2)}`,
     businessName,
     date,
-    paymentType: tx.payment_type,
+    paymentType: paymentType.charAt(0).toUpperCase() + paymentType.slice(1),
     imageUrl: `${baseUrl}/api/pos/receipt/${transaction_id}/image`,
+    receiptNo,
   }, dialHint)
   // fix #18 — check ok and return error to caller; previously HTTP errors were swallowed
   if (!ok) {

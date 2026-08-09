@@ -6,9 +6,12 @@
 //   META_PHONE_NUMBER_ID     — the phone number ID (not the number itself)
 //
 // Template env vars (configure names to match what you created in Meta Business Manager):
-//   META_OTP_TEMPLATE        — default: "askbiz_otp"
-//   META_RECEIPT_TEMPLATE    — default: "askbiz_receipt"
-//   META_TEMPLATE_LANG       — default: "en_GB"
+//   META_OTP_TEMPLATE            — default: "askbiz_otp"
+//   META_RECEIPT_TEMPLATE        — default: "askbiz_receipt"
+//   META_RECEIPT_TEMPLATE_VERSION — set to "2" once askbiz_receipt_v2 is approved
+//                                    (see docs/whatsapp-receipt-template.md) to send
+//                                    the richer 6-param body instead of the legacy 4.
+//   META_TEMPLATE_LANG           — default: "en_GB"
 
 const BASE = 'https://graph.facebook.com/v19.0'
 
@@ -97,12 +100,20 @@ export async function sendOTP(phone: string, code: string): Promise<{ ok: boolea
 // (something about the dynamic image header, most likely) — investigate via
 // Meta Business Manager's WhatsApp Manager message log before re-enabling
 // sendReceiptImage below.
+//
+// Superseded 2026-08-09: rather than re-fighting the image-header bug, the
+// v2 text template (see sendReceipt below) links to the same itemised image
+// as a plain URL in the body instead of attaching it as media — a link is
+// far more reliable than an inline media header and needs no Meta-side
+// investigation. sendReceiptImage is left here only as dead code / a record
+// of what didn't work; there's no plan to re-enable it.
 export interface ReceiptSummary {
   total: string
   businessName: string
   date: string
   paymentType: string
   imageUrl: string
+  receiptNo: string
 }
 
 async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: string, dialHint?: string): Promise<{ ok: boolean; error?: string }> {
@@ -134,6 +145,27 @@ async function sendReceiptImage(phone: string, receipt: ReceiptSummary, lang: st
   return { ok: true }
 }
 
+// v2 adds a receipt number and a link to the full itemised receipt image
+// (see app/api/pos/receipt/[id]/image/route.tsx — the zigzag-edge, VAT,
+// barcode design) directly in the body text, since a plain URL substituted
+// into a body parameter still renders as a tappable link — no template
+// button component needed. It does NOT add any promotional or third-party
+// ad content: Meta's WhatsApp Business Messaging Policy requires Utility
+// templates to be "non-promotional, not containing any promotional or
+// persuasive intent" (order-management/account-alert templates specifically
+// "should not promote, recommend, upsell, or cross-sell products; include
+// offers"), and since April 2025 Meta auto-reclassifies any utility template
+// that trips this as Marketing — pricier, requires separate marketing
+// opt-in, and every merchant on this platform sends through the ONE shared
+// META_PHONE_NUMBER_ID, so a policy strike here risks messaging quality for
+// every shop, not just one. See docs/whatsapp-receipt-template.md.
+//
+// This is opt-in via env flag so a deploy can't silently break production:
+// askbiz_receipt (v1, live) expects exactly 4 body params. Sending 6 params
+// against a 4-placeholder template fails the whole send. Only flip
+// META_RECEIPT_TEMPLATE_VERSION=2 (alongside META_RECEIPT_TEMPLATE pointing
+// at the new template's name) once the v2 template is approved in WhatsApp
+// Manager — see the doc for the exact template text to submit.
 export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHint?: string): Promise<{ ok: boolean; error?: string }> {
   const token = process.env.META_WHATSAPP_TOKEN
   const numId = phoneId()
@@ -141,6 +173,23 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHi
 
   const lang = process.env.META_TEMPLATE_LANG || 'en_GB'
   const template = process.env.META_RECEIPT_TEMPLATE || 'askbiz_receipt'
+  const useV2 = process.env.META_RECEIPT_TEMPLATE_VERSION === '2'
+
+  const parameters = useV2
+    ? [
+        { type: 'text', text: receipt.businessName },
+        { type: 'text', text: receipt.receiptNo },
+        { type: 'text', text: receipt.date },
+        { type: 'text', text: receipt.total },
+        { type: 'text', text: receipt.paymentType },
+        { type: 'text', text: receipt.imageUrl },
+      ]
+    : [
+        { type: 'text', text: receipt.total },
+        { type: 'text', text: receipt.businessName },
+        { type: 'text', text: receipt.date },
+        { type: 'text', text: receipt.paymentType },
+      ]
 
   const res = await fetch(`${BASE}/${numId}/messages`, {
     method:  'POST',
@@ -152,15 +201,7 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHi
       template: {
         name:     template,
         language: { code: lang },
-        components: [{
-          type:       'body',
-          parameters: [
-            { type: 'text', text: receipt.total },
-            { type: 'text', text: receipt.businessName },
-            { type: 'text', text: receipt.date },
-            { type: 'text', text: receipt.paymentType },
-          ],
-        }],
+        components: [{ type: 'body', parameters }],
       },
     }),
   })
