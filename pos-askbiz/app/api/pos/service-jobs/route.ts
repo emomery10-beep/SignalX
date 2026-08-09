@@ -15,6 +15,22 @@ function json(data: unknown, status = 200) {
 const PHOTO_BUCKET = 'service-photos'
 const PHOTO_ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
 
+// Technicians (engineer role) shouldn't see what the customer is being
+// charged for a repair. repair/tickets' UI only ever renders a price when
+// the field is truthy (board cards, list rows, the detail drawer's Quote
+// row), so stripping it at the API layer is enough on its own — no
+// client-side role check needed, and it can't be recovered via the network
+// tab either. Also nulls the joined transaction's `total` (same figure,
+// different door — pos_transactions.total is shown once a job is collected)
+// and original_quoted_price (not currently rendered anywhere, stripped for
+// defense in depth since select('*') returns it).
+function redactPricingForEngineer<T extends Record<string, any>>(job: T, role: string): T {
+  if (role !== 'engineer' || !job) return job
+  const redacted: Record<string, any> = { ...job, quoted_price: null, original_quoted_price: null }
+  if (redacted.transaction) redacted.transaction = { ...redacted.transaction, total: null }
+  return redacted as T
+}
+
 // Uploads one inline base64 photo to the (public) service-photos bucket.
 // Mirrors the existing standalone upload-photo endpoint's bucket/fallback
 // behavior, but runs inline in the intake POST — required so condition
@@ -99,7 +115,8 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query
   if (error) return json({ error: error.message }, 500)
 
-  return json({ jobs: data, total: count })
+  const jobs = (data || []).map(j => redactPricingForEngineer(j, auth.role))
+  return json({ jobs, total: count })
 }
 
 // POST — create a new service job (intake)
@@ -344,7 +361,7 @@ export async function PATCH(req: NextRequest) {
             location:pos_locations!location_id(id, name)
           `)
           .eq('id', id).eq('owner_id', auth.ownerId).maybeSingle()
-        if (existingJob) return json({ job: existingJob, deduped: true })
+        if (existingJob) return json({ job: redactPricingForEngineer(existingJob, auth.role), deduped: true })
       }
     } catch { /* dedupe is best-effort — never block a status update on it */ }
   }
@@ -553,5 +570,5 @@ export async function PATCH(req: NextRequest) {
     })
   }
 
-  return json({ job: updated })
+  return json({ job: redactPricingForEngineer(updated, auth.role) })
 }

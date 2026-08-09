@@ -55,14 +55,46 @@ async function isCustomerOptedOut(
   }
 }
 
+// pos_notification_settings.whatsapp_enabled/email_enabled were built (and,
+// per app/api/pos/notification-settings/route.ts in the root app, default to
+// OFF) for the OWNER-facing internal alert types below — that route
+// deliberately defaults whatsapp_enabled=false until the merchant sets their
+// own whatsapp_phone, since without a destination number the toggle would be
+// a lie. But this send route applies that same single on/off switch as a
+// blanket gate over EVERY notification_type, including the CUSTOMER-facing
+// transactional ones (a repair quote, a "ready for collection" text) — those
+// send to recipient_phone/recipient_email supplied per-call by the caller
+// and have nothing to do with the owner's own whatsapp_phone. Net effect,
+// confirmed live: pos_notification_settings has zero rows for any of the
+// 260 profiles in production, so every customer-facing send has been
+// silently no-op'ing (200 OK, status 'pending', methods_attempted: [])
+// since this table's introduction — not something this session broke, but
+// exactly why the WhatsApp quote/ready notifications didn't arrive.
+// Fix: customer-facing types bypass the settings gate (default ON, only an
+// EXPLICIT settings row with the flag set to false opts a merchant out);
+// the original internal-alert types keep their existing strict opt-in gate.
+const CUSTOMER_FACING_TYPES = new Set([
+  'service_intake', 'service_ready', 'service_quote', 'service_collected', 'service_warranty',
+  'salon_booking_confirmed',
+  'restaurant_order_confirmed', 'restaurant_reservation_confirmed',
+  'logistics_dispatched_sender', 'logistics_dispatched_receiver',
+  'logistics_delivered_sender', 'logistics_delivered_receiver',
+])
+
 /**
  * POST /api/pos/notifications/send
  *
  * Send notifications via WhatsApp (primary) or Email (fallback)
- * Used for: inventory alerts, sales anomalies, cash discrepancies, tax reminders
+ * Used for: (a) customer-facing transactional messages — repair
+ * intake/quote/ready/collected/warranty, salon/restaurant confirmations,
+ * logistics updates — always attempted when a recipient is given, unless
+ * the merchant has explicitly opted out; (b) owner-facing internal alerts —
+ * inventory, sales anomaly, cash variance, tax reminder, payment failed —
+ * gated behind pos_notification_settings same as before.
  *
  * Body:
- *   notification_type: 'inventory_alert' | 'sales_anomaly' | 'cash_variance' | 'tax_reminder' | 'payment_failed'
+ *   notification_type: see CUSTOMER_FACING_TYPES above, or
+ *     'inventory_alert' | 'sales_anomaly' | 'cash_variance' | 'tax_reminder' | 'payment_failed'
  *   recipient_phone?: string (for WhatsApp)
  *   recipient_email?: string (fallback if WhatsApp unavailable)
  *   message_template: string (name of template to use)
@@ -110,6 +142,14 @@ export async function POST(req: NextRequest) {
       methods_attempted: [],
     }
 
+    // Customer-facing types: default ON, only an explicit settings row with
+    // the flag set to false opts the merchant out. Internal alert types:
+    // unchanged strict opt-in (settings row must exist AND be true) — see
+    // the CUSTOMER_FACING_TYPES comment above for why these differ.
+    const isCustomerFacing = CUSTOMER_FACING_TYPES.has(notification_type)
+    const whatsappEnabled = isCustomerFacing ? settings?.whatsapp_enabled !== false : !!settings?.whatsapp_enabled
+    const emailEnabled = isCustomerFacing ? settings?.email_enabled !== false : !!settings?.email_enabled
+
     // GDPR consent gate — these notifications are marketing/promotional, so a
     // hard opt-out on a channel means we skip that channel entirely.
     const whatsappOptedOut =
@@ -118,8 +158,8 @@ export async function POST(req: NextRequest) {
       !!recipient_email && (await isCustomerOptedOut(service, ownerId, 'email', { email: recipient_email }))
 
     // If every channel we could have used is opted out, skip the send outright.
-    const whatsappViable = !!(settings?.whatsapp_enabled && recipient_phone)
-    const emailViable = !!(settings?.email_enabled && recipient_email)
+    const whatsappViable = !!(whatsappEnabled && recipient_phone)
+    const emailViable = !!(emailEnabled && recipient_email)
     if (
       (whatsappViable || emailViable) &&
       (!whatsappViable || whatsappOptedOut) &&
@@ -129,7 +169,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Try WhatsApp first (primary channel)
-    if (settings?.whatsapp_enabled && recipient_phone && !whatsappOptedOut) {
+    if (whatsappEnabled && recipient_phone && !whatsappOptedOut) {
       const whatsappResult = await sendWhatsApp(recipient_phone, message, dialHint)
       notificationResult.methods_attempted.push('whatsapp')
 
@@ -146,7 +186,7 @@ export async function POST(req: NextRequest) {
     // Fallback to email if WhatsApp failed or unavailable
     if (
       notificationResult.status !== 'sent_whatsapp' &&
-      settings?.email_enabled &&
+      emailEnabled &&
       recipient_email &&
       !emailOptedOut
     ) {
