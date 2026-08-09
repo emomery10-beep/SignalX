@@ -175,13 +175,22 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary, dialHi
   const template = process.env.META_RECEIPT_TEMPLATE || 'askbiz_receipt'
   const useV2 = process.env.META_RECEIPT_TEMPLATE_VERSION === '2'
 
+  // Capitalization is applied here, scoped to the v2 branch only — v1's
+  // parameters below are untouched, byte-for-byte identical to before this
+  // whole feature existed, so the currently-live template can't be affected
+  // by a v2-only formatting choice. (Previously this was applied at the
+  // call site in receipt/route.ts, shared by both branches — that leaked
+  // "cash" -> "Cash" into the live v1 receipt before any template was even
+  // approved, breaking the "ships inert" guarantee. Fixed 2026-08-09.)
+  const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
   const parameters = useV2
     ? [
         { type: 'text', text: receipt.businessName },
         { type: 'text', text: receipt.receiptNo },
         { type: 'text', text: receipt.date },
         { type: 'text', text: receipt.total },
-        { type: 'text', text: receipt.paymentType },
+        { type: 'text', text: titleCase(receipt.paymentType) },
         { type: 'text', text: receipt.imageUrl },
       ]
     : [

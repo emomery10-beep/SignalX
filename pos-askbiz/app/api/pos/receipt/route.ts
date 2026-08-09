@@ -117,12 +117,15 @@ export async function POST(req: NextRequest) {
   // Same derivation as the image receipt's receiptNo (app/api/pos/receipt/[id]/image/route.tsx)
   // so the number on the WhatsApp text line matches the one printed on the itemised image.
   const receiptNo = String(tx.id).replace(/-/g, '').slice(0, 8).toUpperCase()
-  const paymentType = String(tx.payment_type || '')
+  // paymentType passed through exactly as stored — unchanged from before
+  // this feature, so the live v1 template is untouched either way.
+  // Any display formatting (e.g. capitalisation) is applied inside
+  // sendReceipt(), scoped to the v2-only branch — see lib/whatsapp.ts.
   const { ok, error: waError } = await sendReceipt(phone, {
     total: `${symbol}${Number(tx.total).toFixed(2)}`,
     businessName,
     date,
-    paymentType: paymentType.charAt(0).toUpperCase() + paymentType.slice(1),
+    paymentType: tx.payment_type,
     imageUrl: `${baseUrl}/api/pos/receipt/${transaction_id}/image`,
     receiptNo,
   }, dialHint)
