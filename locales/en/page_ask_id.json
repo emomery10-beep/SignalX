@@ -8,6 +8,8 @@
   "tapToAsk": "Tap to ask",
   "aiError": "Could not reach the AI. Check your connection and try again.",
   "inputPlaceholder": "Ask a BI question about your data… (Enter to send)",
+  "voiceStartTitle": "Ask by voice",
+  "voiceStopTitle": "Stop recording",
   "bizRetail0": "Which items should I restock urgently?",
   "bizRetail1": "What is my best margin product?",
   "bizRetail2": "Can I increase my prices by 5%?",

@@ -517,6 +517,23 @@ export async function POST(request: NextRequest) {
   const service = createServiceClient()
   {
     const q = questionText.toLowerCase()
+
+    // ── PRODUCT-NAME KEYWORD EXTRACTION ───────────────────────────────────
+    // The "top 5 by revenue" and "60 lowest-stock" cuts below exist to keep the
+    // context small, but they're a relevance *proxy*, not a guarantee — a
+    // healthy-stock bestseller can rank outside both cuts and become invisible
+    // to the AI even when the user names it directly (e.g. "Mtungi 20L sesame
+    // seed oil" ranked ~88th of 93 by stock and outside the top 5 by revenue,
+    // so a direct question about it got answered from unrelated products).
+    // Pull distinctive words out of the question so a real name-match can be
+    // forced into context below regardless of its stock/revenue rank.
+    const BI_STOPWORDS = new Set(['when','what','which','how','much','many','have','has','had','sold','sell','selling','stock','stocks','current','currently','expected','expect','drop','dropping','run','runs','running','out','about','does','doing','done','are','was','were','been','being','their','there','where','after','before','today','yesterday','tomorrow','this','that','these','those','from','with','without','into','onto','over','under','than','then','also','just','only','very','really','still','more','most','least','less','week','weeks','month','months','year','years','days','day','the','and','for','you','your','yours','my','mine','me','business','shop','store','product','products','item','items','low','level','levels','need','needs','order','orders','ordered','ordering','restock','restocking','reorder','last','next','recent','recently','total','totals','number','amount','revenue','profit','margin','margins','sales','sale','growth','grown','compared','compare','versus'])
+    const questionKeywords = Array.from(new Set(
+      q.replace(/[^a-z0-9\s]/gi, ' ')
+       .split(/\s+/)
+       .filter(w => w.length >= 3 && !BI_STOPWORDS.has(w) && !/^\d+$/.test(w))
+    )).slice(0, 6)
+
     const now = new Date()
     let from: Date
     let to: Date = now
@@ -634,11 +651,16 @@ export async function POST(request: NextRequest) {
       periodLabel = 'Last 30 days'
     }
 
-    const [txRes, invRes, staffRes, custRes, debtorRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes] = await Promise.all([
+    const [txRes, invRes, staffRes, custRes, debtorRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes, matchedInvRes] = await Promise.all([
       // pos_transactions has TWO FKs to pos_staff (cashier_id, amended_by) — a bare `pos_staff(name)`
       // embed is ambiguous and PostgREST returns PGRST201 (data: null), silently zeroing every
       // period-scoped number below. Must disambiguate to the cashier relationship explicitly.
-      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff!cashier_id(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
+      // Limit raised 200→1000 (PostgREST's actual row ceiling for this project, verified live —
+      // passing a higher number silently gets clamped to it anyway). 200 was silently dropping
+      // real transactions for any shop doing >~7 txns/day: a live account with 314 in the last
+      // 30 days had its oldest 114 (36%) dropped from every "last 30 days" figure below —
+      // revenue, margin, top products, busiest hour, day-of-week — not just product lookups.
+      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff!cashier_id(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(1000),
       service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price,location_id').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(100),
       service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
       service.from('pos_customers').select('id,name,phone,total_spent,visit_count,last_seen_at').eq('owner_id', user.id).order('total_spent', { ascending: false }).limit(10),
@@ -660,6 +682,12 @@ export async function POST(request: NextRequest) {
       service.from('daily_briefs').select('improved,worsened,action,health_score,date,created_at').eq('user_id', user.id).order('date', { ascending: false }).limit(1),
       // Locations
       service.from('pos_locations').select('id,name,is_active').eq('owner_id', user.id).eq('is_active', true),
+      // Targeted product-name match, independent of the stock/revenue-rank cuts elsewhere in
+      // this block — guarantees a product the user actually named is found regardless of how
+      // it ranks. Only fired when the question has distinctive-enough words to search on.
+      questionKeywords.length > 0
+        ? service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price').eq('owner_id', user.id).eq('active', true).or(questionKeywords.map(k => `name.ilike.%${k}%`).join(','))
+        : Promise.resolve({ data: [] as any[], error: null }),
     ])
 
     const txs       = txRes.data || []
@@ -677,6 +705,7 @@ export async function POST(request: NextRequest) {
     const mpesa     = mpesaRes.data || []
     const brief     = briefRes.data?.[0] || null
     const locations = locRes.data || []
+    const matchedInv = (matchedInvRes as any).data || []
 
     if (txRes.error) console.error('POS tx query error:', txRes.error.message)
     if (invRes.error) console.error('POS inv query error:', invRes.error.message)
@@ -788,6 +817,24 @@ export async function POST(request: NextRequest) {
     if (topProducts.length > 0) {
       posContext += `Top products: ${topProducts.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)}, margin ${s.revenue > 0 ? ((s.revenue - s.cost) / s.revenue * 100).toFixed(0) : 0}%)`).join(', ')}.\n`
     }
+    // Force an exact/partial name match into context regardless of stock or revenue rank —
+    // "Top products" above and "Inventory" below are both relevance proxies (top-5 by revenue,
+    // bottom-60 by stock) that a genuinely healthy-stock bestseller can rank outside of. If the
+    // question names a product, these are the real, complete figures for it — not a top-N guess.
+    if (questionKeywords.length > 0) {
+      const matchedSales = Object.entries(productSales)
+        .filter(([name]) => questionKeywords.some(k => name.toLowerCase().includes(k)))
+        .sort((a, b) => b[1].revenue - a[1].revenue)
+      if (matchedSales.length > 0) {
+        posContext += `PRODUCTS MATCHING THE QUESTION (${periodLabel}, exact — use these numbers, do not estimate or substitute another product): ${matchedSales.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)} revenue, margin ${s.revenue > 0 ? ((s.revenue - s.cost) / s.revenue * 100).toFixed(0) : 0}%)`).join(', ')}.\n`
+      }
+      if (matchedInv.length > 0) {
+        posContext += `Current stock matching the question: ${matchedInv.map((i: any) => `${i.name} (stock:${i.stock_qty}${i.sale_price ? `, price:${finalSymbol}${i.sale_price}` : ''})`).join(', ')}.\n`
+      }
+      if (matchedSales.length === 0 && matchedInv.length === 0) {
+        posContext += `No product in the catalogue matches the words in this question — say so plainly and ask the user to name the exact product rather than guessing or substituting a different one.\n`
+      }
+    }
     // Include ALL inventory names so the AI can answer product-specific questions
     if (inv.length > 0) {
       posContext += `Inventory (${inv.length} products): ${(inv as any[]).slice(0, 60).map((i: any) => `${i.name} (stock:${i.stock_qty}${i.sale_price ? `, price:${finalSymbol}${i.sale_price}` : ''})`).join(', ')}.\n`
@@ -806,7 +853,7 @@ export async function POST(request: NextRequest) {
         .eq('status', 'completed')
         .gte('created_at', broad90From.toISOString())
         .order('created_at', { ascending: false })
-        .limit(200)
+        .limit(1000)
       const broadCompleted = broadTxs || []
       if (broadCompleted.length > 0) {
         posContext += `\nNote: No transactions found for "${periodLabel}" but found ${broadCompleted.length} completed transactions in the last 90 days. `
@@ -843,7 +890,7 @@ export async function POST(request: NextRequest) {
         .gte('created_at', lastMonthStart.toISOString())
         .lt('created_at', lastMonthEnd.toISOString())
         .order('created_at', { ascending: false })
-        .limit(300)
+        .limit(1000)
       const lmCompleted = lastMonthTxs || []
       if (lmCompleted.length > 0) {
         const lmRevenue = lmCompleted.reduce((s: number, t: any) => s + t.total, 0)
@@ -941,6 +988,15 @@ export async function POST(request: NextRequest) {
       if (topUdProducts.length > 0) {
         posContext += `Top products: ${topUdProducts.map(([name, s]) => `${name} (${s.units} units, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
       }
+      // Same top-5-by-revenue blind spot as the POS block above — force in a named-product match.
+      if (questionKeywords.length > 0) {
+        const matchedUd = Object.entries(productSalesUd)
+          .filter(([name]) => questionKeywords.some(k => name.toLowerCase().includes(k)))
+          .sort((a, b) => b[1].revenue - a[1].revenue)
+        if (matchedUd.length > 0) {
+          posContext += `Channel products matching the question: ${matchedUd.map(([name, s]) => `${name} (${s.units} units, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
+        }
+      }
 
       // Merge POS + external channels into one combined day-of-week table
       const allDays = new Set([...Object.keys(posDayRevenue), ...Object.keys(udDayRevenue)])
@@ -1013,7 +1069,7 @@ export async function POST(request: NextRequest) {
         .eq('status', 'completed')
         .gte('created_at', compFrom.toISOString())
         .lte('created_at', compTo.toISOString())
-        .limit(500)
+        .limit(1000)
       if (compErr) console.error('Growth comparison query error:', compErr.message)
       const compCompleted = compTxs || []
       const compRevenue = compCompleted.reduce((s: number, t: any) => s + (t.total || 0), 0)

@@ -7,6 +7,8 @@ import type { AIResult } from '@/lib/ai'
 import { parseFile } from '@/lib/file/parser'
 import ResultBlock from '@/components/chat/ResultBlock'
 import { useLang } from '@/components/LanguageProvider'
+import { useVoice } from '@/hooks/useVoice'
+import VoiceVisualizer from '@/components/chat/VoiceVisualizer'
 
 interface Message {
   id: string
@@ -154,6 +156,21 @@ export default function ChatConversationPage() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
+  // Mic input — the empty-state /ask composer has this (HumanFirstSearch); this page didn't,
+  // leaving the generic bottom-right Help/Voice FAB as the only voice control once a
+  // conversation starts. Wired the same way here for parity between the two composers.
+  const voice = useVoice({
+    onTranscript: (text) => { setInput(text) },
+    onFinalTranscript: (text) => {
+      setInput(text)
+      setTimeout(() => {
+        if (text.trim()) sendMessage(text)
+        voice.stopRecording()
+      }, 200)
+    },
+    silenceTimeoutMs: 2000,
+  })
+
   const autoResize = (e: any) => {
     setInput(e.target.value)
     const ta = e.target; ta.style.height = 'auto'
@@ -244,22 +261,39 @@ export default function ChatConversationPage() {
 
       <div style={{ flexShrink:0, padding: isMobile ? '10px 12px 14px' : '10px 18px 14px', borderTop:'1px solid var(--b)', background:'var(--sf)' }}>
         <div style={{ maxWidth: 'min(680px, 100%)', margin:'0 auto' }}>
-          <div style={{ display:'flex', gap:7, alignItems:'flex-end', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:16, padding:'8px 8px 8px 13px', transition:'border-color 180ms' }}>
-            <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKeyDown}
-              placeholder={tc('page_ask_id.inputPlaceholder')} rows={1}
-              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'var(--tx)', fontFamily:'var(--font-dm,DM Sans,sans-serif)', fontSize:15, lineHeight:1.5, resize:'none', minHeight:20, maxHeight:120, overflowY:'auto' }}/>
-            <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-              <label style={{ width:28, height:28, borderRadius:6, border:'1px solid var(--b)', background:'transparent', color:'var(--tx3)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <input type="file" accept=".csv,.xlsx,.xls" style={{ display:'none' }} onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}/>
-              </label>
-              <button onClick={() => sendMessage()} disabled={!input.trim()||isLoading}
-                style={{ width:30, height:30, borderRadius:8, border:'none', background:input.trim()&&!isLoading?'var(--acc)':'var(--b2)', color:'#04080f', cursor:input.trim()&&!isLoading?'pointer':'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 130ms' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </button>
+          <div style={{ position:'relative' }}>
+            {voice.isRecording && (
+              <VoiceVisualizer
+                isActive={voice.isRecording}
+                transcript={voice.transcript}
+                analyserNode={voice.analyserNode}
+                onStop={() => { voice.stopRecording() }}
+              />
+            )}
+            <div style={{ display:'flex', gap:7, alignItems:'flex-end', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:16, padding:'8px 8px 8px 13px', transition:'border-color 180ms' }}>
+              <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKeyDown}
+                placeholder={tc('page_ask_id.inputPlaceholder')} rows={1}
+                style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'var(--tx)', fontFamily:'var(--font-dm,DM Sans,sans-serif)', fontSize:15, lineHeight:1.5, resize:'none', minHeight:20, maxHeight:120, overflowY:'auto' }}/>
+              <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                <label style={{ width:28, height:28, borderRadius:6, border:'1px solid var(--b)', background:'transparent', color:'var(--tx3)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <input type="file" accept=".csv,.xlsx,.xls" style={{ display:'none' }} onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}/>
+                </label>
+                <button onClick={() => voice.isRecording ? voice.stopRecording() : voice.startRecording()}
+                  title={voice.isRecording ? tc('page_ask_id.voiceStopTitle') : tc('page_ask_id.voiceStartTitle')}
+                  style={{ width:28, height:28, borderRadius:6, border:'1px solid var(--b)', background:voice.isRecording?'rgba(239,68,68,.12)':'transparent', color:voice.isRecording?'#ef4444':'var(--tx3)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
+                <button onClick={() => sendMessage()} disabled={!input.trim()||isLoading}
+                  style={{ width:30, height:30, borderRadius:8, border:'none', background:input.trim()&&!isLoading?'var(--acc)':'var(--b2)', color:'#04080f', cursor:input.trim()&&!isLoading?'pointer':'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 130ms' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
             </div>
           </div>
-
+          {voice.error && (
+            <div style={{ marginTop:6, fontSize:12, color:'#f48080', textAlign:'center' }}>{voice.error}</div>
+          )}
         </div>
       </div>
     </div>
