@@ -366,7 +366,7 @@ export default function AppShellClient({ user, conversations, children }: {
           {/* New question */}
           <button
             onClick={newChat}
-            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx2)', fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 2, transition: 'background 120ms' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx2)', fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 2, transition: 'background 120ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
@@ -384,7 +384,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 key={n.id}
                 href={localePath(n.href, toLocale(lang))}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 9,
+                  display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 9,
                   padding: '9px 10px', borderRadius: 10,
                   textDecoration: 'none', fontSize: 15, fontWeight: 500,
                   background: active ? ACC_BG : 'transparent',
@@ -406,7 +406,7 @@ export default function AppShellClient({ user, conversations, children }: {
           <button
             onClick={() => setMoreOpen(v => !v)}
             aria-expanded={moreOpen}
-            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx3)', fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginTop: 2, transition: 'background 120ms' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx3)', fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginTop: 2, transition: 'background 120ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
@@ -427,7 +427,7 @@ export default function AppShellClient({ user, conversations, children }: {
                   key={n.id}
                   href={localePath(n.href, toLocale(lang))}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 9,
+                    display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 9,
                     padding: '8px 10px', borderRadius: 8,
                     textDecoration: 'none', fontSize: 14, fontWeight: 400,
                     background: active ? ACC_BG2 : 'transparent',
@@ -445,7 +445,7 @@ export default function AppShellClient({ user, conversations, children }: {
               )
             })}
             {isAdmin && (
-              <Link href={localePath('/admin', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 14, color: 'var(--tx3)', marginBottom: 1 }}>
+              <Link href={localePath('/admin', toLocale(lang))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 14, color: 'var(--tx3)', marginBottom: 1 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
                 {tc('appnav.admin')}
               </Link>
