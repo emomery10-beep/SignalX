@@ -50,5 +50,10 @@
   "empty_subtitle": "Scannez la première lettre de voiture pour commencer le suivi",
   "badge_on_time": "À l'heure",
   "badge_late": "En retard",
-  "badge_no_sched": "Non planifié"
+  "badge_no_sched": "Non planifié",
+  "hold_warning_title": "{label} : levée en attente",
+  "hold_warning_days": "{count} jour(s) restant(s)",
+  "hold_warning_regulatory": "En attente de validation manuelle",
+  "hold_warning_cancel": "Annuler",
+  "hold_warning_override": "Expédier quand même"
 }

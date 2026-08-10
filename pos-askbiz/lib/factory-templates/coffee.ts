@@ -109,8 +109,18 @@ const coffeeTemplate: FactoryTypeTemplate = {
       yield_max_pct: 20,
       notes: 'Industry "golden rule" of roughly 5-6kg cherry per 1kg green bean, corroborated by ICO conversion standards. Actual yields typically run 5-10% below this theoretical ratio because of sorting and moisture variance — treat the top of this range as optimistic rather than typical.',
     },
+    {
+      input_product_name: 'Ripe cherry',
+      input_unit: 'kg',
+      output_product_name: 'Dried parchment coffee',
+      output_unit: 'kg',
+      expected_yield_pct: 22,
+      yield_min_pct: 18,
+      yield_max_pct: 28,
+      notes: 'No reliable field figure for cherry-to-parchment specifically was found in research (the sourceNote below originally flagged this row as missing entirely) — this estimate is derived, not sourced: parchment-to-green-bean hulling typically removes roughly 15-20% further weight, so working backward from the cherry-to-green-bean row above (~18%) implies parchment sits somewhat above that. Treat this as the roughest estimate in this whole template family and replace it as soon as you\'ve weighed real batches at the parchment stage — the point of this row is to let that sale be logged and priced at all, not to be precise from day one.',
+    },
   ],
-  sourceNote: 'Letting an owner log and price dried parchment coffee as its own sellable intermediate output — not just a step toward green beans — is probably the single most valuable feature this template needs beyond what the generic capture flow already offers. No recipe row is included here for cherry-to-parchment specifically, since no reliable figure for that intermediate ratio was found in research; add one from your own batches if you sell at the parchment stage.',
+  sourceNote: 'Letting an owner log and price dried parchment coffee as its own sellable intermediate output — not just a step toward green beans — is probably the single most valuable feature this template needs beyond what the generic capture flow already offers.',
 }
 
 export default coffeeTemplate

@@ -50,5 +50,10 @@
   "empty_subtitle": "امسح أول بوليصة شحن لبدء التتبع",
   "badge_on_time": "في الموعد",
   "badge_late": "متأخر",
-  "badge_no_sched": "لا يوجد جدول"
+  "badge_no_sched": "لا يوجد جدول",
+  "hold_warning_title": "{label} لم يتم تخليصه بعد",
+  "hold_warning_days": "{count} يوم متبقٍ",
+  "hold_warning_regulatory": "في انتظار التخليص اليدوي",
+  "hold_warning_cancel": "إلغاء",
+  "hold_warning_override": "إرسال على أي حال"
 }

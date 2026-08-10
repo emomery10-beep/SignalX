@@ -14,24 +14,70 @@ const GREEN  = '#22c55e'
 const RED    = '#ef4444'
 const BLUE   = '#3b82f6'
 const PURPLE = '#8b5cf6'
+// Same sky-blue used for the "packaging" defect category on the Quality
+// screen (factory_quality) — one concept, one color, across every factory
+// screen that surfaces it, rather than picking an unrelated 5th hue.
+const TEAL   = '#0ea5e9'
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
+type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 type Stage = 'viewfinder' | 'confirm_type' | 'details' | 'success'
+
+// Output and wastage captures can additionally be marked "sold" — covers
+// both true waste sold as a byproduct, and a genuine co-product (press-cake,
+// bran/germ, whey — several factory-type templates explicitly warn these
+// are NOT wastage) that the live UI has nowhere else clean to go but
+// 'output'. Kept in sync with SALE_ANNOTATABLE_TYPES in the capture API route.
+const SALE_ANNOTATABLE_TYPES: CaptureType[] = ['output', 'wastage']
+
+// A generic, free-form process-parameter reading (e.g. dairy's pasteurize
+// temp/time) — intake/output only. Kept in sync with
+// PARAM_ANNOTATABLE_TYPES in the capture API route.
+const PARAM_ANNOTATABLE_TYPES: CaptureType[] = ['intake', 'output']
+
+// Common container sizes offered as quick-pick chips on the packaging type's
+// details screen — a starting point, not a closed set; the field next to
+// them is always typeable for anything not listed (50kg sack, 1kg tin, etc).
+const CONTAINER_SIZE_CHIPS = ['5L', '10L', '20L', '1kg', '25kg', '50kg']
 
 function buildTypes(tc: (key: string) => string): { id: CaptureType; label: string; color: string; bg: string; hint: string }[] {
   return [
-    { id: 'intake',   label: tc('factory_capture.type_intake_label'),   color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_hint') },
-    { id: 'output',   label: tc('factory_capture.type_output_label'),   color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: tc('factory_capture.type_output_hint') },
-    { id: 'wastage',  label: tc('factory_capture.type_wastage_label'),  color: RED,    bg: 'rgba(239,68,68,.15)',   hint: tc('factory_capture.type_wastage_hint') },
-    { id: 'dispatch', label: tc('factory_capture.type_dispatch_label'), color: PURPLE, bg: 'rgba(139,92,246,.15)',  hint: tc('factory_capture.type_dispatch_hint') },
+    { id: 'intake',    label: tc('factory_capture.type_intake_label'),    color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_hint') },
+    { id: 'output',    label: tc('factory_capture.type_output_label'),    color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: tc('factory_capture.type_output_hint') },
+    { id: 'packaging', label: tc('factory_capture.type_packaging_label'), color: TEAL,   bg: 'rgba(14,165,233,.15)',  hint: tc('factory_capture.type_packaging_hint') },
+    { id: 'wastage',   label: tc('factory_capture.type_wastage_label'),   color: RED,    bg: 'rgba(239,68,68,.15)',   hint: tc('factory_capture.type_wastage_hint') },
+    { id: 'dispatch',  label: tc('factory_capture.type_dispatch_label'),  color: PURPLE, bg: 'rgba(139,92,246,.15)',  hint: tc('factory_capture.type_dispatch_hint') },
   ]
 }
 
-const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets', 'bags']
+// 'blocks' added for concrete-block/brick factories (pos_factory_recipes'
+// suggested concrete_blocks recipe counts output in blocks — the unit
+// picker had no way to say so before).
+const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets', 'bags', 'blocks']
 
 const WASTAGE_REASON_KEYS = ['reason_damaged', 'reason_spoiled', 'reason_qc_reject', 'reason_machine_fault', 'reason_contamination', 'reason_overproduction', 'reason_other']
 
 interface InventoryItem { id: string; name: string; unit: string | null }
+
+interface OpenHold {
+  label: string
+  releasable_at: string | null
+  is_open: boolean
+  capture?: { product_name: string | null } | null
+}
+
+// Same loose match as lib/factory-holds.ts's server-side matchHoldRule and
+// factory/waybill's client-side check — a free-text dispatch product name
+// checked against a free-text captured product name, so it errs toward
+// catching the match.
+function findMatchedHold(productName: string, holds: OpenHold[]): OpenHold | null {
+  const p = productName.toLowerCase().trim()
+  if (!p) return null
+  const open = holds.filter(h => h.is_open && h.capture?.product_name)
+  // Exact match first — see lib/factory-holds.ts's matchHoldRule for why.
+  const exact = open.find(h => h.capture!.product_name!.toLowerCase().trim() === p)
+  if (exact) return exact
+  return open.find(h => p.includes(h.capture!.product_name!.toLowerCase()) || h.capture!.product_name!.toLowerCase().includes(p)) || null
+}
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 function IconCamera({ size = 28, color = '#fff' }: { size?: number; color?: string }) {
@@ -97,6 +143,29 @@ export default function FactoryCapturePage() {
   const [saveError, setSaveError] = useState('')
   const [pendingSync, setPendingSync] = useState(false)
 
+  // Sale annotation — output/wastage only (SALE_ANNOTATABLE_TYPES)
+  const [markSold, setMarkSold]     = useState(false)
+  const [salePrice, setSalePrice]   = useState('')
+  const [buyerName, setBuyerName]   = useState('')
+
+  // Not-yet-releasable hold check for dispatch captures — warn and require
+  // an explicit tap-through, same policy as factory/waybill.
+  const [openHolds, setOpenHolds] = useState<OpenHold[]>([])
+  const [pendingHoldWarning, setPendingHoldWarning] = useState<OpenHold | null>(null)
+
+  // Process-parameter reading — intake/output only (PARAM_ANNOTATABLE_TYPES)
+  const [recordParam, setRecordParam] = useState(false)
+  const [paramLabel, setParamLabel] = useState('')
+  const [paramValue, setParamValue] = useState('')
+  const [paramUnit, setParamUnit] = useState('')
+
+  // Production run tagging (intake/output) + intermediate flag (output) —
+  // activates pos_factory_production_runs so co-outputs/an intake-then-
+  // output pair can be grouped, and lets a mid-process sellable product
+  // (parboiled paddy, dried parchment coffee) be marked as such.
+  const [runRef, setRunRef] = useState('')
+  const [isIntermediate, setIsIntermediate] = useState(false)
+
   // ── Auth + inventory load ──────────────────────────────────────────────
   useEffect(() => {
     if (!authReady || !session) return
@@ -106,6 +175,10 @@ export default function FactoryCapturePage() {
     // material choices here.
     fetchInventory({ ownerId: session.ownerId, staffId: session.staffId || '', sector: 'factory' })
       .then(d => setInventory((d.inventory || []).slice(0, 60)))
+      .catch(() => {})
+    fetch('/api/pos/factory/capture-holds?status=open', { headers: session.headers })
+      .then(r => r.json())
+      .then(d => setOpenHolds(d.holds || []))
       .catch(() => {})
     openCamera()
 
@@ -199,7 +272,21 @@ export default function FactoryCapturePage() {
 
   function proceedToDetails(t: CaptureType) {
     setCaptureType(t)
-    setUnit(inventory.length > 0 ? (inventory[0].unit || 'kg') : 'kg')
+    // Packaging's "unit" is a container size (20L, 1kg bag…), not one of
+    // the generic weight/count units — leave it blank so the details screen
+    // shows the typeable size field instead of defaulting to something
+    // meaningless like "kg".
+    setUnit(t === 'packaging' ? '' : (inventory.length > 0 ? (inventory[0].unit || 'kg') : 'kg'))
+    setMarkSold(false)
+    setSalePrice('')
+    setBuyerName('')
+    setPendingHoldWarning(null)
+    setRecordParam(false)
+    setParamLabel('')
+    setParamValue('')
+    setParamUnit('')
+    setRunRef('')
+    setIsIntermediate(false)
     setStage('details')
   }
 
@@ -211,8 +298,16 @@ export default function FactoryCapturePage() {
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError(tc('factory_capture.error_valid_quantity')); return }
     if (captureType === 'wastage' && !resolvedNotes) { setSaveError(tc('factory_capture.error_wastage_reason')); return }
     if (captureType === 'dispatch' && !notes.trim()) { setSaveError(tc('factory_capture.error_destination')); return }
-    setSaving(true); setSaveError(''); setPendingSync(false)
+    if (captureType === 'packaging' && !unit.trim()) { setSaveError(tc('factory_capture.error_container_size')); return }
+    if (markSold && salePrice && (isNaN(Number(salePrice)) || Number(salePrice) < 0)) { setSaveError(tc('factory_capture.error_valid_price')); return }
+    if (recordParam && (!paramLabel.trim() || !paramValue || isNaN(Number(paramValue)))) { setSaveError(tc('factory_capture.error_param_incomplete')); return }
+    if (captureType === 'dispatch') {
+      const matched = findMatchedHold(product, openHolds)
+      if (matched && !pendingHoldWarning) { setPendingHoldWarning(matched); return }
+    }
+    setSaving(true); setSaveError(''); setPendingSync(false); setPendingHoldWarning(null)
     const clientTxId = generateClientTxId('capture')
+    const sellingThisType = SALE_ANNOTATABLE_TYPES.includes(captureType)
     const body = {
       type: captureType,
       image: photoUrl,
@@ -221,6 +316,13 @@ export default function FactoryCapturePage() {
       batch_ref: unit,
       notes: resolvedNotes || null,
       client_tx_id: clientTxId,
+      ...(sellingThisType && markSold && salePrice ? { sale_price: Number(salePrice) } : {}),
+      ...(sellingThisType && markSold && buyerName.trim() ? { buyer_name: buyerName.trim() } : {}),
+      ...(PARAM_ANNOTATABLE_TYPES.includes(captureType) && recordParam && paramLabel.trim() && paramValue
+        ? { param_label: paramLabel.trim(), param_value: Number(paramValue), param_unit: paramUnit.trim() || undefined }
+        : {}),
+      ...((captureType === 'intake' || captureType === 'output') && runRef.trim() ? { run_ref: runRef.trim() } : {}),
+      ...(captureType === 'output' && isIntermediate ? { is_intermediate: true } : {}),
     }
     try {
       const res = await fetch('/api/pos/factory/capture', {
@@ -264,6 +366,16 @@ export default function FactoryCapturePage() {
     setSelectedReason('')
     setSaveError('')
     setPendingSync(false)
+    setMarkSold(false)
+    setSalePrice('')
+    setBuyerName('')
+    setPendingHoldWarning(null)
+    setRecordParam(false)
+    setParamLabel('')
+    setParamValue('')
+    setParamUnit('')
+    setRunRef('')
+    setIsIntermediate(false)
     openCamera()
   }
 
@@ -423,10 +535,11 @@ export default function FactoryCapturePage() {
           >
             {/* Coloured circle icon */}
             <div style={{ width: 52, height: 52, borderRadius: '50%', background: `${t.color}20`, border: `2px solid ${t.color}60`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {t.id === 'intake'   && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><path d="M12 2v10M8 10l4 4 4-4"/><rect x="3" y="16" width="18" height="6" rx="1"/></svg>}
-              {t.id === 'output'   && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><path d="M12 22V12M8 14l4-4 4 4"/><rect x="3" y="2" width="18" height="6" rx="1"/></svg>}
-              {t.id === 'wastage'  && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>}
-              {t.id === 'dispatch' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>}
+              {t.id === 'intake'    && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><path d="M12 2v10M8 10l4 4 4-4"/><rect x="3" y="16" width="18" height="6" rx="1"/></svg>}
+              {t.id === 'output'    && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><path d="M12 22V12M8 14l4-4 4 4"/><rect x="3" y="2" width="18" height="6" rx="1"/></svg>}
+              {t.id === 'packaging' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73V8z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>}
+              {t.id === 'wastage'   && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>}
+              {t.id === 'dispatch'  && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>}
             </div>
             <div style={{ fontWeight: 800, fontSize: 16, color: t.color }}>{t.label}</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.3 }}>{t.hint}</div>
@@ -493,14 +606,20 @@ export default function FactoryCapturePage() {
           <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.quantity_label')}</div>
           <div style={{ background: 'rgba(255,255,255,0.05)', border: `1.5px solid ${quantity ? selectedType.color + '60' : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 }}>
             <span style={{ fontSize: 32, fontWeight: 800, color: quantity ? '#f1f5f9' : 'rgba(255,255,255,0.2)', lineHeight: 1 }}>{quantity || '0'}</span>
-            {/* Unit pills */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 160 }}>
-              {UNITS.slice(0, 5).map(u => (
-                <button key={u} onClick={() => setUnit(u)} style={{ padding: '4px 10px', borderRadius: 20, border: `1.5px solid ${unit === u ? selectedType.color : 'rgba(255,255,255,0.15)'}`, background: unit === u ? `${selectedType.color}20` : 'transparent', color: unit === u ? selectedType.color : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: unit === u ? 700 : 400, cursor: 'pointer' }}>
-                  {u}
-                </button>
-              ))}
-            </div>
+            {/* Unit pills — packaging's "unit" is a container size, entered
+                in its own dedicated field below instead, so a plain label
+                stands in here to say what the number above means. */}
+            {captureType === 'packaging' ? (
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tc('factory_capture.container_count_label')}</span>
+            ) : (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 160 }}>
+                {UNITS.slice(0, 5).map(u => (
+                  <button key={u} onClick={() => setUnit(u)} style={{ padding: '4px 10px', borderRadius: 20, border: `1.5px solid ${unit === u ? selectedType.color : 'rgba(255,255,255,0.15)'}`, background: unit === u ? `${selectedType.color}20` : 'transparent', color: unit === u ? selectedType.color : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: unit === u ? 700 : 400, cursor: 'pointer' }}>
+                    {u}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -534,6 +653,94 @@ export default function FactoryCapturePage() {
           </div>
         )}
 
+        {/* Packaging container size — required, mirrors the wastage-reason /
+            dispatch-destination pattern below: a typed value plus quick-pick
+            chips for the sizes that come up most (5L/10L/20L jerry cans and
+            similar), free-text for anything else. */}
+        {captureType === 'packaging' && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              {tc('factory_capture.container_size_label')} <span style={{ color: RED }}>*</span>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+              {CONTAINER_SIZE_CHIPS.map(c => (
+                <button key={c} onClick={() => setUnit(c)}
+                  style={{ padding: '6px 12px', borderRadius: 20, border: `1.5px solid ${unit === c ? TEAL : 'rgba(255,255,255,0.15)'}`, background: unit === c ? `${TEAL}20` : 'transparent', color: unit === c ? TEAL : 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: unit === c ? 700 : 400, cursor: 'pointer' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
+            <input
+              value={unit}
+              onChange={e => setUnit(e.target.value)}
+              placeholder={tc('factory_capture.container_size_placeholder')}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${unit.trim() ? TEAL + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 10, color: '#f1f5f9', padding: '11px 12px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+        )}
+
+        {/* Intermediate flag — output only. A real, separately-sellable
+            mid-process product (parboiled paddy, dried parchment coffee)
+            rather than a final one — see the production-run field below,
+            which is what actually lets its yield be attributed correctly
+            against only the intake that continued toward it. */}
+        {captureType === 'output' && (
+          <button type="button" onClick={() => setIsIntermediate(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', marginBottom: 14, background: isIntermediate ? 'rgba(14,165,233,0.1)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${isIntermediate ? TEAL + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}>
+            <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: `1.5px solid ${isIntermediate ? TEAL : 'rgba(255,255,255,0.3)'}`, background: isIntermediate ? TEAL : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {isIntermediate && <IconCheck size={13} color="#fff" />}
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: isIntermediate ? TEAL : '#f1f5f9' }}>{tc('factory_capture.intermediate_toggle_label')}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{tc('factory_capture.intermediate_toggle_hint')}</div>
+            </div>
+          </button>
+        )}
+
+        {/* Sale annotation — output/wastage only. Covers both true waste
+            sold as a byproduct, and a co-product (press-cake, bran, whey…)
+            that several factory-type templates explicitly warn shouldn't be
+            logged as wastage — it lives under 'output' instead, so this
+            needs to be reachable from both types. */}
+        {SALE_ANNOTATABLE_TYPES.includes(captureType) && (
+          <div style={{ marginBottom: 20 }}>
+            <button type="button" onClick={() => setMarkSold(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: markSold ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${markSold ? GREEN + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}>
+              <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: `1.5px solid ${markSold ? GREEN : 'rgba(255,255,255,0.3)'}`, background: markSold ? GREEN : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {markSold && <IconCheck size={13} color="#fff" />}
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: markSold ? GREEN : '#f1f5f9' }}>{tc('factory_capture.sold_toggle_label')}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{tc('factory_capture.sold_toggle_hint')}</div>
+              </div>
+            </button>
+
+            {markSold && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>{tc('factory_capture.buyer_label')}</label>
+                  <input
+                    value={buyerName}
+                    onChange={e => setBuyerName(e.target.value)}
+                    placeholder={tc('factory_capture.buyer_placeholder')}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', padding: '11px 12px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>{tc('factory_capture.price_label')}</label>
+                  <input
+                    type="number" inputMode="decimal" min="0"
+                    value={salePrice}
+                    onChange={e => setSalePrice(e.target.value)}
+                    placeholder="0"
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', padding: '11px 12px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Dispatch destination */}
         {captureType === 'dispatch' && (
           <div style={{ marginBottom: 20 }}>
@@ -547,6 +754,58 @@ export default function FactoryCapturePage() {
           </div>
         )}
 
+        {/* Process-parameter reading — intake/output only. Generic and
+            free-form (no auto-detection): any factory type can use it for
+            whatever measurement its own process needs (a temperature, a
+            moisture %, a soak time), not just dairy's pasteurize CCP. */}
+        {PARAM_ANNOTATABLE_TYPES.includes(captureType) && (
+          <div style={{ marginBottom: 20 }}>
+            <button type="button" onClick={() => setRecordParam(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', background: recordParam ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${recordParam ? BLUE + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}>
+              <div style={{ width: 20, height: 20, borderRadius: 6, flexShrink: 0, border: `1.5px solid ${recordParam ? BLUE : 'rgba(255,255,255,0.3)'}`, background: recordParam ? BLUE : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {recordParam && <IconCheck size={13} color="#fff" />}
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: recordParam ? BLUE : '#f1f5f9' }}>{tc('factory_capture.param_toggle_label')}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{tc('factory_capture.param_toggle_hint')}</div>
+              </div>
+            </button>
+
+            {recordParam && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 0.8fr', gap: 8, marginTop: 10 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>{tc('factory_capture.param_label_field')}</label>
+                  <input
+                    value={paramLabel}
+                    onChange={e => setParamLabel(e.target.value)}
+                    placeholder={tc('factory_capture.param_label_placeholder')}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', padding: '11px 12px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>{tc('factory_capture.param_value_field')}</label>
+                  <input
+                    type="number" inputMode="decimal"
+                    value={paramValue}
+                    onChange={e => setParamValue(e.target.value)}
+                    placeholder="0"
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', padding: '11px 12px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>{tc('factory_capture.param_unit_field')}</label>
+                  <input
+                    value={paramUnit}
+                    onChange={e => setParamUnit(e.target.value)}
+                    placeholder={tc('factory_capture.param_unit_placeholder')}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#f1f5f9', padding: '11px 12px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Optional notes for intake/output */}
         {(captureType === 'intake' || captureType === 'output') && (
           <div style={{ marginBottom: 20 }}>
@@ -557,6 +816,44 @@ export default function FactoryCapturePage() {
               placeholder={captureType === 'intake' ? tc('factory_capture.notes_intake_placeholder') : tc('factory_capture.notes_output_placeholder')}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
             />
+          </div>
+        )}
+
+        {/* Production run — intake/output only, optional. Type the same
+            reference on the intake and its resulting output(s) to group
+            them, same find-or-create pattern as Batch's batch_ref. */}
+        {(captureType === 'intake' || captureType === 'output') && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              {tc('factory_capture.run_ref_label')} <span style={{ color: 'rgba(255,255,255,0.25)' }}>{tc('factory_capture.notes_optional')}</span>
+            </div>
+            <input
+              value={runRef}
+              onChange={e => setRunRef(e.target.value)}
+              placeholder={tc('factory_capture.run_ref_placeholder')}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+        )}
+
+        {pendingHoldWarning && (
+          <div style={{ background: 'rgba(245,158,11,0.1)', border: `1.5px solid ${AMBER}50`, borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: AMBER, marginBottom: 4 }}>
+              {tc('factory_capture.hold_warning_title', { label: pendingHoldWarning.label })}
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>
+              {pendingHoldWarning.releasable_at
+                ? tc('factory_capture.hold_warning_days', { count: Math.max(0, Math.ceil((new Date(pendingHoldWarning.releasable_at).getTime() - Date.now()) / 86400000)) })
+                : tc('factory_capture.hold_warning_regulatory')}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPendingHoldWarning(null)} style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#f1f5f9', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                {tc('factory_capture.hold_warning_cancel')}
+              </button>
+              <button onClick={submit} style={{ flex: 1, background: AMBER, border: 'none', color: '#1a1206', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                {tc('factory_capture.hold_warning_override')}
+              </button>
+            </div>
           </div>
         )}
 
@@ -598,6 +895,13 @@ export default function FactoryCapturePage() {
         {quantity && ` · ${quantity} ${unit}`}
         {product && ` · ${product}`}
       </div>
+      {markSold && SALE_ANNOTATABLE_TYPES.includes(captureType) && (salePrice || buyerName) && (
+        <div style={{ fontSize: 13, color: GREEN, marginBottom: 6, fontWeight: 600 }}>
+          {buyerName.trim()
+            ? tc('factory_capture.sold_confirmation_with_buyer', { buyer: buyerName, price: salePrice || '—' })
+            : tc('factory_capture.sold_confirmation_no_buyer', { price: salePrice || '—' })}
+        </div>
+      )}
       <div style={{ fontSize: 12, color: pendingSync ? RED : 'rgba(255,255,255,0.3)', marginBottom: 40 }}>
         {pendingSync ? tc('factory_capture.success_pending_sync') : tc('factory_capture.success_awaiting')}
       </div>

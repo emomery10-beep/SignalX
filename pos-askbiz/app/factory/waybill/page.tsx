@@ -43,6 +43,30 @@ interface HubData {
   withScheduleCount: number
 }
 
+interface OpenHold {
+  label: string
+  releasable_at: string | null
+  is_open: boolean
+  capture?: { product_name: string | null } | null
+}
+
+// Same case-insensitive, substring-tolerant match as lib/factory-holds.ts's
+// server-side matchHoldRule — this is checking a *free-text* dispatch
+// product_name against a *free-text* capture product_name, not against a
+// recipe, so it deliberately mirrors that looseness rather than requiring
+// an exact string match a worker would rarely type twice identically.
+function findMatchedHold(productName: string, holds: OpenHold[]): OpenHold | null {
+  const p = productName.toLowerCase().trim()
+  if (!p) return null
+  const open = holds.filter(h => h.is_open && h.capture?.product_name)
+  // Exact match first (see lib/factory-holds.ts's matchHoldRule for why —
+  // same collision-avoidance reasoning, applied to matching against a
+  // worker's own open holds instead of a template's recipe list).
+  const exact = open.find(h => h.capture!.product_name!.toLowerCase().trim() === p)
+  if (exact) return exact
+  return open.find(h => p.includes(h.capture!.product_name!.toLowerCase()) || h.capture!.product_name!.toLowerCase().includes(p)) || null
+}
+
 function timeAgo(iso: string, tc: (key: string, vars?: Record<string, string | number>) => string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
   if (s < 60) return tc('factory_waybill.time_just_now')
@@ -103,6 +127,11 @@ export default function WaybillPage() {
   const [successWaybill, setSuccessWaybill] = useState<Waybill | null>(null)
   const [error,          setError]          = useState('')
 
+  // Not-yet-releasable hold check — warn-and-require-explicit-override at
+  // dispatch, never a hard block (agreed with the user 2026-08-09).
+  const [openHolds, setOpenHolds] = useState<OpenHold[]>([])
+  const [pendingHoldWarning, setPendingHoldWarning] = useState<OpenHold | null>(null)
+
   // Load hub data
   const loadHub = useCallback(async () => {
     if (!session) return
@@ -115,10 +144,20 @@ export default function WaybillPage() {
     }
   }, [session])
 
+  const loadOpenHolds = useCallback(async () => {
+    if (!session) return
+    try {
+      const r = await fetch('/api/pos/factory/capture-holds?status=open', { headers: session.headers })
+      const d = r.ok ? await r.json() : { holds: [] }
+      setOpenHolds(d.holds || [])
+    } catch { /* silent — warning just won't show, not fatal */ }
+  }, [session])
+
   useEffect(() => {
     if (!authReady || !session) return
     loadHub()
-  }, [authReady, session, loadHub])
+    loadOpenHolds()
+  }, [authReady, session, loadHub, loadOpenHolds])
 
   // Open camera
   const openCamera = useCallback(async () => {
@@ -166,11 +205,16 @@ export default function WaybillPage() {
     setStage('details')
   }
 
-  // Submit waybill
+  // Submit waybill — warns and requires an explicit tap-through if the
+  // product being dispatched matches an open hold, rather than silently
+  // allowing or hard-blocking the dispatch.
   const handleSubmit = async () => {
     if (!destination.trim()) { setError(tc('factory_waybill.error_destination_required')); return }
     if (!capturedImage)      { setError(tc('factory_waybill.error_photo_required')); return }
     if (!session) return
+    const matched = findMatchedHold(productName, openHolds)
+    if (matched && !pendingHoldWarning) { setPendingHoldWarning(matched); return }
+    setPendingHoldWarning(null)
     setError('')
     setStage('submitting')
     try {
@@ -258,6 +302,27 @@ export default function WaybillPage() {
         {error && (
           <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: tokens.danger }}>
             {error}
+          </div>
+        )}
+
+        {pendingHoldWarning && (
+          <div style={{ background: 'rgba(249,115,22,0.1)', border: `1px solid ${tokens.warning}50`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: tokens.warning, marginBottom: 4 }}>
+              {tc('factory_waybill.hold_warning_title', { label: pendingHoldWarning.label })}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 10 }}>
+              {pendingHoldWarning.releasable_at
+                ? tc('factory_waybill.hold_warning_days', { count: Math.max(0, Math.ceil((new Date(pendingHoldWarning.releasable_at).getTime() - Date.now()) / 86400000)) })
+                : tc('factory_waybill.hold_warning_regulatory')}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPendingHoldWarning(null)} style={{ flex: 1, background: 'var(--pos-border)', border: 'none', color: 'var(--pos-ink)', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                {tc('factory_waybill.hold_warning_cancel')}
+              </button>
+              <button onClick={handleSubmit} style={{ flex: 1, background: tokens.warning, border: 'none', color: '#1a1206', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                {tc('factory_waybill.hold_warning_override')}
+              </button>
+            </div>
           </div>
         )}
 

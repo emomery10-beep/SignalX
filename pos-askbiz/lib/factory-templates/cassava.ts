@@ -30,7 +30,17 @@ export interface FactoryTypeTemplate {
   id: string
   label: string
   icon: string
-  stageGuidance: { stage: string; hint: string }[]
+  // `path` tags a stage as belonging to one specific branch (garri/fufu/
+  // starch) rather than the shared prep every batch goes through —
+  // undefined means "applies to every path". No live UI reads
+  // stageGuidance yet (this whole array is additive/unused groundwork,
+  // same as the rest of this file), so this only shapes the data
+  // correctly for whenever that UI exists — it does not itself add a
+  // "declare which path this batch is on" screen, which is a separate,
+  // bigger interaction this factory type doesn't have anywhere to live
+  // yet (every existing capture type is a single edge event, not an
+  // in-progress declaration).
+  stageGuidance: { stage: string; hint: string; path?: string }[]
   suggestedRecipes: {
     input_product_name: string
     input_unit: string
@@ -70,52 +80,64 @@ const cassavaTemplate: FactoryTypeTemplate = {
     {
       stage: 'Garri path — ferment & press (1-4 days)',
       hint: 'Ferment the grated mash and press it to remove liquid over 1-4 days.',
+      path: 'garri',
     },
     {
       stage: 'Garri path — sieve',
       hint: 'Sieve the pressed, fermented mash to an even texture.',
+      path: 'garri',
     },
     {
       stage: 'Garri path — fry to ~8% moisture',
       hint: 'Fry the sieved mash down to roughly 8% moisture. This is the finished, shelf-stable garri.',
+      path: 'garri',
     },
     // Branch (b) — fufu.
     {
       stage: 'Fufu path — wet ferment (2-5 days)',
       hint: 'A longer wet fermentation than garri\'s — 2-5 days — is what defines fufu\'s flavour and texture.',
+      path: 'fufu',
     },
     {
       stage: 'Fufu path — dewater',
       hint: 'Dewater the fermented mash.',
+      path: 'fufu',
     },
     {
       stage: 'Fufu path — dry',
       hint: 'Dry the dewatered mash.',
+      path: 'fufu',
     },
     {
       stage: 'Fufu path — mill & sieve',
       hint: 'Mill and sieve the dried product into finished fufu flour.',
+      path: 'fufu',
     },
     // Branch (c) — starch.
     {
       stage: 'Starch path — fine rasp',
       hint: 'A finer rasp than the shared grating step above, aimed at freeing starch rather than producing a fermentable mash.',
+      path: 'starch',
     },
     {
       stage: 'Starch path — screen extraction',
       hint: 'Screen the fine rasp to extract the starch slurry from the fibrous pulp.',
+      path: 'starch',
     },
     {
       stage: 'Starch path — settle (≥6 hours)',
       hint: 'Let the starch slurry settle for at least 6 hours so starch separates out.',
+      path: 'starch',
     },
     {
       stage: 'Starch path — centrifuge',
       hint: 'Centrifuge the settled starch to concentrate it further.',
+      path: 'starch',
     },
     {
       stage: 'Starch path — flash-dry',
       hint: 'Flash-dry the concentrated starch. This is the finished cassava starch product.',
+      path: 'starch',
     },
   ],
   suggestedRecipes: [

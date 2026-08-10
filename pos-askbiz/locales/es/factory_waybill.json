@@ -50,5 +50,10 @@
   "empty_subtitle": "Escanea la primera guía para comenzar el seguimiento",
   "badge_on_time": "A tiempo",
   "badge_late": "Tarde",
-  "badge_no_sched": "Sin prog."
+  "badge_no_sched": "Sin prog.",
+  "hold_warning_title": "{label} aún no se ha liberado",
+  "hold_warning_days": "{count} día(s) restante(s)",
+  "hold_warning_regulatory": "En espera de liberación manual",
+  "hold_warning_cancel": "Cancelar",
+  "hold_warning_override": "Despachar de todos modos"
 }

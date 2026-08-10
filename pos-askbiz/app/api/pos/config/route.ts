@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient()
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('currency, currency_symbol, business_type, business_name')
+    .select('currency, currency_symbol, business_type, business_name, factory_type')
     .eq('id', ownerId)
     .single()
 
@@ -61,5 +61,11 @@ export async function GET(req: NextRequest) {
     business_type:   profile?.business_type || 'retail',
     business_name:   profile?.business_name || null,
     staff_sector:    staffSector,
+    // Which of the 12 factory-type templates (lib/factory-templates) this
+    // owner picked at onboarding/settings, if any — null for every non-
+    // manufacturer business and for manufacturers who picked 'other' or
+    // skipped the step. Consumed by the factory Hub + Production log to
+    // show type-specific yield ranges instead of a flat 90%/70% threshold.
+    factory_type:    profile?.factory_type || null,
   })
 }

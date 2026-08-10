@@ -1,6 +1,7 @@
 {
   "type_intake_label": "Entrada",
   "type_output_label": "Salida",
+  "type_packaging_label": "Envasado",
   "type_wastage_label": "Merma",
   "type_dispatch_label": "Despacho",
   "time_just_now": "ahora mismo",
@@ -31,5 +32,7 @@
   "reason_placeholder": "¿Por qué se rechaza esta captura?",
   "cancel": "Cancelar",
   "rejecting": "Rechazando…",
-  "confirm_reject": "Confirmar rechazo"
+  "confirm_reject": "Confirmar rechazo",
+  "sold_with_buyer": "$ Vendido a {buyer} por {price}",
+  "sold_no_buyer": "$ Vendido por {price}"
 }

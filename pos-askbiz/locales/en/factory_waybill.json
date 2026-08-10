@@ -50,5 +50,10 @@
   "empty_subtitle": "Scan the first waybill to start tracking",
   "badge_on_time": "On time",
   "badge_late": "Late",
-  "badge_no_sched": "No sched."
+  "badge_no_sched": "No sched.",
+  "hold_warning_title": "{label} hasn't cleared yet",
+  "hold_warning_days": "{count} day(s) remaining",
+  "hold_warning_regulatory": "Awaiting manual clearance",
+  "hold_warning_cancel": "Cancel",
+  "hold_warning_override": "Dispatch anyway"
 }

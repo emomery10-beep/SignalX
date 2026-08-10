@@ -28,6 +28,10 @@ export async function PATCH(request: NextRequest) {
     'region', 'sector_hints', 'onboarded',
     'phone', 'address', 'town', 'county', 'postcode',
     'whatsapp_number', 'notify_whatsapp', 'notify_email_alerts', 'notify_digest_hour',
+    // Manual "not yet sellable" hold override — for a factory type outside
+    // the 12-template library, which has no per-recipe holdRule to
+    // auto-detect from (see pos-askbiz/lib/factory-holds.ts).
+    'factory_hold_enabled', 'factory_hold_days', 'factory_hold_label',
   ]
   const update: Record<string, unknown> = {}
   for (const key of allowed) {

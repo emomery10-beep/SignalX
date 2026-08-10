@@ -54,6 +54,8 @@ export type PosAuditEvent =
   | 'shift.production_closed'
   // Factory: waybills
   | 'waybill.logged'
+  // Factory: capture holds (curing / regulatory not-yet-releasable gate)
+  | 'hold.cleared'
 
 export interface PosAuditPayload {
   auth:        PosAuthResult

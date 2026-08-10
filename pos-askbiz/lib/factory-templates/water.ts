@@ -27,6 +27,17 @@
  * "packaging" or "dispatch".
  */
 
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryHoldRule {
+  label: string
+  durationDays?: number
+  secondaryLabel?: string
+  secondaryDurationDays?: number
+  isRegulatory?: boolean
+}
+
 export interface FactoryTypeTemplate {
   id: string
   label: string
@@ -41,6 +52,7 @@ export interface FactoryTypeTemplate {
     yield_min_pct: number
     yield_max_pct: number
     notes: string
+    holdRule?: FactoryHoldRule
   }[]
   sourceNote: string
 }
@@ -81,6 +93,13 @@ const waterTemplate: FactoryTypeTemplate = {
       yield_min_pct: 50,
       yield_max_pct: 98,
       notes: 'Two different loss mechanisms drive this wide range, and are worth tracking separately: simple sediment/carbon filtration backwash typically loses only about 2-10% of production, while a reverse-osmosis (RO) system rejects roughly 15-50% of feed water as reject/concentrate depending on setup. Narrow this range once you know which treatment method your factory actually runs — an RO-based setup will genuinely sit lower than a simple-filtration one, and that is not a fault.',
+      // No fixed duration — a lab result either clears the batch or it
+      // doesn't, so durationDays is deliberately left unset. Matched loosely
+      // against captured product_name (see lib/factory-holds.ts), so this
+      // still applies even though what a worker actually types at the
+      // packaging step ("Water 500ml sachets", say) won't exactly equal
+      // "Treated water".
+      holdRule: { label: 'Quality hold', isRegulatory: true },
     },
   ],
   sourceNote: 'Treated-water batches must clear a regulatory lab test (NAFDAC, Ghana FDA, KEBS, or your local equivalent) before dispatch — the quality-hold stage above is a real compliance gate, not optional. Treatment-loss figures vary heavily by method, so treat this recipe as a starting point: simple filtration alone will sit near the top of the range, while an RO-based setup will sit lower.',

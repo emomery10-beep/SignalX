@@ -13,26 +13,32 @@ const GOOD = '#22c55e'
 const WARN = '#f59e0b'
 const BAD = '#ef4444'
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
+type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
 interface Capture {
   id: string
   type: CaptureType
   product_name: string | null
   quantity: number | null
-  batch_ref: string | null      // holds unit
+  batch_ref: string | null      // holds unit (or container size, for packaging)
   notes: string | null
   photo_url: string | null
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
   captured_by_staff?: { id: string; name: string; role: string } | null
+  sale_price?: number | null
+  buyer_name?: string | null
 }
 
+// Sky-blue matches the "packaging" defect category on the Quality screen
+// and the packaging type pill on Capture/Production — same concept, same
+// color, everywhere it appears in the factory sector.
 const TYPE_META: Record<CaptureType, { icon: string; color: string }> = {
-  intake:   { icon: '📥', color: '#3b82f6' },
-  output:   { icon: '📤', color: GOOD },
-  wastage:  { icon: '🗑️', color: BAD },
-  dispatch: { icon: '🚚', color: '#8b5cf6' },
+  intake:    { icon: '📥', color: '#3b82f6' },
+  output:    { icon: '📤', color: GOOD },
+  packaging: { icon: '📦', color: '#0ea5e9' },
+  wastage:   { icon: '🗑️', color: BAD },
+  dispatch:  { icon: '🚚', color: '#8b5cf6' },
 }
 
 function typeLabel(tc: Tc, type: CaptureType) {
@@ -199,6 +205,13 @@ export default function ApprovalsPage() {
                       {c.quantity != null ? `${c.quantity} ${c.batch_ref || ''}`.trim() : tc('factory_approvals.no_quantity')}
                     </div>
                     {c.notes && <div style={{ fontSize: 13, color: '#cbd5e1', marginTop: 8, background: '#0f172a', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>{c.notes}</div>}
+                    {c.sale_price != null && (
+                      <div style={{ fontSize: 12, color: GOOD, marginTop: 8, fontWeight: 700 }}>
+                        {c.buyer_name
+                          ? tc('factory_approvals.sold_with_buyer', { buyer: c.buyer_name, price: c.sale_price })
+                          : tc('factory_approvals.sold_no_buyer', { price: c.sale_price })}
+                      </div>
+                    )}
 
                     {/* actions */}
                     <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>

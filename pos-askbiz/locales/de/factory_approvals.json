@@ -1,6 +1,7 @@
 {
   "type_intake_label": "Eingang",
   "type_output_label": "Ausgang",
+  "type_packaging_label": "Verpackung",
   "type_wastage_label": "Schwund",
   "type_dispatch_label": "Versand",
   "time_just_now": "gerade eben",
@@ -31,5 +32,7 @@
   "reason_placeholder": "Warum wird diese Erfassung abgelehnt?",
   "cancel": "Abbrechen",
   "rejecting": "Wird abgelehnt…",
-  "confirm_reject": "Ablehnung bestätigen"
+  "confirm_reject": "Ablehnung bestätigen",
+  "sold_with_buyer": "$ Verkauft an {buyer} für {price}",
+  "sold_no_buyer": "$ Verkauft für {price}"
 }

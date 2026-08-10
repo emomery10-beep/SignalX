@@ -50,5 +50,10 @@
   "empty_subtitle": "Changanua waybili ya kwanza kuanza kufuatilia",
   "badge_on_time": "Kwa wakati",
   "badge_late": "Kuchelewa",
-  "badge_no_sched": "Hakuna ratiba"
+  "badge_no_sched": "Hakuna ratiba",
+  "hold_warning_title": "{label} bado haijaondolewa",
+  "hold_warning_days": "siku {count} zilizobaki",
+  "hold_warning_regulatory": "Inasubiri kuondolewa kwa mkono",
+  "hold_warning_cancel": "Futa",
+  "hold_warning_override": "Safirisha hata hivyo"
 }

@@ -19,13 +19,33 @@
  * imports this file yet; it is additive groundwork for the factory-type
  * onboarding/settings UI.
  *
- * Soap is the standout case for curePeriodDays (the other is dairy.ts's
+ * Soap is the standout case for a hold rule (the other is dairy.ts's
  * cheese path): a batch is genuinely not a finished, sellable product
  * until several weeks of curing complete after unmoulding. That's exactly
- * the "time-delay gate" this whole factory-template system currently has
- * no other way to represent — see the cure stage hint and sourceNote
- * below.
+ * what suggestedRecipes[].holdRule (see pos_factory_capture_holds /
+ * lib/factory-holds.ts) exists to represent — see the cure stage hint and
+ * sourceNote below.
  */
+
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryHoldRule {
+  label: string
+  durationDays?: number
+  secondaryLabel?: string
+  secondaryDurationDays?: number
+  isRegulatory?: boolean
+}
+
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryIngredientRatio {
+  name: string
+  unit: string
+  ratioQty: number
+}
 
 export interface FactoryTypeTemplate {
   id: string
@@ -41,15 +61,13 @@ export interface FactoryTypeTemplate {
     yield_min_pct: number
     yield_max_pct: number
     notes: string
+    holdRule?: FactoryHoldRule
+    // Reference data only — see bakery.ts's identical field for why
+    // (nothing reads pos_factory_recipes today; this doesn't touch any
+    // live capture flow or inventory).
+    ingredients?: FactoryIngredientRatio[]
   }[]
   sourceNote: string
-  /**
-   * Mandatory wait, in days, before a batch on this factory type's
-   * slowest-finishing path is a finished, sellable product. Only set for
-   * factory types with a genuine mandatory wait — most don't need it and
-   * should leave the field out entirely rather than default it to 0.
-   */
-  curePeriodDays?: number
 }
 
 const soapTemplate: FactoryTypeTemplate = {
@@ -87,7 +105,7 @@ const soapTemplate: FactoryTypeTemplate = {
     },
     {
       stage: 'Cure',
-      hint: 'This batch is NOT a finished, sellable product yet. Curing genuinely takes several weeks — this is what the curePeriodDays field on this template (defaulted to 35 days, roughly the middle of a typical 4-6 week range) represents. Adjust it based on the owner\'s exact formulation; a harder, longer-cure formulation needs more time than a fast-curing one. Keep curing stock visibly separate from finished, sellable stock until this period completes.',
+      hint: 'This batch is NOT a finished, sellable product yet. Curing genuinely takes several weeks — this is what the suggestedRecipes holdRule below (defaulted to 35 days, roughly the middle of a typical 4-6 week range) represents. Adjust it based on the owner\'s exact formulation; a harder, longer-cure formulation needs more time than a fast-curing one. Keep curing stock visibly separate from finished, sellable stock until this period completes.',
     },
     {
       stage: 'Package',
@@ -108,13 +126,27 @@ const soapTemplate: FactoryTypeTemplate = {
       yield_min_pct: 90,
       yield_max_pct: 110,
       notes: 'Based on a real Ugandan cottage-producer datapoint: 20 litres of palm kernel oil yielded roughly 180 bars, about 21.6kg — close to a 1:1 kg-of-soap-per-litre-of-oil ratio, which is where the ~100% figure comes from. This is a practical cross-material mass ratio, not a same-substance conservation-of-mass calculation, so treat it as a rule of thumb rather than a precise formula. A separate Kenyan source states a standard bar is roughly 54.75% oils by weight, which is a useful cross-check when validating a formulation. No batch-defect-rate figure specific to African small-scale soap-making was found in research, so this template does not invent one — track defects/rejects separately as they\'re actually observed in the owner\'s own batches.',
+      // 35 days sits roughly in the middle of the typical 4-6 week
+      // cottage-soap cure range — the owner should adjust this based on
+      // their exact formulation (oil blend, superfat level, bar size all
+      // shift it), via the Settings hold-days override.
+      holdRule: { label: 'Curing', durationDays: 35 },
+      // Typical cold-process ratio for a standard oil blend at ~5%
+      // superfat: roughly 13-14% caustic soda (NaOH) and ~35% water,
+      // both relative to oil weight — varies by the exact oils used
+      // (each has its own saponification value) and by superfat target,
+      // so this is a starting point, not this owner's actual lye-calc
+      // output. ratioQty units mix litres (oil) and kg (NaOH/water) —
+      // treating 1 litre of oil as ~1kg for this rough ratio, since
+      // most soap-making oils sit close to that density.
+      ingredients: [
+        { name: 'Oil (e.g. palm kernel oil)', unit: 'litres', ratioQty: 1 },
+        { name: 'Caustic soda (NaOH)', unit: 'kg', ratioQty: 0.135 },
+        { name: 'Water (for lye)', unit: 'litres', ratioQty: 0.35 },
+      ],
     },
   ],
   sourceNote: 'This is the clearest example in the whole factory-template set of why a distinct "not ready yet" status matters: a batch sitting in cure for weeks has to be visibly different from a finished, sellable batch, or staff risk shipping soap before saponification and hardening have actually finished.',
-  // 35 days sits roughly in the middle of the typical 4-6 week cottage-soap
-  // cure range — the owner should adjust this based on their exact
-  // formulation (oil blend, superfat level, bar size all shift it).
-  curePeriodDays: 35,
 }
 
 export default soapTemplate

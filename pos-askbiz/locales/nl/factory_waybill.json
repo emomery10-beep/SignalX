@@ -50,5 +50,10 @@
   "empty_subtitle": "Scan de eerste vrachtbrief om te beginnen met bijhouden",
   "badge_on_time": "Op tijd",
   "badge_late": "Te laat",
-  "badge_no_sched": "Geen rooster"
+  "badge_no_sched": "Geen rooster",
+  "hold_warning_title": "{label} is nog niet vrijgegeven",
+  "hold_warning_days": "{count} dag(en) resterend",
+  "hold_warning_regulatory": "In afwachting van handmatige vrijgave",
+  "hold_warning_cancel": "Annuleren",
+  "hold_warning_override": "Toch verzenden"
 }

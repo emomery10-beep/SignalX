@@ -1,6 +1,7 @@
 {
   "type_intake_label": "Gelin",
   "type_output_label": "Wax-soo-saar",
+  "type_packaging_label": "Baakadayn",
   "type_wastage_label": "Khasaare",
   "type_dispatch_label": "Dirid",
   "time_just_now": "hadda",
@@ -31,5 +32,7 @@
   "reason_placeholder": "Maxaa qaabilaaddan loo diidayaa?",
   "cancel": "Jooji",
   "rejecting": "Diidaya…",
-  "confirm_reject": "Xaqiiji diidmada"
+  "confirm_reject": "Xaqiiji diidmada",
+  "sold_with_buyer": "$ Waxaa loo iibiyay {buyer}, qiimo {price} ah",
+  "sold_no_buyer": "$ Waxaa lagu iibiyay qiimo {price} ah"
 }

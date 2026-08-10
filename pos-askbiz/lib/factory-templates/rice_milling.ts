@@ -101,6 +101,16 @@ const riceMillingTemplate: FactoryTypeTemplate = {
       yield_max_pct: 95,
       notes: 'Parboiling is documented to cut milling breakage from 20-40% down to just 2-5%, pushing head-rice yield above 90% in an Ethiopian field study. This figure is specifically about breakage/head-rice yield after parboiling, not a like-for-like replacement for the raw paddy-to-milled-rice ratio in the recipe above — the two numbers are measuring different things.',
     },
+    {
+      input_product_name: 'Paddy',
+      input_unit: 'kg',
+      output_product_name: 'Parboiled paddy',
+      output_unit: 'kg',
+      expected_yield_pct: 98,
+      yield_min_pct: 92,
+      yield_max_pct: 102,
+      notes: 'Parboiled paddy is a real, separately-sellable intermediate (see the parboiling stage hint) — some mills sell it as-is without milling further, and this row lets that sale be tracked and priced on its own instead of only appearing folded into the final milled-rice ratio. No reliable published mass-balance figure specific to this intermediate stage was found in research; the ~98% estimate assumes parboiling (soak, steam, dry back down) is close to mass-neutral since paddy is typically already stored near the 12-14% moisture target it\'s dried back to — treat this as a rough starting point, not a sourced figure like the two milled-rice rows above, and replace it once you\'ve weighed a few real batches.',
+    },
   ],
   sourceNote: 'Whether or not paddy is parboiled first is the single biggest yield/quality decision in this business — bigger than any equipment choice. Ask which recipe applies to a given batch before comparing its actual output against expected yield.',
 }

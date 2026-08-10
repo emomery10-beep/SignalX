@@ -50,5 +50,10 @@
   "empty_subtitle": "Ersten Frachtbrief scannen, um die Verfolgung zu starten",
   "badge_on_time": "Pünktlich",
   "badge_late": "Verspätet",
-  "badge_no_sched": "Kein Plan"
+  "badge_no_sched": "Kein Plan",
+  "hold_warning_title": "{label} ist noch nicht freigegeben",
+  "hold_warning_days": "{count} Tag(e) verbleibend",
+  "hold_warning_regulatory": "Wartet auf manuelle Freigabe",
+  "hold_warning_cancel": "Abbrechen",
+  "hold_warning_override": "Trotzdem versenden"
 }

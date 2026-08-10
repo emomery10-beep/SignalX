@@ -1,6 +1,7 @@
 {
   "type_intake_label": "Inname",
   "type_output_label": "Uitvoer",
+  "type_packaging_label": "Verpakking",
   "type_wastage_label": "Uitval",
   "type_dispatch_label": "Verzending",
   "time_just_now": "zojuist",
@@ -31,5 +32,7 @@
   "reason_placeholder": "Waarom wordt deze vastlegging afgewezen?",
   "cancel": "Annuleren",
   "rejecting": "Afwijzen…",
-  "confirm_reject": "Afwijzing bevestigen"
+  "confirm_reject": "Afwijzing bevestigen",
+  "sold_with_buyer": "$ Verkocht aan {buyer} voor {price}",
+  "sold_no_buyer": "$ Verkocht voor {price}"
 }

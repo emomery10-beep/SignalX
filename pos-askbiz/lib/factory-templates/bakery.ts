@@ -26,6 +26,26 @@
  * weight check, not an attempt to model that ingredient-level recipe.
  */
 
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryIngredientRatio {
+  name: string
+  unit: string
+  // Relative to a ratioQty of 1 for the recipe's own input_product_name —
+  // e.g. flour=1 (implicit), water=0.6 means "0.6kg water per 1kg flour".
+  ratioQty: number
+}
+
+// The mirror image of FactoryHoldRule (see soap.ts/water.ts/dairy.ts/
+// concrete_blocks.ts for that) — "not sellable AFTER N hours" instead of
+// "not sellable UNTIL N days". Bakery is the one template in this set that
+// needs this, per its own sourceNote below.
+export interface FactoryDecayRule {
+  label: string
+  hoursUntilExpiry: number
+}
+
 export interface FactoryTypeTemplate {
   id: string
   label: string
@@ -40,6 +60,17 @@ export interface FactoryTypeTemplate {
     yield_min_pct: number
     yield_max_pct: number
     notes: string
+    // Reference data only — nothing reads pos_factory_recipes today (see
+    // that migration's own comment), so this doesn't change any live
+    // capture flow or deduct real inventory. It exists so the actual
+    // multi-ingredient formulation this template's own mix/knead hint
+    // already says matters "far more than tracking sequential stages" is
+    // captured somewhere, instead of staying folded into one dominant
+    // input's name string. Real per-SKU capture-time logging and
+    // inventory depletion from this data is a separate, larger project —
+    // this only fixes the "the ratio isn't recorded anywhere" gap.
+    ingredients?: FactoryIngredientRatio[]
+    decayRule?: FactoryDecayRule
   }[]
   sourceNote: string
 }
@@ -103,7 +134,24 @@ const bakeryTemplate: FactoryTypeTemplate = {
       expected_yield_pct: 85,
       yield_min_pct: 75,
       yield_max_pct: 90,
-      notes: 'No reliable flour-to-bread yield ratio was found in research, so this row does not invent an ingredient-level number. It reflects a rough dough-to-finished-loaf WEIGHT ratio only, based on documented 10-25% weight loss during proofing, baking and cooling — moisture evaporating, not product being wasted. A real bakery\'s ingredient recipe (the flour/water/yeast/salt ratios that make up the dough itself) is a separate concern this template doesn\'t attempt to model; use this row only to sanity-check that a batch\'s finished weight is in a plausible range against what went into the mixer.',
+      notes: 'No reliable flour-to-bread yield ratio was found in research, so this row does not invent an ingredient-level number. It reflects a rough dough-to-finished-loaf WEIGHT ratio only, based on documented 10-25% weight loss during proofing, baking and cooling — moisture evaporating, not product being wasted. Use this row to sanity-check that a batch\'s finished weight is in a plausible range against what went into the mixer; use the ingredients list below for the actual dough formulation.',
+      // A standard lean white-bread baker's-percentage formula (all
+      // relative to flour=1): ~60% hydration, ~2% salt, ~1.5% instant
+      // yeast — a common starting ratio, not this specific bakery's
+      // measured recipe. Real formulations vary by product (enriched
+      // dough, whole wheat, etc.) — treat as a starting point to edit,
+      // same spirit as every yield range elsewhere in this template set.
+      ingredients: [
+        { name: 'Flour', unit: 'kg', ratioQty: 1 },
+        { name: 'Water', unit: 'litres', ratioQty: 0.6 },
+        { name: 'Yeast', unit: 'kg', ratioQty: 0.015 },
+        { name: 'Salt', unit: 'kg', ratioQty: 0.02 },
+      ],
+      // 24 hours matches this template's own sourceNote below. Applies to
+      // "Baked bread" specifically — a factory type with more than one
+      // shelf-life-sensitive product would set this per relevant recipe
+      // row, same as holdRule already does for dairy's cheese-only case.
+      decayRule: { label: 'Sell by', hoursUntilExpiry: 24 },
     },
   ],
   sourceNote: 'Unsold bakery stock typically ages out within about 24 hours, so freshness and shelf-life tracking matters more here than in most other factory templates in this set — plan alerts and markdowns around a same-day sell-through window rather than a multi-day one.',

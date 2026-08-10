@@ -21,8 +21,32 @@
  *
  * Concrete block making is the one factory type in this set with a real,
  * mandatory curing period before the product is at full strength — see
- * curePeriodDays below and the cure stage in stageGuidance.
+ * the holdRule on suggestedRecipes below and the cure stage in
+ * stageGuidance. It's also the one template that proves a single hold
+ * date isn't enough: there's a 7-day minimum-handling threshold AND a
+ * separate, later 28-day full-strength milestone — holdRule's
+ * secondaryLabel/secondaryDurationDays exist specifically for this case.
  */
+
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryHoldRule {
+  label: string
+  durationDays?: number
+  secondaryLabel?: string
+  secondaryDurationDays?: number
+  isRegulatory?: boolean
+}
+
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryIngredientRatio {
+  name: string
+  unit: string
+  ratioQty: number
+}
 
 export interface FactoryTypeTemplate {
   id: string
@@ -38,16 +62,13 @@ export interface FactoryTypeTemplate {
     yield_min_pct: number
     yield_max_pct: number
     notes: string
+    holdRule?: FactoryHoldRule
+    // Reference data only — see bakery.ts's identical field for why
+    // (nothing reads pos_factory_recipes today; this doesn't touch any
+    // live capture flow or inventory).
+    ingredients?: FactoryIngredientRatio[]
   }[]
   sourceNote: string
-  /**
-   * Days of mandatory curing before blocks are at a practical minimum
-   * strength and safe to sell/use — not the 28 days needed for full
-   * design strength (see the cure stage hint and recipe notes below).
-   * Optional because most other factory types have no equivalent
-   * mandatory wait between output and sellable product.
-   */
-  curePeriodDays?: number
 }
 
 const concreteBlocksTemplate: FactoryTypeTemplate = {
@@ -94,10 +115,27 @@ const concreteBlocksTemplate: FactoryTypeTemplate = {
       yield_min_pct: 86,
       yield_max_pct: 100,
       notes: 'Roughly 30-40 standard 9-inch hollow blocks per 50kg cement bag at a 1:6 mix — track your actual blocks-per-bag count directly, this percentage is just a way to fit that count into the same yield-tracking system as other factory types. Expected (100%) is pegged to a 35-block nominal target and the low end (86%) to 30 blocks; the real-world high end (~40 blocks, which would be 114% of that target) is capped at 100% here because pos_factory_recipes constrains yield_max_pct to at most 100 — so a capture at or above the 35-block target will show as "at target," not distinctly flagged as exceptional. If the upside matters to you, log your literal blocks-per-bag count alongside this percentage. Separately: one Kenyan producer documented cutting rejects from 15% down to 3% simply by extending cure time before handling/stacking — a lever entirely within the owner\'s control (see the cure stage above).',
+      // Two real thresholds, not one: 7 days is the practical minimum
+      // before blocks should be handled/dispatched at all (the blocking
+      // gate); 28 days is when they reach full design strength — later,
+      // and informational rather than blocking, since most small buyers
+      // don't need to wait a full month for ordinary use.
+      holdRule: { label: 'Minimum cure', durationDays: 7, secondaryLabel: 'Full strength', secondaryDurationDays: 28 },
+      // A common 1:6 cement:sand mix (already named in the materials-
+      // intake stage hint above), with aggregate roughly matching sand by
+      // volume and a water-cement ratio around 0.5 — standard starting
+      // ratios for hollow block production, not this owner's exact mix
+      // design. ratioQty is relative to 1 bag of cement (the recipe's own
+      // input_unit).
+      ingredients: [
+        { name: 'Cement', unit: 'bags (50kg)', ratioQty: 1 },
+        { name: 'Sand', unit: 'bags (50kg-equivalent)', ratioQty: 6 },
+        { name: 'Aggregate', unit: 'bags (50kg-equivalent)', ratioQty: 6 },
+        { name: 'Water', unit: 'litres', ratioQty: 25 },
+      ],
     },
   ],
   sourceNote: 'This is the simplest, most directly-measurable ratio of any factory type researched — an owner can verify their own blocks-per-bag number within a single day\'s production run, unlike processes that need days or weeks to complete before a real yield is known.',
-  curePeriodDays: 7,
 }
 
 export default concreteBlocksTemplate

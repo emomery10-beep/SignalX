@@ -23,17 +23,35 @@
  * shared intake/pasteurize/cool prep, the same cooled milk splits into
  * three genuinely different finishing paths — yoghurt, cheese, and
  * ghee/butter — each with a different timeline. Yoghurt and ghee/butter
- * are same-day sellable once packaged; cheese is not, which is why this
- * template is one of only two in the set (soap.ts is the other) that sets
- * curePeriodDays. That field describes the cheese path specifically, not
- * the whole factory type — see the comment next to it below.
+ * are same-day sellable once packaged; cheese is not, which is why the
+ * Cheese suggestedRecipes row below (only that row, not Ghee/butter) is
+ * one of only two holdRule-carrying recipes in the whole set (soap.ts is
+ * the other) — this is exactly why a hold rule has to live on the recipe,
+ * not the template: the same factory type has one output that needs it
+ * and two that don't.
  */
+
+// See lib/factory-templates/index.ts for the canonical version of this
+// interface — redeclared locally here (same convention every template file
+// in this directory already follows) so this file type-checks standalone.
+export interface FactoryHoldRule {
+  label: string
+  durationDays?: number
+  secondaryLabel?: string
+  secondaryDurationDays?: number
+  isRegulatory?: boolean
+}
 
 export interface FactoryTypeTemplate {
   id: string
   label: string
   icon: string
-  stageGuidance: { stage: string; hint: string }[]
+  // `path` tags a stage as belonging to one specific branch (yoghurt/
+  // cheese/ghee_butter) rather than the shared intake/pasteurize/cool
+  // prep every batch goes through — undefined means "applies to every
+  // path". No live UI reads stageGuidance yet, so this only shapes the
+  // data correctly for whenever that UI exists.
+  stageGuidance: { stage: string; hint: string; path?: string }[]
   suggestedRecipes: {
     input_product_name: string
     input_unit: string
@@ -43,15 +61,9 @@ export interface FactoryTypeTemplate {
     yield_min_pct: number
     yield_max_pct: number
     notes: string
+    holdRule?: FactoryHoldRule
   }[]
   sourceNote: string
-  /**
-   * Mandatory wait, in days, before a batch on this factory type's
-   * slowest-finishing path is a finished, sellable product. Only set for
-   * factory types with a genuine mandatory wait — most don't need it and
-   * should leave the field out entirely rather than default it to 0.
-   */
-  curePeriodDays?: number
 }
 
 const dairyTemplate: FactoryTypeTemplate = {
@@ -84,68 +96,84 @@ const dairyTemplate: FactoryTypeTemplate = {
     {
       stage: 'Yoghurt path — inoculate',
       hint: 'Add the yoghurt culture to the cooled milk.',
+      path: 'yoghurt',
     },
     {
       stage: 'Yoghurt path — incubate',
       hint: 'Hold the inoculated milk at incubation temperature until it sets.',
+      path: 'yoghurt',
     },
     {
       stage: 'Yoghurt path — cool',
       hint: 'Cool the set yoghurt before packaging.',
+      path: 'yoghurt',
     },
     {
       stage: 'Yoghurt path — package',
       hint: 'Yoghurt is normally sellable the same day once cooled and packaged — no cure/wait period applies on this path.',
+      path: 'yoghurt',
     },
     // Branch (b) — cheese.
     {
       stage: 'Cheese path — inoculate + add rennet',
       hint: 'Add starter culture and rennet to the cooled milk.',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — coagulate',
       hint: 'Let the milk set into a firm curd.',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — cut curd',
       hint: 'Cut the curd to the size that suits the cheese style — finer cuts release more whey, coarser cuts hold more moisture.',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — drain whey',
       hint: 'Whey is a genuine, separately-sellable co-product here, not waste — weigh and log it as its own output rather than writing it off as a loss.',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — salt',
       hint: 'Salt the drained curd (dry-salted or brined, depending on style).',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — mould / press',
       hint: 'Mould and press the salted curd into its final shape.',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — ripen',
-      hint: 'Ripening genuinely takes days to weeks depending on the cheese style — this is what the curePeriodDays field on this template (defaulted to 14 days as a starting point) represents. Adjust it to match the actual style being made; a soft fresh cheese needs far less time than an aged hard cheese, and the batch is not a finished, sellable product until ripening is done.',
+      hint: 'Ripening genuinely takes days to weeks depending on the cheese style — this is what the Cheese recipe\'s holdRule below (defaulted to 14 days as a starting point) represents. Adjust it to match the actual style being made; a soft fresh cheese needs far less time than an aged hard cheese, and the batch is not a finished, sellable product until ripening is done.',
+      path: 'cheese',
     },
     {
       stage: 'Cheese path — package',
       hint: 'Package only once ripening is complete.',
+      path: 'cheese',
     },
     // Branch (c) — ghee / butter.
     {
       stage: 'Ghee/butter path — churn',
       hint: 'Churn cream (separated out from the cooled milk) until it breaks into butter grains and buttermilk.',
+      path: 'ghee_butter',
     },
     {
       stage: 'Ghee/butter path — separate',
       hint: 'Drain off the buttermilk and work the butter grains together.',
+      path: 'ghee_butter',
     },
     {
       stage: 'Ghee/butter path — simmer / clarify',
       hint: 'Simmer the butter to evaporate remaining water and separate out milk solids, leaving clarified ghee — skip this step if the batch is finishing as butter rather than ghee.',
+      path: 'ghee_butter',
     },
     {
       stage: 'Ghee/butter path — package',
       hint: 'Both butter and ghee are normally sellable the same day once packaged — no cure/wait period applies on this path.',
+      path: 'ghee_butter',
     },
   ],
   suggestedRecipes: [
@@ -157,7 +185,10 @@ const dairyTemplate: FactoryTypeTemplate = {
       expected_yield_pct: 9,
       yield_min_pct: 7.7,
       yield_max_pct: 11.1,
-      notes: 'Expressed as a weight/volume yield percentage for schema consistency, but read it as a ratio rather than a normal process efficiency: roughly 9-13 litres of milk are needed per kg of finished cheese, which is why this figure looks unusually low next to a typical >50% yield. Commercial cheddar-style processing recovers roughly 93% of milk fat and 95% of casein once you account for that ratio — the small percentage here reflects milk being mostly water, not a wasteful process. Treat this ratio, and the 14-day curePeriodDays default on this template, as starting points only; adjust both for the owner\'s actual cheese style.',
+      notes: 'Expressed as a weight/volume yield percentage for schema consistency, but read it as a ratio rather than a normal process efficiency: roughly 9-13 litres of milk are needed per kg of finished cheese, which is why this figure looks unusually low next to a typical >50% yield. Commercial cheddar-style processing recovers roughly 93% of milk fat and 95% of casein once you account for that ratio — the small percentage here reflects milk being mostly water, not a wasteful process. Treat this ratio, and the 14-day holdRule default below, as starting points only; adjust both for the owner\'s actual cheese style.',
+      // Cheese-path only — deliberately absent from the Ghee/butter row
+      // below, which is same-day sellable and needs no hold at all.
+      holdRule: { label: 'Ripening', durationDays: 14 },
     },
     {
       input_product_name: 'Raw milk',
@@ -171,11 +202,6 @@ const dairyTemplate: FactoryTypeTemplate = {
     },
   ],
   sourceNote: 'Farm-level milk losses — spoilage, spillage, rejected milk before it ever reaches the pasteurizer — run roughly 1.3-6.4% across Kenya, Tanzania, Uganda and Ethiopia, and are worth tracking separately from the processing yields above since they happen upstream of every stage in this template. This template is especially relevant to pastoralist and Somali dairy markets, where processing raw milk into yoghurt, cheese or ghee is a common formalization step for herding-based businesses.',
-  // Applies to the cheese path only (see the "Cheese path — ripen" stage
-  // above) — yoghurt and ghee/butter are same-day sellable and unaffected
-  // by this field. 14 days is a reasonable starting point for a fresh-ish
-  // cheese; the owner should edit it to match their actual style.
-  curePeriodDays: 14,
 }
 
 export default dairyTemplate

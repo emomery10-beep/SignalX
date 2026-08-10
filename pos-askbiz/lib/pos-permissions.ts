@@ -36,8 +36,10 @@ export type PosPermission =
   | 'camera.output'         // photograph production output
   | 'camera.wastage'        // photograph defects / wastage
   | 'camera.dispatch'       // photograph outbound dispatch
+  | 'camera.packaging'      // photograph bulk output packaged into sized containers
   // Approvals (supervisor+)
   | 'capture.approve'       // approve pending camera captures
+  | 'hold.clear'            // clear a not-yet-releasable batch hold (curing/regulatory)
   // Reports
   | 'reports.view'          // view shift + production reports
   | 'reports.financial'     // view financial reports (revenue, margins)
@@ -86,8 +88,8 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'service.view', 'service.manage', 'service.execute', 'service.parts', 'service.scan_device', 'service.upload_photo',
     'shift.open', 'shift.close', 'shift.view',
     'staff.manage',
-    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
-    'capture.approve',
+    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch', 'camera.packaging',
+    'capture.approve', 'hold.clear',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
     'batch.log', 'batch.view',
@@ -125,8 +127,8 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     // for any PIN-authenticated manager and only ever worked for the owner's
     // own Supabase-cookie session on the separate owner dashboard.
     'staff.manage',
-    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
-    'capture.approve',
+    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch', 'camera.packaging',
+    'capture.approve', 'hold.clear',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
     'batch.log', 'batch.view',
@@ -141,8 +143,8 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'inventory.view',
     'service.view',
     'shift.view',
-    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
-    'capture.approve',
+    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch', 'camera.packaging',
+    'capture.approve', 'hold.clear',
     'reports.view',
     'purchase_order.view',
     'batch.log', 'batch.view',
@@ -199,7 +201,7 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'camera.dispatch',
   ],
   factory_operator: [
-    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
+    'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch', 'camera.packaging',
     'batch.log', 'batch.view',
     'downtime.report', 'downtime.close', 'downtime.view',
     'shift.production_open', 'shift.production_close', 'shift.production_view',

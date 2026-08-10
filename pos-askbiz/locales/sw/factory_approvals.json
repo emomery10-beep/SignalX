@@ -1,6 +1,7 @@
 {
   "type_intake_label": "Ulazi",
   "type_output_label": "Mazao",
+  "type_packaging_label": "Ufungashaji",
   "type_wastage_label": "Upotevu",
   "type_dispatch_label": "Usafirishaji",
   "time_just_now": "sasa hivi",
@@ -31,5 +32,7 @@
   "reason_placeholder": "Kwa nini rekodi hii inakataliwa?",
   "cancel": "Futa",
   "rejecting": "Inakataa…",
-  "confirm_reject": "Thibitisha kukataa"
+  "confirm_reject": "Thibitisha kukataa",
+  "sold_with_buyer": "$ Imeuzwa kwa {buyer} kwa bei ya {price}",
+  "sold_no_buyer": "$ Imeuzwa kwa bei ya {price}"
 }

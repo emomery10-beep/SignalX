@@ -50,5 +50,10 @@
   "empty_subtitle": "Sawir waybill-ka ugu horreeya si aad u bilowdo la socodka",
   "badge_on_time": "Waqtigeeda",
   "badge_late": "Daahay",
-  "badge_no_sched": "Jadwal ma leh."
+  "badge_no_sched": "Jadwal ma leh.",
+  "hold_warning_title": "{label} weli lama ansixin",
+  "hold_warning_days": "{count} maalmood ayaa hadhay",
+  "hold_warning_regulatory": "Waxaa la sugayaa ansixinta gacanta",
+  "hold_warning_cancel": "Jooji",
+  "hold_warning_override": "Dir Si Kastaba"
 }

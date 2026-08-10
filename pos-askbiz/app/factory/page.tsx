@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { evaluateYield, type YieldStatus } from '@/lib/factory-yield'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
 const tokens = {
@@ -21,9 +22,10 @@ const tokens = {
   output:    'var(--factory-output)',
   wastage:   'var(--factory-wastage)',
   dispatch:  'var(--factory-dispatch)',
+  packaging: '#0ea5e9',
 }
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
+type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
 interface ActiveDowntime {
   id: string
@@ -43,13 +45,15 @@ interface Capture {
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
   captured_by_staff?: { id: string; name: string } | null
+  expires_at?: string | null
 }
 
 const buildTypeMeta = (tc: (key: string) => string): Record<CaptureType, { label: string; color: string; bg: string }> => ({
-  intake:   { label: tc('factory.type_intake'),   color: tokens.intake,   bg: 'rgba(59,130,246,.08)'   },
-  output:   { label: tc('factory.type_output'),   color: tokens.output,   bg: 'rgba(22,163,74,.08)'    },
-  wastage:  { label: tc('factory.type_wastage'),  color: tokens.wastage,  bg: 'rgba(220,38,38,.08)'    },
-  dispatch: { label: tc('factory.type_dispatch'), color: tokens.dispatch, bg: 'rgba(139,92,246,.08)'   },
+  intake:    { label: tc('factory.type_intake'),    color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
+  output:    { label: tc('factory.type_output'),    color: tokens.output,    bg: 'rgba(22,163,74,.08)'   },
+  packaging: { label: tc('factory.type_packaging'), color: tokens.packaging, bg: 'rgba(14,165,233,.08)'  },
+  wastage:   { label: tc('factory.type_wastage'),   color: tokens.wastage,   bg: 'rgba(220,38,38,.08)'   },
+  dispatch:  { label: tc('factory.type_dispatch'),  color: tokens.dispatch,  bg: 'rgba(139,92,246,.08)'  },
 })
 
 const STATUS_COLOR = { pending: tokens.warning, approved: tokens.success, rejected: tokens.danger }
@@ -171,6 +175,7 @@ export default function FactoryHub() {
   const [captures, setCaptures] = useState<Capture[]>([])
   const [loading, setLoading]   = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [factoryType, setFactoryType] = useState<string | null>(null)
 
   // Downtime / OEE state
   const [activeDowntime, setActiveDowntime]     = useState<ActiveDowntime[]>([])
@@ -192,6 +197,9 @@ export default function FactoryHub() {
   // Waybill / dispatch state
   const [waybillOnTimeRate, setWaybillOnTimeRate] = useState<number | null>(null)
   const [waybillTotal, setWaybillTotal]           = useState(0)
+
+  // Not-yet-releasable holds (curing / regulatory)
+  const [openHoldsCount, setOpenHoldsCount] = useState(0)
 
   const loadCaptures = useCallback(async (silent = false) => {
     if (!session) return
@@ -262,6 +270,27 @@ export default function FactoryHub() {
     } catch { /* silent */ }
   }, [session])
 
+  const loadHolds = useCallback(async () => {
+    if (!session) return
+    try {
+      const r = await fetch('/api/pos/factory/capture-holds?status=open', { headers: session.headers })
+      const d = r.ok ? await r.json() : {}
+      setOpenHoldsCount(d.openCount || 0)
+    } catch { /* silent */ }
+  }, [session])
+
+  // Which of the 12 factory-type templates this owner picked, if any — used
+  // to color the Efficiency KPI against that type's real yield range
+  // instead of a flat 90%/70% threshold. Fetched once, not on the 30s poll
+  // interval below (it practically never changes mid-session).
+  useEffect(() => {
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers })
+      .then(r => r.json())
+      .then(d => setFactoryType(d?.factory_type || null))
+      .catch(() => {})
+  }, [authReady, session])
+
   useEffect(() => {
     if (!authReady || !session) return
     loadCaptures()
@@ -270,24 +299,58 @@ export default function FactoryHub() {
     loadBatches()
     loadShift()
     loadWaybills()
-    const interval = setInterval(() => { loadCaptures(true); loadDowntime(); loadQuality(); loadBatches(); loadShift(); loadWaybills() }, 30_000)
+    loadHolds()
+    const interval = setInterval(() => { loadCaptures(true); loadDowntime(); loadQuality(); loadBatches(); loadShift(); loadWaybills(); loadHolds() }, 30_000)
     return () => clearInterval(interval)
-  }, [authReady, session, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills])
+  }, [authReady, session, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills, loadHolds])
 
   // ── Computed KPIs ────────────────────────────────────────────────────────
-  const todays    = captures.filter(c => isToday(c.created_at))
-  const outputs   = todays.filter(c => c.type === 'output')
-  const intakes   = todays.filter(c => c.type === 'intake')
-  const wastages  = todays.filter(c => c.type === 'wastage')
+  const todays     = captures.filter(c => isToday(c.created_at))
+  const outputs    = todays.filter(c => c.type === 'output')
+  const intakes    = todays.filter(c => c.type === 'intake')
+  const wastages   = todays.filter(c => c.type === 'wastage')
   const dispatches = todays.filter(c => c.type === 'dispatch')
+  const packagings = todays.filter(c => c.type === 'packaging')
 
-  const unitsOut    = outputs.reduce((s, c) => s + (c.quantity || 0), 0)
-  const unitsIn     = intakes.reduce((s, c) => s + (c.quantity || 0), 0)
-  const unitsWaste  = wastages.reduce((s, c) => s + (c.quantity || 0), 0)
+  const unitsOut       = outputs.reduce((s, c) => s + (c.quantity || 0), 0)
+  const unitsIn        = intakes.reduce((s, c) => s + (c.quantity || 0), 0)
+  const unitsWaste     = wastages.reduce((s, c) => s + (c.quantity || 0), 0)
+  const unitsPackaged  = packagings.reduce((s, c) => s + (c.quantity || 0), 0)
 
   const totalFlow   = unitsOut + unitsWaste
   const wastagePct  = totalFlow > 0 ? (unitsWaste / totalFlow) * 100 : 0
   const efficiency  = unitsIn > 0 ? Math.min((unitsOut / unitsIn) * 100, 100) : 0
+
+  // Shelf-life decay (bakery-style: sellable now, not for long) — computed
+  // from the same captures list already loaded for everything else on this
+  // page, no extra fetch. "Expiring soon" = within the next 4 hours.
+  const nowMs = Date.now()
+  const withExpiry = captures.filter(c => c.expires_at)
+  const expiredCount = withExpiry.filter(c => new Date(c.expires_at!).getTime() <= nowMs).length
+  const expiringSoonCount = withExpiry.filter(c => {
+    const t = new Date(c.expires_at!).getTime()
+    return t > nowMs && t - nowMs <= 4 * 3600000
+  }).length
+
+  // Dominant product today by output quantity — used so the Efficiency KPI
+  // can be scored against that product's real yield range (e.g. sesame
+  // oil's genuine 33-63%) instead of a flat threshold. On a mixed day
+  // (several unrelated products) this just picks today's biggest
+  // contributor rather than trying to blend recipes that don't mix.
+  const outputByProduct: Record<string, number> = {}
+  for (const c of outputs) {
+    if (!c.product_name) continue
+    outputByProduct[c.product_name] = (outputByProduct[c.product_name] || 0) + (c.quantity || 0)
+  }
+  const dominantProduct = Object.entries(outputByProduct).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+  const efficiencyEvaluation = evaluateYield(unitsIn > 0 ? efficiency : null, dominantProduct, factoryType)
+  // This file colors every other status via the theme's CSS-var tokens
+  // (tokens.success/warning/danger/hint), not raw hex — map the shared
+  // yield-status enum onto that same convention rather than introducing a
+  // second, hardcoded palette for just this one tile.
+  const yieldStatusToken: Record<YieldStatus, string> = {
+    good: tokens.success, warn: tokens.warning, bad: tokens.danger, neutral: tokens.hint,
+  }
 
   // OEE components
   const SHIFT_MINUTES = 8 * 60  // 8-hour shift default
@@ -333,9 +396,15 @@ export default function FactoryHub() {
     {
       label: tc('factory.kpi_efficiency'),
       value: unitsIn > 0 ? `${efficiency.toFixed(0)}%` : '—',
-      sub: tc('factory.kpi_efficiency_sub'),
-      color: efficiency >= 90 ? tokens.success : efficiency >= 70 ? tokens.warning : efficiency > 0 ? tokens.danger : tokens.hint,
-      status: efficiency >= 90 ? 'good' : efficiency >= 70 ? 'warn' : efficiency > 0 ? 'bad' : 'neutral',
+      // Once a factory-type recipe matches today's dominant product, say so
+      // in words too, not just via color — this is the whole point of the
+      // fix (sesame oil's genuine 33-63% shouldn't just read as "less red",
+      // it should be legible as "this is the normal range").
+      sub: efficiencyEvaluation.matchedRecipe && efficiencyEvaluation.min != null
+        ? tc('factory.kpi_efficiency_sub_ranged', { min: efficiencyEvaluation.min, max: efficiencyEvaluation.max ?? efficiencyEvaluation.min })
+        : tc('factory.kpi_efficiency_sub'),
+      color: yieldStatusToken[efficiencyEvaluation.status],
+      status: efficiencyEvaluation.status,
     },
     {
       label: tc('factory.kpi_pending'),
@@ -444,6 +513,40 @@ export default function FactoryHub() {
               <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>{tc('factory.critical_defect_review')}</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.danger}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        )}
+
+        {/* ── Held batches banner ──────────────────────────────────────────── */}
+        {openHoldsCount > 0 && (
+          <button onClick={() => router.push('/factory/production')}
+            style={{ width: '100%', marginBottom: 10, background: `${tokens.warning}10`, border: `1.5px solid ${tokens.warning}40`, borderRadius: 14, padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+            <div style={{ fontSize: 18, flexShrink: 0 }}>⏳</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: tokens.warning }}>
+                {tc(openHoldsCount > 1 ? 'factory.holds_open_other' : 'factory.holds_open_one', { count: openHoldsCount })}
+              </div>
+              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>{tc('factory.holds_open_hint')}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.warning}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        )}
+
+        {/* ── Expiring / expired stock banner ──────────────────────────────── */}
+        {(expiredCount > 0 || expiringSoonCount > 0) && (
+          <button onClick={() => router.push('/factory/production')}
+            style={{ width: '100%', marginBottom: 10, background: `${expiredCount > 0 ? tokens.danger : tokens.warning}10`, border: `1.5px solid ${expiredCount > 0 ? tokens.danger : tokens.warning}40`, borderRadius: 14, padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+            <div style={{ fontSize: 18, flexShrink: 0 }}>⏰</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: expiredCount > 0 ? tokens.danger : tokens.warning }}>
+                {expiredCount > 0
+                  ? tc(expiredCount > 1 ? 'factory.expired_other' : 'factory.expired_one', { count: expiredCount })
+                  : tc(expiringSoonCount > 1 ? 'factory.expiring_other' : 'factory.expiring_one', { count: expiringSoonCount })}
+              </div>
+              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>
+                {expiredCount > 0 && expiringSoonCount > 0 ? tc('factory.expiring_also', { count: expiringSoonCount }) : tc('factory.expiring_hint')}
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${expiredCount > 0 ? tokens.danger : tokens.warning}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         )}
 
@@ -593,20 +696,21 @@ export default function FactoryHub() {
         </div>
 
         {/* ── Today at a glance ─────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 6, marginBottom: 24 }}>
           {([
-            { type: 'intake',   count: intakes.length,   units: unitsIn },
-            { type: 'output',   count: outputs.length,   units: unitsOut },
-            { type: 'wastage',  count: wastages.length,  units: unitsWaste },
-            { type: 'dispatch', count: dispatches.length, units: null },
+            { type: 'intake',    count: intakes.length,    units: unitsIn },
+            { type: 'output',    count: outputs.length,    units: unitsOut },
+            { type: 'packaging', count: packagings.length, units: unitsPackaged },
+            { type: 'wastage',   count: wastages.length,   units: unitsWaste },
+            { type: 'dispatch',  count: dispatches.length, units: null },
           ] as const).map(({ type, count, units }) => {
             const m = TYPE_META[type]
             return (
-              <div key={type} style={{ background: m.bg, border: `1px solid ${m.color}40`, borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: m.color, textTransform: 'capitalize', marginBottom: 4 }}>{m.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: tokens.ink, lineHeight: 1 }}>{count}</div>
-                {units !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>{tc('factory.glance_units', { count: units })}</div>}
-                {units === null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>{tc('factory.glance_shipped')}</div>}
+              <div key={type} style={{ background: m.bg, border: `1px solid ${m.color}40`, borderRadius: 12, padding: '10px 6px', textAlign: 'center' }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: m.color, textTransform: 'capitalize', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: tokens.ink, lineHeight: 1 }}>{count}</div>
+                {units !== null && <div style={{ fontSize: 8, color: tokens.hint, marginTop: 3 }}>{tc('factory.glance_units', { count: units })}</div>}
+                {units === null && <div style={{ fontSize: 8, color: tokens.hint, marginTop: 3 }}>{tc('factory.glance_shipped')}</div>}
               </div>
             )
           })}

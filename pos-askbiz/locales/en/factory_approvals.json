@@ -1,6 +1,7 @@
 {
   "type_intake_label": "Intake",
   "type_output_label": "Output",
+  "type_packaging_label": "Packaging",
   "type_wastage_label": "Wastage",
   "type_dispatch_label": "Dispatch",
   "time_just_now": "just now",
@@ -31,5 +32,7 @@
   "reason_placeholder": "Why is this capture being rejected?",
   "cancel": "Cancel",
   "rejecting": "Rejecting…",
-  "confirm_reject": "Confirm reject"
+  "confirm_reject": "Confirm reject",
+  "sold_with_buyer": "$ Sold to {buyer} for {price}",
+  "sold_no_buyer": "$ Sold for {price}"
 }

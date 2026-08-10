@@ -581,6 +581,20 @@ function LocalisationPanel() {
   const [factorySaved, setFactorySaved]           = useState(false)
   const [factoryError, setFactoryError]           = useState(false)
 
+  // ── Manual "not yet sellable" hold override ──────────────────────────────
+  // Only relevant when Factory Type is 'other'/unset — a known template
+  // (sesame_oil, water, soap, ...) already auto-detects its own hold rule
+  // precisely, per recipe, with no owner input needed. This is purely the
+  // fallback for a factory type this app has never modelled, so an owner
+  // running something outside the 12-template library isn't just left with
+  // no hold-tracking option at all (see pos-askbiz/lib/factory-holds.ts).
+  const [holdEnabled, setHoldEnabled] = useState(false)
+  const [holdDays, setHoldDays]       = useState('')
+  const [holdLabel, setHoldLabel]     = useState('')
+  const [holdSaving, setHoldSaving]   = useState(false)
+  const [holdSaved, setHoldSaved]     = useState(false)
+  const [holdError, setHoldError]     = useState(false)
+
   useEffect(() => {
     fetch('/api/profile').then(r => r.json()).then(d => {
       if (d && !d.error) {
@@ -588,6 +602,9 @@ function LocalisationPanel() {
         if (d.business_type) setBizType(d.business_type)
         setPosBusinessType(d.business_type || '')
         setFactoryType(d.factory_type || '')
+        setHoldEnabled(!!d.factory_hold_enabled)
+        setHoldDays(d.factory_hold_days != null ? String(d.factory_hold_days) : '')
+        setHoldLabel(d.factory_hold_label || '')
       }
       setFactoryTypeLoaded(true)
     })
@@ -610,6 +627,22 @@ function LocalisationPanel() {
       if (!res.ok) { setFactoryError(true); return }
       setFactorySaved(true); setTimeout(() => setFactorySaved(false), 2500)
     } catch { setFactoryError(true) } finally { setFactorySaving(false) }
+  }
+
+  const saveHold = async () => {
+    setHoldSaving(true); setHoldError(false)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          factory_hold_enabled: holdEnabled,
+          factory_hold_days: holdEnabled && holdDays ? Number(holdDays) : null,
+          factory_hold_label: holdEnabled ? (holdLabel.trim() || null) : null,
+        }),
+      })
+      if (!res.ok) { setHoldError(true); return }
+      setHoldSaved(true); setTimeout(() => setHoldSaved(false), 2500)
+    } catch { setHoldError(true) } finally { setHoldSaving(false) }
   }
 
   return (
@@ -655,6 +688,43 @@ function LocalisationPanel() {
           </Card>
           <SaveRow onClick={saveFactoryType} saving={factorySaving} saved={factorySaved} label="Save factory type"/>
           {factoryError && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 6 }}>Couldn't save — please try again.</div>}
+
+          {/* Manual hold override — only surfaced for 'other'/unset factory
+              type. A known type already gets a precise, per-product hold
+              automatically; this is the self-service fallback for a
+              business this app's 12 templates have never modelled. */}
+          {(factoryType === '' || factoryType === FACTORY_TYPE_OTHER) && (
+            <>
+              <Card>
+                <CardHeader title="Batch Hold"/>
+                <SettingRow
+                  top
+                  label="Not-yet-sellable hold"
+                  description="Turn this on if your product needs to wait (curing, aging, a quality test) before it's ready to sell. Applies to every finished-goods capture in the factory app — a warning shows at dispatch until the hold clears."
+                  right={
+                    <input type="checkbox" checked={holdEnabled} onChange={e => setHoldEnabled(e.target.checked)} style={{ width: 20, height: 20, cursor: 'pointer' }}/>
+                  }
+                />
+                {holdEnabled && (
+                  <>
+                    <SettingRow
+                      label="What to call it"
+                      description='Shown to staff, e.g. "Curing" or "Quality test".'
+                      right={<input value={holdLabel} onChange={e => setHoldLabel(e.target.value)} placeholder="Hold" style={{ ...sel, minWidth: 160 }}/>}
+                    />
+                    <SettingRow
+                      border={false}
+                      label="Days to wait"
+                      description="Leave blank if it's a pass/fail check with no fixed number of days (like a lab test) — staff will need to manually clear it instead."
+                      right={<input type="number" min={1} value={holdDays} onChange={e => setHoldDays(e.target.value)} placeholder="e.g. 14" style={{ ...sel, minWidth: 100 }}/>}
+                    />
+                  </>
+                )}
+              </Card>
+              <SaveRow onClick={saveHold} saving={holdSaving} saved={holdSaved} label="Save hold settings"/>
+              {holdError && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 6 }}>Couldn't save — please try again.</div>}
+            </>
+          )}
         </>
       )}
     </div>
