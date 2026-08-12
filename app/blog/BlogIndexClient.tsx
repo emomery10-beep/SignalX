@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { getAllPosts } from '@/lib/blog-content'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import { slugifyCluster, formatClusterName } from '@/lib/blog-taxonomy'
+import BlogSidebar from './BlogSidebar'
 
 function getContentType(title: string, pillar: string): string {
   const t = title.toLowerCase()
@@ -196,15 +198,6 @@ function buildPopularTopics(tc: (key: string, vars?: Record<string, string | num
  ]
 }
 
-function ChevronIcon({ expanded }: { expanded: boolean }) {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-      style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms', display: 'block' }}>
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-  )
-}
-
 const PAGE_SIZE = 20
 
 // ── Inner component (needs useSearchParams → requires Suspense wrapper) ──────
@@ -233,9 +226,6 @@ function BlogContent() {
   const [active,           setActive]           = useState<string | null>(initCluster)
   const [activePillar,     setActivePillar]     = useState<string | null>(initPillar)
   const [search,           setSearch]           = useState('')
-  const [expandedClusters, setExpandedClusters] = useState<Set<string>>(
-    initCluster ? new Set([initCluster]) : new Set()
-  )
   const [visibleCount,     setVisibleCount]     = useState(PAGE_SIZE)
   const [sidebarOpen,      setSidebarOpen]      = useState(false)
   const [sortBy,           setSortBy]           = useState<'date' | 'quickest'>('date')
@@ -247,19 +237,6 @@ function BlogContent() {
     posts.forEach(p => { if (!seen.has(p.cluster)) { seen.add(p.cluster); out.push(p.cluster) } })
     return out.sort((a, b) => a.localeCompare(b))
   }, [posts])
-
-  const clusterPillars = useMemo(() => {
-    const map: Record<string, string[]> = {}
-    clusters.forEach(c => {
-      const seen = new Set<string>()
-      const pillars: string[] = []
-      posts.filter(p => p.cluster === c).forEach(p => {
-        if (p.pillar && !seen.has(p.pillar)) { seen.add(p.pillar); pillars.push(p.pillar) }
-      })
-      map[c] = pillars
-    })
-    return map
-  }, [clusters, posts])
 
   const filtered = useMemo(() => {
     let r = posts
@@ -310,7 +287,7 @@ function BlogContent() {
       .map(([cluster, count]) => ({
         cluster,
         count,
-        description: popularTopics.find(t => t.cluster === cluster)?.description ?? tc('blog_index.topic_fallback_description', { count, cluster }),
+        description: popularTopics.find(t => t.cluster === cluster)?.description ?? tc('blog_index.topic_fallback_description', { count, cluster: formatClusterName(cluster) }),
         icon:        popularTopics.find(t => t.cluster === cluster)?.icon ?? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
@@ -324,15 +301,6 @@ function BlogContent() {
   const visibleRows = filtered.slice(0, visibleCount)
   const hasMore     = filtered.length > visibleCount
 
-  function toggleExpand(cluster: string) {
-    setExpandedClusters(prev => {
-      const next = new Set(prev)
-      if (next.has(cluster)) next.delete(cluster)
-      else next.add(cluster)
-      return next
-    })
-  }
-
   function selectCluster(cluster: string) {
     if (active === cluster && !activePillar) {
       setActive(null)
@@ -342,8 +310,6 @@ function BlogContent() {
       setSearch('')
       setVisibleCount(PAGE_SIZE)
       setCtFilter(null)
-      if (!expandedClusters.has(cluster))
-        setExpandedClusters(prev => new Set([...prev, cluster]))
     }
     setSidebarOpen(false)
   }
@@ -374,7 +340,7 @@ function BlogContent() {
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
-            <span style={{ fontSize: 12, fontWeight: 500, color: c.text }}>{post.cluster}</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: c.text }}>{formatClusterName(post.cluster)}</span>
           </div>
           <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 15, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
             {post.title}
@@ -456,54 +422,7 @@ function BlogContent() {
 
         {/* ── Sidebar ── */}
         <div className={`blog-sidebar-wrap${sidebarOpen ? ' open' : ''}`}>
-          <aside style={{ minHeight: '100%', [isRTL ? 'borderLeft' : 'borderRight']: `1px solid ${BD}`, padding: '20px 0 32px' }}>
-
-            <div style={{ padding: '0 12px', marginBottom: 4 }}>
-              <button className="sb-btn" onClick={goHome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 11, fontWeight: isHome ? 600 : 400 }}>
-                <span>{tc('blog_index.sidebar_all_topics')}</span>
-                <span style={{ fontSize: 12, color: TX3 }}>{posts.length}</span>
-              </button>
-            </div>
-
-            <div style={{ height: 10 }} />
-
-            {clusters.map(cluster => {
-              const c         = getColour(cluster)
-              const isActive  = active === cluster
-              const isExp     = expandedClusters.has(cluster)
-              const pillars   = clusterPillars[cluster] || []
-              const count     = posts.filter(p => p.cluster === cluster).length
-
-              return (
-                <div key={cluster} style={{ padding: '0 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', borderRadius: 8, background: isActive ? c.bg : 'transparent', marginBottom: 1 }}>
-                    <button className="sb-btn" onClick={() => selectCluster(cluster)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px 7px 10px', borderRadius: '8px 0 0 8px', color: isActive ? c.text : TX2, fontSize: 11, fontWeight: isActive ? 600 : 400, textAlign: 'left' }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
-                      <span style={{ lineHeight: 1.35, flex: 1 }}>{cluster}</span>
-                      <span style={{ fontSize: 12, color: isActive ? c.text : TX3, flexShrink: 0 }}>{count}</span>
-                    </button>
-                    {pillars.length > 0 && (
-                      <button className="sb-btn" onClick={() => toggleExpand(cluster)} aria-label={isExp ? tc('blog_index.sidebar_collapse') : tc('blog_index.sidebar_expand')} style={{ padding: '7px 10px', borderRadius: '0 8px 8px 0', color: isActive ? c.text : TX3, display: 'flex', alignItems: 'center' }}>
-                        <ChevronIcon expanded={isExp}/>
-                      </button>
-                    )}
-                  </div>
-                  {isExp && pillars.length > 0 && (
-                    <div style={{ paddingLeft: 26, paddingBottom: 4 }}>
-                      {pillars.map(pillar => {
-                        const isPA = activePillar === pillar && active === cluster
-                        return (
-                          <button key={pillar} className="pillar-btn" onClick={() => { setActive(cluster); setActivePillar(pillar); setSearch(''); setVisibleCount(PAGE_SIZE); setSidebarOpen(false) }} style={{ display: 'block', width: '100%', padding: '5px 8px', borderRadius: 6, fontSize: 10, color: isPA ? c.text : TX2, fontWeight: isPA ? 600 : 400, background: isPA ? c.bg : 'transparent' }}>
-                            {pillar}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </aside>
+          <BlogSidebar posts={posts} totalCount={posts.length} activeSlug={initCluster ? slugifyCluster(initCluster) : undefined} />
         </div>
 
         {/* ── Main ── */}
@@ -548,7 +467,7 @@ function BlogContent() {
                         key={topic.cluster}
                         className="topic-card"
                         onClick={() => selectCluster(topic.cluster)}
-                        aria-label={tc('blog_index.browse_topic_aria', { cluster: topic.cluster })}
+                        aria-label={tc('blog_index.browse_topic_aria', { cluster: formatClusterName(topic.cluster) })}
                         style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 20px 18px', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', color: 'inherit',
                           /* override globals.css button { display: inline-flex; align-items: center } */
                           display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
@@ -556,7 +475,7 @@ function BlogContent() {
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: c.bg, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, color: c.text, flexShrink: 0 }}>
                           {topic.icon}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
+                        <div style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{formatClusterName(topic.cluster)}</div>
                         <p style={{ fontSize: 12, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
                         <span style={{ fontSize: 10, color: c.text, fontWeight: 600 }}>{tc('blog_index.topic_articles_count', { count: topic.count })}</span>
                       </button>
@@ -570,7 +489,7 @@ function BlogContent() {
                     return (
                       <button key={topic.cluster} className="sb-btn" onClick={() => selectCluster(topic.cluster)} style={{ fontSize: 11, color: TX, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36 }}>
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
-                        <span style={{ fontWeight: 500 }}>{topic.cluster}</span>
+                        <span style={{ fontWeight: 500 }}>{formatClusterName(topic.cluster)}</span>
                         <span style={{ fontSize: 12, color: TX3, fontWeight: 400 }}>{topic.count}</span>
                       </button>
                     )
@@ -637,7 +556,7 @@ function BlogContent() {
                 <button className="crumb-btn" onClick={goHome} style={{ color: ACC, fontSize: 11, fontWeight: 500 }}>{tc('blog_index.crumb_all_topics')}</button>
                 {active && (
                   <><span style={{ color: TX3 }}>/</span>
-                  <button className="crumb-btn" onClick={() => { setActivePillar(null) }} style={{ color: activePillar ? TX2 : TX, fontWeight: activePillar ? 400 : 600, fontSize: 11 }}>{active}</button></>
+                  <button className="crumb-btn" onClick={() => { setActivePillar(null) }} style={{ color: activePillar ? TX2 : TX, fontWeight: activePillar ? 400 : 600, fontSize: 11 }}>{formatClusterName(active)}</button></>
                 )}
                 {activePillar && (
                   <><span style={{ color: TX3 }}>/</span><span style={{ color: TX, fontWeight: 600 }}>{activePillar}</span></>
@@ -650,11 +569,11 @@ function BlogContent() {
               {/* Header */}
               <div style={{ marginBottom: 24 }}>
                 <h1 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
-                  {search ? tc('blog_index.results_for', { query: search }) : activePillar || active}
+                  {search ? tc('blog_index.results_for', { query: search }) : activePillar || (active ? formatClusterName(active) : active)}
                 </h1>
                 <p style={{ fontSize: 13, color: TX2, margin: 0 }}>
                   {filtered.length !== 1 ? tc('blog_index.article_count_plural', { count: filtered.length }) : tc('blog_index.article_count', { count: filtered.length })}
-                  {active && !search && ` · ${active}`}
+                  {active && !search && ` · ${formatClusterName(active)}`}
                 </p>
               </div>
 

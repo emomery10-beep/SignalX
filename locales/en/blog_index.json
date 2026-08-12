@@ -4,6 +4,7 @@
   "sidebar_all_topics": "All topics",
   "sidebar_collapse": "Collapse",
   "sidebar_expand": "Expand",
+  "sidebar_search_placeholder": "Search topics…",
   "home_heading": "Business Intelligence Hub",
   "home_subtitle": "{count} guides across {topics} topics — AI, eCommerce, finance, and SME strategy.",
   "search_placeholder": "Search articles and guides…",

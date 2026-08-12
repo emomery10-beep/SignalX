@@ -4,6 +4,7 @@
   "sidebar_all_topics": "Tous les sujets",
   "sidebar_collapse": "Réduire",
   "sidebar_expand": "Développer",
+  "sidebar_search_placeholder": "Rechercher un sujet…",
   "home_heading": "Hub d'intelligence économique",
   "home_subtitle": "{count} guides répartis sur {topics} sujets — IA, e-commerce, finance et stratégie PME.",
   "search_placeholder": "Rechercher des articles et des guides…",

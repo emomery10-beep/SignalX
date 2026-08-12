@@ -4,6 +4,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
 import type { BlogPost } from '@/lib/blog-content'
 import type { AcademyArticle } from '@/lib/academy-types'
+import { slugifyCluster, formatClusterName } from '@/lib/blog-taxonomy'
 import ShareButtons from './ShareButtons'
 import ReadingProgress from './ReadingProgress'
 import ScrollDepthTracker from './ScrollDepthTracker'
@@ -197,7 +198,7 @@ export default function BlogPostView({
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home',  item: BASE },
       { '@type': 'ListItem', position: 2, name: 'Blog',  item: `${BASE}/blog` },
-      { '@type': 'ListItem', position: 3, name: post.cluster, item: `${BASE}/blog?cluster=${encodeURIComponent(post.cluster)}` },
+      { '@type': 'ListItem', position: 3, name: post.cluster, item: `${BASE}/blog/topic/${slugifyCluster(post.cluster)}` },
       { '@type': 'ListItem', position: 4, name: post.title, item: postUrl },
     ],
   }
@@ -293,22 +294,19 @@ export default function BlogPostView({
           <span>/</span>
           <Link href={localePath('/blog', toLocale(lang))} style={{ color: TX3, textDecoration: 'none' }}>{tc('blog.blog_label')}</Link>
           <span>/</span>
-          <Link href={localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, toLocale(lang))} style={{ color: TX3, textDecoration: 'none' }}>{post.cluster}</Link>
+          <Link href={localePath(`/blog/topic/${slugifyCluster(post.cluster)}`, toLocale(lang))} style={{ color: TX3, textDecoration: 'none' }}>{formatClusterName(post.cluster)}</Link>
           <span>/</span>
           <span style={{ color: TX2 }}>{post.title.length > 48 ? post.title.slice(0, 48) + '…' : post.title}</span>
         </nav>
 
-        {/* Cluster + pillar badges — Global Trade Intelligence articles link to
-            their dedicated hub page (spoke -> hub); everything else uses the
-            existing query-param cluster filter. */}
+        {/* Cluster + pillar badges — every cluster now has a real hub page
+            (spoke -> hub), so the badge always links there. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           <Link
-            href={post.pillar === 'Global Trade Intelligence'
-              ? localePath(`/blog/topic/${post.cluster.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-')}`, toLocale(lang))
-              : localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, toLocale(lang))}
+            href={localePath(`/blog/topic/${slugifyCluster(post.cluster)}`, toLocale(lang))}
             style={{ fontSize: 9, fontWeight: 700, color: clusterColour.text, background: clusterColour.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em', textDecoration: 'none' }}
           >
-            {post.cluster}
+            {formatClusterName(post.cluster)}
           </Link>
           {post.pillar && (
             <Link
@@ -427,7 +425,7 @@ export default function BlogPostView({
                 {i === 3 && contextualLinks.length > 0 && (
                   <div style={{ background: EV, borderRadius: 10, padding: '14px 18px', margin: '28px 0', border: `1px solid ${B}` }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: TX2, marginBottom: 10 }}>
-                      More in {post.cluster}
+                      More in {formatClusterName(post.cluster)}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {contextualLinks.map(p => (

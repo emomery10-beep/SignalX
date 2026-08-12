@@ -8,6 +8,7 @@ export const revalidate = 0 // Always regenerate — never serve stale cached si
 import type { MetadataRoute } from "next";
 import { createClient } from '@supabase/supabase-js'
 import { getAllPosts } from "@/lib/blog-content";
+import { slugifyCluster, buildSidebarTree, getClusterCounts } from "@/lib/blog-taxonomy";
 import { HELP_ARTICLES, HELP_TOPICS } from "@/lib/help-content";
 import { POLICY_ARTICLES } from "@/lib/rules-content";
 import { getAllArticles as getTransparencyArticles } from "@/lib/transparency-content";
@@ -95,6 +96,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const posts = staticPosts;
 
+  // Every cluster now gets a real hub page (app/blog/topic/[cluster]), not
+  // just the 3 Global Trade Intelligence ones — and every region/industry
+  // rollup (app/blog/group/[group]) that actually has posts in it gets one too.
+  const clusterSlugs = Object.keys(getClusterCounts(staticPosts)).map(slugifyCluster);
+  const sidebarTree = buildSidebarTree(getClusterCounts(staticPosts));
+  const groupSlugs = new Set<string>();
+  for (const node of sidebarTree) {
+    if (node.type !== 'group') continue;
+    if (node.linkable) groupSlugs.add(node.key);
+    for (const child of node.children) {
+      if (child.type === 'subgroup') groupSlugs.add(child.key);
+    }
+  }
+
   return [
     // ── CORE: landing pages, tools, comparisons, integrations, case studies ──
     { url: base,                                                  lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
@@ -176,11 +191,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // ── BLOG: all blog posts ────────────────────────────────────────────────────
     { url: `${base}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
-    // Global Trade Intelligence hub pages (hub-and-spoke: each of the 63
-    // trade-news articles links back to its cluster's hub here)
-    { url: `${base}/blog/topic/us-china-tariffs`,        lastModified: now, changeFrequency: "monthly", priority: 0.75 },
-    { url: `${base}/blog/topic/supply-chain-disruption`, lastModified: now, changeFrequency: "monthly", priority: 0.75 },
-    { url: `${base}/blog/topic/trade-finance`,           lastModified: now, changeFrequency: "monthly", priority: 0.75 },
+    // Cluster hub pages — hub-and-spoke: every article links back to its
+    // cluster's hub, and the hub links out to all of them.
+    ...clusterSlugs.map((slug) => ({
+      url: `${base}/blog/topic/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.75,
+    })),
+    // Region/industry rollup hub pages (e.g. /blog/group/asean) — the
+    // consolidated entry point for clusters too thin to rank alone.
+    ...Array.from(groupSlugs).map((slug) => ({
+      url: `${base}/blog/group/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7,
+    })),
     ...posts.map((post) => ({
       url: `${base}/blog/${post.slug}`,
       lastModified: hashModifiedDate(post.slug, post.publishDate),
