@@ -70,9 +70,14 @@ export const metadata: Metadata = {
     },
   },
   // Favicon and apple-touch-icon come from the App Router file conventions
-  // (app/icon.svg, app/apple-icon.tsx), driven by the brand mark in lib/brand.ts.
-  // The sitewide social card is /og-image.png → /api/og?mode=brand (branded with
-  // the same mark); individual pages may override with their own image.
+  // (app/favicon.ico, app/icon.svg, app/apple-icon.tsx), driven by the brand mark
+  // in lib/brand.ts. favicon.ico is a static multi-size (16/32/48) raster fallback
+  // for crawlers/browsers that don't resolve SVG favicons (notably Google Search —
+  // an SVG-only <link rel="icon"> is not a reliable source for the search-result
+  // favicon). manifest.json below links the PWA's 192/512 PNG icons for the same
+  // reason. The sitewide social card is /og-image.png → /api/og?mode=brand (branded
+  // with the same mark); individual pages may override with their own image.
+  manifest: '/manifest.json',
   openGraph: {
     type: 'website',
     siteName: 'AskBiz',
