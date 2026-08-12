@@ -8,6 +8,8 @@ const PUBLIC_PATHS = [
   '/help/',
   '/academy',
   '/academy/',
+  '/research',
+  '/research/',
   '/how-to',
   '/translate',
   '/bloomberg-alternative',
