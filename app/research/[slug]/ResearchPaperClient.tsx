@@ -89,6 +89,22 @@ export default function ResearchPaperClient({ paper }: { paper: ResearchPaper })
           </ol>
         </section>
 
+        {paper.sections && paper.sections.length > 0 && (
+          <section style={{ marginBottom: 36, paddingTop: 34, borderTop: `1px solid ${C.b}` }}>
+            <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: C.tx3, margin: "0 0 22px" }}>Full paper</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+              {paper.sections.map((s) => (
+                <div key={s.heading}>
+                  <h3 style={{ fontFamily: "var(--font-sora)", fontSize: 15.5, fontWeight: 700, color: C.tx, letterSpacing: "-.01em", margin: "0 0 10px" }}>{s.heading}</h3>
+                  {s.paragraphs.map((p, i) => (
+                    <p key={i} style={{ fontSize: 13.5, lineHeight: 1.8, color: C.tx2, margin: i === 0 ? 0 : "12px 0 0" }}>{p}</p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 30 }}>
           {paper.tags.map((t) => (
             <span key={t} style={{ fontSize: 10, color: C.tx3, background: C.el, borderRadius: 9999, padding: "4px 11px" }}>{t}</span>

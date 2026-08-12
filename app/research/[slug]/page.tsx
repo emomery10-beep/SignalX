@@ -37,6 +37,13 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 // signal for Google and for AI answer engines to cite this specific paper.
 function jsonLd(p: NonNullable<ReturnType<typeof getPaper>>) {
   const url = `${SITE}/research/${p.slug}`;
+  // Full section text, when present, gives AI answer engines and Google the
+  // entire argument to index/cite, not just the abstract — falls back to the
+  // abstract + key findings for papers (like the first) with no on-page body.
+  const fullText = p.sections?.length
+    ? p.sections.map((s) => `${s.heading}. ${s.paragraphs.join(" ")}`).join(" ")
+    : p.abstract + " " + p.keyFindings.join(" ");
+  const wordCount = fullText.trim().split(/\s+/).length;
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -47,7 +54,8 @@ function jsonLd(p: NonNullable<ReturnType<typeof getPaper>>) {
         name: p.title,
         abstract: p.abstract,
         description: p.summary,
-        articleBody: p.abstract + " " + p.keyFindings.join(" "),
+        articleBody: fullText,
+        wordCount,
         datePublished: p.date,
         inLanguage: "en",
         keywords: p.tags.join(", "),
