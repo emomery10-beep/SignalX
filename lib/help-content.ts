@@ -616,7 +616,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "clv-calculation-guide",
       "clv-by-acquisition-channel",
       "clv-vs-cac-guide",
-      "repeat-purchase-rate-guide",
+      "repeat-purchase-rate-clv-guide",
       "clv-segmentation",
       "improving-clv-strategies",
       "clv-cohort-analysis",
@@ -784,7 +784,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     slug: "factory-operations",
     title: "Factory Operations",
-    description: "Set up and use AskBiz Factory Captures — submit production photos, manage approvals, track batches, quality, downtime, shifts and waybills, and maintain a full audit trail across your production floor.",
+    description: "Set up and use AskBiz Factory Captures — submit production photos, manage approvals and not-yet-releasable holds, track batches, quality, downtime, shifts, waybills, yield, and production runs, and maintain a full audit trail across your production floor.",
     icon: "🏭",
     color: "#6b7280",
     articles: [
@@ -795,6 +795,11 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-factory-batch-quality-downtime",
       "pos-factory-shifts-waybills",
       "pos-factory-type-setup",
+      "pos-factory-holds",
+      "pos-factory-packaging-captures",
+      "pos-factory-sale-tracking",
+      "pos-factory-yield-ranges",
+      "pos-factory-production-runs",
     ],
   },
 ];
@@ -811,8 +816,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
     topicSlug: "getting-started",
     readTime: 6,
     popular: true,
-    lastUpdated: "2026-08-09",
-    keywords: ["askbiz setup", "onboarding", "getting started", "business intelligence setup", "pos setup", "till setup", "free pos trial"],
+    lastUpdated: "2026-08-11",
+    keywords: ["askbiz setup", "onboarding", "getting started", "business intelligence setup", "pos setup", "till setup", "free pos trial", "pos product tour", "add first staff member"],
     content: [
       {
         heading: "Overview",
@@ -828,11 +833,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "The POS Track — Market Stall, Food Stand, Shop, Salon or Repair",
-        body: "Pick one of these five and onboarding ends right after Step 2 — no business-name typing, no sector picker, no data-connection step. You land on a **\"Nice work\"** screen with one big button: **Start free — up to 5 staff**, no card required, full POS access for 30 days. Tap it and AskBiz creates a 4-digit till PIN for you on the spot — it's shown once, so note it down. From there you're taken into till setup, where you can (optionally) add your first few items or parts with the camera, add any staff who'll use the till, and start selling. Prefer to hold off on starting the trial clock? The secondary button on that screen takes you straight into till setup without claiming the trial.",
+        body: "Pick one of these five and onboarding ends right after Step 2 — no business-name typing, no sector picker, no data-connection step. You land on a **\"Nice work\"** screen with one big button: **Start free — up to 5 staff**, no card required, full POS access for 30 days. Tap it and AskBiz creates a 4-digit till PIN for you on the spot — it's shown once, so note it down. Either button on this screen takes you straight to your **real POS dashboard** — there's no separate setup wizard to work through first. The first time you land there, a short guided tour walks you through adding your first staff member: their name, a phone number or email, and a 4-digit PIN they'll use to log in at the till. **Skip tour** is always available if you'd rather do that later. Prefer to hold off on starting the trial clock? The secondary button, **Set up my till**, skips the trial claim — you'll land on the same \"Start free\" screen instead, since the dashboard only unlocks once a trial or paid plan is active.",
       },
       {
         heading: "The Business Intelligence Track — Everything Else",
-        body: "Courier, Ecommerce, Services, Distributor, Manufacturer, Importer and Exporter get the fuller flow:\n- **Business Sector** — shown only to Ecommerce, Distributor, Manufacturer, Importer and Exporter. Choose your product category (Fashion & Apparel, Beauty & Personal Care, Health & Wellness, Food & Beverage, Home & Garden, Electronics & Tech, Sports & Outdoor, Luxury & Premium, Kids & Toys, Pet Products, Arts & Crafts, or B2B/Industrial).\n- **Export Markets** — shown only to Exporters, Ecommerce and Importers. Pick your active markets, or **Not yet — show me opportunities** for recommendations instead.\n- **Connect Your Data** — a quick-start version of the full `/sources` page, with five one-tap options (QuickBooks, Stripe, Amazon FBA, Google Sheets, TikTok Shop). Skippable — the full connector list on `/sources` is much larger.\n\nOnce at least one source is connected, AskBiz runs your first analysis and shows your **Business Pulse score**, any anomaly alerts, and your first **Daily Brief**.",
+        body: "Courier, Ecommerce, Services, Distributor, Manufacturer, Importer and Exporter get the fuller flow:\n- **Business Sector** — shown only to Ecommerce, Distributor, Manufacturer, Importer and Exporter. Choose your product category (Fashion & Apparel, Beauty & Personal Care, Health & Wellness, Food & Beverage, Home & Garden, Electronics & Tech, Sports & Outdoor, Luxury & Premium, Kids & Toys, Pet Products, Arts & Crafts, or B2B/Industrial).\n- **Factory Type** — shown only to Manufacturers, right after Business Sector. Pick which of AskBiz's 12 factory-type categories matches what you produce (or **Other**). Skippable, and changeable any time from Settings → Localisation → Factory Settings — see **Choosing Your Factory Type**.\n- **Export Markets** — shown only to Exporters, Ecommerce and Importers. Pick your active markets, or **Not yet — show me opportunities** for recommendations instead.\n- **Connect Your Data** — a quick-start version of the full `/sources` page, with five one-tap options (QuickBooks, Stripe, Amazon FBA, Google Sheets, TikTok Shop). Skippable — the full connector list on `/sources` is much larger.\n\nOnce at least one source is connected, AskBiz runs your first analysis and shows your **Business Pulse score**, any anomaly alerts, and your first **Daily Brief**.",
       },
       {
         heading: "Getting Help During Onboarding",
@@ -842,7 +847,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "Can I skip the onboarding steps?", a: "On the POS track, tap \"Skip setup — go straight to AskBiz\" on the business-type screen, or use the secondary button instead of \"Start free\" on the final screen to defer the trial. On the Business Intelligence track, Sector and Export Markets only ever show for the business types that need them, and Connect Data can always be completed later from /sources." },
       { q: "How do I re-run onboarding?", a: "Go to Account Settings → Business Profile and edit any field. Changing your sector or business type will prompt AskBiz to re-calibrate your benchmarks." },
-      { q: "Can I invite team members during onboarding?", a: "On the POS track, yes — team setup happens inside till setup itself, before you even pay: add each staff member's name, role and PIN, and your monthly price updates live as you add seats. On the Business Intelligence track, team seats are on the Business plan; invite from Account Settings → Team after onboarding." },
+      { q: "Can I invite team members during onboarding?", a: "On the POS track, the first-run tour on your dashboard walks you through adding your first staff member right after you claim the trial — name, phone or email, and a PIN. Add more any time from the Staff tab, up to your plan's seat limit; go past that and you'll be prompted to add seats from Billing. On the Business Intelligence track, team seats are on the Business plan; invite from Account Settings → Team after onboarding." },
     ],
     related: ["connect-first-data-source", "business-pulse-score-explained", "plans-comparison"],
   },
@@ -1990,16 +1995,16 @@ export const HELP_ARTICLES: HelpArticle[] = [
     topic: "Ask AskBiz",
     topicSlug: "ask-askbiz",
     readTime: 4,
-    lastUpdated: "2026-04-01",
-    keywords: ["how askbiz ai works", "ai business intelligence accuracy", "askbiz answer accuracy"],
+    lastUpdated: "2026-08-11",
+    keywords: ["how askbiz ai works", "ai business intelligence accuracy", "askbiz answer accuracy", "does askbiz make up numbers", "askbiz data grounding"],
     content: [
       {
         heading: "The Answering Process",
-        body: "When you ask a question, AskBiz:\n1. **Parses your intent** — understands what you're asking and what data is needed\n2. **Queries your connected data** — pulls relevant metrics from your sources\n3. **Applies AI analysis** — uses Claude (by Anthropic) to reason over your data\n4. **Generates a structured response** — with numbers, charts, or a narrative explanation\n5. **Flags confidence level** — indicates how certain the answer is based on data completeness",
+        body: "When you ask a question, AskBiz:\n1. **Parses your intent** — understands what you're asking and what data is needed\n2. **Queries your connected data** — pulls relevant metrics from your sources\n3. **Applies AI analysis** — reasons over your data to build an answer\n4. **Generates a structured response** — with numbers, charts, or a narrative explanation\n5. **Flags confidence level** — indicates how certain the answer is based on data completeness",
       },
       {
         heading: "Confidence Levels",
-        body: "Answers carry a confidence indicator:\n- **High confidence** — based on complete, recent, directly connected data\n- **Medium confidence** — based on partial data or data older than 30 days\n- **Low confidence** — based on limited data; the answer is directionally useful but verify before acting on it\n- **Estimate** — no directly relevant data; AskBiz is using benchmarks or inference\n\nAlways act with appropriate caution on Medium or Low confidence answers for financial decisions.",
+        body: "Answers carry a confidence indicator:\n- **High confidence** — based on complete, recent, directly connected data\n- **Medium confidence** — based on partial data or data older than 30 days\n- **Low confidence** — based on limited data; the answer is directionally useful but verify before acting on it\n\nIf there's no relevant data to answer your question at all, AskBiz says so directly — naming the specific figure or connection it's missing — rather than filling the gap with an industry benchmark, a generic ratio, or an assumption about how your business operates. Every number in an answer is expected to trace back to your actual connected data.\n\nAlways act with appropriate caution on Medium or Low confidence answers for financial decisions.",
       },
       {
         heading: "Data Freshness",
@@ -9637,37 +9642,42 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "first-5-minutes",
     title: "Your First 5 Minutes with AskBiz",
-    description: "Just signed up? Here's exactly what to do in your first five minutes to see real insights from your business data.",
+    description: "Just signed up? Here's exactly what to do in your first five minutes — whether you're setting up a POS till or a Business Intelligence workspace.",
     topic: "Getting Started",
     topicSlug: "getting-started",
-    readTime: 3,
+    readTime: 4,
     popular: true,
-    keywords: ["getting started askbiz", "new account setup", "first steps askbiz", "quick start guide", "how to use askbiz"],
-    lastUpdated: "2025-05-01",
+    keywords: ["getting started askbiz", "new account setup", "first steps askbiz", "quick start guide", "how to use askbiz", "pos free trial first steps"],
+    lastUpdated: "2026-08-11",
     content: [
       {
-        heading: "Step 1 — Sign in and land on your Dashboard",
-        body: "After signing up, you land on your **Dashboard**. It may look empty right now — that's normal. AskBiz needs at least one connected data source before it can show you anything. This takes about 2 minutes.",
+        heading: "Which track are you on?",
+        body: "Your first 5 minutes look different depending on what you picked during onboarding. If you chose **Market stall, Restaurant/Food stand, Shop/Kiosk, Salon/Barbershop, or Repair Shop**, you're on the **POS track** — jump to \"The POS Track\" below. Everyone else (Courier, Ecommerce, Services, Distributor, Manufacturer, Importer, Exporter) is on the **Business Intelligence track** — the rest of this guide is for you. See the **Complete Onboarding Guide** if you haven't finished signing up yet.",
       },
       {
-        heading: "Step 2 — Connect your first data source",
-        body: "Click **Connect Data** in the sidebar (or the banner on your dashboard). Choose the tool your business uses most — Shopify, QuickBooks, Stripe, Xero, Amazon, or WooCommerce are the most popular starting points.\n\nYou'll be asked to log in to that tool and grant read-only access. AskBiz **never writes data** back to your connected tools.\n\nOnce connected, your first sync starts automatically. Small accounts sync in under 60 seconds. Larger accounts (2+ years of data) may take 3–5 minutes.",
+        heading: "The POS Track — Your First 5 Minutes",
+        body: "After picking your business type and confirming your location, you land on a **\"Nice work\"** screen. Tap **Start free — up to 5 staff** and AskBiz creates your 4-digit till PIN on the spot — note it down, it's shown once. You're taken straight to your **real POS dashboard**, no separate setup step first. The first time you land there, a short guided tour walks you through adding your first staff member — their name, a phone number or email, and a PIN for them to log in at the till. Tap **Skip tour** if you'd rather do that later. From there you're ready to process your first sale.",
       },
       {
-        heading: "Step 3 — Check your Business Pulse score",
-        body: "Once your data syncs, your **Business Pulse** score appears — a 0–100 score summarising your business health across revenue, profit, cash flow, and growth.\n\n- **70–100**: Strong — keep doing what's working\n- **50–69**: Stable — one or two areas need attention\n- **Below 50**: Action needed — tap the score for a breakdown\n\nTap any category in the Pulse breakdown to see the specific metric pulling it down.",
+        heading: "The Business Intelligence Track — Connect Your First Data Source",
+        body: "After onboarding, you land on your **Home** dashboard. It'll look empty at first — that's normal, AskBiz needs at least one connected data source before it can show you anything. Click the plug icon in the sidebar to open `/sources`, and choose the tool your business uses most — Shopify, QuickBooks, Stripe, Xero, Amazon, or WooCommerce are the most popular starting points. You'll be asked to log in to that tool and grant read-only access — AskBiz **never writes data** back to your connected tools. Once connected, your first sync starts automatically: small accounts sync in under 60 seconds, larger accounts (2+ years of data) may take 3–5 minutes.",
       },
       {
-        heading: "Step 4 — Ask your first question",
-        body: "Click **Ask AskBiz** in the sidebar. Type a plain-English question like:\n\n- \"What was my best-selling product last month?\"\n- \"How is my profit margin trending?\"\n- \"Which customers haven't ordered in 60 days?\"\n\nAskBiz analyses your live data and answers in seconds. You don't need to know SQL or build any reports.",
+        heading: "Check your Business Pulse score",
+        body: "Once your data syncs, your **Business Pulse** score appears — a 0–100 score summarising your business health across revenue, profit, cash flow, and growth.\n- **70–100**: Strong — keep doing what's working\n- **50–69**: Stable — one or two areas need attention\n- **Below 50**: Action needed — tap the score for a breakdown\n\nTap any category in the Pulse breakdown to see the specific metric pulling it down.",
       },
       {
-        heading: "Step 5 — Set up your first alert (optional but recommended)",
+        heading: "Ask your first question",
+        body: "Click **Ask AskBiz** in the sidebar. Type a plain-English question like:\n- \"What was my best-selling product last month?\"\n- \"How is my profit margin trending?\"\n- \"Which customers haven't ordered in 60 days?\"\n\nAskBiz analyses your live data and answers in seconds — and if it doesn't have enough data to answer, it tells you what's missing rather than guessing. You don't need to know SQL or build any reports.",
+      },
+      {
+        heading: "Set up your first alert (optional but recommended)",
         body: "Go to **Alerts** and create one alert — for example: \"Tell me if my daily revenue drops more than 20% versus last week.\"\n\nAlerts run automatically and notify you by email. Most users set up 2–3 alerts in their first week and save hours of manual checking.",
       },
     ],
     faq: [
-      { q: "My dashboard is blank after connecting — is something wrong?", a: "Not at all. The first sync can take a few minutes for large accounts. Refresh after 5 minutes. If it's still blank after 10 minutes, check Settings → Integrations to see the sync status. If it shows an error, see our troubleshooting guide." },
+      { q: "I signed up as a shop, market stall, salon, or repair business — why don't I see a Dashboard or Connect Data option?", a: "You're on the POS track, which skips data connection entirely — your sales and stock already live inside your till. See \"The POS Track\" section above." },
+      { q: "My dashboard is blank after connecting — is something wrong?", a: "Not at all. The first sync can take a few minutes for large accounts. Refresh after 5 minutes. If it's still blank after 10 minutes, check `/sources` to see the sync status. If it shows an error, see our troubleshooting guide." },
       { q: "Do I need to connect multiple data sources to get value?", a: "No — one source is enough to start. Many users get valuable insights from Shopify alone, or QuickBooks alone. Adding more sources makes the Business Pulse score more accurate and unlocks cross-platform insights." },
       { q: "Can I try AskBiz with sample data first?", a: "Yes. If you haven't connected a source yet, your dashboard shows a sample data preview. It's clearly labelled 'Sample Data' and is replaced as soon as you connect your real account." },
     ],
@@ -11048,7 +11058,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
   },
 
   {
-    slug: "repeat-purchase-rate-guide",
+    slug: "repeat-purchase-rate-clv-guide",
     title: "Repeat Purchase Rate: How to Measure and Improve Customer Loyalty",
     description: "Understand your repeat purchase rate, what it means for CLV, and the most effective strategies to increase it.",
     topic: "Customer Lifetime Value (CLV)",
@@ -11161,7 +11171,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Which CLV improvement strategy should I start with?", a: "Start with the lever that's furthest below your category benchmark. For most new e-commerce businesses, purchase frequency is the weakest lever — a post-purchase email flow (Day 3, Day 14, Day 30 nudges towards second purchase) is typically the highest-ROI first initiative." },
       { q: "How long until I see CLV improvements after launching new strategies?", a: "AOV improvements are visible within weeks. Purchase frequency improvements take 3–6 months to show in cohort data (you need to observe the next purchase cycle). Customer lifespan improvements take 12–24 months to fully manifest. Plan your measurement timeline accordingly." },
     ],
-    related: ["clv-overview", "repeat-purchase-rate-guide", "clv-vs-cac-guide"],
+    related: ["clv-overview", "repeat-purchase-rate-clv-guide", "clv-vs-cac-guide"],
   },
 
   {
@@ -11211,12 +11221,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-getting-started",
     title: "Getting Started with AskBiz POS",
-    description: "Set up AskBiz POS from scratch — enable the module, add your first products, configure tax settings, and process your first test sale in under 10 minutes.",
+    description: "How AskBiz POS actually gets set up — a business type you choose at signup, not a settings toggle — plus adding your first products and processing a test sale.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 5,
     popular: true,
-    lastUpdated: "2026-05-12",
+    lastUpdated: "2026-08-12",
     keywords: ["askbiz pos setup", "point of sale getting started", "how to set up pos system", "pos system for small business", "askbiz pos tutorial", "free pos system uk"],
     content: [
       {
@@ -11224,53 +11234,53 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "AskBiz POS is a built-in point of sale system that turns any phone, tablet, or laptop into a fully functional till. Unlike third-party POS systems that require separate hardware and monthly subscriptions, AskBiz POS is included in your existing plan and works straight from your browser.\n\nBecause it is native to AskBiz, every sale you process feeds directly into your dashboards, Daily Brief, and AI chat. There is no CSV export, no sync delay, and no data reconciliation — your in-store and online numbers live in one place from the moment you start selling.",
       },
       {
-        heading: "Enabling the POS module",
-        body: "Navigate to **Settings → Features → Point of Sale** and toggle it on. AskBiz will create a dedicated **/pos** section in your sidebar. You will also see a new **POS** tab on your main dashboard showing in-store revenue alongside your existing channels.\n\nIf you are on the Free plan, POS is available with a limit of 50 transactions per month. Growth and Business plans have unlimited transactions. Check **Account → Plan** if you are unsure which plan you are on.",
+        heading: "Getting a till",
+        body: "AskBiz POS isn't a module you switch on — it comes from the **business type** you pick at signup (Market stall, Restaurant/Food stand, Shop/Kiosk, Salon/Barbershop, or Repair Shop). Pick one of these and you land straight on your till after claiming your free trial. See the **Complete Onboarding Guide** for the full signup flow. Offline cash sales work too — see **What Happens When Your Internet Drops During a Sale**.",
       },
       {
         heading: "Adding your first products",
-        body: "Head to **/pos/inventory** and tap **Add Product**. Enter the product name, price, and optionally a barcode or SKU. If you already have products in your Shopify or other connected store, tap **Import from Source** to pull them in automatically — AskBiz will match on SKU or product name.\n\nYou can also bulk-import products via CSV. Download the template from the inventory page, fill in your product details, and upload. AskBiz maps columns automatically and flags any rows that need attention.",
+        body: "Go to your **Inventory** tab and tap **Add Product**. Enter the product name and price, and optionally a photo. You can also bulk-add products by pasting a simple CSV list of name, price, quantity, and unit.",
       },
       {
         heading: "Processing your first test sale",
-        body: "Go to **/pos** and you will see the sale screen. Tap a product or use the camera scanner to add items to the basket. When ready, tap **Charge** and select a payment method (cash, card, or other). For your first sale, try a cash transaction to get familiar with the flow.\n\nOnce complete, the sale appears immediately in your POS dashboard and in your main AskBiz analytics. Ask the AI chat *\"How much did I sell in-store today?\"* to confirm everything is connected.",
+        body: "Open your POS dashboard and you will see the sale screen. Tap a product, or use the camera to photograph it — AskBiz's AI identifies products from a photo rather than reading a barcode (see **Scanning Products with Your Camera** for how this really works) — to add items to the basket. When ready, tap **Charge** and select a payment method. For your first sale, try a cash transaction to get familiar with the flow.\n\nOnce complete, the sale appears immediately in your POS dashboard and in your main AskBiz analytics. Ask the AI chat *\"How much did I sell in-store today?\"* to confirm everything is connected.",
       },
     ],
     faq: [
-      { q: "Do I need special hardware to use AskBiz POS?", a: "No. AskBiz POS runs in your browser on any device with a camera. A phone or tablet is ideal for scanning barcodes, but a laptop works too. If you want a barcode scanner or receipt printer, any USB or Bluetooth HID-compatible scanner will work." },
-      { q: "Can I use AskBiz POS offline?", a: "Currently AskBiz POS requires an internet connection to process and record sales. Offline mode is on the roadmap — for now, a mobile data connection on your phone is sufficient as a backup if your shop Wi-Fi goes down." },
+      { q: "Do I need special hardware to use AskBiz POS?", a: "No. AskBiz POS runs in your browser on any device with a camera. A phone or tablet works well for photographing products; a laptop works too, without a camera, using search and manual entry." },
+      { q: "Can I use AskBiz POS offline?", a: "Cash sales — yes. AskBiz POS caches your product catalogue and queues cash sales locally if your connection drops, syncing automatically once you're back online. Card payments need a live connection. See What Happens When Your Internet Drops During a Sale for the full picture." },
     ],
     related: ["pos-scanning-products", "pos-making-a-sale", "pos-managing-inventory"],
   },
   {
     slug: "pos-adding-staff",
     title: "Adding and Managing POS Staff Members",
-    description: "Invite staff to your AskBiz POS, assign roles, set permissions, and track who processes each sale — all without sharing your main account login.",
+    description: "Add staff to your AskBiz POS with a phone number or email and a PIN, assign roles, and track who processes each sale — all without sharing your main account login.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
-    lastUpdated: "2026-05-12",
+    lastUpdated: "2026-08-12",
     keywords: ["pos staff management", "add staff to pos", "pos user permissions", "pos staff login", "point of sale employee setup", "pos roles and permissions"],
     content: [
       {
         heading: "Why add staff members?",
-        body: "Adding individual staff accounts means every transaction is tagged with the person who processed it. This unlocks staff performance reporting, shift-level revenue breakdowns, and accountability if a transaction needs to be investigated later.\n\nStaff members log in with their own magic link — they never see your main AskBiz dashboard, billing details, or connected data sources. They only see the POS sale screen and, optionally, basic stats for their own shift.",
+        body: "Adding individual staff accounts means every transaction is tagged with the person who processed it. This unlocks staff performance reporting, shift-level revenue breakdowns, and accountability if a transaction needs to be investigated later.\n\nStaff members log in with their own phone number or email plus a PIN — they never see your main AskBiz dashboard, billing details, or connected data sources. They only see the POS sale screen and, optionally, basic stats for their own shift.",
       },
       {
-        heading: "Inviting a new staff member",
-        body: "Go to **Settings → POS → Staff** and tap **Invite Staff**. Enter the person's name and email address. They will receive a magic link email that logs them straight into the POS screen on their device.\n\nYou can also generate a **PIN-only login** for environments where staff share a single tablet. Each person gets a unique 4-digit PIN — they tap it at the start of their shift and all sales are attributed to them until they tap out.",
+        heading: "Adding a new staff member",
+        body: "From the **Staff** tab in your POS dashboard, tap **Add Staff**. Enter the person's name, a phone number or email, their role, and a PIN (4–6 digits) — they'll use this PIN at pos.askbiz.co to log in. There's no invite email to wait for; the account is ready as soon as you save it.",
       },
       {
         heading: "Roles and permissions",
-        body: "AskBiz POS has three staff roles:\n\n- **Cashier** — can process sales, apply discounts up to a configured limit, and view their own shift stats\n- **Supervisor** — everything a Cashier can do, plus process refunds, void transactions, and view daily store stats\n- **Manager** — everything a Supervisor can do, plus add or remove products, adjust inventory, and export data\n\nOnly the account owner (you) can invite or remove staff, change roles, or access the full AskBiz analytics suite.",
+        body: "AskBiz POS has several staff roles, the core three being:\n\n- **Cashier** — can process sales and view their own shift stats\n- **Supervisor** — everything a Cashier can do, plus view daily store stats. (Refunds and amendments are Manager/Owner-only — see Processing Full and Partial Refunds.)\n- **Manager** — everything a Supervisor can do, plus add or remove products, adjust inventory, process refunds, and export data\n\nOnly the account owner and Managers can add or remove staff or change roles.",
       },
       {
         heading: "Removing or deactivating staff",
-        body: "To remove a staff member, go to **Settings → POS → Staff**, find their name, and tap **Deactivate**. Their magic link and PIN stop working immediately, but their historical sales data remains in your reports for audit purposes.\n\nIf someone is on leave or temporarily unavailable, use **Pause** instead of Deactivate — this preserves their account so they can resume without a new invitation when they return.",
+        body: "To remove a staff member, go to the **Staff** tab, find their name, and tap **Deactivate**. Their login stops working immediately, but their historical sales data remains in your reports for audit purposes.",
       },
     ],
     faq: [
-      { q: "How many staff members can I add?", a: "Free and Growth plans support up to 5 POS staff members. The Business plan supports unlimited staff. You can check your current usage in Settings → POS → Staff." },
+      { q: "How many staff members can I add?", a: "You're not limited by plan tier — staff are added as purchased seats (up to 50 per account). Add seats from Billing as your team grows; check your current usage in the Staff tab." },
       { q: "Can staff members see business analytics or revenue data?", a: "No. Staff members only see the POS sale screen and their own shift summary. They cannot access dashboards, AI chat, connected data sources, or billing information." },
     ],
     related: ["pos-getting-started", "pos-staff-performance", "pos-login-issues"],
@@ -11278,33 +11288,33 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-scanning-products",
     title: "Scanning Products with Your Camera",
-    description: "Use your phone or tablet camera to scan barcodes and QR codes at the point of sale. Learn how to set up the scanner, link barcodes to products, and troubleshoot common issues.",
+    description: "AskBiz POS identifies products from a photo using AI visual recognition — not barcode or QR scanning. Learn how to photograph a product, what happens on a match or no-match, and what to do when it doesn't work.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
-    lastUpdated: "2026-05-12",
-    keywords: ["pos barcode scanner", "scan products with phone camera", "barcode scanning pos", "qr code pos system", "camera barcode reader pos", "how to scan barcodes askbiz"],
+    lastUpdated: "2026-08-12",
+    keywords: ["pos camera scan", "scan products with phone camera", "ai product recognition pos", "photo scan pos system", "camera scan askbiz", "how does askbiz pos camera work"],
     content: [
       {
-        heading: "How camera scanning works",
-        body: "AskBiz POS uses your device's built-in camera to read barcodes and QR codes in real time. When you open the sale screen and tap the **Scan** button (or press `S` on a keyboard), the camera activates and looks for a recognisable code.\n\nSupported formats include EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, ITF, and QR codes. Most retail products already carry one of these — you just need to link the code to a product in your inventory.",
+        heading: "How camera scanning actually works",
+        body: "AskBiz POS doesn't read barcodes or QR codes — there's no barcode decoding in the product at all. Instead, when you tap the camera/scan button on the sell screen, you photograph the product itself, and AskBiz sends that photo to an AI vision model, which identifies what the product is and matches it against your existing inventory by name and appearance.\n\nThis is deliberate: it's built for businesses where products often don't carry a scannable barcode at all — fresh produce, market-stall goods, and locally-made items — not just packaged retail stock with a printed code.",
       },
       {
-        heading: "Linking barcodes to products",
-        body: "There are two ways to link a barcode:\n\n- **During product creation** — when adding a product in **/pos/inventory**, tap the barcode field and scan the item. The code is saved automatically.\n- **On first scan** — if you scan a barcode that is not yet linked, AskBiz shows a prompt asking you to select or create the matching product. This is the fastest way to build your catalogue if you have physical stock to hand.\n\nOnce linked, scanning the same barcode instantly adds the product to the current sale basket.",
+        heading: "Scanning a product at sale",
+        body: "On the sell screen, tap the camera button and photograph the product (or a clear, distinguishing part of its packaging). AskBiz identifies it against your inventory in a couple of seconds and adds it to the basket automatically on a confident match.",
+      },
+      {
+        heading: "When there's no match",
+        body: "If AskBiz can't confidently match the photo to anything in your inventory, it doesn't guess — it tells you no match was found so you can add the product manually or try a clearer photo instead. This is a deliberate accuracy choice: a wrong automatic match would be worse than asking you to confirm.",
       },
       {
         heading: "Tips for reliable scanning",
-        body: "- Hold the barcode **10–20 cm** from the camera and keep it steady for a second\n- Make sure the barcode area is **well lit** — the camera flash can be enabled in POS settings if your environment is dim\n- Clean any dust or moisture from the barcode label\n- For curved surfaces (bottles, tubes), angle the product so the barcode is as flat as possible toward the camera\n- If you are using a tablet on a stand, position the stand so products can be held in front of the camera comfortably",
-      },
-      {
-        heading: "Using an external scanner",
-        body: "If you prefer a dedicated barcode scanner, AskBiz POS supports any **HID-compatible** USB or Bluetooth scanner. These scanners type the barcode number into the active field, so they work without any driver installation.\n\nPlug in or pair your scanner, make sure the POS sale screen is in focus, and scan — the product will be added to the basket just as if you had used the camera. External scanners are faster and more reliable for high-volume environments.",
+        body: "- Fill the frame with the product and keep it well lit\n- Photograph a consistent, distinguishing angle for products that look similar (label facing the camera works well)\n- Clean the camera lens if photos are coming out blurry\n- If a product genuinely won't scan reliably, you can always add it to the basket by tapping it in the product grid or searching by name — camera scanning is a shortcut, not the only way in",
       },
     ],
     faq: [
-      { q: "Can I scan QR codes as well as barcodes?", a: "Yes. AskBiz POS recognises both traditional barcodes (EAN, UPC, Code 128, etc.) and QR codes. You can generate custom QR codes for products that do not have a manufacturer barcode." },
-      { q: "What if two products have the same barcode?", a: "Each barcode can only be linked to one product in your inventory. If you scan a barcode already linked to a different product, AskBiz will show the existing match and give you the option to reassign it." },
+      { q: "Does AskBiz POS support barcode or QR code scanning?", a: "No — there's no barcode/QR decoding in AskBiz POS. Products are identified by AI photo recognition instead, which is why it works for goods that don't carry a printed barcode at all." },
+      { q: "Can I use an external barcode scanner instead?", a: "Not currently — since AskBiz POS doesn't have a barcode-linked product model, a dedicated barcode scanner has nothing to plug into. Add products via the camera, the product grid, or search instead." },
     ],
     related: ["pos-getting-started", "pos-making-a-sale", "pos-camera-troubleshooting"],
   },
@@ -11325,11 +11335,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Applying discounts",
-        body: "Tap the **Discount** button at the bottom of the basket to apply a discount. You can choose:\n\n- **Percentage discount** — e.g. 10% off the entire basket\n- **Fixed amount** — e.g. £5 off\n- **Per-item discount** — tap a specific line item, then tap Discount to reduce just that product\n\nCashier-role staff can apply discounts up to the limit set by the account owner (default: 15%). Supervisors and Managers can apply any discount. All discounts are logged and visible in reporting.",
+        body: "Tap the **Discount** button at the bottom of the basket to apply a discount. You can choose:\n\n- **Percentage discount** — e.g. 10% off the entire basket\n- **Fixed amount** — e.g. £5 off\n- **Per-item discount** — tap a specific line item, then tap Discount to reduce just that product\n\nAll staff roles that can process a sale can apply a discount — there's no role-based percentage cap today. All discounts are logged and visible in reporting.",
       },
       {
         heading: "Choosing a payment method and completing the sale",
-        body: "When the basket is ready, tap **Charge**. You will see the total (including VAT if configured) and a list of payment methods:\n\n- **Cash** — enter the amount tendered and AskBiz calculates the change\n- **Card** — record that the customer paid by card (AskBiz POS does not process card payments directly — use your existing card terminal)\n- **Other** — for bank transfers, vouchers, or store credit\n\nTap the payment method, confirm, and the sale is complete. The basket clears and is ready for the next customer.",
+        body: "When the basket is ready, tap **Charge**. You will see the total (including VAT if configured) and a list of payment methods:\n\n- **Cash** — enter the amount tendered and AskBiz calculates the change\n- **Card** — record that the customer paid by card\n- **Other** — for bank transfers, vouchers, or store credit\n\nTap the payment method, confirm, and the sale is complete. The basket clears and is ready for the next customer.",
       },
       {
         heading: "Receipts and post-sale options",
@@ -11337,7 +11347,6 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Can I split a payment across two methods (e.g. part cash, part card)?", a: "Yes. After tapping Charge, select the first payment method and enter the partial amount. AskBiz will show the remaining balance and let you select a second method for the rest." },
       { q: "What happens if I close the browser mid-sale?", a: "AskBiz POS saves the current basket in your browser session. When you reopen /pos, the basket will still be there. If you clear your browser data, the unsaved basket is lost — only completed sales are permanently stored." },
     ],
     related: ["pos-scanning-products", "pos-processing-refunds", "pos-whatsapp-receipts-setup"],
@@ -11365,12 +11374,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "Categories help you organise the product grid on the sale screen and power category-level reporting. Go to **/pos/inventory → Categories** to create, rename, or reorder them.\n\nGood category structures are simple and flat. For a coffee shop: **Hot Drinks, Cold Drinks, Food, Snacks, Merchandise**. For a clothing retailer: **Tops, Bottoms, Accessories, Footwear, Sale Items**. Avoid nesting categories more than one level deep — it slows down the sale screen.",
       },
       {
-        heading: "Importing products from other sources",
-        body: "If you already sell online through Shopify, WooCommerce, or another connected platform, you can import your existing product catalogue into POS. Go to **/pos/inventory → Import → From Connected Source** and select the platform.\n\nAskBiz matches products by SKU first, then by name. Duplicates are flagged for review. You can also import from a CSV file — download the template, fill in your products, and upload. The importer handles up to 5,000 products per batch.",
+        heading: "Bulk-adding products via CSV",
+        body: "You can bulk-add products by pasting a simple CSV list — name, price, quantity, and unit, one product per line — rather than adding them one at a time. There's no connected-store import (Shopify, WooCommerce, etc.) into POS inventory today; POS and your online store catalogues are managed separately.",
       },
     ],
     faq: [
-      { q: "Can I have different prices for in-store and online?", a: "Yes. POS prices are independent of your online store prices. When you import from a connected source, AskBiz copies the current online price but you can change it without affecting your online listing." },
+      { q: "Can I have different prices for in-store and online?", a: "Yes. POS prices are entirely independent of your online store prices — there's no automatic sync between them, so you're free to price them differently." },
       { q: "What happens if I delete a product?", a: "Deleting a product removes it from the sale screen and inventory list, but historical sales data for that product is preserved in your reports. If you might sell it again, use Archive instead of Delete." },
     ],
     related: ["pos-getting-started", "pos-restocking-guide", "pos-scanning-products"],
@@ -11404,7 +11413,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Does restocking a product in POS update my online store stock?", a: "No. POS inventory is managed separately from your online store. If you want unified stock, manage inventory in your ecommerce platform (e.g. Shopify) and import into POS — stock syncs one way from the source." },
-      { q: "Can I set different reorder points for different locations?", a: "Multi-location stock management is available on the Business plan. Each location has its own stock levels and reorder points. On Free and Growth plans, POS tracks a single location." },
+      { q: "Can I set different reorder points for different locations?", a: "Multi-location tracking exists in AskBiz's data model, though the branch-level inventory UI is still limited today — most businesses will find POS tracks stock as a single combined total in practice. See Managing Multiple Branches in AskBiz POS for exactly what's built so far." },
     ],
     related: ["pos-managing-inventory", "pos-viewing-daily-stats", "pos-exporting-data"],
   },
@@ -11456,7 +11465,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Who can process refunds?",
-        body: "Refund permissions depend on staff roles:\n\n- **Cashier** — cannot process refunds. If a customer requests one, the Cashier must call a Supervisor or Manager.\n- **Supervisor** — can process refunds for transactions made in the current day.\n- **Manager** — can process refunds for any transaction, regardless of date.\n- **Account owner** — full refund access with no restrictions.\n\nThis tiered approach protects against unauthorised refunds while keeping the process fast for legitimate returns.",
+        body: "Refund permissions depend on staff roles:\n\n- **Cashier** — cannot process refunds. If a customer requests one, the Cashier must call a Manager or the account owner.\n- **Supervisor** — also cannot process refunds. Only Manager and Owner roles hold refund permission today — there's no same-day carve-out for Supervisors.\n- **Manager** — can process any refund, with no date restriction.\n- **Account owner** — full refund access with no restrictions.\n\nThis keeps refund authority concentrated in your most trusted roles.",
       },
       {
         heading: "Full refund",
@@ -11468,12 +11477,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "How refunds affect reporting",
-        body: "Refunded amounts are subtracted from your gross revenue to calculate **net revenue**, which is the figure AskBiz uses for all dashboards and AI analysis. The Daily Brief will flag unusual refund patterns — for example, if refund rate for a product exceeds 10%, AskBiz will surface this as an anomaly.\n\nRefunds also restore stock levels automatically (if stock tracking is enabled for the product). If you do not want stock restored — for example, if the returned item is damaged — toggle off **Restore Stock** during the refund process.",
+        body: "Refunded amounts are subtracted from your gross revenue to calculate **net revenue**, which is the figure AskBiz uses for all dashboards and AI analysis.\n\nRefunds also restore stock levels automatically (if stock tracking is enabled for the product) — this happens unconditionally as part of processing the refund, with no option to opt out today. If a returned item is actually damaged and shouldn't go back into sellable stock, adjust the quantity down manually afterwards.",
       },
     ],
     faq: [
-      { q: "Can I refund a transaction from a previous day?", a: "Supervisors can only refund same-day transactions. Managers and the account owner can refund transactions from any date. If you need to change this policy, adjust refund permissions in Settings → POS → Permissions." },
-      { q: "Is there a time limit for processing refunds?", a: "AskBiz does not enforce a refund time limit — that is your business policy. However, transactions older than 12 months are archived and require the account owner to process refunds." },
+      { q: "Can I refund a transaction from a previous day?", a: "Yes — Managers and the account owner can refund a transaction from any date; there's no time limit built in. Supervisors and Cashiers don't have refund access at all, regardless of date." },
+      { q: "Is there a time limit for processing refunds?", a: "No — AskBiz doesn't enforce a refund time limit or archive older transactions differently. That's your own business policy to set." },
     ],
     related: ["pos-making-a-sale", "pos-amending-transactions", "pos-viewing-daily-stats"],
   },
@@ -11493,11 +11502,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "How to amend a transaction",
-        body: "Go to **/pos/transactions**, find the sale, and tap **Amend**. You can:\n\n- **Change a product** — remove the wrong item and add the correct one\n- **Adjust quantity** — increase or decrease units sold\n- **Change payment method** — switch from cash to card or vice versa\n- **Add a note** — record why the amendment was made\n\nOnly Managers and the account owner can amend transactions. A full amendment history is saved — the original and all changes are visible in the transaction detail view.",
+        body: "Go to **/pos/transactions**, find the sale, and tap **Amend**. You can:\n\n- **Change a product** — remove the wrong item and add the correct one\n- **Adjust quantity** — increase or decrease units sold\n- **Change payment method** — switch from cash to card or vice versa\n- **Add a note** — record why the amendment was made\n\nOnly Managers and the account owner can amend transactions, and only within **24 hours** of the original sale — after that, the transaction can no longer be amended. A full amendment history is saved — the original and all changes are visible in the transaction detail view.",
       },
       {
-        heading: "Voiding a transaction",
-        body: "If a transaction should not have happened at all — for example, a test sale or a complete duplicate — use **Void** instead of Amend. Voiding removes the transaction from revenue calculations entirely but keeps a record of it in the audit log.\n\nVoided transactions are marked with a strikethrough in the transaction list and excluded from all reports. Stock levels are restored automatically when a transaction is voided. Only Managers and the account owner can void transactions.",
+        heading: "About \"voiding\" a transaction",
+        body: "A **void** in AskBiz isn't a manager-initiated action you choose to take on a completed sale. It happens automatically only when a card or mobile-money payment fails while a transaction is still pending, moving it out of your figures without it ever completing. If a sale genuinely shouldn't have happened once it's already completed, use a refund instead of looking for a manual void option.",
       },
       {
         heading: "Audit trail and accountability",
@@ -11505,7 +11514,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Can a Cashier amend or void a transaction?", a: "No. Only Managers and the account owner have amendment and void permissions. Cashiers should flag mistakes to a Manager for correction." },
+      { q: "Can a Cashier amend a transaction?", a: "No. Only Managers and the account owner can amend a transaction, and only within 24 hours of the sale. Cashiers should flag mistakes to a Manager for correction." },
       { q: "Does amending a transaction change my historical reports?", a: "Yes. Amendments update the original transaction data, so reports reflect the corrected figures. The original values are preserved in the audit trail but not shown in standard reports." },
     ],
     related: ["pos-processing-refunds", "pos-making-a-sale", "pos-staff-performance"],
@@ -11526,7 +11535,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Connecting WhatsApp",
-        body: "Go to **Settings → POS → Receipts → WhatsApp** and tap **Connect**. You will need a WhatsApp Business account (free from Meta). AskBiz uses the WhatsApp Business API to send messages — follow the on-screen prompts to link your account.\n\nOnce connected, you will see a green **WhatsApp Connected** badge on your POS settings page. Test the connection by sending a receipt to your own number from any completed transaction.",
+        body: "There's nothing to connect — WhatsApp receipts work out of the box on every account, sent through AskBiz's own WhatsApp Business platform connection rather than one you set up yourself. You don't need your own WhatsApp Business account, and there's no per-business connect step. Just enter a customer's number on any completed sale and send.",
       },
       {
         heading: "What the receipt actually looks like",
@@ -11543,7 +11552,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Does the customer need to opt in to receive WhatsApp receipts?", a: "Yes. You must have the customer's verbal or written consent before sending a WhatsApp message. AskBiz does not send receipts automatically — your staff must manually enter the number and tap Send each time." },
-      { q: "Is there a cost per WhatsApp message?", a: "AskBiz covers the WhatsApp Business API cost for receipt messages on Growth and Business plans. Free plan users can send up to 50 WhatsApp receipts per month. Additional messages are charged at the standard WhatsApp Business API rate." },
+      { q: "Is there a cost per WhatsApp message?", a: "AskBiz covers the WhatsApp messaging cost for receipts — there's no separate per-message charge to you." },
       { q: "Why did my customer get a short text message instead of the full receipt image?", a: "This is automatic and expected — AskBiz always tries the full itemised receipt image first and only falls back to a short text confirmation (total, business name, date, payment method) if the image can't be delivered. No setup or troubleshooting is needed on your end; sends switch over to the image automatically once it's available for your account." },
     ],
     related: ["pos-making-a-sale", "pos-vat-tax-settings", "pos-getting-started"],
@@ -11622,11 +11631,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "The staff performance report",
-        body: "Go to **/pos/reports → Staff Performance** to see a breakdown of sales by team member. For each staff member, the report shows:\n\n- **Revenue processed** — total sales value\n- **Transactions** — number of sales\n- **Average basket** — their average sale value\n- **Items per transaction** — how many products per sale\n- **Refund rate** — percentage of their sales that were refunded\n\nFilter by date range to compare performance across different periods — daily, weekly, or monthly.",
+        body: "Your POS dashboard shows a **staff leaderboard** ranking your team by revenue and number of sales — a quick, at-a-glance view rather than a dedicated report with a full metric breakdown. For anything more specific — average basket by staff member, refund rate, or a particular date range — ask AskBiz AI Chat directly (see below); it can pull figures the leaderboard doesn't show.",
       },
       {
         heading: "Shift-level analysis",
-        body: "If your staff work in defined shifts, AskBiz can break performance down by shift. Configure your shift patterns in **Settings → POS → Shifts** (e.g. Morning 09:00–14:00, Afternoon 14:00–19:00). The report then shows performance per person per shift.\n\nThis is particularly useful for identifying whether performance differences are driven by the person or the time of day. A staff member who only works quiet Tuesday mornings will naturally have lower revenue than someone on busy Saturday afternoons — shift context makes comparisons fair.",
+        body: "AskBiz POS does have real shift tracking (opening/closing a shift with a cash count — see Opening and Closing Shifts), but it's a cash-accountability tool, not a pre-defined shift-pattern schedule, and today's leaderboard doesn't break performance down per shift. If you want to compare a person's performance to the time of day they usually work, that context is something to bring yourself when reading the numbers.",
       },
       {
         heading: "Using performance data constructively",
@@ -11634,12 +11643,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Privacy and transparency",
-        body: "Performance tracking should be transparent with your team. Let staff know that individual sales data is recorded and how it will be used. In many jurisdictions, you are legally required to inform employees about workplace monitoring.\n\nStaff members with Supervisor or Manager roles can see their own performance stats. Cashiers see only their shift summary. Only the account owner sees the comparative leaderboard across all staff.",
+        body: "Performance tracking should be transparent with your team. Let staff know that individual sales data is recorded and how it will be used. In many jurisdictions, you are legally required to inform employees about workplace monitoring.\n\nStaff members see only their own shift summary — not each other's figures. Owners and Managers can see the comparative leaderboard across the whole team.",
       },
     ],
     faq: [
-      { q: "Can I turn off staff performance tracking?", a: "Yes. Go to Settings → POS → Staff → Performance Tracking and toggle it off. Sales will still be recorded but not attributed to individual staff members. You can re-enable it at any time." },
-      { q: "Can staff members see each other's performance?", a: "No. Only the account owner sees the full leaderboard. Staff members see only their own stats. If you want to share a team leaderboard, you can export and share it manually." },
+      { q: "Can I turn off staff performance tracking?", a: "No — every sale is automatically tagged to the staff member who processed it, and there's no setting to turn this off. It's what makes the accountability and leaderboard features possible in the first place." },
+      { q: "Can staff members see each other's performance?", a: "No. Only Owners and Managers see the full leaderboard. Staff members see only their own stats. If you want to share a team leaderboard, you can export and share it manually." },
     ],
     related: ["pos-adding-staff", "pos-viewing-daily-stats", "pos-exporting-data"],
   },
@@ -11655,11 +11664,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "What you can export",
-        body: "AskBiz POS lets you export the following data sets:\n\n- **Transactions** — every sale, refund, void, and amendment with full line-item detail\n- **Daily summaries** — one row per day with total revenue, transactions, average basket, and VAT\n- **Inventory** — current product catalogue with stock levels, prices, and categories\n- **Staff performance** — per-staff revenue, transactions, and metrics for a date range\n- **VAT report** — VAT breakdown by rate for your accountant\n\nAll exports are available in **CSV** (for spreadsheets) and **PDF** (for printing or emailing).",
+        body: "AskBiz POS lets you export your **transaction history** — every sale, refund, and amendment with full line-item detail — plus a dedicated **VAT report** for your accountant. Both export as **CSV** from your POS dashboard.",
       },
       {
         heading: "How to export",
-        body: "Go to **/pos/reports** and select the report you want. Set the date range using the date picker, then tap the **Export** button in the top-right corner. Choose CSV or PDF and the file will download to your device.\n\nFor scheduled exports, go to **Settings → POS → Scheduled Exports**. You can set up a weekly or monthly email that delivers a CSV or PDF to your inbox (or your accountant's inbox) automatically. This is useful for businesses that need to send regular takings reports.",
+        body: "From your POS dashboard, set the date range you want, then tap **Export** (or **Export VAT** for the VAT-specific report). The CSV downloads straight to your device — there's no PDF option today even where it might be shown, and no scheduled/automatic email delivery, so treat exporting as something you do on demand rather than something you set and forget.",
       },
       {
         heading: "Importing exported data into other tools",
@@ -11668,68 +11677,64 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "How far back can I export data?", a: "You can export all POS data from the date you first enabled the POS module. There is no time limit on historical exports. Very large exports (over 100,000 transactions) may take a few minutes to generate." },
-      { q: "Can I schedule automatic exports?", a: "Yes. Go to Settings → POS → Scheduled Exports and configure the frequency (daily, weekly, monthly), format (CSV or PDF), and recipient email address. Scheduled exports are available on all plans." },
+      { q: "Can I schedule automatic exports?", a: "Not yet — exports are manual, on-demand downloads today. If you need a regular report, you'll need to export and send it yourself for now." },
     ],
     related: ["pos-viewing-daily-stats", "pos-vat-tax-settings", "pos-staff-performance"],
   },
   {
     slug: "pos-camera-troubleshooting",
     title: "Troubleshooting: Camera Not Working",
-    description: "Fix common camera issues in AskBiz POS — permission denied, black screen, slow scanning, or camera not detected. Step-by-step troubleshooting for all devices.",
+    description: "Fix common camera issues when photographing products in AskBiz POS — permission denied, the photo picker not opening, or a photo that won't upload.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
-    readTime: 4,
-    lastUpdated: "2026-05-12",
-    keywords: ["pos camera not working", "barcode scanner not detecting", "camera permission denied pos", "pos black screen camera", "fix pos camera issue", "pos camera troubleshooting guide"],
+    readTime: 3,
+    lastUpdated: "2026-08-12",
+    keywords: ["pos camera not working", "camera permission denied pos", "product scan not working pos", "fix pos camera issue", "pos camera troubleshooting guide"],
     content: [
       {
+        heading: "How the camera really works here",
+        body: "AskBiz POS doesn't run a live in-browser camera preview — tapping the scan/camera button hands off to your device's own camera app to take a single photo, the same way attaching a photo to a message would. That photo is then uploaded and identified by AI (see Scanning Products with Your Camera). This matters for troubleshooting: there's no live video feed to go black or freeze, no flash toggle inside AskBiz, and no front/rear camera switch inside the app — all of that is your phone's normal camera app, outside AskBiz entirely.",
+      },
+      {
         heading: "Camera permission denied",
-        body: "The most common issue is that your browser has not been given permission to access the camera. When you first tap **Scan** in AskBiz POS, your browser should show a permission popup asking to allow camera access.\n\nIf you dismissed this popup or clicked **Block**, you need to reset the permission:\n\n- **Chrome (Android/Desktop)** — tap the padlock icon in the address bar → Site settings → Camera → Allow\n- **Safari (iPhone/iPad)** — go to Settings → Safari → Camera → set to Allow\n- **Firefox** — tap the padlock icon → Permissions → Camera → Allow\n\nAfter changing the permission, refresh the page and tap Scan again.",
+        body: "If tapping the camera button does nothing or shows an error instead of opening your camera app, your browser may not have camera/file access permission:\n\n- **Chrome (Android/Desktop)** — tap the padlock icon in the address bar → Site settings → Camera → Allow\n- **Safari (iPhone/iPad)** — go to Settings → Safari → Camera → set to Allow\n- **Firefox** — tap the padlock icon → Permissions → Camera → Allow\n\nAfter changing the permission, refresh the page and try again.",
       },
       {
-        heading: "Black screen or frozen image",
-        body: "If the camera opens but shows a black screen or a frozen image:\n\n1. Check that no other app is using the camera (video call, another browser tab, mirror app)\n2. Close and reopen the browser tab — this resets the camera session\n3. Restart the browser entirely if the issue persists\n4. On mobile, try switching between the front and rear cameras using the camera toggle in the scan view\n\nIf you are on a laptop with a privacy shutter, make sure it is open. Some laptops also have a keyboard shortcut (often `F8` or `Fn+F8`) that toggles the camera on and off.",
+        heading: "Photo taken but nothing happens, or it says no match",
+        body: "If the photo uploads but AskBiz doesn't recognise the product, that's expected behaviour, not a bug — AskBiz deliberately won't guess on an unclear match (see Scanning Products with Your Camera). Retake the photo with better lighting and the product filling more of the frame, or add the product manually instead.\n\nIf the upload itself seems stuck or fails outright, check your connection — recognition runs server-side and needs a live connection to work.",
       },
       {
-        heading: "Slow or unreliable barcode detection",
-        body: "If the camera opens and shows a live image but fails to recognise barcodes:\n\n- **Improve lighting** — barcode scanning struggles in dim environments. Turn on overhead lights or enable the camera flash in POS scan settings\n- **Hold steady** — keep the barcode still in the centre of the frame for at least one second\n- **Clean the lens** — fingerprints and smudges reduce sharpness, especially on phones\n- **Check the barcode** — damaged, wrinkled, or very small barcodes may not scan. Try typing the barcode number manually as a fallback\n- **Reduce distance** — hold the barcode 10–20 cm from the camera, not further",
-      },
-      {
-        heading: "Camera not detected at all",
-        body: "If AskBiz says **No camera detected**, your device either does not have a camera or the browser cannot find it.\n\n- **Desktop without a webcam** — use an external USB webcam or switch to an external barcode scanner instead\n- **Browser does not support camera access** — ensure you are using a modern browser (Chrome, Safari, Firefox, Edge). Older browsers or in-app browsers (e.g. opening AskBiz from within Facebook) may not support camera access\n- **Device restrictions** — some corporate or school-managed devices have camera access disabled at the operating system level. Check with your IT administrator\n\nAs a workaround, you can always type barcode numbers manually or use the product search to add items to the basket.",
+        heading: "No camera available",
+        body: "If your device has no camera (an older laptop, for example) or your browser blocks camera access entirely, you can still add every product by tapping it in the product grid or searching by name — the camera is a shortcut, never the only way to add an item to a sale.",
       },
     ],
     faq: [
-      { q: "Does AskBiz POS work with the front-facing (selfie) camera?", a: "Yes, but the rear camera is recommended for barcode scanning because it has autofocus and a higher resolution on most devices. You can switch between cameras using the toggle in the scan view." },
-      { q: "Can I use AskBiz POS without a camera at all?", a: "Absolutely. You can add products by tapping the product grid, using the search bar, or typing barcode numbers manually. An external USB/Bluetooth barcode scanner also works without camera access." },
+      { q: "Why is there no live camera preview like other POS apps?", a: "AskBiz deliberately uses your device's native camera app for a single photo instead of a live in-browser preview, which is more reliable across devices and avoids the black-screen/frozen-preview issues live browser camera previews are prone to." },
+      { q: "Can I use AskBiz POS without a camera at all?", a: "Yes. Add products by tapping the product grid or searching by name — no camera required." },
     ],
     related: ["pos-scanning-products", "pos-getting-started", "pos-login-issues"],
   },
   {
     slug: "pos-login-issues",
-    title: "Troubleshooting: Login and Magic Link Issues",
-    description: "Fix common POS login problems — magic link not arriving, link expired, staff PIN not working, session timeout issues, and how to reset a forgotten account PIN yourself.",
+    title: "Troubleshooting: Login Issues",
+    description: "Fix common POS login problems — phone or email not recognised, staff PIN not working, session timeout, and how to reset a forgotten account PIN yourself.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
-    lastUpdated: "2026-07-24",
-    keywords: ["pos login not working", "magic link not received pos", "pos staff pin not working", "pos session expired", "pos login troubleshooting", "askbiz pos login help", "forgot pin", "reset pin whatsapp", "forgot account pin", "phone pin reset"],
+    lastUpdated: "2026-08-12",
+    keywords: ["pos login not working", "pos staff pin not working", "pos session expired", "pos login troubleshooting", "askbiz pos login help", "forgot pin", "reset pin whatsapp", "forgot account pin", "phone pin reset"],
     content: [
       {
-        heading: "Magic link not arriving",
-        body: "AskBiz POS staff members log in via magic link emails. If the email is not arriving:\n\n1. **Check spam/junk** — magic links from AskBiz sometimes land in spam folders, especially on first use\n2. **Verify the email address** — ask the account owner to check the address in Settings → POS → Staff. A single typo will send the link to the wrong inbox\n3. **Wait 2 minutes** — email delivery can take up to 2 minutes during busy periods\n4. **Resend** — the staff member can tap **Resend Link** on the login page. Only the most recent link is valid\n5. **Check email filters** — corporate email systems sometimes block automated emails. Whitelist `noreply@askbiz.co` to prevent this",
-      },
-      {
-        heading: "Magic link expired",
-        body: "Magic links expire after **15 minutes** for security reasons. If a staff member clicks an expired link, they will see an error message with a **Request New Link** button.\n\nCommon causes of expiry:\n- The email sat in the inbox too long before being opened\n- The link was opened on a different device from the one that requested it (magic links are device-bound)\n- The account owner sent a new invitation, which invalidated the previous link\n\nThe fix is always the same: go to the POS login page and request a fresh link.",
+        heading: "How staff login actually works",
+        body: "Staff at pos.askbiz.co log in with their **phone number or email, then a PIN** — there's no magic link, OTP text, or emailed sign-in link involved at any point. If a staff member is expecting an email or text with a login link, that's not how it works here; they should just go to pos.askbiz.co and enter their phone/email and PIN directly.",
       },
       {
         heading: "Staff PIN not working",
-        body: "If a staff member's 4-digit PIN is rejected:\n\n- **Check caps lock is off** — PINs are numeric, but some on-screen keyboards behave unexpectedly with caps lock\n- **Verify the PIN** — the account owner can view and reset PINs in Settings → POS → Staff → [name] → Reset PIN\n- **Account deactivated** — if the staff member has been paused or deactivated, their PIN stops working. Check their status in staff settings\n- **Wrong location** — if you have multiple POS locations, PINs are location-specific. Make sure the staff member is logging into the correct location",
+        body: "If a staff member's PIN (4–6 digits) is rejected:\n\n- **Verify the PIN** — the account owner can reset it from the Staff tab: find the staff member and tap Reset PIN\n- **Account deactivated** — if the staff member has been paused or deactivated, their login stops working. Check their status in staff settings\n- **Wrong phone/email** — confirm the staff member is entering the exact phone number or email their account was created with",
       },
       {
         heading: "Session timeout and re-authentication",
-        body: "POS sessions stay active for **12 hours** by default. After that, the staff member is logged out and must re-authenticate with their magic link or PIN. This timeout protects against unattended devices being used by unauthorised people.\n\nYou can adjust the timeout period in **Settings → POS → Security → Session Timeout**. For high-security environments, reduce it to 1–4 hours. For convenience in trusted environments (e.g. your own shop with no public access), you can extend it to 24 hours.",
+        body: "POS sessions are designed to expire after a period of inactivity so an unattended device isn't left logged in. There's no settings screen to adjust this — the exact timeout is a fixed value baked into the app, not something you configure per business.",
       },
       {
         heading: "Forgotten your own PIN?",
@@ -11737,7 +11742,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Can I use a password instead of a magic link?", a: "No. AskBiz POS uses magic links and PINs only — there are no passwords to remember, forget, or compromise. This is a deliberate security choice that reduces the risk of credential theft." },
+      { q: "Can I use a password instead of a PIN?", a: "No. AskBiz POS uses phone/email plus a PIN only — there are no passwords to remember, forget, or compromise. This is a deliberate security choice that reduces the risk of credential theft." },
       { q: "What if I (the account owner) cannot log in?", a: "Account owner login issues are not POS-specific — sign in at /signin, not a separate POS login page. If you sign in with email, use the password reset or magic-link options there. If you sign in with phone + PIN and have forgotten your PIN, tap Forgot PIN? on the Phone tab of /signin to reset it yourself over WhatsApp (see 'Forgotten your own PIN?' above) — no need to contact support for this." },
       { q: "Is resetting my own PIN the same as resetting a staff member's PIN?", a: "No. Resetting your own PIN is self-service, via /forgot-pin, verified by a WhatsApp code sent to your own phone. Resetting a staff member's PIN is something only you (the account owner) can do, from Settings → POS → Staff → [name] → Reset PIN — staff cannot reset their own PIN." },
     ],
@@ -11761,7 +11766,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "What transaction records you must keep",
-        body: "HMRC requires you to retain the following for every sale:\n\n- **Date and time** of the transaction\n- **Amount charged** (including VAT breakdown)\n- **VAT rate applied** (standard 20%, reduced 5%, or zero-rated)\n- **Description of goods or services** sold\n- **Payment method** (cash, card, contactless)\n\nAskBiz POS captures all of these automatically. You must retain these records for **at least 6 years** — AskBiz stores your full transaction history for the lifetime of your account. If you cancel your account, export your data first using **POS → Export → Full History**.",
+        body: "HMRC requires you to retain the following for every sale:\n\n- **Date and time** of the transaction\n- **Amount charged** (including VAT breakdown)\n- **VAT rate applied** (standard 20%, reduced 5%, or zero-rated)\n- **Description of goods or services** sold\n- **Payment method** (cash, card, contactless)\n\nAskBiz POS captures all of these automatically. You must retain these records for **at least 6 years** — AskBiz stores your full transaction history for the lifetime of your account. If you cancel your account, export your data first using the Export button on your POS dashboard, setting the date range to cover your full history.",
       },
       {
         heading: "VAT schemes and POS configuration",
@@ -11776,7 +11781,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Does AskBiz POS satisfy Making Tax Digital requirements?", a: "Yes. AskBiz POS keeps digital records of all transactions with VAT breakdowns and supports digital export to MTD-compatible accounting software. The data chain is fully digital with no manual re-keying required." },
       { q: "How long does HMRC require me to keep POS records?", a: "HMRC requires you to keep VAT records for at least 6 years. AskBiz retains your full transaction history for the lifetime of your account." },
     ],
-    related: ["pos-vat-tax-settings", "pos-exporting-data", "pos-audit-trail"],
+    related: ["pos-vat-tax-settings", "pos-exporting-data", "pos-audit-trail-guide"],
   },
   {
     slug: "pos-gdpr-customer-data",
@@ -11798,11 +11803,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Data retention and deletion",
-        body: "You must not keep personal data longer than necessary. Transaction records must be retained for 6 years for HMRC compliance, but customer phone numbers collected for receipts should be reviewed regularly.\n\nAskBiz POS retains transaction data for as long as your account is active (and for HMRC compliance after closure). WhatsApp phone numbers are stored alongside the transaction they relate to. If a customer requests deletion of their phone number under their **right to erasure**, you can remove it from the transaction record in **POS → Transactions → [transaction] → Customer Details → Remove Phone Number**. The transaction itself is retained for tax purposes, but the personal identifier is stripped.",
+        body: "You must not keep personal data longer than necessary. Transaction records must be retained for 6 years for HMRC compliance, but customer phone numbers collected for receipts should be reviewed regularly.\n\nAskBiz POS retains transaction data for as long as your account is active (and for HMRC compliance after closure). WhatsApp phone numbers are stored alongside the transaction they relate to. If a customer requests deletion of their phone number under their **right to erasure**, contact support to have it removed — there isn't a self-service button on the transaction record for this today. The transaction itself is retained for tax purposes, but the personal identifier can be stripped on request.",
       },
       {
         heading: "Staff responsibilities and training",
-        body: "Your POS staff handle customer data every day, so they need to understand the basics:\n\n- **Never share customer phone numbers** outside the POS system\n- **Never photograph or copy** transaction screens containing customer details\n- **Report any data breach** (e.g., a device left unlocked in a public area) to the account owner immediately\n- **Do not look up customer transaction history** without a legitimate business reason\n\nAskBiz POS role-based access helps enforce this — cashiers can only see the current transaction, not historical customer data. Only account owners and inventory managers with elevated permissions can access full transaction histories.",
+        body: "Your POS staff handle customer data every day, so they need to understand the basics:\n\n- **Never share customer phone numbers** outside the POS system\n- **Never photograph or copy** transaction screens containing customer details\n- **Report any data breach** (e.g., a device left unlocked in a public area) to the account owner immediately\n- **Do not look up customer transaction history** without a legitimate business reason\n\nAskBiz POS role-based access helps enforce this, though it's worth knowing precisely: Cashiers can see your transaction history (not just the transaction they're currently processing), while full cross-staff visibility is reserved for Owners and branch Managers specifically.",
       },
     ],
     faq: [
@@ -11827,7 +11832,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "VAT receipt obligations",
-        body: "If you are VAT-registered, different rules apply depending on the transaction value:\n\n- **Under £250** — a simplified VAT receipt is sufficient. It must show your name, VAT number, date, description of goods, total including VAT, and the VAT rate applied\n- **£250 and over** — a full VAT invoice is required. This must additionally include the customer's name and address, a unique invoice number, your address, the net amount, VAT amount, and gross amount separately\n\nAskBiz POS generates simplified VAT receipts for all transactions by default. For sales of £250 or more where the customer requests a full VAT invoice, use **Transaction → Generate VAT Invoice** to create one with the required additional fields.",
+        body: "If you are VAT-registered, different rules apply depending on the transaction value:\n\n- **Under £250** — a simplified VAT receipt is sufficient. It must show your name, VAT number, date, description of goods, total including VAT, and the VAT rate applied\n- **£250 and over** — a full VAT invoice is required. This must additionally include the customer's name and address, a unique invoice number, your address, the net amount, VAT amount, and gross amount separately\n\nAskBiz POS generates simplified VAT receipts for all transactions by default. There isn't a dedicated full-VAT-invoice generator today for the rarer £250-and-over case — if a customer specifically needs one, you'll need to put the additional required details (their name and address, a unique invoice number, and the net/VAT/gross breakdown) together yourself.",
       },
       {
         heading: "Digital receipts and legal validity",
@@ -11844,30 +11849,30 @@ export const HELP_ARTICLES: HelpArticle[] = [
   // ── POS + BI INTEGRATION & ADVANCED ───────────────────────────────────────
   {
     slug: "pos-dashboards-and-reports",
-    title: "Viewing POS Data in Dashboards and Reports",
-    description: "Your POS transactions feed directly into AskBiz dashboards. Learn how to set up a retail dashboard, read POS widgets, and schedule reports for your team.",
+    title: "Viewing POS Data in Your Dashboard and Reports",
+    description: "Your POS transactions feed directly into your AskBiz dashboard in real time — no export step, no separate dashboard builder. Here's where to actually see the numbers.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
     popular: true,
-    lastUpdated: "2026-05-12",
-    keywords: ["pos dashboard", "pos reports", "pos analytics askbiz", "retail dashboard setup", "pos data in askbiz", "point of sale reporting"],
+    lastUpdated: "2026-08-12",
+    keywords: ["pos dashboard", "pos reports", "pos analytics askbiz", "pos data in askbiz", "point of sale reporting"],
     content: [
       {
         heading: "How POS data reaches your dashboard",
-        body: "Every transaction processed through AskBiz POS is written to your central data store in real time. Dashboard widgets pull from the same store, so your numbers update within seconds of a sale completing. There is no export step, no CSV upload, and no overnight batch — the data flows automatically.\n\nIf you also sell online (Shopify, Amazon, Etsy, etc.), your POS data appears alongside online data in a unified view. This means you can see total revenue across all channels, compare in-store vs online performance, and spot products that sell differently depending on channel.",
+        body: "Every transaction processed through AskBiz POS is written to your central data store in real time. Your **Overview** tab pulls from the same store, so your numbers update within seconds of a sale completing. There is no export step, no CSV upload, and no overnight batch — the data flows automatically.\n\nIf you also sell online (Shopify, Amazon, Etsy, etc.), your POS data appears alongside online data in a unified view. This means you can see total revenue across all channels and compare in-store vs. online performance.",
       },
       {
-        heading: "Setting up a POS dashboard",
-        body: "Go to **Dashboards → Create Dashboard** and choose the **Retail POS** template, or start blank and add widgets manually. Recommended widgets:\n\n- **Revenue Today** — running total with day-over-day comparison\n- **Units Sold** — volume independent of value\n- **Average Basket Size** — mean transaction value\n- **Top Products** — ranked by revenue or units\n- **Sales by Staff** — cashier leaderboard\n- **Low Stock Alerts** — products approaching reorder point\n\nArrange them in the order you check each morning. Save the dashboard as your default home view.",
+        heading: "Where to actually look",
+        body: "There's no separate \"build a dashboard\" step — your POS dashboard's **Overview** tab already shows revenue, transaction count, average basket, and top products as soon as you're selling. See **Viewing Daily Sales and Revenue Stats** for the full breakdown of what's there. If you want a metric that isn't shown directly, ask AskBiz AI Chat instead of hunting for a custom-dashboard builder — it can compute most things on the spot.",
       },
       {
-        heading: "Scheduling POS reports",
-        body: "Go to **Dashboards → [your POS dashboard] → Schedule** to set up automatic email delivery. Choose daily, weekly, or monthly. Weekly reports sent on Monday mornings are popular — they give you a full view of the previous week's retail performance before the new week starts.\n\nReports include all widgets on the dashboard as a PDF snapshot. You can share them with staff, store managers, or your accountant without giving them AskBiz login access.",
+        heading: "Sharing numbers with your team or accountant",
+        body: "There's no built-in \"share a view-only dashboard\" link today. To get numbers to someone without giving them full AskBiz access, export the relevant data (see Exporting POS Transaction Data) and send it directly, or share a screenshot.",
       },
     ],
     faq: [
-      { q: "Can my store manager see the POS dashboard without full admin access?", a: "Yes. Share the dashboard via Dashboards → Share and set the permission to 'View only'. The manager sees the data but cannot modify the dashboard or access other AskBiz features." },
+      { q: "Do I need to set anything up to see my POS data in reports?", a: "No — it's automatic from your first sale. There's no dashboard-builder step to configure." },
       { q: "How far back does POS dashboard data go?", a: "All the way back to your first POS transaction. There is no data retention limit while your account is active." },
     ],
     related: ["pos-viewing-daily-stats", "pos-staff-performance", "pos-exporting-data"],
@@ -11896,7 +11901,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Does the AI only answer questions about today's data?", a: "No. It has access to your full POS transaction history — ask about any date range since you started using the POS." },
+      { q: "Does the AI only answer questions about today's data?", a: "It recognises a set of common phrases well — yesterday, last 7 days, last 30 days, this week, this month, last month — and pulls real figures for those. For anything it doesn't recognise (an exact date range, or 'since I started'), be specific in how you phrase it; naming one of the recognised periods gets the most reliable answer." },
       { q: "Can I ask about individual transactions?", a: "Yes. Try: 'Show me all refunds over £50 this month' or 'Find the transaction for order #1234.'" },
     ],
     related: ["pos-dashboards-and-reports", "pos-viewing-daily-stats", "pos-getting-started"],
@@ -11904,50 +11909,33 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-multi-location",
     title: "Managing Multiple Branches in AskBiz POS",
-    description: "Set up and manage multiple store locations with separate inventory, branch-locked staff, stock transfers, and consolidated owner reporting.",
+    description: "What multi-branch support in AskBiz POS covers today — staff can be assigned to a branch — and what's not yet built: a branch management screen or a dashboard branch filter.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
-    readTime: 5,
+    readTime: 4,
     popular: true,
-    lastUpdated: "2026-05-14",
-    keywords: ["pos multi location", "multiple shops pos", "pos two stores", "multi site point of sale", "askbiz pos locations", "pos branches", "multi branch pos"],
+    lastUpdated: "2026-08-12",
+    keywords: ["pos multi location", "multiple shops pos", "pos two stores", "askbiz pos locations", "pos branches", "multi branch pos"],
     content: [
       {
-        heading: "How multi-branch POS works",
-        body: "AskBiz POS supports multiple store locations under a single account. Each branch has its own inventory, its own staff, and its own transaction history. As the owner, you see everything across all branches from one dashboard.\n\nEvery branch is a **location** record in your account. When you create a branch, it gets a unique ID that tags all inventory, transactions, and staff assigned to it. Your existing data is automatically assigned to a default 'Main' branch.",
+        heading: "What's real today",
+        body: "AskBiz's data model supports multiple locations — a location ID can tag inventory, transactions, and staff — and the **Add/Edit Staff** screen genuinely lets you assign a staff member to a branch (see Assigning Staff to Specific Branches). Transactions and inventory are correctly filtered server-side by whichever branch a staff member is assigned to.",
       },
       {
-        heading: "Adding a new branch",
-        body: "Go to your **POS dashboard** and click the **Branches** tab. Click **+ Add branch** and enter a name — for example, 'Downtown', 'Mall Branch', or 'Market Stall'. The branch is created instantly and appears in the list.\n\nYou can rename a branch at any time by clicking **Edit** next to it. Each branch shows how many staff members and products are assigned to it.",
+        heading: "What isn't self-serve yet",
+        body: "There's currently no dashboard screen to create, rename, or manage branches yourself, and no branch picker or filter anywhere on the Overview, Inventory, or other dashboard tabs — so as the owner, you can't currently switch your own view to a single branch or see a side-by-side branch comparison in the dashboard itself. If you need multiple branches set up, contact support rather than looking for a self-serve \"Add Branch\" button — it doesn't exist in the product today.",
       },
       {
-        heading: "The branch picker",
-        body: "Once you have two or more branches, a **Branch** dropdown appears at the top of your POS dashboard. Use it to filter everything — overview stats, transactions, and inventory — by a specific branch, or select **All Branches** to see consolidated data.\n\nThis picker affects what you see in the Overview, Inventory, and Staff tabs. The Audit tab always shows all branches.",
-      },
-      {
-        heading: "Assigning staff to branches",
-        body: "When you add a new staff member in the **Staff** tab, you will see a **branch selector dropdown** below the role selector. Choose which branch this person works at.\n\nStaff assigned to a branch are **locked to that location** — they can only see inventory and process sales for their branch. This prevents a cashier at Branch A from accidentally selling Branch B's stock.\n\nTo reassign a staff member, click **Edit** on their profile and change the branch. Staff with no branch assigned can work at any location.",
-      },
-      {
-        heading: "Separate inventory per branch",
-        body: "Each branch maintains **independent stock levels**. The same product can have 50 units at your main store and 10 units at your market stall. Low-stock alerts trigger per branch, so you restock where it is needed.\n\nWhen viewing inventory with **All Branches** selected, each product shows a branch label so you can see which location it belongs to. When a specific branch is selected, you only see that branch's stock.\n\nNew products added by a staff member are automatically assigned to their branch. Products added by the owner are assigned to whichever branch is currently selected in the branch picker.",
-      },
-      {
-        heading: "Stock transfers between branches",
-        body: "To move stock between branches, use the stock transfer system. A transfer deducts stock from the source branch immediately and marks it as **in transit**. The receiving branch then confirms receipt, which adds the stock to their inventory.\n\nIf a transfer is cancelled, the stock is returned to the source branch automatically. You can view all transfers — pending, in transit, received, and cancelled — from the API.",
-      },
-      {
-        heading: "AI insights across all branches",
-        body: "The **Ask** page automatically aggregates data from all your branches. When you ask 'how was yesterday?', the AI shows consolidated revenue, then breaks it down per branch.\n\n**Business Pulse** also reads from all branches — stockout warnings, margin alerts, and sales anomalies are detected per branch and reported together. You get one unified view of your entire business.",
+        heading: "Stock transfers",
+        body: "A stock-transfer system exists on the backend (deduct from source, mark in transit, confirm receipt at the destination) — see Transferring Stock Between Branches for exactly how the mechanics work — but like branch management, there's no dashboard screen to trigger one yourself yet.",
       },
     ],
     faq: [
-      { q: "Is there an extra charge for additional branches?", a: "Check your plan at Settings > Billing. The number of POS locations included depends on your plan tier." },
-      { q: "Can I see which branch a transaction came from?", a: "Yes. Every transaction is tagged with its branch. You can filter by branch in the dashboard, Ask AI chat, and CSV exports." },
-      { q: "What happens if I deactivate a branch?", a: "The branch and its data remain in your account for reporting purposes, but no new transactions or inventory changes can be made against it." },
-      { q: "Can a staff member work at multiple branches?", a: "Currently, each staff member is assigned to one branch. To move them, edit their profile and change the branch. Staff with no branch assigned can work anywhere." },
+      { q: "Can I ask the AI chat about a specific branch?", a: "Yes — the AI genuinely does break down revenue and inventory per branch when you ask a branch-specific question, even though there's no dedicated branch-filter UI on the dashboard itself yet." },
+      { q: "Can a staff member work at multiple branches?", a: "Each staff member is assigned to one branch at a time (or none, meaning they can work anywhere). To move them, edit their profile and change the branch." },
+      { q: "Does Business Pulse detect issues per branch — stockouts, margin drops, and so on?", a: "Not yet — anomaly and health-score detection today isn't branch-aware. It's worth knowing if you're relying on it to catch a problem specific to one location." },
     ],
-    related: ["pos-adding-staff", "pos-managing-inventory", "pos-stock-transfers", "pos-branch-staff-assignment", "pos-ai-chat-guide"],
+    related: ["pos-adding-staff", "pos-branch-staff-assignment", "pos-stock-transfers", "pos-multi-branch-ai"],
   },
   {
     slug: "pos-stock-transfers",
@@ -11964,8 +11952,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "Stock transfers are useful when one branch is running low on a product while another has surplus. Instead of placing a new order with your supplier, you move existing stock between your own locations.\n\nCommon scenarios: a product is selling faster than expected at one branch, you are closing a pop-up and need to return stock to your main store, or you are opening a new branch and need to seed it with products from your existing inventory.",
       },
       {
-        heading: "Initiating a transfer",
-        body: "To start a transfer, you need to specify:\n\n- **Source branch** — where the stock is coming from\n- **Destination branch** — where the stock is going\n- **Product** — which item to transfer\n- **Quantity** — how many units to move\n\nWhen you initiate a transfer, the specified quantity is **deducted from the source branch immediately** to prevent overselling. The transfer is marked as **in transit**.",
+        heading: "How a transfer works (backend mechanics)",
+        body: "A transfer is defined by:\n\n- **Source branch** — where the stock is coming from\n- **Destination branch** — where the stock is going\n- **Product** — which item to transfer\n- **Quantity** — how many units to move\n\nThe specified quantity is **deducted from the source branch immediately** to prevent overselling, and the transfer is created directly as **in transit** — there's no separate \"pending, not yet dispatched\" stage. Worth knowing: this system exists on the backend, but there's no dashboard screen to trigger a transfer yourself yet — see Managing Multiple Branches in AskBiz POS for the current state of branch tooling generally.",
       },
       {
         heading: "Receiving a transfer",
@@ -11977,7 +11965,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Transfer statuses",
-        body: "Each transfer has one of four statuses:\n\n- **Pending** — created but not yet dispatched\n- **In transit** — stock deducted from source, awaiting receipt at destination\n- **Received** — stock successfully added to destination inventory\n- **Cancelled** — transfer voided, stock returned to source",
+        body: "Each transfer has one of three statuses:\n\n- **In transit** — the status every transfer starts at, the moment it's created; stock is already deducted from the source\n- **Received** — stock successfully added to destination inventory\n- **Cancelled** — transfer voided, stock returned to source",
       },
     ],
     faq: [
@@ -12010,7 +11998,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "How branch locking works technically",
-        body: "When a staff member logs into the POS app, the system checks their `location_id` in the database. All API requests they make — viewing inventory, processing sales, restocking products — are automatically filtered to their assigned branch.\n\nAs the owner, you are never locked to a branch. You can view all branches or filter to any specific one using the branch picker on the dashboard.",
+        body: "When a staff member logs into the POS app, the system checks their `location_id` in the database. All API requests they make — viewing inventory, processing sales, restocking products — are automatically filtered to their assigned branch.\n\nAs the owner, you are never locked to a branch — you always see every branch's data combined. There isn't a branch-filter picker on the dashboard yet to narrow your own view to one branch at a time; see Managing Multiple Branches in AskBiz POS for the current state of that tooling.",
       },
     ],
     faq: [
@@ -12022,31 +12010,26 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-branch-filtered-dashboard",
     title: "Viewing POS Data by Branch",
-    description: "Use the branch picker to filter your POS dashboard by location. See revenue, sales, inventory, and staff for a specific branch or across all locations.",
+    description: "There's no branch-filter picker on the dashboard yet — here's what branch-level visibility actually looks like today, and how to get a branch-specific answer via AI chat instead.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 3,
-    lastUpdated: "2026-05-14",
-    keywords: ["branch filter", "location filter", "pos dashboard filter", "per branch reporting", "branch picker", "multi location dashboard"],
+    lastUpdated: "2026-08-12",
+    keywords: ["branch filter", "location filter", "pos dashboard filter", "per branch reporting", "multi location dashboard"],
     content: [
       {
-        heading: "The branch picker",
-        body: "When you have two or more branches, a **Branch** dropdown appears at the top of your POS dashboard, just below the tab bar. It defaults to **All Branches**, which shows consolidated data across every location.\n\nSelect a specific branch to filter the entire dashboard — revenue cards, transaction list, inventory count, and staff metrics all update to show only that branch's data.",
+        heading: "What exists today",
+        body: "Your dashboard's Overview tab shows your combined figures across every branch — there isn't a branch dropdown or filter to narrow it down to one location at a time yet. Inventory and staff records are correctly tagged with a branch behind the scenes (see Managing Multiple Branches in AskBiz POS), the dashboard views just don't currently offer a way to filter by it.",
       },
       {
-        heading: "What gets filtered",
-        body: "The branch filter affects:\n\n- **Overview tab** — revenue, sales count, refunds, average sale, gross profit, margin, and the sales-by-hour chart all reflect the selected branch\n- **Inventory tab** — only products assigned to the selected branch are shown. When viewing All Branches, each product displays a branch label\n- **Staff tab** — shows all staff regardless of branch, but their assigned branch is visible next to their role\n- **Audit tab** — always shows data from all branches for complete oversight",
-      },
-      {
-        heading: "Using the AI with branch data",
-        body: "The **Ask** page aggregates all branches automatically. You can ask branch-specific questions like:\n\n- 'What was revenue at the Downtown branch yesterday?'\n- 'Which branch has the most low-stock items?'\n- 'Compare sales between Main and Nyali this week'\n\nThe AI breaks down data per branch when relevant, giving you a consolidated view with per-location detail.",
+        heading: "Getting a branch-specific answer",
+        body: "The most reliable way to see one branch's numbers today is to ask **AskBiz AI Chat** directly — for example, \"What was revenue at [branch name] yesterday?\" or \"Compare sales between [branch A] and [branch B] this week.\" The AI genuinely does break results down per branch on request, even without a dashboard filter to do it visually.",
       },
     ],
     faq: [
-      { q: "Does the date range filter work with the branch filter?", a: "Yes. Both filters work together — you can view last 7 days of data for a specific branch, or yesterday's data across all branches." },
-      { q: "Can I export data for a single branch?", a: "Yes. Set the branch filter to the location you want, then click Export CSV. The export will contain only the filtered data." },
+      { q: "Can I export data for a single branch?", a: "Ask AI Chat for that branch's figures and export from there, or contact support if you need a structured branch-specific export — there's no self-serve branch filter on the Export button today." },
     ],
-    related: ["pos-multi-location", "pos-dashboards-and-reports", "pos-ai-chat-guide"],
+    related: ["pos-multi-location", "pos-multi-branch-ai", "pos-ai-chat-guide"],
   },
   {
     slug: "pos-multi-branch-ai",
@@ -12068,7 +12051,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Business Pulse and multi-branch alerts",
-        body: "**Business Pulse** detects signals across all your branches independently. If your Downtown branch has a stockout risk but your Main branch is fine, the alert specifies which branch is affected.\n\nSignals detected include:\n\n- **Stockout risk** — per branch, based on sales velocity vs current stock\n- **Out-of-stock items** — flagged per branch\n- **Low margin products** — identified per branch\n- **Sales anomalies** — unusual spikes or drops at specific branches\n\nThe health score combines data from all branches to give you a single business health rating.",
+        body: "Business Pulse's health score and anomaly detection are not yet branch-aware — they look at your business as a whole, not per location. If you specifically need to know whether a stockout or margin problem is isolated to one branch, ask AI Chat directly (see above) rather than relying on an automatic per-branch alert.",
       },
       {
         heading: "Making decisions with cross-branch data",
@@ -12093,7 +12076,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "What requires internet",
-        body: "Some features need a live connection and will not work offline:\n\n- **Card payments** — the card processor requires connectivity (this is a card network limitation, not AskBiz)\n- **Camera scanning for new products** — the image recognition API runs server-side\n- **WhatsApp receipt delivery** — requires an API call\n- **Staff login via magic link** — needs to verify the token with the server\n- **Real-time inventory level checks** — stock levels sync on reconnection\n\nIf you are in the middle of a card transaction when connectivity drops, the payment will fail. Ask the customer to pay cash or wait for reconnection.",
+        body: "Some features need a live connection and will not work offline:\n\n- **Card payments** — the card processor requires connectivity (this is a card network limitation, not AskBiz)\n- **Camera scanning for new products** — the image recognition API runs server-side\n- **WhatsApp receipt delivery** — requires an API call\n- **First-time login** — needs a live connection to verify your phone/email and PIN\n- **Real-time inventory level checks** — stock levels sync on reconnection\n\nIf you are in the middle of a card transaction when connectivity drops, the payment will fail. Ask the customer to pay cash or wait for reconnection.",
       },
       {
         heading: "Recovering after an outage",
@@ -12102,7 +12085,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Will I lose sales data if my internet drops?", a: "No. Transactions are saved locally and sync when connectivity returns. Data is only at risk if the device loses power AND the browser cache is cleared before reconnecting, which is extremely rare." },
-      { q: "How long can I stay offline?", a: "Brief outages (under 30 minutes) are handled seamlessly. Longer outages work but may take a minute to sync the queue. Always restore connectivity as quickly as possible." },
+      { q: "How long can I stay offline?", a: "There's no fixed cutoff — the offline queue keeps accepting cash sales for as long as you're disconnected and syncs everything once you're back online. Restore connectivity as soon as practical so your dashboard reflects the latest numbers." },
     ],
     related: ["pos-getting-started", "pos-camera-troubleshooting", "pos-making-a-sale"],
   },
@@ -12167,7 +12150,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Can I sell items by other units, like litres or metres?", a: "The unit field currently supports 'kg' for weight-based decimal input. For other continuous units (litres, metres), you can set the unit label to whatever describes your product and use the decimal input the same way — the system treats any non-unit item as a decimal quantity input." },
+      { q: "Can I sell items by other units, like litres?", a: "Litre is a real unit option in your inventory settings, but today only 'kg' gets the decimal-quantity input on the sell screen — litre, pack, and box all use the standard whole-number counter instead. If you sell a genuinely continuous product like cooking oil by volume, kg is currently your only option for true decimal entry." },
       { q: "How does a kg sale appear in transaction reports?", a: "The transaction records the item name, the weight entered as the quantity, the per-kg price, and the line total. In reporting, kg sales appear alongside regular unit sales with the weight shown in the quantity column." },
     ],
     related: ["pos-managing-inventory", "pos-restocking-guide", "pos-making-a-sale"],
@@ -14017,297 +14000,309 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-repair-getting-started",
     title: "Getting Started with Repair & Service Jobs",
-    description: "Learn how to enable the repair and service jobs feature in AskBiz POS, configure staff roles, and understand the end-to-end repair workflow.",
+    description: "How AskBiz's repair and service-job workflow actually works: it's a business type you choose at signup, not a settings toggle, and it spans two apps — your staff till and your owner dashboard.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
-    readTime: 4,
+    readTime: 5,
     popular: true,
     content: [
       {
-        heading: "Enabling repair and service jobs",
-        body: "Navigate to POS Settings and toggle on 'Repair & Service Jobs'. Once enabled, a new Repairs tab appears in your POS dashboard. Only account owners and managers can enable this feature. All existing POS functionality continues to work alongside the repair module without interruption.",
+        heading: "How you get repair features",
+        body: "Repair is one of AskBiz's five **POS track** business types — Market stall, Restaurant/Food stand, Shop/Kiosk, Salon/Barbershop, and **Repair Shop** — chosen once during signup. It isn't a feature you toggle on in settings, and there's no separate opt-in step: pick Repair Shop at onboarding and your till is a repair workflow from the start. See the **Complete Onboarding Guide** for the signup flow itself.",
+      },
+      {
+        heading: "Two places your repairs live",
+        body: "Repair jobs are managed from two apps:\n- **pos.askbiz.co** — the day-to-day staff till. Staff log in with their PIN and work through intake, the ticket board, and parts from here.\n- **askbiz.co/pos → Services tab** — your owner dashboard. This has the fuller view: assigning engineers, picking service presets, and reviewing every job across your team.\n\nBoth read and write the same jobs — a job created on the till shows up in your dashboard immediately, and vice versa.",
       },
       {
         heading: "Staff roles for repairs",
-        body: "Two additional roles become available: Repair Staff and Engineer. Repair Staff can check in devices and manage the front-desk workflow. Engineers are assigned to jobs and can log diagnostics, parts used, and completion notes. Assign roles from the Staff Management page under POS Settings.",
+        body: "Two roles are built for repair work, with different permissions:\n- **Repair** (front desk) — creates and manages jobs, logs parts, uploads photos. Cannot mark a job as executed/in-progress on their own.\n- **Engineer** (technician) — works assigned jobs, logs parts and photos, marks progress. Cannot create new jobs, and by default only sees jobs assigned to them (managers and owners see everything). Engineers also don't see the price the customer is being charged — that's hidden from technician-level accounts.\n\nAdd staff from the **Staff** tab in your dashboard and pick a repair-specific role template (Repair Intake Specialist, Repair Technician, Repair Quality Checker, or Repair Manager).",
       },
       {
         heading: "The repair workflow at a glance",
-        body: "Every repair follows a clear pipeline: intake, quoting, assignment, repair, completion, and collection. Each stage updates in real time on the Repairs dashboard. Staff and customers receive notifications at key milestones, keeping everyone informed throughout the process.",
+        body: "Every job moves through: **intake → quoted → accepted → in progress → completed → collected**. Jobs can also be cancelled or reopened at most stages. WhatsApp notifications fire automatically at several of these stages — see **Customer Notifications for Repair Jobs** for exactly which ones.",
       },
     ],
     faq: [
-      { q: "Can I use repair jobs without the standard POS sales features?", a: "Yes. You can enable repair jobs independently. However, linking repairs to sales transactions requires the full POS module to be active." },
-      { q: "Is there an extra charge for the repair feature?", a: "Repair & Service Jobs is included in all POS plans at no additional cost." },
-      { q: "Can I disable the feature after enabling it?", a: "Yes, you can toggle it off at any time. Existing repair records are preserved and remain accessible in your reports." },
+      { q: "Do repair jobs use the same payment system as regular sales?", a: "Yes. When a customer collects and pays, that payment is recorded as a standard POS transaction linked to the job — it appears in your regular sales reports and revenue totals too, not in a separate silo." },
+      { q: "Is there an extra charge for the repair feature?", a: "No. Repair is included as part of your POS plan like any other business type — there's no separate charge for it." },
+      { q: "Can I switch from Repair to a different business type later?", a: "Yes — go to Account Settings and update your business type. Existing repair jobs and records are preserved either way." },
     ],
     related: ["pos-getting-started", "pos-adding-staff", "pos-repair-intake-workflow"],
-    keywords: ["repair", "service jobs", "enable repairs", "repair workflow", "engineer role", "repair staff"],
-    lastUpdated: "2026-05-16",
+    keywords: ["repair business type", "service jobs", "pos.askbiz.co repair", "repair workflow", "engineer role", "repair staff", "repair status pipeline"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-intake-workflow",
     title: "Checking In a Device for Repair",
-    description: "Step-by-step guide to creating a new service job, capturing customer and device details, recording faults, and taking intake photos.",
+    description: "Step-by-step guide to the real intake flow at pos.askbiz.co/repair: an AI device scan, condition photos with a pass/fail checklist, fault details, and what fires automatically once you submit.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
-    readTime: 4,
+    readTime: 5,
     content: [
       {
-        heading: "Creating a new service job",
-        body: "From the Repairs tab, tap 'New Job'. Search for an existing customer or add a new one. Customer name, phone number, and email are captured so notifications can be sent automatically. Returning customers have their details pre-filled from previous visits.",
+        heading: "Starting a new job",
+        body: "From the Repair hub at **pos.askbiz.co/repair**, start a new intake. It walks through four short stages: device scan, condition photos, details, and submit.",
       },
       {
-        heading: "Recording device and fault information",
-        body: "Enter the device type, make, model, and serial number. Then describe the reported fault in the free-text field. You can select from common fault categories to speed up entry. A clear fault description helps engineers diagnose the issue more quickly once assigned.",
+        heading: "Device scan",
+        body: "Photograph the device's rear label or sticker. AskBiz reads it and extracts the model, serial number, manufacture date, storage, and colour automatically, with a confidence score. If the serial number matches a device that was collected under warranty before, you'll see a live **\"Under warranty\"** banner right here — no separate lookup needed.",
       },
       {
-        heading: "Intake photos and geo-tagging",
-        body: "Use your device camera to capture photos of the item at intake. Photos are timestamped and geo-tagged automatically, providing a verifiable record of the item's condition on arrival. This protects both your business and the customer in the event of any dispute.",
+        heading: "Condition photos and checklist",
+        body: "Take up to four labelled photos (front, back, screen, sides), then work through a quick pass/fail/untested checklist covering screen, buttons, camera, and battery — a faster, more structured record than a single free-text condition note. Add any extra detail in the free-text notes field.",
+      },
+      {
+        heading: "Fault details",
+        body: "Enter the customer's name and phone number, describe the fault in free text, and pick the device type and priority. There's no saved-customer lookup yet — details are entered fresh each time, even for a returning customer. You can also assign an engineer here (a flat list of your repair staff) and enter an estimated price if you already know it.",
+      },
+      {
+        heading: "After you submit",
+        body: "If you entered a customer phone number, AskBiz automatically sends a WhatsApp intake confirmation the moment the job is created — including the price, if you set one. The confirmation screen then offers a **send/resend quote** button (only shown once a price exists), correctly labelled depending on whether the automatic message already went out.",
       },
     ],
     faq: [
-      { q: "Can I add multiple faults to one job?", a: "Yes. You can list multiple faults during intake or add further issues later when the engineer begins their assessment." },
-      { q: "Are intake photos required?", a: "Photos are optional but strongly recommended. They serve as evidence of the device condition at check-in and help avoid disputes." },
+      { q: "Can I add multiple faults to one job?", a: "Yes — describe them together in the fault field at intake, or add more detail later; there's no hard limit on what you record." },
+      { q: "Are intake photos required?", a: "Photos are optional but strongly recommended. They're your evidence of the device's condition at check-in and help avoid disputes later." },
+      { q: "Does AskBiz record the customer's exact address or location at intake?", a: "Not on the staff till. Location capture exists in the owner's admin console (askbiz.co/pos → Services) if you create a job from there instead." },
     ],
     related: ["pos-repair-getting-started", "pos-repair-quoting-customers", "pos-camera-troubleshooting"],
-    keywords: ["device check-in", "intake", "fault description", "intake photos", "geo-tag", "service job"],
-    lastUpdated: "2026-05-16",
+    keywords: ["device check-in", "intake", "fault description", "device scan", "repair checklist", "service job", "warranty detection"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-quoting-customers",
     title: "Quoting Customers for Repairs",
-    description: "Learn how to build repair quotes using service presets or custom pricing, send them via WhatsApp or email, and manage customer approvals.",
+    description: "How repair pricing actually works today: one price per job, set from a preset or typed in directly, sent to the customer over WhatsApp, and approved by a reply — not an online approve/decline link.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
     content: [
       {
-        heading: "Building a repair quote",
-        body: "Open a service job and tap 'Create Quote'. Select from your saved service presets for common repairs or add custom line items with descriptions and prices. Parts can be itemised separately. The quote total updates in real time as you add or remove items.",
+        heading: "Setting a price",
+        body: "A repair job carries a single price, not an itemised quote. Set it either by picking a saved **service preset** (if your account has any set up — this pre-fills the price and estimated time) from your admin dashboard, or by typing a price directly during intake or when updating the job.",
       },
       {
-        heading: "Sending quotes to customers",
-        body: "Once the quote is ready, send it directly to the customer via WhatsApp or email. The message uses a professional template that includes your business name, a breakdown of costs, and a link for the customer to approve or decline the quote online.",
+        heading: "Sending the quote",
+        body: "If a customer phone number was entered, AskBiz already sent the price automatically as part of the intake confirmation. From the job, you can also send or resend the quote message over WhatsApp at any time — the confirmation screen labels the button correctly depending on whether the automatic message already went out. Email quoting isn't functional yet, even where it's shown as an option — WhatsApp is the only channel that actually delivers today.",
       },
       {
-        heading: "Customer approval flow",
-        body: "Customers can approve or decline the quote from the link provided. Approved quotes automatically move the job to the next stage. Declined quotes prompt an optional reason field. You can revise and resend a quote as many times as needed before work begins.",
+        heading: "How customers respond",
+        body: "The WhatsApp quote message asks the customer to **reply YES to approve, or call to discuss** — there's no clickable online approve/decline link. When the customer replies, a staff member manually marks the job **Accepted** (or **Declined**) from the ticket board or dashboard based on that reply.",
       },
     ],
     faq: [
-      { q: "Can I offer a discount on a quote?", a: "Yes. Add a discount line item or adjust individual line prices. The customer sees the final total after any discounts applied." },
-      { q: "What happens if the customer does not respond?", a: "The job remains in the 'Awaiting Approval' stage. You can resend the quote or follow up manually. No automatic reminders are sent unless you configure them." },
+      { q: "Can I offer a discount on a quote?", a: "Not as a separate line item — there's no discounting feature for repair jobs today. Enter the final price you want to charge directly." },
+      { q: "What happens if the customer does not respond?", a: "The job stays at 'Quoted' until you hear back. Resend the quote message from the job at any time — there's no automatic reminder yet." },
+      { q: "Can I revise a price after sending it?", a: "Yes — update the price on the job and resend the quote message; the new figure is what the customer sees." },
     ],
     related: ["pos-repair-service-presets", "pos-repair-customer-notifications", "pos-repair-intake-workflow"],
-    keywords: ["repair quote", "customer approval", "WhatsApp quote", "pricing", "service estimate", "quote template"],
-    lastUpdated: "2026-05-16",
+    keywords: ["repair quote", "customer approval", "WhatsApp quote", "pricing", "service estimate", "reply yes to approve"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-assigning-engineers",
     title: "Assigning Engineers to Repair Jobs",
-    description: "How to assign and reassign engineers to service jobs, manage engineer skills, and handle additional issues discovered during repair.",
+    description: "How to assign a repair job to an engineer today — a plain staff list, set at intake or shortly after — and what AskBiz already tracks for smarter routing in future.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 3,
     content: [
       {
         heading: "Assigning an engineer",
-        body: "From the service job, tap 'Assign Engineer' and select from your available engineers. You can filter by skill or availability. The assigned engineer receives a notification with the job details, fault description, and any intake photos attached to the record.",
+        body: "Pick an engineer from your repair staff list at intake, or shortly after from your admin dashboard (askbiz.co/pos → Services) while the job is still at **Quoted** or **Accepted**. The list shows every staff member with a repair-engineer role — it isn't filtered by skill or current workload. Once a job moves to **In Progress**, reassignment isn't available from either app; you'd need to note the change manually.",
       },
       {
-        heading: "Engineer skills and specialisations",
-        body: "Each engineer profile can list their skills and specialisations, such as screen repair, logic board work, or software diagnostics. When assigning jobs, AskBiz highlights engineers whose skills match the reported fault, helping you route work to the right person.",
+        heading: "Engineer skills — tracked, not yet used for routing",
+        body: "AskBiz already lets you record each engineer's skills and specialisations against your service presets behind the scenes. Automatic skill-based suggestions when assigning a job aren't available yet — assignment today is a flat list, regardless of what skills are on file.",
       },
       {
-        heading: "Reassignment and additional issues",
-        body: "Engineers can be reassigned if priorities change. Engineers may also log additional issues discovered during the repair. These additional findings can trigger a revised quote to the customer before further work proceeds, keeping the process transparent.",
+        heading: "What engineers see",
+        body: "By default, an engineer sees only the jobs assigned to them — managers and owners see every job across the team. If an engineer discovers additional issues during the repair, log them in the job notes and update the price if the extra work changes the cost; resend the quote so the customer sees the new figure before you continue.",
       },
     ],
     faq: [
-      { q: "Can one job be assigned to multiple engineers?", a: "Currently each job is assigned to a single engineer at a time. You can reassign to a different engineer if the scope changes." },
-      { q: "Do engineers see all jobs or only their own?", a: "Engineers see only jobs assigned to them by default. Managers and owners can view all jobs across the team." },
-      { q: "What happens when an engineer finds an additional fault?", a: "They log it against the job. If the additional work changes the cost, a revised quote is sent to the customer for approval before proceeding." },
+      { q: "Can one job be assigned to multiple engineers?", a: "No — each job has a single assigned engineer at a time." },
+      { q: "Do engineers see all jobs or only their own?", a: "Only their own by default. Managers and owners see every job across the team." },
+      { q: "Can I reassign a job that's already in progress?", a: "Not from either app today — reassignment is only available while a job is at Quoted or Accepted." },
     ],
     related: ["pos-repair-getting-started", "pos-adding-staff", "pos-repair-quoting-customers"],
     keywords: ["assign engineer", "engineer skills", "reassign", "repair assignment", "additional issues", "engineer notes"],
-    lastUpdated: "2026-05-16",
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-tracking-parts",
     title: "Tracking Parts Used in Repairs",
-    description: "Add parts from your inventory to repair jobs, track costs per job, and let AskBiz automatically deduct stock when parts are used.",
+    description: "How parts stock deduction really works in AskBiz repair jobs — automatic and accurate once a part is logged, with the current limits on adding and removing parts.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 3,
     content: [
       {
-        heading: "Adding parts to a repair job",
-        body: "While working on a job, tap 'Add Parts' to search your POS inventory. Select the part, specify the quantity, and it is linked to the job. If the part is not in your inventory, you can add a custom entry with a description and cost for one-off items.",
-      },
-      {
         heading: "Automatic stock deduction",
-        body: "When a part is added to a repair job, AskBiz automatically deducts it from your inventory. This keeps stock levels accurate without manual adjustments. If a part is removed from the job before completion, the stock is restored automatically.",
+        body: "The moment a part is logged against a repair job, AskBiz deducts it from your inventory automatically — no manual stock adjustment needed. This only happens while a job is **Accepted** or **In Progress**.",
       },
       {
-        heading: "Part costs and line totals",
-        body: "Each part carries its cost price and any markup you configure. The job's parts total updates in real time. This feeds directly into your repair margin reports, giving you clear visibility of material costs versus the amount charged to the customer.",
+        heading: "Adding parts today",
+        body: "Parts logging is built on the backend, but there's currently no button in either app to attach a part to a specific job — the Parts screen at pos.askbiz.co/repair/parts is your general parts inventory (add a part with its SKU, stock level, cost, sale price, and supplier), not a per-job picker yet. Job detail screens show any parts already on a job as a read-only list.",
+      },
+      {
+        heading: "No removal or restock yet",
+        body: "There's currently no way to remove a part from a job once it's logged, or to have stock automatically restored — deduction is one-directional. If a part was logged in error, adjust your inventory stock level manually to correct it.",
       },
     ],
     faq: [
-      { q: "What if a part is out of stock?", a: "You can still add it to the job, but AskBiz displays a warning that stock is insufficient. You may need to restock before completing the repair." },
-      { q: "Can I track parts that are not in my main inventory?", a: "Yes. Use the custom part entry to log items purchased specifically for a repair. These are tracked against the job but do not appear in your main inventory." },
+      { q: "What if a part is out of stock?", a: "Check your parts inventory before starting a repair that needs it — AskBiz doesn't yet block or warn at the point of logging a part against a job." },
+      { q: "Can I track parts that are not in my main inventory?", a: "Not separately today — parts live in the same inventory as the rest of your stock, tracked by SKU." },
     ],
     related: ["pos-managing-inventory", "pos-restocking-guide", "pos-repair-completing-collection"],
     keywords: ["repair parts", "stock deduction", "parts tracking", "inventory", "part costs", "materials"],
-    lastUpdated: "2026-05-16",
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-completing-collection",
     title: "Completing Repairs and Customer Collection",
-    description: "Mark repair jobs as complete, capture checkout photos, link payments, and manage the customer collection process.",
+    description: "How marking a repair ready and collecting payment actually works — a single-tap status change, an optional progress-photo update for the customer, and a WhatsApp receipt on collection.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
     content: [
       {
-        heading: "Marking a job as complete",
-        body: "Once the repair is finished, the engineer taps 'Mark Complete' and adds any final notes. A checkout photo of the repaired item is captured to document its condition. The job status moves to 'Ready for Collection' and the customer is notified automatically.",
+        heading: "Marking a job ready",
+        body: "From the ticket board, tap **Mark Ready** to move a job from In Progress to Completed — it's a single status change, with no notes or photo required to complete it. AskBiz sends the ready-for-collection WhatsApp message automatically at this point.",
       },
       {
-        heading: "Payment and checkout",
-        body: "When the customer arrives, open the job and tap 'Collect & Pay'. The outstanding balance is shown. Payment can be taken via your standard POS payment methods. The repair transaction links to the original job, keeping your financial records unified.",
+        heading: "Sharing progress photos (optional, any time)",
+        body: "You can add photos to a job's gallery at any point during the repair and tap **Share Update** to WhatsApp the customer a link to a photo gallery page they can view without logging in — useful for showing work in progress, not just the final result. This is separate from marking the job ready and isn't required.",
       },
       {
-        heading: "Collection flow",
-        body: "After payment, the customer signs on screen to confirm collection. The job moves to 'Collected' status. A final receipt is generated and can be sent via WhatsApp or email. The entire job history, including photos and notes, is archived for future reference.",
+        heading: "Collection and payment",
+        body: "When the customer arrives, open the job and take payment through your normal POS payment methods for the full quoted price — there's no deposit/partial-payment split for repair jobs today. The payment is recorded as a standard transaction linked to the job, so it appears in your regular sales figures too. Tap **Collect** to move the job to Collected; this fires both the collection confirmation and, where applicable, the warranty message automatically. There's no on-screen signature capture — collection is confirmed by staff marking the job, not a customer signature.",
       },
     ],
     faq: [
-      { q: "Can I take a deposit at intake and the balance at collection?", a: "Yes. Record a partial payment at intake. The remaining balance is shown at collection and must be settled before the job is marked as collected." },
-      { q: "What if the customer does not collect the item?", a: "The job remains in 'Ready for Collection' status. You can send reminder notifications from the job screen at any time." },
+      { q: "Can I take a deposit at intake and the balance at collection?", a: "Not currently — repair jobs carry a single price, paid in full at collection." },
+      { q: "What if the customer does not collect the item?", a: "The job stays at 'Completed' until collected. Resend the ready notification from the job if you want to remind them." },
+      { q: "Can I capture a photo of the item's condition at handover?", a: "Your owner dashboard (askbiz.co/pos → Services) offers an optional checkout-photo prompt once a job is completed. It's not required and isn't part of the staff till's Mark Ready action." },
     ],
     related: ["pos-repair-tracking-parts", "pos-making-a-sale", "pos-repair-warranty-management"],
-    keywords: ["complete repair", "collection", "checkout photos", "repair payment", "customer pickup", "ready for collection"],
-    lastUpdated: "2026-05-16",
+    keywords: ["complete repair", "collection", "mark ready", "share update", "repair payment", "customer pickup", "photo gallery"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-warranty-management",
     title: "Managing Repair Warranties",
-    description: "Understand how AskBiz automatically creates warranties for completed repairs, manage warranty terms, and handle warranty claims.",
+    description: "AskBiz automatically creates a 90-day warranty on every collected repair and re-detects it by serial number on a future visit — here's exactly how it works and its current limits.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
     content: [
       {
         heading: "Auto-created warranties",
-        body: "When a repair job is marked as collected, AskBiz automatically creates a warranty record. The default warranty period is 90 days from the collection date. Each warranty is linked to the job, customer, and device serial number for easy lookup.",
+        body: "The moment a repair job is marked **Collected**, AskBiz automatically creates a warranty record covering it — no action needed from staff. The warranty period is **90 days** from the collection date, and a confirmation is sent to the customer over WhatsApp alongside the collection message.",
       },
       {
-        heading: "Customising warranty terms",
-        body: "You can adjust the default warranty period in POS Settings under Repair Preferences. Individual jobs can also have their warranty overridden at completion. Set longer warranties for premium repairs or shorter ones for minor fixes as your business requires.",
+        heading: "The 90-day period isn't adjustable yet",
+        body: "There's currently no settings screen to change the default period or turn automatic warranties off — 90 days applies to every collected job. If your business needs a different term, that's not configurable today.",
       },
       {
-        heading: "Warranty claims and lookups",
-        body: "Customers can return with a warranty claim. Search by serial number, customer name, or job reference to find the warranty. If the claim is valid, a new linked job is created at no charge. The original job history is attached for the engineer's reference.",
+        heading: "How a warranty claim gets found",
+        body: "There's no dedicated warranty-search screen today. The real mechanism is automatic: when a device comes back in for a new intake, AskBiz scans its serial number as part of the normal device-scan step and shows a live **\"Under warranty\"** banner right there if a match is found — no manual lookup needed.",
       },
     ],
     faq: [
-      { q: "Can I disable automatic warranties?", a: "Yes. Toggle off auto-warranties in Repair Preferences. You can still create warranties manually on individual jobs if needed." },
-      { q: "What happens when a warranty expires?", a: "Expired warranties remain in your records for reference but are clearly marked as expired. Any new work on the device is treated as a standard paid repair." },
-      { q: "Can customers check their warranty status online?", a: "Not currently. Warranty lookups are performed in-store by your staff using the serial number or customer details." },
+      { q: "Can I disable automatic warranties?", a: "Not today — every job creates a 90-day warranty automatically on collection." },
+      { q: "What happens when a warranty expires?", a: "Nothing changes automatically in the workflow — a new intake for that device is simply treated as a standard paid repair, since the device-scan warranty check won't find an active match anymore." },
+      { q: "Can customers check their warranty status online?", a: "Not currently. Warranty status surfaces to staff automatically at a new intake, via the device scan." },
     ],
-    related: ["pos-repair-completing-collection", "pos-repair-getting-started", "pos-repair-reports-analytics"],
-    keywords: ["warranty", "90-day warranty", "warranty claim", "serial number lookup", "repair guarantee", "warranty terms"],
-    lastUpdated: "2026-05-16",
+    related: ["pos-repair-completing-collection", "pos-repair-getting-started", "pos-repair-intake-workflow"],
+    keywords: ["warranty", "90-day warranty", "warranty claim", "serial number lookup", "repair guarantee", "device scan warranty"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-service-presets",
-    title: "Creating Service Presets for Common Repairs",
-    description: "Set up reusable service presets with standard pricing, estimated times, and required parts to speed up quoting and maintain consistency.",
+    title: "Service Presets for Common Repairs",
+    description: "What service presets are, how staff use them to speed up pricing a job today, and the current limits on creating or editing your own.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 3,
     content: [
       {
-        heading: "Creating a service preset",
-        body: "Go to POS Settings, then Repair Presets. Tap 'Add Preset' and enter the service name, category, standard price, estimated repair time, and any required parts. Presets appear as quick-select options when building quotes, saving time on repetitive repairs.",
+        heading: "What a service preset is",
+        body: "A service preset is a saved combination of a repair name, price, and estimated time — for example, a screen replacement at a fixed price. Where presets exist on your account, they show up as a quick-pick dropdown when a job is created or priced, so staff don't have to type the same figures repeatedly for common repairs.",
       },
       {
-        heading: "Organising presets by category",
-        body: "Group your presets into categories such as Screen Repairs, Battery Replacements, or Software Services. Categories keep the preset list manageable as it grows and help staff find the right service quickly during the quoting process.",
-      },
-      {
-        heading: "Editing and removing presets",
-        body: "Presets can be updated at any time. Price changes apply to future quotes only and do not affect existing jobs. You can archive presets you no longer offer rather than deleting them, which preserves historical reporting accuracy for past jobs that used those presets.",
+        heading: "Creating and editing your own — not yet self-serve",
+        body: "There's currently no settings screen to add, edit, or archive presets yourself. If your preset list looks empty or out of date, this isn't something you're missing in the app — that management screen hasn't shipped yet.",
       },
     ],
     faq: [
-      { q: "Can I set different prices for different device models?", a: "Yes. Create separate presets for each model variant, for example 'Screen Repair - iPhone 15' and 'Screen Repair - iPhone 16', each with its own pricing." },
-      { q: "Do presets automatically add parts to the job?", a: "Presets can list required parts. When selected during quoting, those parts are suggested but not added to the job until the engineer confirms them during the repair." },
+      { q: "Do presets automatically add parts to the job?", a: "Not currently — a preset only pre-fills a price and estimated time when picked; it doesn't attach parts to the job." },
+      { q: "Can I set different prices for different device models?", a: "Only if a preset already exists for that specific model — there's no way to create model-specific variants yourself yet." },
     ],
     related: ["pos-repair-quoting-customers", "pos-repair-getting-started", "pos-managing-inventory"],
-    keywords: ["service preset", "repair template", "standard pricing", "repair categories", "estimated time", "common repairs"],
-    lastUpdated: "2026-05-16",
+    keywords: ["service preset", "repair pricing", "standard pricing", "quote dropdown", "estimated time"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-customer-notifications",
     title: "Customer Notifications for Repair Jobs",
-    description: "Configure WhatsApp and email notifications that keep customers informed at every stage of their repair, from intake to collection.",
+    description: "The real notification set for repair jobs — six automatic WhatsApp messages across intake, quoting, and collection, one on/off switch, and why email notifications don't currently deliver.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 4,
     content: [
       {
-        heading: "Notification stages",
-        body: "AskBiz sends notifications at key milestones: intake confirmation, quote sent, quote approved, repair complete, ready for collection, and warranty information. Each notification is triggered automatically when the job moves to the corresponding stage, requiring no manual effort from staff.",
+        heading: "The six real notifications",
+        body: "AskBiz sends these automatically over WhatsApp:\n- **Intake confirmation** — the moment a job is created with a customer phone number, including the price if one's already set\n- **Quote** — sent (or resent) whenever you choose to send it\n- **Ready for collection** — fires once, when a job is marked Completed\n- **Collected** — fires on collection\n- **Warranty confirmation** — fires alongside the collected message\n- **Photo update** — sent whenever you tap Share Update to send new progress photos\n\nThere's no separate \"quote approved\" notification — approval is a manual status change your staff make after the customer replies, not a system-triggered message. \"Repair complete\" and \"ready for collection\" are the same message, not two separate stages.",
       },
       {
-        heading: "WhatsApp and email templates",
-        body: "Notifications are sent via WhatsApp and email using professional templates that include your business name and job details. Templates are pre-configured but can be customised in POS Settings under Notification Templates. You can adjust the wording to match your brand voice.",
+        heading: "WhatsApp works, email doesn't — yet",
+        body: "Every notification above is delivered over WhatsApp. Email is shown as an option in places but doesn't currently deliver — treat WhatsApp as the only channel your customers will actually receive right now.",
       },
       {
-        heading: "Managing notification preferences",
-        body: "You can enable or disable individual notification stages. For example, you might choose to send only the intake confirmation and ready-for-collection messages. Customer contact preferences are respected, so notifications are sent only via channels the customer has provided.",
+        heading: "One on/off switch, not per-stage",
+        body: "You can turn notifications on or off, but as a single setting covering all of them — there's no way to enable some stages and disable others individually, and there's no free-text \"send a custom message\" composer. If you want to share something outside the standard messages, use **Share Update** on a job to send new photos with a short link.",
       },
     ],
     faq: [
-      { q: "Can I send a custom message to the customer outside the standard stages?", a: "Yes. Open the job and tap 'Send Message' to compose a free-text WhatsApp or email message directly from the job screen." },
-      { q: "What if the customer has not provided an email address?", a: "Notifications fall back to WhatsApp if a phone number is available. If neither is on file, the notification is skipped and a note is added to the job." },
-      { q: "Are notifications sent in the customer's language?", a: "Templates currently support English only. Multi-language support is planned for a future update." },
+      { q: "Can I send a custom message to the customer outside the standard stages?", a: "Not as free text. The closest option is Share Update on the job, which sends any new photos as a WhatsApp message with a link to a viewable gallery." },
+      { q: "What if the customer has not provided a phone number?", a: "No automatic notifications are sent for that job — a phone number is what triggers them." },
+      { q: "Are notifications sent in the customer's language?", a: "No — all templates are in English only today." },
     ],
     related: ["pos-whatsapp-receipts-setup", "pos-repair-quoting-customers", "pos-repair-completing-collection"],
-    keywords: ["repair notifications", "WhatsApp", "email templates", "customer updates", "intake confirmation", "collection notification"],
-    lastUpdated: "2026-05-16",
+    keywords: ["repair notifications", "WhatsApp", "share update", "customer updates", "intake confirmation", "collection notification"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-repair-reports-analytics",
     title: "Repair Revenue and Analytics",
-    description: "View repair metrics on your POS dashboard, analyse margins per job, and use AI chat to query repair performance data.",
+    description: "What your Repair Hub dashboard actually shows, how repair revenue feeds your wider POS reporting, and what AskBiz AI chat can (and can't yet) tell you about your repair data.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 5,
     content: [
       {
-        heading: "Unified data integration",
-        body: "Repair revenue feeds directly into your main POS reporting. Sales and repair income appear together on your dashboard, giving you a complete picture of business performance. You can filter views to show repairs only or combined totals as needed.",
+        heading: "Your Repair Hub dashboard",
+        body: "The Repair Hub shows six live numbers: active jobs, jobs ready for pickup, jobs collected today, revenue today, average turnaround time, and any parts running low on stock. It doesn't currently show a parts-cost or margin figure, and there's no date-range or per-engineer filter on this screen.",
       },
       {
-        heading: "Repair metrics and margins",
-        body: "The Repairs dashboard shows jobs completed, average repair time, revenue, parts costs, and profit margins. Drill into individual jobs to see a full cost breakdown. Use date filters and engineer filters to compare performance across your team or time periods.",
+        heading: "Unified data integration",
+        body: "Collected repair revenue feeds into your main POS reporting alongside regular sales, so your overall dashboards reflect the full picture. A margin figure (price minus parts cost) is calculated automatically behind the scenes when a job is collected, but it currently only feeds your general business-intelligence reporting rather than appearing directly on the Repair Hub itself.",
       },
       {
         heading: "AI chat queries for repairs",
-        body: "Use AskBiz AI Chat to ask natural-language questions about your repair data. For example, ask 'What was my repair revenue last month?' or 'Which engineer completed the most jobs this week?'. The AI draws on your live repair data to provide instant answers.",
+        body: "Ask AskBiz AI Chat natural-language questions about your repair data — for example, \"What was my repair revenue last month?\" or \"What's my parts-versus-labour split on repairs this month?\" — and it pulls real numbers from your live jobs, including a genuine parts-cost breakdown. Per-engineer questions like \"which engineer completed the most jobs\" aren't answerable yet — that breakdown isn't available to the AI today.",
       },
     ],
     faq: [
-      { q: "Can I export repair reports?", a: "Yes. Repair data can be exported in the same formats as your standard POS reports, including CSV and PDF, from the Reports section." },
-      { q: "Do repair margins include labour costs?", a: "Margins currently reflect parts costs against the amount charged. Labour cost tracking is not yet included but is planned for a future release." },
+      { q: "Can I export repair reports?", a: "Not separately today — AskBiz's data export currently covers regular sales transactions only, not repair jobs, and only as CSV." },
+      { q: "Do repair margins include labour costs?", a: "No — the margin AskBiz calculates reflects parts cost against the price charged. Labour cost isn't factored in yet." },
+      { q: "Can I filter repair reporting by date range or engineer?", a: "Not on the Repair Hub dashboard today. Ask AskBiz AI Chat a specific question instead — for example naming a date range — and it will pull the real figures for that period." },
     ],
     related: ["pos-dashboards-and-reports", "pos-ai-chat-guide", "pos-exporting-data"],
-    keywords: ["repair analytics", "repair revenue", "margin calculation", "repair dashboard", "AI chat repairs", "repair reports"],
-    lastUpdated: "2026-05-16",
+    keywords: ["repair analytics", "repair revenue", "margin calculation", "repair dashboard", "AI chat repairs", "parts vs labour"],
+    lastUpdated: "2026-08-11",
   },
   {
     slug: "pos-multi-sector-overview",
@@ -14327,7 +14322,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "How staff see their sector",
-        body: "Staff log in at pos.askbiz.co using their phone (WhatsApp OTP) or email. They only see the sector they have been assigned to by the admin. A cashier assigned to Retail sees the retail till. A repair engineer sees their job queue. A restaurant server sees the order flow. They cannot cross into other sectors. This keeps each role focused and prevents accidental cross-sector data entry.",
+        body: "Staff log in at pos.askbiz.co using their phone number or email, then a PIN. They only see the sector they have been assigned to by the admin. A cashier assigned to Retail sees the retail till. A repair engineer sees their job queue. A restaurant server sees the order flow. They cannot cross into other sectors. This keeps each role focused and prevents accidental cross-sector data entry.",
       },
       {
         heading: "Intelligence stays separated",
@@ -14395,7 +14390,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Where the filters appear",
-        body: "The Branch and Sector dropdowns appear at the top of your POS dashboard, directly above the date range selector. They are always visible regardless of which tab is active. This means you set your filter once and it applies consistently as you move between Overview, Operations, Staff, Branches, Map, and Audit — you do not need to re-select your filter on each tab.",
+        body: "The Branch and Sector dropdowns appear at the top of your POS dashboard, directly above the date range selector. They are always visible regardless of which tab is active. This means you set your filter once and it applies consistently as you move between dashboard tabs — you do not need to re-select your filter on each tab.",
       },
       {
         heading: "Branch filter",
@@ -14529,13 +14524,13 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Refunds and voids",
-        body: "If an order needs to be voided after submission (wrong table, duplicate entry), open the order and tap Void. Voids are recorded in your audit trail with a reason. If payment has already been processed and a refund is needed, use the standard POS refund workflow from the admin dashboard. All refunds appear in your Operations tab with full detail.",
+        body: "If an order needs to be voided after submission (wrong table, duplicate entry), open the order and tap Void. If payment has already been processed and a refund is needed, use the standard POS refund workflow from the admin dashboard instead.",
       },
     ],
     faq: [
       { q: "Can two staff members add to the same order at the same time?", a: "Orders are currently single-edit — only one device should be modifying an order at a time. Simultaneous edits from different devices may result in the last submission overwriting earlier changes." },
-      { q: "Is there a way to split a bill between customers?", a: "Split payment by method (part cash, part card) is supported. Splitting a bill by item or by equal shares between guests is planned for a future update." },
-      { q: "How do I see orders from earlier today?", a: "Completed orders are visible in the Operations tab of the admin dashboard at askbiz.co/pos, filtered to the Restaurant sector. You can also export them from the Reports section." },
+      { q: "Is there a way to split a bill between customers?", a: "Splitting a bill by item or by equal shares between guests isn't available yet." },
+      { q: "How do I see orders from earlier today?", a: "Completed orders create standard POS transactions, visible in your regular transaction history and reporting, filtered to the Restaurant sector." },
     ],
     related: ["pos-restaurant-getting-started", "pos-restaurant-daily-brief", "pos-processing-refunds", "pos-amending-transactions"],
     keywords: ["restaurant orders", "table management", "order processing", "kitchen orders", "bill", "payment", "covers"],
@@ -14546,110 +14541,113 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-factory-getting-started",
     title: "Getting Started with Factory Captures",
-    description: "Learn what Factory Captures are, how to enable the factory sector in AskBiz POS, and understand the four capture types — intake, output, wastage, and dispatch.",
+    description: "Learn what Factory Captures are, how the factory sector is really set up, and understand the five capture types — intake, output, packaging, wastage, and dispatch.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
     readTime: 5,
     popular: true,
-    lastUpdated: "2026-07-24",
-    keywords: ["factory captures askbiz", "production logging pos", "photo capture manufacturing", "askbiz factory feature", "production intake output wastage dispatch", "factory type", "batch tracking", "quality checks", "downtime logging", "production shift", "waybill"],
+    lastUpdated: "2026-08-12",
+    keywords: ["factory captures askbiz", "production logging pos", "photo capture manufacturing", "askbiz factory feature", "production intake output wastage dispatch packaging", "factory type", "batch tracking", "quality checks", "downtime logging", "production shift", "waybill"],
     content: [
       {
         heading: "What are Factory Captures?",
         body: "**Factory Captures** is a production logging feature built into AskBiz POS. It gives floor staff a fast, photo-first way to record production events — without paper forms or separate software.\n\nEvery capture is:\n- Timestamped and attributed to the submitting staff member\n- Attached to a mandatory photo\n- Queued for supervisor approval before being formally recorded\n\nThe result is a tamper-proof production log that reflects what actually happened on your floor, not what someone remembered later.",
       },
       {
-        heading: "Enabling the factory sector",
-        body: "To activate Factory Captures, go to **Settings → Features → Sectors** in your AskBiz admin panel and toggle on **Factory**.\n\nOnce enabled:\n- Factory-specific role permissions become available in the **Staff** tab\n- Your staff dashboard at **pos.askbiz.co** shows capture buttons based on assigned permissions\n- The **Audit** tab in your admin panel begins recording all capture events\n\nIf you are on the Free plan, Factory Captures is available with a limit of 100 captures per month. Growth and Business plans have unlimited captures.",
+        heading: "How you get the factory sector",
+        body: "Factory Captures comes with the **Manufacturer** business type — pick it at signup and you're set up for it from the start, no separate settings toggle to find. If you're already signed up as a Manufacturer, the sector is already live for your account.",
       },
       {
-        heading: "The four capture types",
-        body: "AskBiz Factory Captures has four event types, each covering a distinct production stage:\n\n- **Intake** — log incoming raw materials or components. Staff photograph the batch on arrival.\n- **Output** — record finished goods coming off the production line. Photo verifies quantity and condition.\n- **Wastage** — document damaged, spoiled, or rejected materials. Every wastage event builds your loss rate record.\n- **Dispatch** — log finished goods leaving the facility. Closes the loop between production and fulfilment.\n\nEach type has its own permission flag (`camera.intake`, `camera.output`, `camera.wastage`, `camera.dispatch`) so you can assign exactly the right access to each staff member.",
+        heading: "The five capture types",
+        body: "AskBiz Factory Captures has five event types, each covering a distinct production stage:\n\n- **Intake** — log incoming raw materials or components. Staff photograph the batch on arrival.\n- **Output** — record finished goods coming off the production line. Photo verifies quantity and condition.\n- **Packaging** — record bulk output being packed into sized units, like 20L jerry cans or 1kg bags. See **Packaging Captures**.\n- **Wastage** — document damaged, spoiled, or rejected materials. Every wastage event builds your loss rate record.\n- **Dispatch** — log finished goods leaving the facility. Closes the loop between production and fulfilment. Checks any open holds on the product first — see **Not-Yet-Releasable Holds**.\n\nEach type has its own permission flag (`camera.intake`, `camera.output`, `camera.packaging`, `camera.wastage`, `camera.dispatch`) so you can assign exactly the right access to each staff member.",
       },
       {
         heading: "Factory Types — tell AskBiz what you make",
-        body: "If your business type is set to **Manufacturer**, you can also record your **factory type** — the specific kind of production you run. AskBiz currently has 12 built-in categories (cooking oil pressing, packaged water, maize milling, cassava processing, rice milling, dairy processing, bakery, soap making, concrete blocks, poultry processing, coffee processing, and fish smoking), plus an **Other** option for anything not listed.\n\nYou're asked to pick one during onboarding, and can change it any time afterwards at **Settings → Localisation → Factory Settings** in your AskBiz admin panel — it's optional, and skipping it doesn't block anything. Picking a type doesn't change which capture buttons your staff see today; every factory still uses the same four capture types above. See **Choosing Your Factory Type** for what each of the 12 categories covers.",
+        body: "You can also record your **factory type** — the specific kind of production you run, from 12 built-in categories (cooking oil pressing, packaged water, maize milling, cassava processing, rice milling, dairy processing, bakery, soap making, concrete blocks, poultry processing, coffee processing, and fish smoking), plus an **Other** option. You're asked to pick one during onboarding, right after Business Sector, and can change it any time from **Settings → Localisation → Factory Settings**. It's optional and skippable. Picking a type now genuinely changes what AskBiz does with your production data — see **Choosing Your Factory Type**.",
       },
       {
         heading: "Beyond captures — the wider Factory toolkit",
-        body: "Factory Captures is the entry point, but the Factory sector also includes five more floor-level tools, all reachable from the **Factory hub** at **pos.askbiz.co/factory**:\n\n- **Batch Tracking** — scan a batch reference through checkpoints (intake, in progress, QC pass, QC fail, dispatch) with a photo at each one, building a traceability trail for that batch.\n- **Quality Checks** — log a defect against a product with a defect type and severity, separate from a general wastage capture.\n- **Downtime Logging** — report when a machine stops, with a start photo, and close it out later with an end photo. AskBiz records how long it was down.\n- **Production Shifts** — start and end a named production shift with a photo at each end, optionally set a target output, and track live output against it.\n- **Waybills** — log a full dispatch record with a destination, references, and a scheduled time, and see whether the dispatch was on time.\n\nUnlike the four capture types above, none of these five go through the pending-approval queue described in **Approving and Rejecting Captures** — they save directly to your production record, with every action written to your audit trail. See **Batch Tracking, Quality Checks, and Downtime Logging** and **Production Shifts and Waybills** for the full detail.",
+        body: "Factory Captures is the entry point, but the Factory sector also includes several more floor-level tools, all reachable from the **Factory hub** at **pos.askbiz.co/factory**:\n\n- **Batch Tracking** — scan a batch reference through checkpoints (intake, in progress, QC pass, QC fail, dispatch) with a photo at each one, building a traceability trail for that batch.\n- **Quality Checks** — log a defect against a product with a defect type and severity, separate from a general wastage capture.\n- **Downtime Logging** — report when a machine stops, with a start photo, and close it out later with an end photo. AskBiz records how long it was down.\n- **Production Shifts** — start and end a named production shift with a photo at each end, optionally set a target output, and track live output against it.\n- **Waybills** — log a full dispatch record with a destination, references, and a scheduled time, and see whether the dispatch was on time.\n- **Production Runs** — optionally tie a group of intake and output captures together to see accurate per-run yield. See **Production Runs and Intermediates**.\n\nUnlike the five capture types above, none of these go through the pending-approval queue described in **Approving and Rejecting Captures** — they save directly to your production record, with every action written to your audit trail.",
       },
     ],
     faq: [
       { q: "Do I need special hardware to use Factory Captures?", a: "No. Factory Captures runs in any browser at pos.askbiz.co. Staff use the camera on their phone or tablet to take photos. No app download or dedicated hardware is required." },
-      { q: "Can I use Factory Captures alongside the POS sales features?", a: "Yes. Factory Captures is a feature layer on top of AskBiz POS. Staff who process sales and log captures use the same pos.askbiz.co interface — their permissions determine which features they see." },
+      { q: "Can I use Factory Captures alongside the POS sales features?", a: "Yes. Staff who process sales and log captures use the same pos.askbiz.co interface — their permissions determine which features they see." },
       { q: "What happens to a capture before it is approved?", a: "It sits in the pending queue and is visible to supervisors with the capture.approve permission. It does not appear in your formal production record or audit trail until it is approved." },
     ],
-    related: ["pos-factory-submitting-captures", "pos-factory-approvals", "pos-factory-roles-permissions", "pos-factory-type-setup", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
+    related: ["pos-factory-submitting-captures", "pos-factory-approvals", "pos-factory-roles-permissions", "pos-factory-type-setup", "pos-factory-holds", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
   },
   {
     slug: "pos-factory-submitting-captures",
     title: "How to Submit a Factory Capture",
-    description: "Step-by-step guide for floor workers: log in to pos.askbiz.co with your PIN, open the capture dashboard, take a photo, select a capture type, add notes, and submit for supervisor approval.",
+    description: "Step-by-step guide for floor workers: log in to pos.askbiz.co, open the capture dashboard, take a photo, select a capture type, add any optional detail, and submit for supervisor approval.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
-    readTime: 4,
-    lastUpdated: "2026-07-24",
-    keywords: ["submit factory capture", "pos.askbiz.co floor worker", "production photo log", "capture intake output", "factory capture how to", "capture quantity unit", "wastage reason", "dispatch destination"],
+    readTime: 5,
+    lastUpdated: "2026-08-12",
+    keywords: ["submit factory capture", "pos.askbiz.co floor worker", "production photo log", "capture intake output packaging", "factory capture how to", "capture quantity unit", "wastage reason", "dispatch destination", "process parameter"],
     content: [
       {
         heading: "Logging in as a floor worker",
-        body: "Floor workers do not use email to log in. Open **pos.askbiz.co** on any phone, tablet, or shared device and tap **PIN Login**. Enter your unique **4-digit PIN** — your manager will have provided this when setting up your account.\n\nOnce logged in, your dashboard shows only the capture buttons your permissions allow. For example, if you have `camera.intake` and `camera.output`, you will see **Intake** and **Output** buttons. You will not see options outside your assigned role.\n\nIf you do not have a PIN or it is not working, ask your manager to check **Settings → POS → Staff** and regenerate your PIN.",
+        body: "Open **pos.askbiz.co** on any phone, tablet, or shared device and sign in with your **phone number** (the default, easiest option) or email, then your PIN. Once logged in, your dashboard shows only the capture buttons your permissions allow. For example, if you have `camera.intake` and `camera.output`, you will see **Intake** and **Output** buttons and no others.\n\nIf your login isn't working, ask your manager to check **Settings → POS → Staff** and confirm your details.",
       },
       {
         heading: "Opening the capture dashboard and submitting",
-        body: "Tap the camera button on the Factory hub, or tap a capture-type pill at the bottom of the live camera screen, then tap the shutter (or use the gallery icon to upload an existing photo instead). The form then walks you through:\n\n1. **Photo** — taken live or chosen from your gallery. The photo is **mandatory** — you cannot submit without one.\n2. **Type** — tap one of the four type cards (Intake, Output, Wastage, Dispatch) shown under your photo. If you tapped a type pill before shooting, that type is already selected.\n3. **Product** — pick a product from your inventory list, or choose **Other** and type a name. This is required.\n4. **Quantity and unit** — enter the amount on the on-screen numpad and pick a unit (kg, pcs, litres, and others). This is required.\n5. **Wastage reason** (wastage only) — choose one of the quick reason chips: damaged, spoiled, QC reject, machine fault, contamination, overproduction, or other. This is **mandatory** for wastage.\n6. **Destination** (dispatch only) — type where the goods are going. This is **mandatory** for dispatch.\n7. **Notes** (intake and output only) — optional free text.\n8. **Submit** — send it to the pending approval queue.\n\nYou will see a confirmation screen. Your capture is now visible to supervisors. If you're offline when you submit, AskBiz queues the capture on your device and sends it automatically once you're back online, rather than showing an error.",
+        body: "Tap the camera button on the Factory hub, or tap a capture-type pill at the bottom of the live camera screen, then tap the shutter (or use the gallery icon to upload an existing photo instead). The form then walks you through:\n\n1. **Photo** — taken live or chosen from your gallery. The photo is **mandatory** — you cannot submit without one.\n2. **Type** — tap one of the five type cards (Intake, Output, Packaging, Wastage, Dispatch) shown under your photo. If you tapped a type pill before shooting, that type is already selected.\n3. **Product** — pick a product from your inventory list, or choose **Other** and type a name. This is required.\n4. **Quantity and unit** — enter the amount on the on-screen numpad and pick a unit (kg, pcs, litres, and others). Required on every type except Packaging, which uses container size instead (see below).\n5. **Container size** (packaging only) — pick a quick-pick size (5L, 10L, 20L, 1kg, 25kg, 50kg) or type your own. **Mandatory** for packaging.\n6. **Wastage reason** (wastage only) — choose one of the quick reason chips: damaged, spoiled, QC reject, machine fault, contamination, overproduction, or other. This is **mandatory** for wastage.\n7. **Destination** (dispatch only) — type where the goods are going. **Mandatory** for dispatch. If the product matches an open hold, you'll see a warning here before you can submit — see **Not-Yet-Releasable Holds**.\n8. **Notes** (intake and output only) — optional free text.\n9. **Submit** — send it to the pending approval queue.\n\nYou will see a confirmation screen. Your capture is now visible to supervisors. If you're offline when you submit, AskBiz queues the capture on your device and sends it automatically once you're back online, rather than showing an error.",
+      },
+      {
+        heading: "Optional extras on intake and output",
+        body: "A few optional toggles appear on intake and output captures, for factories that need them:\n- **Record a measurement** — log one free-form reading (a label, a value, and a unit) alongside the capture, for anything you track by hand today — temperature, moisture %, cure time, and so on.\n- **This is a mid-process product** (output only) — flag an output that's genuinely sellable as-is before your process is finished, like parboiled paddy or dried parchment coffee. See **Production Runs and Intermediates**.\n- **This was sold** (output and wastage) — record a buyer name and price for material sold directly from this capture, rather than kept in stock. See **Marking Output and Wastage as Sold**.\n- **Production Run reference** — tie this capture to a named production run, so AskBiz can compute yield for that run specifically. See **Production Runs and Intermediates**.\n\nAll four are optional — skip them for a quick, simple capture.",
       },
       {
         heading: "Dispatch captures vs. waybills",
-        body: "A **dispatch** capture (above) is a quick photo-log of goods leaving the facility — the same four fields as any other capture. If you need a fuller dispatch record — a destination, waybill and vehicle reference, a scheduled time, and whether the dispatch was on time — use **Waybills** instead, a separate tool covered in **Production Shifts and Waybills**. Many factories use both: a dispatch capture for the general log, and a waybill for shipments that need real paperwork.",
+        body: "A **dispatch** capture (above) is a quick photo-log of goods leaving the facility — the same core fields as any other capture. If you need a fuller dispatch record — a destination, waybill and vehicle reference, a scheduled time, and whether the dispatch was on time — use **Waybills** instead, a separate tool covered in **Production Shifts and Waybills**. Many factories use both: a dispatch capture for the general log, and a waybill for shipments that need real paperwork.",
       },
       {
         heading: "After submission — what to expect",
-        body: "Once submitted, your capture is in the **pending queue**. You do not need to take any further action unless a supervisor rejects it.\n\nIf a supervisor **approves** your capture, it becomes part of the formal production record. You may see the status update to **Approved** on your dashboard if you are still logged in.\n\nIf a supervisor **rejects** your capture, you will see a **Rejected** status with the reason your supervisor entered. You should review the reason, correct the issue (for example, retake the photo or correct the capture type), and resubmit.",
+        body: "Once submitted, your capture is in the **pending queue**. You do not need to take any further action unless a supervisor rejects it.\n\nIf a supervisor **approves** your capture, it becomes part of the formal production record. You may see the status update to **Approved** on your dashboard if you are still logged in.\n\nIf a supervisor **rejects** your capture, you will see a **Rejected** status with the reason your supervisor entered — this is final and can't be reversed, so review the reason, correct the issue (for example, retake the photo or correct the capture type), and resubmit as a new capture.",
       },
     ],
     faq: [
-      { q: "What should I include in the notes field?", a: "Notes are only shown for intake and output captures, and they're optional — use them for anything your supervisor needs that isn't already covered by the product, quantity, and unit fields, such as a supplier delivery note number. If you need to follow a specific batch through its stages, use Batch Tracking instead of writing a batch number into notes." },
+      { q: "What should I include in the notes field?", a: "Notes are only shown for intake and output captures, and they're optional — use them for anything your supervisor needs that isn't already covered by the product, quantity, and unit fields. If you need to follow a specific batch through its stages, use Batch Tracking instead of writing a batch number into notes." },
       { q: "Can I submit a capture without a photo?", a: "No. A photo is mandatory for every capture submission. This is by design — the photo is what gives the capture its evidentiary value and allows supervisors to verify the event visually." },
-      { q: "Do I have to enter a quantity?", a: "Yes. Every capture needs a quantity greater than zero and a unit (kg, pcs, litres, and others). AskBiz uses this to build your production, wastage, and dispatch totals." },
-      { q: "What happens if I submit the wrong capture type?", a: "Contact your supervisor immediately. They can reject the capture with a reason, and you can resubmit with the correct type. Do not attempt to submit a duplicate with the correct type while the original is still pending — wait for the rejection first." },
+      { q: "Do I have to enter a quantity?", a: "Yes, on every type except Packaging — Packaging uses a container size instead. AskBiz uses this to build your production, wastage, and dispatch totals." },
+      { q: "What happens if I submit the wrong capture type?", a: "Contact your supervisor immediately. They can reject the capture with a reason, and you can resubmit with the correct type — a rejected capture can't be edited or un-rejected." },
     ],
-    related: ["pos-factory-getting-started", "pos-factory-approvals", "pos-factory-roles-permissions", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
+    related: ["pos-factory-getting-started", "pos-factory-approvals", "pos-factory-roles-permissions", "pos-factory-packaging-captures", "pos-factory-holds"],
   },
   {
     slug: "pos-factory-approvals",
     title: "Approving and Rejecting Captures",
-    description: "How supervisors and managers review the pending approvals queue, approve captures with one tap, reject with a mandatory reason, and what happens to the audit trail after each action.",
+    description: "How supervisors and managers review the pending approvals queue, approve captures with one tap, reject with a mandatory (and final) reason, and what happens to the audit trail after each action.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
     readTime: 5,
-    lastUpdated: "2026-07-24",
+    lastUpdated: "2026-08-12",
     keywords: ["approve factory capture", "reject production capture", "supervisor approvals pos", "capture.approve permission", "factory audit trail approval", "does batch tracking need approval", "quality check approval"],
     content: [
       {
         heading: "The approvals queue — supervisor login",
-        body: "Supervisors holding the **`capture.approve`** permission see an **Approvals** tab when they log in at **pos.askbiz.co** with their PIN.\n\nThe approvals queue lists all pending captures for the facility. Each entry shows:\n- The **photo** attached to the capture\n- The **capture type** (intake, output, wastage, or dispatch)\n- The **submitting staff member** and their PIN\n- The **timestamp** of submission\n- Any **notes** the staff member entered\n\nPending captures are shown in chronological order. Supervisors should work through the queue regularly — ideally before the end of each shift.",
+        body: "Supervisors holding the **`capture.approve`** permission see an **Approvals** tab when they log in at **pos.askbiz.co**.\n\nThe approvals queue lists all pending captures for the facility. Each entry shows:\n- The **photo** attached to the capture\n- The **capture type** (intake, output, packaging, wastage, or dispatch)\n- The **submitting staff member**\n- The **timestamp** of submission\n- Any **notes**, and, if the capture was marked sold, the buyer and price\n\nPending captures are shown in chronological order. Supervisors should work through the queue regularly — ideally before the end of each shift.",
       },
       {
         heading: "Approving a capture",
-        body: "To approve a capture:\n\n1. Tap the capture entry in the queue to open the detail view\n2. Review the photo and details\n3. Tap **Approve**\n\nThe capture is immediately recorded in the **audit trail** with your supervisor ID and the approval timestamp. It becomes part of the formal production record. The status on the floor worker's dashboard updates to **Approved**.\n\nApprovals are **permanent** — once approved, a capture cannot be deleted. It can be flagged for review by a manager, but the original record remains in the audit trail.",
+        body: "To approve a capture:\n\n1. Tap the capture entry in the queue to open the detail view\n2. Review the photo and details\n3. Tap **Approve**\n\nThe capture is immediately recorded in the **audit trail** with your supervisor ID and the approval timestamp. It becomes part of the formal production record. The status on the floor worker's dashboard updates to **Approved**.\n\nApprovals are **permanent** — once approved, a capture cannot be deleted.",
       },
       {
         heading: "Rejecting a capture and what happens next",
-        body: "To reject a capture:\n\n1. Tap the capture entry in the queue\n2. Tap **Reject**\n3. Enter a **rejection reason** — this field is mandatory\n4. Tap **Confirm Rejection**\n\nCommon rejection reasons include: *photo unclear or missing*, *incorrect capture type selected*, *batch reference missing from notes*, or *duplicate submission*.\n\nThe rejection reason is recorded in the **audit trail** alongside your supervisor ID and timestamp. The floor worker is notified of the rejection and can see your reason. They should resubmit with the issue corrected.\n\n**Managers** can override a rejection and approve a previously rejected capture from the admin panel Audit tab if needed.",
+        body: "To reject a capture:\n\n1. Tap the capture entry in the queue\n2. Tap **Reject**\n3. Enter a **rejection reason** — this field is mandatory\n4. Tap **Confirm Rejection**\n\nCommon rejection reasons include: *photo unclear or missing*, *incorrect capture type selected*, *batch reference missing from notes*, or *duplicate submission*.\n\nThe rejection reason is recorded in the **audit trail** alongside your supervisor ID and timestamp. The floor worker is notified of the rejection and can see your reason, and should resubmit as a new capture with the issue corrected. **Rejections are permanent too** — there's no way for a manager or anyone else to reverse a rejection and approve the same capture afterwards, from the Audit tab or anywhere else.",
       },
       {
         heading: "What does not go through this queue",
-        body: "This approvals queue covers only the four capture types — intake, output, wastage, and dispatch. AskBiz's other Factory tools — Batch Tracking, Quality Checks, Downtime Logging, Production Shifts, and Waybills — save directly to your production record with no pending-approval step. There's nothing to approve or reject for those; your audit trail (who did what, and when) is the oversight mechanism instead. See **Batch Tracking, Quality Checks, and Downtime Logging** and **Production Shifts and Waybills** for how each of those works.",
+        body: "This approvals queue covers only the five capture types — intake, output, packaging, wastage, and dispatch. AskBiz's other Factory tools — Batch Tracking, Quality Checks, Downtime Logging, Production Shifts, and Waybills — save directly to your production record with no pending-approval step. There's nothing to approve or reject for those; your audit trail (who did what, and when) is the oversight mechanism instead.",
       },
     ],
     faq: [
       { q: "Can I approve captures in bulk?", a: "Currently, approvals are one at a time to ensure each capture is reviewed individually. Bulk approval is on the product roadmap." },
       { q: "What happens if a shift ends with pending captures still in the queue?", a: "Pending captures remain in the queue until approved or rejected — they do not expire. However, best practice is to clear the queue before a shift ends. Managers can see all pending captures across shifts from the admin panel." },
-      { q: "Can a manager approve captures if no supervisor is available?", a: "Yes. Managers have all supervisor permissions by default, including capture.approve. If no supervisor is on shift, a manager can approve captures directly." },
-      { q: "Do quality checks or downtime reports need approval too?", a: "No. Quality Checks, Downtime Logging, Batch Tracking, Production Shifts, and Waybills all save immediately — they don't sit in this pending queue. Only the four capture types (intake, output, wastage, dispatch) go through supervisor approval." },
-      { q: "What if a capture's photo won't load in the queue?", a: "You'll see a placeholder icon and a note that the photo is unavailable instead of a broken image — this can happen if a photo is still syncing from an offline queue. You can still approve or reject using the other details shown." },
+      { q: "Can a rejected capture be reinstated?", a: "No — rejection is final for that specific capture. The correct fix is for the floor worker to resubmit a fresh capture with the issue corrected." },
+      { q: "Do quality checks or downtime reports need approval too?", a: "No. Quality Checks, Downtime Logging, Batch Tracking, Production Shifts, and Waybills all save immediately — they don't sit in this pending queue." },
     ],
     related: ["pos-factory-getting-started", "pos-factory-submitting-captures", "pos-audit-trail-guide", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills"],
   },
@@ -14691,20 +14689,24 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-factory-shifts-waybills",
     title: "Production Shifts and Waybills",
-    description: "How to run a production shift with a live output target and log a dispatch waybill with on-time tracking in AskBiz POS's Factory sector.",
+    description: "How to run a production shift with a live output target and log a dispatch waybill with on-time and hold-status tracking in AskBiz POS's Factory sector.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
     readTime: 5,
-    lastUpdated: "2026-07-24",
-    keywords: ["production shift factory", "shift target output", "waybill dispatch pos", "on-time rate factory", "dispatch documentation askbiz", "factory hub shift"],
+    lastUpdated: "2026-08-12",
+    keywords: ["production shift factory", "shift target output", "waybill dispatch pos", "on-time rate factory", "dispatch documentation askbiz", "factory hub shift", "waybill hold warning"],
     content: [
       {
         heading: "Production Shifts — tracking output against a target",
-        body: "A **Production Shift** tracks a block of working time on your factory floor against an output target — separate from the cash-register shift your cashiers open and close at checkout.\n\nTo start one, open **Start Shift** from the Factory hub (`pos.askbiz.co/factory`), take a photo, choose **Morning**, **Afternoon**, **Night**, or **Custom** (with your own name), and optionally set a **target output**. Only one production shift can be active at a time.\n\nWhile the shift is running, the Factory hub shows **live output** — the total quantity from every approved output capture logged during that shift — updating as captures are approved. When the shift ends, open **End Shift**, take a closing photo, and AskBiz locks in the final output figure and the shift's duration. That final figure won't change afterwards even if a capture from that shift is approved or rejected later, so it stays a reliable historical record.",
+        body: "A **Production Shift** tracks a block of working time on your factory floor against an output target — separate from the cash-register shift your cashiers open and close at checkout.\n\nTo start one, open **Start Shift** from the Factory hub (`pos.askbiz.co/factory`), take a photo, choose **Morning**, **Afternoon**, **Night**, or **Custom** (with your own name), and optionally set a **target output**. Only one production shift can be active at a time.\n\nWhile the shift is running, the Factory hub shows **live output** — the total quantity from every output capture logged during that shift that hasn't been rejected (so pending and approved captures both count) — updating as captures come in. When the shift ends, open **End Shift**, take a closing photo, and AskBiz locks in the final output figure and the shift's duration. That final figure won't change afterwards even if a capture from that shift is approved or rejected later, so it stays a reliable historical record.",
       },
       {
         heading: "Waybills — logging a full dispatch record",
-        body: "A **Waybill** is a fuller dispatch record than a plain dispatch capture — use it for shipments that need real paperwork. Open **Scan Waybill** from the Factory hub, photograph the shipment, then fill in:\n\n- **Destination** — required\n- **Scheduled time** — optional, but needed if you want on-time tracking (see below)\n- **Waybill reference** and **vehicle reference** — optional, shown in capitals\n- **Product** and **quantity** — optional\n- **Notes** — optional\n\nOnce logged, the waybill appears in your recent-dispatches list with its photo and, if you set a scheduled time, an on-time or late badge.",
+        body: "A **Waybill** is a fuller dispatch record than a plain dispatch capture — use it for shipments that need real paperwork. Open **Scan Waybill** from the Factory hub, photograph the shipment, then fill in:\n\n- **Destination** — required\n- **Scheduled time** — optional, but needed if you want on-time tracking (see below)\n- **Waybill reference** and **vehicle reference** — optional, shown in capitals\n- **Product** and **quantity** — optional\n- **Notes** — optional\n\nIf the product you type matches something with an open hold, you'll see a warning before you can log the waybill — see the next section. Once logged, the waybill appears in your recent-dispatches list with its photo and, if you set a scheduled time, an on-time or late badge.",
+      },
+      {
+        heading: "Hold warnings on dispatch",
+        body: "Both a **dispatch capture** and a **waybill** check the product name you enter against any open holds on your account (see **Not-Yet-Releasable Holds**). If it matches, you'll see an inline warning — the hold's label and either how many days remain or that it needs manual clearance — with **Cancel** or **Dispatch anyway**. Tapping Dispatch anyway logs the dispatch or waybill as normal.\n\nWorth knowing: this check happens in the app as you type, as a helpful warning — it isn't a hard block enforced by AskBiz's servers. Treat it as a prompt to double-check, not a guarantee that nothing on hold can ever be dispatched.",
       },
       {
         heading: "On-time tracking, explained",
@@ -14712,83 +14714,250 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Permissions and where these live",
-        body: "Both tools are reached from the **Factory hub** (`pos.askbiz.co/factory`). Like Batch Tracking, Quality Checks, and Downtime Logging, neither goes through the pending-approval queue used for the four capture types — they save immediately and are written to your audit trail.\n\nThe permission flags are:\n\n- **`shift.production_open`**, **`shift.production_close`**, **`shift.production_view`** — start, end, or view production shifts\n- **`waybill.log`**, **`waybill.view`** — log a dispatch waybill, or view the waybill hub and stats\n\nThese are separate from the general **`shift.open`**/**`shift.close`** permissions used for the cash-register shift — holding one doesn't grant the other. See **Factory Roles and Permissions** for which of the five factory role templates carry which of these by default.",
+        body: "Both tools are reached from the **Factory hub** (`pos.askbiz.co/factory`). Like Batch Tracking, Quality Checks, and Downtime Logging, neither goes through the pending-approval queue used for capture types — they save immediately and are written to your audit trail.\n\nThe permission flags are:\n\n- **`shift.production_open`**, **`shift.production_close`**, **`shift.production_view`** — start, end, or view production shifts\n- **`waybill.log`**, **`waybill.view`** — log a dispatch waybill, or view the waybill hub and stats\n\nThese are separate from the general **`shift.open`**/**`shift.close`** permissions used for the cash-register shift — holding one doesn't grant the other. See **Factory Roles and Permissions** for which of the five factory role templates carry which of these by default.",
       },
     ],
     faq: [
       { q: "Is a Production Shift the same as the shift cashiers open at checkout?", a: "No. Production Shifts track factory floor output against a target. The cash-register shift is a completely separate reconciliation feature for till takings. Holding permission for one doesn't grant the other." },
       { q: "Can two production shifts run at once, for two different lines?", a: "Not currently — only one production shift can be active per business at a time, regardless of how many locations or lines you run." },
       { q: "What's the difference between a dispatch capture and a waybill?", a: "A dispatch capture (Factory Captures) is a quick photo-log of goods leaving. A waybill is the fuller dispatch record — destination, references, a schedule, and on-time tracking — for shipments that need real paperwork. See How to Submit a Factory Capture for the dispatch capture flow." },
-      { q: "What if I don't set a scheduled time on a waybill?", a: "It's logged normally but shows as \"no schedule\" rather than on-time or late, and doesn't count toward your on-time rate." },
+      { q: "Can a hold actually stop me from dispatching something?", a: "Not on its own — the warning is there to make you double-check, but tapping Dispatch anyway always goes through. Formally clearing a hold (with a photo, from the Production log) is a separate, permission-gated action — see Not-Yet-Releasable Holds." },
     ],
-    related: ["pos-factory-getting-started", "pos-factory-batch-quality-downtime", "pos-factory-roles-permissions", "pos-factory-submitting-captures"],
+    related: ["pos-factory-getting-started", "pos-factory-batch-quality-downtime", "pos-factory-roles-permissions", "pos-factory-submitting-captures", "pos-factory-holds"],
   },
   {
     slug: "pos-factory-type-setup",
     title: "Choosing Your Factory Type",
-    description: "What AskBiz's 12 factory-type categories are, what each one covers, and what picking one at onboarding or in settings does today.",
+    description: "What AskBiz's 12 factory-type categories are, what each one covers, and what picking one now genuinely changes in your production tracking — yield ranges, automatic holds, and expiry.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
-    readTime: 4,
-    lastUpdated: "2026-07-24",
-    keywords: ["factory type askbiz", "manufacturer business type", "factory type settings", "oil pressing water milling dairy bakery soap concrete poultry coffee fish", "pos factory categories"],
+    readTime: 5,
+    lastUpdated: "2026-08-12",
+    keywords: ["factory type askbiz", "manufacturer business type", "factory type settings", "oil pressing water milling dairy bakery soap concrete poultry coffee fish", "pos factory categories", "yield range by factory type"],
     content: [
       {
         heading: "What is a Factory Type?",
-        body: "If your **Business Type** is set to **Manufacturer**, AskBiz can also record your **Factory Type** — a more specific classification of what you actually produce. This is a separate setting from Business Type: changing one never changes the other.\n\nIt's optional. You can skip it during onboarding and pick one later, or never pick one at all — an unset factory type doesn't limit or change any capture, batch, quality, downtime, shift, or waybill feature. Everything in Factory Operations works the same regardless.",
+        body: "If your **Business Type** is set to **Manufacturer**, AskBiz can also record your **Factory Type** — a more specific classification of what you actually produce. This is a separate setting from Business Type: changing one never changes the other.\n\nIt's optional. You can skip it during onboarding and pick one later, or never pick one at all — an unset factory type doesn't block any capture, batch, quality, downtime, shift, or waybill feature. Everything in Factory Operations still works; you just get generic yield thresholds instead of ones calibrated to your specific production.",
       },
       {
         heading: "The 12 categories, in plain terms",
-        body: "- **Cooking Oil Pressing** (sesame, groundnut, sunflower, or palm) — pressing seeds or fruit into oil. Yields vary hugely by seed, from around 18% for palm to over 70% for groundnut, and the press-cake left over is a sellable by-product, not waste.\n- **Packaged Drinking Water** (sachet or bottled) — treating raw water and packaging it. Includes a required regulatory lab-test hold before any batch can be sold.\n- **Maize Milling** (posho/flour mill) — grinding maize into flour at one of three grades. Each run produces two sellable products at once: the flour and the bran/germ removed alongside it.\n- **Cassava Processing** (garri, fufu, or starch) — peeling, washing, and grating cassava, then branching into one of three different finished products, each with its own process and yield.\n- **Rice Milling / Parboiling** — cleaning and milling paddy into rice, optionally parboiling it first, which significantly reduces breakage and raises the milled-rice yield.\n- **Dairy Processing** (yoghurt, cheese, or ghee) — pasteurizing raw milk, then branching three ways. Yoghurt and ghee/butter are sellable the same day; cheese needs a genuine ripening period first.\n- **Bakery / Bread Production** — mixing, proofing, and baking dough. Unsold stock ages out fast (about a day), so freshness tracking matters more here than in most other types.\n- **Soap / Detergent Making** — combining oils/fats with lye, moulding, and curing. A batch is genuinely not sellable until several weeks of curing are complete.\n- **Concrete Block / Brick Making** — mixing cement, sand, aggregate, and water, moulding, and curing blocks. Minimum cure is about a week; full design strength takes 28 days.\n- **Poultry Processing / Abattoir** (broiler, turkey, duck, or goose) — slaughtering, defeathering, and eviscerating birds down to a dressed carcass, tracked as a percentage of live weight.\n- **Coffee Processing** (wet/washed) — pulping, fermenting, washing, and drying cherry down to green beans. Dried parchment coffee is a real, separately-sellable stopping point along the way.\n- **Fish Smoking / Processing** — cleaning and smoking fresh fish until it reaches a shelf-stable moisture level. Yield varies the most of any type here, so AskBiz encourages tracking your own average rather than relying on a generic figure.\n\nThere's also an **Other** option for anything not listed.",
+        body: "- **Cooking Oil Pressing** (sesame, groundnut, sunflower, or palm) — pressing seeds or fruit into oil. Yields vary hugely by seed, from around 18% for palm to over 70% for groundnut, and the press-cake left over is a sellable by-product, not waste.\n- **Packaged Drinking Water** (sachet or bottled) — treating raw water and packaging it. Includes a required regulatory lab-test hold before any batch can be sold.\n- **Maize Milling** (posho/flour mill) — grinding maize into flour at one of three grades. Each run produces two sellable products at once: the flour and the bran/germ removed alongside it.\n- **Cassava Processing** (garri, fufu, or starch) — peeling, washing, and grating cassava, then branching into one of three different finished products, each with its own process and yield.\n- **Rice Milling / Parboiling** — cleaning and milling paddy into rice, optionally parboiling it first, which significantly reduces breakage and raises the milled-rice yield. Parboiled paddy itself is a real, sellable stopping point.\n- **Dairy Processing** (yoghurt, cheese, or ghee) — pasteurizing raw milk, then branching three ways. Yoghurt and ghee/butter are sellable the same day; cheese needs a genuine ripening period first.\n- **Bakery / Bread Production** — mixing, proofing, and baking dough. Unsold stock ages out fast, so freshness tracking matters more here than in most other types.\n- **Soap / Detergent Making** — combining oils/fats with lye, moulding, and curing. A batch is genuinely not sellable until several weeks of curing are complete.\n- **Concrete Block / Brick Making** — mixing cement, sand, aggregate, and water, moulding, and curing blocks. Minimum cure is about a week; full design strength takes 28 days.\n- **Poultry Processing / Abattoir** (broiler, turkey, duck, or goose) — slaughtering, defeathering, and eviscerating birds down to a dressed carcass, tracked as a percentage of live weight.\n- **Coffee Processing** (wet/washed) — pulping, fermenting, washing, and drying cherry down to green beans. Dried parchment coffee is a real, separately-sellable stopping point along the way.\n- **Fish Smoking / Processing** — cleaning and smoking fresh fish until it reaches a shelf-stable moisture level. Yield varies the most of any type here, so AskBiz encourages tracking your own average rather than relying on a generic figure.\n\nThere's also an **Other** option for anything not listed.",
       },
       {
         heading: "Where to set or change it",
         body: "You're asked to pick a factory type once during onboarding, on a step shown only to the Manufacturer business type, right after you pick your sector. It's skippable.\n\nTo set or change it later, go to **Settings → Localisation → Factory Settings** in your AskBiz admin panel (askbiz.co, not the pos.askbiz.co staff terminal) and choose from the dropdown, then save. This setting lives alongside — but is completely separate from — the **Business Type** setting on the same page.",
       },
       {
-        heading: "What picking a type does — and doesn't — do today",
-        body: "Right now, picking a factory type simply records which of the 12 categories (or Other) your business is, on your business profile. It does not currently change your capture buttons, add stage-specific checklists to the app, or pre-fill any yield/recipe figures for you — every factory still uses the same four capture types and the same Batch, Quality, Downtime, Shift, and Waybill tools described elsewhere in Factory Operations, regardless of which type you pick.\n\nUNVERIFIED: whether or how soon type-specific stage guidance and suggested yield recipes will appear in the app — the underlying reference data (typical production stages and expected yield ranges per type) exists, but nothing in the product surfaces it to you yet.",
+        heading: "What picking a type actually does",
+        body: "Picking a factory type now genuinely changes three things:\n\n1. **Yield ranges** — your Efficiency KPI and Production log score your output against the expected yield range for your specific type and product (for example, sesame oil's normal range is roughly 33–63%), instead of one flat threshold applied to everyone. See **Understanding Your Production Efficiency and Yield Range**.\n2. **Automatic holds** — for water, soap, concrete blocks, and dairy's cheese line specifically, a matching output or packaging capture automatically creates a not-yet-releasable hold with no extra input from you. See **Not-Yet-Releasable Holds**.\n3. **Automatic expiry** — for bakery specifically, a matching output or packaging capture is automatically given a short sell-by window.\n\nWhat it still doesn't do: change which capture buttons you see (every factory type uses the same five capture types), or show you a stage-by-stage checklist for your process — that reference data exists behind the scenes but isn't surfaced in the app yet.",
       },
     ],
     faq: [
       { q: "I picked the wrong factory type — how do I fix it?", a: "Go to Settings → Localisation → Factory Settings and pick a different one, then save. There's no limit on how many times you can change it." },
-      { q: "My factory doesn't match any of the 12 categories — what do I pick?", a: "Choose Other. Nothing about your capture screens or the rest of Factory Operations changes based on this choice." },
-      { q: "Does choosing a factory type cost extra or require a specific plan?", a: "UNVERIFIED: no plan restriction on the factory type setting itself was found while researching this article — treat this as unconfirmed until checked against current plan terms." },
-      { q: "Will picking a factory type change what my staff see when they submit a capture?", a: "Not today. Every factory type sees the same four capture types and the same Batch, Quality, Downtime, Shift, and Waybill tools." },
+      { q: "My factory doesn't match any of the 12 categories — what do I pick?", a: "Choose Other. You'll still get generic yield thresholds and none of the type-specific automatic holds or expiry — nothing about your capture screens changes either way." },
+      { q: "Does choosing a factory type cost extra or require a specific plan?", a: "No — it's a free setting available regardless of plan." },
+      { q: "Will picking a factory type change what my staff see when they submit a capture?", a: "No. Every factory type sees the same five capture types and the same Batch, Quality, Downtime, Shift, and Waybill tools — the difference is in how AskBiz scores and gates the data behind the scenes." },
     ],
-    related: ["pos-factory-getting-started", "pos-factory-roles-permissions"],
+    related: ["pos-factory-getting-started", "pos-factory-roles-permissions", "pos-factory-yield-ranges", "pos-factory-holds"],
   },
   {
     slug: "pos-factory-roles-permissions",
     title: "Factory Roles and Permissions",
-    description: "Understand the factory-specific permission flags in AskBiz POS — camera.intake, camera.output, camera.wastage, camera.dispatch, and capture.approve — and how to assign them to your staff.",
+    description: "Understand the factory-specific permission flags in AskBiz POS — the five camera.* capture flags, capture.approve, hold.clear, and more — and how to assign them to your staff.",
     topic: "Factory Operations",
     topicSlug: "factory-operations",
     readTime: 6,
-    lastUpdated: "2026-07-24",
-    keywords: ["factory permissions askbiz", "camera.intake permission", "capture.approve role", "factory staff roles pos", "production floor permissions", "batch.log permission", "quality.check permission", "downtime permissions factory", "shift.production_open", "waybill.log permission", "factory role templates", "line operator quality inspector shift supervisor"],
+    lastUpdated: "2026-08-12",
+    keywords: ["factory permissions askbiz", "camera.intake permission", "capture.approve role", "hold.clear permission", "factory staff roles pos", "production floor permissions", "batch.log permission", "quality.check permission", "downtime permissions factory", "shift.production_open", "waybill.log permission", "factory role templates", "line operator quality inspector shift supervisor"],
     content: [
       {
         heading: "The factory permission flags",
-        body: "AskBiz's Factory sector uses a set of specific permission flags. The original five cover the capture-and-approve flow:\n\n- **`camera.intake`** — can submit intake captures (incoming materials/components)\n- **`camera.output`** — can submit output captures (finished goods off the line)\n- **`camera.wastage`** — can submit wastage captures (damaged or rejected materials)\n- **`camera.dispatch`** — can submit dispatch captures (finished goods leaving the facility)\n- **`capture.approve`** — can see the pending approvals queue and approve or reject captures\n\nA further set covers the wider Factory toolkit (see **Batch Tracking, Quality Checks, and Downtime Logging** and **Production Shifts and Waybills**):\n\n- **`batch.log`** / **`batch.view`** — log a batch checkpoint scan / view the batch hub and history\n- **`quality.check`** / **`quality.view`** — log a quality check / view quality check history\n- **`downtime.report`**, **`downtime.close`**, **`downtime.view`** — open a downtime event, close one, or view them\n- **`shift.production_open`**, **`shift.production_close`**, **`shift.production_view`** — start, end, or view production shifts (separate from the general `shift.open`/`shift.close` used at the cash register)\n- **`waybill.log`** / **`waybill.view`** — log a dispatch waybill / view the waybill hub and on-time stats\n- **`factory.machines_manage`** / **`factory.recipes_manage`** — reserved for upcoming machine-registry and recipe-management screens; owners and managers hold them today, but no admin screen currently uses them\n\nPermission flags are additive — a staff member can hold any combination.",
+        body: "AskBiz's Factory sector uses a set of specific permission flags. Five cover the capture-and-approve flow:\n\n- **`camera.intake`**, **`camera.output`**, **`camera.packaging`**, **`camera.wastage`**, **`camera.dispatch`** — can submit that type of capture\n- **`capture.approve`** — can see the pending approvals queue and approve or reject captures\n\nA further set covers the wider Factory toolkit:\n\n- **`batch.log`** / **`batch.view`** — log a batch checkpoint scan / view the batch hub and history\n- **`quality.check`** / **`quality.view`** — log a quality check / view quality check history\n- **`downtime.report`**, **`downtime.close`**, **`downtime.view`** — open a downtime event, close one, or view them\n- **`shift.production_open`**, **`shift.production_close`**, **`shift.production_view`** — start, end, or view production shifts (separate from the general `shift.open`/`shift.close` used at the cash register)\n- **`waybill.log`** / **`waybill.view`** — log a dispatch waybill / view the waybill hub and on-time stats\n- **`hold.clear`** — formally clear a not-yet-releasable hold with a photo, from the Production log\n- **`factory.machines_manage`** / **`factory.recipes_manage`** — reserved for upcoming machine-registry and recipe-management screens; owners and managers hold them today, but no admin screen currently uses them\n\nPermission flags are additive — a staff member can hold any combination.",
       },
       {
         heading: "Roles in context — the five factory role templates",
-        body: "When you add a factory staff member from **Settings → POS → Staff**, you can start from one of five ready-made role templates instead of toggling flags one by one:\n\n- **Line Operator** — the general floor role. Gets all four `camera.*` flags plus batch, downtime, production-shift, and waybill logging — everything needed to run the line day to day, but not `capture.approve`.\n- **Quality Inspector** — QA staff. Gets `camera.intake`/`camera.wastage`, `quality.check`/`quality.view`, and view access to batches, downtime, and waybills.\n- **Shift Supervisor** — a working supervisor. Gets everything a Line Operator gets, plus `capture.approve`, `quality.check`/`quality.view`, and view-level access across sales, inventory, service jobs, and reports.\n- **Production Manager** — full management access: every Factory permission (including `capture.approve` and the reserved machine/recipe flags), plus inventory management, refunds, and financial reports.\n- **Inventory Manager** — stock and traceability focused. Gets `camera.intake`, full purchase-order permissions, and view access to batches, downtime, and waybills, alongside general inventory management.\n- **Owner** — full access to every feature, always, including staff management.\n\nYou can still fine-tune any staff member's individual flags after applying a template — templates are a starting point, not a lock.",
+        body: "AskBiz defines five factory role templates: Line Operator, Quality Inspector, Shift Supervisor, Production Manager, and Inventory Manager.\n\n- **Line Operator** — the general floor role. Gets all five `camera.*` flags plus batch, downtime, production-shift, and waybill logging — everything needed to run the line day to day, but not `capture.approve` or `hold.clear`.\n- **Quality Inspector** — QA staff. Gets `camera.intake`/`camera.wastage`, `quality.check`/`quality.view`, and view access to batches, downtime, and waybills.\n- **Shift Supervisor** — a working supervisor. Gets everything a Line Operator gets, plus `capture.approve`, `hold.clear`, `quality.check`/`quality.view`, and view-level access across sales, inventory, service jobs, purchase orders, and reports.\n- **Production Manager** — full management access: every Factory permission (including `capture.approve`, `hold.clear`, and the reserved machine/recipe flags), plus inventory management, refunds, and financial reports.\n- **Inventory Manager** — stock and traceability focused. Gets `camera.intake`, purchase-order view/create/receive/pay (not send-to-supplier), and view access to batches, downtime, and waybills, alongside general inventory management.\n- **Owner** — full access to every feature, always, including staff management.\n\nWorth knowing when adding staff: today's Add Staff screen only offers a direct picker for three of these five (Line Operator, Shift Supervisor, Production Manager) under simpler labels (Worker/Supervisor/Manager). Quality Inspector and Inventory Manager are fully valid roles once assigned, but need to be set from Settings → POS → Staff rather than that quicker picker.",
       },
       {
         heading: "Assigning roles from the admin Staff tab",
-        body: "For a new staff member, the fastest route is picking one of the five role templates above when you add them from **Settings → POS → Staff** — it applies a sensible permission set in one step. To fine-tune afterwards, or to set permissions from scratch:\n\n1. Go to **Settings → POS → Staff** in your admin panel\n2. Find the staff member and tap **Edit**\n3. Under **Factory Permissions**, toggle on the relevant flags\n4. Tap **Save**\n\nChanges take effect immediately — the staff member will see the updated capture buttons the next time they log in at **pos.askbiz.co**.\n\nTo remove a permission, return to the same screen and toggle it off. The staff member's historical captures are not affected — only future capture access is changed.",
+        body: "For a new staff member, the fastest route is picking one of the role templates above when you add them — it applies a sensible permission set in one step. To fine-tune afterwards, or to set permissions from scratch:\n\n1. Go to **Settings → POS → Staff** in your admin panel\n2. Find the staff member and tap **Edit**\n3. Under **Factory Permissions**, toggle on the relevant flags\n4. Tap **Save**\n\nChanges take effect immediately — the staff member will see the updated capture buttons the next time they log in at **pos.askbiz.co**.\n\nTo remove a permission, return to the same screen and toggle it off. The staff member's historical captures are not affected — only future capture access is changed.",
       },
     ],
     faq: [
       { q: "Can a floor worker also be a supervisor?", a: "Yes. You can assign both camera permissions and capture.approve to the same staff member. This is common in small operations where a working supervisor logs captures and approves their own team's submissions." },
       { q: "What happens if a staff member tries to access a capture type they do not have permission for?", a: "The capture button for that type simply does not appear on their dashboard. Staff only see the actions their permissions allow — there is no error or workaround." },
       { q: "How do I remove a staff member's capture permissions if they change roles?", a: "Go to Settings → POS → Staff, edit the staff member, and toggle off the relevant factory permission flags. Changes are immediate." },
-      { q: "What's the fastest way to set up a new factory team?", a: "Add each staff member from Settings → POS → Staff and pick the closest of the five role templates (Line Operator, Quality Inspector, Shift Supervisor, Production Manager, Inventory Manager) instead of ticking permission flags one by one. You can still adjust individual flags afterwards." },
       { q: "What do factory.machines_manage and factory.recipes_manage do?", a: "They're reserved for upcoming machine-registry and recipe/yield-management screens. Owners and managers hold them today, but no admin screen currently uses them yet — nothing changes for your team by holding or not holding these two." },
+      { q: "Who can clear a not-yet-releasable hold?", a: "Only staff with the hold.clear permission — Shift Supervisor, Production Manager, and Owner by default. Line Operator, Quality Inspector, and Inventory Manager don't get it automatically." },
     ],
-    related: ["pos-factory-getting-started", "pos-staff-roles-explained", "pos-factory-approvals", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills", "pos-factory-type-setup"],
+    related: ["pos-factory-getting-started", "pos-staff-roles-explained", "pos-factory-approvals", "pos-factory-batch-quality-downtime", "pos-factory-shifts-waybills", "pos-factory-type-setup", "pos-factory-holds"],
+  },
+  {
+    slug: "pos-factory-holds",
+    title: "Not-Yet-Releasable Holds (Curing, Regulatory Clearance, and Custom Waits)",
+    description: "How AskBiz automatically holds production that isn't ready to ship yet — curing soap, setting concrete, ripening cheese, lab-testing water — plus how dispatch warnings and manual clearance work.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 5,
+    lastUpdated: "2026-08-12",
+    keywords: ["factory hold", "curing period pos", "batch hold settings", "not yet releasable", "dispatch anyway warning", "regulatory clearance factory", "hold.clear permission", "shelf life expiry factory"],
+    content: [
+      {
+        heading: "What a hold is",
+        body: "Some production genuinely isn't ready to sell the moment it comes off the line — soap needs weeks to cure, concrete needs days to set, cheese needs to ripen, packaged water needs a lab test. AskBiz can track this automatically as a **hold**: a batch of output is flagged as not-yet-releasable until either a set number of days passes, or someone manually clears it with a photo.",
+      },
+      {
+        heading: "Which factory types hold automatically",
+        body: "Four of AskBiz's 12 factory types create a hold automatically, with no setup needed, whenever a matching output or packaging capture is logged:\n- **Packaged Drinking Water** — a regulatory lab-test hold with no fixed duration; it can only be cleared manually.\n- **Soap / Detergent Making** — a 35-day curing hold.\n- **Concrete Block / Brick Making** — a 7-day minimum-cure hold (full design strength at 28 days is noted for information but isn't a second blocking hold).\n- **Dairy Processing** — a 14-day ripening hold, on the **cheese** line only (yoghurt and ghee/butter aren't held).\n\nIf your factory type isn't one of these, or is set to **Other**, output isn't held automatically — but you can still set up a manual hold, below.",
+      },
+      {
+        heading: "Setting a manual hold for your own factory type",
+        body: "If your factory type is unset or **Other**, go to **Settings → Localisation → Factory Settings → Batch Hold** and turn it on. Give it a label and, if it has a fixed wait, a number of days — leave the days blank if it should only ever be cleared manually. This applies to every output and packaging capture, not per-product.",
+      },
+      {
+        heading: "How a hold gets cleared",
+        body: "A hold with a fixed number of days clears itself automatically once that time passes — no action needed. A hold with no fixed duration (like water's lab test) only clears when someone with the **`hold.clear`** permission (Shift Supervisor, Production Manager, or Owner, by default) formally clears it from the **Production log**, with a required photo as evidence.",
+      },
+      {
+        heading: "What happens if you try to dispatch something on hold",
+        body: "Both a dispatch capture and a waybill check what you're dispatching against any open holds. If it matches, you'll see a warning — the hold's label and how long is left, or that it needs manual clearance — with **Cancel** or **Dispatch anyway**. This warning is there to make you stop and check; tapping Dispatch anyway always lets the dispatch or waybill go through. It's a prompt, not a hard block enforced by AskBiz's servers.",
+      },
+      {
+        heading: "The mirror image: shelf-life and expiry",
+        body: "Holds stop something shipping too early. AskBiz also tracks the opposite problem — stock that needs to ship before it goes off. Today this is automatic for **Bakery** only: a matching output or packaging capture gets a short sell-by window (currently 24 hours). The Factory hub and Production log show an amber \"expiring soon\" badge in the last few hours before that window ends, and a red \"expired\" badge after it passes. Unlike holds, there's currently no Settings option to set a custom decay window for other factory types.",
+      },
+    ],
+    faq: [
+      { q: "Can I stop a hold from blocking a dispatch entirely?", a: "The dispatch warning can always be overridden by tapping Dispatch anyway — it's a heads-up, not an enforced block. Formally clearing the hold (with a photo, by someone with hold.clear permission) is the way to resolve it properly rather than just dispatching past the warning each time." },
+      { q: "Does a curing or setting hold need a photo to clear once the time is up?", a: "No — a duration-based hold (soap, concrete, cheese) clears itself automatically once its days pass. Only a no-duration hold, like water's regulatory test, requires a manual photo clearance." },
+      { q: "My factory type doesn't have holds — can I still use them?", a: "Yes, if your factory type is unset or Other — turn on the manual Batch Hold option in Settings → Localisation → Factory Settings. The four built-in factory types with template holds (water, soap, concrete blocks, dairy) don't need this — theirs are automatic." },
+      { q: "Why does dairy only hold cheese and not yoghurt or ghee?", a: "Yoghurt and ghee/butter are genuinely sellable the same day they're made — only cheese needs a real ripening period, so only that line creates a hold." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-type-setup", "pos-factory-shifts-waybills", "pos-factory-roles-permissions"],
+  },
+  {
+    slug: "pos-factory-packaging-captures",
+    title: "Packaging Captures: Turning Bulk Output into Sized Units",
+    description: "How to log packaging captures — the fifth capture type — for turning bulk production into sized, sellable units like jerry cans or bags, and how it differs from Output and Dispatch.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 3,
+    lastUpdated: "2026-08-12",
+    keywords: ["packaging capture", "container size factory", "bulk to units", "jerry can bag packaging pos", "fifth capture type"],
+    content: [
+      {
+        heading: "What packaging captures are for",
+        body: "Many factories produce in bulk but sell in fixed-size units — oil pressed into a tank, then packed into 20L jerry cans; water treated in bulk, then packed into sachets or bottles. **Packaging** is a dedicated capture type for logging that packing step, separate from the original Output capture that recorded the bulk production itself.",
+      },
+      {
+        heading: "How it differs from Output and Dispatch",
+        body: "**Output** records production coming off the line — the bulk oil, the treated water. **Packaging** records that same material being packed into sized containers. **Dispatch** records it leaving the facility. A single batch typically passes through all three as separate captures.",
+      },
+      {
+        heading: "Logging a packaging capture",
+        body: "Follow the same photo-first flow as any capture, with one difference: instead of a quantity-and-unit pair, you're asked for a **container size** — pick a quick-pick option (5L, 10L, 20L, 1kg, 25kg, 50kg) or type your own. The quantity you enter is the number of containers, not a weight or volume. Packaging captures are colour-coded teal throughout the Factory hub, approvals queue, and Production log so they're easy to tell apart from the other four types at a glance.",
+      },
+    ],
+    faq: [
+      { q: "Do packaging captures go through the same approval queue?", a: "Yes — like the other four capture types, a packaging capture is pending until a supervisor approves or rejects it." },
+      { q: "Can I mark packaged goods as sold, or flag them as a mid-process product?", a: "No — the sale-tracking and mid-process toggles are only offered on Output and Wastage captures, not Packaging." },
+      { q: "Does every factory type use packaging captures?", a: "The capture type itself is available to every factory, regardless of your factory type — use it wherever your process includes a distinct packing step." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-submitting-captures", "pos-factory-approvals"],
+  },
+  {
+    slug: "pos-factory-sale-tracking",
+    title: "Marking Output and Wastage as Sold",
+    description: "How to record a buyer and price directly on an output or wastage capture — for genuine co-products, like press-cake or bran, that shouldn't be filed as ordinary waste.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 3,
+    lastUpdated: "2026-08-12",
+    keywords: ["sold wastage capture", "co-product sale factory", "buyer name price capture", "press cake bran sale", "by-product tracking pos"],
+    content: [
+      {
+        heading: "Why this exists",
+        body: "Several production processes generate a genuine by-product that's still worth money — sesame's press-cake, maize milling's bran and germ, dairy's whey. That material isn't waste, but it also isn't your main output. The **\"This was sold\"** toggle gives it somewhere accurate to live, on either an **Output** or a **Wastage** capture, instead of forcing you to either hide it in notes or misrecord it as a loss.",
+      },
+      {
+        heading: "Recording a sale on a capture",
+        body: "When submitting an Output or Wastage capture, turn on **\"This was sold\"** and enter the **buyer's name** and the **price** you sold it for. Both fields are optional even with the toggle on — record whichever you have.",
+      },
+      {
+        heading: "Where it shows up",
+        body: "A sold capture is flagged in the approvals queue (\"Sold to {buyer} for {price}\", or just the price if no buyer was given) so supervisors see it at a glance, and again on the Production log once approved, with a dedicated sold badge and detail fields.",
+      },
+    ],
+    faq: [
+      { q: "Can I mark a Packaging or Intake capture as sold?", a: "No — the sale-tracking toggle is only available on Output and Wastage captures." },
+      { q: "Does marking something as sold affect my stock or revenue figures automatically?", a: "It's recorded on the capture itself for visibility and reporting, alongside your other production data." },
+      { q: "Should I use this for my main product, or just by-products?", a: "It works for either, but it exists mainly to give genuine by-products (press-cake, bran, whey, and similar) an honest home — your main product's sales normally flow through your regular POS transactions instead." },
+    ],
+    related: ["pos-factory-submitting-captures", "pos-factory-approvals", "pos-factory-type-setup"],
+  },
+  {
+    slug: "pos-factory-yield-ranges",
+    title: "Understanding Your Production Efficiency and Yield Range",
+    description: "How AskBiz scores your output-to-intake ratio against a realistic range for your specific factory type and product, instead of one flat threshold — plus the reference ranges for all 12 types.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 5,
+    lastUpdated: "2026-08-12",
+    keywords: ["factory yield range", "production efficiency kpi", "expected yield by factory type", "sesame oil yield", "concrete block yield", "bakery yield", "yield calculation pos"],
+    content: [
+      {
+        heading: "Why a flat threshold doesn't work for production",
+        body: "A generic \"90% good, 70% warning\" efficiency threshold makes sense for some processes and is actively misleading for others. Pressing sesame into oil at 36% isn't a problem — it's the expected result of the process. Judged against a flat 90% target, a genuinely healthy sesame press would look like a serious loss every single day.",
+      },
+      {
+        heading: "How AskBiz scores your yield today",
+        body: "If your **Factory Type** is set, AskBiz's Efficiency KPI (on the Factory hub) and Yield Summary (on the Production log) compare your actual output-to-intake ratio against the expected range for your specific type and product — scoring it **good** within that range, **warn** moderately outside it, and **bad** well outside it. If your factory type is unset, set to **Other**, or your product doesn't match a known recipe, AskBiz falls back to the same flat 90%/70% threshold used before — it's a safe default, just not calibrated to your process.",
+      },
+      {
+        heading: "Reference: expected yield ranges by factory type",
+        body: "Approximate ranges AskBiz uses today, for your main product line in each type:\n- **Cooking Oil Pressing** — Sesame ~36% (33–63%), Groundnut ~76% (68–80%), Sunflower ~25% (20–30%), Palm ~18% (12–24%)\n- **Packaged Drinking Water** — ~90% (50–98%)\n- **Maize Milling** — Whole meal ~98% (97–99%), Sifted/bolted ~88% (80–96%), \"Super\" meal ~68% (60–75%)\n- **Cassava Processing** — Garri ~22% (17.5–35%), Fufu ~25% (15–40%, a rougher estimate), Starch ~20% (15–25%)\n- **Rice Milling** — Milled rice (no parboil) ~66% (53–70%), Parboiled milled rice ~90% (85–95%), Parboiled paddy ~98% (92–102%)\n- **Dairy Processing** — Cheese ~9% (7.7–11.1%), Ghee/butter ~81% (80–82%)\n- **Bakery** — Baked bread ~85% (75–90%)\n- **Soap Making** — ~100% (90–110%)\n- **Concrete Blocks** — ~100% (86–100%)\n- **Poultry Processing** — Broiler ~72% (70–75%), Turkey ~79% (77–81%), Duck ~70.5% (66–75%), Goose ~68% (64–72%)\n- **Coffee Processing** — Green beans ~18% (15–20%), Dried parchment ~22% (18–28%, the roughest estimate in the set)\n- **Fish Smoking** — ~50% (20–80% — the widest, least certain range here; AskBiz encourages tracking your own average over time rather than relying on this figure)\n\nThese are starting points, not guarantees — real yield varies with your equipment, raw material quality, and process.",
+      },
+    ],
+    faq: [
+      { q: "My yield is outside the expected range — did I do something wrong?", a: "Not necessarily. These ranges are realistic starting points, not hard rules — your own equipment and materials can shift them. Track your own average over time and treat a big change from your own normal as the real signal to investigate." },
+      { q: "Does this affect my capture buttons or block anything?", a: "No — yield scoring is purely informational, shown on the Efficiency KPI and Yield Summary. It doesn't gate or change any capture." },
+      { q: "Can I set my own custom yield range?", a: "Not yet — ranges are AskBiz's built-in figures per factory type today, with no per-account customisation." },
+    ],
+    related: ["pos-factory-type-setup", "pos-factory-getting-started", "pos-factory-batch-quality-downtime"],
+  },
+  {
+    slug: "pos-factory-production-runs",
+    title: "Production Runs and Mid-Process Intermediates",
+    description: "How to tie a group of captures together as one production run for accurate per-run yield, and how to flag a genuinely sellable mid-process product like parboiled paddy.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 4,
+    lastUpdated: "2026-08-12",
+    keywords: ["production run reference", "factory yield per run", "mid-process product", "sellable intermediate", "parboiled paddy", "dried parchment coffee", "intermediate badge"],
+    content: [
+      {
+        heading: "Why production runs exist",
+        body: "AskBiz's overall Yield Summary divides your total output for a product by your *entire* intake history for it — which gets misleading the moment you sell part of a batch early as a mid-process product and keep processing the rest. A **Production Run** groups just the intake and output captures that actually belong together, so AskBiz can compute an accurate yield for that specific run instead.",
+      },
+      {
+        heading: "Tagging captures with a run reference",
+        body: "On an intake or output capture, optionally add a **Production Run reference** — a code you choose, like `SB-2607`. Type the same reference on every capture that belongs to that run. If the reference doesn't exist yet, AskBiz creates it automatically the first time you use it; if it does, this capture is added to that run.",
+      },
+      {
+        heading: "The \"By Production Run\" card",
+        body: "Your Production log shows a **By Production Run** card listing your top runs by volume, each with its own computed yield — that run's output divided by that run's intake, independent of your product's overall history. This is what makes a run's yield stay accurate even if you sold part of the intake early as an intermediate (see below) partway through.",
+      },
+      {
+        heading: "Flagging a mid-process product as sellable",
+        body: "Some processes have a real stopping point partway through that's already sellable — parboiled paddy before it's milled into rice, or dried parchment coffee before it's hulled into green beans. On an **Output** capture, turn on **\"This is a mid-process product\"** to flag it as one of these. It gets a distinct **Intermediate** badge wherever it appears, so it's clearly not your final finished product. This isn't limited to any specific factory type — flag any output that's genuinely being sold before your process is complete.",
+      },
+    ],
+    faq: [
+      { q: "Do I have to use production run references?", a: "No — both the run reference and the intermediate flag are optional. Skip them for a simple capture; use them when you need accurate yield on a specific batch or a mid-process sale." },
+      { q: "Can I use a production run reference and Batch Tracking together?", a: "Yes — they're separate tools. Batch Tracking follows one batch through checkpoints (intake, in progress, QC pass/fail, dispatch); a production run reference groups captures specifically for yield calculation. Many factories only need one or the other." },
+      { q: "Which factory types have a known intermediate product?", a: "Rice Milling (parboiled paddy) and Coffee Processing (dried parchment coffee) both call one out specifically in their recipe data — but the intermediate flag itself works for any output, on any factory type." },
+    ],
+    related: ["pos-factory-submitting-captures", "pos-factory-batch-quality-downtime", "pos-factory-yield-ranges", "pos-factory-type-setup"],
   },
 
   // ── POS — STAFF ROLES & AUDIT TRAIL ─────────────────────────────────────────
@@ -14809,11 +14978,11 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "The six POS staff roles",
-        body: "AskBiz POS has six staff role levels, ordered from most restricted to most permissive:\n\n**Cashier** — the most common floor role. Can process sales, apply discounts up to a configured limit, and view their own shift summary. Cannot process refunds or void transactions.\n\n**Inventory** — focused on stock management. Can add, edit, and adjust product inventory. Cannot process sales or access financial reports.\n\n**Repair / Engineer** — specific to the repair sector. Can log repair intake, update job status, mark jobs complete, and view assigned jobs. Cannot access sales or inventory functions outside the repair workflow.\n\n**Supervisor** — everything a Cashier can do, plus process refunds, void transactions, approve factory captures, and view daily store stats across all staff.\n\n**Manager** — everything a Supervisor can do, plus add or edit products, adjust inventory, export data, run reports, and access the full audit trail.\n\n**Owner / Admin** — full access to all features including billing, API connections, staff management, and all analytics.",
+        body: "AskBiz POS has six staff role levels, ordered from most restricted to most permissive:\n\n**Cashier** — the most common floor role. Can process sales and apply discounts (no role-based cap today), and view their own shift summary. Cannot process refunds or amend transactions.\n\n**Inventory** — focused on stock management. Can add, edit, and adjust product inventory. Cannot process sales or access financial reports.\n\n**Repair / Engineer** — specific to the repair sector. Can log repair intake, update job status, mark jobs complete, and view assigned jobs. Cannot access sales or inventory functions outside the repair workflow.\n\n**Supervisor** — everything a Cashier can do, plus process refunds, void transactions, approve factory captures, and view daily store stats across all staff.\n\n**Manager** — everything a Supervisor can do, plus add or edit products, adjust inventory, export data, run reports, and access the full audit trail.\n\n**Owner / Admin** — full access to all features including billing, API connections, staff management, and all analytics.",
       },
       {
         heading: "How to assign and change roles",
-        body: "To assign a role when adding a new staff member:\n1. Go to **Settings → POS → Staff** and tap **Invite Staff** or **Add Staff (PIN)**\n2. Enter the staff member's details\n3. Select their **Role** from the dropdown\n4. Tap **Save**\n\nTo change an existing staff member's role:\n1. Go to **Settings → POS → Staff**\n2. Find the staff member and tap **Edit**\n3. Change the **Role** dropdown to the new role\n4. Tap **Save** — the change is immediate\n\nRole changes do not affect historical records. If a cashier is promoted to supervisor, their previous transactions remain tagged as cashier-level actions in the audit trail.",
+        body: "To assign a role when adding a new staff member:\n1. Go to the **Staff** tab in your POS dashboard and tap **Add Staff**\n2. Enter the staff member's details\n3. Select their **Role** from the dropdown\n4. Tap **Save**\n\nTo change an existing staff member's role:\n1. Go to the **Staff** tab\n2. Find the staff member and tap **Edit**\n3. Change the **Role** dropdown to the new role\n4. Tap **Save** — the change is immediate\n\nRole changes do not affect historical records. If a cashier is promoted to supervisor, their previous transactions remain tagged as cashier-level actions in the audit trail.",
       },
       {
         heading: "Role interactions with factory permissions",
@@ -14822,7 +14991,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "Can I customise what each role can do?", a: "Role definitions are currently fixed in AskBiz POS to maintain accountability integrity. You can adjust individual factory permission flags, but the core role permissions (cashier, supervisor, manager) are standardised." },
-      { q: "How many staff members can I add?", a: "Free and Growth plans support up to 5 POS staff members. Business plans support unlimited staff. Check your current usage in Settings → POS → Staff." },
+      { q: "How many staff members can I add?", a: "Staff are added as purchased seats rather than a plan-tier allowance — add seats from Billing as your team grows, up to 50 per account. Check your current usage in the Staff tab." },
       { q: "Can a staff member hold multiple roles?", a: "No — each staff member has one base role. However, factory permission flags can be added on top of any base role to extend their access in the production floor context." },
       { q: "What happens to a staff member's data if I change their role?", a: "All historical transactions, captures, and actions remain attributed to the staff member with the role they held at the time of the action. Role changes only affect what they can do going forward." },
     ],
@@ -14844,7 +15013,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Accessing the audit trail",
-        body: "Go to your AskBiz admin panel at **askbiz.co/pos** and click the **Audit** tab in the left navigation.\n\nThe audit trail loads the most recent 100 entries by default. Each entry shows:\n- Event type and a plain-English description\n- The staff member who performed the action (name and PIN)\n- Timestamp (date and time)\n- For factory captures: the attached photo and approval chain\n\nYou can expand any entry to see full details. For transaction events, you can also navigate directly to the original transaction record.",
+        body: "Go to your AskBiz admin panel at **askbiz.co/pos** and click the **Audit** tab in the left navigation.\n\nThe audit trail loads the most recent 50 entries by default (100 is the maximum per page). Each entry shows:\n- Event type and a plain-English description\n- The staff member who performed the action (name and PIN)\n- Timestamp (date and time)\n- For factory captures: the attached photo and approval chain\n\nYou can expand any entry to see full details. For transaction events, you can also navigate directly to the original transaction record.",
       },
       {
         heading: "Filtering and using the audit trail for disputes",
@@ -14854,7 +15023,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "How long is audit trail data retained?", a: "AskBiz retains audit trail data for a minimum of 7 years to meet HMRC and standard accounting compliance requirements. Data is not deleted when staff are removed or when you change plans." },
       { q: "Can staff members see the audit trail?", a: "No. The audit trail is only accessible to managers and account owners from the admin panel at askbiz.co/pos. Staff who log in at pos.askbiz.co cannot see audit records." },
-      { q: "Is the audit trail included in all plans?", a: "Yes. The audit trail is available on all plans including Free. The export to CSV feature is available on Growth and Business plans." },
+      { q: "Is the audit trail included in all plans?", a: "Yes — including the CSV export, which isn't restricted by plan tier either." },
     ],
     related: ["pos-staff-roles-explained", "pos-factory-approvals", "pos-amending-transactions"],
   },
