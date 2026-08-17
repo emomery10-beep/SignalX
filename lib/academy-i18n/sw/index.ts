@@ -21,10 +21,12 @@ import { waveABatch1Translations } from './wave-a-batch1'
 import { wave_a_batch2Translations } from './wave-a-batch2'
 import { waveABatch3Translations } from './wave-a-batch3'
 import { waveABatch4NewArticlesTranslations } from './wave-a-batch4-new-articles'
+import { waveBBatch1Translations } from './wave-b-batch1'
 
 export const translations: LocaleTranslations = {
   ...waveABatch1Translations,
   ...wave_a_batch2Translations,
   ...waveABatch3Translations,
   ...waveABatch4NewArticlesTranslations,
+  ...waveBBatch1Translations,
 }
