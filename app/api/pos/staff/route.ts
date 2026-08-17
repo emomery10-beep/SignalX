@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { hashPin } from '@/lib/pin'
+import { sanitizeName } from '@/lib/sanitize'
 import { logPosAudit } from '@/lib/pos-audit'
 import type { PosAuthResult } from '@/lib/pos-auth'
 
@@ -40,7 +41,11 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { phone, email, name, role, pin, location_id, sector } = await req.json()
+  const { phone, email, name: rawName, role, pin, location_id, sector } = await req.json()
+  // A staff name is written by one person and displayed to others (owner
+  // dashboards, receipts, audit log), so it is untrusted input to those
+  // surfaces — strip markup on the way in.
+  const name = sanitizeName(rawName)
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
 
   // Accept both legacy roles AND template IDs (format: "business-type-role")
@@ -162,7 +167,13 @@ export async function PATCH(req: NextRequest) {
   }
 
   const updates: Record<string, unknown> = {}
-  if (name   !== undefined) updates.name   = name
+  if (name   !== undefined) {
+    // The DB trigger rejects a name that is nothing but markup; catch it
+    // here so the caller gets a clean 400 instead of a constraint error.
+    const cleanName = sanitizeName(name)
+    if (!cleanName) return NextResponse.json({ error: 'Name must contain at least one ordinary character' }, { status: 400 })
+    updates.name = cleanName
+  }
   if (role   !== undefined) updates.role   = role
   if (phone  !== undefined) updates.phone  = phone || null
   if (email  !== undefined) updates.email  = email || null

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { capText } from '@/lib/sanitize'
 
 export const runtime = 'nodejs'
 
@@ -26,19 +27,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'question and answer_text are required' }, { status: 400 })
   }
 
+  // Everything here is client-supplied and ends up on a PUBLIC, unauthenticated
+  // page (/insight/[id]), so it is untrusted no matter that the caller is
+  // signed in. What makes it safe is escaping at the render site — the page
+  // escapes answer_text before formatting it, and React escapes the rest as JSX
+  // text. These caps are here so the share endpoint can't be used to publish
+  // arbitrary long-form content on our own domain. Markup is deliberately NOT
+  // stripped: a real insight says things like "products selling < 10 a week".
+  if (String(question).length > 2_000 || String(answer_text).length > 20_000) {
+    return NextResponse.json({ error: 'Insight too large to share' }, { status: 413 })
+  }
+  const cleanRecommendations = Array.isArray(recommendations)
+    ? recommendations.slice(0, 20).map(r => capText(r, 500))
+    : null
+
   const { data, error } = await supabase
     .from('shared_insights')
     .insert({
       user_id: user.id,
-      question,
+      question: capText(question, 2_000),
       answer_text,
-      insight_header: insight_header || null,
+      insight_header: insight_header ? capText(insight_header, 300) : null,
       kpi_cards: kpi_cards || null,
       chart_type: chart_type || null,
       chart_labels: chart_labels || null,
       chart_values: chart_values || null,
       chart_label: chart_label || null,
-      recommendations: recommendations || null,
+      recommendations: cleanRecommendations,
     })
     .select('id')
     .single()

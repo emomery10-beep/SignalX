@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sanitizeName } from '@/lib/sanitize'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' as any })
@@ -90,7 +91,11 @@ export async function GET(request: NextRequest) {
       users = (authData?.users || []).map((u: any) => ({
         id: u.id,
         email: u.email || '',
-        full_name: u.user_metadata?.full_name || u.email?.split('@')[0] || '',
+        // Written by the client at signUp() and NOT covered by the
+        // profiles trigger, so this is the one name the DB can't clean.
+        // Sanitised on read: the admin list is exactly where a blind-XSS
+        // probe aims a payload planted in signup metadata.
+        full_name: sanitizeName(u.user_metadata?.full_name) || u.email?.split('@')[0] || '',
         plan_id: subsMap[u.id] || 'free',
         business_type: null,
         registration_country: null,

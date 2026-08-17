@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { cookies, headers } from 'next/headers'
 import { resolveLocale, localePath } from '@/lib/i18n-locale'
+import { formatInlineHtml } from '@/lib/sanitize'
 
 interface KpiCard { label: string; value: string; trend?: string; status?: string }
 
@@ -217,11 +218,11 @@ export default async function InsightPage({ params }: { params: { id: string } }
           color: '#334155',
           boxShadow: '0 1px 4px rgba(0,0,0,.04)',
         }}
-          dangerouslySetInnerHTML={{
-            __html: insight.answer_text
-              .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#0F172A;font-weight:600">$1</strong>')
-              .replace(/\n/g, '<br/>')
-          }}
+          // answer_text arrives from the client via POST /api/share, so it is
+          // fully attacker-controlled, and this page is public and
+          // unauthenticated. Escape before applying our **bold**/newline
+          // formatting — never interpolate it raw.
+          dangerouslySetInnerHTML={{ __html: formatInlineHtml(insight.answer_text, '#0F172A', 600) }}
         />
 
         {/* Recommendations */}

@@ -4,6 +4,7 @@
 import { createHmac } from 'crypto'
 import { t, tList } from '@/lib/i18n-catalog'
 import { isRTL, type Lang } from '@/lib/i18n-locale'
+import { escapeHtml, sanitizeName } from '@/lib/sanitize'
 
 const RESEND_API = 'https://api.resend.com/emails'
 const FROM = 'AskBiz <noreply@askbiz.co>'
@@ -63,7 +64,7 @@ export async function sendOTPEmail(email: string, code: string, name: string): P
     <div style="font-family:system-ui,sans-serif;max-width:400px;margin:0 auto;padding:32px 24px;background:#f9f8f6;">
       <div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
         <div style="font-size:12px;font-weight:700;color:#d08a59;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px;">AskBiz POS</div>
-        <div style="font-size:18px;font-weight:700;color:#1a1916;margin-bottom:6px;">Hi ${name} 👋</div>
+        <div style="font-size:18px;font-weight:700;color:#1a1916;margin-bottom:6px;">Hi ${escapeHtml(name)} 👋</div>
         <div style="font-size:14px;color:#6b6760;margin-bottom:24px;">Your login code for AskBiz POS:</div>
         <div style="font-size:44px;font-weight:800;letter-spacing:0.25em;color:#d08a59;font-family:monospace;margin-bottom:24px;text-align:center;">${code}</div>
         <div style="font-size:12px;color:#a39e97;text-align:center;">Valid for 10 minutes · Do not share this code</div>
@@ -121,7 +122,7 @@ export function teamInviteEmail(opts: {
                 You have been invited
               </h1>
               <p style="margin:0 0 24px;font-size:15px;color:#6b6760;line-height:1.6;">
-                <strong style="color:#1a1916;">${opts.inviterName}</strong> has invited you to their AskBiz workspace as a team member.
+                <strong style="color:#1a1916;">${escapeHtml(opts.inviterName)}</strong> has invited you to their AskBiz workspace as a team member.
               </p>
 
               <!-- Role card -->
@@ -129,13 +130,13 @@ export function teamInviteEmail(opts: {
                 <tr>
                   <td style="padding:16px 20px;">
                     <div style="font-size:11px;font-weight:700;color:#a39e97;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Your role</div>
-                    <div style="font-size:15px;font-weight:600;color:#6366F1;">${roleLabel}</div>
+                    <div style="font-size:15px;font-weight:600;color:#6366F1;">${escapeHtml(roleLabel)}</div>
                   </td>
                 </tr>
               </table>
 
               <p style="margin:0 0 24px;font-size:14px;color:#6b6760;line-height:1.6;">
-                AskBiz is a phone POS and business tracker with built-in AI reporting. As ${opts.role === 'accountant' ? 'an accountant' : 'a'} <strong>${opts.role}</strong>, you will have access to the data and reports relevant to your role.
+                AskBiz is a phone POS and business tracker with built-in AI reporting. As ${opts.role === 'accountant' ? 'an accountant' : 'a'} <strong>${escapeHtml(opts.role)}</strong>, you will have access to the data and reports relevant to your role.
               </p>
 
               <!-- CTA Button -->
@@ -181,7 +182,7 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, na
     <div style="font-family:system-ui,sans-serif;max-width:400px;margin:0 auto;padding:32px 24px;background:#f9f8f6;">
       <div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
         <div style="font-size:12px;font-weight:700;color:#d08a59;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px;">AskBiz POS</div>
-        <div style="font-size:18px;font-weight:700;color:#1a1916;margin-bottom:6px;">Hi ${name} 👋</div>
+        <div style="font-size:18px;font-weight:700;color:#1a1916;margin-bottom:6px;">Hi ${escapeHtml(name)} 👋</div>
         <div style="font-size:14px;color:#6b6760;margin-bottom:24px;">Click the button below to sign in to your AskBiz POS:</div>
         <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;width:100%;">
           <tr>
@@ -251,8 +252,12 @@ function lifecycleShell(body: string, unsubscribeUrl: string, locale: Lang): str
 // Recipient's first name, or a locale-appropriate generic greeting word when
 // none is on file (matches the old `opts.firstName || 'there'` behavior, made
 // locale-aware since "there" doesn't translate as a literal word).
+// Sanitised, not HTML-escaped: this value is interpolated into both the HTML
+// body and the plain-text subject line, and escaped entities would render
+// literally in a subject ("O&#39;Brien"). Stripping angle brackets is what
+// stops a name from opening a tag, and a real name never contains them.
 function nameOr(locale: Lang, firstName: string): string {
-  return firstName || t(locale, 'lifecycle_emails.fallback_name')
+  return sanitizeName(firstName) || t(locale, 'lifecycle_emails.fallback_name')
 }
 
 // ── Welcome email — sent once, shortly after signup ──────────────────────────
@@ -473,10 +478,10 @@ export function alertEmail(opts: {
                 </td>
               </tr>
             </table>
-            <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#1a1916;">${opts.alertName}</h1>
-            ${opts.businessName ? `<p style="margin:0 0 20px;font-size:13px;color:#a39e97;">${opts.businessName}</p>` : ''}
+            <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#1a1916;">${escapeHtml(opts.alertName)}</h1>
+            ${opts.businessName ? `<p style="margin:0 0 20px;font-size:13px;color:#a39e97;">${escapeHtml(opts.businessName)}</p>` : ''}
             <div style="background:${c.bg};border:1px solid ${c.border};border-radius:12px;padding:16px 20px;margin-bottom:24px;">
-              <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">${opts.message}</p>
+              <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">${escapeHtml(opts.message)}</p>
             </div>
             <table cellpadding="0" cellspacing="0">
               <tr>

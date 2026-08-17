@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
 import type { AIResult } from '@/lib/ai'
 import { parseFile } from '@/lib/file/parser'
+import { formatInlineHtml } from '@/lib/sanitize'
 import ResultBlock from '@/components/chat/ResultBlock'
 import { useLang } from '@/components/LanguageProvider'
 
@@ -228,7 +229,7 @@ export default function ChatConversationPage() {
                   <div style={{ padding:'10px 14px', borderRadius:13, borderBottomRightRadius:3, background:'var(--ov)', border:'1px solid var(--b)', fontSize:15, lineHeight:1.6, maxWidth:440 }}>{msg.content}</div>
                 ) : (
                   msg.result ? <ResultBlock result={msg.result} onFollowUp={sendMessage} geo={geo}/> : (
-                    <div style={{ padding:'10px 14px', borderRadius:13, borderBottomLeftRadius:3, background:'var(--ev)', border:'1px solid var(--b)', fontSize:15, lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: msg.content.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#47e2da;font-weight:500">$1</strong>').replace(/\n/g,'<br/>') }}/>
+                    <div style={{ padding:'10px 14px', borderRadius:13, borderBottomLeftRadius:3, background:'var(--ev)', border:'1px solid var(--b)', fontSize:15, lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: formatInlineHtml(msg.content) }}/>
                   )
                 )}
               </div>

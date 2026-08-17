@@ -4,6 +4,7 @@ import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { getSector } from '@/lib/pos-role-client'
 import { hashPin } from '@/lib/pin'
+import { sanitizeName } from '@/lib/sanitize'
 
 // All valid pos_staff.role values — must mirror the pos_staff_role_check
 // constraint (supabase/migrations/043_counter_clerk.sql) exactly. Anything
@@ -59,7 +60,11 @@ export async function POST(req: NextRequest) {
   }
 
   const service = createServiceClient()
-  const { phone, email, name, role, pin, location_id } = await req.json()
+  const { phone, email, name: rawName, role, pin, location_id } = await req.json()
+  // A staff name is written by one person (owner/manager) and displayed to
+  // others — owner dashboards, receipts, the audit log — so it is untrusted
+  // input to those surfaces, not just a label for its author.
+  const name = sanitizeName(rawName)
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
   if (!VALID_ROLES.includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
@@ -158,7 +163,13 @@ export async function PATCH(req: NextRequest) {
   }
 
   const updates: Record<string, unknown> = {}
-  if (name   !== undefined) updates.name   = name
+  if (name   !== undefined) {
+    // The DB trigger rejects a name that is nothing but markup; catch it
+    // here so the caller gets a clean 400 instead of a constraint error.
+    const cleanName = sanitizeName(name)
+    if (!cleanName) return NextResponse.json({ error: 'Name must contain at least one ordinary character' }, { status: 400 })
+    updates.name = cleanName
+  }
   if (role   !== undefined) { updates.role = role; updates.sector = sectorForRole(role) }
   if (phone  !== undefined) updates.phone  = phone || null
   if (email  !== undefined) updates.email  = email || null

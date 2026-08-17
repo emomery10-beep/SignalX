@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { sanitizeName } from '@/lib/sanitize'
 
 const MAX_NAME = 60
 const MAX_TAGLINE = 90
@@ -60,8 +61,10 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const business_name = String(body.business_name || '').trim().slice(0, MAX_NAME)
-  const tagline = String(body.tagline || '').trim().slice(0, MAX_TAGLINE)
+  // Both are shown to other people — the public signin carousel and the admin
+  // review queue — so markup is stripped, not just length-capped.
+  const business_name = sanitizeName(body.business_name, MAX_NAME)
+  const tagline = sanitizeName(body.tagline, MAX_TAGLINE)
   const link_url = typeof body.link_url === 'string' ? body.link_url.trim() : ''
   const logo = typeof body.logo === 'string' ? body.logo : null
   const banner = typeof body.banner === 'string' ? body.banner : null

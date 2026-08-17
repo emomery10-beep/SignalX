@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
 import { ADMIN_EMAILS } from '@/lib/admin-auth'
+import { safeExternalUrl } from '@/lib/sanitize'
 
 interface SpotlightItem {
   id: string
@@ -214,7 +215,12 @@ export default function SpotlightAdminPage() {
                 <div style={{ fontSize: 14, color: 'var(--tx2)', marginTop: 2 }}>{item.tagline}</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 6, display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
                   <span>{tc('admin.spotlight_submitted')} {fmtDate ? fmtDate(item.submitted_at) : new Date(item.submitted_at).toLocaleDateString()}</span>
-                  {item.link_url && <a href={item.link_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)' }}>{item.link_url}</a>}
+                  {/* link_url is submitted by the merchant, so it only becomes an
+                      href once it is confirmed http(s) — a `javascript:` URL here
+                      would run inside an admin's authenticated session. */}
+                  {safeExternalUrl(item.link_url)
+                    ? <a href={safeExternalUrl(item.link_url)!} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)' }}>{item.link_url}</a>
+                    : item.link_url && <span style={{ color: '#b45309' }}>{item.link_url}</span>}
                   {!item.terms_accepted_at && <span style={{ color: '#b45309' }}>{tc('admin.spotlight_no_terms')}</span>}
                 </div>
                 {item.status === 'approved' && (

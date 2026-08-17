@@ -8,6 +8,7 @@ import LanguageToggle from '@/components/LanguageToggle'
 import PasskeyNudge from '@/components/PasskeyNudge'
 import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
 import { phoneToSyntheticEmail, pinToPassword } from '@/lib/phone-auth'
+import { sanitizeName } from '@/lib/sanitize'
 import SpotlightCarousel from '@/components/SpotlightCarousel'
 import AdvertiseInquiryModal from '@/components/AdvertiseInquiryModal'
 
@@ -112,7 +113,11 @@ function AuthPage() {
           email, password,
           options: {
             data: {
-              full_name: `${firstName} ${lastName}`.trim(),
+              // Sanitised here for the honest path; auth.users.raw_user_meta_data
+              // is written by the client, so the DB trigger in
+              // supabase/migrations/20260817_sanitize_profile_names.sql is what
+              // actually holds the line on the profile row.
+              full_name: sanitizeName(`${firstName} ${lastName}`.trim()),
               // Recorded proof of affirmative consent (GDPR Art. 7(1))
               consent_accepted: true,
               consent_accepted_at: new Date().toISOString(),

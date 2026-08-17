@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sanitizeCsvCell } from '@/lib/sanitize'
 
 export async function GET(req: NextRequest) {
   const supabase = createClient()
@@ -64,7 +65,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+  // Quoting alone stops a cell breaking the CSV structure, but Excel and Sheets
+  // still evaluate a quoted cell that begins with = + - @. Staff names and item
+  // names are user-written, so they go through sanitizeCsvCell first — otherwise
+  // a product called `=HYPERLINK(...)` runs when the owner opens their export.
+  const csv = rows
+    .map(r => r.map(cell => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
   const filename = `askbiz-pos-${new Date().toISOString().split('T')[0]}.csv`
 
   return new NextResponse(csv, {
