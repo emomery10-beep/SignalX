@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 import { DEFAULT_LOCALE, PREFIXED_LOCALES, resolveLocale } from '@/lib/i18n-locale'
 // CSP lives in one place (plain JS so next.config.js can require it too).
-import { CONTENT_SECURITY_POLICY } from '@/lib/security-headers'
+import { CONTENT_SECURITY_POLICY, CONTENT_SECURITY_POLICY_REPORT_ONLY } from '@/lib/security-headers'
 import { STATIC_LOCALE_SEO_SLUGS } from '@/lib/seo-i18n-slugs'
 
 // Logical paths that get a REAL per-locale static render (app/[locale]/[seoSlug])
@@ -170,6 +170,13 @@ export async function middleware(request: NextRequest) {
     res.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self)')
     if (!res.headers.has('Content-Security-Policy')) {
       res.headers.set('Content-Security-Policy', CONTENT_SECURITY_POLICY)
+    }
+    // Report-only measurement of the next tightening. Kept in step with the
+    // enforced header on these responses too — a redirect/rewrite that carried
+    // the enforced policy but not the report-only one would leave a hole in the
+    // violation data for exactly the flows that redirect (auth, locale).
+    if (!res.headers.has('Content-Security-Policy-Report-Only')) {
+      res.headers.set('Content-Security-Policy-Report-Only', CONTENT_SECURITY_POLICY_REPORT_ONLY)
     }
     return res
   }

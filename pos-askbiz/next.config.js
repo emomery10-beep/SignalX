@@ -58,8 +58,26 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   },
 })
 
+const { CONTENT_SECURITY_POLICY, SECURITY_HEADERS } = require('./lib/security-headers')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          ...SECURITY_HEADERS,
+          // Report-only, deliberately: this app had no CSP at all until now, and
+          // enforcing a first-draft policy on a live till risks blocking a host
+          // mid-sale. Violations go to /api/csp-report; promote to
+          // 'Content-Security-Policy' once a week of trading comes back clean.
+          { key: 'Content-Security-Policy-Report-Only', value: CONTENT_SECURITY_POLICY },
+        ],
+      },
+    ]
+  },
+
   output: 'standalone',
   typescript: { ignoreBuildErrors: true },
   eslint:     { ignoreDuringBuilds: true },

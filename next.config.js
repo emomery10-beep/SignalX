@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const { CONTENT_SECURITY_POLICY } = require('./lib/security-headers')
+const { CONTENT_SECURITY_POLICY, CONTENT_SECURITY_POLICY_REPORT_ONLY } = require('./lib/security-headers')
 
 const nextConfig = {
   // TODO: remove once pre-existing TS errors are fixed across the codebase
@@ -25,6 +25,11 @@ const nextConfig = {
           { key: 'Permissions-Policy',          value: 'camera=(self), microphone=(self), geolocation=(self)' },
           { key: 'Strict-Transport-Security',    value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'Content-Security-Policy',     value: CONTENT_SECURITY_POLICY },
+          // Measures the next tightening (narrowed img-src, no 'unsafe-eval')
+          // without enforcing it — violations go to /api/csp-report. Fold the
+          // clean directives into the enforced policy above once a week of real
+          // traffic comes back quiet. See lib/security-headers.js.
+          { key: 'Content-Security-Policy-Report-Only', value: CONTENT_SECURITY_POLICY_REPORT_ONLY },
         ],
       },
       {
