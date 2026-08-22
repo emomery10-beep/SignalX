@@ -144,36 +144,56 @@ async function runCarolyneScout() {
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push(`Searching ${hasTavily ? 'Tavily' : ''}${hasTavily && hasSerper ? ' + ' : ''}${hasSerper ? 'Serper' : ''} for East African market data...`)
 
-    const searchResults = await Promise.allSettled(
-      selected.map(async s => {
-        let searchResult: TavilySearchResponse | null = null
-        if (hasTavily) {
-          searchResult = await tavilySearch(s.query, {
-            searchDepth:   'advanced',
-            maxResults:    5,
-            includeAnswer: true,
-            topic:         'news',
-            days:          14,
-          })
+    // Four provider paths, best first. These topics are evergreen how-tos
+    // rather than news events, so Tavily's news-only scope legitimately comes
+    // back empty most days — the plain general-topic search below it is a real
+    // second provider path, not a formality, and it is what keeps the run alive
+    // when Serper's credits run out. Every failure reason lands in `log`, so
+    // the admin panel says "out of credits" instead of a bland "no results".
+    const searchOne = async (query: string): Promise<TavilySearchResponse | null> => {
+      if (hasTavily) {
+        const news = await tavilySearch(query, {
+          searchDepth: 'advanced', maxResults: 5, includeAnswer: true,
+          topic: 'news', days: 14, diagnostics: log,
+        })
+        if (news?.results?.length) return news
+
+        const general = await tavilySearch(query, {
+          searchDepth: 'advanced', maxResults: 5, includeAnswer: true,
+          topic: 'general', diagnostics: log,
+        })
+        if (general?.results?.length) {
+          log.push(`Tavily general-search fallback used for: "${query}"`)
+          return general
         }
-        if (!searchResult?.results?.length && hasSerper) {
-          // Most of these topics are evergreen, not news events — try news
-          // (freshest) then general search (broader) before giving up.
-          for (const type of ['news', 'search'] as const) {
-            const serperRes = await serperSearch(s.query, { type, num: 5 })
-            if (serperRes?.organic?.length) {
-              searchResult = {
-                query:   s.query,
-                answer:  serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
-                results: serperRes.organic.map(r => ({ url: r.link, title: r.title, content: r.snippet, score: 0.7, published_date: r.date })),
-                response_time: 0,
-              } as TavilySearchResponse
-              break
-            }
+      }
+
+      if (hasSerper) {
+        for (const type of ['news', 'search'] as const) {
+          const serperRes = await serperSearch(query, { type, num: 5, diagnostics: log })
+          if (serperRes?.organic?.length) {
+            log.push(`Serper ${type} fallback used for: "${query}"`)
+            return {
+              query,
+              results: serperRes.organic.map(r => ({
+                title: r.title,
+                url: r.link,
+                content: r.snippet,
+                score: 1,
+                published_date: r.date,
+              })),
+              answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+              response_time: 0,
+            } satisfies TavilySearchResponse
           }
         }
-        return { ...s, searchResult }
-      })
+      }
+
+      return null
+    }
+
+    const searchResults = await Promise.allSettled(
+      selected.map(async s => ({ ...s, searchResult: await searchOne(s.query) }))
     )
 
     const validResults = searchResults
@@ -183,7 +203,11 @@ async function runCarolyneScout() {
       .map(r => r.value)
 
     if (validResults.length === 0) {
-      log.push('No search results — exiting')
+      log.push(
+        'No search results from any query — exiting. The provider lines above ' +
+        'say why: an out-of-credit Serper account or an invalid/revoked Tavily ' +
+        'key are the usual causes, and neither is fixable from here.'
+      )
       return NextResponse.json({ success: false, log, reason: 'no_results' })
     }
 
