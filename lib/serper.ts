@@ -21,14 +21,21 @@ export interface SerperResponse {
   knowledgeGraph?: { description?: string }
 }
 
+// Pass `diagnostics` (a caller's run log) to learn WHY this returned null.
+// An out-of-credit account answers HTTP 400 "Not enough credits", which is
+// otherwise indistinguishable from a query that genuinely found nothing.
 export async function serperSearch(query: string, options: {
   type?: 'search' | 'news'
   num?: number
   tbs?: string   // time filter e.g. 'qdr:d' = past day
+  diagnostics?: string[]
 } = {}): Promise<SerperResponse | null> {
-  if (!SERPER_KEY) return null
+  const { type = 'search', num = 5, tbs, diagnostics } = options
 
-  const { type = 'search', num = 5, tbs } = options
+  if (!SERPER_KEY) {
+    diagnostics?.push('Serper: SERPER_API_KEY not set — skipped')
+    return null
+  }
 
   const endpoint = type === 'news'
     ? 'https://google.serper.dev/news'
@@ -44,15 +51,26 @@ export async function serperSearch(query: string, options: {
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(8000),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error(`[Serper] /${type} error ${res.status}: ${errText}`)
+      diagnostics?.push(
+        `Serper /${type}: HTTP ${res.status} — ${errText.replace(/\s+/g, ' ').slice(0, 160)}` +
+        (/not enough credits/i.test(errText) ? ' (top up at serper.dev — the whole fallback is dead until you do)' : '')
+      )
+      return null
+    }
     const data = await res.json()
     // The /news endpoint puts results under `news`, not `organic` — normalize
     // so every caller can read `.organic` regardless of which endpoint this hit.
     if (type === 'news' && !data.organic && Array.isArray(data.news)) {
       data.organic = data.news
     }
+    if (!data?.organic?.length) diagnostics?.push(`Serper /${type}: 0 results for "${query}"`)
     return data as SerperResponse
-  } catch {
+  } catch (err) {
+    console.error('[Serper] Search failed:', err)
+    diagnostics?.push(`Serper /${type}: request failed — ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }

@@ -28,19 +28,27 @@ export interface TavilySearchOptions {
   excludeDomains?: string[]             // exclude domains
   topic?: 'general' | 'news'           // news = recent articles prioritised
   days?: number                         // for news topic: last N days
+  diagnostics?: string[]                // caller's run log — failures are pushed here
 }
 
 /**
  * Search the live web via Tavily and return structured results.
  * Returns null (non-throwing) if the API key is missing or the request fails —
  * so the chat route degrades gracefully rather than erroring.
+ *
+ * Pass `diagnostics` (e.g. a scout's run log) to find out WHY it returned null:
+ * a dead key, an out-of-credit account and a genuinely empty result set all
+ * look identical from the return value alone, which is how a 401 spent weeks
+ * showing up in the admin panel as a bland "no results".
  */
 export async function tavilySearch(
   query: string,
   options: TavilySearchOptions = {}
 ): Promise<TavilySearchResponse | null> {
+  const diagnostics = options.diagnostics
   if (!TAVILY_API_KEY) {
     console.warn('[Tavily] TAVILY_API_KEY not set — skipping web search')
+    diagnostics?.push('Tavily: TAVILY_API_KEY not set — skipped')
     return null
   }
 
@@ -81,13 +89,24 @@ export async function tavilySearch(
     if (!res.ok) {
       const errText = await res.text()
       console.error(`[Tavily] API error ${res.status}: ${errText}`)
+      diagnostics?.push(
+        `Tavily: HTTP ${res.status} — ${errText.replace(/\s+/g, ' ').slice(0, 160)}` +
+        (res.status === 401 ? ' (TAVILY_API_KEY is invalid or revoked)' : '') +
+        (res.status === 429 ? ' (rate limited or out of credits)' : '')
+      )
       return null
     }
 
-    const data = await res.json()
-    return data as TavilySearchResponse
+    const data = await res.json() as TavilySearchResponse
+    if (!data?.results?.length) {
+      diagnostics?.push(
+        `Tavily: 0 results for "${query}" (topic: ${topic}${days && topic === 'news' ? `, last ${days}d` : ''})`
+      )
+    }
+    return data
   } catch (err) {
     console.error('[Tavily] Search failed:', err)
+    diagnostics?.push(`Tavily: request failed — ${err instanceof Error ? err.message : String(err)}`)
     return null
   }
 }

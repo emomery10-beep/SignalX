@@ -131,15 +131,15 @@ async function runShiillahScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    // Each topic is its own independent Groq call, sized on its own — the
-    // per-request 413 below was caused by prompt+maxTokens size, not by
-    // running multiple topics per invocation. Still matching Victor/
-    // Carolyne/Ben's conservative 1-per-run pace for now (rather than 2)
-    // since Swahili's real per-call cost on this model is still unproven in
-    // production; raise it once logUsage shows consistent headroom.
-    const selected = scoredQueries.slice(0, 1)
+    // Still one post per run, matching Victor/Carolyne/Ben's conservative pace
+    // since Swahili's real per-call cost on this model is unproven in
+    // production; raise it once logUsage shows consistent headroom. Only the
+    // *search* fans out: three candidate topics, tried in order, because a
+    // single dry query used to end the entire run.
+    const candidates = scoredQueries.slice(0, 3)
+    const [primary] = candidates
+    log.push(`Selected 1 topic (${primary.penalty === 0 ? 'fresh' : 'revisit'}) + ${candidates.length - 1} backups`)
 
-    log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     const hasTavily = !!process.env.TAVILY_API_KEY
     const hasSerper = !!process.env.SERPER_API_KEY
     if (!hasTavily && !hasSerper) {
@@ -148,61 +148,79 @@ async function runShiillahScout() {
     }
     log.push(`Searching ${hasTavily ? 'Tavily' : ''}${hasTavily && hasSerper ? ' + ' : ''}${hasSerper ? 'Serper' : ''} for live data...`)
 
-    const searchResults = await Promise.allSettled(
-      selected.map(async s => {
-        let searchResult = await tavilySearch(s.query, {
-          searchDepth: 'advanced',
-          maxResults: 5,
-          includeAnswer: true,
-          topic: 'news',
-          days: 14,
+    // Four provider paths, best first. These topics are evergreen rather than
+    // news events, so Tavily's news-only scope legitimately comes back empty
+    // most days — the plain general-topic search below it is a real second
+    // provider path, not a formality, and it is what keeps the run alive when
+    // Serper's credits run out. Every failure reason lands in `log`, so the
+    // admin panel says "out of credits" instead of a bland "no results".
+    const searchOne = async (query: string): Promise<TavilySearchResponse | null> => {
+      if (hasTavily) {
+        const news = await tavilySearch(query, {
+          searchDepth: 'advanced', maxResults: 5, includeAnswer: true,
+          topic: 'news', days: 14, diagnostics: log,
         })
+        if (news?.results?.length) return news
 
-        if (!searchResult?.results?.length) {
-          // Most of these topics are evergreen, not news events — try news
-          // (freshest) then general search (broader) before giving up.
-          for (const type of ['news', 'search'] as const) {
-            const serperRes = await serperSearch(s.query, { type, num: 5 })
-            if (serperRes?.organic?.length) {
-              searchResult = {
-                query: s.query,
-                results: serperRes.organic.map(r => ({
-                  title: r.title,
-                  url: r.link,
-                  content: r.snippet,
-                  score: 1,
-                  published_date: r.date,
-                })),
-                answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
-                response_time: 0,
-              } satisfies TavilySearchResponse
-              log.push(`Serper ${type} fallback used for: "${s.query}"`)
-              break
-            }
+        const general = await tavilySearch(query, {
+          searchDepth: 'advanced', maxResults: 5, includeAnswer: true,
+          topic: 'general', diagnostics: log,
+        })
+        if (general?.results?.length) {
+          log.push(`Tavily general-search fallback used for: "${query}"`)
+          return general
+        }
+      }
+
+      if (hasSerper) {
+        for (const type of ['news', 'search'] as const) {
+          const serperRes = await serperSearch(query, { type, num: 5, diagnostics: log })
+          if (serperRes?.organic?.length) {
+            log.push(`Serper ${type} fallback used for: "${query}"`)
+            return {
+              query,
+              results: serperRes.organic.map(r => ({
+                title: r.title,
+                url: r.link,
+                content: r.snippet,
+                score: 1,
+                published_date: r.date,
+              })),
+              answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+              response_time: 0,
+            } satisfies TavilySearchResponse
           }
         }
+      }
 
-        return { ...s, searchResult }
-      })
-    )
+      return null
+    }
 
-    const validResults = searchResults
-      .filter((r): r is PromiseFulfilledResult<typeof selected[0] & { searchResult: TavilySearchResponse }> =>
-        r.status === 'fulfilled' && !!r.value.searchResult?.results?.length
-      )
-      .map(r => r.value)
-
-    const rejectedCount = searchResults.filter(r => r.status === 'rejected').length
-    const nullCount = searchResults.filter(r => r.status === 'fulfilled' && !r.value.searchResult?.results?.length).length
-    if (rejectedCount > 0) log.push(`${rejectedCount} requests threw errors`)
-    if (nullCount > 0) log.push(`${nullCount} queries returned no results from Tavily or Serper`)
+    const validResults: (typeof candidates[number] & { searchResult: TavilySearchResponse })[] = []
+    for (const candidate of candidates) {
+      let searchResult: TavilySearchResponse | null = null
+      try {
+        searchResult = await searchOne(candidate.query)
+      } catch (err) {
+        log.push(`Search threw for "${candidate.query}": ${err instanceof Error ? err.message : String(err)}`)
+      }
+      if (searchResult?.results?.length) {
+        validResults.push({ ...candidate, searchResult })
+        break
+      }
+      log.push(`No sources for "${candidate.query}" — trying next topic`)
+    }
 
     if (validResults.length === 0) {
-      log.push('No search results from any query — exiting')
+      log.push(
+        `No search results from any of ${candidates.length} topics — exiting. ` +
+        'The provider lines above say why: an out-of-credit Serper account or an ' +
+        'invalid/revoked Tavily key are the usual causes, and neither is fixable from here.'
+      )
       return NextResponse.json({ success: false, log, reason: 'no_results' })
     }
 
-    log.push(`Got results for ${validResults.length}/${selected.length} queries. Writing blogs...`)
+    log.push(`Got sources for "${validResults[0].query}". Writing blog...`)
 
     const blogResults = await Promise.allSettled(
       validResults.map(r => writeShiillahBlogPost(r, recentPublished))
