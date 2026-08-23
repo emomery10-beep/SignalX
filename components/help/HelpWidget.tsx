@@ -193,7 +193,7 @@ const SECTION_MAP: [string, string][] = [
   ['/files',        'files-uploads'],
   ['/templates',    'templates'],
   ['/sell',         'point-of-sale'],
-  ['/pos',          'mobile-money'],
+  ['/pos',          'point-of-sale'],
   ['/cfo',          'advanced-intelligence'],
 ]
 

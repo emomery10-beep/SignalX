@@ -64,8 +64,8 @@ export const EXPANDED_HELP_TOPICS: HelpTopic[] = [
   },
   {
     slug: "logistics-dispatch",
-    title: "Logistics & Dispatch",
-    description: "Shipment tracking, freight quotes, dispatch management, parcel documentation, and courier performance.",
+    title: "Shipment Carrier Tracking",
+    description: "Track outbound shipments and get freight quotes through connected carrier integrations (17Track, Parcel Monkey) — for the Business Intelligence track. If you run AskBiz's own POS Logistics/Courier sector (your own trucks, drivers, and parcels), see POS Logistics & Courier instead.",
     icon: "🚚",
     color: "#3498db",
     articles: [
@@ -162,6 +162,32 @@ export const EXPANDED_HELP_TOPICS: HelpTopic[] = [
       "gdpr-data-deletion",
       "consent-logging",
       "tax-filing-preview",
+    ],
+  },
+  {
+    slug: "pos-logistics-courier",
+    title: "POS Logistics & Courier",
+    description: "Run your own courier or dispatch operation from AskBiz POS — log parcels, assign your own trucks and drivers, dispatch, and confirm ID-verified collection with photo evidence.",
+    icon: "🚛",
+    color: "#2c7a7b",
+    articles: [
+      "pos-logistics-getting-started",
+      "pos-logistics-parcel-intake",
+      "pos-logistics-dispatch-and-trucks",
+      "pos-logistics-collection",
+      "pos-logistics-roles-permissions",
+    ],
+  },
+  {
+    slug: "pos-salon",
+    title: "Salon",
+    description: "Run a salon or barbershop from AskBiz POS — book appointments, assign stylists, keep a client history with photos and colour formulas, and track backbar product usage.",
+    icon: "💇",
+    color: "#c2447a",
+    articles: [
+      "pos-salon-getting-started",
+      "pos-salon-bookings-and-stylists",
+      "pos-salon-clients-and-history",
     ],
   },
 ];
@@ -1371,10 +1397,11 @@ export const EXPANDED_HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "Can I export CFO Mode summaries?", a: "Yes. Click Export to download the summary as a formatted PDF or copy it to clipboard for pasting into presentations." },
       { q: "Is CFO Mode available on all plans?", a: "CFO Mode is available on the Business plan." },
+      { q: "Is this the same as the full CFO Dashboard?", a: "No — CFO Mode is a chat-answer formatting toggle. The full CFO Dashboard (Intelligence → CFO tab, also on the Business plan) is a much larger, separate feature — P&L, cash flow, margins, inventory, receivables, expenses, budget, forecasts, tax, and a board report with PDF export, each as their own tab. Dedicated help content for the full dashboard is on the roadmap; for now, look for the tab names above inside the dashboard itself." },
     ],
     related: ["decision-memory-guide", "what-if-scenarios", "benchmarking-guide"],
     keywords: ["CFO", "executive", "board", "summary", "reports"],
-    lastUpdated: "2026-05-21",
+    lastUpdated: "2026-08-23",
   },
 
   // ══ FORECASTING & ALERTS ═══════════════════════════════════════════════════
@@ -1793,6 +1820,217 @@ export const EXPANDED_HELP_ARTICLES: HelpArticle[] = [
     related: ["rate-limits", "api-access", "authentication"],
     keywords: ["verified business", "KYC", "business verification", "verification badge", "verified badge", "API rate limit increase", "developer verification", "business verification documents"],
     lastUpdated: "2026-07-25",
+  },
+
+  // ── POS LOGISTICS & COURIER ─────────────────────────────────────────────────
+  {
+    slug: "pos-logistics-getting-started",
+    title: "Getting Started with POS Logistics & Courier",
+    description: "What the Logistics sector in AskBiz POS is for — your own courier/dispatch operation, not third-party carrier tracking — and how to start using it.",
+    topic: "POS Logistics & Courier",
+    topicSlug: "pos-logistics-courier",
+    readTime: 4,
+    lastUpdated: "2026-08-23",
+    keywords: ["pos logistics", "courier pos", "dispatch pos", "parcel tracking pos", "own trucks drivers", "logistics sector askbiz"],
+    content: [
+      {
+        heading: "What this sector is — and isn't",
+        body: "The **Logistics** sector is for businesses that run their own courier or dispatch operation — your own trucks, your own drivers, your own parcels moving between your own locations or to customers. It's a different thing from **Shipment Carrier Tracking** (a separate Business Intelligence topic), which is about tracking shipments through third-party carriers like DHL or FedEx via connected integrations — if you're an exporter or online seller checking on shipments a carrier is handling for you, that's the one you want instead.",
+      },
+      {
+        heading: "Getting the sector",
+        body: "Like Retail, Repair, Restaurant, and Salon, Logistics is one of AskBiz POS's sectors, switched on from the **Services** tab in your admin dashboard (askbiz.co/pos) — see **Running Multiple Sectors from One POS Account** for how the sector picker works generally. Staff you assign to Logistics log in at pos.askbiz.co and see only the logistics workflow.",
+      },
+      {
+        heading: "What's in the Logistics hub",
+        body: "The Logistics hub is where your day-to-day dispatch work happens, with separate screens for **intake** (logging a new parcel), **dispatch** (assigning parcels to trucks and drivers), and **collection** (confirming a parcel has been picked up, with ID verification and photo evidence) — plus a dashboard summarising activity. Intake uses your device camera, in keeping with AskBiz's camera-first approach elsewhere in POS, and works offline: a parcel logged without a connection queues locally and syncs once you're back online.",
+      },
+    ],
+    faq: [
+      { q: "Is this the same as tracking a DHL or FedEx shipment?", a: "No — that's Shipment Carrier Tracking, a separate feature for tracking shipments handled by third-party carriers. Logistics is for dispatching your own trucks and drivers." },
+      { q: "Does logging a parcel work without an internet connection?", a: "Yes — parcel intake queues locally if you're offline and syncs automatically once you're reconnected." },
+    ],
+    related: ["pos-multi-sector-overview", "pos-logistics-parcel-intake", "pos-logistics-dispatch-and-trucks", "shipments-overview"],
+  },
+  {
+    slug: "pos-logistics-parcel-intake",
+    title: "Logging a Parcel for Dispatch",
+    description: "How to log a new parcel in AskBiz POS Logistics — tracking number, sender and receiver details, weight, and fee — with a camera photo at intake.",
+    topic: "POS Logistics & Courier",
+    topicSlug: "pos-logistics-courier",
+    readTime: 3,
+    lastUpdated: "2026-08-23",
+    keywords: ["log a parcel", "parcel intake", "courier tracking number", "sender receiver details", "parcel weight fee"],
+    content: [
+      {
+        heading: "What you record at intake",
+        body: "Logging a new parcel captures a **tracking number**, **sender** and **receiver** details, the parcel's **weight**, and the **fee** you're charging for the delivery. A photo of the parcel is captured at this stage too — useful evidence of its condition before it goes anywhere.",
+      },
+      {
+        heading: "Where it goes next",
+        body: "Once logged, a parcel is ready to be assigned to a truck and driver for dispatch — see **Assigning Parcels to Trucks and Dispatching**. It stays visible in your logistics records from intake all the way through to confirmed collection.",
+      },
+    ],
+    faq: [
+      { q: "Can I log a parcel without a tracking number?", a: "UNVERIFIED — treat the tracking number as a required field unless you've confirmed otherwise on your own account, since it's what the rest of the workflow (dispatch, collection) looks the parcel up by." },
+      { q: "Is the intake photo mandatory?", a: "Photo capture is part of the standard intake flow — treat it as expected practice even though it hasn't been independently confirmed as a strictly required field." },
+    ],
+    related: ["pos-logistics-getting-started", "pos-logistics-dispatch-and-trucks", "pos-logistics-collection"],
+  },
+  {
+    slug: "pos-logistics-dispatch-and-trucks",
+    title: "Assigning Parcels to Trucks and Dispatching",
+    description: "How dispatch works in AskBiz POS Logistics — assigning parcels to your own trucks and drivers, dispatching in bulk, and tracking truck locations and vehicle inspections.",
+    topic: "POS Logistics & Courier",
+    topicSlug: "pos-logistics-courier",
+    readTime: 4,
+    lastUpdated: "2026-08-23",
+    keywords: ["dispatch parcels", "assign truck driver", "bulk dispatch", "truck location tracking", "vehicle inspection pos", "scan truck plate"],
+    content: [
+      {
+        heading: "Assigning and dispatching",
+        body: "From the dispatch screen, parcels are assigned to one of your own trucks and drivers, then dispatched. Multiple parcels can be dispatched together as a batch rather than one at a time, which matters if a single truck run covers several parcels.",
+      },
+      {
+        heading: "Trucks and vehicle checks",
+        body: "Trucks are identified in the system, including by scanning a truck's number plate rather than typing it in. AskBiz also tracks truck locations and supports a vehicle inspection record — useful for keeping a record of a vehicle's condition alongside the deliveries it's making.",
+      },
+    ],
+    faq: [
+      { q: "Can I dispatch more than one parcel at a time?", a: "Yes — bulk dispatch is supported, so a single truck run carrying several parcels doesn't need to be processed one by one." },
+      { q: "How does AskBiz know which truck a parcel is on?", a: "Trucks are identified in the system — plate-scanning is one of the ways a truck gets recognised — and a dispatched parcel is linked to the truck and driver it was assigned to." },
+    ],
+    related: ["pos-logistics-parcel-intake", "pos-logistics-collection", "pos-logistics-getting-started"],
+  },
+  {
+    slug: "pos-logistics-collection",
+    title: "Confirming Parcel Collection",
+    description: "How AskBiz POS Logistics confirms a parcel has reached its recipient — ID verification and photo evidence at handover.",
+    topic: "POS Logistics & Courier",
+    topicSlug: "pos-logistics-courier",
+    readTime: 3,
+    lastUpdated: "2026-08-23",
+    keywords: ["parcel collection", "id verified handover", "proof of delivery photo", "courier collection confirmation"],
+    content: [
+      {
+        heading: "Confirming handover",
+        body: "When a parcel reaches whoever is collecting it, the collection screen records the handover with **ID verification** and a **photo** as evidence — giving you a real record that the right person received the right parcel, not just a status flipped to \"delivered\" with nothing behind it.",
+      },
+      {
+        heading: "Who can confirm a collection",
+        body: "See **Logistics Roles and Permissions** for which staff level can process a collection versus just view logistics records.",
+      },
+    ],
+    faq: [
+      { q: "What counts as ID verification here?", a: "UNVERIFIED — the collection flow captures ID verification as part of confirming handover; the exact form that takes hasn't been independently confirmed, so don't assume a specific mechanism until you've seen it on your own account." },
+    ],
+    related: ["pos-logistics-dispatch-and-trucks", "pos-logistics-getting-started", "pos-logistics-roles-permissions"],
+  },
+  {
+    slug: "pos-logistics-roles-permissions",
+    title: "Logistics Roles and Permissions",
+    description: "The three logistics staff levels in AskBiz POS — dispatch, branch, and clerk — and roughly what each can do.",
+    topic: "POS Logistics & Courier",
+    topicSlug: "pos-logistics-courier",
+    readTime: 3,
+    lastUpdated: "2026-08-23",
+    keywords: ["logistics roles", "logistics permissions", "dispatch level", "branch level", "clerk level"],
+    content: [
+      {
+        heading: "Three logistics staff levels",
+        body: "AskBiz POS recognises three levels of logistics staff access: a **dispatch** level, a **branch** level, and a **clerk** level. As with other POS sectors, the more senior the level, the more of the logistics workflow (assigning trucks, dispatching, confirming collection) it's likely to unlock, with clerk-level access being the most restricted.\n\nUNVERIFIED: the exact permission boundary between these three levels hasn't been independently confirmed article-by-article — treat this as the real three-tier structure, and check your own account's Staff tab for the exact capabilities of each level.",
+      },
+      {
+        heading: "Assigning a logistics role",
+        body: "Assign staff to the Logistics sector and a specific level from the **Staff** tab in your admin dashboard, the same place you assign staff to any other sector — see **Assigning Staff to Sectors**.",
+      },
+    ],
+    faq: [
+      { q: "Which level can confirm a parcel collection?", a: "UNVERIFIED — dispatch-level access is the most likely to include this given it sits above branch and clerk, but check your own account rather than assuming." },
+    ],
+    related: ["pos-logistics-getting-started", "pos-sector-staff-assignment", "pos-staff-roles-explained"],
+  },
+
+  // ── SALON ────────────────────────────────────────────────────────────────────
+  {
+    slug: "pos-salon-getting-started",
+    title: "Getting Started with the Salon Sector",
+    description: "What the Salon sector in AskBiz POS covers — bookings, stylist assignment, client history, and product tracking — and how to start using it.",
+    topic: "Salon",
+    topicSlug: "pos-salon",
+    readTime: 4,
+    lastUpdated: "2026-08-23",
+    keywords: ["salon pos", "barbershop pos", "salon sector askbiz", "stylist booking system", "salon business type"],
+    content: [
+      {
+        heading: "What the Salon sector covers",
+        body: "The Salon sector is built for chair-based service businesses — hair salons, barbershops, and similar. It covers four real areas: **appointment bookings** (with stylist and service assignment), a **client record** (visit history and photos), a **colour formula history** per client, and **product tracking** for backbar and retail stock used during services.",
+      },
+      {
+        heading: "Getting the sector",
+        body: "Like Retail, Repair, Restaurant, and Logistics, Salon is one of AskBiz POS's sectors, switched on from the **Services** tab in your admin dashboard (askbiz.co/pos) — see **Running Multiple Sectors from One POS Account** for how the sector picker works generally. You can also pick **Salon / Barbershop** directly as your business type at signup, which is one of the five POS-track options — see the **Complete Onboarding Guide**.",
+      },
+      {
+        heading: "Where staff work",
+        body: "Staff assigned to the Salon sector log in at pos.askbiz.co and see the salon workflow — bookings, clients, and products — rather than a generic retail till.",
+      },
+    ],
+    faq: [
+      { q: "Do I need to pick Salon at signup, or can I add it later?", a: "Either — pick Salon / Barbershop as your business type at signup for the fastest path, or add the sector to an existing account later from the Services tab, the same way any other sector is added." },
+    ],
+    related: ["pos-multi-sector-overview", "pos-salon-bookings-and-stylists", "pos-salon-clients-and-history", "onboarding-guide"],
+  },
+  {
+    slug: "pos-salon-bookings-and-stylists",
+    title: "Salon Bookings and Stylist Assignment",
+    description: "How appointment booking works in AskBiz POS Salon — picking a service, a stylist, and a time, and filtering the schedule by either.",
+    topic: "Salon",
+    topicSlug: "pos-salon",
+    readTime: 4,
+    lastUpdated: "2026-08-23",
+    keywords: ["salon booking", "stylist assignment", "appointment scheduling salon", "chair booking pos"],
+    content: [
+      {
+        heading: "Booking an appointment",
+        body: "A booking pairs a **client**, a **service**, a **stylist**, and a **time**. The bookings screen can be filtered by stylist or by service, so you can see a specific stylist's day at a glance, or check who's free for a particular service.",
+      },
+      {
+        heading: "The salon hub at a glance",
+        body: "Your Salon hub summarises the day — today's appointments, your top-performing service, and your return-client rate, giving you a quick read on how busy and how repeat-driven your day is.",
+      },
+    ],
+    faq: [
+      { q: "Can a client book online themselves, or does staff enter every booking?", a: "UNVERIFIED — this hasn't been independently confirmed either way; check your own account for whether a self-serve booking option exists." },
+    ],
+    related: ["pos-salon-getting-started", "pos-salon-clients-and-history", "pos-adding-staff"],
+  },
+  {
+    slug: "pos-salon-clients-and-history",
+    title: "Salon Clients, Colour Formulas, and Product Usage",
+    description: "How AskBiz POS Salon keeps a client's visit history and photos, tracks colour formulas between visits, and logs backbar and retail product usage against services.",
+    topic: "Salon",
+    topicSlug: "pos-salon",
+    readTime: 4,
+    lastUpdated: "2026-08-23",
+    keywords: ["salon client history", "colour formula tracking", "hair colour history", "backbar product usage", "salon retail products"],
+    content: [
+      {
+        heading: "Client records and photos",
+        body: "Each client has a record built up over visits, including photos — useful for a stylist to see what was done last time, not just what was booked.",
+      },
+      {
+        heading: "Colour formula history",
+        body: "For colour services specifically, AskBiz keeps a history of the exact formula used for a client, so a repeat colour appointment can match what worked before instead of a stylist relying on memory or a paper card.",
+      },
+      {
+        heading: "Product tracking",
+        body: "Backbar products (used during a service) and retail products (sold to the client) are both tracked, tagged to the salon sector separately from any other sector's inventory you run.",
+      },
+    ],
+    faq: [
+      { q: "Is the colour formula visible to any stylist, or only the one who created it?", a: "UNVERIFIED — this hasn't been independently confirmed; check your own account's permission settings." },
+    ],
+    related: ["pos-salon-getting-started", "pos-salon-bookings-and-stylists", "pos-managing-inventory"],
   },
 ];
 

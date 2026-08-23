@@ -162,7 +162,7 @@ export default function GlossaryPage() {
           </aside>
 
           {/* Main */}
-          <main className="gl-main">
+          <main className="gl-main" id="main-content">
             <div className="gl-hero">
               <h1 className="gl-title">Business & AskBiz Glossary</h1>
               <p className="gl-sub">Plain-English definitions for {GLOSSARY.length}+ business metrics and AskBiz-specific terms.</p>

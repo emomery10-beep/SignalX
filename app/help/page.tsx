@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import HelpPageClient from './HelpPageClient'
 
 export const metadata: Metadata = {
@@ -23,5 +24,11 @@ export const metadata: Metadata = {
 }
 
 export default function HelpPage() {
-  return <HelpPageClient />
+  // HelpPageClient reads ?q= / ?topic= via useSearchParams, which Next.js
+  // requires a Suspense boundary for.
+  return (
+    <Suspense fallback={null}>
+      <HelpPageClient />
+    </Suspense>
+  )
 }

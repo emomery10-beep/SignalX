@@ -722,6 +722,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "notification-preferences",
       "ai-preferences",
       "privacy-and-compliance-settings",
+      "get-featured-spotlight",
     ],
   },
   {
@@ -736,6 +737,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-scanning-products",
       "pos-making-a-sale",
       "pos-managing-inventory",
+      "pos-retail-customer-credit",
       "pos-restocking-guide",
       "pos-purchase-orders-tile",
       "pos-processing-refunds",
@@ -11385,6 +11387,35 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-getting-started", "pos-restocking-guide", "pos-scanning-products"],
   },
   {
+    slug: "pos-retail-customer-credit",
+    title: "Customer Credit Accounts (Debt Book)",
+    description: "Track pay-later customer balances in AskBiz POS Retail — including bulk-importing an existing paper debt book with your camera — and record repayments.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-08-23",
+    keywords: ["customer credit pos", "debt book", "pay later customers", "iou tracking pos", "camera import debt book", "customer balance owed"],
+    content: [
+      {
+        heading: "What this is for",
+        body: "If you let regular customers buy now and pay later — common for market stalls and small shops — the customer credit feature tracks what each customer owes as a running balance, instead of you keeping it in a paper notebook or memory. This is a Retail-sector feature, separate from the B2B **Debtors** view used for invoiced wholesale accounts (see Managing B2B Customers and Trade Accounts).",
+      },
+      {
+        heading: "Bulk-importing an existing paper debt book",
+        body: "If you already keep a paper debt book, you don't have to re-type every customer by hand — point your camera at the page and AskBiz bulk-creates customer credit records from it in one go. You can still add a single customer's credit record manually as well.",
+      },
+      {
+        heading: "Recording activity",
+        body: "Each customer's credit record is a running ledger: new debt added when they buy on credit, and payments recorded as they pay down what they owe. The balance owed updates as each entry is logged.",
+      },
+    ],
+    faq: [
+      { q: "Is this different from the B2B Debtors / accounts-receivable view?", a: "Yes — that's a separate Business Intelligence feature for invoiced wholesale trade accounts. Customer credit accounts are a simpler running-balance ledger built for everyday retail pay-later customers." },
+      { q: "How accurate is the camera bulk-import from a paper debt book?", a: "UNVERIFIED — accuracy will depend on your handwriting and photo quality; review the imported records against your paper book the first time you use it rather than assuming a perfect match." },
+    ],
+    related: ["pos-getting-started", "pos-making-a-sale", "pos-scanning-products"],
+  },
+  {
     slug: "pos-restocking-guide",
     title: "Restocking Products and Updating Quantities",
     description: "Record stock deliveries, adjust quantities, set low-stock alerts, and keep your POS inventory accurate so you never oversell or miss a restock.",
@@ -13724,6 +13755,37 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     related: ["settings-overview", "data-security", "gdpr-compliance", "data-subject-rights", "connected-apps-guide"],
   },
+  {
+    slug: "get-featured-spotlight",
+    title: "Get Featured (Spotlight)",
+    description: "A paid promotional placement for your business — submit your name, tagline, logo, banner and link for review, then track impressions and clicks once it's live.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 3,
+    popular: false,
+    lastUpdated: "2026-08-23",
+    keywords: ["get featured", "spotlight", "business promotion askbiz", "paid placement", "spotlight impressions clicks"],
+    content: [
+      {
+        heading: "What Get Featured is",
+        body: "**Get Featured** (also called Spotlight) is a paid promotional placement for your business inside AskBiz. Go to **Settings → Get Featured** and submit your business name, a short tagline, a logo, a banner image, and a link. Submissions go into a review queue — your listing shows as **pending** until an AskBiz admin approves or rejects it.",
+      },
+      {
+        heading: "It's a paid feature",
+        body: "Running a Spotlight placement has a cost, charged for a set duration. UNVERIFIED — the exact price and duration aren't confirmed here; check the submission screen in Settings → Get Featured for the current figures on your account before submitting, rather than assuming a fixed rate.",
+      },
+      {
+        heading: "Once it's live",
+        body: "An approved listing tracks **impressions** and **clicks** so you can see whether it's actually getting attention, and you can toggle it active or inactive yourself from the same Settings screen.",
+      },
+    ],
+    faq: [
+      { q: "What happens if my submission is rejected?", a: "UNVERIFIED — whether you can edit and resubmit a rejected listing, or need to submit fresh, hasn't been independently confirmed. Check Settings → Get Featured for your listing's current status and options." },
+      { q: "Where does an approved listing actually appear?", a: "UNVERIFIED — this hasn't been independently confirmed here. Check your listing's live status in Settings → Get Featured once approved." },
+      { q: "Can I turn my listing off without losing it?", a: "Yes — you can toggle your listing active or inactive from Settings → Get Featured without needing to resubmit it from scratch." },
+    ],
+    related: ["settings-overview", "billing-cycle-explained", "payment-methods"],
+  },
 
   // ── ADDITIONAL: TROUBLESHOOTING (connector errors) ──────────────────────────
   {
@@ -14307,14 +14369,14 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pos-multi-sector-overview",
     title: "Running Multiple Sectors from One POS Account",
-    description: "How to manage Restaurant, Retail, Repair, and Salon from a single AskBiz account — with separated intelligence, staff permissions, and a unified owner view.",
+    description: "How to manage Retail, Repair, Restaurant, Salon, Factory, and Logistics from a single AskBiz account — with separated intelligence, staff permissions, and a unified owner view.",
     topic: "Point of Sale (POS)",
     topicSlug: "point-of-sale",
     readTime: 6,
     content: [
       {
         heading: "What sectors are supported",
-        body: "AskBiz POS supports four sectors from a single account: **Retail** (standard product sales), **Repair / Service** (job-based workflow with intake, parts, and collection), **Restaurant** (table orders, covers, kitchen workflow, daily brief), and **Salon** (chair-based services, stylist assignment). You do not need separate accounts or subscriptions — one owner account covers all sectors you operate.",
+        body: "AskBiz POS supports six sectors from a single account: **Retail** (standard product sales), **Repair / Service** (job-based workflow with intake, parts, and collection), **Restaurant** (table orders, covers, kitchen workflow, daily brief), **Salon** (bookings, stylist assignment, client history — see Getting Started with the Salon Sector), **Factory** (camera-first production captures — see Getting Started with Factory Captures), and **Logistics / Courier** (your own trucks, drivers, and parcel dispatch — see Getting Started with POS Logistics & Courier). You do not need separate accounts or subscriptions — one owner account covers all sectors you operate.",
       },
       {
         heading: "The sector picker in admin",
@@ -14338,9 +14400,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Can the same staff member work across two sectors?", a: "Each staff member is assigned to one sector, with a maximum of two sector changes (to prevent account-sharing). If a staff member genuinely needs to switch sectors long-term, you can edit their assignment in the Staff tab. Further changes beyond the limit require purchasing a new seat." },
       { q: "Can I see combined revenue across all sectors?", a: "Yes. Set the Sector filter to 'All Sectors' on the Overview tab to see total revenue across every sector and branch in one view." },
     ],
-    related: ["pos-sector-staff-assignment", "pos-branch-sector-filters", "pos-restaurant-getting-started", "pos-repair-getting-started"],
-    keywords: ["multi-sector", "restaurant", "retail", "repair", "salon", "sector picker", "one account", "staff permissions"],
-    lastUpdated: "2026-05-17",
+    related: ["pos-sector-staff-assignment", "pos-branch-sector-filters", "pos-restaurant-getting-started", "pos-repair-getting-started", "pos-salon-getting-started", "pos-logistics-getting-started"],
+    keywords: ["multi-sector", "restaurant", "retail", "repair", "salon", "factory", "logistics", "courier", "sector picker", "one account", "staff permissions"],
+    lastUpdated: "2026-08-23",
   },
   {
     slug: "pos-sector-staff-assignment",

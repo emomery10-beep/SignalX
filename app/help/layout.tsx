@@ -107,6 +107,7 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
+      <a href="#main-content" className="hc-skip-link">Skip to main content</a>
       <StatusBanner />
       {children}
     </>

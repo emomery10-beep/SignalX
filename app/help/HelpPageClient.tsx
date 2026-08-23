@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { HELP_TOPICS, HELP_ARTICLES, searchArticles, getPopularArticles, type HelpArticle } from '@/lib/help-content'
 import { useLang } from '@/components/LanguageProvider'
 import './help.css'
@@ -35,15 +36,49 @@ function buildResources(tc: (key: string) => string) {
 
 export default function HelpPageClient() {
   const { tc } = useLang()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const popularArticles = useMemo(() => getPopularArticles(), [])
   const searchRef = useRef<HTMLInputElement>(null)
 
-  const [activeTopic,    setActiveTopic]    = useState<string | null>(null)
+  // Seed from the URL (?topic=, ?q=) so a shared/bookmarked link — and the
+  // page's own SearchAction schema, which advertises /help?q={term} — land
+  // on the right view instead of always resetting to the home state.
+  const [activeTopic,    setActiveTopic]    = useState<string | null>(() => searchParams.get('topic'))
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
-  const [search,         setSearch]         = useState('')
+  const [search,         setSearch]         = useState(() => searchParams.get('q') || '')
   const [searchFocused,  setSearchFocused]  = useState(false)
   const [visibleCount,   setVisibleCount]   = useState(PAGE_SIZE)
   const [acOpen,         setAcOpen]         = useState(false)
+
+  // Keep the URL mirroring search/topic state (debounced — search fires on
+  // every keystroke and shouldn't spam history) so this view is shareable
+  // and survives a refresh.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const usp = new URLSearchParams()
+      if (activeTopic) usp.set('topic', activeTopic)
+      if (search.trim()) usp.set('q', search.trim())
+      const qs = usp.toString()
+      const url = qs ? `/help?${qs}` : '/help'
+      if (`${window.location.pathname}${window.location.search}` !== url) {
+        router.replace(url, { scroll: false })
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [search, activeTopic, router])
+
+  // The reverse direction: when the URL changes from outside our own writes
+  // above — back/forward navigation, most importantly — sync state to match.
+  // useState's lazy initializer only runs once on mount, so without this,
+  // pressing Back updates the address bar but leaves the old topic/search
+  // view on screen.
+  useEffect(() => {
+    const topicParam = searchParams.get('topic')
+    const qParam = searchParams.get('q') || ''
+    setActiveTopic(prev => (prev === topicParam ? prev : topicParam))
+    setSearch(prev => (prev === qParam ? prev : qParam))
+  }, [searchParams])
 
   // CMD+K / Ctrl+K focuses search
   useEffect(() => {
@@ -103,12 +138,16 @@ export default function HelpPageClient() {
   function selectTopic(slug: string) {
     if (activeTopic === slug) {
       setActiveTopic(null)
+      router.push('/help', { scroll: false })
     } else {
       setActiveTopic(slug)
       setSearch('')
       setVisibleCount(PAGE_SIZE)
       if (!expandedTopics.has(slug))
         setExpandedTopics(prev => new Set([...prev, slug]))
+      // Pushed (not replaced) — picking a topic is a real navigation step,
+      // so the back button should be able to step out of it.
+      router.push(`/help?topic=${encodeURIComponent(slug)}`, { scroll: false })
     }
   }
 
@@ -116,6 +155,7 @@ export default function HelpPageClient() {
     setActiveTopic(null)
     setSearch('')
     setVisibleCount(PAGE_SIZE)
+    router.push('/help', { scroll: false })
   }
 
   return (
@@ -206,7 +246,7 @@ export default function HelpPageClient() {
         </aside>
 
         {/* ── Main ── */}
-        <main className="hc-main">
+        <main className="hc-main" id="main-content">
           {/* Search bar — prominent, X-style */}
           <div style={{ marginBottom: isHome ? 40 : 28 }}>
             {isHome && (
@@ -400,12 +440,25 @@ export default function HelpPageClient() {
                 </p>
               </div>
 
-              {/* No results */}
+              {/* No results — don't dead-end; offer real popular searches to try instead */}
               {displayList.length === 0 && (
                 <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <div style={{ fontSize: 12, color: 'var(--hc-secondary)', marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, color: 'var(--hc-secondary)', marginBottom: isSearch ? 20 : 16 }}>
                     {isSearch ? tc('help.no_articles_found_for') + ' “' + search + '”' : tc('help.no_articles_found')}.
                   </div>
+                  {isSearch && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 20, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
+                      {POPULAR_QUERIES.filter(q => q.toLowerCase() !== search.trim().toLowerCase()).slice(0, 5).map(q => (
+                        <button key={q} onClick={() => { setSearch(q); setVisibleCount(PAGE_SIZE) }} style={{
+                          fontSize: 11, color: 'var(--hc-dark)', background: 'var(--hc-surface)',
+                          border: '1px solid var(--hc-border-dark)', borderRadius: 9999,
+                          padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--hc-font)',
+                        }}>
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <button onClick={goHome} style={{
                     fontSize: 11, color: 'var(--hc-accent)', background: 'none',
                     border: '1px solid var(--hc-accent)', borderRadius: 8,

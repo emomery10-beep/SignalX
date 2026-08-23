@@ -143,7 +143,7 @@ export default function TopicPage({ params }: Props) {
           </aside>
 
           {/* Main */}
-          <main className="hc-main" style={{ padding: '32px 0 64px 40px' }}>
+          <main className="hc-main" id="main-content" style={{ padding: '32px 0 64px 40px' }}>
             {/* Topic banner */}
             <div className="hc-topic-banner">
               <div className="hc-topic-banner-icon">{topic.icon}</div>

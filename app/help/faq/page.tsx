@@ -143,7 +143,7 @@ export default function FAQPage() {
           </aside>
 
           {/* Main */}
-          <main className="faq-main">
+          <main className="faq-main" id="main-content">
             <div className="faq-hero">
               <h1 className="faq-title">Frequently Asked Questions</h1>
               <p className="faq-sub">
