@@ -9,6 +9,7 @@ const SCOUTS = [
   { name: 'Carolyne (East Africa)', path: '/api/agent/carolyne-scout' },
   { name: 'Ben (US)',               path: '/api/agent/ben-scout' },
   { name: 'Maya (marketing)',       path: '/api/agent/marketing-scout' },
+  { name: 'Shiillah (Swahili)',     path: '/api/agent/shiillah-scout' },
 ]
 
 export async function GET(request: NextRequest) {
