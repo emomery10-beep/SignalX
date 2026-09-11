@@ -5,6 +5,7 @@ import { hasPermission } from '@/lib/pos-permissions'
 import { logPosAudit } from '@/lib/pos-audit'
 import { matchHoldRule, matchManualHoldRule } from '@/lib/factory-holds'
 import { matchDecayRule } from '@/lib/factory-decay'
+import { syncDispatchToInventory } from '@/lib/factory-dispatch-to-inventory'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -14,11 +15,13 @@ function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
 }
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
 // Permission map: capture type → required permission
 const CAPTURE_PERMISSION: Record<CaptureType, Parameters<typeof hasPermission>[1]> = {
-  intake:    'camera.intake',
+  intake:         'camera.intake',
+  intake_arrival: 'camera.intake',
+  intake_feed:    'camera.intake',
   output:    'camera.output',
   wastage:   'camera.wastage',
   dispatch:  'camera.dispatch',
@@ -495,6 +498,16 @@ export async function PATCH(req: NextRequest) {
     toValue: status,
     metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : {},
   })
+
+  // Auto-sync dispatch captures to inventory when approved
+  if (status === 'approved' && updated.type === 'dispatch') {
+    await syncDispatchToInventory(
+      auth.ownerId,
+      updated.id,
+      updated.product_name,
+      updated.quantity
+    )
+  }
 
   return json({ capture: updated })
 }
