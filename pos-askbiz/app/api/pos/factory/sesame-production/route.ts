@@ -97,13 +97,14 @@ export async function GET(req: NextRequest) {
       feedCost = totalFeedUsed * costPerKg
     }
 
-    // Assume 20L jerrycans = ~14kg oil per can
-    const oilPerJerrycan = 14
-    const jerrycansProduced = Math.floor(oilProduced / oilPerJerrycan)
+    // Get actual packaging captures (20L jerrycans)
+    const jerrycansProduced = captures
+      .filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    // Get dispatched jerrycans (from dispatch captures with product_name containing jerrycan references)
+    // Get actual dispatch captures (Sesame oil jerrycans)
     const jerrycansDispatched = captures
-      .filter(c => c.type === 'dispatch' && (c.product_name.includes('jerrycan') || c.product_name.includes('matungi')))
+      .filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     const jerrycansInStock = jerrycansProduced - jerrycansDispatched
