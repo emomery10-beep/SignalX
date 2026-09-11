@@ -41,7 +41,7 @@ const CONTAINER_SIZE_CHIPS = ['5L', '10L', '20L', '1kg', '25kg', '50kg']
 
 function buildTypes(tc: (key: string) => string): { id: CaptureType; label: string; color: string; bg: string; hint: string }[] {
   return [
-    { id: 'intake',           label: tc('factory_capture.type_intake_label'),           color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_hint') },
+    { id: 'intake',           label: tc('factory_capture.type_intake_feed_label'),      color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_feed_hint') },
     { id: 'intake_arrival',   label: tc('factory_capture.type_intake_arrival_label'),   color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_arrival_hint') },
     { id: 'intake_feed',      label: tc('factory_capture.type_intake_feed_label'),      color: '#06b6d4', bg: 'rgba(6,182,212,.15)',  hint: tc('factory_capture.type_intake_feed_hint') },
     { id: 'output',    label: tc('factory_capture.type_output_label'),    color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: tc('factory_capture.type_output_hint') },

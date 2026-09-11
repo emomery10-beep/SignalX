@@ -49,7 +49,7 @@ interface Capture {
 }
 
 const buildTypeMeta = (tc: (key: string) => string): Record<CaptureType, { label: string; color: string; bg: string }> => ({
-  intake:          { label: tc('factory.type_intake'),          color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
+  intake:          { label: tc('factory.type_intake_feed'),     color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
   intake_arrival:  { label: tc('factory.type_intake_arrival'),  color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
   intake_feed:     { label: tc('factory.type_intake_feed'),     color: '#06b6d4',        bg: 'rgba(6,182,212,.08)'   },
   output:    { label: tc('factory.type_output'),    color: tokens.output,    bg: 'rgba(22,163,74,.08)'   },

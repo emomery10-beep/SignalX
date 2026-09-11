@@ -15,7 +15,7 @@ const GOOD = '#22c55e'
 const WARN = '#f59e0b'
 const BAD = '#ef4444'
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
 interface Capture {
   id: string
@@ -73,7 +73,9 @@ function expiryStatus(iso: string): 'expired' | 'soon' | null {
 // screen and the packaging type pill on the Capture screen — one concept,
 // one color, across the sector.
 const TYPE_META: Record<CaptureType, { icon: string; color: string }> = {
-  intake:    { icon: '📥', color: '#3b82f6' },
+  intake:         { icon: '📥', color: '#3b82f6' },
+  intake_arrival: { icon: '🛬', color: '#3b82f6' },
+  intake_feed:    { icon: '⚙️', color: '#06b6d4' },
   output:    { icon: '📤', color: GOOD },
   packaging: { icon: '📦', color: '#0ea5e9' },
   wastage:   { icon: '🗑️', color: BAD },
