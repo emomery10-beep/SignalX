@@ -150,8 +150,9 @@ export default function FactoryCapturePage() {
   const [salePrice, setSalePrice]   = useState('')
   const [buyerName, setBuyerName]   = useState('')
 
-  // Dispatch pricing — dispatch only
+  // Dispatch pricing & WhatsApp — dispatch only
   const [dispatchPrice, setDispatchPrice] = useState('')
+  const [dispatchWhatsApp, setDispatchWhatsApp] = useState('')
   const [showProductDropdown, setShowProductDropdown] = useState(false)
   const [filteredProducts, setFilteredProducts] = useState<string[]>([])
 
@@ -331,6 +332,7 @@ export default function FactoryCapturePage() {
       ...((captureType === 'intake' || captureType === 'output') && runRef.trim() ? { run_ref: runRef.trim() } : {}),
       ...(captureType === 'output' && isIntermediate ? { is_intermediate: true } : {}),
       ...(captureType === 'dispatch' && dispatchPrice.trim() && !isNaN(Number(dispatchPrice)) ? { sale_price: Number(dispatchPrice) } : {}),
+      ...(captureType === 'dispatch' && dispatchWhatsApp.trim() ? { buyer_name: dispatchWhatsApp.trim() } : {}),
     }
     try {
       const res = await fetch('/api/pos/factory/capture', {
@@ -749,7 +751,7 @@ export default function FactoryCapturePage() {
           </div>
         )}
 
-        {/* Dispatch destination */}
+        {/* Dispatch destination, price, WhatsApp */}
         {captureType === 'dispatch' && (
           <>
             <div style={{ marginBottom: 20 }}>
@@ -771,6 +773,17 @@ export default function FactoryCapturePage() {
                 style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${dispatchPrice ? '#22c55e60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
               />
               {dispatchPrice && <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Total: {(parseFloat(dispatchPrice) * parseFloat(quantity || '0')).toLocaleString()}</div>}
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>📱 WhatsApp number (optional)</div>
+              <input
+                type="tel"
+                value={dispatchWhatsApp}
+                onChange={e => setDispatchWhatsApp(e.target.value.replace(/\D/g, ''))}
+                placeholder="Customer WhatsApp (e.g. 254712345678)"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${dispatchWhatsApp ? PURPLE + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>We'll send a WhatsApp notification when this dispatch is approved</div>
             </div>
           </>
         )}
