@@ -188,7 +188,7 @@ export default function SesameProductionPage() {
               Jerrycans sold: {(((data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)) * 6000).toLocaleString()} KSh ({(data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)} sold × 6000 KSh)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>
-              Waste in stock: {((data.wastage - 0) * 30).toLocaleString()} KSh (cost to be offset by sales)
+              Waste sold: {((data.wastage > 0 ? Math.max(0, data.wastage - 0) : 0) * 30).toLocaleString()} KSh (cost of waste dispatched)
             </div>
           </div>
         </div>
