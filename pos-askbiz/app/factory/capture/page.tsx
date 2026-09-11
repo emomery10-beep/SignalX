@@ -58,6 +58,20 @@ const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets'
 
 const WASTAGE_REASON_KEYS = ['reason_damaged', 'reason_spoiled', 'reason_qc_reject', 'reason_machine_fault', 'reason_contamination', 'reason_overproduction', 'reason_other']
 
+// Predefined factory products — common across most production types
+const FACTORY_PRODUCTS = [
+  'Sesame seed',
+  'Sesame oil',
+  'Sesame waste',
+  'Matungi',
+  'Sunflower oil',
+  'Coconut oil',
+  'Palm oil',
+  'Shea butter',
+  'Soybean oil',
+  'Groundnut oil',
+]
+
 interface InventoryItem { id: string; name: string; unit: string | null }
 
 interface OpenHold {
@@ -588,30 +602,42 @@ export default function FactoryCapturePage() {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
-        {/* Product selector */}
+        {/* Product selector — predefined + custom */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.product_label')}</div>
-          {inventory.length > 0 ? (
-            <div style={{ position: 'relative' }}>
-              <select
-                value={product}
-                onChange={e => setProduct(e.target.value)}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${product ? selectedType.color + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: product ? '#f1f5f9' : 'rgba(255,255,255,0.35)', padding: '14px 16px', fontSize: 15, cursor: 'pointer', appearance: 'none', outline: 'none' }}
-              >
-                <option value="">{tc('factory_capture.product_select_placeholder')}</option>
-                {inventory.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}
-                <option value="__other__">{tc('factory_capture.product_other_option')}</option>
-              </select>
-              <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+          <input
+            value={product}
+            onChange={e => setProduct(e.target.value)}
+            placeholder="Select or type product..."
+            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${product ? selectedType.color + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+          />
+          {product.length > 0 && (
+            <div style={{ marginTop: 8, maxHeight: 160, overflowY: 'auto', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 8 }}>
+              {/* Predefined factory products */}
+              {FACTORY_PRODUCTS.filter(p => p.toLowerCase().includes(product.toLowerCase())).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setProduct(p)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '8px 12px', color: '#f1f5f9', fontSize: 14, cursor: 'pointer', borderRadius: 6, transition: 'background 100ms' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  {p}
+                </button>
+              ))}
+              {/* Inventory items */}
+              {inventory.filter(i => i.name.toLowerCase().includes(product.toLowerCase())).map(i => (
+                <button
+                  key={i.id}
+                  onClick={() => setProduct(i.name)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '8px 12px', color: '#cbd5e1', fontSize: 13, cursor: 'pointer', borderRadius: 6, transition: 'background 100ms' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  {i.name} <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>({i.unit || 'unit'})</span>
+                </button>
+              ))}
             </div>
-          ) : null}
-          {(product === '__other__' || inventory.length === 0) && (
-            <input
-              value={product === '__other__' ? '' : product}
-              onChange={e => setProduct(e.target.value)}
-              placeholder={tc('factory_capture.product_type_placeholder')}
-              style={{ width: '100%', marginTop: inventory.length > 0 ? 8 : 0, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
-            />
           )}
         </div>
 
