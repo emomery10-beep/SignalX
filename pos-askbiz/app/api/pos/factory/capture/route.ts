@@ -6,6 +6,7 @@ import { logPosAudit } from '@/lib/pos-audit'
 import { matchHoldRule, matchManualHoldRule } from '@/lib/factory-holds'
 import { matchDecayRule } from '@/lib/factory-decay'
 import { syncDispatchToInventory } from '@/lib/factory-dispatch-to-inventory'
+import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -506,6 +507,15 @@ export async function PATCH(req: NextRequest) {
       updated.id,
       updated.product_name,
       updated.quantity
+    )
+
+    // Send WhatsApp notification to recipient
+    await sendDispatchWhatsApp(
+      updated.notes, // destination field contains phone or recipient info
+      updated.product_name,
+      updated.quantity,
+      updated.notes,
+      updated.sale_price || null
     )
   }
 
