@@ -80,8 +80,8 @@ export async function GET(req: NextRequest) {
           costsPerKg.push(capture.param_value)
         }
       }
-      // Average cost per kg if available, otherwise default to 50
-      costPerKg = costsPerKg.length > 0 ? costsPerKg.reduce((a, b) => a + b, 0) / costsPerKg.length : 50
+      // Average cost per kg if available, otherwise default to 30 KSh/kg
+      costPerKg = costsPerKg.length > 0 ? costsPerKg.reduce((a, b) => a + b, 0) / costsPerKg.length : 30
       feedCost = intakeFeed * costPerKg
     }
 
