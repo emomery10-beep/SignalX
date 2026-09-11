@@ -40,11 +40,18 @@ export async function GET(req: NextRequest) {
     const output = outputKg * 1.09
 
     const packaging = captures
-      .filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil')
+      .filter(c => c.type === 'packaging' &&
+        (c.product_name === 'Matungi' ||
+         c.product_name?.toLowerCase().includes('jareace') ||
+         c.product_name?.toLowerCase().includes('jerrycan') ||
+         (c.product_name === 'Sesame oil' && c.param_label === 'jerrycan_size')))
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     const dispatch = captures
-      .filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil')
+      .filter(c => c.type === 'dispatch' &&
+        (c.product_name === 'Matungi' ||
+         c.product_name?.toLowerCase().includes('jareace') ||
+         c.product_name?.toLowerCase().includes('jerrycan')))
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     const stock = packaging - dispatch
@@ -67,9 +74,9 @@ export async function GET(req: NextRequest) {
         if (c.product_name === 'Sesame seed') batchMap[date].intake += c.quantity || 0
       } else if (c.type === 'output' && c.product_name === 'Sesame oil') {
         batchMap[date].output += c.quantity || 0
-      } else if (c.type === 'packaging' && c.product_name === 'Sesame oil') {
+      } else if (c.type === 'packaging' && (c.product_name === 'Matungi' || c.product_name?.toLowerCase().includes('jareace') || c.product_name?.toLowerCase().includes('jerrycan') || (c.product_name === 'Sesame oil' && c.param_label === 'jerrycan_size'))) {
         batchMap[date].packaging += c.quantity || 0
-      } else if (c.type === 'dispatch' && c.product_name === 'Sesame oil') {
+      } else if (c.type === 'dispatch' && (c.product_name === 'Matungi' || c.product_name?.toLowerCase().includes('jareace') || c.product_name?.toLowerCase().includes('jerrycan'))) {
         batchMap[date].dispatch += c.quantity || 0
       }
     }
@@ -100,8 +107,8 @@ export async function GET(req: NextRequest) {
       stages: [
         { name: '📥 Intake', quantity: intake, unit: 'kg', captures: captures.filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed').length, lastDate: captures.filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
         { name: '⚙️ Output', quantity: output, unit: 'L', captures: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
-        { name: '📦 Packaging', quantity: packaging, unit: 'cans', captures: captures.filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
-        { name: '🚚 Dispatch', quantity: dispatch, unit: 'cans', captures: captures.filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '📦 Packaging', quantity: packaging, unit: 'cans', captures: captures.filter(c => c.type === 'packaging' && (c.product_name === 'Matungi' || c.product_name?.toLowerCase().includes('jareace') || c.product_name?.toLowerCase().includes('jerrycan') || (c.product_name === 'Sesame oil' && c.param_label === 'jerrycan_size'))).length, lastDate: captures.filter(c => c.type === 'packaging' && (c.product_name === 'Matungi' || c.product_name?.toLowerCase().includes('jareace') || c.product_name?.toLowerCase().includes('jerrycan') || (c.product_name === 'Sesame oil' && c.param_label === 'jerrycan_size'))).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '🚚 Dispatch', quantity: dispatch, unit: 'cans', captures: captures.filter(c => c.type === 'dispatch' && (c.product_name === 'Matungi' || c.product_name?.toLowerCase().includes('jareace') || c.product_name?.toLowerCase().includes('jerrycan'))).length, lastDate: captures.filter(c => c.type === 'dispatch' && (c.product_name === 'Matungi' || c.product_name?.toLowerCase().includes('jareace') || c.product_name?.toLowerCase().includes('jerrycan'))).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
         { name: '📊 Stock', quantity: stock, unit: 'cans', captures: 0, lastDate: new Date().toISOString() }
       ],
       flow: { intake, output, packaging, dispatch, stock, balanced, mismatches },
