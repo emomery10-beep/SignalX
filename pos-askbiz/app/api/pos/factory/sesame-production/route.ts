@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       .select('*')
       .eq('owner_id', auth.ownerId)
       .eq('status', 'approved')
-      .in('product_name', ['Sesame seed', 'Sesame oil', 'Sesame waste'])
+      .in('product_name', ['Sesame seed', 'Sesame oil', 'Sesame waste', 'Sesame oil - Jerrycan Matungi (20L)'])
 
     if (!captures) {
       return NextResponse.json({
