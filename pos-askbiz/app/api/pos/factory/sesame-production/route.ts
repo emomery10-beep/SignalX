@@ -39,15 +39,21 @@ export async function GET(req: NextRequest) {
     }
 
     // Calculate metrics
-    const totalArrival = captures
+    // Total intake = all intake types combined (arrival + feed)
+    const totalIntake = captures
+      .filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    // For the dashboard: show arrival separately if exists, otherwise total intake
+    const intakeArrival = captures
       .filter(c => c.type === 'intake_arrival' && c.product_name === 'Sesame seed')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    const totalFeedUsed = captures
+    const intakeFeed = captures
       .filter(c => (c.type === 'intake' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    const remainingArrival = totalArrival - totalFeedUsed
+    const remainingArrival = intakeArrival > 0 ? intakeArrival - intakeFeed : 0
 
     const oilProduced = captures
       .filter(c => c.type === 'output' && c.product_name === 'Sesame oil')
@@ -101,8 +107,8 @@ export async function GET(req: NextRequest) {
     const grossMargin = totalRevenue - costOfGoods
 
     return NextResponse.json({
-      totalArrival,
-      totalFeedUsed,
+      totalArrival: intakeFeed > 0 ? intakeFeed : totalIntake,
+      totalFeedUsed: intakeFeed,
       remainingArrival,
       feedCost,
       costPerKg,
