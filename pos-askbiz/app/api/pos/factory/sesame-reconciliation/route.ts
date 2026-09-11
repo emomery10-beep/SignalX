@@ -12,10 +12,10 @@ export async function GET(req: NextRequest) {
     const service = createServiceClient()
 
     // Fetch all sesame captures (approved only)
-    const { data: captures } = await supabase
+    const { data: captures } = await service
       .from('pos_factory_captures')
       .select('*')
-      .eq('owner_id', profile.owner_id)
+      .eq('owner_id', auth.ownerId)
       .eq('status', 'approved')
       .in('product_name', ['Sesame seed', 'Sesame oil', 'Sesame waste'])
 

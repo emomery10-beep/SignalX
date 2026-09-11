@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       .filter(c => c.type === 'wastage' && c.product_name === 'Sesame waste')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    const yield_ = totalFeedUsed > 0 ? (oilProduced / totalFeedUsed) * 100 : 0
+    const yield_ = intakeFeed > 0 ? (oilProduced / intakeFeed) * 100 : 0
 
     // Calculate actual feed cost from capture records
     let feedCost = 0
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
       }
       // Average cost per kg if available, otherwise default to 50
       costPerKg = costsPerKg.length > 0 ? costsPerKg.reduce((a, b) => a + b, 0) / costsPerKg.length : 50
-      feedCost = totalFeedUsed * costPerKg
+      feedCost = intakeFeed * costPerKg
     }
 
     // Get actual packaging captures (20L jerrycans)
