@@ -109,9 +109,9 @@ export async function GET(req: NextRequest) {
     const grossMargin = totalRevenue - costOfGoods
 
     return NextResponse.json({
-      totalArrival: intakeFeed > 0 ? intakeFeed : totalIntake,
+      totalArrival: intakeArrival > 0 ? intakeArrival : totalIntake,
       totalFeedUsed: intakeFeed,
-      remainingArrival,
+      remainingArrival: Math.max(0, intakeArrival - intakeFeed),
       feedCost,
       costPerKg,
       oilProduced,
