@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosAuth } from '@/lib/pos-auth-server'
+import { resolvePosAuth } from '@/lib/pos-auth'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
 
