@@ -52,7 +52,7 @@ export async function createConnectedAccount(params: CreateConnectedAccountParam
 
     return {
       accountId: account.id,
-      createdAt: new Date(account.created * 1000),
+      createdAt: new Date((account.created ?? Math.floor(Date.now() / 1000)) * 1000),
     }
   } catch (error: any) {
     console.error('[stripe-connect] createConnectedAccount error:', error)
@@ -88,21 +88,30 @@ export async function generateOnboardingLink(connectedAccountId: string, returnU
  */
 export async function createPaymentLink(params: CreatePaymentLinkParams) {
   try {
+    // Payment Links (unlike Checkout Sessions) can't take inline price_data —
+    // they only accept a reference to an existing Price, so create one first,
+    // scoped to the connected account.
+    const price = await stripe.prices.create(
+      {
+        currency: params.currency,
+        unit_amount: params.amount,
+        product_data: {
+          name: params.description || 'Payment',
+        },
+      },
+      {
+        stripeAccount: params.connected_account_id,
+      }
+    )
+
     const link = await stripe.paymentLinks.create(
       {
         line_items: [
           {
-            price_data: {
-              currency: params.currency,
-              product_data: {
-                name: params.description || 'Payment',
-              },
-              unit_amount: params.amount,
-            },
+            price: price.id,
             quantity: 1,
           },
         ],
-        mode: 'payment',
         metadata: params.metadata,
       },
       {
