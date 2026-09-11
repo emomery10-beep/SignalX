@@ -1,0 +1,208 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+)
+
+export async function GET(req: NextRequest) {
+  try {
+    // Get auth from headers
+    const authHeader = req.headers.get('authorization') || ''
+    if (!authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.slice(7)
+    const { data: { user } } = await supabase.auth.getUser(token)
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Get owner_id
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('owner_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!profile?.owner_id) {
+      return NextResponse.json({ error: 'No owner found' }, { status: 400 })
+    }
+
+    // Fetch all sesame captures (approved only)
+    const { data: captures } = await supabase
+      .from('pos_factory_captures')
+      .select('*')
+      .eq('owner_id', profile.owner_id)
+      .eq('status', 'approved')
+      .in('product_name', ['Sesame seed', 'Sesame oil', 'Sesame waste'])
+
+    if (!captures) {
+      return NextResponse.json({
+        stages: [],
+        flow: { intake: 0, output: 0, packaging: 0, dispatch: 0, stock: 0, balanced: true, mismatches: [] },
+        batches: [],
+        posSync: { pendingDispatch: 0, syncedDispatch: 0, lastSync: null }
+      })
+    }
+
+    // Calculate stages
+    const intake = captures
+      .filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    const output = captures
+      .filter(c => c.type === 'output' && c.product_name === 'Sesame oil')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    const packaging = captures
+      .filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    const dispatch = captures
+      .filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    const stock = packaging - dispatch
+
+    // Check balance
+    const balanced = packaging === (dispatch + stock)
+    const mismatches: string[] = []
+    if (!balanced) {
+      if (packaging < dispatch) mismatches.push(`Dispatch (${dispatch}) exceeds packaging (${packaging})`)
+      if (packaging > dispatch + stock) mismatches.push(`Unaccounted jerrycans: ${packaging - dispatch - stock} missing`)
+    }
+
+    // Get batches by date
+    const batchMap: Record<string, { intake: number; output: number; packaging: number; dispatch: number }> = {}
+    for (const c of captures) {
+      const date = c.created_at.split('T')[0]
+      if (!batchMap[date]) batchMap[date] = { intake: 0, output: 0, packaging: 0, dispatch: 0 }
+
+      if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') {
+        if (c.product_name === 'Sesame seed') batchMap[date].intake += c.quantity || 0
+      } else if (c.type === 'output' && c.product_name === 'Sesame oil') {
+        batchMap[date].output += c.quantity || 0
+      } else if (c.type === 'packaging' && c.product_name === 'Sesame oil') {
+        batchMap[date].packaging += c.quantity || 0
+      } else if (c.type === 'dispatch' && c.product_name === 'Sesame oil') {
+        batchMap[date].dispatch += c.quantity || 0
+      }
+    }
+
+    const batches = Object.entries(batchMap)
+      .sort(([d1], [d2]) => d2.localeCompare(d1))
+      .map(([date, batch]) => ({
+        id: date,
+        date,
+        intake: batch.intake,
+        output: batch.output,
+        packaging: batch.packaging,
+        dispatch: batch.dispatch,
+        status: batch.packaging === (batch.dispatch + (batch.packaging - batch.dispatch)) ? 'balanced' as const : 'incomplete' as const
+      }))
+
+    // POS sync status (check if dispatch is synced to inventory)
+    const { data: inventory } = await supabase
+      .from('pos_inventory')
+      .select('*')
+      .eq('owner_id', profile.owner_id)
+      .ilike('name', '%sesame%oil%')
+
+    const syncedDispatch = inventory?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0
+    const pendingDispatch = Math.max(0, dispatch - syncedDispatch)
+
+    return NextResponse.json({
+      stages: [
+        { name: '📥 Intake', quantity: intake, unit: 'kg', captures: captures.filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed').length, lastDate: captures.filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '⚙️ Output', quantity: output, unit: 'kg', captures: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '📦 Packaging', quantity: packaging, unit: 'cans', captures: captures.filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '🚚 Dispatch', quantity: dispatch, unit: 'cans', captures: captures.filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '📊 Stock', quantity: stock, unit: 'cans', captures: 0, lastDate: new Date().toISOString() }
+      ],
+      flow: { intake, output, packaging, dispatch, stock, balanced, mismatches },
+      batches,
+      posSync: { pendingDispatch, syncedDispatch, lastSync: null }
+    })
+  } catch (error) {
+    console.error('Reconciliation error:', error)
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('authorization') || ''
+    if (!authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.slice(7)
+    const { data: { user } } = await supabase.auth.getUser(token)
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('owner_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!profile?.owner_id) {
+      return NextResponse.json({ error: 'No owner found' }, { status: 400 })
+    }
+
+    const body = await req.json()
+    if (body.action === 'sync_to_pos') {
+      // Get all dispatched sesame oil captures
+      const { data: dispatches } = await supabase
+        .from('pos_factory_captures')
+        .select('*')
+        .eq('owner_id', profile.owner_id)
+        .eq('status', 'approved')
+        .eq('type', 'dispatch')
+        .eq('product_name', 'Sesame oil')
+
+      if (!dispatches) {
+        return NextResponse.json({ synced: 0 })
+      }
+
+      const totalDispatched = dispatches.reduce((sum, d) => sum + (d.quantity || 0), 0)
+
+      // Update or create inventory entry
+      const { data: existing } = await supabase
+        .from('pos_inventory')
+        .select('id')
+        .eq('owner_id', profile.owner_id)
+        .ilike('name', '%sesame oil%')
+        .single()
+
+      if (existing) {
+        await supabase
+          .from('pos_inventory')
+          .update({ quantity: totalDispatched, updated_at: new Date().toISOString() })
+          .eq('id', existing.id)
+      } else {
+        await supabase
+          .from('pos_inventory')
+          .insert({
+            owner_id: profile.owner_id,
+            name: 'Sesame Oil (20L)',
+            quantity: totalDispatched,
+            unit: 'cans',
+            cost: 0
+          })
+      }
+
+      return NextResponse.json({ synced: totalDispatched, message: 'Synced to POS inventory' })
+    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+  } catch (error) {
+    console.error('Sync error:', error)
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}

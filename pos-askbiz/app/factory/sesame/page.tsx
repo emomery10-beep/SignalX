@@ -80,7 +80,10 @@ export default function SesameProductionPage() {
             <div style={{ fontSize: 12, color: '#94a3b8' }}>Real-time intake, production & inventory</div>
           </div>
         </div>
-        <button onClick={load} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>↻ Refresh</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => router.push('/factory/sesame-reconciliation')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>🔗 Reconciliation</button>
+          <button onClick={load} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>↻ Refresh</button>
+        </div>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
