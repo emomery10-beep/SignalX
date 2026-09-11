@@ -33,9 +33,11 @@ export async function GET(req: NextRequest) {
       .filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    const output = captures
+    const outputKg = captures
       .filter(c => c.type === 'output' && c.product_name === 'Sesame oil')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
+    // Convert oil from kg to liters (1 kg = 1.09 L for sesame oil at density 0.916 kg/L)
+    const output = outputKg * 1.09
 
     const packaging = captures
       .filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil')
@@ -78,7 +80,7 @@ export async function GET(req: NextRequest) {
         id: date,
         date,
         intake: batch.intake,
-        output: batch.output,
+        output: batch.output * 1.09, // Convert kg to L
         packaging: batch.packaging,
         dispatch: batch.dispatch,
         status: batch.packaging === (batch.dispatch + (batch.packaging - batch.dispatch)) ? 'balanced' as const : 'incomplete' as const
@@ -97,7 +99,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       stages: [
         { name: '📥 Intake', quantity: intake, unit: 'kg', captures: captures.filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed').length, lastDate: captures.filter(c => (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') && c.product_name === 'Sesame seed').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
-        { name: '⚙️ Output', quantity: output, unit: 'kg', captures: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
+        { name: '⚙️ Output', quantity: output, unit: 'L', captures: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'output' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
         { name: '📦 Packaging', quantity: packaging, unit: 'cans', captures: captures.filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
         { name: '🚚 Dispatch', quantity: dispatch, unit: 'cans', captures: captures.filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil').length, lastDate: captures.filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at || new Date().toISOString() },
         { name: '📊 Stock', quantity: stock, unit: 'cans', captures: 0, lastDate: new Date().toISOString() }

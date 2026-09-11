@@ -119,7 +119,7 @@ export default function SesameProductionPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Oil Produced</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{data.oilProduced.toLocaleString()} kg</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{data.oilProduced.toLocaleString('en-US', { maximumFractionDigits: 1 })} L</div>
             </div>
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Waste Generated</div>

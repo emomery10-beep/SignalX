@@ -228,10 +228,10 @@ export default function SesameReconciliationPage() {
                   {data.batches.map(batch => (
                     <tr key={batch.id} style={{ borderBottom: '1px solid #334155' }}>
                       <td style={{ padding: '10px', color: '#e2e8f0' }}>{new Date(batch.date).toLocaleDateString()}</td>
-                      <td style={{ padding: '10px', color: BLUE }}>{batch.intake}</td>
-                      <td style={{ padding: '10px', color: GREEN }}>{batch.output}</td>
-                      <td style={{ padding: '10px', color: BLUE }}>{batch.packaging}</td>
-                      <td style={{ padding: '10px', color: AMBER }}>{batch.dispatch}</td>
+                      <td style={{ padding: '10px', color: BLUE }}>{batch.intake} kg</td>
+                      <td style={{ padding: '10px', color: GREEN }}>{batch.output.toLocaleString('en-US', { maximumFractionDigits: 1 })} L</td>
+                      <td style={{ padding: '10px', color: BLUE }}>{batch.packaging} cans</td>
+                      <td style={{ padding: '10px', color: AMBER }}>{batch.dispatch} cans</td>
                       <td style={{ padding: '10px' }}>
                         <span style={{
                           fontSize: 10,

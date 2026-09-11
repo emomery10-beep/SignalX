@@ -57,15 +57,18 @@ export async function GET(req: NextRequest) {
     // Only calculate if both are in compatible units (kg)
     const remainingArrival = Math.max(0, intakeArrival - intakeFeed)
 
-    const oilProduced = captures
+    const oilProducedKg = captures
       .filter(c => c.type === 'output' && c.product_name === 'Sesame oil')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    // Convert oil from kg to liters (1 kg = 1.09 L for sesame oil at density 0.916 kg/L)
+    const oilProduced = oilProducedKg * 1.09
 
     const wastage = captures
       .filter(c => c.type === 'wastage' && c.product_name === 'Sesame waste')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    const yield_ = intakeFeed > 0 ? (oilProduced / intakeFeed) * 100 : 0
+    const yield_ = intakeFeed > 0 ? (oilProducedKg / intakeFeed) * 100 : 0
 
     // Calculate actual feed cost from capture records
     let feedCost = 0
