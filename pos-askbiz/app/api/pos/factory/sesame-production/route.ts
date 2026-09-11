@@ -125,9 +125,10 @@ export async function GET(req: NextRequest) {
 
     const totalRevenue = productRevenue + jerrycanRevenue
 
-    // Cost of goods = seed cost + jerrycan production cost (6000 KSh per can) + waste stock cost
+    // Cost of goods = seed cost + jerrycan SOLD cost (6000 KSh per can sold, not produced) + waste stock cost
     const jerrycanProductionCost = 6000 // KSh per can
-    const costOfGoods = feedCost + (jerrycansProduced * jerrycanProductionCost) + wasteStockCost
+    const jerrycansSold = Math.max(0, jerrycansProduced - jerrycansInStock) // Only count sold/dispatched, not in-stock
+    const costOfGoods = feedCost + (jerrycansSold * jerrycanProductionCost) + wasteStockCost
 
     const grossMargin = totalRevenue - costOfGoods
 

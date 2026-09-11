@@ -185,7 +185,7 @@ export default function SesameProductionPage() {
               Sesame seed: {data.feedCost.toLocaleString()} KSh ({data.totalFeedUsed.toLocaleString()} kg @ 30 KSh/kg)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
-              Jerrycans produced: {((data.jerrycansProduced || 0) * 6000).toLocaleString()} KSh ({data.jerrycansProduced} × 6000 KSh)
+              Jerrycans sold: {(((data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)) * 6000).toLocaleString()} KSh ({(data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)} sold × 6000 KSh)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>
               Waste in stock: {((data.wastage - 0) * 30).toLocaleString()} KSh (cost to be offset by sales)
