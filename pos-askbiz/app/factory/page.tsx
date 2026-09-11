@@ -405,8 +405,10 @@ export default function FactoryHub() {
       // fix (sesame oil's genuine 33-63% shouldn't just read as "less red",
       // it should be legible as "this is the normal range").
       sub: efficiencyEvaluation.matchedRecipe && efficiencyEvaluation.min != null
-        ? tc('factory.kpi_efficiency_sub_ranged', { min: efficiencyEvaluation.min, max: efficiencyEvaluation.max ?? efficiencyEvaluation.min })
-        : tc('factory.kpi_efficiency_sub'),
+        ? `${efficiencyEvaluation.productLabel || dominantProduct || 'Product'}: ${tc('factory.kpi_efficiency_sub_ranged', { min: efficiencyEvaluation.min, max: efficiencyEvaluation.max ?? efficiencyEvaluation.min })}`
+        : dominantProduct
+          ? `${dominantProduct} • ${tc('factory.kpi_efficiency_sub')}`
+          : tc('factory.kpi_efficiency_sub'),
       color: yieldStatusToken[efficiencyEvaluation.status],
       status: efficiencyEvaluation.status,
     },
