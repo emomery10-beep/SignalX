@@ -80,8 +80,12 @@ export default function SesameReconciliationPage() {
         headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({ action: 'sync_to_pos' })
       })
+      const result = await res.json()
+      console.log('Sync response:', result, 'Status:', res.status)
       if (res.ok) {
-        load()
+        setTimeout(() => load(), 500)
+      } else {
+        console.error('Sync failed:', result)
       }
     } catch (e) {
       console.error('Sync error:', e)
