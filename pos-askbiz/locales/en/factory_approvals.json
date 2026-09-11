@@ -1,5 +1,7 @@
 {
-  "type_intake_label": "Intake",
+  "type_intake_label": "Intake: Feed",
+  "type_intake_arrival_label": "Intake: Arrival",
+  "type_intake_feed_label": "Intake: Feed",
   "type_output_label": "Output",
   "type_packaging_label": "Packaging",
   "type_wastage_label": "Wastage",
