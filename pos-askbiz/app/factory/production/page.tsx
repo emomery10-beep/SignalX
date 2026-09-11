@@ -214,12 +214,17 @@ export default function ProductionLogPage() {
     (!name || name === '__other__') ? tc('factory_production.yield_unspecified') : name
 
   // Yield summary: output qty / intake qty per product
+  // Include all intake types (intake, intake_arrival, intake_feed) in the calculation
   const yieldMap: Record<string, { intake: number; output: number }> = {}
   for (const c of captures) {
     const p = displayProduct(c.product_name)
-    if (c.type === 'intake' || c.type === 'output') {
+    if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed' || c.type === 'output') {
       yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
-      yieldMap[p][c.type] += c.quantity || 0
+      if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') {
+        yieldMap[p].intake += c.quantity || 0
+      } else if (c.type === 'output') {
+        yieldMap[p].output += c.quantity || 0
+      }
     }
   }
   const yields = Object.entries(yieldMap)
@@ -247,7 +252,7 @@ export default function ProductionLogPage() {
     const key = c.production_run.id
     if (!runMap[key]) runMap[key] = { run_ref: c.production_run.run_ref || key.slice(0, 8), intake: [], outputs: [] }
     const p = displayProduct(c.product_name)
-    if (c.type === 'intake') runMap[key].intake.push({ product: p, qty: c.quantity || 0 })
+    if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') runMap[key].intake.push({ product: p, qty: c.quantity || 0 })
     if (c.type === 'output') runMap[key].outputs.push({ product: p, qty: c.quantity || 0, isIntermediate: !!c.is_intermediate })
   }
   const runs = Object.values(runMap)
