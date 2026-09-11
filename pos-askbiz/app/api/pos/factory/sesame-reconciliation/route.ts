@@ -1,35 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/server'
+import { resolvePosAuth } from '@/lib/pos-auth-server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const json = (data: any, status = 200) => NextResponse.json(data, { status })
 
 export async function GET(req: NextRequest) {
   try {
-    // Get auth from headers
-    const authHeader = req.headers.get('authorization') || ''
-    if (!authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const auth = await resolvePosAuth(req)
+    if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-    const token = authHeader.slice(7)
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Get owner_id
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('owner_id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!profile?.owner_id) {
-      return NextResponse.json({ error: 'No owner found' }, { status: 400 })
-    }
+    const service = createServiceClient()
 
     // Fetch all sesame captures (approved only)
     const { data: captures } = await supabase
@@ -105,10 +85,10 @@ export async function GET(req: NextRequest) {
       }))
 
     // POS sync status (check if dispatch is synced to inventory)
-    const { data: inventory } = await supabase
+    const { data: inventory } = await service
       .from('pos_inventory')
       .select('*')
-      .eq('owner_id', profile.owner_id)
+      .eq('owner_id', auth.ownerId)
       .ilike('name', '%sesame%oil%')
 
     const syncedDispatch = inventory?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0
@@ -134,62 +114,46 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization') || ''
-    if (!authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const auth = await resolvePosAuth(req)
+    if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-    const token = authHeader.slice(7)
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('owner_id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!profile?.owner_id) {
-      return NextResponse.json({ error: 'No owner found' }, { status: 400 })
-    }
-
+    const service = createServiceClient()
     const body = await req.json()
+
     if (body.action === 'sync_to_pos') {
       // Get all dispatched sesame oil captures
-      const { data: dispatches } = await supabase
+      const { data: dispatches } = await service
         .from('pos_factory_captures')
         .select('*')
-        .eq('owner_id', profile.owner_id)
+        .eq('owner_id', auth.ownerId)
         .eq('status', 'approved')
         .eq('type', 'dispatch')
         .eq('product_name', 'Sesame oil')
 
       if (!dispatches) {
-        return NextResponse.json({ synced: 0 })
+        return json({ synced: 0 })
       }
 
       const totalDispatched = dispatches.reduce((sum, d) => sum + (d.quantity || 0), 0)
 
       // Update or create inventory entry
-      const { data: existing } = await supabase
+      const { data: existing } = await service
         .from('pos_inventory')
         .select('id')
-        .eq('owner_id', profile.owner_id)
+        .eq('owner_id', auth.ownerId)
         .ilike('name', '%sesame oil%')
         .single()
 
       if (existing) {
-        await supabase
+        await service
           .from('pos_inventory')
           .update({ quantity: totalDispatched, updated_at: new Date().toISOString() })
           .eq('id', existing.id)
       } else {
-        await supabase
+        await service
           .from('pos_inventory')
           .insert({
-            owner_id: profile.owner_id,
+            owner_id: auth.ownerId,
             name: 'Sesame Oil (20L)',
             quantity: totalDispatched,
             unit: 'cans',
@@ -197,12 +161,12 @@ export async function POST(req: NextRequest) {
           })
       }
 
-      return NextResponse.json({ synced: totalDispatched, message: 'Synced to POS inventory' })
+      return json({ synced: totalDispatched, message: 'Synced to POS inventory' })
     }
 
-    return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+    return json({ error: 'Unknown action' }, 400)
   } catch (error) {
     console.error('Sync error:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return json({ error: 'Server error' }, 500)
   }
 }

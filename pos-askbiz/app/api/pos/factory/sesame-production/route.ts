@@ -1,41 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/server'
+import { resolvePosAuth } from '@/lib/pos-auth-server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-)
+const json = (data: any, status = 200) => NextResponse.json(data, { status })
 
 export async function GET(req: NextRequest) {
   try {
-    // Get auth from headers
-    const authHeader = req.headers.get('authorization') || ''
-    if (!authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const auth = await resolvePosAuth(req)
+    if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-    const token = authHeader.slice(7)
-    const { data: { user } } = await supabase.auth.getUser(token)
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Get owner_id from session
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('owner_id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!profile?.owner_id) {
-      return NextResponse.json({ error: 'No owner found' }, { status: 400 })
-    }
+    const service = createServiceClient()
 
     // Fetch all sesame captures (approved only)
-    const { data: captures } = await supabase
+    const { data: captures } = await service
       .from('pos_factory_captures')
       .select('*')
-      .eq('owner_id', profile.owner_id)
+      .eq('owner_id', auth.ownerId)
       .eq('status', 'approved')
       .in('product_name', ['Sesame seed', 'Sesame oil', 'Sesame waste'])
 
