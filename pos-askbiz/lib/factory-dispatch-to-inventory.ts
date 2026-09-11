@@ -9,7 +9,7 @@
  * Non-fatal: sync failures don't block the approval. Logged for debugging.
  */
 
-import { createServiceClient } from './supabase-service'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export interface DispatchSyncResult {
   success: boolean
