@@ -70,23 +70,26 @@ export async function GET(req: NextRequest) {
 
     const yield_ = intakeFeed > 0 ? (oilProducedKg / intakeFeed) * 100 : 0
 
-    // Calculate actual feed cost from capture records
-    let feedCost = 0
+    // Calculate actual seed cost from intake_arrival purchases
+    // This is the actual cost paid to purchase the sesame seed
+    let seedCost = 0
     let costPerKg = 0
-    const feedCaptures = captures.filter(c => (c.type === 'intake' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
 
-    if (feedCaptures.length > 0) {
-      // Look for cost per kg in param_label/param_value or use recorded costs
-      const costsPerKg: number[] = []
-      for (const capture of feedCaptures) {
-        if (capture.param_label === 'feed_cost_per_kg' && capture.param_value) {
-          costsPerKg.push(capture.param_value)
+    const arrivalCaptures = captures.filter(c => c.type === 'intake_arrival' && c.product_name === 'Sesame seed')
+    if (arrivalCaptures.length > 0) {
+      // Look for intake_price_per_kg from intake_arrival captures
+      const purchasePricesPerKg: number[] = []
+      for (const capture of arrivalCaptures) {
+        if (capture.param_label === 'intake_price_per_kg' && capture.param_value) {
+          purchasePricesPerKg.push(capture.param_value)
         }
       }
-      // Average cost per kg if available, otherwise default to 30 KSh/kg
-      costPerKg = costsPerKg.length > 0 ? costsPerKg.reduce((a, b) => a + b, 0) / costsPerKg.length : 30
-      feedCost = intakeFeed * costPerKg
+      // Average purchase price if available, otherwise default to 30 KSh/kg
+      costPerKg = purchasePricesPerKg.length > 0 ? purchasePricesPerKg.reduce((a, b) => a + b, 0) / purchasePricesPerKg.length : 30
     }
+
+    // Calculate seed cost based on feed used (quantity fed to pressing × purchase price per kg)
+    const feedCost = intakeFeed * costPerKg
 
     // Get actual packaging captures (20L jerrycans)
     // Standard name: "Sesame oil - Jerrycan Matungi (20L)"

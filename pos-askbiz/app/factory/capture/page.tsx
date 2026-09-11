@@ -174,6 +174,9 @@ export default function FactoryCapturePage() {
   // Feed cost tracking — intake_feed only
   const [feedCostPerKg, setFeedCostPerKg] = useState('')
 
+  // Intake arrival price tracking — intake_arrival only
+  const [intakePricePerKg, setIntakePricePerKg] = useState('')
+
   // Not-yet-releasable hold check for dispatch captures — warn and require
   // an explicit tap-through, same policy as factory/waybill.
   const [openHolds, setOpenHolds] = useState<OpenHold[]>([])
@@ -352,6 +355,7 @@ export default function FactoryCapturePage() {
       ...(captureType === 'dispatch' && dispatchPrice.trim() && !isNaN(Number(dispatchPrice)) ? { sale_price: Number(dispatchPrice) } : {}),
       ...(captureType === 'dispatch' && dispatchWhatsApp.trim() ? { buyer_name: dispatchWhatsApp.trim() } : {}),
       ...(captureType === 'intake_feed' && feedCostPerKg.trim() && !isNaN(Number(feedCostPerKg)) ? { param_label: 'feed_cost_per_kg', param_value: Number(feedCostPerKg) } : {}),
+      ...(captureType === 'intake_arrival' && intakePricePerKg.trim() && !isNaN(Number(intakePricePerKg)) ? { param_label: 'intake_price_per_kg', param_value: Number(intakePricePerKg) } : {}),
     }
     try {
       const res = await fetch('/api/pos/factory/capture', {
@@ -817,6 +821,22 @@ export default function FactoryCapturePage() {
               <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>We'll send a WhatsApp notification when this dispatch is approved</div>
             </div>
           </>
+        )}
+
+        {/* Intake arrival price tracking — intake_arrival only */}
+        {captureType === 'intake_arrival' && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>💵 Purchase price per kg</div>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={intakePricePerKg}
+              onChange={e => setIntakePricePerKg(e.target.value)}
+              placeholder="Purchase price per kg (e.g. 110 for KSh 110)"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${intakePricePerKg ? GREEN + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+            />
+            {intakePricePerKg && quantity && <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Total purchased: {(parseFloat(intakePricePerKg) * parseFloat(quantity)).toLocaleString()} KSh</div>}
+          </div>
         )}
 
         {/* Feed cost tracking — intake_feed only */}
