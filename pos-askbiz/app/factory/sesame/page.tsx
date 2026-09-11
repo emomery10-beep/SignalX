@@ -182,10 +182,13 @@ export default function SesameProductionPage() {
           <div style={{ background: '#0f172a', borderRadius: 8, padding: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>Cost Breakdown</div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
-              Sesame seed: {data.feedCost.toLocaleString()} KSh ({data.totalFeedUsed.toLocaleString()} kg)
+              Sesame seed: {data.feedCost.toLocaleString()} KSh ({data.totalFeedUsed.toLocaleString()} kg @ 30 KSh/kg)
+            </div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
+              Jerrycans produced: {((data.jerrycansProduced || 0) * 6000).toLocaleString()} KSh ({data.jerrycansProduced} × 6000 KSh)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>
-              Jerrycans: {((data.jerrycansProduced || 0) * 80).toLocaleString()} KSh ({data.jerrycansProduced} × 80 KSh)
+              Waste in stock: {((data.wastage - 0) * 30).toLocaleString()} KSh (cost to be offset by sales)
             </div>
           </div>
         </div>
