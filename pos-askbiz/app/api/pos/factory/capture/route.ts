@@ -46,12 +46,12 @@ const SALE_ANNOTATABLE_TYPES: CaptureType[] = ['output', 'wastage']
 // pasteurize stage happens before the yoghurt/cheese/ghee-butter branch is
 // even chosen). Intake/output only — the two "a real measurement happened
 // here" moments; wastage/dispatch/packaging don't obviously need one.
-const PARAM_ANNOTATABLE_TYPES: CaptureType[] = ['intake', 'output']
+const PARAM_ANNOTATABLE_TYPES: CaptureType[] = ['intake', 'intake_arrival', 'intake_feed', 'output']
 
 // Which captures can be grouped into a production run (see the run_ref
 // find-or-create block in POST below) — intake/output only, the two
 // moments a run's "what went in, what came out" actually spans.
-const RUN_TAGGABLE_TYPES: CaptureType[] = ['intake', 'output']
+const RUN_TAGGABLE_TYPES: CaptureType[] = ['intake', 'intake_arrival', 'intake_feed', 'output']
 
 // ─────────────────────────────────────────────────────────────
 // GET — list captures (filterable by type / status / date / shift)
@@ -133,8 +133,8 @@ export async function POST(req: NextRequest) {
   const product_name = body.product_name === '__other__' ? null : body.product_name
 
   if (!type || !image) return json({ error: 'type and image required' }, 400)
-  if (!['intake', 'output', 'wastage', 'dispatch', 'packaging'].includes(type)) {
-    return json({ error: 'type must be intake, output, wastage, dispatch, or packaging' }, 400)
+  if (!['intake', 'intake_arrival', 'intake_feed', 'output', 'wastage', 'dispatch', 'packaging'].includes(type)) {
+    return json({ error: 'type must be intake, intake_arrival, intake_feed, output, wastage, dispatch, or packaging' }, 400)
   }
 
   const captureType = type as CaptureType
