@@ -40,19 +40,11 @@ export async function GET(req: NextRequest) {
     const output = outputKg * 1.09
 
     const packaging = captures
-      .filter(c => c.type === 'packaging' &&
-        (c.product_name === 'Sesame oil - Jerrycan Matungi (20L)' ||
-         c.product_name === 'Matungi' ||
-         c.product_name?.toLowerCase().includes('jareace') ||
-         c.product_name?.toLowerCase().includes('jerrycan')))
+      .filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil - Jerrycan Matungi (20L)')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     const dispatch = captures
-      .filter(c => c.type === 'dispatch' &&
-        (c.product_name === 'Sesame oil - Jerrycan Matungi (20L)' ||
-         c.product_name === 'Matungi' ||
-         c.product_name?.toLowerCase().includes('jareace') ||
-         c.product_name?.toLowerCase().includes('jerrycan')))
+      .filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil - Jerrycan Matungi (20L)')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     const stock = packaging - dispatch

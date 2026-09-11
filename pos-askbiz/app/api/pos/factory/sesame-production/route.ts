@@ -92,22 +92,13 @@ export async function GET(req: NextRequest) {
     const feedCost = intakeFeed * costPerKg
 
     // Get actual packaging captures (20L jerrycans)
-    // Standard name: "Sesame oil - Jerrycan Matungi (20L)"
     const jerrycansProduced = captures
-      .filter(c => c.type === 'packaging' &&
-        (c.product_name === 'Sesame oil - Jerrycan Matungi (20L)' ||
-         c.product_name === 'Matungi' ||
-         c.product_name?.toLowerCase().includes('jareace') ||
-         c.product_name?.toLowerCase().includes('jerrycan')))
+      .filter(c => c.type === 'packaging' && c.product_name === 'Sesame oil - Jerrycan Matungi (20L)')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     // Get actual dispatch captures (Sesame oil jerrycans)
     const jerrycansDispatched = captures
-      .filter(c => c.type === 'dispatch' &&
-        (c.product_name === 'Sesame oil - Jerrycan Matungi (20L)' ||
-         c.product_name === 'Matungi' ||
-         c.product_name?.toLowerCase().includes('jareace') ||
-         c.product_name?.toLowerCase().includes('jerrycan')))
+      .filter(c => c.type === 'dispatch' && c.product_name === 'Sesame oil - Jerrycan Matungi (20L)')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     const jerrycansInStock = jerrycansProduced - jerrycansDispatched
