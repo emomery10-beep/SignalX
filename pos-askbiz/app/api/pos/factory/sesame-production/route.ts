@@ -97,14 +97,25 @@ export async function GET(req: NextRequest) {
 
     const jerrycansInStock = jerrycansProduced - jerrycansDispatched
 
+    // Sesame waste cost calculation
+    // Cost = (waste produced - waste sold) × 30 KSh/kg
+    const wasteDispatched = captures
+      .filter(c => c.type === 'dispatch' && c.product_name === 'Sesame waste')
+      .reduce((sum, c) => sum + (c.quantity || 0), 0)
+
+    const wasteCostPerKg = 30 // Same as sesame seed cost
+    const wasteProductionCost = wastage * wasteCostPerKg
+    const wasteSoldCost = wasteDispatched * wasteCostPerKg
+    const wasteStockCost = wasteProductionCost - wasteSoldCost
+
     // Revenue from dispatch sales
     const totalRevenue = captures
       .filter(c => c.type === 'dispatch' && c.sale_price)
       .reduce((sum, c) => sum + ((c.sale_price || 0) * (c.quantity || 1)), 0)
 
-    // Cost of goods = seed cost + jerrycan cost (80 KSh per can)
+    // Cost of goods = seed cost + jerrycan cost (80 KSh per can) + waste stock cost
     const jerrycanCost = 80 // KSh per can
-    const costOfGoods = feedCost + (jerrycansProduced * jerrycanCost)
+    const costOfGoods = feedCost + (jerrycansProduced * jerrycanCost) + wasteStockCost
 
     const grossMargin = totalRevenue - costOfGoods
 
