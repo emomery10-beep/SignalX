@@ -63,6 +63,7 @@ const FACTORY_PRODUCTS = [
   'Sesame seed',
   'Sesame oil',
   'Sesame waste',
+  'Sesame oil - Jerrycan Matungi (20L)',
   'Matungi',
   'Sunflower oil',
   'Coconut oil',

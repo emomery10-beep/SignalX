@@ -89,19 +89,20 @@ export async function GET(req: NextRequest) {
     }
 
     // Get actual packaging captures (20L jerrycans)
-    // Matches: "Matungi", "Two jareace of sesame oil", "Sesame oil - Jerrycan", etc.
+    // Standard name: "Sesame oil - Jerrycan Matungi (20L)"
     const jerrycansProduced = captures
       .filter(c => c.type === 'packaging' &&
-        (c.product_name === 'Matungi' ||
+        (c.product_name === 'Sesame oil - Jerrycan Matungi (20L)' ||
+         c.product_name === 'Matungi' ||
          c.product_name?.toLowerCase().includes('jareace') ||
-         c.product_name?.toLowerCase().includes('jerrycan') ||
-         (c.product_name === 'Sesame oil' && c.param_label === 'jerrycan_size')))
+         c.product_name?.toLowerCase().includes('jerrycan')))
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
     // Get actual dispatch captures (Sesame oil jerrycans)
     const jerrycansDispatched = captures
       .filter(c => c.type === 'dispatch' &&
-        (c.product_name === 'Matungi' ||
+        (c.product_name === 'Sesame oil - Jerrycan Matungi (20L)' ||
+         c.product_name === 'Matungi' ||
          c.product_name?.toLowerCase().includes('jareace') ||
          c.product_name?.toLowerCase().includes('jerrycan')))
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
