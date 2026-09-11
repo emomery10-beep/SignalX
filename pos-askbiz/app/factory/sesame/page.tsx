@@ -95,7 +95,12 @@ export default function SesameProductionPage() {
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Used for Pressing</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: AMBER }}>{data.totalFeedUsed.toLocaleString()} kg</div>
-              <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>Cost: {data.feedCost.toLocaleString()} KSh @ {data.costPerKg} KSh/kg</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>@ {data.costPerKg.toFixed(2)} KSh/kg</div>
+            </div>
+            <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Feed Cost</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: RED }}>{data.feedCost.toLocaleString()} KSh</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>Total spent</div>
             </div>
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Remaining</div>
@@ -154,7 +159,7 @@ export default function SesameProductionPage() {
         {/* Revenue & Margin */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>💰 Revenue & Profitability</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 16 }}>
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Total Revenue</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{data.totalRevenue.toLocaleString()} KSh</div>
@@ -167,6 +172,17 @@ export default function SesameProductionPage() {
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Gross Margin</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{data.grossMargin.toLocaleString()} KSh</div>
               <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{data.totalRevenue > 0 ? ((data.grossMargin / data.totalRevenue) * 100).toFixed(1) : 0}% margin</div>
+            </div>
+          </div>
+
+          {/* Cost breakdown */}
+          <div style={{ background: '#0f172a', borderRadius: 8, padding: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>Cost Breakdown</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
+              Sesame seed: {data.feedCost.toLocaleString()} KSh ({data.totalFeedUsed.toLocaleString()} kg)
+            </div>
+            <div style={{ fontSize: 11, color: '#94a3b8' }}>
+              Jerrycans: {((data.jerrycansProduced || 0) * 80).toLocaleString()} KSh ({data.jerrycansProduced} × 80 KSh)
             </div>
           </div>
         </div>

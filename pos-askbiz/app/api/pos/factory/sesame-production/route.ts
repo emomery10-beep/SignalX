@@ -79,6 +79,24 @@ export async function GET(req: NextRequest) {
 
     const yield_ = totalFeedUsed > 0 ? (oilProduced / totalFeedUsed) * 100 : 0
 
+    // Calculate actual feed cost from capture records
+    let feedCost = 0
+    let costPerKg = 0
+    const feedCaptures = captures.filter(c => (c.type === 'intake' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
+
+    if (feedCaptures.length > 0) {
+      // Look for cost per kg in param_label/param_value or use recorded costs
+      const costsPerKg: number[] = []
+      for (const capture of feedCaptures) {
+        if (capture.param_label === 'feed_cost_per_kg' && capture.param_value) {
+          costsPerKg.push(capture.param_value)
+        }
+      }
+      // Average cost per kg if available, otherwise default to 50
+      costPerKg = costsPerKg.length > 0 ? costsPerKg.reduce((a, b) => a + b, 0) / costsPerKg.length : 50
+      feedCost = totalFeedUsed * costPerKg
+    }
+
     // Assume 20L jerrycans = ~14kg oil per can
     const oilPerJerrycan = 14
     const jerrycansProduced = Math.floor(oilProduced / oilPerJerrycan)
@@ -95,9 +113,7 @@ export async function GET(req: NextRequest) {
       .filter(c => c.type === 'dispatch' && c.sale_price)
       .reduce((sum, c) => sum + ((c.sale_price || 0) * (c.quantity || 1)), 0)
 
-    // Cost of goods = seed cost + jerrycan cost
-    const costPerKg = 50 // KSh per kg
-    const feedCost = totalFeedUsed * costPerKg
+    // Cost of goods = seed cost + jerrycan cost (80 KSh per can)
     const jerrycanCost = 80 // KSh per can
     const costOfGoods = feedCost + (jerrycansProduced * jerrycanCost)
 
