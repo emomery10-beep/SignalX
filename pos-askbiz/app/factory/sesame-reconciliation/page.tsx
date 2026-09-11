@@ -53,6 +53,9 @@ export default function SesameReconciliationPage() {
   useEffect(() => {
     if (!authReady || !session) return
     load()
+    // Auto-refresh every 15 seconds
+    const interval = setInterval(() => load(), 15000)
+    return () => clearInterval(interval)
   }, [authReady, session])
 
   async function load() {
@@ -63,7 +66,13 @@ export default function SesameReconciliationPage() {
         headers: session.headers
       })
       const d = res.ok ? await res.json() : null
-      if (d) setData(d)
+      if (d) {
+        setData(d)
+        // Auto-sync if there are pending dispatches
+        if (d.posSync.pendingDispatch > 0) {
+          setTimeout(() => syncToPOS(), 1000)
+        }
+      }
     } catch (e) {
       console.error('Reconciliation load error:', e)
     } finally {
@@ -193,23 +202,9 @@ export default function SesameReconciliationPage() {
             </div>
           </div>
           {data.posSync.pendingDispatch > 0 && (
-            <button
-              onClick={syncToPOS}
-              disabled={syncing}
-              style={{
-                width: '100%',
-                background: syncing ? '#64748b' : BLUE,
-                border: 'none',
-                color: '#f1f5f9',
-                padding: '12px 16px',
-                borderRadius: 8,
-                cursor: syncing ? 'not-allowed' : 'pointer',
-                fontSize: 14,
-                fontWeight: 700
-              }}
-            >
-              {syncing ? 'Syncing...' : `✓ Sync ${data.posSync.pendingDispatch} Jerrycans to POS`}
-            </button>
+            <div style={{ width: '100%', background: AMBER + '15', border: `1px solid ${AMBER}40`, color: AMBER, padding: '12px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, textAlign: 'center' }}>
+              ⏳ Auto-syncing {data.posSync.pendingDispatch} jerrycans...
+            </div>
           )}
         </div>
 
