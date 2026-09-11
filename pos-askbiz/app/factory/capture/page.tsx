@@ -19,7 +19,7 @@ const PURPLE = '#8b5cf6'
 // screen that surfaces it, rather than picking an unrelated 5th hue.
 const TEAL   = '#0ea5e9'
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 type Stage = 'viewfinder' | 'confirm_type' | 'details' | 'success'
 
 // Output and wastage captures can additionally be marked "sold" — covers
@@ -30,9 +30,9 @@ type Stage = 'viewfinder' | 'confirm_type' | 'details' | 'success'
 const SALE_ANNOTATABLE_TYPES: CaptureType[] = ['output', 'wastage']
 
 // A generic, free-form process-parameter reading (e.g. dairy's pasteurize
-// temp/time) — intake/output only. Kept in sync with
+// temp/time) — intake/intake_arrival/intake_feed/output only. Kept in sync with
 // PARAM_ANNOTATABLE_TYPES in the capture API route.
-const PARAM_ANNOTATABLE_TYPES: CaptureType[] = ['intake', 'output']
+const PARAM_ANNOTATABLE_TYPES: CaptureType[] = ['intake', 'intake_arrival', 'intake_feed', 'output']
 
 // Common container sizes offered as quick-pick chips on the packaging type's
 // details screen — a starting point, not a closed set; the field next to
@@ -41,7 +41,9 @@ const CONTAINER_SIZE_CHIPS = ['5L', '10L', '20L', '1kg', '25kg', '50kg']
 
 function buildTypes(tc: (key: string) => string): { id: CaptureType; label: string; color: string; bg: string; hint: string }[] {
   return [
-    { id: 'intake',    label: tc('factory_capture.type_intake_label'),    color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_hint') },
+    { id: 'intake',           label: tc('factory_capture.type_intake_label'),           color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_hint') },
+    { id: 'intake_arrival',   label: tc('factory_capture.type_intake_arrival_label'),   color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_arrival_hint') },
+    { id: 'intake_feed',      label: tc('factory_capture.type_intake_feed_label'),      color: '#06b6d4', bg: 'rgba(6,182,212,.15)',  hint: tc('factory_capture.type_intake_feed_hint') },
     { id: 'output',    label: tc('factory_capture.type_output_label'),    color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: tc('factory_capture.type_output_hint') },
     { id: 'packaging', label: tc('factory_capture.type_packaging_label'), color: TEAL,   bg: 'rgba(14,165,233,.15)',  hint: tc('factory_capture.type_packaging_hint') },
     { id: 'wastage',   label: tc('factory_capture.type_wastage_label'),   color: RED,    bg: 'rgba(239,68,68,.15)',   hint: tc('factory_capture.type_wastage_hint') },

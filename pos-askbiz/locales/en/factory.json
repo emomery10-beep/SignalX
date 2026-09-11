@@ -1,5 +1,7 @@
 {
   "type_intake": "Intake",
+  "type_intake_arrival": "Intake: Arrival",
+  "type_intake_feed": "Intake: Feed",
   "type_output": "Output",
   "type_packaging": "Packaging",
   "type_wastage": "Wastage",

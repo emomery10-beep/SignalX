@@ -1,6 +1,10 @@
 {
   "type_intake_label": "Intake",
   "type_intake_hint": "Raw materials in",
+  "type_intake_arrival_label": "Intake: Arrival",
+  "type_intake_arrival_hint": "Raw seeds/materials arriving at factory",
+  "type_intake_feed_label": "Intake: Feed",
+  "type_intake_feed_hint": "Seeds loaded into the machine",
   "type_output_label": "Output",
   "type_output_hint": "Finished goods out",
   "type_wastage_label": "Wastage",

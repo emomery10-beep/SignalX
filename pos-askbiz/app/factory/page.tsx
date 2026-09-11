@@ -25,7 +25,7 @@ const tokens = {
   packaging: '#0ea5e9',
 }
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch' | 'packaging'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
 interface ActiveDowntime {
   id: string
@@ -49,7 +49,9 @@ interface Capture {
 }
 
 const buildTypeMeta = (tc: (key: string) => string): Record<CaptureType, { label: string; color: string; bg: string }> => ({
-  intake:    { label: tc('factory.type_intake'),    color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
+  intake:          { label: tc('factory.type_intake'),          color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
+  intake_arrival:  { label: tc('factory.type_intake_arrival'),  color: tokens.intake,    bg: 'rgba(59,130,246,.08)'  },
+  intake_feed:     { label: tc('factory.type_intake_feed'),     color: '#06b6d4',        bg: 'rgba(6,182,212,.08)'   },
   output:    { label: tc('factory.type_output'),    color: tokens.output,    bg: 'rgba(22,163,74,.08)'   },
   packaging: { label: tc('factory.type_packaging'), color: tokens.packaging, bg: 'rgba(14,165,233,.08)'  },
   wastage:   { label: tc('factory.type_wastage'),   color: tokens.wastage,   bg: 'rgba(220,38,38,.08)'   },
@@ -307,7 +309,9 @@ export default function FactoryHub() {
   // ── Computed KPIs ────────────────────────────────────────────────────────
   const todays     = captures.filter(c => isToday(c.created_at))
   const outputs    = todays.filter(c => c.type === 'output')
-  const intakes    = todays.filter(c => c.type === 'intake')
+  // intake_arrival + old 'intake' (backwards compat) = raw material arriving at factory
+  const intakes    = todays.filter(c => c.type === 'intake' || c.type === 'intake_arrival')
+  const intakesFeed = todays.filter(c => c.type === 'intake_feed')
   const wastages   = todays.filter(c => c.type === 'wastage')
   const dispatches = todays.filter(c => c.type === 'dispatch')
   const packagings = todays.filter(c => c.type === 'packaging')
