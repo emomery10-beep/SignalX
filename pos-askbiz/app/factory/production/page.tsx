@@ -301,26 +301,40 @@ export default function ProductionLogPage() {
         {yields.length > 0 && (
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>{tc('factory_production.yield_summary_title')} <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>{tc('factory_production.yield_summary_hint')}</span></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
               {yields.map((y, idx) => (
-                <div key={y.product} className="pos-item" style={{ background: '#0f172a', borderRadius: 8, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{y.product}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: YIELD_STATUS_COLOR[y.evaluation.status] }}>
+                <div key={y.product} className="pos-item" style={{ background: '#0f172a', borderRadius: 8, padding: '14px 16px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 8 }}>{y.product}</div>
+
+                  {/* Main percentage + status */}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 24, fontWeight: 700, color: YIELD_STATUS_COLOR[y.evaluation.status] }}>
                       {y.pct == null ? '—' : `${y.pct.toFixed(0)}%`}
                     </span>
-                    <span style={{ fontSize: 11, color: '#64748b' }}>{tc('factory_production.yield_out_in', { out: y.output.toLocaleString(), in: y.intake.toLocaleString() })}</span>
+                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: y.evaluation.matchedRecipe ? '#22c55e1a' : '#64748b1a', color: y.evaluation.matchedRecipe ? '#22c55e' : '#64748b', fontWeight: 600 }}>
+                      {y.evaluation.matchedRecipe ? '✓ recipe' : 'no recipe'}
+                    </span>
                   </div>
-                  {/* Don't rely on color alone — show what "normal" actually
-                      means for this product once a factory-type recipe
-                      matches it (e.g. sesame oil's genuine 33-63% range),
-                      instead of leaving the color as the only explanation. */}
-                  {y.evaluation.matchedRecipe && y.evaluation.min != null && (
-                    <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>
-                      {tc('factory_production.yield_expected_range', {
-                        min: y.evaluation.min,
-                        max: y.evaluation.max ?? y.evaluation.min,
-                      })}
+
+                  {/* Output and intake details */}
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
+                    <div>📤 Output: <strong>{y.output.toLocaleString()}</strong></div>
+                    <div>📥 Intake: <strong>{y.intake.toLocaleString()}</strong></div>
+                  </div>
+
+                  {/* Expected range — always show if available */}
+                  {y.evaluation.min != null && (
+                    <div style={{ fontSize: 10, color: '#64748b', padding: '6px 8px', background: '#334155', borderRadius: 4, marginTop: 6 }}>
+                      Normal: <strong>{y.evaluation.min}–{y.evaluation.max ?? y.evaluation.min}%</strong>
+                    </div>
+                  )}
+
+                  {/* Status indicator */}
+                  {y.evaluation.status !== 'neutral' && (
+                    <div style={{ fontSize: 9, marginTop: 6, padding: '3px 6px', borderRadius: 3, background: YIELD_STATUS_COLOR[y.evaluation.status] + '1a', color: YIELD_STATUS_COLOR[y.evaluation.status], fontWeight: 600 }}>
+                      {y.evaluation.status === 'good' && '✓ Within range'}
+                      {y.evaluation.status === 'warn' && '⚠ Caution'}
+                      {y.evaluation.status === 'bad' && '✕ Below range'}
                     </div>
                   )}
                 </div>
