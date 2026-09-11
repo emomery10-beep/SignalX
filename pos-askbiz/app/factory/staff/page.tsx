@@ -134,7 +134,9 @@ export default function FactoryStaffPage() {
     try {
       const r = await fetch('/api/pos/staff', { headers: session.headers })
       const d = r.ok ? await r.json() : { staff: [] }
-      setStaff(d.staff || [])
+      // Filter to only factory staff (roles starting with 'factory-')
+      const factoryStaff = (d.staff || []).filter((s: StaffMember) => s.role?.startsWith('factory-'))
+      setStaff(factoryStaff)
 
       // Load locations
       const locRes = await fetch('/api/pos/locations', { headers: session.headers })
