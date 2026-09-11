@@ -53,7 +53,9 @@ export async function GET(req: NextRequest) {
       .filter(c => (c.type === 'intake' || c.type === 'intake_feed') && c.product_name === 'Sesame seed')
       .reduce((sum, c) => sum + (c.quantity || 0), 0)
 
-    const remainingArrival = intakeArrival > 0 ? intakeArrival - intakeFeed : 0
+    // Remaining = arrival that hasn't been used for pressing yet
+    // Only calculate if both are in compatible units (kg)
+    const remainingArrival = Math.max(0, intakeArrival - intakeFeed)
 
     const oilProduced = captures
       .filter(c => c.type === 'output' && c.product_name === 'Sesame oil')
