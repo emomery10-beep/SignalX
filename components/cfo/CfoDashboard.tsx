@@ -39,6 +39,7 @@ import ChurnAnalytics from './ChurnAnalytics'
 import FinancingReadiness from './FinancingReadiness'
 import ThreeWayForecast from './ThreeWayForecast'
 import RecoveredRevenue from './RecoveredRevenue'
+import SesameFinancialWidget from './SesameFinancialWidget'
 import { loadCostConfig, sumFixed } from './CostConfigDrawer'
 
 interface SnapshotData {
@@ -444,6 +445,8 @@ export default function CfoDashboard({ onAsk }: Props) {
 
           {/* Cash Flow section */}
           <CashFlowCountdown onAsk={onAsk} />
+          {/* Sesame Production Financial (Optional Add-on) */}
+          <SesameFinancialWidget period={period} />
         </div>
       )}
 
