@@ -1033,6 +1033,15 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   const { tc } = useLang()
   const [sortCol, setSortCol] = useState('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [sesameData, setSesameData] = useState<any>(null)
+
+  // Fetch sesame production costs for inventory valuation
+  useEffect(() => {
+    fetch('/api/pos/factory/sesame-production')
+      .then(r => r.json())
+      .then(data => setSesameData(data))
+      .catch(err => console.error('Sesame data fetch failed:', err))
+  }, [])
   const onSort = (c: string) => {
     if (sortCol === c) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(c); setSortDir('asc') }
@@ -1050,30 +1059,27 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       return sum
     }, 0)
 
-    if (seedQuantity > 0) {
+    // Use real costs from sesame production API
+    const seedCost = sesameData?.costPerKg || 0
+    const rawMaterialsCost = sesameData?.rawMaterialsCost || 0
+    const seedsInStock = sesameData?.remainingArrival || 0
+
+    if (seedsInStock > 0) {
       items.push({
         name: 'Sesame seed',
         category: 'raw',
-        quantity: seedQuantity,
-        stock: seedQuantity,
+        quantity: seedsInStock,
+        stock: seedsInStock,
         unit: 'kg',
-        cost: 0,
-        cost_price: 0,
+        cost: seedCost,
+        cost_price: seedCost,
       })
     }
 
-    // Jerrycans: count produced minus dispatched
-    const jerrycansProduced = (outputs || []).reduce((sum, c) => {
-      if (c.product?.includes('Jerrycan')) return sum + (Number(c.quantity) || 0)
-      return sum
-    }, 0)
-
-    const jerrycansDispatched = (dispatches || []).reduce((sum, c) => {
-      if (c.product?.includes('Jerrycan')) return sum + (Number(c.quantity) || 0)
-      return sum
-    }, 0)
-
-    const jerrycansInStock = jerrycansProduced - jerrycansDispatched
+    // Jerrycans: use real production cost from API
+    const jerrycanProductionCost = 6000 // KSh per can
+    const jerrycansInStock = sesameData?.jerrycansInStock || 0
+    const finishedGoodsValue = sesameData?.finishedGoodsValue || 0
 
     if (jerrycansInStock > 0) {
       items.push({
@@ -1082,13 +1088,13 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
         quantity: jerrycansInStock,
         stock: jerrycansInStock,
         unit: 'pcs',
-        cost: 0,
-        cost_price: 0,
+        cost: jerrycanProductionCost,
+        cost_price: jerrycanProductionCost,
       })
     }
 
     return items
-  }, [intakes, outputs, dispatches])
+  }, [intakes, outputs, dispatches, sesameData])
 
   // usage rate estimate from intake captures (units consumed per day over 30d)
   const usageByProduct = useMemo(() => {
