@@ -12,7 +12,7 @@ const ACC_BG = 'rgba(245,158,11,.08)'
 const ACC_BORDER = 'rgba(245,158,11,.25)'
 
 // ── Types ────────────────────────────────────────────────────
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch'
 type CaptureStatus = 'pending' | 'approved' | 'rejected'
 type SubTab = 'overview' | 'production' | 'quality' | 'inventory' | 'dispatch' | 'costing'
 type SortDir = 'asc' | 'desc'
@@ -437,7 +437,8 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
 
   // ── Derived: typed capture groups ──────────────────────────
   const outputs = useMemo(() => captures.filter(c => c.type === 'output'), [captures])
-  const intakes = useMemo(() => captures.filter(c => c.type === 'intake'), [captures])
+  // Include all intake types: intake, intake_arrival, intake_feed
+  const intakes = useMemo(() => captures.filter(c => c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed'), [captures])
   const wastages = useMemo(() => captures.filter(c => c.type === 'wastage'), [captures])
   const dispatches = useMemo(() => captures.filter(c => c.type === 'dispatch'), [captures])
 
