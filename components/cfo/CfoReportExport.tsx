@@ -450,7 +450,7 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
           <DataTable
             columns={[tc('cfo_report.forecast_col_month'), tc('cfo_report.pnl_revenue'), tc('cfo_report.pnl_cogs'), tc('cfo_report.forecast_col_net'), tc('cfo_report.forecast_col_margin')]}
             rows={forecastSummary.monthlyBreakdown.map(m => [
-              m.month, fmt(m.revenue, sym), fmt(m.cogs, sym), fmt(m.net, sym), `${m.net_margin_pct.toFixed(1)}%`,
+              m.month, fmt(m.revenue, sym), fmt(m.cogs, sym), fmt(m.net, sym), `${(m.net_margin_pct ?? 0).toFixed(1)}%`,
             ])}
           />
 

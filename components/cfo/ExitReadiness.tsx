@@ -316,8 +316,8 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
             <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_exit.metric_net_margin')}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: totals.net_margin_pct >= 10 ? GREEN : totals.net_margin_pct >= 0 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
-              {totals.net_margin_pct.toFixed(1)}%
+            <div style={{ fontSize: 13, fontWeight: 700, color: (totals.net_margin_pct ?? 0) >= 10 ? GREEN : (totals.net_margin_pct ?? 0) >= 0 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
+              {(totals.net_margin_pct ?? 0).toFixed(1)}%
             </div>
           </div>
           <div style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>

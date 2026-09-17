@@ -890,7 +890,7 @@ function PnlFull({ data, sym, fmtCurrency, onAsk, tc }: { data: SnapshotData; sy
             <tr style={{ borderTop: '2px solid var(--b)', background: 'rgba(34,197,94,.03)' }}>
               <td style={{ padding: '9px 0', fontWeight: 700, fontSize: 13 }}>{tc('cfo_dashboard.row_gross_profit')}</td>
               <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(t.gross_profit)}</td>
-              <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, color: t.gross_margin_pct >= 35 ? '#22C55E' : t.gross_margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{t.gross_margin_pct}%</td>
+              <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, color: (t.gross_margin_pct ?? 0) >= 35 ? '#22C55E' : (t.gross_margin_pct ?? 0) >= 20 ? '#F59E0B' : '#EF4444' }}>{(t.gross_margin_pct ?? 0)}%</td>
               <td style={{ padding: '9px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(c.gross_profit)}</td>
               <td style={{ padding: '9px 0', textAlign: 'right' }}>{renderChange(pct(t.gross_profit, c.gross_profit))}</td>
             </tr>
@@ -903,7 +903,7 @@ function PnlFull({ data, sym, fmtCurrency, onAsk, tc }: { data: SnapshotData; sy
                 {fmtCurrency(t.net_profit)}
               </td>
               <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 700, color: t.net_profit >= 0 ? '#22C55E' : '#EF4444' }}>
-                {t.net_margin_pct}%
+                {(t.net_margin_pct ?? 0)}%
               </td>
               <td style={{ padding: '10px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(c.net_profit)}</td>
               <td style={{ padding: '10px 0', textAlign: 'right' }}>{renderChange(pct(t.net_profit, c.net_profit))}</td>
