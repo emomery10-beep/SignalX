@@ -132,6 +132,11 @@ export async function GET(req: NextRequest) {
 
     const grossMargin = totalRevenue - costOfGoods
 
+    // Inventory valuation
+    const rawMaterialsCost = remainingArrival * costPerKg // Sesame seed remaining in stock
+    const finishedGoodsValue = jerrycansInStock * jerrycanProductionCost // Jerrycans in stock at production cost
+    const totalStockValue = rawMaterialsCost + finishedGoodsValue + wasteStockValue
+
     return NextResponse.json({
       totalArrival: intakeArrival > 0 ? intakeArrival : totalIntake,
       totalFeedUsed: intakeFeed,
@@ -147,6 +152,9 @@ export async function GET(req: NextRequest) {
       totalRevenue,
       costOfGoods,
       grossMargin,
+      rawMaterialsCost,
+      finishedGoodsValue,
+      totalStockValue,
     })
   } catch (error) {
     console.error('Sesame production error:', error)

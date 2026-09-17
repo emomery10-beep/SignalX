@@ -31,6 +31,11 @@ interface ProductionData {
   totalRevenue: number
   costOfGoods: number
   grossMargin: number
+
+  // Inventory valuation
+  rawMaterialsCost?: number
+  finishedGoodsValue?: number
+  totalStockValue?: number
 }
 
 export default function SesameProductionPage() {
@@ -156,6 +161,28 @@ export default function SesameProductionPage() {
             {data.jerrycansProduced === (data.jerrycansDispatched + data.jerrycansInStock)
               ? `✓ Balanced: ${data.jerrycansProduced} produced = ${data.jerrycansDispatched} dispatched + ${data.jerrycansInStock} stock`
               : `✕ Mismatch: ${data.jerrycansProduced} produced ≠ ${data.jerrycansDispatched} + ${data.jerrycansInStock}`}
+          </div>
+        </div>
+
+        {/* Inventory Valuation */}
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>📊 Stock Value</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Raw Materials (Sesame)</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: BLUE }}>{(data.rawMaterialsCost || 0).toLocaleString()} KSh</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{data.remainingArrival.toLocaleString()} kg remaining</div>
+            </div>
+            <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Finished Goods (Jerrycans)</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{(data.finishedGoodsValue || 0).toLocaleString()} KSh</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{data.jerrycansInStock} cans × 6000 KSh</div>
+            </div>
+            <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Total Stock Value</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{(data.totalStockValue || 0).toLocaleString()} KSh</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>Raw + Finished goods</div>
+            </div>
           </div>
         </div>
 

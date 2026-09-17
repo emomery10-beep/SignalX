@@ -502,11 +502,20 @@ export async function PATCH(req: NextRequest) {
 
   // Auto-sync dispatch captures to inventory when approved
   if (status === 'approved' && updated.type === 'dispatch') {
+    // Calculate production cost for jerrycans (6000 KSh each) or use sale_price if available
+    let costPerUnit = 0
+    if (updated.product_name?.includes('Jerrycan')) {
+      costPerUnit = 6000 // KSh per 20L jerrycan
+    }
+    const salePrice = updated.sale_price || 0
+
     await syncDispatchToInventory(
       auth.ownerId,
       updated.id,
       updated.product_name,
-      updated.quantity
+      updated.quantity,
+      costPerUnit,
+      salePrice
     )
 
     // Send WhatsApp notification to recipient
