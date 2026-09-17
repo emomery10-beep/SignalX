@@ -233,6 +233,7 @@ export default function ProductionLogPage() {
   }
 
   // Yield summary: output qty / intake qty per product
+  // ONLY count intake_feed (seed actually fed into press), not intake_arrival (received stock).
   // When a product is an output of a transformation (sesame oil ← sesame seed),
   // match it against its input product, not itself.
   // Unit conversion: 1 kg oil ≈ 1.09 litres (sesame/groundnut/etc)
@@ -241,8 +242,8 @@ export default function ProductionLogPage() {
   for (const c of captures) {
     const p = displayProduct(c.product_name)
 
-    if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') {
-      // For intakes, always use the product name as-is
+    if (c.type === 'intake_feed') {
+      // Only count seed actually fed into the press, not received/stored stock
       yieldMap[p] = yieldMap[p] || { intake: 0, output: 0, intakeUnit: c.batch_ref || 'kg' }
       yieldMap[p].intake += c.quantity || 0
     } else if (c.type === 'output') {
