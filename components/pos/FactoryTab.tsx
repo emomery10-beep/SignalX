@@ -413,8 +413,10 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
       if (selectedLocation && selectedLocation !== 'all') params.set('location_id', selectedLocation)
       const res = await fetch(`/api/pos/factory/capture?${params}`)
       const data = await res.json()
-      const list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
-      setCaptures(Array.isArray(list) ? list : [])
+      let list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
+      // Map API response fields (product_name) to component interface (product)
+      list = Array.isArray(list) ? list.map(c => ({ ...c, product: c.product || (c as any).product_name })) : []
+      setCaptures(list)
     } catch (err) {
       console.error('Failed to fetch factory captures:', err)
       setCaptures([])
