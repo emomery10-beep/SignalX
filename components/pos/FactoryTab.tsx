@@ -1267,7 +1267,7 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
 }) {
   const { tc } = useLang()
 
-  // Real operating costs (Kenya rates)
+  // Real operating costs (Kenya rates) — per 20L jerrycan
   const STAFF_COST_PER_DAY = 2400 // KSh
   const STAFF_DAYS_PER_WEEK = 6
   const MOTOR_HOURS_PER_DAY = 14 // 1 HP motor
@@ -1282,33 +1282,41 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     return motorKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
   }, [])
 
-  // Cost per unit (allocated across output)
+  // Count total 20L jerrycans produced (from output captures)
+  const jerrycansProduced = useMemo(() => {
+    return outputs.reduce((sum, c) => {
+      if (c.product?.toLowerCase().includes('jerrycan') || c.unit?.toLowerCase() === 'jerrycan') {
+        return sum + (Number(c.quantity) || 0)
+      }
+      return sum
+    }, 0)
+  }, [outputs])
+
+  // Cost per 20L jerrycan (allocated across actual jerrycan output)
   const totalMaterialCost = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [intakes, costForCapture])
-  const dailyTotalCost = useMemo(() => staffCostPerDay + electricityCostPerDay, [electricityCostPerDay])
 
-  // Allocate staff + electricity per unit based on actual output
-  const staffCostPerUnit = useMemo(() => {
-    if (totalOutput <= 0) return 0
-    // Assume 6 days/week production, allocate weekly staff cost
-    const weeklyCost = staffCostPerDay * STAFF_DAYS_PER_WEEK
-    const avgDailyOutput = totalOutput / 6 // rough estimate, could be refined with date-based calc
-    return avgDailyOutput > 0 ? staffCostPerDay / avgDailyOutput : 0
-  }, [totalOutput])
+  // Allocate staff + electricity per jerrycan based on actual jerrycan output
+  const staffCostPerJerrycan = useMemo(() => {
+    if (jerrycansProduced <= 0) return 0
+    // Assume 6 days/week production, allocate daily staff cost across daily jerrycan output
+    const avgDailyJerrycans = jerrycansProduced / 6
+    return avgDailyJerrycans > 0 ? staffCostPerDay / avgDailyJerrycans : 0
+  }, [jerrycansProduced])
 
-  const electricityCostPerUnit = useMemo(() => {
-    if (totalOutput <= 0) return 0
-    // Same logic: allocate daily electricity cost across today's or estimated daily output
-    const avgDailyOutput = totalOutput / 6
-    return avgDailyOutput > 0 ? electricityCostPerDay / avgDailyOutput : 0
-  }, [totalOutput, electricityCostPerDay])
+  const electricityCostPerJerrycan = useMemo(() => {
+    if (jerrycansProduced <= 0) return 0
+    // Allocate daily electricity cost across daily jerrycan output
+    const avgDailyJerrycans = jerrycansProduced / 6
+    return avgDailyJerrycans > 0 ? electricityCostPerDay / avgDailyJerrycans : 0
+  }, [jerrycansProduced, electricityCostPerDay])
 
-  const totalLabor = totalOutput * staffCostPerUnit
-  const totalElectricity = totalOutput * electricityCostPerUnit
+  const totalLabor = jerrycansProduced * staffCostPerJerrycan
+  const totalElectricity = jerrycansProduced * electricityCostPerJerrycan
   // Small overhead for misc costs (oil, filters, maintenance) — 5% of material+labor
   const overheadPct = 5
   const totalOverhead = (totalMaterialCost + totalLabor + totalElectricity) * (overheadPct / 100)
   const totalProductionCost = totalMaterialCost + totalLabor + totalElectricity + totalOverhead
-  const costPerUnit = totalOutput > 0 ? totalProductionCost / totalOutput : 0
+  const costPerJerrycan = jerrycansProduced > 0 ? totalProductionCost / jerrycansProduced : 0
   const wasteCost = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [wastages, costForCapture])
 
   const pieSlices = [
@@ -1340,23 +1348,27 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
   }, [intakes, outputs, costForCapture, sellByProduct])
 
-  // cost-per-unit trend over time (weekly)
+  // cost-per-jerrycan trend over time (weekly)
   const costTrend = useMemo(() => {
     const intakeByWeek = new Map<string, number>()
-    const outputByWeek = new Map<string, number>()
+    const jerrycansByWeek = new Map<string, number>()
     for (const c of intakes) intakeByWeek.set(weekKey(c.created_at), (intakeByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0) * costForCapture(c))
-    for (const c of outputs) outputByWeek.set(weekKey(c.created_at), (outputByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
-    const weeks = Array.from(new Set([...Array.from(intakeByWeek.keys()), ...Array.from(outputByWeek.keys())])).sort()
+    for (const c of outputs) {
+      if (c.product?.toLowerCase().includes('jerrycan') || c.unit?.toLowerCase() === 'jerrycan') {
+        jerrycansByWeek.set(weekKey(c.created_at), (jerrycansByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
+      }
+    }
+    const weeks = Array.from(new Set([...Array.from(intakeByWeek.keys()), ...Array.from(jerrycansByWeek.keys())])).sort()
     return weeks.map(w => {
       const mat = intakeByWeek.get(w) || 0
-      const out = outputByWeek.get(w) || 0
-      const labor = out * staffCostPerUnit
-      const elec = out * electricityCostPerUnit
+      const cans = jerrycansByWeek.get(w) || 0
+      const labor = cans * staffCostPerJerrycan
+      const elec = cans * electricityCostPerJerrycan
       const oh = (mat + labor + elec) * (overheadPct / 100)
-      const cpu = out > 0 ? (mat + labor + elec + oh) / out : 0
+      const cpu = cans > 0 ? (mat + labor + elec + oh) / cans : 0
       return { label: w.split('-W')[1] ? `W${w.split('-W')[1]}` : w, value: cpu }
     })
-  }, [intakes, outputs, costForCapture, staffCostPerUnit, electricityCostPerUnit, overheadPct])
+  }, [intakes, outputs, costForCapture, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPct])
 
   // margin analysis per product
   const margins = useMemo(() => {
@@ -1375,45 +1387,45 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     }
     return Array.from(outByProduct.entries()).map(([product, v]) => {
       const matPerUnit = v.qty > 0 ? v.cost / v.qty : 0
-      const laborElectricity = staffCostPerUnit + electricityCostPerUnit
+      const laborElectricity = staffCostPerJerrycan + electricityCostPerJerrycan
       const fullCost = matPerUnit + laborElectricity + (matPerUnit + laborElectricity) * (overheadPct / 100)
       const sell = sellByProduct.get(product.toLowerCase()) || 0
       const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
       return { product, fullCost, sell, margin, hasSell: sell > 0 }
     }).filter(r => r.fullCost > 0).sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellByProduct, staffCostPerUnit, electricityCostPerUnit])
+  }, [intakes, outputs, costForCapture, sellByProduct, staffCostPerJerrycan, electricityCostPerJerrycan])
 
   return (
     <div>
       {/* Real Operating Costs */}
       <div style={{ padding: 14, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (Real)</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, fontSize: 10, color: 'var(--tx2)' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (per 20L Jerrycan)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, fontSize: 10, color: 'var(--tx2)' }}>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Staff</div>
             <div>{fmt(currencySymbol, staffCostPerDay)}/day × {STAFF_DAYS_PER_WEEK} days/week</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, staffCostPerUnit)}/unit</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan</div>
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Electricity</div>
             <div>{MOTOR_HORSEPOWER} HP motor, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerDay)}/day, {fmt(currencySymbol, electricityCostPerUnit)}/unit</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerDay)}/day, {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Seeds (Material)</div>
             <div>From intake_arrival capture prices</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} total</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} total across {fmtInt(jerrycansProduced)} jerrycans</div>
           </div>
         </div>
       </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label={tc('pos_factory.productionCostPerUnit')} value={fmt(currencySymbol, costPerUnit)} sub="Material + Labor + Electricity + Overhead" accent={ACC} />
-        <KpiCard label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={tc('pos_factory.totalOutputUnits', { n: fmtInt(totalOutput) })} accent="var(--tx)" />
+        <KpiCard label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Labor + Electricity + Overhead" accent={ACC} />
+        <KpiCard label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)" />
         <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Seeds from intake_arrival" accent="#3b82f6" />
-        <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub="Staff allocation per unit" accent="#60a5fa" />
-        <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub="1 HP motor @ 14h/day" accent="#fbbf24" />
+        <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa" />
+        <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={`${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ 14h/day`} accent="#fbbf24" />
         <KpiCard label={tc('pos_factory.wastageCostLabel')} value={fmt(currencySymbol, wasteCost)} sub={tc('pos_factory.valueOfWastedMaterials')} accent={RED} />
       </div>
 
@@ -1487,11 +1499,11 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
 
       {/* Cost notes */}
       <div style={{ padding: 16, borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Calculation</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Per 20L Jerrycan</div>
         <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
-          <div>Material cost from intake_arrival captures; staff & electricity allocated based on actual output units.</div>
+          <div>Material cost from intake_arrival captures; staff & electricity allocated based on actual 20L jerrycan output.</div>
           <div style={{ marginTop: 8 }}>Overhead at {overheadPct}% covers oil changes, filters, maintenance, and misc equipment costs.</div>
-          <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total units: {fmtInt(totalOutput)}</div>
+          <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total 20L jerrycans produced: {fmtInt(jerrycansProduced)}</div>
         </div>
       </div>
     </div>
