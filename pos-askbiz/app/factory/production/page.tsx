@@ -368,8 +368,8 @@ export default function ProductionLogPage() {
 
                   {/* Output and intake details */}
                   <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
-                    <div>📤 Output: <strong>{y.output.toLocaleString()}</strong></div>
-                    <div>📥 Intake: <strong>{y.intake.toLocaleString()}</strong></div>
+                    <div>📤 Output: <strong>{y.output.toLocaleString()}</strong> {y.outputUnit}</div>
+                    <div>📥 Intake: <strong>{y.intake.toLocaleString()}</strong> {y.intakeUnit}</div>
                   </div>
 
                   {/* Expected range — always show if available */}
