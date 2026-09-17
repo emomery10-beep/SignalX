@@ -351,11 +351,11 @@ export default function CfoDashboard({ onAsk }: Props) {
 
           {/* EBITDA Summary (compact — full widget lives on P&L tab) */}
           {!loading && data?.totals && data.totals.revenue > 0 && (() => {
-            const netP = data.totals.net_profit
+            const netP = data.totals.net_profit ?? 0
             const estTax = netP > 0 ? Math.round(netP * 0.15) : 0
-            const estInt = Math.round(data.totals.revenue * 0.02)
-            const estDep = Math.round(data.totals.fixed_costs * 0.05)
-            const estAmo = Math.round(data.totals.fixed_costs * 0.03)
+            const estInt = Math.round((data.totals.revenue ?? 0) * 0.02)
+            const estDep = Math.round((data.totals.fixed_costs ?? 0) * 0.05)
+            const estAmo = Math.round((data.totals.fixed_costs ?? 0) * 0.03)
             const ebitdaVal = netP + estTax + estInt + estDep + estAmo
             const ebitdaMarginVal = data.totals.revenue > 0 ? (ebitdaVal / data.totals.revenue) * 100 : 0
             const priorEbitdaVal = data.comparison.net_profit + estTax + estInt + estDep + estAmo

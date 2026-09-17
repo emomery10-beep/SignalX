@@ -504,7 +504,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
                   {fmt(totals.gross_profit, sym)}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)', borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
-                  {totals.gross_margin_pct.toFixed(1)}%
+                  {(totals.gross_margin_pct ?? 0).toFixed(1)}%
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)', borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
                   {fmt(comparison.gross_profit, sym)}
@@ -536,7 +536,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
                   {fmt(totals.net_profit, sym)}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)', borderBottom: 'none' }}>
-                  {totals.net_margin_pct.toFixed(1)}%
+                  {(totals.net_margin_pct ?? 0).toFixed(1)}%
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx2)', borderBottom: 'none' }}>
                   {fmt(comparison.net_profit, sym)}
@@ -584,8 +584,8 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
                     <td style={{ ...tdStyle, textAlign: 'right', fontSize: 12, fontWeight: 600, color: m.net >= 0 ? GREEN : RED }}>
                       {fmt(m.net, sym)}
                     </td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{m.gross_margin_pct.toFixed(1)}%</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{m.net_margin_pct.toFixed(1)}%</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{(m.gross_margin_pct ?? 0).toFixed(1)}%</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{(m.net_margin_pct ?? 0).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>
