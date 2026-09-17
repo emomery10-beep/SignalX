@@ -242,8 +242,11 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
         const n = pnlMonthly.length
 
         const xStep = n > 1 ? innerW / (n - 1) : 0
-        const grossPts = pnlMonthly.map((d, i) => ({ x: padL + i * xStep, y: padT + innerH - (d.gross_margin_pct / 100) * innerH }))
-        const netPts = pnlMonthly.map((d, i) => ({ x: padL + i * xStep, y: padT + innerH - (Math.max(d.net_margin_pct, 0) / 100) * innerH }))
+        const validData = pnlMonthly.filter(d => d.gross_margin_pct !== undefined && d.net_margin_pct !== undefined)
+        if (validData.length < 2) return null
+
+        const grossPts = validData.map((d, i) => ({ x: padL + i * xStep, y: padT + innerH - (d.gross_margin_pct / 100) * innerH }))
+        const netPts = validData.map((d, i) => ({ x: padL + i * xStep, y: padT + innerH - (Math.max(d.net_margin_pct, 0) / 100) * innerH }))
 
         const grossLine = grossPts.map(p => `${p.x},${p.y}`).join(' ')
         const netLine = netPts.map(p => `${p.x},${p.y}`).join(' ')
@@ -271,7 +274,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                 <polyline points={grossLine} fill="none" stroke={GREEN} strokeWidth={2} strokeLinejoin="round" />
                 {grossPts.map((p, i) => (
                   <circle key={`g${i}`} cx={p.x} cy={p.y} r={3} fill={GREEN} stroke="#fff" strokeWidth={1.5}>
-                    <title>{tc('cfo_margin.tooltip_gross', { month: pnlMonthly[i].month, pct: pnlMonthly[i].gross_margin_pct.toFixed(1) })}</title>
+                    <title>{tc('cfo_margin.tooltip_gross', { month: validData[i].month, pct: validData[i].gross_margin_pct.toFixed(1) })}</title>
                   </circle>
                 ))}
 
@@ -279,12 +282,12 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                 <polyline points={netLine} fill="none" stroke={INDIGO} strokeWidth={2} strokeLinejoin="round" />
                 {netPts.map((p, i) => (
                   <circle key={`n${i}`} cx={p.x} cy={p.y} r={3} fill={INDIGO} stroke="#fff" strokeWidth={1.5}>
-                    <title>{tc('cfo_margin.tooltip_net', { month: pnlMonthly[i].month, pct: pnlMonthly[i].net_margin_pct.toFixed(1) })}</title>
+                    <title>{tc('cfo_margin.tooltip_net', { month: validData[i].month, pct: validData[i].net_margin_pct.toFixed(1) })}</title>
                   </circle>
                 ))}
 
                 {/* X-axis labels */}
-                {pnlMonthly.map((d, i) => (
+                {validData.map((d, i) => (
                   <text key={i} x={padL + i * xStep} y={chartH - 4} textAnchor="middle" fontSize={9} fill="var(--tx3)">{d.month}</text>
                 ))}
               </svg>
