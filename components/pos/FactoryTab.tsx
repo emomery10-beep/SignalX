@@ -1038,8 +1038,14 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   // Fetch sesame production costs for inventory valuation
   useEffect(() => {
     fetch('/api/pos/factory/sesame-production')
-      .then(r => r.json())
-      .then(data => setSesameData(data))
+      .then(r => {
+        if (!r.ok) throw new Error(`API error: ${r.status}`)
+        return r.json()
+      })
+      .then(data => {
+        if (data && typeof data === 'object') setSesameData(data)
+        else console.warn('Sesame data is invalid:', data)
+      })
       .catch(err => console.error('Sesame data fetch failed:', err))
   }, [])
   const onSort = (c: string) => {
