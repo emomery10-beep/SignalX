@@ -5,6 +5,7 @@ import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import { evaluateYield, YIELD_STATUS_COLOR } from '@/lib/factory-yield'
+import { getFactoryTypeTemplate } from '@/lib/factory-templates'
 import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
@@ -213,16 +214,47 @@ export default function ProductionLogPage() {
   const displayProduct = (name: string | null) =>
     (!name || name === '__other__') ? tc('factory_production.yield_unspecified') : name
 
+  // Build a product transformation map from the factory template.
+  // This maps output_product_name → input_product_name for factories like
+  // sesame oil pressing, where sesame seed (input) transforms to sesame oil (output).
+  // Without this map, yields are calculated per product-name independently,
+  // causing sesame seed intake and sesame oil output to never match.
+  const transformationMap: Record<string, { inputProduct: string; expectedYield: number }> = {}
+  if (factoryType) {
+    const template = getFactoryTypeTemplate(factoryType)
+    if (template?.suggestedRecipes) {
+      for (const recipe of template.suggestedRecipes) {
+        transformationMap[recipe.output_product_name] = {
+          inputProduct: recipe.input_product_name,
+          expectedYield: recipe.expected_yield_pct
+        }
+      }
+    }
+  }
+
   // Yield summary: output qty / intake qty per product
   // Include all intake types (intake, intake_arrival, intake_feed) in the calculation
-  const yieldMap: Record<string, { intake: number; output: number }> = {}
+  // When a product is an output of a transformation (sesame oil ← sesame seed),
+  // match it against its input product, not itself.
+  const yieldMap: Record<string, { intake: number; output: number; transformedFrom?: string }> = {}
   for (const c of captures) {
     const p = displayProduct(c.product_name)
-    if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed' || c.type === 'output') {
+
+    if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') {
+      // For intakes, always use the product name as-is
       yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
-      if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') {
-        yieldMap[p].intake += c.quantity || 0
-      } else if (c.type === 'output') {
+      yieldMap[p].intake += c.quantity || 0
+    } else if (c.type === 'output') {
+      // For outputs, check if this product is an output of a transformation
+      const transform = transformationMap[p]
+      if (transform) {
+        // This is a transformed product — key it by input name and mark it
+        const inputKey = transform.inputProduct
+        yieldMap[inputKey] = yieldMap[inputKey] || { intake: 0, output: 0, transformedFrom: p }
+        yieldMap[inputKey].output += c.quantity || 0
+      } else {
+        // No transformation — use the product name as-is
+        yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
         yieldMap[p].output += c.quantity || 0
       }
     }
@@ -231,7 +263,11 @@ export default function ProductionLogPage() {
     .filter(([, v]) => v.intake > 0 || v.output > 0)
     .map(([product, v]) => {
       const pct = v.intake > 0 ? (v.output / v.intake) * 100 : null
-      return { product, ...v, pct, evaluation: evaluateYield(pct, product, factoryType) }
+      // For transformed products, display as "input → output" to show the flow
+      const displayLabel = v.transformedFrom ? `${product} → ${v.transformedFrom}` : product
+      // Evaluate using the output product name (the actual product being made)
+      const evalProduct = v.transformedFrom || product
+      return { product: displayLabel, ...v, pct, evaluation: evaluateYield(pct, evalProduct, factoryType) }
     })
     .sort((a, b) => (b.output + b.intake) - (a.output + a.intake))
     .slice(0, 8)
