@@ -233,16 +233,17 @@ export default function ProductionLogPage() {
   }
 
   // Yield summary: output qty / intake qty per product
-  // Include all intake types (intake, intake_arrival, intake_feed) in the calculation
   // When a product is an output of a transformation (sesame oil ← sesame seed),
   // match it against its input product, not itself.
-  const yieldMap: Record<string, { intake: number; output: number; transformedFrom?: string }> = {}
+  // Unit conversion: 1 kg oil ≈ 1.09 litres (sesame/groundnut/etc)
+  const OIL_KG_TO_LITRES = 1.09
+  const yieldMap: Record<string, { intake: number; output: number; transformedFrom?: string; intakeUnit?: string; outputUnit?: string }> = {}
   for (const c of captures) {
     const p = displayProduct(c.product_name)
 
     if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') {
       // For intakes, always use the product name as-is
-      yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
+      yieldMap[p] = yieldMap[p] || { intake: 0, output: 0, intakeUnit: c.batch_ref || 'kg' }
       yieldMap[p].intake += c.quantity || 0
     } else if (c.type === 'output') {
       // For outputs, check if this product is an output of a transformation
@@ -250,11 +251,17 @@ export default function ProductionLogPage() {
       if (transform) {
         // This is a transformed product — key it by input name and mark it
         const inputKey = transform.inputProduct
-        yieldMap[inputKey] = yieldMap[inputKey] || { intake: 0, output: 0, transformedFrom: p }
-        yieldMap[inputKey].output += c.quantity || 0
+        yieldMap[inputKey] = yieldMap[inputKey] || { intake: 0, output: 0, transformedFrom: p, outputUnit: c.batch_ref || 'litres' }
+
+        // Convert output to kg-equivalent if it's in litres (oil)
+        let outputQty = c.quantity || 0
+        if (c.batch_ref === 'litres' || c.batch_ref === 'L') {
+          outputQty = outputQty / OIL_KG_TO_LITRES
+        }
+        yieldMap[inputKey].output += outputQty
       } else {
         // No transformation — use the product name as-is
-        yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
+        yieldMap[p] = yieldMap[p] || { intake: 0, output: 0, outputUnit: c.batch_ref || 'kg' }
         yieldMap[p].output += c.quantity || 0
       }
     }
