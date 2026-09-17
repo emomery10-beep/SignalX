@@ -1282,10 +1282,11 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     return motorKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
   }, [])
 
-  // Count total 20L jerrycans produced (from output captures)
+  // Count total 20L jerrycans produced (from output captures with "Jerrycan" in product name)
   const jerrycansProduced = useMemo(() => {
     return outputs.reduce((sum, c) => {
-      if (c.product?.toLowerCase().includes('jerrycan') || c.unit?.toLowerCase() === 'jerrycan') {
+      // Match products like "Sesame oil - Jerrycan Matungi (20L)"
+      if (c.product?.includes('Jerrycan')) {
         return sum + (Number(c.quantity) || 0)
       }
       return sum
@@ -1354,7 +1355,7 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     const jerrycansByWeek = new Map<string, number>()
     for (const c of intakes) intakeByWeek.set(weekKey(c.created_at), (intakeByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0) * costForCapture(c))
     for (const c of outputs) {
-      if (c.product?.toLowerCase().includes('jerrycan') || c.unit?.toLowerCase() === 'jerrycan') {
+      if (c.product?.includes('Jerrycan')) {
         jerrycansByWeek.set(weekKey(c.created_at), (jerrycansByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
       }
     }
