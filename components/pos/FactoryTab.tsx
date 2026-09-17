@@ -563,7 +563,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
             <QualityView captures={captures} wastages={wastages} costForCapture={costForCapture} totalWaste={totalWaste} currencySymbol={currencySymbol} staffName={staffName} />
           )}
           {subTab === 'inventory' && (
-            <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} />
+            <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} outputs={outputs} dispatches={dispatches} />
           )}
           {subTab === 'dispatch' && (
             <DispatchView dispatches={dispatches} staffName={staffName} currencySymbol={currencySymbol} />
@@ -1025,8 +1025,8 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
 // ═════════════════════════════════════════════════════════════
 // INVENTORY SUB-TAB
 // ═════════════════════════════════════════════════════════════
-function InventoryView({ inv, intakes, currencySymbol }: {
-  inv: InventoryItem[]; intakes: FactoryCapture[]; currencySymbol: string
+function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
+  inv: InventoryItem[]; intakes: FactoryCapture[]; currencySymbol: string; outputs?: FactoryCapture[]; dispatches?: FactoryCapture[]
 }) {
   const { tc } = useLang()
   const [sortCol, setSortCol] = useState('name')
@@ -1035,6 +1035,58 @@ function InventoryView({ inv, intakes, currencySymbol }: {
     if (sortCol === c) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(c); setSortDir('asc') }
   }
+
+  // Calculate factory inventory: sesame seed (intake) + jerrycans (produced - dispatched)
+  const factoryInventory = useMemo(() => {
+    const items: InventoryItem[] = []
+
+    // Sesame seed: sum all intake_arrival + intake_feed
+    const seedQuantity = intakes.reduce((sum, c) => {
+      if (c.type === 'intake_arrival' || c.type === 'intake_feed') {
+        return sum + (Number(c.quantity) || 0)
+      }
+      return sum
+    }, 0)
+
+    if (seedQuantity > 0) {
+      items.push({
+        name: 'Sesame seed',
+        category: 'raw',
+        quantity: seedQuantity,
+        stock: seedQuantity,
+        unit: 'kg',
+        cost: 0,
+        cost_price: 0,
+      })
+    }
+
+    // Jerrycans: count produced minus dispatched
+    const jerrycansProduced = (outputs || []).reduce((sum, c) => {
+      if (c.product?.includes('Jerrycan')) return sum + (Number(c.quantity) || 0)
+      return sum
+    }, 0)
+
+    const jerrycansDispatched = (dispatches || []).reduce((sum, c) => {
+      if (c.product?.includes('Jerrycan')) return sum + (Number(c.quantity) || 0)
+      return sum
+    }, 0)
+
+    const jerrycansInStock = jerrycansProduced - jerrycansDispatched
+
+    if (jerrycansInStock > 0) {
+      items.push({
+        name: 'Sesame oil - Jerrycan (20L)',
+        category: 'finished',
+        quantity: jerrycansInStock,
+        stock: jerrycansInStock,
+        unit: 'pcs',
+        cost: 0,
+        cost_price: 0,
+      })
+    }
+
+    return items
+  }, [intakes, outputs, dispatches])
 
   // usage rate estimate from intake captures (units consumed per day over 30d)
   const usageByProduct = useMemo(() => {
@@ -1046,7 +1098,9 @@ function InventoryView({ inv, intakes, currencySymbol }: {
   }, [intakes])
 
   const rows = useMemo(() => {
-    const mapped = inv.map(it => {
+    // Combine factory-calculated inventory + static inventory
+    const allItems = [...factoryInventory, ...inv]
+    const mapped = allItems.map(it => {
       const qty = getQty(it)
       const cost = getCost(it)
       const reorder = getReorder(it)
@@ -1313,12 +1367,17 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
 
   const totalLabor = jerrycansProduced * staffCostPerJerrycan
   const totalElectricity = jerrycansProduced * electricityCostPerJerrycan
+  // Wastage cost calculation (default 30 KSh per unit, editable)
+  const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
+  const wasteCost = useMemo(() => {
+    return wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * wastagePerUnitCost, 0)
+  }, [wastages, wastagePerUnitCost])
+
   // Small overhead for misc costs (oil, filters, maintenance) — 5% of material+labor
   const overheadPct = 5
   const totalOverhead = (totalMaterialCost + totalLabor + totalElectricity) * (overheadPct / 100)
   const totalProductionCost = totalMaterialCost + totalLabor + totalElectricity + totalOverhead
   const costPerJerrycan = jerrycansProduced > 0 ? totalProductionCost / jerrycansProduced : 0
-  const wasteCost = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [wastages, costForCapture])
 
   const pieSlices = [
     { label: tc('pos_factory.pieMaterials'), value: totalMaterialCost, color: ACC },
@@ -1416,6 +1475,16 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Seeds (Material)</div>
             <div>From intake_arrival capture prices</div>
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} total across {fmtInt(jerrycansProduced)} jerrycans</div>
+          </div>
+          <div>
+            <div style={{ marginBottom: 2, fontWeight: 600 }}>Wastage Cost per Unit</div>
+            <input
+              type="number"
+              value={wastagePerUnitCost}
+              onChange={e => setWastagePerUnitCost(Math.max(0, Number(e.target.value) || 0))}
+              style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+            />
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>KSh/unit (default 30)</div>
           </div>
         </div>
       </div>
