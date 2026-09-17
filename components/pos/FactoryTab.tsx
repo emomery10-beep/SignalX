@@ -1266,20 +1266,55 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
   totalOutput: number; currencySymbol: string
 }) {
   const { tc } = useLang()
-  // assumptions — editable estimates for labor + overhead
-  const [laborPerUnit, setLaborPerUnit] = useState(0.5)
-  const [overheadPct, setOverheadPct] = useState(15)
 
+  // Real operating costs (Kenya rates)
+  const STAFF_COST_PER_DAY = 2400 // KSh
+  const STAFF_DAYS_PER_WEEK = 6
+  const MOTOR_HOURS_PER_DAY = 14 // 1 HP motor
+  const MOTOR_HORSEPOWER = 1
+  const ELECTRICITY_RATE_PER_KWH = 20 // KSh (Kenya average)
+  const HP_TO_KW = 0.746 // 1 HP = 0.746 kW
+
+  // Calculate real operating costs
+  const staffCostPerDay = STAFF_COST_PER_DAY
+  const electricityCostPerDay = useMemo(() => {
+    const motorKW = MOTOR_HORSEPOWER * HP_TO_KW
+    return motorKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
+  }, [])
+
+  // Cost per unit (allocated across output)
   const totalMaterialCost = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [intakes, costForCapture])
-  const totalLabor = totalOutput * laborPerUnit
-  const totalOverhead = (totalMaterialCost + totalLabor) * (overheadPct / 100)
-  const totalProductionCost = totalMaterialCost + totalLabor + totalOverhead
+  const dailyTotalCost = useMemo(() => staffCostPerDay + electricityCostPerDay, [electricityCostPerDay])
+
+  // Allocate staff + electricity per unit based on actual output
+  const staffCostPerUnit = useMemo(() => {
+    if (totalOutput <= 0) return 0
+    // Assume 6 days/week production, allocate weekly staff cost
+    const weeklyCost = staffCostPerDay * STAFF_DAYS_PER_WEEK
+    const avgDailyOutput = totalOutput / 6 // rough estimate, could be refined with date-based calc
+    return avgDailyOutput > 0 ? staffCostPerDay / avgDailyOutput : 0
+  }, [totalOutput])
+
+  const electricityCostPerUnit = useMemo(() => {
+    if (totalOutput <= 0) return 0
+    // Same logic: allocate daily electricity cost across today's or estimated daily output
+    const avgDailyOutput = totalOutput / 6
+    return avgDailyOutput > 0 ? electricityCostPerDay / avgDailyOutput : 0
+  }, [totalOutput, electricityCostPerDay])
+
+  const totalLabor = totalOutput * staffCostPerUnit
+  const totalElectricity = totalOutput * electricityCostPerUnit
+  // Small overhead for misc costs (oil, filters, maintenance) — 5% of material+labor
+  const overheadPct = 5
+  const totalOverhead = (totalMaterialCost + totalLabor + totalElectricity) * (overheadPct / 100)
+  const totalProductionCost = totalMaterialCost + totalLabor + totalElectricity + totalOverhead
   const costPerUnit = totalOutput > 0 ? totalProductionCost / totalOutput : 0
   const wasteCost = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [wastages, costForCapture])
 
   const pieSlices = [
     { label: tc('pos_factory.pieMaterials'), value: totalMaterialCost, color: ACC },
     { label: tc('pos_factory.pieLabor'), value: totalLabor, color: '#3b82f6' },
+    { label: 'Electricity', value: totalElectricity, color: '#fbbf24' },
     { label: tc('pos_factory.pieOverhead'), value: totalOverhead, color: '#a855f7' },
   ].filter(s => s.value > 0)
 
@@ -1315,12 +1350,13 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     return weeks.map(w => {
       const mat = intakeByWeek.get(w) || 0
       const out = outputByWeek.get(w) || 0
-      const labor = out * laborPerUnit
-      const oh = (mat + labor) * (overheadPct / 100)
-      const cpu = out > 0 ? (mat + labor + oh) / out : 0
+      const labor = out * staffCostPerUnit
+      const elec = out * electricityCostPerUnit
+      const oh = (mat + labor + elec) * (overheadPct / 100)
+      const cpu = out > 0 ? (mat + labor + elec + oh) / out : 0
       return { label: w.split('-W')[1] ? `W${w.split('-W')[1]}` : w, value: cpu }
     })
-  }, [intakes, outputs, costForCapture, laborPerUnit, overheadPct])
+  }, [intakes, outputs, costForCapture, staffCostPerUnit, electricityCostPerUnit, overheadPct])
 
   // margin analysis per product
   const margins = useMemo(() => {
@@ -1339,38 +1375,45 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     }
     return Array.from(outByProduct.entries()).map(([product, v]) => {
       const matPerUnit = v.qty > 0 ? v.cost / v.qty : 0
-      const fullCost = matPerUnit + laborPerUnit + (matPerUnit + laborPerUnit) * (overheadPct / 100)
+      const laborElectricity = staffCostPerUnit + electricityCostPerUnit
+      const fullCost = matPerUnit + laborElectricity + (matPerUnit + laborElectricity) * (overheadPct / 100)
       const sell = sellByProduct.get(product.toLowerCase()) || 0
       const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
       return { product, fullCost, sell, margin, hasSell: sell > 0 }
     }).filter(r => r.fullCost > 0).sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellByProduct, laborPerUnit, overheadPct])
-
-  const inputStyle: React.CSSProperties = { width: 90, padding: '6px 8px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 11, fontFamily: 'inherit' }
+  }, [intakes, outputs, costForCapture, sellByProduct, staffCostPerUnit, electricityCostPerUnit])
 
   return (
     <div>
-      {/* Assumptions */}
+      {/* Real Operating Costs */}
       <div style={{ padding: 14, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>{tc('pos_factory.costingAssumptions')}</div>
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-          <label style={{ fontSize: 10, color: 'var(--tx2)' }}>
-            {tc('pos_factory.laborPerUnit', { symbol: currencySymbol })}
-            <input type="number" step="0.01" value={laborPerUnit} onChange={e => setLaborPerUnit(Number(e.target.value) || 0)} style={{ ...inputStyle, marginLeft: 8 }} />
-          </label>
-          <label style={{ fontSize: 10, color: 'var(--tx2)' }}>
-            {tc('pos_factory.overheadPct')}
-            <input type="number" step="1" value={overheadPct} onChange={e => setOverheadPct(Number(e.target.value) || 0)} style={{ ...inputStyle, marginLeft: 8 }} />
-          </label>
-          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('pos_factory.adjustToRecompute')}</span>
+        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (Real)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, fontSize: 10, color: 'var(--tx2)' }}>
+          <div>
+            <div style={{ marginBottom: 2, fontWeight: 600 }}>Staff</div>
+            <div>{fmt(currencySymbol, staffCostPerDay)}/day × {STAFF_DAYS_PER_WEEK} days/week</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, staffCostPerUnit)}/unit</div>
+          </div>
+          <div>
+            <div style={{ marginBottom: 2, fontWeight: 600 }}>Electricity</div>
+            <div>{MOTOR_HORSEPOWER} HP motor, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerDay)}/day, {fmt(currencySymbol, electricityCostPerUnit)}/unit</div>
+          </div>
+          <div>
+            <div style={{ marginBottom: 2, fontWeight: 600 }}>Seeds (Material)</div>
+            <div>From intake_arrival capture prices</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} total</div>
+          </div>
         </div>
       </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label={tc('pos_factory.productionCostPerUnit')} value={fmt(currencySymbol, costPerUnit)} sub={tc('pos_factory.materialsLaborOverhead')} accent={ACC} />
+        <KpiCard label={tc('pos_factory.productionCostPerUnit')} value={fmt(currencySymbol, costPerUnit)} sub="Material + Labor + Electricity + Overhead" accent={ACC} />
         <KpiCard label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={tc('pos_factory.totalOutputUnits', { n: fmtInt(totalOutput) })} accent="var(--tx)" />
-        <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub={tc('pos_factory.fromIntakeCaptures')} accent="#3b82f6" />
+        <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Seeds from intake_arrival" accent="#3b82f6" />
+        <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub="Staff allocation per unit" accent="#60a5fa" />
+        <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub="1 HP motor @ 14h/day" accent="#fbbf24" />
         <KpiCard label={tc('pos_factory.wastageCostLabel')} value={fmt(currencySymbol, wasteCost)} sub={tc('pos_factory.valueOfWastedMaterials')} accent={RED} />
       </div>
 
@@ -1442,11 +1485,13 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
         )}
       </Section>
 
-      {/* Overhead allocation placeholder */}
+      {/* Cost notes */}
       <div style={{ padding: 16, borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_factory.overheadComingSoonTitle')}</div>
-        <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 460, margin: '0 auto' }}>
-          {tc('pos_factory.overheadComingSoonDesc', { pct: overheadPct })}
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Calculation</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
+          <div>Material cost from intake_arrival captures; staff & electricity allocated based on actual output units.</div>
+          <div style={{ marginTop: 8 }}>Overhead at {overheadPct}% covers oil changes, filters, maintenance, and misc equipment costs.</div>
+          <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total units: {fmtInt(totalOutput)}</div>
         </div>
       </div>
     </div>
