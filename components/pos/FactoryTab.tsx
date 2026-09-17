@@ -686,8 +686,8 @@ function ProductionView({ captures, staffName, currencySymbol }: {
     else { setSortCol(c); setSortDir('asc') }
   }
 
-  // production = intake + output
-  const base = useMemo(() => captures.filter(c => c.type === 'intake' || c.type === 'output'), [captures])
+  // production = intake (all types) + output
+  const base = useMemo(() => captures.filter(c => c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed' || c.type === 'output'), [captures])
 
   const operators = useMemo(() => {
     const set = new Set<string>()
@@ -725,13 +725,13 @@ function ProductionView({ captures, staffName, currencySymbol }: {
 
   const products = useMemo(() => Array.from(new Set(base.map(c => c.product).filter(Boolean))).sort(), [base])
 
-  // Yield per product (output / intake)
+  // Yield per product (output / intake) - include all intake types
   const yields = useMemo(() => {
     const m = new Map<string, { intake: number; output: number }>()
     for (const c of base) {
       const k = c.product || 'Unknown'
       const e = m.get(k) || { intake: 0, output: 0 }
-      if (c.type === 'intake') e.intake += Number(c.quantity) || 0
+      if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') e.intake += Number(c.quantity) || 0
       if (c.type === 'output') e.output += Number(c.quantity) || 0
       m.set(k, e)
     }
@@ -741,14 +741,14 @@ function ProductionView({ captures, staffName, currencySymbol }: {
       .sort((a, b) => b.yield - a.yield)
   }, [base])
 
-  // Batch tracking: group by date+product
+  // Batch tracking: group by date+product - include all intake types
   const batches = useMemo(() => {
     const m = new Map<string, { date: string; product: string; intake: number; output: number; count: number }>()
     for (const c of base) {
       const dk = dayKey(c.created_at)
       const k = `${dk}|${c.product}`
       const e = m.get(k) || { date: dk, product: c.product || 'Unknown', intake: 0, output: 0, count: 0 }
-      if (c.type === 'intake') e.intake += Number(c.quantity) || 0
+      if (c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed') e.intake += Number(c.quantity) || 0
       if (c.type === 'output') e.output += Number(c.quantity) || 0
       e.count += 1
       m.set(k, e)
