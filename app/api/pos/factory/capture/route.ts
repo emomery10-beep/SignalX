@@ -12,11 +12,13 @@ function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
 }
 
-type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch'
 
 // Permission map: capture type → required permission
 const CAPTURE_PERMISSION: Record<CaptureType, Parameters<typeof hasPermission>[1]> = {
   intake:   'camera.intake',
+  intake_arrival: 'camera.intake',
+  intake_feed: 'camera.intake',
   output:   'camera.output',
   wastage:  'camera.wastage',
   dispatch: 'camera.dispatch',
@@ -41,12 +43,13 @@ export async function GET(req: NextRequest) {
 
   const service = createServiceClient()
   const { searchParams } = new URL(req.url)
-  const type      = searchParams.get('type')
-  const status    = searchParams.get('status')
-  const shift_id  = searchParams.get('shift_id')
-  const date      = searchParams.get('date')  // YYYY-MM-DD
-  const page      = Math.max(0, parseInt(searchParams.get('page')  || '0'))
-  const limit     = Math.min(100, parseInt(searchParams.get('limit') || '50'))
+  const type        = searchParams.get('type')
+  const status      = searchParams.get('status')
+  const shift_id    = searchParams.get('shift_id')
+  const location_id = searchParams.get('location_id')
+  const date        = searchParams.get('date')  // YYYY-MM-DD
+  const page        = Math.max(0, parseInt(searchParams.get('page')  || '0'))
+  const limit       = Math.min(100, parseInt(searchParams.get('limit') || '50'))
 
   let query = service
     .from('pos_factory_captures')
@@ -60,9 +63,10 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
     .range(page * limit, (page + 1) * limit - 1)
 
-  if (type)     query = query.eq('type', type)
-  if (status)   query = query.eq('status', status)
-  if (shift_id) query = query.eq('shift_id', shift_id)
+  if (type)        query = query.eq('type', type)
+  if (status)      query = query.eq('status', status)
+  if (shift_id)    query = query.eq('shift_id', shift_id)
+  if (location_id) query = query.eq('location_id', location_id)
   if (date) {
     query = query
       .gte('created_at', `${date}T00:00:00.000Z`)
