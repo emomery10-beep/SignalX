@@ -253,10 +253,11 @@ export default function ProductionLogPage() {
         const inputKey = transform.inputProduct
         yieldMap[inputKey] = yieldMap[inputKey] || { intake: 0, output: 0, transformedFrom: p, outputUnit: c.batch_ref || 'litres' }
 
-        // Convert output to kg-equivalent if it's in litres (oil)
+        // Convert output from kg to litres if needed (oil)
         let outputQty = c.quantity || 0
-        if (c.batch_ref === 'litres' || c.batch_ref === 'L') {
-          outputQty = outputQty / OIL_KG_TO_LITRES
+        if (c.batch_ref === 'kg' || !c.batch_ref) {
+          // Oil logged as kg — convert to litres (1 kg ≈ 1.09 L)
+          outputQty = outputQty * OIL_KG_TO_LITRES
         }
         yieldMap[inputKey].output += outputQty
       } else {
