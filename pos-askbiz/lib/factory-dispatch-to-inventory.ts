@@ -21,7 +21,9 @@ export async function syncDispatchToInventory(
   ownerId: string,
   dispatchId: string,
   productName: string | null,
-  quantity: number | null
+  quantity: number | null,
+  costPerUnit: number = 0,
+  salePrice: number = 0
 ): Promise<DispatchSyncResult> {
   // Dispatch without product or qty can't sync
   if (!productName?.trim() || !quantity || quantity <= 0) {
@@ -56,6 +58,8 @@ export async function syncDispatchToInventory(
           stock_qty: (existing.stock_qty || 0) + quantity,
           factory_dispatch_id: dispatchId,
           source_type: 'factory_dispatch',
+          cost_price: costPerUnit > 0 ? costPerUnit : existing.cost_price,
+          sale_price: salePrice > 0 ? salePrice : existing.sale_price,
         })
         .eq('id', existing.id)
         .select('id')
@@ -74,8 +78,8 @@ export async function syncDispatchToInventory(
           sector: 'factory',
           factory_dispatch_id: dispatchId,
           source_type: 'factory_dispatch',
-          cost_price: 0,
-          sale_price: 0,
+          cost_price: costPerUnit > 0 ? costPerUnit : null,
+          sale_price: salePrice > 0 ? salePrice : null,
         })
         .select('id')
         .single()
