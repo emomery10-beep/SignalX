@@ -378,8 +378,8 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                         {fmt(monthlyBudget.revenue, sym)}
                         {monthlyBudget.revenue > 0 && <span style={{ fontSize: 9, marginLeft: 4, color: revVar >= 0 ? '#22C55E' : '#EF4444', fontWeight: 600 }}>{revVar > 0 ? '+' : ''}{revVar.toFixed(0)}%</span>}
                       </td>
-                      <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 600, color: m.gross_margin_pct >= 35 ? '#22C55E' : m.gross_margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>
-                        {m.gross_margin_pct.toFixed(1)}%
+                      <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 600, color: (m.gross_margin_pct ?? 0) >= 35 ? '#22C55E' : (m.gross_margin_pct ?? 0) >= 20 ? '#F59E0B' : '#EF4444' }}>
+                        {(m.gross_margin_pct ?? 0).toFixed(1)}%
                       </td>
                       <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 600, color: m.net >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmt(m.net, sym)}</td>
                       <td style={{ padding: '9px 18px', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>

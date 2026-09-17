@@ -729,17 +729,17 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
                 <td style={{ padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.row_net_margin')}</td>
                 {completedMonths.slice(-2).map(m => (
                   <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>
-                    {m.net_margin_pct.toFixed(1)}%
+                    {(m.net_margin_pct ?? 0).toFixed(1)}%
                   </td>
                 ))}
                 {currentPartial && (
                   <td style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: 'var(--tx3)', opacity: 0.6 }}>
-                    {currentPartial.net_margin_pct.toFixed(1)}%
+                    {(currentPartial.net_margin_pct ?? 0).toFixed(1)}%
                   </td>
                 )}
                 {pnlForecast.map(m => (
-                  <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: m.net_margin_pct < 0 ? '#ef4444' : 'var(--tx3)', background: 'rgba(208,138,89,.03)' }}>
-                    {m.net_margin_pct.toFixed(1)}%
+                  <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: (m.net_margin_pct ?? 0) < 0 ? '#ef4444' : 'var(--tx3)', background: 'rgba(208,138,89,.03)' }}>
+                    {(m.net_margin_pct ?? 0).toFixed(1)}%
                   </td>
                 ))}
               </tr>
