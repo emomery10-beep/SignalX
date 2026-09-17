@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   const location_id = searchParams.get('location_id')
   const date        = searchParams.get('date')  // YYYY-MM-DD
   const page        = Math.max(0, parseInt(searchParams.get('page')  || '0'))
-  const limit       = Math.min(100, parseInt(searchParams.get('limit') || '50'))
+  const limit       = Math.min(2000, parseInt(searchParams.get('limit') || '2000'))
 
   let query = service
     .from('pos_factory_captures')

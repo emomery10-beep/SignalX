@@ -12,7 +12,7 @@ const ACC_BG = 'rgba(245,158,11,.08)'
 const ACC_BORDER = 'rgba(245,158,11,.25)'
 
 // ── Types ────────────────────────────────────────────────────
-type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch'
+type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 type CaptureStatus = 'pending' | 'approved' | 'rejected'
 type SubTab = 'overview' | 'production' | 'quality' | 'inventory' | 'dispatch' | 'costing'
 type SortDir = 'asc' | 'desc'
@@ -138,9 +138,12 @@ const STATUS_STYLE: Record<CaptureStatus, { bg: string; text: string; label: str
 }
 const TYPE_STYLE: Record<CaptureType, { bg: string; text: string; label: string }> = {
   intake: { bg: 'rgba(59,130,246,.12)', text: '#3b82f6', label: 'Intake' },
+  intake_arrival: { bg: 'rgba(59,130,246,.12)', text: '#3b82f6', label: 'Intake Arrival' },
+  intake_feed: { bg: 'rgba(6,182,212,.12)', text: '#06b6d4', label: 'Intake Feed' },
   output: { bg: 'rgba(245,158,11,.12)', text: ACC, label: 'Output' },
   wastage: { bg: 'rgba(220,38,38,.12)', text: RED, label: 'Wastage' },
   dispatch: { bg: 'rgba(168,85,247,.12)', text: '#a855f7', label: 'Dispatch' },
+  packaging: { bg: 'rgba(14,165,233,.12)', text: '#0ea5e9', label: 'Packaging' },
 }
 
 function StatusBadge({ status }: { status: CaptureStatus }) {
@@ -153,10 +156,21 @@ function StatusBadge({ status }: { status: CaptureStatus }) {
     </span>
   )
 }
+const TYPE_LABEL_KEY: Record<string, string> = {
+  intake: 'Intake',
+  intake_arrival: 'IntakeArrival',
+  intake_feed: 'IntakeFeed',
+  output: 'Output',
+  wastage: 'Wastage',
+  dispatch: 'Dispatch',
+  packaging: 'Packaging',
+}
+
 function TypeBadge({ type }: { type: CaptureType }) {
   const { tc } = useLang()
   const s = TYPE_STYLE[type] || TYPE_STYLE.intake
-  const label = tc('pos_factory.type' + (type === 'intake' ? 'Intake' : type === 'output' ? 'Output' : type === 'wastage' ? 'Wastage' : 'Dispatch'))
+  const labelKey = TYPE_LABEL_KEY[type] || (type.charAt(0).toUpperCase() + type.slice(1))
+  const label = tc('pos_factory.type' + labelKey)
   return (
     <span style={{ fontSize: 9, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
       {label}
@@ -411,6 +425,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
     try {
       const params = new URLSearchParams()
       if (selectedLocation && selectedLocation !== 'all') params.set('location_id', selectedLocation)
+      params.set('limit', '2000')
       const res = await fetch(`/api/pos/factory/capture?${params}`)
       const data = await res.json()
       let list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
@@ -441,6 +456,10 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
   const outputs = useMemo(() => captures.filter(c => c.type === 'output'), [captures])
   // Include all intake types: intake, intake_arrival, intake_feed
   const intakes = useMemo(() => captures.filter(c => c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed'), [captures])
+  // Material actually CONSUMED into production — excludes intake_arrival
+  // (which is stock received, not yet used) to avoid double-counting cost
+  const intakesConsumed = useMemo(() => captures.filter(c => c.type === 'intake' || c.type === 'intake_feed'), [captures])
+  const packaging = useMemo(() => captures.filter(c => (c.type as any) === 'packaging'), [captures])
   const wastages = useMemo(() => captures.filter(c => c.type === 'wastage'), [captures])
   const dispatches = useMemo(() => captures.filter(c => c.type === 'dispatch'), [captures])
 
@@ -493,6 +512,27 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
     }
     return m
   }, [inv])
+
+  // ── Average purchase price per product from intake_price_per_kg
+  // annotations (set on intake_arrival captures). Lets downstream
+  // intake_feed captures of the same product — which never carry
+  // their own price — inherit the purchase cost.
+  const paramCostByProduct = useMemo(() => {
+    const sums = new Map<string, { total: number; count: number }>()
+    for (const c of captures) {
+      const anyC = c as any
+      if (anyC.param_label === 'intake_price_per_kg' && anyC.param_value != null && Number(anyC.param_value) > 0) {
+        const key = (c.product || '').toLowerCase()
+        const e = sums.get(key) || { total: 0, count: 0 }
+        e.total += Number(anyC.param_value)
+        e.count += 1
+        sums.set(key, e)
+      }
+    }
+    const m = new Map<string, number>()
+    sums.forEach((v, k) => m.set(k, v.total / v.count))
+    return m
+  }, [captures])
   const sellByProduct = useMemo(() => {
     const m = new Map<string, number>()
     for (const it of inv) {
@@ -503,8 +543,15 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
   }, [inv])
   const costForCapture = useCallback((c: FactoryCapture): number => {
     if (c.cost_per_unit != null && Number(c.cost_per_unit) > 0) return Number(c.cost_per_unit)
-    return costByProduct.get((c.product || '').toLowerCase()) || 0
-  }, [costByProduct])
+    // Intake captures may carry their purchase price as a param annotation
+    // (param_label: 'intake_price_per_kg') rather than cost_per_unit
+    const anyC = c as any
+    if (anyC.param_label === 'intake_price_per_kg' && anyC.param_value != null && Number(anyC.param_value) > 0) {
+      return Number(anyC.param_value)
+    }
+    const productKey = (c.product || '').toLowerCase()
+    return paramCostByProduct.get(productKey) || costByProduct.get(productKey) || 0
+  }, [costByProduct, paramCostByProduct])
 
   // ═══════════════════ SUB-TAB BAR ════════════════════════════
   const subTabs: { id: SubTab; label: string }[] = [
@@ -572,7 +619,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
           )}
           {subTab === 'costing' && (
             <CostingView
-              intakes={intakes} outputs={outputs} wastages={wastages}
+              intakes={intakesConsumed} outputs={outputs} wastages={wastages} packaging={packaging}
               costForCapture={costForCapture} sellByProduct={sellByProduct}
               totalOutput={totalOutput} currencySymbol={currencySymbol}
             />
@@ -1137,7 +1184,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       if (av > bv) return sortDir === 'asc' ? 1 : -1
       return 0
     })
-  }, [inv, usageByProduct, sortCol, sortDir])
+  }, [inv, factoryInventory, usageByProduct, sortCol, sortDir])
 
   const stockValue = useMemo(() => rows.reduce((s, r) => s + r.value, 0), [rows])
   const lowStock = useMemo(() => rows.filter(r => r.low), [rows])
@@ -1327,8 +1374,8 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 // ═════════════════════════════════════════════════════════════
 // COSTING SUB-TAB — crown jewel
 // ═════════════════════════════════════════════════════════════
-function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct, totalOutput, currencySymbol }: {
-  intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]
+function CostingView({ intakes, outputs, wastages, packaging, costForCapture, sellByProduct, totalOutput, currencySymbol }: {
+  intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]; packaging?: FactoryCapture[]
   costForCapture: (c: FactoryCapture) => number
   sellByProduct: Map<string, number>
   totalOutput: number; currencySymbol: string
@@ -1350,16 +1397,24 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     return motorKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
   }, [])
 
-  // Count total 20L jerrycans produced (from output captures with "Jerrycan" in product name)
+  // Count total 20L jerrycans produced. Jerrycans are recorded as
+  // 'packaging' type captures, not 'output' — packaging repackages an
+  // already-logged output into sellable units. Fall back to scanning
+  // outputs too, in case a factory type logs jerrycans directly as output.
   const jerrycansProduced = useMemo(() => {
+    const fromPackaging = (packaging || []).reduce((sum, c) => {
+      if ((c.product || '').toLowerCase().includes('jerrycan')) return sum + (Number(c.quantity) || 0)
+      return sum
+    }, 0)
+    if (fromPackaging > 0) return fromPackaging
     return outputs.reduce((sum, c) => {
       // Match products like "Sesame oil - Jerrycan Matungi (20L)"
-      if (c.product?.includes('Jerrycan')) {
+      if ((c.product || '').toLowerCase().includes('jerrycan')) {
         return sum + (Number(c.quantity) || 0)
       }
       return sum
     }, 0)
-  }, [outputs])
+  }, [outputs, packaging])
 
   // Cost per 20L jerrycan (allocated across actual jerrycan output)
   const totalMaterialCost = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [intakes, costForCapture])
