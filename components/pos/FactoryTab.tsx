@@ -619,7 +619,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
           )}
           {subTab === 'costing' && (
             <CostingView
-              intakes={intakesConsumed} outputs={outputs} wastages={wastages} packaging={packaging}
+              intakes={intakesConsumed} outputs={outputs} wastages={wastages} packaging={packaging} dispatches={dispatches}
               costForCapture={costForCapture} sellByProduct={sellByProduct}
               totalOutput={totalOutput} currencySymbol={currencySymbol}
             />
@@ -1374,8 +1374,8 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 // ═════════════════════════════════════════════════════════════
 // COSTING SUB-TAB — crown jewel
 // ═════════════════════════════════════════════════════════════
-function CostingView({ intakes, outputs, wastages, packaging, costForCapture, sellByProduct, totalOutput, currencySymbol }: {
-  intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]; packaging?: FactoryCapture[]
+function CostingView({ intakes, outputs, wastages, packaging, dispatches, costForCapture, sellByProduct, totalOutput, currencySymbol }: {
+  intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]; packaging?: FactoryCapture[]; dispatches?: FactoryCapture[]
   costForCapture: (c: FactoryCapture) => number
   sellByProduct: Map<string, number>
   totalOutput: number; currencySymbol: string
@@ -1417,7 +1417,16 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
   }, [outputs, packaging])
 
   // Cost per 20L jerrycan (allocated across actual jerrycan output)
-  const totalMaterialCost = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [intakes, costForCapture])
+  // Gross cost of ALL seed fed into the press, including the portion that
+  // ended up as wastage rather than oil.
+  const grossMaterialCost = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [intakes, costForCapture])
+  const intakeQtyTotal = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [intakes])
+  const avgSeedCostPerKg = intakeQtyTotal > 0 ? grossMaterialCost / intakeQtyTotal : 0
+  const wastageQtyTotal = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [wastages])
+  // Material cost attributable to jerrycans only — excludes the cost of
+  // seed that became wastage rather than oil, so cost-per-jerrycan isn't
+  // inflated by material that never made it into a sellable jerrycan.
+  const totalMaterialCost = Math.max(0, grossMaterialCost - (wastageQtyTotal * avgSeedCostPerKg))
 
   // Allocate staff + electricity per jerrycan based on actual jerrycan output
   const staffCostPerJerrycan = useMemo(() => {
@@ -1440,9 +1449,18 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
   const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
   // Value recoverable by selling wastage (press cake/byproduct), NOT a loss —
   // wastagePerUnitCost is the per-kg price it can be sold at (editable).
+  // Wastage still IN STOCK (produced minus already sold/dispatched) —
+  // once sold, its value shows up as real revenue elsewhere, not here.
+  const wastageSoldQty = useMemo(() => {
+    return (dispatches || []).reduce((s, c) => {
+      if ((c.product || '').toLowerCase().includes('waste')) return s + (Number(c.quantity) || 0)
+      return s
+    }, 0)
+  }, [dispatches])
+  const wastageInStockQty = Math.max(0, wastageQtyTotal - wastageSoldQty)
   const wasteSaleValue = useMemo(() => {
-    return wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * wastagePerUnitCost, 0)
-  }, [wastages, wastagePerUnitCost])
+    return wastageInStockQty * wastagePerUnitCost
+  }, [wastageInStockQty, wastagePerUnitCost])
 
   // Small overhead for misc costs (oil, filters, maintenance) — 5% of material+labor
   const overheadPct = 5
@@ -1544,8 +1562,8 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Seeds (Material)</div>
-            <div>From intake_arrival capture prices</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} total across {fmtInt(jerrycansProduced)} jerrycans</div>
+            <div>From intake_arrival prices, net of wastage</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} across {fmtInt(jerrycansProduced)} jerrycans (excl. {fmt(currencySymbol, wastageQtyTotal * avgSeedCostPerKg)} wasted seed cost)</div>
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Wastage Sale Price (per kg)</div>
@@ -1564,10 +1582,10 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <KpiCard label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Labor + Electricity + Overhead" accent={ACC} />
         <KpiCard label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)" />
-        <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Seeds from intake_arrival" accent="#3b82f6" />
+        <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6" />
         <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa" />
         <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={`${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ 14h/day`} accent="#fbbf24" />
-        <KpiCard label="Wastage Sale Value" value={fmt(currencySymbol, wasteSaleValue)} sub="Recoverable revenue if waste is sold" accent={GREEN} />
+        <KpiCard label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold, not counted in jerrycan cost`} accent={GREEN} />
       </div>
 
       {/* Material cost breakdown pie */}
