@@ -30,6 +30,7 @@ interface FactoryCapture {
   operator?: string | null
   staff_id?: string | null
   cost_per_unit?: number | null
+  sale_price?: number | null
   destination?: string | null
   created_at: string
 }
@@ -1445,22 +1446,31 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   const totalLabor = jerrycansProduced * staffCostPerJerrycan
   const totalElectricity = jerrycansProduced * electricityCostPerJerrycan
-  // Wastage cost calculation (default 30 KSh per unit, editable)
+  // Manual fallback price, only used until real wastage sale data exists
   const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
-  // Value recoverable by selling wastage (press cake/byproduct), NOT a loss —
-  // wastagePerUnitCost is the per-kg price it can be sold at (editable).
+  // Value recoverable by selling wastage (press cake/byproduct), NOT a loss.
   // Wastage still IN STOCK (produced minus already sold/dispatched) —
   // once sold, its value shows up as real revenue elsewhere, not here.
-  const wastageSoldQty = useMemo(() => {
-    return (dispatches || []).reduce((s, c) => {
-      if ((c.product || '').toLowerCase().includes('waste')) return s + (Number(c.quantity) || 0)
-      return s
-    }, 0)
+  const { wastageSoldQty, wasteSaleRevenue } = useMemo(() => {
+    let qty = 0, revenue = 0
+    for (const c of (dispatches || [])) {
+      if ((c.product || '').toLowerCase().includes('waste')) {
+        const q = Number(c.quantity) || 0
+        qty += q
+        if (c.sale_price != null && Number(c.sale_price) > 0) revenue += q * Number(c.sale_price)
+      }
+    }
+    return { wastageSoldQty: qty, wasteSaleRevenue: revenue }
   }, [dispatches])
   const wastageInStockQty = Math.max(0, wastageQtyTotal - wastageSoldQty)
+  // Actual realized price per kg from real dispatch sales, when available —
+  // falls back to the manual estimate only if wastage has never been sold.
+  const actualWastePricePerKg = wastageSoldQty > 0 ? wasteSaleRevenue / wastageSoldQty : 0
+  const usingActualWastePrice = actualWastePricePerKg > 0
+  const effectiveWastePricePerKg = usingActualWastePrice ? actualWastePricePerKg : wastagePerUnitCost
   const wasteSaleValue = useMemo(() => {
-    return wastageInStockQty * wastagePerUnitCost
-  }, [wastageInStockQty, wastagePerUnitCost])
+    return wastageInStockQty * effectiveWastePricePerKg
+  }, [wastageInStockQty, effectiveWastePricePerKg])
 
   // Small overhead for misc costs (oil, filters, maintenance) — 5% of material+labor
   const overheadPct = 5
@@ -1567,13 +1577,22 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Wastage Sale Price (per kg)</div>
-            <input
-              type="number"
-              value={wastagePerUnitCost}
-              onChange={e => setWastagePerUnitCost(Math.max(0, Number(e.target.value) || 0))}
-              style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
-            />
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>KSh/kg — what waste sells for (default 30)</div>
+            {usingActualWastePrice ? (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>{fmt(currencySymbol, actualWastePricePerKg)}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>Actual avg from {fmtInt(wastageSoldQty)}kg sold via dispatch</div>
+              </>
+            ) : (
+              <>
+                <input
+                  type="number"
+                  value={wastagePerUnitCost}
+                  onChange={e => setWastagePerUnitCost(Math.max(0, Number(e.target.value) || 0))}
+                  style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                />
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>Estimate — no wastage sold yet (default 30 KSh/kg)</div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -1585,7 +1604,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6" />
         <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa" />
         <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={`${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ 14h/day`} accent="#fbbf24" />
-        <KpiCard label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold, not counted in jerrycan cost`} accent={GREEN} />
+        <KpiCard label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN} />
       </div>
 
       {/* Material cost breakdown pie */}
