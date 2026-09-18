@@ -1438,7 +1438,9 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
   const totalElectricity = jerrycansProduced * electricityCostPerJerrycan
   // Wastage cost calculation (default 30 KSh per unit, editable)
   const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
-  const wasteCost = useMemo(() => {
+  // Value recoverable by selling wastage (press cake/byproduct), NOT a loss —
+  // wastagePerUnitCost is the per-kg price it can be sold at (editable).
+  const wasteSaleValue = useMemo(() => {
     return wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * wastagePerUnitCost, 0)
   }, [wastages, wastagePerUnitCost])
 
@@ -1546,14 +1548,14 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} total across {fmtInt(jerrycansProduced)} jerrycans</div>
           </div>
           <div>
-            <div style={{ marginBottom: 2, fontWeight: 600 }}>Wastage Cost per Unit</div>
+            <div style={{ marginBottom: 2, fontWeight: 600 }}>Wastage Sale Price (per kg)</div>
             <input
               type="number"
               value={wastagePerUnitCost}
               onChange={e => setWastagePerUnitCost(Math.max(0, Number(e.target.value) || 0))}
               style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
             />
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>KSh/unit (default 30)</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>KSh/kg — what waste sells for (default 30)</div>
           </div>
         </div>
       </div>
@@ -1565,7 +1567,7 @@ function CostingView({ intakes, outputs, wastages, packaging, costForCapture, se
         <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Seeds from intake_arrival" accent="#3b82f6" />
         <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa" />
         <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={`${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ 14h/day`} accent="#fbbf24" />
-        <KpiCard label={tc('pos_factory.wastageCostLabel')} value={fmt(currencySymbol, wasteCost)} sub={tc('pos_factory.valueOfWastedMaterials')} accent={RED} />
+        <KpiCard label="Wastage Sale Value" value={fmt(currencySymbol, wasteSaleValue)} sub="Recoverable revenue if waste is sold" accent={GREEN} />
       </div>
 
       {/* Material cost breakdown pie */}
