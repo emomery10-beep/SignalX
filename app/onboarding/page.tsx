@@ -479,10 +479,18 @@ export default function OnboardingPage() {
       // onboarding on their next visit with no explanation.
       if (error) { setSaveError(error.message); return false }
 
-      // POS personas go to the pre-payment setup flow (build the stall, then
-      // pay), not straight to the paywalled dashboard. Show the passkey nudge
-      // once here, now that onboarding is actually done, instead of before
-      // signup even started.
+      // Funnel instrumentation: fires once here, the single point every done-
+      // screen exit actually funnels through (trial claimed, trial failed, or
+      // skipped via the "Set up my till" button below) — unlike the trial-
+      // specific events above, this one confirms the user actually left the
+      // done screen for /pos, not just that they clicked a button.
+      if (isPosPersona) trackFunnelEvent('onboarding_finish_clicked', { businessType: bizType })
+
+      // Show the passkey nudge once here, now that onboarding is actually
+      // done, instead of before signup even started. POS personas land on
+      // the real dashboard directly — see app/(app)/pos/page.tsx, which
+      // handles both the not-yet-enabled paywall/trial-claim state and,
+      // once enabled, the first-run product tour.
       setPendingNudge(dest ?? (POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home'))
       return true
     } catch (e) {
@@ -1047,7 +1055,7 @@ export default function OnboardingPage() {
               {!ownerPin && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
                   {isPosPersona ? (
-                    <button style={ghostBtn} onClick={() => { trackFunnelEvent('onboarding_trial_skipped', { businessType: bizType }); trackFunnelEvent('onboarding_finish_clicked', { businessType: bizType }); finish() }} disabled={saving || trialLoading}>
+                    <button style={ghostBtn} onClick={() => { trackFunnelEvent('onboarding_trial_skipped', { businessType: bizType }); finish() }} disabled={saving || trialLoading}>
                       {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta_pos')}
                     </button>
                   ) : (

@@ -1331,7 +1331,7 @@ export default function AdminPage() {
             {posFunnel && (
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
                 <div style={{fontSize:15,fontWeight:600,marginBottom:4}}>POS trial funnel</div>
-                <div style={{fontSize:13,color:'var(--tx3)',marginBottom:16}}>Distinct users per step, last {posFunnel.windowDays} days — onboarding done through trial claim</div>
+                <div style={{fontSize:13,color:'var(--tx3)',marginBottom:16}}>Distinct users per step, last {posFunnel.windowDays} days — onboarding done through the live /pos paywall and first-run tour</div>
                 {(() => {
                   const LABELS: Record<string,string> = {
                     onboarding_done_pos_shown: 'Onboarding done (POS persona)',
@@ -1339,20 +1339,14 @@ export default function AdminPage() {
                     onboarding_trial_started: 'Trial started from done screen',
                     onboarding_trial_failed: 'Trial claim failed on done screen',
                     onboarding_trial_skipped: 'Skipped trial, continued to setup',
-                    onboarding_finish_clicked: 'Continued to catalogue setup',
-                    setup_fork_shown: 'Reached catalogue setup',
-                    setup_capture_opened: 'Opened camera capture',
-                    setup_import_opened: 'Opened bulk import',
-                    setup_item_added: 'Added ≥1 item',
-                    setup_ready_clicked: '"I’m ready" clicked',
-                    setup_ready_screen_shown: 'Reached "ready" screen',
-                    setup_activate_clicked: 'Clicked through to activate',
-                    activate_screen_shown: 'Reached activate screen (fallback path)',
-                    activate_trial_button_shown: 'Saw "Start free trial" button (fallback)',
-                    activate_trial_clicked: 'Clicked "Start free trial" (fallback)',
-                    activate_trial_started: 'Trial started from activate (fallback)',
-                    activate_trial_failed: 'Trial start failed (fallback)',
-                    activate_payment_clicked: 'Clicked a payment option instead',
+                    onboarding_finish_clicked: 'Left done screen for /pos',
+                    paywall_shown: 'Reached /pos paywall (trial not yet claimed)',
+                    paywall_trial_clicked: 'Clicked "Start free trial" (paywall)',
+                    paywall_trial_started: 'Trial started from paywall',
+                    paywall_trial_failed: 'Trial claim failed on paywall',
+                    tour_started: 'First-run tour started',
+                    tour_completed: 'First-run tour completed (staff added)',
+                    tour_skipped: 'First-run tour skipped',
                   }
                   const first = posFunnel.steps?.[0]?.users || 0
                   return (posFunnel.steps || []).map((s: any) => {

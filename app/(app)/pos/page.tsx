@@ -19,6 +19,7 @@ import { getTemplateById } from '@/lib/staff-templates'
 import { useLang } from '@/components/LanguageProvider'
 import CoachMark from '@/components/CoachMark'
 import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
+import { trackFunnelEvent } from '@/lib/funnel-track'
 
 // ── Module-level builder functions (called inside the component with tc) ──
 // Sector option lists (id = logic key, label = displayed)
@@ -257,6 +258,7 @@ export default function POSPage() {
   const [posTrialError, setPosTrialError]     = useState('')
   const [posOwnerPin, setPosOwnerPin]         = useState('')
   const claimTrialFromPos = async () => {
+    trackFunnelEvent('paywall_trial_clicked', { businessType })
     setPosTrialLoading(true)
     setPosTrialError('')
     try {
@@ -267,19 +269,27 @@ export default function POSPage() {
       })
       const d = await res.json()
       if (d.success) {
+        trackFunnelEvent('paywall_trial_started', { businessType })
         setPosEnabled(true)
         if (d.owner_pin) setPosOwnerPin(String(d.owner_pin))
       } else {
+        trackFunnelEvent('paywall_trial_failed', { businessType, metadata: { error: d.error || null } })
         setPosTrialError(d.error || tc('pos_app.toast_staff_add_failed'))
       }
     } catch {
+      trackFunnelEvent('paywall_trial_failed', { businessType, metadata: { error: 'network' } })
       setPosTrialError(tc('pos_app.toast_staff_add_failed'))
     } finally {
       setPosTrialLoading(false)
     }
   }
 
-  const skipTour = () => {
+  // reason distinguishes a real finish (tour's real action actually
+  // happened — see the tourStep===0-after-save call site) from an explicit
+  // bail (Cancel or the "Skip tour" link) — both end the tour the same way,
+  // but only one should count as a completion in the funnel dashboard.
+  const skipTour = (reason: 'completed' | 'skipped' = 'skipped') => {
+    if (tourStep > 0) trackFunnelEvent(reason === 'completed' ? 'tour_completed' : 'tour_skipped', { businessType })
     setTourStep(0)
     try { localStorage.setItem(POS_TOUR_DONE_KEY, '1') } catch { /* best-effort */ }
   }
@@ -293,11 +303,24 @@ export default function POSPage() {
     let done = true
     try { done = localStorage.getItem(POS_TOUR_DONE_KEY) === '1' } catch { /* fail open to "done" — never nag if storage is blocked */ }
     if (!done) {
+      trackFunnelEvent('tour_started', { businessType })
       setTab('staff')
       setTourStep(1)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posEnabled])
+
+  // Funnel instrumentation: the paywall is the done-screen equivalent for
+  // anyone who didn't claim the trial during onboarding (skipped, failed, or
+  // an old account revisiting) — same one-per-arrival pattern as
+  // onboarding_done_pos_shown. Scoped to the same POS-persona business types
+  // that get the trial-claim button below, not the paid-seats paywall.
+  useEffect(() => {
+    if (posEnabled === false && ['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase())) {
+      trackFunnelEvent('paywall_shown', { businessType })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posEnabled, businessType])
 
   // Each effect advances exactly one step, gated on the real state change
   // that step is actually about. No timers, no "Next" button — the tour
@@ -741,7 +764,7 @@ export default function POSPage() {
           setNewPin('')
           setNewLocationId('')
           setShowAddStaff(false)
-          if (tourStep > 0) skipTour() // real completion, not a skip — same end state either way
+          if (tourStep > 0) skipTour('completed') // real completion, not a skip — same end state either way
           notify(tc('pos_app.toast_staff_added_template', { name: data.staff.name, template: data.staff.template?.name }))
         } else {
           notify(data.error || tc('pos_app.toast_staff_add_failed'), false)
@@ -2111,7 +2134,7 @@ export default function POSPage() {
                     <button onClick={() => { setShowAddStaff(false); if (tourStep > 0) skipTour() }} style={btnSecondary}>{tc('pos_app.cancel')}</button>
                   </div>
                   {tourStep > 0 && (
-                    <button onClick={skipTour} style={{ background: 'none', border: 'none', color: 'var(--tx3)', fontSize: 13, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginTop: 4, alignSelf: 'center' }}>
+                    <button onClick={() => skipTour()} style={{ background: 'none', border: 'none', color: 'var(--tx3)', fontSize: 13, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginTop: 4, alignSelf: 'center' }}>
                       {tc('pos_app.tour_skip')}
                     </button>
                   )}

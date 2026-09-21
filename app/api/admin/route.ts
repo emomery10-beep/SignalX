@@ -309,15 +309,18 @@ export async function GET(request: NextRequest) {
     // migration 20260801000001). Distinct users per event over the window, so
     // a step that can fire more than once per user (e.g. an item added per
     // product) doesn't inflate that step's count relative to a one-shot step.
+    //
+    // Covers onboarding's done screen through the live /pos paywall and
+    // first-run tour (see lib/funnel-track.ts). The pre-2026-08-09 wizard
+    // steps (setup_*/activate_*) are deliberately excluded here — that page
+    // now redirects to /pos before it can fire them, so they're permanently
+    // zero; see the comment in lib/funnel-track.ts before re-adding them.
     const FUNNEL_STEPS = [
       'onboarding_done_pos_shown',
       'onboarding_trial_clicked', 'onboarding_trial_started', 'onboarding_trial_failed', 'onboarding_trial_skipped',
       'onboarding_finish_clicked',
-      'setup_fork_shown', 'setup_capture_opened', 'setup_import_opened', 'setup_item_added',
-      'setup_ready_clicked', 'setup_ready_screen_shown', 'setup_activate_clicked',
-      // Fallback path — reached directly, or by anyone who skipped/failed the trial claim above.
-      'activate_screen_shown', 'activate_trial_button_shown', 'activate_trial_clicked',
-      'activate_trial_started', 'activate_trial_failed', 'activate_payment_clicked',
+      'paywall_shown', 'paywall_trial_clicked', 'paywall_trial_started', 'paywall_trial_failed',
+      'tour_started', 'tour_completed', 'tour_skipped',
     ]
     const funnelWindowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()
     const { data: funnelRows, error: funnelError } = await supabase
