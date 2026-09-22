@@ -34,5 +34,11 @@
   "rejecting": "Afwijzen…",
   "confirm_reject": "Afwijzing bevestigen",
   "sold_with_buyer": "$ Verkocht aan {buyer} voor {price}",
-  "sold_no_buyer": "$ Verkocht voor {price}"
+  "sold_no_buyer": "$ Verkocht voor {price}",
+  "access_denied_title": "Goedkeuringen zijn beperkt",
+  "access_denied_subtitle": "Alleen een supervisor, manager of eigenaar kan openstaande registraties bekijken en goedkeuren.",
+  "dispatch_price_label": "Verzendprijs (per eenheid)",
+  "dispatch_price_hint": "Automatisch ingevuld met {default} — u kunt dit aanpassen vóór goedkeuring",
+  "dispatch_price_total": "Totaal: {total}",
+  "error_valid_dispatch_price": "Voer een geldige verzendprijs in."
 }

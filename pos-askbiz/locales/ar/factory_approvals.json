@@ -34,5 +34,11 @@
   "rejecting": "جارٍ الرفض…",
   "confirm_reject": "تأكيد الرفض",
   "sold_with_buyer": "مباع إلى {buyer} مقابل {price}",
-  "sold_no_buyer": "مباع مقابل {price}"
+  "sold_no_buyer": "مباع مقابل {price}",
+  "access_denied_title": "الموافقات مقيّدة",
+  "access_denied_subtitle": "يمكن فقط للمشرف أو المدير أو المالك عرض التسجيلات المعلّقة والموافقة عليها.",
+  "dispatch_price_label": "سعر الشحن (للوحدة الواحدة)",
+  "dispatch_price_hint": "معبأ تلقائياً بـ {default} — يمكنك تعديله قبل الموافقة",
+  "dispatch_price_total": "الإجمالي: {total}",
+  "error_valid_dispatch_price": "أدخل سعر شحن صالحاً."
 }

@@ -34,5 +34,11 @@
   "rejecting": "Diidaya…",
   "confirm_reject": "Xaqiiji diidmada",
   "sold_with_buyer": "$ Waxaa loo iibiyay {buyer}, qiimo {price} ah",
-  "sold_no_buyer": "$ Waxaa lagu iibiyay qiimo {price} ah"
+  "sold_no_buyer": "$ Waxaa lagu iibiyay qiimo {price} ah",
+  "access_denied_title": "Ogolaanshuhu waa xaddidan yihiin",
+  "access_denied_subtitle": "Kaliya kormeeraha, maareeyaha, ama milkiilaha ayaa arki kara oo ansixin kara qaabilaadaha sugaya.",
+  "dispatch_price_label": "Qiimaha diridda (hal halbeeg)",
+  "dispatch_price_hint": "Waxaa si toos ah loogu buuxiyay {default} — waad bedeli kartaa ka hor inta aadan ansixin",
+  "dispatch_price_total": "Wadarta: {total}",
+  "error_valid_dispatch_price": "Geli qiime sax ah oo diridda ah."
 }

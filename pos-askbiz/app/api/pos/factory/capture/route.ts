@@ -39,6 +39,23 @@ const CAPTURE_PERMISSION: Record<CaptureType, Parameters<typeof hasPermission>[1
 // packaging just repackages an output that may already be marked sold.
 const SALE_ANNOTATABLE_TYPES: CaptureType[] = ['output', 'wastage']
 
+// Default per-unit dispatch price, used when an approver approves a
+// dispatch capture without amending the auto-filled value. Mirrors the
+// hardcoded per-jerrycan production cost below (costPerUnit) — this is the
+// same kind of single-product shortcut, requested directly by the owner.
+// Keep in sync with the matching default in app/factory/approvals/page.tsx.
+const DEFAULT_DISPATCH_PRICE = 8000
+
+// dispatch_price is set ONLY by the approver at approval time (PATCH below)
+// and must never reach the staff member who submitted the dispatch capture
+// — confirmed requirement, not merely a nice-to-have. Strip it from any
+// response reaching a role without capture.approve. Mirrors
+// redactPricingForEngineer in app/api/pos/service-jobs/route.ts.
+function redactDispatchPriceForNonApprovers<T extends Record<string, unknown>>(capture: T, role: string): T {
+  if (!capture || hasPermission(role, 'capture.approve')) return capture
+  return { ...capture, dispatch_price: null }
+}
+
 // A generic, free-form process-parameter reading (e.g. dairy's pasteurize
 // temp/time) — deliberately not auto-detected/template-matched like
 // holdRule/decayRule; a worker fills this in directly, so it needs no
@@ -110,7 +127,8 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query
   if (error) return json({ error: error.message }, 500)
 
-  return json({ captures: data, total: count })
+  const captures = (data || []).map(c => redactDispatchPriceForNonApprovers(c, auth.role))
+  return json({ captures, total: count })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -447,7 +465,7 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'Only supervisor, manager, or owner can approve captures' }, 403)
   }
 
-  const { id, status, rejection_reason } = await req.json()
+  const { id, status, rejection_reason, dispatch_price } = await req.json()
 
   if (!id || !status) return json({ error: 'id and status required' }, 400)
   if (!['approved', 'rejected'].includes(status)) {
@@ -457,12 +475,24 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'rejection_reason required when rejecting a capture' }, 400)
   }
 
+  // Approver-set dispatch price (see DEFAULT_DISPATCH_PRICE above) — only
+  // meaningful when approving a dispatch capture, validated up front so a
+  // bad value 400s before anything is written.
+  let resolvedDispatchPrice: number | null = null
+  if (dispatch_price !== undefined && dispatch_price !== null && dispatch_price !== '') {
+    const parsedDispatchPrice = Number(dispatch_price)
+    if (!Number.isFinite(parsedDispatchPrice) || parsedDispatchPrice < 0) {
+      return json({ error: 'dispatch_price must be a non-negative number' }, 400)
+    }
+    resolvedDispatchPrice = parsedDispatchPrice
+  }
+
   const service = createServiceClient()
 
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status')
+    .select('id, status, type')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -472,6 +502,11 @@ export async function PATCH(req: NextRequest) {
     return json({ error: `Capture is already ${existing.status}` }, 400)
   }
 
+  const isDispatchApproval = status === 'approved' && existing.type === 'dispatch'
+  if (isDispatchApproval && resolvedDispatchPrice === null) {
+    resolvedDispatchPrice = DEFAULT_DISPATCH_PRICE
+  }
+
   const { data: updated, error } = await service
     .from('pos_factory_captures')
     .update({
@@ -479,6 +514,7 @@ export async function PATCH(req: NextRequest) {
       approved_by:      auth.staffId || null,
       approved_at:      status === 'approved' ? new Date().toISOString() : null,
       rejection_reason: status === 'rejected' ? rejection_reason.trim() : null,
+      ...(isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
     })
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
@@ -497,17 +533,17 @@ export async function PATCH(req: NextRequest) {
     event: status === 'approved' ? 'capture.approved' : 'capture.rejected',
     entityType: 'factory_capture', entityId: id,
     toValue: status,
-    metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : {},
+    metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : (isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
   })
 
   // Auto-sync dispatch captures to inventory when approved
-  if (status === 'approved' && updated.type === 'dispatch') {
+  if (isDispatchApproval) {
     // Calculate production cost for jerrycans (6000 KSh each) or use sale_price if available
     let costPerUnit = 0
     if (updated.product_name?.includes('Jerrycan')) {
       costPerUnit = 6000 // KSh per 20L jerrycan
     }
-    const salePrice = updated.sale_price || 0
+    const salePrice = updated.dispatch_price || 0
 
     await syncDispatchToInventory(
       auth.ownerId,
@@ -524,7 +560,7 @@ export async function PATCH(req: NextRequest) {
       updated.product_name,
       updated.quantity,
       updated.notes,
-      updated.sale_price || null
+      updated.dispatch_price || null
     )
   }
 

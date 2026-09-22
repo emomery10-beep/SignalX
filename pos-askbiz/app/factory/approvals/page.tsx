@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { hasPermission } from '@/lib/pos-permissions'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 
@@ -12,6 +13,12 @@ const ACC = '#f59e0b'
 const GOOD = '#22c55e'
 const WARN = '#f59e0b'
 const BAD = '#ef4444'
+
+// Single-product default — the owner only dispatches one product line, so
+// every dispatch approval starts pre-filled with this price and can be
+// amended right here before approving. Keep in sync with the server-side
+// fallback (DEFAULT_DISPATCH_PRICE in app/api/pos/factory/capture/route.ts).
+const DEFAULT_DISPATCH_PRICE = 8000
 
 type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
@@ -28,6 +35,7 @@ interface Capture {
   captured_by_staff?: { id: string; name: string; role: string } | null
   sale_price?: number | null
   buyer_name?: string | null
+  dispatch_price?: number | null
 }
 
 // Sky-blue matches the "packaging" defect category on the Quality screen
@@ -69,6 +77,13 @@ export default function ApprovalsPage() {
   const [rejecting, setRejecting] = useState<Capture | null>(null)
   const [reason, setReason] = useState('')
 
+  // Approver-editable dispatch price, per capture id — pre-filled with
+  // DEFAULT_DISPATCH_PRICE, amendable right up until Approve is pressed.
+  const [dispatchPrices, setDispatchPrices] = useState<Record<string, string>>({})
+  function dispatchPriceFor(c: Capture) {
+    return dispatchPrices[c.id] ?? String(DEFAULT_DISPATCH_PRICE)
+  }
+
   // photo lightbox
   const [zoom, setZoom] = useState<string | null>(null)
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set())
@@ -95,13 +110,22 @@ export default function ApprovalsPage() {
 
   async function decide(c: Capture, status: 'approved' | 'rejected', rejection_reason?: string) {
     if (!session) return
+    let dispatch_price: number | undefined
+    if (status === 'approved' && c.type === 'dispatch') {
+      const parsed = Number(dispatchPriceFor(c))
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        setError(tc('factory_approvals.error_valid_dispatch_price'))
+        return
+      }
+      dispatch_price = parsed
+    }
     setBusy(c.id)
     setError(null)
     try {
       const res = await fetch('/api/pos/factory/capture', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}) }),
+        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}) }),
       })
       if (res.status === 405) {
         // PATCH not supported on this deployment — surface clearly
@@ -135,6 +159,21 @@ export default function ApprovalsPage() {
 
   if (!authReady || !session) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>{tc('factory_approvals.loading')}</div>
+  }
+
+  // Approvals carry a per-dispatch price (auto-filled, amendable) that the
+  // dispatching staff member must never see — so this whole screen,
+  // including the pending list, is gated on capture.approve rather than
+  // relying on the PATCH endpoint alone to keep them out.
+  if (!hasPermission(session.role, 'capture.approve')) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', padding: 24, textAlign: 'center' }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>{tc('factory_approvals.access_denied_title')}</div>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 6 }}>{tc('factory_approvals.access_denied_subtitle')}</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -212,6 +251,34 @@ export default function ApprovalsPage() {
                         {c.buyer_name
                           ? tc('factory_approvals.sold_with_buyer', { buyer: c.buyer_name, price: c.sale_price })
                           : tc('factory_approvals.sold_no_buyer', { price: c.sale_price })}
+                      </div>
+                    )}
+
+                    {/* Dispatch price — approver-only, auto-filled, amendable before Approve.
+                        The dispatcher who submitted this capture never sees this field or its
+                        value (see redactDispatchPriceForNonApprovers in the API route). */}
+                    {c.type === 'dispatch' && (
+                      <div style={{ marginTop: 10, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px' }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          {tc('factory_approvals.dispatch_price_label')}
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <input
+                            type="number" inputMode="decimal" min="0"
+                            value={dispatchPriceFor(c)}
+                            disabled={working}
+                            onChange={e => setDispatchPrices(prev => ({ ...prev, [c.id]: e.target.value }))}
+                            style={{ width: 120, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                          />
+                          {c.quantity != null && (
+                            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>
+                              {tc('factory_approvals.dispatch_price_total', { total: (Number(dispatchPriceFor(c)) * c.quantity).toLocaleString() })}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+                          {tc('factory_approvals.dispatch_price_hint', { default: DEFAULT_DISPATCH_PRICE.toLocaleString() })}
+                        </div>
                       </div>
                     )}
 

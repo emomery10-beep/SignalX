@@ -34,5 +34,11 @@
   "rejecting": "Inakataa…",
   "confirm_reject": "Thibitisha kukataa",
   "sold_with_buyer": "$ Imeuzwa kwa {buyer} kwa bei ya {price}",
-  "sold_no_buyer": "$ Imeuzwa kwa bei ya {price}"
+  "sold_no_buyer": "$ Imeuzwa kwa bei ya {price}",
+  "access_denied_title": "Idhini zimezuiwa",
+  "access_denied_subtitle": "Ni msimamizi, meneja, au mmiliki pekee anayeweza kuona na kuidhinisha rekodi zinazosubiri.",
+  "dispatch_price_label": "Bei ya usafirishaji (kwa kila kipimo)",
+  "dispatch_price_hint": "Imejazwa awali kwa {default} — unaweza kubadilisha kabla ya kuidhinisha",
+  "dispatch_price_total": "Jumla: {total}",
+  "error_valid_dispatch_price": "Weka bei sahihi ya usafirishaji."
 }

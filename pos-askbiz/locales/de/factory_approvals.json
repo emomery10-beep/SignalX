@@ -34,5 +34,11 @@
   "rejecting": "Wird abgelehnt…",
   "confirm_reject": "Ablehnung bestätigen",
   "sold_with_buyer": "$ Verkauft an {buyer} für {price}",
-  "sold_no_buyer": "$ Verkauft für {price}"
+  "sold_no_buyer": "$ Verkauft für {price}",
+  "access_denied_title": "Genehmigungen sind eingeschränkt",
+  "access_denied_subtitle": "Nur ein Supervisor, Manager oder Inhaber kann ausstehende Erfassungen einsehen und genehmigen.",
+  "dispatch_price_label": "Versandpreis (pro Einheit)",
+  "dispatch_price_hint": "Automatisch mit {default} ausgefüllt — vor der Genehmigung änderbar",
+  "dispatch_price_total": "Gesamt: {total}",
+  "error_valid_dispatch_price": "Bitte einen gültigen Versandpreis eingeben."
 }

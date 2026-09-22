@@ -34,5 +34,11 @@
   "rejecting": "Rechazando…",
   "confirm_reject": "Confirmar rechazo",
   "sold_with_buyer": "$ Vendido a {buyer} por {price}",
-  "sold_no_buyer": "$ Vendido por {price}"
+  "sold_no_buyer": "$ Vendido por {price}",
+  "access_denied_title": "Aprobaciones restringidas",
+  "access_denied_subtitle": "Solo un supervisor, gerente o propietario puede ver y aprobar los registros pendientes.",
+  "dispatch_price_label": "Precio de despacho (por unidad)",
+  "dispatch_price_hint": "Rellenado automáticamente con {default} — puedes ajustarlo antes de aprobar",
+  "dispatch_price_total": "Total: {total}",
+  "error_valid_dispatch_price": "Introduce un precio de despacho válido."
 }

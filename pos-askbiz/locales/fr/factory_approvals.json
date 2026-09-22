@@ -34,5 +34,11 @@
   "rejecting": "Rejet en cours…",
   "confirm_reject": "Confirmer le rejet",
   "sold_with_buyer": "$ Vendu à {buyer} pour {price}",
-  "sold_no_buyer": "$ Vendu pour {price}"
+  "sold_no_buyer": "$ Vendu pour {price}",
+  "access_denied_title": "Approbations restreintes",
+  "access_denied_subtitle": "Seul un superviseur, un gestionnaire ou le propriétaire peut consulter et approuver les saisies en attente.",
+  "dispatch_price_label": "Prix d'expédition (par unité)",
+  "dispatch_price_hint": "Pré-rempli à {default} — modifiable avant l'approbation",
+  "dispatch_price_total": "Total : {total}",
+  "error_valid_dispatch_price": "Saisissez un prix d'expédition valide."
 }

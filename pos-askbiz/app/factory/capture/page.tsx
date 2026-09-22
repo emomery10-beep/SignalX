@@ -164,8 +164,10 @@ export default function FactoryCapturePage() {
   const [salePrice, setSalePrice]   = useState('')
   const [buyerName, setBuyerName]   = useState('')
 
-  // Dispatch pricing & WhatsApp — dispatch only
-  const [dispatchPrice, setDispatchPrice] = useState('')
+  // Dispatch WhatsApp — dispatch only. Price is deliberately NOT captured
+  // here: the dispatcher must never see or set the dispatch price — the
+  // approver enters it (with an auto-filled default) at approval time.
+  // See app/factory/approvals/page.tsx and the PATCH handler below.
   const [dispatchWhatsApp, setDispatchWhatsApp] = useState('')
   const [showProductDropdown, setShowProductDropdown] = useState(false)
   const [filteredProducts, setFilteredProducts] = useState<string[]>([])
@@ -351,7 +353,6 @@ export default function FactoryCapturePage() {
         : {}),
       ...((captureType === 'intake' || captureType === 'output') && runRef.trim() ? { run_ref: runRef.trim() } : {}),
       ...(captureType === 'output' && isIntermediate ? { is_intermediate: true } : {}),
-      ...(captureType === 'dispatch' && dispatchPrice.trim() && !isNaN(Number(dispatchPrice)) ? { sale_price: Number(dispatchPrice) } : {}),
       ...(captureType === 'dispatch' && dispatchWhatsApp.trim() ? { buyer_name: dispatchWhatsApp.trim() } : {}),
       ...(captureType === 'intake_feed' && feedCostPerKg.trim() && !isNaN(Number(feedCostPerKg)) ? { param_label: 'feed_cost_per_kg', param_value: Number(feedCostPerKg) } : {}),
       ...(captureType === 'intake_arrival' && intakePricePerKg.trim() && !isNaN(Number(intakePricePerKg)) ? { param_label: 'intake_price_per_kg', param_value: Number(intakePricePerKg) } : {}),
@@ -796,17 +797,6 @@ export default function FactoryCapturePage() {
                 placeholder={tc('factory_capture.destination_placeholder')}
                 style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? PURPLE + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
               />
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>💰 Price per unit (optional)</div>
-              <input
-                type="number"
-                value={dispatchPrice}
-                onChange={e => setDispatchPrice(e.target.value)}
-                placeholder="Sale price per unit (e.g. 1250 for KSh 1,250)"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${dispatchPrice ? '#22c55e60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
-              />
-              {dispatchPrice && <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Total: {(parseFloat(dispatchPrice) * parseFloat(quantity || '0')).toLocaleString()}</div>}
             </div>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>📱 WhatsApp number (optional)</div>

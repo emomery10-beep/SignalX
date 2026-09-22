@@ -36,5 +36,11 @@
   "rejecting": "Rejecting…",
   "confirm_reject": "Confirm reject",
   "sold_with_buyer": "$ Sold to {buyer} for {price}",
-  "sold_no_buyer": "$ Sold for {price}"
+  "sold_no_buyer": "$ Sold for {price}",
+  "access_denied_title": "Approvals are restricted",
+  "access_denied_subtitle": "Only a supervisor, manager, or owner can view and approve pending captures.",
+  "dispatch_price_label": "Dispatch price (per unit)",
+  "dispatch_price_hint": "Auto-filled at {default} — you can adjust it before approving",
+  "dispatch_price_total": "Total: {total}",
+  "error_valid_dispatch_price": "Enter a valid dispatch price."
 }
