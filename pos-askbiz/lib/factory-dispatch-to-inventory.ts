@@ -35,14 +35,23 @@ export async function syncDispatchToInventory(
     const trimmedName = productName.trim()
 
     // Find existing inventory by product name (case-insensitive)
-    // Prefer items tagged sector='factory', but sync to any matching name
+    // Prefer items tagged sector='factory', but sync to any matching name.
+    // NOTE: this query was broken from the day it was written — `{ foreignTable:
+    // 'inventory' }` on .or() only applies to an *embedded* resource, but this
+    // query selects from 'inventory' directly (PGRST108: "'inventory' is not an
+    // embedded resource"), and .order('sector desc nulls last') passed a raw SQL
+    // fragment where postgrest-js expects a bare column name (42703: column
+    // "sector desc nulls last" does not exist). Every call errored and was
+    // silently swallowed by the catch block below (sync is deliberately
+    // non-fatal), so no dispatch has ever actually synced to inventory.
+    // Confirmed live 2026-09-22 by reproducing this exact query.
     const { data: existing, error: findError } = await service
       .from('inventory')
       .select('id, stock_qty')
       .eq('owner_id', ownerId)
       .ilike('name', trimmedName)
-      .or(`sector.eq.factory,sector.is.null`, { foreignTable: 'inventory' })
-      .order('sector desc nulls last')
+      .or(`sector.eq.factory,sector.is.null`)
+      .order('sector', { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle()
 
