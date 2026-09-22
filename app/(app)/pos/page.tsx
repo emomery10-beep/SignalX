@@ -349,6 +349,24 @@ export default function POSPage() {
 
   // Inventory
   const [showAddProduct, setShowAddProduct] = useState(false)
+
+  // GettingStartedChecklist's "add your first product" step links here with
+  // ?action=add_product. That link is clicked while already sitting on /pos
+  // (the checklist only ever renders there), so it's a same-route,
+  // query-only navigation — App Router re-renders in place rather than
+  // remounting, so this must depend on the actual param value (not run
+  // once on mount) or a second click after the first would never re-fire.
+  // Strips the param after handling so a refresh doesn't reopen the modal.
+  const addProductAction = searchParams.get('action')
+  useEffect(() => {
+    if (addProductAction !== 'add_product') return
+    setShowAddProduct(true)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('action')
+    router.replace(params.toString() ? `?${params.toString()}` : '/pos', { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addProductAction])
+
   const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'pcs' })
   const [addingProduct, setAddingProduct] = useState(false)
   const [invSearch, setInvSearch] = useState('')

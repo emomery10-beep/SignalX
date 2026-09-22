@@ -1,13 +1,23 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { trackFunnelEvent } from '@/lib/funnel-track'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
 const ACC_BORDER = 'rgba(208,138,89,.2)'
 const GREEN = '#16a34a'
 
-const DISMISS_KEY = 'askbiz_checklist_dismissed_v1'
+// Stores a future timestamp (ms), not a boolean — a manual dismiss hides the
+// card for DISMISS_DAYS, then it comes back if the steps still aren't done.
+// The old permanent-forever v1 key meant one accidental or "later" click
+// hid this for good, with zero follow-up (see [[pos-post-signup-activation-crisis]]:
+// 71% of pos_enabled accounts never added a product). "All done" still uses
+// this same key with a ~1-year duration — effectively permanent, no need
+// for a separate mechanism.
+const DISMISS_KEY = 'askbiz_checklist_dismiss_until_v2'
+const DISMISS_DAYS = 7
+const DAY_MS = 86400000
 
 type ChecklistStep = {
   label: string
@@ -28,9 +38,12 @@ export default function GettingStartedChecklist() {
   const [steps, setSteps] = useState<ChecklistStep[]>([])
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.localStorage.getItem(DISMISS_KEY) === '1') {
-      setLoading(false)
-      return
+    if (typeof window !== 'undefined') {
+      const until = Number(window.localStorage.getItem(DISMISS_KEY) || 0)
+      if (until && Date.now() < until) {
+        setLoading(false)
+        return
+      }
     }
 
     let cancelled = false
@@ -48,9 +61,16 @@ export default function GettingStartedChecklist() {
         setSteps(built)
         const allDone = built.length > 0 && built.every(s => s.done)
         if (allDone && typeof window !== 'undefined') {
-          window.localStorage.setItem(DISMISS_KEY, '1')
+          window.localStorage.setItem(DISMISS_KEY, String(Date.now() + 365 * DAY_MS))
+        } else if (built.length > 0) {
+          trackFunnelEvent('checklist_shown', { businessType: bizType, metadata: { steps_done: built.filter(s => s.done).length, steps_total: built.length } })
         }
         setDismissed(allDone)
+      } catch (e) {
+        console.error('GettingStartedChecklist: failed to build steps', e)
+        // Leave dismissed at its default (true) for this load only — nothing
+        // is persisted, so a transient error never hides the card for good;
+        // the next page load tries fresh.
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -60,8 +80,14 @@ export default function GettingStartedChecklist() {
   }, [])
 
   const dismiss = () => {
+    trackFunnelEvent('checklist_dismissed', { businessType, metadata: { steps_done: steps.filter(s => s.done).length, steps_total: steps.length } })
     setDismissed(true)
-    if (typeof window !== 'undefined') window.localStorage.setItem(DISMISS_KEY, '1')
+    if (typeof window !== 'undefined') window.localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DAYS * DAY_MS))
+  }
+
+  const goToStep = (s: ChecklistStep) => {
+    trackFunnelEvent('checklist_step_clicked', { businessType, metadata: { step: s.label } })
+    router.push(s.href)
   }
 
   if (loading || dismissed || steps.length === 0) return null
@@ -91,7 +117,7 @@ export default function GettingStartedChecklist() {
         {steps.map((s, i) => (
           <button
             key={i}
-            onClick={() => router.push(s.href)}
+            onClick={() => goToStep(s)}
             style={{
               display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
               padding: '10px 12px', borderRadius: 10, border: '1px solid var(--b)',
@@ -137,7 +163,10 @@ async function buildSteps(bizType: string): Promise<ChecklistStep[]> {
       safeCount('/api/pos/staff', d => d.staff?.length || 0),
     ])
     return [
-      { label: 'Scan or add your first product', done: products > 0, href: '/pos' },
+      // ?action=add_product — see the matching useEffect in app/(app)/pos/page.tsx.
+      // Plain '/pos' silently did nothing here: this card only ever renders
+      // while already on /pos, so a same-URL push is a no-op navigation.
+      { label: 'Scan or add your first product', done: products > 0, href: '/pos?action=add_product' },
       { label: 'Make your first sale', done: sales > 0, href: '/pos' },
       { label: 'Invite a staff member', done: staff > 0, href: '/pos?tab=staff' },
     ]

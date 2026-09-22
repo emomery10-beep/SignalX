@@ -38,6 +38,15 @@
     "cta": "Reviens sur AskBiz →",
     "signoff": "— Idarus, Fondateur &amp; PDG d'AskBiz"
   },
+  "first_product": {
+    "subject": "Ta caisse est prête, {firstName} — il ne manque qu'un produit",
+    "heading": "Encore une chose avant de pouvoir vendre.",
+    "body1": "Salut {firstName} — ton essai AskBiz POS est actif depuis quelques jours déjà, mais ton catalogue est encore vide, donc il n'y a rien à encaisser.",
+    "body2": "Ajoute un produit — une photo et un prix suffisent — et tu pourras faire ta première vente en moins d'une minute.",
+    "cta": "Ajoute ton premier produit →",
+    "closing": "Bloqué sur quelque chose ? Réponds à cet e-mail — une vraie personne le lit.",
+    "signoff": "— Idarus, Fondateur &amp; PDG d'AskBiz"
+  },
   "plan_upgrade": {
     "subject": "Bienvenue sur {planName}, {firstName} !",
     "heading": "Salut {firstName}, bienvenue sur {planName} !",

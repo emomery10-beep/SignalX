@@ -40,6 +40,12 @@ export const POS_FUNNEL_EVENTS = [
   'tour_started',
   'tour_completed',
   'tour_skipped',
+  // The "Getting started" checklist (components/onboarding/GettingStartedChecklist.tsx)
+  // — separate from the tour above, shown on every /pos load until its steps
+  // are done or it's dismissed.
+  'checklist_shown',
+  'checklist_step_clicked',
+  'checklist_dismissed',
 ] as const
 
 export type PosFunnelEvent = typeof POS_FUNNEL_EVENTS[number]

@@ -38,6 +38,15 @@
     "cta": "Rudi AskBiz →",
     "signoff": "— Idarus, Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
   },
+  "first_product": {
+    "subject": "Rejista yako iko tayari, {firstName} — inahitaji bidhaa moja tu",
+    "heading": "Jambo moja limebaki kabla ya kuuza.",
+    "body1": "Habari {firstName} — jaribio lako la AskBiz POS limekuwa hai kwa siku kadhaa sasa, lakini bado hakuna bidhaa yoyote kwenye orodha yako, kwa hivyo hakuna cha kuuza.",
+    "body2": "Ongeza bidhaa moja — picha na bei inatosha — na utaweza kufanya mauzo yako ya kwanza kwa chini ya dakika moja.",
+    "cta": "Ongeza bidhaa yako ya kwanza →",
+    "closing": "Umekwama mahali popote? Jibu barua pepe hii — mtu halisi anaisoma.",
+    "signoff": "— Idarus, Mwanzilishi &amp; Afisa Mkuu Mtendaji wa AskBiz"
+  },
   "plan_upgrade": {
     "subject": "Karibu {planName}, {firstName}!",
     "heading": "Habari {firstName}, karibu {planName}!",

@@ -38,6 +38,15 @@
     "cta": "Ku soo laabo AskBiz →",
     "signoff": "— Idarus, Aasaasaha &amp; CEO-ga AskBiz"
   },
+  "first_product": {
+    "subject": "Keydkaaga waa diyaar, {firstName} — wuxuu u baahan yahay hal alaab oo keliya",
+    "heading": "Hal shay ayaa kaa harsan kahor inta aadan iibin.",
+    "body1": "Salaan {firstName} — tijaabadaada AskBiz POS ayaa firfircoon ilaa dhowr maalmood, laakiin weli liiskaaga alaabta waa banaan yahay, sidaas darteed wax lama iibin karo.",
+    "body2": "Ku dar hal alaab — sawir iyo qiimo ayaa ku filan — waxaadna samayn kartaa iibkaaga ugu horreeya wakhti ka yar hal daqiiqo.",
+    "cta": "Ku dar alaabtaada ugu horreysa →",
+    "closing": "Wax kugu adkaaday? Ka jawaab emaylkan — qof dhab ah ayaa akhriya.",
+    "signoff": "— Idarus, Aasaasaha &amp; CEO-ga AskBiz"
+  },
   "plan_upgrade": {
     "subject": "Ku soo dhawoow {planName}, {firstName}!",
     "heading": "Salaan {firstName}, ku soo dhawoow {planName}!",

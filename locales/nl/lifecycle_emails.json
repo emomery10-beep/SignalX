@@ -38,6 +38,15 @@
     "cta": "Kom terug naar AskBiz →",
     "signoff": "— Idarus, Founder &amp; CEO van AskBiz"
   },
+  "first_product": {
+    "subject": "Je kassa is klaar, {firstName} — hij heeft alleen nog een product nodig",
+    "heading": "Nog één ding voordat je kunt verkopen.",
+    "body1": "Hoi {firstName} — je AskBiz POS-proefperiode staat nu al een paar dagen live, maar je assortiment is nog leeg, dus er is niets om aan te slaan.",
+    "body2": "Voeg één product toe — een foto en een prijs is genoeg — en je kunt binnen een minuut je eerste verkoop doen.",
+    "cta": "Voeg je eerste product toe →",
+    "closing": "Ergens vastgelopen? Reageer op deze e-mail — een echt persoon leest 'm.",
+    "signoff": "— Idarus, Founder &amp; CEO van AskBiz"
+  },
   "plan_upgrade": {
     "subject": "Welkom bij {planName}, {firstName}!",
     "heading": "Hoi {firstName}, welkom bij {planName}!",

@@ -318,6 +318,39 @@ export function reEngagementEmail(opts: { firstName: string; unsubscribeUrl: str
   }
 }
 
+// ── First-product nudge — pos_enabled but the catalogue is still empty ────────
+// Distinct from reEngagementEmail: gated on real product-catalogue state (see
+// app/api/cron/lifecycle-emails/route.ts), not login recency, so it can say
+// something specific the generic re-engagement email can't.
+export function firstProductEmail(opts: { firstName: string; unsubscribeUrl: string; locale: Lang }): { subject: string; html: string } {
+  const { locale } = opts
+  const name = nameOr(locale, opts.firstName)
+  const k = (key: string) => t(locale, `lifecycle_emails.first_product.${key}`, { firstName: name })
+  return {
+    subject: k('subject'),
+    html: lifecycleShell(`
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">${k('heading')}</h1>
+      <p style="margin:0 0 16px;font-size:15px;color:#6b6760;line-height:1.65;">
+        ${k('body1')}
+      </p>
+      <p style="margin:0 0 24px;font-size:15px;color:#1a1916;line-height:1.7;">
+        ${k('body2')}
+      </p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
+          <a href="https://askbiz.co/pos" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">${k('cta')}</a>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 20px;font-size:14px;color:#1a1916;line-height:1.6;">
+        ${k('closing')}
+      </p>
+      <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;">
+        ${k('signoff')}
+      </p>
+    `, opts.unsubscribeUrl, locale),
+  }
+}
+
 // ── Re-engagement email — early nudge, 7 days inactive ────────────────────────
 export function reEngagement7DayEmail(opts: { firstName: string; unsubscribeUrl: string; locale: Lang }): { subject: string; html: string } {
   const { locale } = opts
