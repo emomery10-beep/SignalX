@@ -45,11 +45,13 @@ interface InventoryItem {
   category?: string // 'raw' | 'finished' | other
   quantity?: number
   stock?: number
+  stock_qty?: number // the real `inventory` table's actual column name
   unit?: string
   cost?: number
   cost_price?: number
   price?: number
   selling_price?: number
+  sale_price?: number // the real `inventory` table's actual column name
   reorder_point?: number
   reorder_level?: number
 }
@@ -103,23 +105,40 @@ function weekKey(date: string | Date): string {
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`
 }
 
+// The real `inventory` table (this factory's actual stock — everything
+// dispatch-synced from approved captures, see [[sesame-factory-analytics-fix-status]])
+// uses stock_qty/sale_price, not quantity/stock/selling_price/price. Those
+// were the only names checked here, so every real row silently read as 0 —
+// only the locally-computed synthetic items below (which set both name
+// styles themselves) ever displayed correctly. cost_price was already
+// covered, which is why cost read fine once qty did.
 function getQty(item: InventoryItem): number {
-  return Number(item.quantity ?? item.stock ?? 0) || 0
+  return Number(item.quantity ?? item.stock ?? item.stock_qty ?? 0) || 0
 }
 function getCost(item: InventoryItem): number {
   return Number(item.cost ?? item.cost_price ?? 0) || 0
 }
 function getSell(item: InventoryItem): number {
-  return Number(item.selling_price ?? item.price ?? 0) || 0
+  return Number(item.selling_price ?? item.price ?? item.sale_price ?? 0) || 0
 }
 function getReorder(item: InventoryItem): number {
   return Number(item.reorder_point ?? item.reorder_level ?? 0) || 0
 }
+// `category` is NULL on every real inventory row today (confirmed live) —
+// only the synthetic factory-computed items below ever set it. Name-based
+// fallback so Raw/Finished still classify real rows instead of every one
+// of them silently falling through to '—' and never reaching either KPI.
 function isRaw(item: InventoryItem): boolean {
-  return (item.category || '').toLowerCase().includes('raw')
+  const cat = (item.category || '').toLowerCase()
+  if (cat) return cat.includes('raw')
+  const n = (item.name || '').toLowerCase()
+  return n.includes('seed') && !n.includes('oil') && !n.includes('waste')
 }
 function isFinished(item: InventoryItem): boolean {
-  return (item.category || '').toLowerCase().includes('finish')
+  const cat = (item.category || '').toLowerCase()
+  if (cat) return cat.includes('finish')
+  const n = (item.name || '').toLowerCase()
+  return (n.includes('oil') || n.includes('jerrycan') || n.includes('mtungi')) && !n.includes('waste')
 }
 
 // categorize a free-text note into a coarse waste reason
@@ -1460,6 +1479,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const totalElectricity = jerrycansProduced * electricityCostPerJerrycan
   // Manual fallback price, only used until real wastage sale data exists
   const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
+  // Manual override — lets the user amend the price even once actual dispatch
+  // data exists (e.g. the realized average is skewed by an early low-price sale).
+  const [wastagePriceOverride, setWastagePriceOverride] = useState<number | null>(null)
   // Value recoverable by selling wastage (press cake/byproduct), NOT a loss.
   // Wastage still IN STOCK (produced minus already sold/dispatched) —
   // once sold, its value shows up as real revenue elsewhere, not here.
@@ -1479,7 +1501,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // falls back to the manual estimate only if wastage has never been sold.
   const actualWastePricePerKg = wastageSoldQty > 0 ? wasteSaleRevenue / wastageSoldQty : 0
   const usingActualWastePrice = actualWastePricePerKg > 0
-  const effectiveWastePricePerKg = usingActualWastePrice ? actualWastePricePerKg : wastagePerUnitCost
+  const computedWastePricePerKg = usingActualWastePrice ? actualWastePricePerKg : wastagePerUnitCost
+  const isWastePriceAmended = wastagePriceOverride != null
+  const effectiveWastePricePerKg = isWastePriceAmended ? wastagePriceOverride! : computedWastePricePerKg
   const wasteSaleValue = useMemo(() => {
     return wastageInStockQty * effectiveWastePricePerKg
   }, [wastageInStockQty, effectiveWastePricePerKg])
@@ -1588,8 +1612,39 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} across {fmtInt(jerrycansProduced)} jerrycans (excl. {fmt(currencySymbol, wastageQtyTotal * avgSeedCostPerKg)} wasted seed cost)</div>
           </div>
           <div>
-            <div style={{ marginBottom: 2, fontWeight: 600 }}>Wastage Sale Price (per kg)</div>
-            {usingActualWastePrice ? (
+            <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              Wastage Sale Price (per kg)
+              {!isWastePriceAmended && (
+                <button
+                  type="button"
+                  onClick={() => setWastagePriceOverride(computedWastePricePerKg)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+            {isWastePriceAmended ? (
+              <>
+                <input
+                  type="number"
+                  autoFocus
+                  value={wastagePriceOverride ?? 0}
+                  onChange={e => setWastagePriceOverride(Math.max(0, Number(e.target.value) || 0))}
+                  style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setWastagePriceOverride(null)}
+                  style={{ marginLeft: 6, fontSize: 9, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Reset to {usingActualWastePrice ? 'actual' : 'estimate'}
+                </button>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>
+                  Manually set{usingActualWastePrice ? ` — actual avg is ${fmt(currencySymbol, actualWastePricePerKg)}` : ''}
+                </div>
+              </>
+            ) : usingActualWastePrice ? (
               <>
                 <div style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>{fmt(currencySymbol, actualWastePricePerKg)}</div>
                 <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>Actual avg from {fmtInt(wastageSoldQty)}kg sold via dispatch</div>
@@ -1616,7 +1671,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6" />
         <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa" />
         <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={`${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ 14h/day`} accent="#fbbf24" />
-        <KpiCard label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN} />
+        <KpiCard label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${isWastePriceAmended ? 'amended' : usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN} />
       </div>
 
       {/* Material cost breakdown pie */}
