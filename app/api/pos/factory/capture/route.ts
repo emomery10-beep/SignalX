@@ -24,6 +24,22 @@ const CAPTURE_PERMISSION: Record<CaptureType, Parameters<typeof hasPermission>[1
   dispatch: 'camera.dispatch',
 }
 
+// dispatch_price is set only by an approver (pos-askbiz's PATCH /factory/
+// capture, capture.approve permission) and must never reach the staff
+// member who submitted the dispatch — same requirement as pos-askbiz's copy
+// of this route (app/api/pos/factory/capture/route.ts there has the fuller
+// fix; this older, separate copy only needed this one piece ported over
+// since it never had dispatch_price/PATCH support to begin with). This
+// route's GET selects '*' with no redaction, and this root app's PIN-staff
+// auth (lib/pos-auth.ts) accepts the same x-staff-id/x-owner-id headers a
+// dispatcher would use — so without this, any staff role with a camera
+// permission could read dispatch_price for their own approved dispatches.
+// Confirmed live 2026-09-22.
+function redactDispatchPriceForNonApprovers<T extends Record<string, unknown>>(capture: T, role: string | null | undefined): T {
+  if (!capture || hasPermission(role, 'capture.approve')) return capture
+  return { ...capture, dispatch_price: null }
+}
+
 // ─────────────────────────────────────────────────────────────
 // GET — list captures (filterable by type / status / date / shift)
 // ─────────────────────────────────────────────────────────────
@@ -81,7 +97,8 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query
   if (error) return json({ error: error.message }, 500)
 
-  return json({ captures: data, total: count })
+  const captures = (data || []).map((c: Record<string, unknown>) => redactDispatchPriceForNonApprovers(c, auth.role))
+  return json({ captures, total: count })
 }
 
 // ─────────────────────────────────────────────────────────────
