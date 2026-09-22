@@ -31,6 +31,10 @@ interface FactoryCapture {
   staff_id?: string | null
   cost_per_unit?: number | null
   sale_price?: number | null
+  /** Approver-set price for a dispatch, per unit. Null for a pending/rejected
+   * dispatch, or for any capture viewed by a role without capture.approve
+   * (redacted server-side — see route.ts). */
+  dispatch_price?: number | null
   destination?: string | null
   created_at: string
 }
@@ -473,7 +477,15 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
   const wastagePct = totalOutput + totalWaste > 0 ? (totalWaste / (totalOutput + totalWaste)) * 100 : 0
   const pendingCount = useMemo(() => captures.filter(c => c.status === 'pending').length, [captures])
   const efficiency = totalIntake > 0 ? (totalOutput / totalIntake) * 100 : 0
-  const salesRevenue = useMemo(() => txns.reduce((s, t) => s + (Number(t.total ?? t.amount ?? 0) || 0), 0), [txns])
+  // Dispatch is this factory's actual point of sale (goods leave as an
+  // approved, priced dispatch — there's no separate POS checkout for them),
+  // so its value belongs in revenue alongside pos_transactions. dispatch_price
+  // is set by the approver (see app/factory/approvals in pos-askbiz); only
+  // approved dispatches have one.
+  const dispatchRevenue = useMemo(() => dispatches
+    .filter(d => d.status === 'approved')
+    .reduce((s, d) => s + (Number(d.quantity) || 0) * (Number(d.dispatch_price) || 0), 0), [dispatches])
+  const salesRevenue = useMemo(() => txns.reduce((s, t) => s + (Number(t.total ?? t.amount ?? 0) || 0), 0) + dispatchRevenue, [txns, dispatchRevenue])
 
   // ── Daily series (last 30 days) ────────────────────────────
   const dailySeries = useMemo(() => {
