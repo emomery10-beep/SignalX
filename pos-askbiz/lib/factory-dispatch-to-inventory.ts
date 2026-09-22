@@ -77,7 +77,12 @@ export async function syncDispatchToInventory(
       if (updateError) throw updateError
       inventoryId = updated?.id || null
     } else {
-      // Create new inventory entry for this factory dispatch
+      // Create new inventory entry for this factory dispatch. sale_price is
+      // NOT NULL on this table (23502 if given null) — unlike cost_price,
+      // which allows null. Every dispatch of a product with no set price
+      // (e.g. a byproduct dispatched before an approver ever priced it) hit
+      // this and failed to create its inventory row at all. Confirmed live
+      // 2026-09-22 while replaying historical dispatches.
       const { data: created, error: createError } = await service
         .from('inventory')
         .insert({
@@ -88,7 +93,7 @@ export async function syncDispatchToInventory(
           factory_dispatch_id: dispatchId,
           source_type: 'factory_dispatch',
           cost_price: costPerUnit > 0 ? costPerUnit : null,
-          sale_price: salePrice > 0 ? salePrice : null,
+          sale_price: salePrice > 0 ? salePrice : 0,
         })
         .select('id')
         .single()
@@ -99,7 +104,11 @@ export async function syncDispatchToInventory(
 
     return { success: true, inventory_id: inventoryId }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+    // Supabase/PostgREST errors are plain objects with a .message, not
+    // Error instances — String(err) on those gives the useless
+    // "[object Object]", which is exactly what hid the two bugs above from
+    // ever showing up meaningfully in server logs.
+    const message = err instanceof Error ? err.message : (err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : String(err))
     console.error('Factory dispatch sync failed:', message)
     // Non-fatal — don't let sync failures block the approval
     return { success: false, error: message }
