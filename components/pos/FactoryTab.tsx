@@ -291,6 +291,18 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
   chart?: { label: string; raw: number; color: string }[]; chartMode?: 'stack' | 'compare'
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false)
+  // This card is rendered on both the owner's desktop dashboard and the
+  // staff mobile PWA. A bottom sheet (narrow box, dimmed gutters either
+  // side) is the right mobile affordance but reads as "floating, not
+  // centered" on a wide desktop window — same 768px breakpoint the parent
+  // page (app/(app)/pos/page.tsx) already uses for its own isMobile check.
+  const [isDesktop, setIsDesktop] = useState(false)
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Escape-to-close and background scroll lock while the sheet is open —
   // standard modal behavior this component didn't have yet.
@@ -352,13 +364,27 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
           onClick={e => { e.stopPropagation(); setShowBreakdown(false) }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex',
-            alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000,
+            alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center', zIndex: 1000,
             animation: 'kpiSheetFadeIn 200ms ease-out',
           }}
         >
+          <style>{`
+            @keyframes kpiSheetFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes kpiSheetSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+            @keyframes kpiDialogIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+            @media (prefers-reduced-motion: reduce) {
+              .kpi-breakdown-sheet, .kpi-breakdown-sheet * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+            }
+          `}</style>
           <div
+            className="kpi-breakdown-sheet"
             onClick={e => e.stopPropagation()}
-            style={{
+            style={isDesktop ? {
+              background: 'var(--bg)', borderRadius: 16,
+              width: '90%', maxWidth: 440, maxHeight: '85vh', overflowY: 'auto', padding: 24,
+              boxShadow: '0 8px 32px rgba(0,0,0,.25)',
+              animation: 'kpiDialogIn 200ms cubic-bezier(.16,1,.3,1)',
+            } : {
               background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16,
               width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 24,
               boxShadow: '0 -8px 30px rgba(0,0,0,.25)',
@@ -1756,12 +1782,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const [isEditingOverhead, setIsEditingOverhead] = useState(false)
   const totalOverhead = overheadOverride
   const overheadPerJerrycan = jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0
-  const totalProductionCost = totalMaterialCost + totalLabor + totalElectricity + totalOverhead
+  // Labor excluded from the jerrycan cost roll-up at the owner's request —
+  // wastage byproduct sales (~600kg/week @ KSh30/kg) already cover it as a
+  // separate revenue stream, so it's tracked on its own (Labor Cost card,
+  // margins table) rather than folded into Cost per 20L Jerrycan.
+  const totalProductionCost = totalMaterialCost + totalElectricity + totalOverhead
   const costPerJerrycan = jerrycansProduced > 0 ? totalProductionCost / jerrycansProduced : 0
 
   const pieSlices = [
     { label: tc('pos_factory.pieMaterials'), value: totalMaterialCost, color: ACC },
-    { label: tc('pos_factory.pieLabor'), value: totalLabor, color: '#3b82f6' },
     { label: 'Electricity', value: totalElectricity, color: '#fbbf24' },
     { label: tc('pos_factory.pieOverhead'), value: totalOverhead, color: '#a855f7' },
   ].filter(s => s.value > 0)
