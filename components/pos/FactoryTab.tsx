@@ -1934,13 +1934,13 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       // so the trend isn't inflated by seed that never became oil.
       const mat = Math.max(0, grossMat - (wastageByWeek.get(w) || 0) * avgSeedCostPerKg)
       const cans = jerrycansByWeek.get(w) || 0
-      const labor = cans * staffCostPerJerrycan
+      // Labor excluded here too, to match costPerJerrycan above.
       const elec = cans * electricityCostPerJerrycan
       const oh = cans * overheadPerJerrycan
-      const cpu = cans > 0 ? (mat + labor + elec + oh) / cans : 0
+      const cpu = cans > 0 ? (mat + elec + oh) / cans : 0
       return { label: w.split('-W')[1] ? `W${w.split('-W')[1]}` : w, value: cpu }
     })
-  }, [intakes, outputs, packaging, wastages, costForCapture, avgSeedCostPerKg, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan])
+  }, [intakes, outputs, packaging, wastages, costForCapture, avgSeedCostPerKg, electricityCostPerJerrycan, overheadPerJerrycan])
 
   // margin analysis per product
   const margins = useMemo(() => {
@@ -1977,15 +1977,16 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           const cost = v.cost > 0 ? v.cost : totalMaterialCost
           matPerUnit = cost / v.qty
         }
-        // staffCostPerJerrycan/electricityCostPerJerrycan are a cost PER 20L
-        // JERRYCAN — only add them where v.qty is actually jerrycan-denominated.
-        // Bulk rows here (Sesame seed in kg) never actually match this — see
-        // the dedicated jerrycan row below instead, which uses the
+        // electricityCostPerJerrycan is a cost PER 20L JERRYCAN — only add
+        // it where v.qty is actually jerrycan-denominated. Bulk rows here
+        // (Sesame seed in kg) never actually match this — see the
+        // dedicated jerrycan row below instead, which uses the
         // already-correct costPerJerrycan directly rather than
-        // reconstructing it here.
+        // reconstructing it here. Labor excluded per owner request — see
+        // costPerJerrycan above.
         const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
-        const laborElectricityOverhead = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan + overheadPerJerrycan : 0
-        const fullCost = matPerUnit + laborElectricityOverhead
+        const electricityOverhead = isJerrycanUnit ? electricityCostPerJerrycan + overheadPerJerrycan : 0
+        const fullCost = matPerUnit + electricityOverhead
         const sell = sellPriceFor(v.label)
         const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
         return { product: v.label, fullCost, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: !isJerrycanUnit }
@@ -1993,9 +1994,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
     // The actually-sold unit — see the matching row in stdVsActual above
     // for why bulk "Sesame oil" has no sell reference of its own. fullCost
-    // here is costPerJerrycan (already material + labor + electricity +
-    // overhead, all correctly per-jerrycan) so this row needs no separate
-    // "material only" caveat.
+    // here is costPerJerrycan (already material + electricity + overhead,
+    // all correctly per-jerrycan — labor excluded per owner request) so
+    // this row needs no separate "material only" caveat.
     const jerrycanLabel = 'Sesame oil - Jerrycan Matungi (20L)'
     const jerrycanRows = []
     if (jerrycansProduced > 0 && costPerJerrycan > 0) {
@@ -2004,7 +2005,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       jerrycanRows.push({ product: jerrycanLabel, fullCost: costPerJerrycan, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: false })
     }
     return [...bulkRows, ...jerrycanRows].sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost, jerrycansProduced, costPerJerrycan])
+  }, [intakes, outputs, costForCapture, sellPriceFor, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost, jerrycansProduced, costPerJerrycan])
 
   return (
     <div>
@@ -2190,38 +2191,34 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <KpiCard
-          label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Labor + Electricity + Overhead" accent={ACC}
+          label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Electricity + Overhead" accent={ACC}
           chart={[
             { label: 'Material', raw: jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0, color: ACC },
-            { label: 'Labor', raw: staffCostPerJerrycan, color: '#3b82f6' },
             { label: 'Electricity', raw: electricityCostPerJerrycan, color: '#fbbf24' },
             { label: 'Overhead', raw: jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0, color: '#a855f7' },
           ]}
           breakdown={[
             { label: 'Material', value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0)}/can` },
-            { label: 'Labor', value: `${fmt(currencySymbol, staffCostPerJerrycan)}/can` },
             { label: 'Electricity', value: `${fmt(currencySymbol, electricityCostPerJerrycan)}/can` },
             { label: 'Overhead', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can` },
             { label: 'Cost per jerrycan', value: fmt(currencySymbol, costPerJerrycan), strong: true },
           ]}
-          breakdownNote={`÷ ${fmtInt(jerrycansProduced)} jerrycans produced`}
+          breakdownNote={`÷ ${fmtInt(jerrycansProduced)} jerrycans produced. Labor excluded — offset by ~600kg/week of wastage byproduct sold at KSh30/kg.`}
         />
         <KpiCard
           label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)"
           chart={[
             { label: 'Material', raw: totalMaterialCost, color: ACC },
-            { label: 'Labor', raw: totalLabor, color: '#3b82f6' },
             { label: 'Electricity', raw: totalElectricity, color: '#fbbf24' },
             { label: 'Overhead', raw: totalOverhead, color: '#a855f7' },
           ]}
           breakdown={[
             { label: 'Material', value: fmt(currencySymbol, totalMaterialCost) },
-            { label: 'Labor', value: fmt(currencySymbol, totalLabor) },
             { label: 'Electricity', value: fmt(currencySymbol, totalElectricity) },
             { label: 'Overhead', value: fmt(currencySymbol, totalOverhead) },
             { label: 'Total', value: fmt(currencySymbol, totalProductionCost), strong: true },
           ]}
-          breakdownNote={totalOverhead === 0 ? "Overhead is KSh0 by default — click Edit on the Overhead card below to enter real maintenance/misc costs." : undefined}
+          breakdownNote="Labor excluded (see Labor Cost card below for its own figure) — offset by wastage byproduct sales."
         />
         <KpiCard
           label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6"
@@ -2382,7 +2379,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       <div style={{ padding: 16, borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)', textAlign: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Per 20L Jerrycan</div>
         <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
-          <div>Material cost from intake_arrival captures; staff & electricity allocated based on actual 20L jerrycan output.</div>
+          <div>Material cost from intake_arrival captures; electricity allocated based on actual 20L jerrycan output. Labor excluded from this figure — wastage byproduct sales already cover it as a separate income stream (see Labor Cost card for its own number).</div>
           <div style={{ marginTop: 8 }}>Overhead (oil changes, filters, maintenance, misc equipment costs) is KSh0 unless entered manually — edit it in Operating Costs above.</div>
           <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total 20L jerrycans produced: {fmtInt(jerrycansProduced)}</div>
         </div>
