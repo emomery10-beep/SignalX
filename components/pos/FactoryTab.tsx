@@ -108,16 +108,40 @@ function weekKey(date: string | Date): string {
 // Capture product names are free text (dropdown + typed "other"), so the
 // same product shows up as "Sesame seed" and "sesame seed" — different
 // grouping keys for what's really one product. Collapse case/whitespace
-// only; this deliberately does NOT fix genuinely distinct bad entries like
-// "Sesame seeds" (plural) or a stray "S" — merging those by guesswork risks
-// silently blending one product's numbers into another's, which is worse
-// than leaving them visibly separate. isLikelyRealProduct filters the
-// obvious junk (single-character entries) out of the costing tables below.
+// only — a genuinely distinct bad entry (confirmed 3x "Sesame seeds" from
+// one staff member, always the same real product) was corrected at the
+// source in the DB instead of merged here by guesswork, since merging
+// display-side risks silently blending two actually-different products in
+// a case this normalizer can't tell apart. isLikelyRealProduct filters the
+// obvious junk (single-character entries, e.g. a stray "S") out of the
+// costing tables below.
 function norm(product: string): string {
   return product.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 function isLikelyRealProduct(label: string): boolean {
   return label.trim().length >= 3
+}
+
+// Established elsewhere in this codebase (app/factory/production/page.tsx's
+// yield-summary: "1 kg oil ≈ 1.09 litres") — reused here so a litres-
+// denominated output capture converts onto the same kg basis as the
+// majority (kg) captures instead of being summed as if litres and kg were
+// interchangeable units.
+const OIL_KG_PER_LITRE = 1 / 1.09
+// Converts an output capture's quantity onto a kg basis. Returns null for a
+// unit that can't be safely converted — confirmed live: 2 historical
+// captures logged as "pcs"/"200g" whose own notes ("Sesame seed 20l
+// mtungi", "By 20l") say they were really counting 20L jerrycans, not
+// literal grams or generic pieces of bulk oil — so a quantity of "9" or
+// "20" there doesn't mean what it would for a real pcs/weight unit. Callers
+// exclude these from weight-based totals rather than guess at the intended
+// jerrycan count.
+function outputQtyInKg(c: FactoryCapture): number | null {
+  const qty = Number(c.quantity) || 0
+  const unit = (c.unit || '').trim().toLowerCase()
+  if (unit === '' || unit === 'kg' || unit === 'kgs') return qty
+  if (unit === 'litres' || unit === 'liters' || unit === 'litre' || unit === 'liter' || unit === 'l') return qty * OIL_KG_PER_LITRE
+  return null
 }
 
 // The real `inventory` table (this factory's actual stock — everything
@@ -1599,9 +1623,11 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       m.set(k, e)
     }
     for (const c of outputs) {
+      const kg = outputQtyInKg(c)
+      if (kg == null) continue
       const k = norm(c.product || 'Unknown')
       const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, outputQty: 0 }
-      e.outputQty += Number(c.quantity) || 0
+      e.outputQty += kg
       m.set(k, e)
     }
     return Array.from(m.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
@@ -1610,6 +1636,17 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       return { product: v.label, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
     }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
   }, [intakes, outputs, costForCapture, sellPriceFor])
+
+  // Output captures whose unit couldn't be safely converted onto a kg basis
+  // (see outputQtyInKg) — excluded from stdVsActual/margins above; surfaced
+  // as a caveat note rather than silently dropped.
+  const excludedOutputUnits = useMemo(() => {
+    let qty = 0, count = 0
+    for (const c of outputs) {
+      if (outputQtyInKg(c) == null) { qty += Number(c.quantity) || 0; count++ }
+    }
+    return { qty, count }
+  }, [outputs])
 
   // cost-per-jerrycan trend over time (weekly)
   const costTrend = useMemo(() => {
@@ -1643,9 +1680,11 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       outByProduct.set(k, e)
     }
     for (const c of outputs) {
+      const kg = outputQtyInKg(c)
+      if (kg == null) continue
       const k = norm(c.product || 'Unknown')
       const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, qty: 0 }
-      e.qty += Number(c.quantity) || 0
+      e.qty += kg
       outByProduct.set(k, e)
     }
     return Array.from(outByProduct.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
@@ -1830,6 +1869,12 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           <LineChart points={costTrend} color={ACC} yLabel={tc('pos_factory.costPerUnitLabel', { symbol: currencySymbol })} formatY={(n) => fmt(currencySymbol, n)} />
         )}
       </Section>
+
+      {excludedOutputUnits.count > 0 && (
+        <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 8 }}>
+          Note: {excludedOutputUnits.count} output record{excludedOutputUnits.count === 1 ? '' : 's'} ({fmtInt(excludedOutputUnits.qty)} units logged in an unrecognized unit — pcs/200g, whose own notes suggest they meant 20L jerrycans, not that literal unit) are excluded from the two tables below until corrected in the Production log.
+        </div>
+      )}
 
       {/* Standard vs Actual */}
       <Section title={tc('pos_factory.stdVsActualTitle')}>
