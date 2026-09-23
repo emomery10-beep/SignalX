@@ -242,14 +242,16 @@ function TypeBadge({ type }: { type: CaptureType }) {
 }
 
 // ── KPI card ─────────────────────────────────────────────────
-function KpiCard({ label, value, sub, accent, onClick, active }: {
+function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakdownNote }: {
   label: string; value: string; sub?: string; accent?: string; onClick?: () => void; active?: boolean
+  breakdown?: { label: string; value: string; strong?: boolean }[]; breakdownNote?: string
 }) {
+  const [showBreakdown, setShowBreakdown] = useState(false)
   return (
     <div
       onClick={onClick}
       style={{
-        padding: 16, borderRadius: 12, background: 'var(--sf)',
+        position: 'relative', padding: 16, borderRadius: 12, background: 'var(--sf)',
         border: active ? `1.5px solid ${accent || ACC}` : '1px solid var(--b)',
         cursor: onClick ? 'pointer' : 'default', transition: 'border-color .15s',
         boxShadow: active ? `0 0 0 3px ${ACC_BG}` : 'none',
@@ -257,9 +259,63 @@ function KpiCard({ label, value, sub, accent, onClick, active }: {
       onMouseEnter={e => { if (onClick) e.currentTarget.style.borderColor = accent || ACC }}
       onMouseLeave={e => { if (onClick && !active) e.currentTarget.style.borderColor = 'var(--b)' }}
     >
-      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>{label}</div>
+        {breakdown && breakdown.length > 0 && (
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); setShowBreakdown(s => !s) }}
+            title="Show how this is calculated"
+            aria-label="Show how this is calculated"
+            style={{
+              width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+              border: `1px solid ${showBreakdown ? (accent || ACC) : 'var(--b)'}`,
+              background: showBreakdown ? (accent || ACC) : 'var(--bg)',
+              color: showBreakdown ? '#fff' : 'var(--tx3)',
+              fontSize: 9, fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            i
+          </button>
+        )}
+      </div>
       <div style={{ fontSize: 22, fontWeight: 800, color: accent || 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{value}</div>
       {sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
+      {showBreakdown && breakdown && breakdown.length > 0 && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'absolute', top: '100%', left: 0, marginTop: 6, zIndex: 30, minWidth: 240,
+            padding: 12, borderRadius: 10, background: 'var(--sf)',
+            border: `1px solid ${accent || ACC_BORDER}`, boxShadow: '0 10px 28px rgba(0,0,0,.18)',
+          }}
+        >
+          {breakdown.map((line, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 10,
+                color: line.strong ? 'var(--tx)' : 'var(--tx2)', fontWeight: line.strong ? 700 : 400,
+                padding: '4px 0', borderTop: line.strong ? '1px solid var(--b)' : 'none',
+              }}
+            >
+              <span>{line.label}</span>
+              <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{line.value}</span>
+            </div>
+          ))}
+          {breakdownNote && (
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 6, fontStyle: 'italic' }}>{breakdownNote}</div>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowBreakdown(false)}
+            style={{ marginTop: 8, fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+          >
+            Close
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1455,9 +1511,19 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   // Real operating costs (Kenya rates) — per 20L jerrycan
   const STAFF_COST_PER_DAY = 2400 // KSh
-  const MOTOR_HOURS_PER_DAY = 14 // 1 HP motor
+  const MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
   const MOTOR_HORSEPOWER = 1
-  const ELECTRICITY_RATE_PER_KWH = 20 // KSh (Kenya average)
+  // KPLC CI1 (415V three-phase, the standard low-voltage 3-phase supply a
+  // small factory would have) energy charge, 2025/26 — confirmed by owner
+  // this factory is on 3-phase, not single-phase. Meaningfully lower than
+  // the single-phase Small Commercial (SC3) rate of ~19-20 KSh/kWh this
+  // used before. NOTE: CI tariffs also carry a separate fixed demand charge
+  // (~KSh 1,100/kVA/month) on top of the per-kWh energy charge, which isn't
+  // modeled here — it's billed on the whole facility's peak simultaneous
+  // demand, not attributable to this one motor without knowing the site's
+  // registered kVA. The real monthly bill will run higher than this
+  // energy-only figure by that fixed amount.
+  const ELECTRICITY_RATE_PER_KWH = 13.44
   const HP_TO_KW = 0.746 // 1 HP = 0.746 kW
 
   // Calculate real operating costs
@@ -1470,12 +1536,19 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // Number of distinct calendar days the factory actually had activity,
   // from real capture timestamps — drives labor/electricity cost so it
   // scales with the real production period instead of an assumed cadence.
+  // Confirmed by owner: machines only run 6 days/week (never Sundays), so a
+  // Sunday capture (e.g. a dispatch or wastage log with no pressing) is
+  // excluded rather than counted as a full operating day.
   const productionDays = useMemo(() => {
     const days = new Set<string>()
-    for (const c of intakes) days.add(dayKey(c.created_at))
-    for (const c of outputs) days.add(dayKey(c.created_at))
-    for (const c of (packaging || [])) days.add(dayKey(c.created_at))
-    for (const c of wastages) days.add(dayKey(c.created_at))
+    const addIfWorkingDay = (created_at: string) => {
+      if (new Date(created_at).getDay() === 0) return
+      days.add(dayKey(created_at))
+    }
+    for (const c of intakes) addIfWorkingDay(c.created_at)
+    for (const c of outputs) addIfWorkingDay(c.created_at)
+    for (const c of (packaging || [])) addIfWorkingDay(c.created_at)
+    for (const c of wastages) addIfWorkingDay(c.created_at)
     return days.size
   }, [intakes, outputs, packaging, wastages])
 
@@ -1511,20 +1584,29 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const totalMaterialCost = Math.max(0, grossMaterialCost - (wastageQtyTotal * avgSeedCostPerKg))
 
   // Manual top-up for ad-hoc labour (casual/temporary workers beyond the
-  // fixed daily staff rate) and any extra electricity that comes with it —
-  // the capture log has no record of casual hires, so this is entered by
-  // hand and added on top of the real-days calculation below.
+  // fixed daily staff rate) — the capture log has no record of casual
+  // hires, so this is entered by hand and added on top of the real-days
+  // calculation below.
   const [adhocLaborCost, setAdhocLaborCost] = useState(0)
   const [isEditingLabor, setIsEditingLabor] = useState(false)
-  const [adhocElectricityCost, setAdhocElectricityCost] = useState(0)
+
+  // Electricity is a FULL override, not an add-on — the formula's "1 HP,
+  // 14h/day, every active day" assumption is a generic default (not this
+  // factory's real motor/hours/tariff), so it can just be wrong, not merely
+  // incomplete. Confirmed against a real ~KSh30,000/month total bill: the
+  // formula attributing ~22% of that to one small press motor alone was
+  // implausible, so the user needs to replace it outright, not add to it.
+  const [electricityOverride, setElectricityOverride] = useState<number | null>(null)
   const [isEditingElectricity, setIsEditingElectricity] = useState(false)
+  const isElectricityAmended = electricityOverride != null
 
   // Labor + electricity cost for the actual period the factory operated
   // (real distinct days with logged activity), then spread across actual
   // jerrycan output — not a fixed weekly assumption regardless of volume —
-  // plus any manually entered ad-hoc cost on top.
+  // plus any manually entered ad-hoc labour cost on top.
   const totalLabor = productionDays * staffCostPerDay + adhocLaborCost
-  const totalElectricity = productionDays * electricityCostPerDay + adhocElectricityCost
+  const formulaElectricity = productionDays * electricityCostPerDay
+  const totalElectricity = isElectricityAmended ? electricityOverride! : formulaElectricity
   const staffCostPerJerrycan = jerrycansProduced > 0 ? totalLabor / jerrycansProduced : 0
   const electricityCostPerJerrycan = jerrycansProduced > 0 ? totalElectricity / jerrycansProduced : 0
   // Manual fallback price, only used until real wastage sale data exists
@@ -1651,16 +1733,27 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // cost-per-jerrycan trend over time (weekly)
   const costTrend = useMemo(() => {
     const intakeByWeek = new Map<string, number>()
+    const wastageByWeek = new Map<string, number>()
     const jerrycansByWeek = new Map<string, number>()
     for (const c of intakes) intakeByWeek.set(weekKey(c.created_at), (intakeByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0) * costForCapture(c))
-    for (const c of outputs) {
-      if (c.product?.includes('Jerrycan')) {
+    for (const c of wastages) wastageByWeek.set(weekKey(c.created_at), (wastageByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
+    // Finished jerrycans are logged as 'packaging' captures, not 'output'
+    // (see jerrycansProduced above) — this loop only ever checked outputs,
+    // so jerrycansByWeek stayed empty and every week showed KSh0. Mirror the
+    // same packaging-first, output-fallback logic used there.
+    const hasPackagingJerrycans = (packaging || []).some(c => (c.product || '').toLowerCase().includes('jerrycan'))
+    const jerrycanSource = hasPackagingJerrycans ? (packaging || []) : outputs
+    for (const c of jerrycanSource) {
+      if ((c.product || '').toLowerCase().includes('jerrycan')) {
         jerrycansByWeek.set(weekKey(c.created_at), (jerrycansByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
       }
     }
     const weeks = Array.from(new Set([...Array.from(intakeByWeek.keys()), ...Array.from(jerrycansByWeek.keys())])).sort()
     return weeks.map(w => {
-      const mat = intakeByWeek.get(w) || 0
+      const grossMat = intakeByWeek.get(w) || 0
+      // Net out that week's wastage cost, same as totalMaterialCost above,
+      // so the trend isn't inflated by seed that never became oil.
+      const mat = Math.max(0, grossMat - (wastageByWeek.get(w) || 0) * avgSeedCostPerKg)
       const cans = jerrycansByWeek.get(w) || 0
       const labor = cans * staffCostPerJerrycan
       const elec = cans * electricityCostPerJerrycan
@@ -1668,7 +1761,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       const cpu = cans > 0 ? (mat + labor + elec + oh) / cans : 0
       return { label: w.split('-W')[1] ? `W${w.split('-W')[1]}` : w, value: cpu }
     })
-  }, [intakes, outputs, costForCapture, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPct])
+  }, [intakes, outputs, packaging, wastages, costForCapture, avgSeedCostPerKg, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPct])
 
   // margin analysis per product
   const margins = useMemo(() => {
@@ -1754,39 +1847,46 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
               Electricity
-              {!isEditingElectricity && (
+              {!isEditingElectricity && !isElectricityAmended && (
                 <button
                   type="button"
-                  onClick={() => setIsEditingElectricity(true)}
+                  onClick={() => { setIsEditingElectricity(true) }}
                   style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
                 >
-                  {adhocElectricityCost > 0 ? 'Edit extra' : '+ Extra cost'}
+                  Edit
                 </button>
               )}
             </div>
-            <div>{MOTOR_HORSEPOWER} HP motor, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
-            {isEditingElectricity ? (
-              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>+ Extra electricity (KSh)</span>
+            {isElectricityAmended && !isEditingElectricity ? (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 700, color: ACC }}>{fmt(currencySymbol, electricityOverride!)} <span style={{ fontSize: 9, fontWeight: 400, color: 'var(--tx3)' }}>manually set</span></div>
+                <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
+                  <button type="button" onClick={() => setIsEditingElectricity(true)} style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Edit</button>
+                  <button type="button" onClick={() => setElectricityOverride(null)} style={{ fontSize: 9, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Reset to formula ({fmt(currencySymbol, formulaElectricity)})</button>
+                </div>
+              </>
+            ) : isEditingElectricity ? (
+              <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>Actual cost (KSh)</span>
                 <input
                   type="number"
                   autoFocus
-                  value={adhocElectricityCost}
-                  onChange={e => setAdhocElectricityCost(Math.max(0, Number(e.target.value) || 0))}
-                  style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                  value={electricityOverride ?? Math.round(formulaElectricity)}
+                  onChange={e => setElectricityOverride(Math.max(0, Number(e.target.value) || 0))}
+                  style={{ width: 80, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
                 />
                 <button
                   type="button"
-                  onClick={() => setIsEditingElectricity(false)}
+                  onClick={() => { if (electricityOverride == null) setElectricityOverride(Math.round(formulaElectricity)); setIsEditingElectricity(false) }}
                   style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
                 >
                   Done
                 </button>
               </div>
-            ) : adhocElectricityCost > 0 ? (
-              <div style={{ fontSize: 9, color: ACC, marginTop: 2 }}>+ {fmt(currencySymbol, adhocElectricityCost)} extra added</div>
-            ) : null}
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerDay)}/day, {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
+            ) : (
+              <div>{MOTOR_HORSEPOWER} HP motor, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
+            )}
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600 }}>Seeds (Material)</div>
@@ -1848,12 +1948,74 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Labor + Electricity + Overhead" accent={ACC} />
-        <KpiCard label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)" />
-        <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6" />
-        <KpiCard label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa" />
-        <KpiCard label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={`${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ 14h/day`} accent="#fbbf24" />
-        <KpiCard label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${isWastePriceAmended ? 'amended' : usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN} />
+        <KpiCard
+          label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Labor + Electricity + Overhead" accent={ACC}
+          breakdown={[
+            { label: 'Material', value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0)}/can` },
+            { label: 'Labor', value: `${fmt(currencySymbol, staffCostPerJerrycan)}/can` },
+            { label: 'Electricity', value: `${fmt(currencySymbol, electricityCostPerJerrycan)}/can` },
+            { label: `Overhead (${overheadPct}%)`, value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0)}/can` },
+            { label: 'Cost per jerrycan', value: fmt(currencySymbol, costPerJerrycan), strong: true },
+          ]}
+          breakdownNote={`÷ ${fmtInt(jerrycansProduced)} jerrycans produced`}
+        />
+        <KpiCard
+          label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)"
+          breakdown={[
+            { label: 'Material', value: fmt(currencySymbol, totalMaterialCost) },
+            { label: 'Labor', value: fmt(currencySymbol, totalLabor) },
+            { label: 'Electricity', value: fmt(currencySymbol, totalElectricity) },
+            { label: `Overhead (${overheadPct}%)`, value: fmt(currencySymbol, totalOverhead) },
+            { label: 'Total', value: fmt(currencySymbol, totalProductionCost), strong: true },
+          ]}
+        />
+        <KpiCard
+          label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6"
+          breakdown={[
+            { label: 'Seed intake (all)', value: `${fmtInt(intakeQtyTotal)}kg` },
+            { label: 'Avg. price/kg', value: `${fmt(currencySymbol, avgSeedCostPerKg)}/kg` },
+            { label: 'Gross seed cost', value: fmt(currencySymbol, grossMaterialCost) },
+            { label: 'Less wastage', value: `− ${fmt(currencySymbol, wastageQtyTotal * avgSeedCostPerKg)}` },
+            { label: 'Net material cost', value: fmt(currencySymbol, totalMaterialCost), strong: true },
+          ]}
+          breakdownNote="Price sourced from intake_arrival captures; wastage removed at the same avg. price/kg."
+        />
+        <KpiCard
+          label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa"
+          breakdown={[
+            { label: 'Days active', value: `${fmtInt(productionDays)} days` },
+            { label: 'Rate', value: `${fmt(currencySymbol, staffCostPerDay)}/day` },
+            { label: 'Base labor', value: fmt(currencySymbol, productionDays * staffCostPerDay) },
+            ...(adhocLaborCost > 0 ? [{ label: '+ Ad-hoc labour', value: fmt(currencySymbol, adhocLaborCost) }] : []),
+            { label: 'Total', value: fmt(currencySymbol, totalLabor), strong: true },
+          ]}
+          breakdownNote="Days active = distinct calendar days with any intake, output, packaging, or wastage capture logged."
+        />
+        <KpiCard
+          label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={isElectricityAmended ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan · manually set` : `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ ${MOTOR_HOURS_PER_DAY}h/day`} accent="#fbbf24"
+          breakdown={isElectricityAmended ? [
+            { label: 'Formula estimate', value: fmt(currencySymbol, formulaElectricity) },
+            { label: 'Manually set to', value: fmt(currencySymbol, electricityOverride!), strong: true },
+          ] : [
+            { label: 'Motor', value: `${MOTOR_HORSEPOWER} HP (${(MOTOR_HORSEPOWER * HP_TO_KW).toFixed(2)} kW)` },
+            { label: 'Hours/day', value: `${MOTOR_HOURS_PER_DAY}h` },
+            { label: 'Rate', value: `${ELECTRICITY_RATE_PER_KWH} KSh/kWh` },
+            { label: 'Cost/day', value: fmt(currencySymbol, electricityCostPerDay) },
+            { label: 'Days active', value: `${fmtInt(productionDays)} days` },
+            { label: 'Total', value: fmt(currencySymbol, totalElectricity), strong: true },
+          ]}
+          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : "Assumes the motor runs the full 14h on every active day — click Edit on the Electricity card above if that overstates real usage."}
+        />
+        <KpiCard
+          label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${isWastePriceAmended ? 'amended' : usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN}
+          breakdown={[
+            { label: 'Total wastage', value: `${fmtInt(wastageQtyTotal)}kg` },
+            { label: 'Already sold', value: `${fmtInt(wastageSoldQty)}kg` },
+            { label: 'In stock', value: `${fmtInt(wastageInStockQty)}kg` },
+            { label: 'Price/kg', value: `${fmt(currencySymbol, effectiveWastePricePerKg)}/kg` },
+            { label: 'Sale value', value: fmt(currencySymbol, wasteSaleValue), strong: true },
+          ]}
+        />
       </div>
 
       {/* Material cost breakdown pie */}
