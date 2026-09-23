@@ -242,9 +242,53 @@ function TypeBadge({ type }: { type: CaptureType }) {
 }
 
 // ── KPI card ─────────────────────────────────────────────────
-function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakdownNote }: {
+// Small visual for a KpiCard breakdown popover. 'stack' draws one bar split
+// into proportional segments (a composition — e.g. what a total is made
+// of). 'compare' draws one full-width bar per item, each sized relative to
+// the largest (a comparison — e.g. formula estimate vs. manually set).
+function MiniBars({ items, mode }: { items: { label: string; raw: number; color: string }[]; mode: 'stack' | 'compare' }) {
+  const positive = items.filter(it => it.raw > 0)
+  if (positive.length < 2) return null
+  if (mode === 'stack') {
+    const total = positive.reduce((s, it) => s + it.raw, 0)
+    if (total <= 0) return null
+    return (
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', width: '100%', height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--b)' }}>
+          {positive.map((it, i) => (
+            <div key={i} title={`${it.label}`} style={{ width: `${(it.raw / total) * 100}%`, background: it.color }} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+          {positive.map((it, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8, color: 'var(--tx3)' }}>
+              <span style={{ width: 6, height: 6, borderRadius: 2, background: it.color, display: 'inline-block' }} />
+              {it.label}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  const max = Math.max(...positive.map(it => it.raw))
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+      {positive.map((it, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 8, color: 'var(--tx3)', width: 74, flexShrink: 0 }}>{it.label}</div>
+          <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--b)', overflow: 'hidden' }}>
+            <div style={{ width: `${(it.raw / max) * 100}%`, height: '100%', background: it.color, borderRadius: 3 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakdownNote, chart, chartMode }: {
   label: string; value: string; sub?: string; accent?: string; onClick?: () => void; active?: boolean
   breakdown?: { label: string; value: string; strong?: boolean }[]; breakdownNote?: string
+  chart?: { label: string; raw: number; color: string }[]; chartMode?: 'stack' | 'compare'
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false)
   return (
@@ -291,6 +335,7 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
             border: `1px solid ${accent || ACC_BORDER}`, boxShadow: '0 10px 28px rgba(0,0,0,.18)',
           }}
         >
+          {chart && chart.length > 0 && <MiniBars items={chart} mode={chartMode || 'stack'} />}
           {breakdown.map((line, i) => (
             <div
               key={i}
@@ -1950,6 +1995,12 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <KpiCard
           label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Labor + Electricity + Overhead" accent={ACC}
+          chart={[
+            { label: 'Material', raw: jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0, color: ACC },
+            { label: 'Labor', raw: staffCostPerJerrycan, color: '#3b82f6' },
+            { label: 'Electricity', raw: electricityCostPerJerrycan, color: '#fbbf24' },
+            { label: 'Overhead', raw: jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0, color: '#a855f7' },
+          ]}
           breakdown={[
             { label: 'Material', value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0)}/can` },
             { label: 'Labor', value: `${fmt(currencySymbol, staffCostPerJerrycan)}/can` },
@@ -1961,6 +2012,12 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         />
         <KpiCard
           label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)"
+          chart={[
+            { label: 'Material', raw: totalMaterialCost, color: ACC },
+            { label: 'Labor', raw: totalLabor, color: '#3b82f6' },
+            { label: 'Electricity', raw: totalElectricity, color: '#fbbf24' },
+            { label: 'Overhead', raw: totalOverhead, color: '#a855f7' },
+          ]}
           breakdown={[
             { label: 'Material', value: fmt(currencySymbol, totalMaterialCost) },
             { label: 'Labor', value: fmt(currencySymbol, totalLabor) },
@@ -1971,6 +2028,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         />
         <KpiCard
           label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6"
+          chart={[
+            { label: 'Net material', raw: totalMaterialCost, color: '#3b82f6' },
+            { label: 'Wastage removed', raw: wastageQtyTotal * avgSeedCostPerKg, color: RED },
+          ]}
           breakdown={[
             { label: 'Seed intake (all)', value: `${fmtInt(intakeQtyTotal)}kg` },
             { label: 'Avg. price/kg', value: `${fmt(currencySymbol, avgSeedCostPerKg)}/kg` },
@@ -1982,6 +2043,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         />
         <KpiCard
           label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa"
+          chart={adhocLaborCost > 0 ? [
+            { label: 'Base', raw: productionDays * staffCostPerDay, color: '#60a5fa' },
+            { label: 'Ad-hoc', raw: adhocLaborCost, color: '#f59e0b' },
+          ] : undefined}
           breakdown={[
             { label: 'Days active', value: `${fmtInt(productionDays)} days` },
             { label: 'Rate', value: `${fmt(currencySymbol, staffCostPerDay)}/day` },
@@ -1989,10 +2054,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             ...(adhocLaborCost > 0 ? [{ label: '+ Ad-hoc labour', value: fmt(currencySymbol, adhocLaborCost) }] : []),
             { label: 'Total', value: fmt(currencySymbol, totalLabor), strong: true },
           ]}
-          breakdownNote="Days active = distinct calendar days with any intake, output, packaging, or wastage capture logged."
+          breakdownNote="Days active = distinct calendar days (excl. Sundays) with any intake, output, packaging, or wastage capture logged."
         />
         <KpiCard
           label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={isElectricityAmended ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan · manually set` : `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ ${MOTOR_HOURS_PER_DAY}h/day`} accent="#fbbf24"
+          chart={isElectricityAmended ? [
+            { label: 'Formula est.', raw: formulaElectricity, color: '#94a3b8' },
+            { label: 'Manually set', raw: electricityOverride!, color: '#fbbf24' },
+          ] : undefined}
+          chartMode="compare"
           breakdown={isElectricityAmended ? [
             { label: 'Formula estimate', value: fmt(currencySymbol, formulaElectricity) },
             { label: 'Manually set to', value: fmt(currencySymbol, electricityOverride!), strong: true },
@@ -2004,10 +2074,14 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Days active', value: `${fmtInt(productionDays)} days` },
             { label: 'Total', value: fmt(currencySymbol, totalElectricity), strong: true },
           ]}
-          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : "Assumes the motor runs the full 14h on every active day — click Edit on the Electricity card above if that overstates real usage."}
+          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs the full ${MOTOR_HOURS_PER_DAY}h on every active day — click Edit on the Electricity card above if that overstates real usage.`}
         />
         <KpiCard
           label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${isWastePriceAmended ? 'amended' : usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN}
+          chart={[
+            { label: 'In stock', raw: wastageInStockQty, color: GREEN },
+            { label: 'Already sold', raw: wastageSoldQty, color: '#94a3b8' },
+          ]}
           breakdown={[
             { label: 'Total wastage', value: `${fmtInt(wastageQtyTotal)}kg` },
             { label: 'Already sold', value: `${fmtInt(wastageSoldQty)}kg` },
