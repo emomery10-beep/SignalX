@@ -105,6 +105,21 @@ function weekKey(date: string | Date): string {
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`
 }
 
+// Capture product names are free text (dropdown + typed "other"), so the
+// same product shows up as "Sesame seed" and "sesame seed" — different
+// grouping keys for what's really one product. Collapse case/whitespace
+// only; this deliberately does NOT fix genuinely distinct bad entries like
+// "Sesame seeds" (plural) or a stray "S" — merging those by guesswork risks
+// silently blending one product's numbers into another's, which is worse
+// than leaving them visibly separate. isLikelyRealProduct filters the
+// obvious junk (single-character entries) out of the costing tables below.
+function norm(product: string): string {
+  return product.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+function isLikelyRealProduct(label: string): boolean {
+  return label.trim().length >= 3
+}
+
 // The real `inventory` table (this factory's actual stock — everything
 // dispatch-synced from approved captures, see [[sesame-factory-analytics-fix-status]])
 // uses stock_qty/sale_price, not quantity/stock/selling_price/price. Those
@@ -1416,7 +1431,6 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   // Real operating costs (Kenya rates) — per 20L jerrycan
   const STAFF_COST_PER_DAY = 2400 // KSh
-  const STAFF_DAYS_PER_WEEK = 6
   const MOTOR_HOURS_PER_DAY = 14 // 1 HP motor
   const MOTOR_HORSEPOWER = 1
   const ELECTRICITY_RATE_PER_KWH = 20 // KSh (Kenya average)
@@ -1428,6 +1442,18 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     const motorKW = MOTOR_HORSEPOWER * HP_TO_KW
     return motorKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
   }, [])
+
+  // Number of distinct calendar days the factory actually had activity,
+  // from real capture timestamps — drives labor/electricity cost so it
+  // scales with the real production period instead of an assumed cadence.
+  const productionDays = useMemo(() => {
+    const days = new Set<string>()
+    for (const c of intakes) days.add(dayKey(c.created_at))
+    for (const c of outputs) days.add(dayKey(c.created_at))
+    for (const c of (packaging || [])) days.add(dayKey(c.created_at))
+    for (const c of wastages) days.add(dayKey(c.created_at))
+    return days.size
+  }, [intakes, outputs, packaging, wastages])
 
   // Count total 20L jerrycans produced. Jerrycans are recorded as
   // 'packaging' type captures, not 'output' — packaging repackages an
@@ -1460,23 +1486,23 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // inflated by material that never made it into a sellable jerrycan.
   const totalMaterialCost = Math.max(0, grossMaterialCost - (wastageQtyTotal * avgSeedCostPerKg))
 
-  // Allocate staff + electricity per jerrycan based on actual jerrycan output
-  const staffCostPerJerrycan = useMemo(() => {
-    if (jerrycansProduced <= 0) return 0
-    // Assume 6 days/week production, allocate daily staff cost across daily jerrycan output
-    const avgDailyJerrycans = jerrycansProduced / 6
-    return avgDailyJerrycans > 0 ? staffCostPerDay / avgDailyJerrycans : 0
-  }, [jerrycansProduced])
+  // Manual top-up for ad-hoc labour (casual/temporary workers beyond the
+  // fixed daily staff rate) and any extra electricity that comes with it —
+  // the capture log has no record of casual hires, so this is entered by
+  // hand and added on top of the real-days calculation below.
+  const [adhocLaborCost, setAdhocLaborCost] = useState(0)
+  const [isEditingLabor, setIsEditingLabor] = useState(false)
+  const [adhocElectricityCost, setAdhocElectricityCost] = useState(0)
+  const [isEditingElectricity, setIsEditingElectricity] = useState(false)
 
-  const electricityCostPerJerrycan = useMemo(() => {
-    if (jerrycansProduced <= 0) return 0
-    // Allocate daily electricity cost across daily jerrycan output
-    const avgDailyJerrycans = jerrycansProduced / 6
-    return avgDailyJerrycans > 0 ? electricityCostPerDay / avgDailyJerrycans : 0
-  }, [jerrycansProduced, electricityCostPerDay])
-
-  const totalLabor = jerrycansProduced * staffCostPerJerrycan
-  const totalElectricity = jerrycansProduced * electricityCostPerJerrycan
+  // Labor + electricity cost for the actual period the factory operated
+  // (real distinct days with logged activity), then spread across actual
+  // jerrycan output — not a fixed weekly assumption regardless of volume —
+  // plus any manually entered ad-hoc cost on top.
+  const totalLabor = productionDays * staffCostPerDay + adhocLaborCost
+  const totalElectricity = productionDays * electricityCostPerDay + adhocElectricityCost
+  const staffCostPerJerrycan = jerrycansProduced > 0 ? totalLabor / jerrycansProduced : 0
+  const electricityCostPerJerrycan = jerrycansProduced > 0 ? totalElectricity / jerrycansProduced : 0
   // Manual fallback price, only used until real wastage sale data exists
   const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
   // Manual override — lets the user amend the price even once actual dispatch
@@ -1522,26 +1548,68 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   ].filter(s => s.value > 0)
 
   // standard vs actual material usage per product
+  // Real realized price per product, from this factory's own approved
+  // dispatches (see DEFAULT_DISPATCH_PRICE / app/factory/approvals in
+  // pos-askbiz) — the actual point of sale for factory output. Preferred
+  // over the generic retail `inventory` catalog below, which is keyed by
+  // packaged-SKU names (bottle sizes, brand variants) that essentially
+  // never match a bulk production product name. Mirrors the wastage
+  // actual-vs-estimate pattern (wastageSoldQty/wasteSaleRevenue above).
+  const actualSellSumsByProduct = useMemo(() => {
+    const sums = new Map<string, { revenue: number; qty: number }>()
+    for (const d of (dispatches || [])) {
+      if (d.status !== 'approved') continue
+      const price = Number(d.dispatch_price) || 0
+      const qty = Number(d.quantity) || 0
+      if (price <= 0 || qty <= 0) continue
+      const k = norm(d.product || '')
+      if (!k) continue
+      const e = sums.get(k) || { revenue: 0, qty: 0 }
+      e.revenue += qty * price
+      e.qty += qty
+      sums.set(k, e)
+    }
+    return sums
+  }, [dispatches])
+  // Actual realized dispatch price first, generic catalog price as fallback
+  // for a product that's never actually been dispatched yet. The dispatch
+  // SKU name is usually a more specific superset of the output-stage name
+  // ("Sesame oil" becomes "Sesame oil - Jerrycan Matungi (20L)" once
+  // packaged for dispatch), so an exact match is tried first and a
+  // substring match second — aggregated across every dispatch bucket that
+  // clearly names the same base product, not just the first one found.
+  const sellPriceFor = useCallback((product: string): number => {
+    const k = norm(product)
+    const exact = actualSellSumsByProduct.get(k)
+    if (exact && exact.qty > 0) return exact.revenue / exact.qty
+    let revenue = 0, qty = 0
+    for (const [dk, v] of actualSellSumsByProduct.entries()) {
+      if (dk.includes(k) || k.includes(dk)) { revenue += v.revenue; qty += v.qty }
+    }
+    if (qty > 0) return revenue / qty
+    return sellByProduct.get(k) || 0
+  }, [actualSellSumsByProduct, sellByProduct])
+
   const stdVsActual = useMemo(() => {
-    const m = new Map<string, { actualCost: number; outputQty: number }>()
+    const m = new Map<string, { label: string; actualCost: number; outputQty: number }>()
     for (const c of intakes) {
-      const k = c.product || 'Unknown'
-      const e = m.get(k) || { actualCost: 0, outputQty: 0 }
+      const k = norm(c.product || 'Unknown')
+      const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, outputQty: 0 }
       e.actualCost += (Number(c.quantity) || 0) * costForCapture(c)
       m.set(k, e)
     }
     for (const c of outputs) {
-      const k = c.product || 'Unknown'
-      const e = m.get(k) || { actualCost: 0, outputQty: 0 }
+      const k = norm(c.product || 'Unknown')
+      const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, outputQty: 0 }
       e.outputQty += Number(c.quantity) || 0
       m.set(k, e)
     }
-    return Array.from(m.entries()).map(([product, v]) => {
+    return Array.from(m.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
       const actualPerUnit = v.outputQty > 0 ? v.actualCost / v.outputQty : 0
-      const std = sellByProduct.get(product.toLowerCase()) || 0
-      return { product, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
+      const std = sellPriceFor(v.label)
+      return { product: v.label, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
     }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
-  }, [intakes, outputs, costForCapture, sellByProduct])
+  }, [intakes, outputs, costForCapture, sellPriceFor])
 
   // cost-per-jerrycan trend over time (weekly)
   const costTrend = useMemo(() => {
@@ -1567,28 +1635,39 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   // margin analysis per product
   const margins = useMemo(() => {
-    const outByProduct = new Map<string, { cost: number; qty: number }>()
+    const outByProduct = new Map<string, { label: string; cost: number; qty: number }>()
     for (const c of intakes) {
-      const k = c.product || 'Unknown'
-      const e = outByProduct.get(k) || { cost: 0, qty: 0 }
+      const k = norm(c.product || 'Unknown')
+      const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, qty: 0 }
       e.cost += (Number(c.quantity) || 0) * costForCapture(c)
       outByProduct.set(k, e)
     }
     for (const c of outputs) {
-      const k = c.product || 'Unknown'
-      const e = outByProduct.get(k) || { cost: 0, qty: 0 }
+      const k = norm(c.product || 'Unknown')
+      const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, qty: 0 }
       e.qty += Number(c.quantity) || 0
       outByProduct.set(k, e)
     }
-    return Array.from(outByProduct.entries()).map(([product, v]) => {
+    return Array.from(outByProduct.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
       const matPerUnit = v.qty > 0 ? v.cost / v.qty : 0
-      const laborElectricity = staffCostPerJerrycan + electricityCostPerJerrycan
+      // staffCostPerJerrycan/electricityCostPerJerrycan are a cost PER 20L
+      // JERRYCAN — only add them where v.qty is actually jerrycan-denominated
+      // (packaging/dispatch output, "pcs"). For bulk raw-material or
+      // in-process output rows (Sesame seed in kg, bulk Sesame oil in
+      // kg/litres before packaging), v.qty is a totally different unit, so
+      // adding a per-jerrycan cost would overstate full cost by whatever the
+      // kg-vs-jerrycan ratio is. Those rows show material cost only — an
+      // honest (if incomplete) number beats a wrong blended one — until
+      // there's a real per-unit labor/electricity allocation for bulk
+      // product, not just packaged jerrycans.
+      const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
+      const laborElectricity = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan : 0
       const fullCost = matPerUnit + laborElectricity + (matPerUnit + laborElectricity) * (overheadPct / 100)
-      const sell = sellByProduct.get(product.toLowerCase()) || 0
+      const sell = sellPriceFor(v.label)
       const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
-      return { product, fullCost, sell, margin, hasSell: sell > 0 }
+      return { product: v.label, fullCost, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: !isJerrycanUnit }
     }).filter(r => r.fullCost > 0).sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellByProduct, staffCostPerJerrycan, electricityCostPerJerrycan])
+  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan])
 
   return (
     <div>
@@ -1597,13 +1676,77 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (per 20L Jerrycan)</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, fontSize: 10, color: 'var(--tx2)' }}>
           <div>
-            <div style={{ marginBottom: 2, fontWeight: 600 }}>Staff</div>
-            <div>{fmt(currencySymbol, staffCostPerDay)}/day × {STAFF_DAYS_PER_WEEK} days/week</div>
+            <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              Staff
+              {!isEditingLabor && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingLabor(true)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  {adhocLaborCost > 0 ? 'Edit ad-hoc' : '+ Ad-hoc labour'}
+                </button>
+              )}
+            </div>
+            <div>{fmt(currencySymbol, staffCostPerDay)}/day × {fmtInt(productionDays)} active day{productionDays === 1 ? '' : 's'}</div>
+            {isEditingLabor ? (
+              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>+ Ad-hoc labour (KSh)</span>
+                <input
+                  type="number"
+                  autoFocus
+                  value={adhocLaborCost}
+                  onChange={e => setAdhocLaborCost(Math.max(0, Number(e.target.value) || 0))}
+                  style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsEditingLabor(false)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : adhocLaborCost > 0 ? (
+              <div style={{ fontSize: 9, color: ACC, marginTop: 2 }}>+ {fmt(currencySymbol, adhocLaborCost)} ad-hoc labour added</div>
+            ) : null}
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan</div>
           </div>
           <div>
-            <div style={{ marginBottom: 2, fontWeight: 600 }}>Electricity</div>
+            <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              Electricity
+              {!isEditingElectricity && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingElectricity(true)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  {adhocElectricityCost > 0 ? 'Edit extra' : '+ Extra cost'}
+                </button>
+              )}
+            </div>
             <div>{MOTOR_HORSEPOWER} HP motor, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
+            {isEditingElectricity ? (
+              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>+ Extra electricity (KSh)</span>
+                <input
+                  type="number"
+                  autoFocus
+                  value={adhocElectricityCost}
+                  onChange={e => setAdhocElectricityCost(Math.max(0, Number(e.target.value) || 0))}
+                  style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsEditingElectricity(false)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : adhocElectricityCost > 0 ? (
+              <div style={{ fontSize: 9, color: ACC, marginTop: 2 }}>+ {fmt(currencySymbol, adhocElectricityCost)} extra added</div>
+            ) : null}
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerDay)}/day, {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
           </div>
           <div>
@@ -1729,7 +1872,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 {margins.map(r => (
                   <tr key={r.product}>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{r.product}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmt(currencySymbol, r.fullCost)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>
+                      {fmt(currencySymbol, r.fullCost)}
+                      {r.fullCostIsMaterialOnly && <span title="Material cost only — labor/electricity/overhead aren't allocated per unit for bulk (non-jerrycan) product yet" style={{ marginLeft: 4, color: 'var(--tx3)', cursor: 'help' }}>*</span>}
+                    </td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>{r.hasSell ? fmt(currencySymbol, r.sell) : '—'}</td>
                     <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: !r.hasSell ? 'var(--tx3)' : r.margin >= 30 ? GREEN : r.margin >= 0 ? AMBER : RED }}>
                       {r.hasSell ? pct(r.margin) : '—'}
@@ -1738,6 +1884,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 ))}
               </tbody>
             </table>
+            {margins.some(r => r.fullCostIsMaterialOnly) && (
+              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 6 }}>* Material cost only — labor, electricity and overhead are currently allocated per 20L jerrycan, so they're only added for jerrycan-denominated rows.</div>
+            )}
           </div>
         )}
       </Section>
