@@ -308,15 +308,13 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
         {breakdown && breakdown.length > 0 && (
           <button
             type="button"
-            onClick={e => { e.stopPropagation(); setShowBreakdown(s => !s) }}
+            onClick={e => { e.stopPropagation(); setShowBreakdown(true) }}
             title="Show how this is calculated"
             aria-label="Show how this is calculated"
             style={{
-              width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-              border: `1px solid ${showBreakdown ? (accent || ACC) : 'var(--b)'}`,
-              background: showBreakdown ? (accent || ACC) : 'var(--bg)',
-              color: showBreakdown ? '#fff' : 'var(--tx3)',
-              fontSize: 9, fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1,
+              width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+              border: `1px solid var(--b)`, background: 'var(--bg)', color: 'var(--tx3)',
+              fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -328,37 +326,47 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
       {sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
       {showBreakdown && breakdown && breakdown.length > 0 && (
         <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            position: 'absolute', top: '100%', left: 0, marginTop: 6, zIndex: 30, minWidth: 240,
-            padding: 12, borderRadius: 10, background: 'var(--sf)',
-            border: `1px solid ${accent || ACC_BORDER}`, boxShadow: '0 10px 28px rgba(0,0,0,.18)',
-          }}
+          onClick={e => { e.stopPropagation(); setShowBreakdown(false) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
         >
-          {chart && chart.length > 0 && <MiniBars items={chart} mode={chartMode || 'stack'} />}
-          {breakdown.map((line, i) => (
-            <div
-              key={i}
-              style={{
-                display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 10,
-                color: line.strong ? 'var(--tx)' : 'var(--tx2)', fontWeight: line.strong ? 700 : 400,
-                padding: '4px 0', borderTop: line.strong ? '1px solid var(--b)' : 'none',
-              }}
-            >
-              <span>{line.label}</span>
-              <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{line.value}</span>
-            </div>
-          ))}
-          {breakdownNote && (
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 6, fontStyle: 'italic' }}>{breakdownNote}</div>
-          )}
-          <button
-            type="button"
-            onClick={() => setShowBreakdown(false)}
-            style={{ marginTop: 8, fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16,
+              width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 20,
+              boxShadow: '0 -8px 30px rgba(0,0,0,.25)',
+            }}
           >
-            Close
-          </button>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{label}</div>
+              <button
+                type="button"
+                onClick={() => setShowBreakdown(false)}
+                aria-label="Close"
+                style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer', flexShrink: 0 }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: accent || 'var(--tx)', fontFamily: 'var(--font-sora)', marginBottom: 14 }}>{value}</div>
+            {chart && chart.length > 0 && <MiniBars items={chart} mode={chartMode || 'stack'} />}
+            {breakdown.map((line, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 12,
+                  color: line.strong ? 'var(--tx)' : 'var(--tx2)', fontWeight: line.strong ? 700 : 400,
+                  padding: '8px 0', borderTop: '1px solid var(--b)',
+                }}
+              >
+                <span>{line.label}</span>
+                <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{line.value}</span>
+              </div>
+            ))}
+            {breakdownNote && (
+              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 10, fontStyle: 'italic' }}>{breakdownNote}</div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1685,9 +1693,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     return wastageInStockQty * effectiveWastePricePerKg
   }, [wastageInStockQty, effectiveWastePricePerKg])
 
-  // Small overhead for misc costs (oil, filters, maintenance) — 5% of material+labor
-  const overheadPct = 5
-  const totalOverhead = (totalMaterialCost + totalLabor + totalElectricity) * (overheadPct / 100)
+  // Overhead (oil changes, filters, maintenance, misc equipment costs) has
+  // no real capture data behind it — was a flat 5% guess on top of the
+  // other components. Now an explicit manual entry, defaulting to KSh0 so
+  // it never inflates the cost figures unless the owner actually enters a
+  // real number for what they spent.
+  const [overheadOverride, setOverheadOverride] = useState(0)
+  const [isEditingOverhead, setIsEditingOverhead] = useState(false)
+  const totalOverhead = overheadOverride
+  const overheadPerJerrycan = jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0
   const totalProductionCost = totalMaterialCost + totalLabor + totalElectricity + totalOverhead
   const costPerJerrycan = jerrycansProduced > 0 ? totalProductionCost / jerrycansProduced : 0
 
@@ -1758,11 +1772,19 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       m.set(k, e)
     }
     return Array.from(m.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
-      const actualPerUnit = v.outputQty > 0 ? v.actualCost / v.outputQty : 0
+      // A pressed product (Sesame oil) is virtually never itself "intake"d —
+      // its real cost is the seed that fed the press, which this loop
+      // already tracks under the "Sesame seed" key, not "Sesame oil". A
+      // product with real output but ~zero cost of its own is that case:
+      // fall back to totalMaterialCost, the factory's actual net seed cost
+      // (already correctly excludes wasted seed — see its own definition
+      // above), rather than showing a nonsense KSh0 material cost.
+      const cost = v.actualCost > 0 ? v.actualCost : totalMaterialCost
+      const actualPerUnit = v.outputQty > 0 ? cost / v.outputQty : 0
       const std = sellPriceFor(v.label)
       return { product: v.label, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
     }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
-  }, [intakes, outputs, costForCapture, sellPriceFor])
+  }, [intakes, outputs, costForCapture, sellPriceFor, totalMaterialCost])
 
   // Output captures whose unit couldn't be safely converted onto a kg basis
   // (see outputQtyInKg) — excluded from stdVsActual/margins above; surfaced
@@ -1802,11 +1824,11 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       const cans = jerrycansByWeek.get(w) || 0
       const labor = cans * staffCostPerJerrycan
       const elec = cans * electricityCostPerJerrycan
-      const oh = (mat + labor + elec) * (overheadPct / 100)
+      const oh = cans * overheadPerJerrycan
       const cpu = cans > 0 ? (mat + labor + elec + oh) / cans : 0
       return { label: w.split('-W')[1] ? `W${w.split('-W')[1]}` : w, value: cpu }
     })
-  }, [intakes, outputs, packaging, wastages, costForCapture, avgSeedCostPerKg, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPct])
+  }, [intakes, outputs, packaging, wastages, costForCapture, avgSeedCostPerKg, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan])
 
   // margin analysis per product
   const margins = useMemo(() => {
@@ -1826,7 +1848,11 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       outByProduct.set(k, e)
     }
     return Array.from(outByProduct.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
-      const matPerUnit = v.qty > 0 ? v.cost / v.qty : 0
+      // Same transformation fallback as stdVsActual above — a pressed
+      // product's own "intake" cost is ~zero; its real cost basis is the
+      // factory's net seed cost.
+      const cost = v.cost > 0 ? v.cost : totalMaterialCost
+      const matPerUnit = v.qty > 0 ? cost / v.qty : 0
       // staffCostPerJerrycan/electricityCostPerJerrycan are a cost PER 20L
       // JERRYCAN — only add them where v.qty is actually jerrycan-denominated
       // (packaging/dispatch output, "pcs"). For bulk raw-material or
@@ -1838,13 +1864,13 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       // there's a real per-unit labor/electricity allocation for bulk
       // product, not just packaged jerrycans.
       const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
-      const laborElectricity = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan : 0
-      const fullCost = matPerUnit + laborElectricity + (matPerUnit + laborElectricity) * (overheadPct / 100)
+      const laborElectricityOverhead = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan + overheadPerJerrycan : 0
+      const fullCost = matPerUnit + laborElectricityOverhead
       const sell = sellPriceFor(v.label)
       const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
       return { product: v.label, fullCost, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: !isJerrycanUnit }
     }).filter(r => r.fullCost > 0).sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan])
+  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost])
 
   return (
     <div>
@@ -1940,6 +1966,42 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              Overhead
+              {!isEditingOverhead && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingOverhead(true)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+            {isEditingOverhead ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>KSh</span>
+                <input
+                  type="number"
+                  autoFocus
+                  value={overheadOverride}
+                  onChange={e => setOverheadOverride(Math.max(0, Number(e.target.value) || 0))}
+                  style={{ width: 80, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsEditingOverhead(false)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <div>{totalOverhead > 0 ? 'Manually set' : 'Not tracked — no maintenance/misc-cost captures'}</div>
+            )}
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalOverhead)} total{totalOverhead > 0 && jerrycansProduced > 0 ? ` (${fmt(currencySymbol, overheadPerJerrycan)}/jerrycan)` : ''}</div>
+          </div>
+          <div>
+            <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
               Wastage Sale Price (per kg)
               {!isWastePriceAmended && (
                 <button
@@ -2005,7 +2067,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Material', value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0)}/can` },
             { label: 'Labor', value: `${fmt(currencySymbol, staffCostPerJerrycan)}/can` },
             { label: 'Electricity', value: `${fmt(currencySymbol, electricityCostPerJerrycan)}/can` },
-            { label: `Overhead (${overheadPct}%)`, value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0)}/can` },
+            { label: 'Overhead', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can` },
             { label: 'Cost per jerrycan', value: fmt(currencySymbol, costPerJerrycan), strong: true },
           ]}
           breakdownNote={`÷ ${fmtInt(jerrycansProduced)} jerrycans produced`}
@@ -2022,9 +2084,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Material', value: fmt(currencySymbol, totalMaterialCost) },
             { label: 'Labor', value: fmt(currencySymbol, totalLabor) },
             { label: 'Electricity', value: fmt(currencySymbol, totalElectricity) },
-            { label: `Overhead (${overheadPct}%)`, value: fmt(currencySymbol, totalOverhead) },
+            { label: 'Overhead', value: fmt(currencySymbol, totalOverhead) },
             { label: 'Total', value: fmt(currencySymbol, totalProductionCost), strong: true },
           ]}
+          breakdownNote={totalOverhead === 0 ? "Overhead is KSh0 by default — click Edit on the Overhead card below to enter real maintenance/misc costs." : undefined}
         />
         <KpiCard
           label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Excl. wasted-seed cost" accent="#3b82f6"
@@ -2075,6 +2138,14 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Total', value: fmt(currencySymbol, totalElectricity), strong: true },
           ]}
           breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs the full ${MOTOR_HOURS_PER_DAY}h on every active day — click Edit on the Electricity card above if that overstates real usage.`}
+        />
+        <KpiCard
+          label="Overhead Cost" value={fmt(currencySymbol, totalOverhead)} sub={totalOverhead > 0 ? `${fmt(currencySymbol, overheadPerJerrycan)}/jerrycan` : "Not set — defaults to KSh0"} accent="#a855f7"
+          breakdown={[
+            { label: 'Overhead', value: fmt(currencySymbol, totalOverhead), strong: true },
+            { label: 'Per jerrycan', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can` },
+          ]}
+          breakdownNote="No formula behind this — oil changes, filters, maintenance, and misc equipment costs aren't tracked as captures, so this stays KSh0 until you enter a real number below."
         />
         <KpiCard
           label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${isWastePriceAmended ? 'amended' : usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN}
@@ -2177,7 +2248,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Per 20L Jerrycan</div>
         <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
           <div>Material cost from intake_arrival captures; staff & electricity allocated based on actual 20L jerrycan output.</div>
-          <div style={{ marginTop: 8 }}>Overhead at {overheadPct}% covers oil changes, filters, maintenance, and misc equipment costs.</div>
+          <div style={{ marginTop: 8 }}>Overhead (oil changes, filters, maintenance, misc equipment costs) is KSh0 unless entered manually — edit it in Operating Costs above.</div>
           <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total 20L jerrycans produced: {fmtInt(jerrycansProduced)}</div>
         </div>
       </div>
