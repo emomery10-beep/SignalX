@@ -291,6 +291,18 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
   chart?: { label: string; raw: number; color: string }[]; chartMode?: 'stack' | 'compare'
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false)
+
+  // Escape-to-close and background scroll lock while the sheet is open —
+  // standard modal behavior this component didn't have yet.
+  useEffect(() => {
+    if (!showBreakdown) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowBreakdown(false) }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prevOverflow }
+  }, [showBreakdown])
+
   return (
     <div
       onClick={onClick}
@@ -306,19 +318,27 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>{label}</div>
         {breakdown && breakdown.length > 0 && (
+          // 44x44 hit area (touch-target minimum) around a compact 24px
+          // visual circle — negative margins keep the card header's layout
+          // unchanged while the tappable region is still full-size.
           <button
             type="button"
             onClick={e => { e.stopPropagation(); setShowBreakdown(true) }}
             title="Show how this is calculated"
             aria-label="Show how this is calculated"
             style={{
-              width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-              border: `1px solid var(--b)`, background: 'var(--bg)', color: 'var(--tx3)',
-              fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0, lineHeight: 1,
+              width: 44, height: 44, margin: '-10px -10px -10px 0', flexShrink: 0,
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            i
+            <span style={{
+              width: 24, height: 24, borderRadius: '50%', border: '1px solid var(--b)',
+              background: 'var(--bg)', color: 'var(--tx3)', fontSize: 10, fontWeight: 700, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              i
+            </span>
           </button>
         )}
       </div>
@@ -326,15 +346,23 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
       {sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
       {showBreakdown && breakdown && breakdown.length > 0 && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${label} breakdown`}
           onClick={e => { e.stopPropagation(); setShowBreakdown(false) }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex',
+            alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000,
+            animation: 'kpiSheetFadeIn 200ms ease-out',
+          }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
               background: 'var(--bg)', borderTopLeftRadius: 16, borderTopRightRadius: 16,
-              width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 20,
+              width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 24,
               boxShadow: '0 -8px 30px rgba(0,0,0,.25)',
+              animation: 'kpiSheetSlideUp 220ms cubic-bezier(.16,1,.3,1)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -343,7 +371,7 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
                 type="button"
                 onClick={() => setShowBreakdown(false)}
                 aria-label="Close"
-                style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer', flexShrink: 0 }}
+                style={{ width: 44, height: 44, margin: '-10px -10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', fontSize: 22, lineHeight: 1, color: 'var(--tx3)', cursor: 'pointer', flexShrink: 0 }}
               >
                 ×
               </button>
@@ -1737,21 +1765,19 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     return sums
   }, [dispatches])
   // Actual realized dispatch price first, generic catalog price as fallback
-  // for a product that's never actually been dispatched yet. The dispatch
-  // SKU name is usually a more specific superset of the output-stage name
-  // ("Sesame oil" becomes "Sesame oil - Jerrycan Matungi (20L)" once
-  // packaged for dispatch), so an exact match is tried first and a
-  // substring match second — aggregated across every dispatch bucket that
-  // clearly names the same base product, not just the first one found.
+  // for a product that's never actually been dispatched yet. Exact match
+  // ONLY — this used to also substring-match ("Sesame oil" against the
+  // dispatch SKU "Sesame oil - Jerrycan Matungi (20L)"), which silently
+  // compared a per-KG bulk-oil cost against a per-JERRYCAN sell price (a
+  // ~18x unit mismatch that showed as a nonsense ~97% margin). Bulk,
+  // pre-packaging product genuinely has no sell reference — it's never
+  // sold at that stage, only after packaging — so it correctly shows "—"
+  // now instead of a wrong number. The packaged-jerrycan row below carries
+  // its own exact-matching label instead.
   const sellPriceFor = useCallback((product: string): number => {
     const k = norm(product)
     const exact = actualSellSumsByProduct.get(k)
     if (exact && exact.qty > 0) return exact.revenue / exact.qty
-    let revenue = 0, qty = 0
-    for (const [dk, v] of actualSellSumsByProduct.entries()) {
-      if (dk.includes(k) || k.includes(dk)) { revenue += v.revenue; qty += v.qty }
-    }
-    if (qty > 0) return revenue / qty
     return sellByProduct.get(k) || 0
   }, [actualSellSumsByProduct, sellByProduct])
 
@@ -1771,7 +1797,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       e.outputQty += kg
       m.set(k, e)
     }
-    return Array.from(m.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
+    const bulkRows = Array.from(m.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
       // A pressed product (Sesame oil) is virtually never itself "intake"d —
       // its real cost is the seed that fed the press, which this loop
       // already tracks under the "Sesame seed" key, not "Sesame oil". A
@@ -1784,7 +1810,22 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       const std = sellPriceFor(v.label)
       return { product: v.label, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
     }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
-  }, [intakes, outputs, costForCapture, sellPriceFor, totalMaterialCost])
+
+    // The actually-sold unit is a packaged 20L jerrycan, not bulk oil —
+    // bulk "Sesame oil" above is a pre-packaging intermediate with no sell
+    // reference of its own (see sellPriceFor). This row uses figures
+    // that are already unit-consistent elsewhere in this view: material
+    // cost per jerrycan (this table is specifically Material Cost) against
+    // the real dispatch-weighted sell price for that exact product name.
+    const jerrycanLabel = 'Sesame oil - Jerrycan Matungi (20L)'
+    const jerrycanRows = []
+    if (jerrycansProduced > 0) {
+      const actualPerUnit = totalMaterialCost / jerrycansProduced
+      const std = sellPriceFor(jerrycanLabel)
+      jerrycanRows.push({ product: jerrycanLabel, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 })
+    }
+    return [...bulkRows, ...jerrycanRows]
+  }, [intakes, outputs, costForCapture, sellPriceFor, totalMaterialCost, jerrycansProduced])
 
   // Output captures whose unit couldn't be safely converted onto a kg basis
   // (see outputQtyInKg) — excluded from stdVsActual/margins above; surfaced
@@ -1847,30 +1888,40 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       e.qty += kg
       outByProduct.set(k, e)
     }
-    return Array.from(outByProduct.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
+    const bulkRows = Array.from(outByProduct.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
       // Same transformation fallback as stdVsActual above — a pressed
       // product's own "intake" cost is ~zero; its real cost basis is the
       // factory's net seed cost.
       const cost = v.cost > 0 ? v.cost : totalMaterialCost
       const matPerUnit = v.qty > 0 ? cost / v.qty : 0
       // staffCostPerJerrycan/electricityCostPerJerrycan are a cost PER 20L
-      // JERRYCAN — only add them where v.qty is actually jerrycan-denominated
-      // (packaging/dispatch output, "pcs"). For bulk raw-material or
-      // in-process output rows (Sesame seed in kg, bulk Sesame oil in
-      // kg/litres before packaging), v.qty is a totally different unit, so
-      // adding a per-jerrycan cost would overstate full cost by whatever the
-      // kg-vs-jerrycan ratio is. Those rows show material cost only — an
-      // honest (if incomplete) number beats a wrong blended one — until
-      // there's a real per-unit labor/electricity allocation for bulk
-      // product, not just packaged jerrycans.
+      // JERRYCAN — only add them where v.qty is actually jerrycan-denominated.
+      // Bulk rows here (Sesame seed in kg, bulk Sesame oil in kg/litres
+      // before packaging) never actually match this — see the dedicated
+      // jerrycan row below instead, which uses the already-correct
+      // costPerJerrycan directly rather than reconstructing it here.
       const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
       const laborElectricityOverhead = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan + overheadPerJerrycan : 0
       const fullCost = matPerUnit + laborElectricityOverhead
       const sell = sellPriceFor(v.label)
       const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
       return { product: v.label, fullCost, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: !isJerrycanUnit }
-    }).filter(r => r.fullCost > 0).sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost])
+    }).filter(r => r.fullCost > 0)
+
+    // The actually-sold unit — see the matching row in stdVsActual above
+    // for why bulk "Sesame oil" has no sell reference of its own. fullCost
+    // here is costPerJerrycan (already material + labor + electricity +
+    // overhead, all correctly per-jerrycan) so this row needs no separate
+    // "material only" caveat.
+    const jerrycanLabel = 'Sesame oil - Jerrycan Matungi (20L)'
+    const jerrycanRows = []
+    if (jerrycansProduced > 0 && costPerJerrycan > 0) {
+      const sell = sellPriceFor(jerrycanLabel)
+      const margin = sell > 0 ? ((sell - costPerJerrycan) / sell) * 100 : 0
+      jerrycanRows.push({ product: jerrycanLabel, fullCost: costPerJerrycan, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: false })
+    }
+    return [...bulkRows, ...jerrycanRows].sort((a, b) => b.margin - a.margin)
+  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost, jerrycansProduced, costPerJerrycan])
 
   return (
     <div>
