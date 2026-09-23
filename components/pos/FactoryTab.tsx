@@ -1620,11 +1620,22 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // Confirmed by owner: machines only run 6 days/week (never Sundays), so a
   // Sunday capture (e.g. a dispatch or wastage log with no pressing) is
   // excluded rather than counted as a full operating day.
+  //
+  // Both the Sunday check AND the day-bucketing must be evaluated in the
+  // factory's own timezone (Nairobi, UTC+3, no DST), not the viewer's
+  // browser timezone. `dayKey`/`new Date(...).getDay()` use the browser's
+  // local clock — so the same data could split one real Nairobi business
+  // day across two different local calendar days (or vice versa), or miss/
+  // over-count Sundays, depending on where the dashboard is opened from. A
+  // fixed +3h shift, read back with UTC getters, gives a stable answer
+  // regardless of viewer location.
   const productionDays = useMemo(() => {
     const days = new Set<string>()
     const addIfWorkingDay = (created_at: string) => {
-      if (new Date(created_at).getDay() === 0) return
-      days.add(dayKey(created_at))
+      const nairobi = new Date(new Date(created_at).getTime() + 3 * 3600 * 1000)
+      if (nairobi.getUTCDay() === 0) return
+      const key = `${nairobi.getUTCFullYear()}-${String(nairobi.getUTCMonth() + 1).padStart(2, '0')}-${String(nairobi.getUTCDate()).padStart(2, '0')}`
+      days.add(key)
     }
     for (const c of intakes) addIfWorkingDay(c.created_at)
     for (const c of outputs) addIfWorkingDay(c.created_at)
