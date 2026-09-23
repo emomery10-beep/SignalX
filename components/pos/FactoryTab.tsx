@@ -1782,41 +1782,57 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   }, [actualSellSumsByProduct, sellByProduct])
 
   const stdVsActual = useMemo(() => {
-    const m = new Map<string, { label: string; actualCost: number; outputQty: number }>()
+    const m = new Map<string, { label: string; actualCost: number; intakeQty: number; outputQty: number }>()
     for (const c of intakes) {
       const k = norm(c.product || 'Unknown')
-      const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, outputQty: 0 }
+      const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, intakeQty: 0, outputQty: 0 }
       e.actualCost += (Number(c.quantity) || 0) * costForCapture(c)
+      e.intakeQty += Number(c.quantity) || 0
       m.set(k, e)
     }
     for (const c of outputs) {
       const kg = outputQtyInKg(c)
       if (kg == null) continue
       const k = norm(c.product || 'Unknown')
-      const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, outputQty: 0 }
+      const e = m.get(k) || { label: (c.product || 'Unknown').trim(), actualCost: 0, intakeQty: 0, outputQty: 0 }
       e.outputQty += kg
       m.set(k, e)
     }
-    const bulkRows = Array.from(m.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
-      // A pressed product (Sesame oil) is virtually never itself "intake"d —
-      // its real cost is the seed that fed the press, which this loop
-      // already tracks under the "Sesame seed" key, not "Sesame oil". A
-      // product with real output but ~zero cost of its own is that case:
-      // fall back to totalMaterialCost, the factory's actual net seed cost
-      // (already correctly excludes wasted seed — see its own definition
-      // above), rather than showing a nonsense KSh0 material cost.
-      const cost = v.actualCost > 0 ? v.actualCost : totalMaterialCost
-      const actualPerUnit = v.outputQty > 0 ? cost / v.outputQty : 0
-      const std = sellPriceFor(v.label)
-      return { product: v.label, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
-    }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
+    const bulkRows = Array.from(m.values())
+      .filter(v => isLikelyRealProduct(v.label))
+      // Superseded by the dedicated jerrycan row below, which uses the
+      // correct per-jerrycan basis — showing bulk "Sesame oil" here too
+      // would duplicate it under a mismatched per-kg cost.
+      .filter(v => norm(v.label) !== 'sesame oil')
+      .map(v => {
+        // A raw material (Sesame seed) is genuinely bought (has real
+        // intake) — its true cost is what you paid per kg of intake, NOT
+        // its total cost divided by some unrelated "output" quantity (a
+        // handful of captures can be mislabeled with the raw material's
+        // name by mistake, e.g. a single stray 50kg "output" entry against
+        // 8,800+kg of real intake — dividing the whole seed spend by that
+        // stray figure produced a nonsense per-kg cost).
+        // A pressed product with no real intake cost of its own (virtually
+        // never true here since bulk oil is excluded above) falls back to
+        // totalMaterialCost, the factory's actual net seed cost.
+        let actualPerUnit = 0
+        if (v.intakeQty > 0 && v.actualCost > 0) {
+          actualPerUnit = v.actualCost / v.intakeQty
+        } else if (v.outputQty > 0) {
+          const cost = v.actualCost > 0 ? v.actualCost : totalMaterialCost
+          actualPerUnit = cost / v.outputQty
+        }
+        const std = sellPriceFor(v.label)
+        return { product: v.label, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 }
+      }).filter(r => r.actualPerUnit > 0 || r.standard > 0)
 
     // The actually-sold unit is a packaged 20L jerrycan, not bulk oil —
-    // bulk "Sesame oil" above is a pre-packaging intermediate with no sell
-    // reference of its own (see sellPriceFor). This row uses figures
-    // that are already unit-consistent elsewhere in this view: material
-    // cost per jerrycan (this table is specifically Material Cost) against
-    // the real dispatch-weighted sell price for that exact product name.
+    // bulk "Sesame oil" above is a pre-packaging intermediate, excluded
+    // from bulkRows since it's the same real product as this row. This row
+    // uses figures that are already unit-consistent elsewhere in this
+    // view: material cost per jerrycan (this table is specifically
+    // Material Cost) against the real dispatch-weighted sell price for
+    // that exact product name.
     const jerrycanLabel = 'Sesame oil - Jerrycan Matungi (20L)'
     const jerrycanRows = []
     if (jerrycansProduced > 0) {
@@ -1873,40 +1889,52 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   // margin analysis per product
   const margins = useMemo(() => {
-    const outByProduct = new Map<string, { label: string; cost: number; qty: number }>()
+    const outByProduct = new Map<string, { label: string; cost: number; intakeQty: number; qty: number }>()
     for (const c of intakes) {
       const k = norm(c.product || 'Unknown')
-      const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, qty: 0 }
+      const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, intakeQty: 0, qty: 0 }
       e.cost += (Number(c.quantity) || 0) * costForCapture(c)
+      e.intakeQty += Number(c.quantity) || 0
       outByProduct.set(k, e)
     }
     for (const c of outputs) {
       const kg = outputQtyInKg(c)
       if (kg == null) continue
       const k = norm(c.product || 'Unknown')
-      const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, qty: 0 }
+      const e = outByProduct.get(k) || { label: (c.product || 'Unknown').trim(), cost: 0, intakeQty: 0, qty: 0 }
       e.qty += kg
       outByProduct.set(k, e)
     }
-    const bulkRows = Array.from(outByProduct.values()).filter(v => isLikelyRealProduct(v.label)).map(v => {
-      // Same transformation fallback as stdVsActual above — a pressed
-      // product's own "intake" cost is ~zero; its real cost basis is the
-      // factory's net seed cost.
-      const cost = v.cost > 0 ? v.cost : totalMaterialCost
-      const matPerUnit = v.qty > 0 ? cost / v.qty : 0
-      // staffCostPerJerrycan/electricityCostPerJerrycan are a cost PER 20L
-      // JERRYCAN — only add them where v.qty is actually jerrycan-denominated.
-      // Bulk rows here (Sesame seed in kg, bulk Sesame oil in kg/litres
-      // before packaging) never actually match this — see the dedicated
-      // jerrycan row below instead, which uses the already-correct
-      // costPerJerrycan directly rather than reconstructing it here.
-      const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
-      const laborElectricityOverhead = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan + overheadPerJerrycan : 0
-      const fullCost = matPerUnit + laborElectricityOverhead
-      const sell = sellPriceFor(v.label)
-      const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
-      return { product: v.label, fullCost, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: !isJerrycanUnit }
-    }).filter(r => r.fullCost > 0)
+    const bulkRows = Array.from(outByProduct.values())
+      .filter(v => isLikelyRealProduct(v.label))
+      // Superseded by the dedicated jerrycan row below — see stdVsActual.
+      .filter(v => norm(v.label) !== 'sesame oil')
+      .map(v => {
+        // Raw material (real intake, e.g. Sesame seed): cost per kg of what
+        // was actually bought — not divided by an unrelated output-stage
+        // quantity (see stdVsActual's bulkRows for the full explanation).
+        // Same fallback to totalMaterialCost as stdVsActual for a pressed
+        // product with no real intake cost of its own.
+        let matPerUnit = 0
+        if (v.intakeQty > 0 && v.cost > 0) {
+          matPerUnit = v.cost / v.intakeQty
+        } else if (v.qty > 0) {
+          const cost = v.cost > 0 ? v.cost : totalMaterialCost
+          matPerUnit = cost / v.qty
+        }
+        // staffCostPerJerrycan/electricityCostPerJerrycan are a cost PER 20L
+        // JERRYCAN — only add them where v.qty is actually jerrycan-denominated.
+        // Bulk rows here (Sesame seed in kg) never actually match this — see
+        // the dedicated jerrycan row below instead, which uses the
+        // already-correct costPerJerrycan directly rather than
+        // reconstructing it here.
+        const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
+        const laborElectricityOverhead = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan + overheadPerJerrycan : 0
+        const fullCost = matPerUnit + laborElectricityOverhead
+        const sell = sellPriceFor(v.label)
+        const margin = sell > 0 ? ((sell - fullCost) / sell) * 100 : 0
+        return { product: v.label, fullCost, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: !isJerrycanUnit }
+      }).filter(r => r.fullCost > 0)
 
     // The actually-sold unit — see the matching row in stdVsActual above
     // for why bulk "Sesame oil" has no sell reference of its own. fullCost
