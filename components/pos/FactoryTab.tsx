@@ -1593,7 +1593,23 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // Real operating costs (Kenya rates) — per 20L jerrycan
   const STAFF_COST_PER_DAY = 2400 // KSh
   const MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
-  const MOTOR_HORSEPOWER = 1
+  // Real machines confirmed by the owner (2026-09-23), replacing the prior
+  // placeholder single "1 HP motor" — that number understated real usage by
+  // roughly 15x. Researched against manufacturer/supplier listings:
+  //   - Milano MOP100 press: 10 HP — confirmed by two independent Kenyan
+  //     suppliers (makimara.co.ke, metrostores.co.ke).
+  //   - Milano ~250 filter: no exact "250K" model was found. The nearest
+  //     verified Milano filter machine (MOF300, kreatives.co.ke) runs 1 HP
+  //     — used as the estimate here. If the real nameplate differs, correct
+  //     it below or use the Edit override on the Electricity card.
+  //   - KK40 press: 3 kW, the "F Universal" variant per the manufacturer's
+  //     own spec sheet (oelpresse.de). The "F Special" variant is 4kW —
+  //     swap this if that's the one actually installed.
+  const MACHINES = [
+    { name: 'Milano MOP100 press', kw: 10 * 0.746 },
+    { name: 'Milano filter (~250)', kw: 1 * 0.746 },
+    { name: 'KK40 press', kw: 3 },
+  ]
   // KPLC CI1 (415V three-phase, the standard low-voltage 3-phase supply a
   // small factory would have) energy charge, 2025/26 — confirmed by owner
   // this factory is on 3-phase, not single-phase. Meaningfully lower than
@@ -1605,14 +1621,13 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // registered kVA. The real monthly bill will run higher than this
   // energy-only figure by that fixed amount.
   const ELECTRICITY_RATE_PER_KWH = 13.44
-  const HP_TO_KW = 0.746 // 1 HP = 0.746 kW
 
   // Calculate real operating costs
   const staffCostPerDay = STAFF_COST_PER_DAY
+  const totalMachineKW = MACHINES.reduce((s, m) => s + m.kw, 0)
   const electricityCostPerDay = useMemo(() => {
-    const motorKW = MOTOR_HORSEPOWER * HP_TO_KW
-    return motorKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
-  }, [])
+    return totalMachineKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
+  }, [totalMachineKW])
 
   // Number of distinct calendar days the factory actually had activity,
   // from real capture timestamps — drives labor/electricity cost so it
@@ -2045,7 +2060,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </button>
               </div>
             ) : (
-              <div>{MOTOR_HORSEPOWER} HP motor, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
+              <div>{MACHINES.length} machines, {totalMachineKW.toFixed(1)} kW combined, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
             )}
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
           </div>
@@ -2220,7 +2235,8 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Formula estimate', value: fmt(currencySymbol, formulaElectricity) },
             { label: 'Manually set to', value: fmt(currencySymbol, electricityOverride!), strong: true },
           ] : [
-            { label: 'Motor', value: `${MOTOR_HORSEPOWER} HP (${(MOTOR_HORSEPOWER * HP_TO_KW).toFixed(2)} kW)` },
+            ...MACHINES.map(m => ({ label: m.name, value: `${m.kw.toFixed(2)} kW` })),
+            { label: 'Combined', value: `${totalMachineKW.toFixed(2)} kW`, strong: true },
             { label: 'Hours/day', value: `${MOTOR_HOURS_PER_DAY}h` },
             { label: 'Rate', value: `${ELECTRICITY_RATE_PER_KWH} KSh/kWh` },
             { label: 'Cost/day', value: fmt(currencySymbol, electricityCostPerDay) },
