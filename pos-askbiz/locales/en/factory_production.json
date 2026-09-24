@@ -20,6 +20,7 @@
   "yield_expected_range": "Normal range: {min}-{max}%",
   "filter_all_types": "All types",
   "filter_all_statuses": "All statuses",
+  "filter_yesterday": "Yesterday",
   "filter_search_product": "Search product…",
   "filter_clear": "Clear",
   "table_loading": "Loading captures…",

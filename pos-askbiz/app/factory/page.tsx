@@ -73,6 +73,25 @@ function isToday(iso: string) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
 }
 
+// Nairobi (UTC+3, no DST) calendar day, not the viewer's browser timezone —
+// same convention as components/pos/FactoryTab.tsx's day-bucketing fix
+// (commit 139d94f1), so "today"/"yesterday" here mean the same thing they
+// do on the API side and on that other dashboard, regardless of where this
+// page is opened from.
+function nairobiDayKey(d: Date): string {
+  const n = new Date(d.getTime() + 3 * 3600 * 1000)
+  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
+}
+function shiftDayKey(key: string, deltaDays: number): string {
+  const [y, m, d] = key.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  dt.setUTCDate(dt.getUTCDate() + deltaDays)
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
+}
+function formatDayKey(key: string) {
+  return new Date(`${key}T00:00:00+03:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 function IconCamera({ size = 22 }: { size?: number }) {
   return (
@@ -203,6 +222,13 @@ export default function FactoryHub() {
   // Not-yet-releasable holds (curing / regulatory)
   const [openHoldsCount, setOpenHoldsCount] = useState(0)
 
+  // "At a glance" day being viewed — defaults to today (Nairobi), stepped
+  // with the ←/→ switcher. Independent of `captures` below: OEE stays
+  // pinned to the real, live today regardless of which day is browsed here.
+  const [viewDate, setViewDate] = useState(() => nairobiDayKey(new Date()))
+  const [dayCaptures, setDayCaptures] = useState<Capture[]>([])
+  const [dayLoading, setDayLoading] = useState(true)
+
   const loadCaptures = useCallback(async (silent = false) => {
     if (!session) return
     if (!silent) setLoading(true)
@@ -281,6 +307,18 @@ export default function FactoryHub() {
     } catch { /* silent */ }
   }, [session])
 
+  const loadDayCaptures = useCallback(async (date: string, silent = false) => {
+    if (!session) return
+    if (!silent) setDayLoading(true)
+    try {
+      const r = await fetch(`/api/pos/factory/capture?date=${date}`, { headers: session.headers })
+      const d = r.ok ? await r.json() : { captures: [] }
+      setDayCaptures(d.captures || [])
+    } catch { /* silent */ } finally {
+      setDayLoading(false)
+    }
+  }, [session])
+
   // Which of the 12 factory-type templates this owner picked, if any — used
   // to color the Efficiency KPI against that type's real yield range
   // instead of a flat 90%/70% threshold. Fetched once, not on the 30s poll
@@ -306,15 +344,26 @@ export default function FactoryHub() {
     return () => clearInterval(interval)
   }, [authReady, session, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills, loadHolds])
 
-  // ── Computed KPIs ────────────────────────────────────────────────────────
-  const todays     = captures.filter(c => isToday(c.created_at))
-  const outputs    = todays.filter(c => c.type === 'output')
+  // Separate effect/interval keyed on viewDate: switching day re-fetches
+  // immediately, and the 30s refresh follows whichever day is on screen.
+  useEffect(() => {
+    if (!authReady || !session) return
+    loadDayCaptures(viewDate)
+    const interval = setInterval(() => loadDayCaptures(viewDate, true), 30_000)
+    return () => clearInterval(interval)
+  }, [authReady, session, viewDate, loadDayCaptures])
+
+  // ── Computed KPIs (for the viewed day — defaults to today) ────────────────
+  // `dayCaptures` is already server-scoped to `viewDate` (Nairobi calendar
+  // day, see the capture API route), so no client-side day filter is needed
+  // here — unlike OEE below, which stays pinned to the real today.
+  const outputs    = dayCaptures.filter(c => c.type === 'output')
   // intake_arrival + old 'intake' (backwards compat) = raw material arriving at factory
-  const intakes    = todays.filter(c => c.type === 'intake' || c.type === 'intake_arrival')
-  const intakesFeed = todays.filter(c => c.type === 'intake_feed')
-  const wastages   = todays.filter(c => c.type === 'wastage')
-  const dispatches = todays.filter(c => c.type === 'dispatch')
-  const packagings = todays.filter(c => c.type === 'packaging')
+  const intakes    = dayCaptures.filter(c => c.type === 'intake' || c.type === 'intake_arrival')
+  const intakesFeed = dayCaptures.filter(c => c.type === 'intake_feed')
+  const wastages   = dayCaptures.filter(c => c.type === 'wastage')
+  const dispatches = dayCaptures.filter(c => c.type === 'dispatch')
+  const packagings = dayCaptures.filter(c => c.type === 'packaging')
 
   const unitsOut       = outputs.reduce((s, c) => s + (c.quantity || 0), 0)
   const unitsIn        = intakes.reduce((s, c) => s + (c.quantity || 0), 0)
@@ -324,6 +373,19 @@ export default function FactoryHub() {
   const totalFlow   = unitsOut + unitsWaste
   const wastagePct  = totalFlow > 0 ? (unitsWaste / totalFlow) * 100 : 0
   const efficiency  = unitsIn > 0 ? Math.min((unitsOut / unitsIn) * 100, 100) : 0
+
+  const todayKeyNairobi = nairobiDayKey(new Date())
+  const isViewingToday = viewDate === todayKeyNairobi
+  const isViewingYesterday = viewDate === shiftDayKey(todayKeyNairobi, -1)
+
+  // OEE stays pinned to the real, live today (it's a right-now operational
+  // gauge — Availability/Performance come from live downtime & shift state
+  // that were never day-scoped), regardless of which day is being browsed
+  // in the "at a glance" cards above.
+  const todaysOwnCaptures = captures.filter(c => isToday(c.created_at))
+  const todayUnitsOut   = todaysOwnCaptures.filter(c => c.type === 'output').reduce((s, c) => s + (c.quantity || 0), 0)
+  const todayUnitsWaste = todaysOwnCaptures.filter(c => c.type === 'wastage').reduce((s, c) => s + (c.quantity || 0), 0)
+  const todayTotalFlow  = todayUnitsOut + todayUnitsWaste
 
   // Shelf-life decay (bakery-style: sellable now, not for long) — computed
   // from the same captures list already loaded for everything else on this
@@ -365,11 +427,13 @@ export default function FactoryHub() {
   const oeePerformance = (activeShift?.target_units && activeShift.target_units > 0)
     ? Math.min(((activeShift.live_output || 0) / activeShift.target_units) * 100, 100)
     : null
-  // OEE Quality: defect-units ÷ (output + defect-units), falls back to wastage ratio
-  const oeeQuality = qualityTotalAffected > 0 && unitsOut > 0
-    ? Math.max(0, ((unitsOut - qualityTotalAffected) / unitsOut) * 100)
-    : totalFlow > 0
-      ? ((unitsOut / totalFlow) * 100)
+  // OEE Quality: defect-units ÷ (output + defect-units), falls back to
+  // wastage ratio. Always today's own figures (see todayUnitsOut/
+  // todayTotalFlow above) — "OEE TODAY" doesn't follow the day switcher.
+  const oeeQuality = qualityTotalAffected > 0 && todayUnitsOut > 0
+    ? Math.max(0, ((todayUnitsOut - qualityTotalAffected) / todayUnitsOut) * 100)
+    : todayTotalFlow > 0
+      ? ((todayUnitsOut / todayTotalFlow) * 100)
       : null
 
   const pending   = captures.filter(c => c.status === 'pending').length
@@ -574,8 +638,24 @@ export default function FactoryHub() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
+        {/* ── Day switcher ─────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <button onClick={() => setViewDate(v => shiftDayKey(v, -1))} aria-label={tc('factory.glance_prev_day')}
+            style={{ width: 30, height: 30, borderRadius: 9, background: tokens.surface, border: `1px solid ${tokens.border}`, color: tokens.ink, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ display: 'inline-flex', transform: 'rotate(180deg)' }}><IconChevronRight size={13} /></span>
+          </button>
+          <div style={{ fontSize: 13, fontWeight: 700, color: tokens.ink }}>
+            {isViewingToday ? tc('factory.glance_today') : isViewingYesterday ? tc('factory.glance_yesterday') : formatDayKey(viewDate)}
+            {' '}<span style={{ fontWeight: 500, color: tokens.hint }}>{tc('factory.glance_title')}</span>
+          </div>
+          <button onClick={() => setViewDate(v => shiftDayKey(v, 1))} disabled={isViewingToday} aria-label={tc('factory.glance_next_day')}
+            style={{ width: 30, height: 30, borderRadius: 9, background: tokens.surface, border: `1px solid ${tokens.border}`, color: isViewingToday ? tokens.border : tokens.ink, cursor: isViewingToday ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconChevronRight size={13} />
+          </button>
+        </div>
+
         {/* ── KPI grid ─────────────────────────────────────────────────────── */}
-        {loading ? (
+        {dayLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
             {[...Array(5)].map((_, i) => (
               <div key={i} style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 14, height: 80, animation: 'pulse 1.6s ease-in-out infinite', animationDelay: `${i * 100}ms` }} />
@@ -702,7 +782,7 @@ export default function FactoryHub() {
           ))}
         </div>
 
-        {/* ── Today at a glance ─────────────────────────────────────────────── */}
+        {/* ── Per-type breakdown for the viewed day ───────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 6, marginBottom: 24 }}>
           {([
             { type: 'intake',    count: intakes.length,    units: unitsIn },

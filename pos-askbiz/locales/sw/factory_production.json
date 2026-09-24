@@ -18,6 +18,7 @@
   "yield_expected_range": "Kiwango cha kawaida: {min}-{max}%",
   "filter_all_types": "Aina zote",
   "filter_all_statuses": "Hali zote",
+  "filter_yesterday": "Jana",
   "filter_search_product": "Tafuta bidhaa…",
   "filter_clear": "Ondoa vichujio",
   "table_loading": "Inapakia rekodi…",

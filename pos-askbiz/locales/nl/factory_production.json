@@ -18,6 +18,7 @@
   "yield_expected_range": "Normaal bereik: {min}-{max}%",
   "filter_all_types": "Alle typen",
   "filter_all_statuses": "Alle statussen",
+  "filter_yesterday": "Gisteren",
   "filter_search_product": "Product zoeken…",
   "filter_clear": "Wissen",
   "table_loading": "Registraties laden…",

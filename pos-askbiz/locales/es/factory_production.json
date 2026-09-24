@@ -18,6 +18,7 @@
   "yield_expected_range": "Rango normal: {min}-{max}%",
   "filter_all_types": "Todos los tipos",
   "filter_all_statuses": "Todos los estados",
+  "filter_yesterday": "Ayer",
   "filter_search_product": "Buscar producto…",
   "filter_clear": "Limpiar",
   "table_loading": "Cargando registros…",

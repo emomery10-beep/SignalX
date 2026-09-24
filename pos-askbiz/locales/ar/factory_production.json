@@ -18,6 +18,7 @@
   "yield_expected_range": "النطاق الطبيعي: {min}-{max}%",
   "filter_all_types": "جميع الأنواع",
   "filter_all_statuses": "جميع الحالات",
+  "filter_yesterday": "أمس",
   "filter_search_product": "ابحث عن منتج…",
   "filter_clear": "مسح",
   "table_loading": "جارٍ تحميل الإدخالات…",

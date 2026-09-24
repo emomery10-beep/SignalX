@@ -113,10 +113,17 @@ export async function GET(req: NextRequest) {
   if (type)     query = query.eq('type', type)
   if (status)   query = query.eq('status', status)
   if (shift_id) query = query.eq('shift_id', shift_id)
-  if (date) {
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    // Nairobi (UTC+3, no DST) calendar day, not the raw UTC one — a
+    // capture made after ~9pm Nairobi time is already "tomorrow" in UTC, so
+    // a plain UTC midnight boundary would silently put it under the wrong
+    // date. Same convention as components/pos/FactoryTab.tsx's day-bucketing
+    // fix (commit 139d94f1).
+    const start = new Date(`${date}T00:00:00+03:00`)
+    const end = new Date(start.getTime() + 24 * 3600 * 1000)
     query = query
-      .gte('created_at', `${date}T00:00:00.000Z`)
-      .lt('created_at',  `${date}T23:59:59.999Z`)
+      .gte('created_at', start.toISOString())
+      .lt('created_at',  end.toISOString())
   }
 
   // Non-approvers (floor workers) only see their own captures

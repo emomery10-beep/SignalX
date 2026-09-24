@@ -61,6 +61,13 @@ function daysLeft(iso: string): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000))
 }
 
+// Nairobi (UTC+3, no DST) "yesterday" as YYYY-MM-DD, for the date filter's
+// quick button — matches the capture API's own Nairobi day boundary.
+function yesterdayNairobiKey(): string {
+  const n = new Date(Date.now() + 3 * 3600 * 1000 - 24 * 3600 * 1000)
+  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
+}
+
 // Expired = red; expiring within 4h = amber; otherwise not shown as a
 // badge at all (a decay deadline days away isn't yet worth flagging).
 function expiryStatus(iso: string): 'expired' | 'soon' | null {
@@ -128,9 +135,19 @@ export default function ProductionLogPage() {
       .then(r => r.json())
       .then(d => setFactoryType(d?.factory_type || null))
       .catch(() => {})
-    load()
     loadOpenHolds()
   }, [authReady, session])
+
+  // Re-fetch from the server whenever the date filter changes — a plain
+  // `limit=100` fetch only ever holds the most recent 100 captures across
+  // every type, so on a busy factory a picked date (e.g. "yesterday") could
+  // silently return nothing just because that day's rows had already
+  // scrolled past the cap. Passing `date` to the API filters server-side
+  // instead, so any day is reachable regardless of how much happened since.
+  useEffect(() => {
+    if (!authReady || !session) return
+    load(fDate || undefined)
+  }, [authReady, session, fDate])
 
   useEffect(() => {
     if (!detail || !session) { setDetailHolds([]); return }
@@ -142,11 +159,12 @@ export default function ProductionLogPage() {
       .finally(() => setDetailHoldsLoading(false))
   }, [detail, session])
 
-  async function load() {
+  async function load(date?: string) {
     if (!session) return
     setLoading(true)
     try {
-      const res = await fetch('/api/pos/factory/capture?limit=100', { headers: session.headers })
+      const qs = date ? `&date=${date}` : ''
+      const res = await fetch(`/api/pos/factory/capture?limit=100${qs}`, { headers: session.headers })
       const data = res.ok ? await res.json() : { captures: [] }
       setCaptures(data.captures || [])
     } catch (e) {
@@ -202,7 +220,10 @@ export default function ProductionLogPage() {
   const filtered = captures.filter(c => {
     if (fType && c.type !== fType) return false
     if (fStatus && c.status !== fStatus) return false
-    if (fDate && !c.created_at.startsWith(fDate)) return false
+    // fDate itself is now applied server-side (see the effect above), in
+    // the factory's own Nairobi day boundary rather than raw UTC — no
+    // client-side re-check here, so a capture near midnight isn't excluded
+    // by a second, differently-timezoned filter.
     if (fProduct && !(c.product_name || '').toLowerCase().includes(fProduct.toLowerCase())) return false
     return true
   })
@@ -331,7 +352,7 @@ export default function ProductionLogPage() {
             <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('factory_production.header_captures_count', { shown: filtered.length, total: captures.length })}</div>
           </div>
         </div>
-        <button onClick={load} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('factory_production.header_refresh')}</button>
+        <button onClick={() => load(fDate || undefined)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('factory_production.header_refresh')}</button>
       </div>
 
       {/* Account bar — language + sign out, same slim row on every factory screen.
@@ -440,6 +461,12 @@ export default function ProductionLogPage() {
             <option value="rejected">{tc('factory_production.status_rejected')}</option>
           </select>
           <input type="date" value={fDate} onChange={e => setFDate(e.target.value)} style={filterStyle} />
+          <button
+            onClick={() => setFDate(prev => prev === yesterdayNairobiKey() ? '' : yesterdayNairobiKey())}
+            style={{ ...filterStyle, cursor: 'pointer', background: fDate === yesterdayNairobiKey() ? ACC : filterStyle.background, color: fDate === yesterdayNairobiKey() ? '#1e293b' : filterStyle.color, fontWeight: 600 }}
+          >
+            {tc('factory_production.filter_yesterday')}
+          </button>
           <input value={fProduct} onChange={e => setFProduct(e.target.value)} placeholder={tc('factory_production.filter_search_product')} style={{ ...filterStyle, flex: 1, minWidth: 160 }} />
           {(fType || fStatus || fDate || fProduct) && (
             <button onClick={() => { setFType(''); setFStatus(''); setFDate(''); setFProduct('') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', borderRadius: 8, padding: '0 14px', cursor: 'pointer', fontSize: 13 }}>{tc('factory_production.filter_clear')}</button>
