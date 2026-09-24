@@ -756,7 +756,7 @@ export default function FactoryHub() {
         {/* ── Quick actions ─────────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
           {[
-            { label: '🌾 Sesame Production', sub: 'Real-time intake, yield & inventory', icon: <span style={{ fontSize: 20 }}>🌾</span>, color: '#f59e0b', href: '/factory/sesame', span: false },
+            { label: 'Sesame Production', sub: 'Real-time intake, yield & inventory', icon: <span style={{ fontSize: 20 }}>🌾</span>, color: '#f59e0b', href: '/factory/sesame', span: false },
             { label: tc('factory.action_production_log'), sub: tc('factory.action_production_log_sub'), icon: <IconClipboard size={20} />, color: tokens.intake, href: '/factory/production', span: false },
             { label: tc('factory.action_approvals'), sub: tc('factory.action_approvals_sub', { count: pending }), icon: <IconCheckSquare size={20} />, color: pending > 0 ? tokens.danger : tokens.success, href: '/factory/approvals', span: false },
             { label: tc('factory.action_quality_check'), sub: qualityOpen > 0 ? tc(qualityOpen > 1 ? 'factory.action_quality_open_other' : 'factory.action_quality_open_one', { count: qualityOpen }) : tc('factory.action_quality_log'), icon: <IconShield size={20} />, color: qualityCriticals > 0 ? tokens.danger : qualityOpen > 0 ? tokens.warning : tokens.intake, href: '/factory/quality', span: false },
