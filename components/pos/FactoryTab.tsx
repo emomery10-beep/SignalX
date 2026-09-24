@@ -1772,6 +1772,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const wasteSaleValue = useMemo(() => {
     return wastageInStockQty * effectiveWastePricePerKg
   }, [wastageInStockQty, effectiveWastePricePerKg])
+  // Cost of the seed that became wastage (see totalMaterialCost's own
+  // deduction above) and the revenue that byproduct is actually clawing
+  // back, side by side — these two numbers live in unrelated places
+  // elsewhere on this page (Material Cost's "Less wastage" line vs. the
+  // separate Wastage Sale Value card), easy to read as connected when
+  // they're not netted anywhere. wasteSaleRevenue is realized (already
+  // sold); wasteSaleValue is still projected (in stock, not yet sold).
+  const wastageCostTotal = wastageQtyTotal * avgSeedCostPerKg
+  const netWastagePosition = wasteSaleRevenue + wasteSaleValue - wastageCostTotal
 
   // Overhead (oil changes, filters, maintenance, misc equipment costs) has
   // no real capture data behind it — was a flat 5% guess on top of the
@@ -2292,6 +2301,25 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Price/kg', value: `${fmt(currencySymbol, effectiveWastePricePerKg)}/kg` },
             { label: 'Sale value', value: fmt(currencySymbol, wasteSaleValue), strong: true },
           ]}
+        />
+        <KpiCard
+          label="Wastage: Net Position"
+          value={`${netWastagePosition >= 0 ? '+' : '−'}${fmt(currencySymbol, Math.abs(netWastagePosition))}`}
+          sub={netWastagePosition >= 0 ? 'Byproduct sales are covering the loss' : 'Byproduct sales not yet covering the loss'}
+          accent={netWastagePosition >= 0 ? GREEN : RED}
+          chart={[
+            { label: 'Wastage cost', raw: wastageCostTotal, color: RED },
+            { label: 'Revenue recovered', raw: wasteSaleRevenue, color: GREEN },
+            { label: 'Value in stock', raw: wasteSaleValue, color: '#94a3b8' },
+          ]}
+          chartMode="compare"
+          breakdown={[
+            { label: 'Seed lost to wastage', value: `− ${fmt(currencySymbol, wastageCostTotal)}` },
+            { label: 'Revenue recovered (sold)', value: `+ ${fmt(currencySymbol, wasteSaleRevenue)}` },
+            { label: 'Value in stock (unsold)', value: `+ ${fmt(currencySymbol, wasteSaleValue)}` },
+            { label: 'Net position', value: `${netWastagePosition >= 0 ? '+' : '−'}${fmt(currencySymbol, Math.abs(netWastagePosition))}`, strong: true },
+          ]}
+          breakdownNote="Ties together two numbers that live separately elsewhere on this page: Material Cost's 'Less wastage' deduction (the cost) and Wastage Sale Value (the recovery) — not netted against each other anywhere else."
         />
       </div>
 
