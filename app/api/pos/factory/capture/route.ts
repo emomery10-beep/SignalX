@@ -64,6 +64,8 @@ export async function GET(req: NextRequest) {
   const shift_id    = searchParams.get('shift_id')
   const location_id = searchParams.get('location_id')
   const date        = searchParams.get('date')  // YYYY-MM-DD
+  const from        = searchParams.get('from')  // ISO datetime, inclusive
+  const to          = searchParams.get('to')    // ISO datetime, inclusive
   const page        = Math.max(0, parseInt(searchParams.get('page')  || '0'))
   const limit       = Math.min(2000, parseInt(searchParams.get('limit') || '2000'))
 
@@ -83,11 +85,20 @@ export async function GET(req: NextRequest) {
   if (status)      query = query.eq('status', status)
   if (shift_id)    query = query.eq('shift_id', shift_id)
   if (location_id) query = query.eq('location_id', location_id)
-  if (date) {
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    // Nairobi (UTC+3, no DST) calendar day, not raw UTC — a capture made
+    // after ~9pm Nairobi time is already "tomorrow" in UTC, so a plain UTC
+    // midnight boundary silently puts it under the wrong date. Same
+    // convention as components/pos/FactoryTab.tsx's day-bucketing fix
+    // (commit 139d94f1) and pos-askbiz's copy of this route.
+    const start = new Date(`${date}T00:00:00+03:00`)
+    const end = new Date(start.getTime() + 24 * 3600 * 1000)
     query = query
-      .gte('created_at', `${date}T00:00:00.000Z`)
-      .lt('created_at',  `${date}T23:59:59.999Z`)
+      .gte('created_at', start.toISOString())
+      .lt('created_at',  end.toISOString())
   }
+  if (from) query = query.gte('created_at', from)
+  if (to)   query = query.lte('created_at', to)
 
   // Non-approvers (floor workers) only see their own captures
   if (!hasPermission(auth.role, 'capture.approve') && auth.staffId) {

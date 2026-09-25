@@ -141,6 +141,18 @@ interface InventoryItem {
   id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; sector?: string | null; active: boolean; location_id?: string; location?: { id: string; name: string } | null;
   expiry_date?: string | null; batch_number?: string | null; supplier?: string | null; brand?: string | null;
 }
+// Factory's point of sale — an approved, priced dispatch capture — not a
+// pos_transactions row. See components/pos/FactoryTab.tsx.
+interface FactoryDispatch {
+  id: string; product_name?: string | null; quantity?: number | null; dispatch_price?: number | null
+  status: string; created_at: string; approved_at?: string | null; notes?: string | null
+  // Not a real column on pos_factory_captures today — kept optional in case
+  // it's added later. Matches the same defensive check FactoryTab's own
+  // DispatchView uses (components/pos/FactoryTab.tsx): the recipient/phone
+  // for a dispatch is actually stored in `notes` (see pos-askbiz's capture
+  // route.ts, "destination field contains phone or recipient info").
+  destination?: string | null
+}
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
@@ -152,7 +164,7 @@ type TxDetailType = Transaction | null
 const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2', factory: '#64748b' }
 
 export default function POSPage() {
-  const { tc, lang } = useLang()
+  const { tc, lang, fmtDate } = useLang()
   const supabase = createClient()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -171,6 +183,8 @@ export default function POSPage() {
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [prevTransactions, setPrevTransactions] = useState<Transaction[]>([])
+  const [factoryDispatches, setFactoryDispatches] = useState<FactoryDispatch[]>([])
+  const [prevFactoryDispatches, setPrevFactoryDispatches] = useState<FactoryDispatch[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [currencySymbol, setCurrencySymbol] = useState('£')
@@ -470,6 +484,24 @@ export default function POSPage() {
     return data.transactions || []
   }, [selectedLocation])
 
+  // Factory's revenue-bearing event — an approved dispatch, priced by the
+  // approver — lives in pos_factory_captures, not pos_transactions. See the
+  // dispatchInScope comment below for why this is fetched alongside
+  // transactions instead of inside FactoryTab's own (unscoped) fetch.
+  const fetchFactoryDispatches = useCallback(async (from: string, to: string, locId?: string): Promise<FactoryDispatch[]> => {
+    const loc = locId || selectedLocation
+    const params = new URLSearchParams({ type: 'dispatch', status: 'approved', from, to, limit: '500' })
+    if (loc && loc !== 'all') params.set('location_id', loc)
+    try {
+      const res = await fetch(`/api/pos/factory/capture?${params}`)
+      if (!res.ok) return []
+      const data = await res.json()
+      return Array.isArray(data) ? data : (data.captures || [])
+    } catch {
+      return []
+    }
+  }, [selectedLocation])
+
   useEffect(() => {
     const init = async () => {
       setLoading(true)
@@ -489,10 +521,12 @@ export default function POSPage() {
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
 
-      const [staffRes, txData, prevTxData, invRes, locRes, reorderRes] = await Promise.all([
+      const [staffRes, txData, prevTxData, dispatchData, prevDispatchData, invRes, locRes, reorderRes] = await Promise.all([
         fetch('/api/pos/staff'),
         fetchTransactions(start.toISOString(), end.toISOString(), 'all'),
         fetchTransactions(prev.start.toISOString(), prev.end.toISOString(), 'all'),
+        fetchFactoryDispatches(start.toISOString(), end.toISOString(), 'all'),
+        fetchFactoryDispatches(prev.start.toISOString(), prev.end.toISOString(), 'all'),
         fetch('/api/pos/inventory'),
         fetch('/api/pos/locations'),
         fetch('/api/pos/reorder-suggestions').catch(() => null),
@@ -505,6 +539,8 @@ export default function POSPage() {
       setStaff(staffData.staff || [])
       setTransactions(txData)
       setPrevTransactions(prevTxData)
+      setFactoryDispatches(dispatchData)
+      setPrevFactoryDispatches(prevDispatchData)
       setInventory(invData.inventory || [])
       setLocations(locData.locations || [])
       setReorderSuggestions(reorderData.suggestions || [])
@@ -520,14 +556,18 @@ export default function POSPage() {
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
       const locParam = selectedLocation !== 'all' ? `&location_id=${selectedLocation}` : ''
-      const [txData, prevTxData, invRes] = await Promise.all([
+      const [txData, prevTxData, dispatchData, prevDispatchData, invRes] = await Promise.all([
         fetchTransactions(start.toISOString(), end.toISOString()),
         fetchTransactions(prev.start.toISOString(), prev.end.toISOString()),
+        fetchFactoryDispatches(start.toISOString(), end.toISOString()),
+        fetchFactoryDispatches(prev.start.toISOString(), prev.end.toISOString()),
         fetch(`/api/pos/inventory?${locParam ? `location_id=${selectedLocation}` : ''}`),
       ])
       const invData = await invRes.json()
       setTransactions(txData)
       setPrevTransactions(prevTxData)
+      setFactoryDispatches(dispatchData)
+      setPrevFactoryDispatches(prevDispatchData)
       setInventory(invData.inventory || [])
       setTxPage(0)
     }
@@ -600,6 +640,31 @@ export default function POSPage() {
   const prevRevenue = prevCompletedTx.reduce((s, t) => s + t.total, 0)
   const todaySales = completedTx.length
   const prevSales = prevCompletedTx.length
+
+  // Factory sells via approved, priced dispatches rather than a POS checkout
+  // (see components/pos/FactoryTab.tsx's own salesRevenue) — there's no
+  // pos_transactions row to filter by cashier sector the way every other
+  // sector works. Folded into the Revenue/Sales/Avg Sale KPIs (and the
+  // combined 'all' view) so this page's totals match what the Factory tab
+  // itself reports instead of reading zero. NOT folded into Gross
+  // Profit/Margin below — dispatch COGS (material+labour+electricity) is
+  // only modelled in the Factory tab's Costing view via owner-entered
+  // overrides that live in that component's local state, so there's no
+  // reliable cost figure to attach to it here.
+  const dispatchInScope = selectedSector === 'factory' || selectedSector === 'all'
+  const dispatchRevenueInRange = useMemo(() => dispatchInScope
+    ? factoryDispatches.reduce((s, d) => s + (Number(d.quantity) || 0) * (Number(d.dispatch_price) || 0), 0)
+    : 0, [factoryDispatches, dispatchInScope])
+  const prevDispatchRevenueInRange = useMemo(() => dispatchInScope
+    ? prevFactoryDispatches.reduce((s, d) => s + (Number(d.quantity) || 0) * (Number(d.dispatch_price) || 0), 0)
+    : 0, [prevFactoryDispatches, dispatchInScope])
+  const dispatchCountInRange = dispatchInScope ? factoryDispatches.length : 0
+  const prevDispatchCountInRange = dispatchInScope ? prevFactoryDispatches.length : 0
+  const combinedRevenue = todayRevenue + dispatchRevenueInRange
+  const combinedPrevRevenue = prevRevenue + prevDispatchRevenueInRange
+  const combinedSales = todaySales + dispatchCountInRange
+  const combinedPrevSales = prevSales + prevDispatchCountInRange
+
   const refundedTx = useMemo(() =>
     transactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && txMatchesSector(t)),
     [transactions, selectedSector, cashierSectorMap])
@@ -1407,8 +1472,8 @@ export default function POSPage() {
             {/* KPI row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
               {[
-                { label: tc('pos_app.kpi_revenue'), value: `${fmt(currencySymbol, todayRevenue)}`, color: GREEN, prev: prevRevenue, curr: todayRevenue, type: 'sales' as const, inverse: false },
-                { label: tc('pos_app.kpi_sales'), value: todaySales.toString(), color: ACC, prev: prevSales, curr: todaySales, type: 'sales' as const, inverse: false },
+                { label: tc('pos_app.kpi_revenue'), value: `${fmt(currencySymbol, combinedRevenue)}`, color: GREEN, prev: combinedPrevRevenue, curr: combinedRevenue, type: 'sales' as const, inverse: false },
+                { label: tc('pos_app.kpi_sales'), value: combinedSales.toString(), color: ACC, prev: combinedPrevSales, curr: combinedSales, type: 'sales' as const, inverse: false },
                 { label: tc('pos_app.kpi_refunds'), value: refundCount.toString(), color: refundCount > 0 ? RED : 'var(--tx)', prev: prevRefunds, curr: refundCount, type: 'refunds' as const, inverse: true },
                 { label: tc('pos_app.kpi_low_stock'), value: alertCount.toString(), color: alertCount > 0 ? RED : GREEN, prev: 0, curr: alertCount, type: 'low_stock' as const, inverse: true },
               ].map((kpi, i) => (
@@ -1445,14 +1510,14 @@ export default function POSPage() {
                 className="card-hover"
                 style={{ ...cardStyle, display: 'block' }}>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_app.card_avg_sale')}</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, combinedSales > 0 ? combinedRevenue / combinedSales : 0)}</div>
               </div>
             </div>
 
             {/* Ask AskBiz about POS data */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
               {[
-                { label: '📊 ' + tc('pos_app.ask_analyse_today'), query: `My POS today: ${fmt(currencySymbol, todayRevenue)} revenue, ${todaySales} sales, ${margin.toFixed(1)}% margin, ${refundCount} refunds. Analyse this — is it a good day? What should I focus on?` },
+                { label: '📊 ' + tc('pos_app.ask_analyse_today'), query: `My POS today: ${fmt(currencySymbol, combinedRevenue)} revenue, ${combinedSales} sales, ${margin.toFixed(1)}% margin, ${refundCount} refunds. Analyse this — is it a good day? What should I focus on?` },
                 { label: '⭐ ' + tc('pos_app.ask_top_products'), query: 'What are my top 10 selling POS products this week by revenue and quantity?' },
                 { label: '👥 ' + tc('pos_app.ask_staff_ranking'), query: 'Rank my POS staff by sales performance — revenue per cashier, transaction count, and average sale value.' },
                 { label: '📦 ' + tc('pos_app.ask_stock_alerts'), query: 'Which products are running low on stock or have expiry warnings? Show items I need to reorder.' },
@@ -1769,8 +1834,45 @@ export default function POSPage() {
 
             {/* Recent transactions */}
             <div>
-              <div style={sectionLabel}>{tc('pos_app.recent_transactions')}</div>
-              {sectorTransactions.length === 0 ? (
+              <div style={sectionLabel}>{selectedSector === 'factory' ? tc('pos_app.recent_dispatches') : tc('pos_app.recent_transactions')}</div>
+              {selectedSector === 'factory' ? (
+                factoryDispatches.length === 0 ? (
+                  <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos_app.no_dispatches_yet')}</div>
+                    <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{tc('pos_app.no_dispatches_hint')}</div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
+                      {factoryDispatches.slice(txPage * TX_PER_PAGE, (txPage + 1) * TX_PER_PAGE).map((d, i, arr) => (
+                        <div key={d.id}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)' }}>
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--tx)' }}>
+                              {d.product_name || tc('pos_app.dispatch_fallback')}{d.quantity != null ? ` × ${d.quantity}` : ''}
+                            </div>
+                            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+                              {fmtDate(d.approved_at || d.created_at, { hour: '2-digit', minute: '2-digit' })}{(d.destination || d.notes) ? ` · ${d.destination || d.notes}` : ''}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, (Number(d.quantity) || 0) * (Number(d.dispatch_price) || 0))}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Pagination */}
+                    {factoryDispatches.length > TX_PER_PAGE && (
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+                        <button onClick={() => setTxPage(p => Math.max(0, p - 1))} disabled={txPage === 0} style={{ ...btnSecondary, opacity: txPage === 0 ? 0.4 : 1, padding: '6px 12px', fontSize: 14 }}>{tc('pos_app.previous')}</button>
+                        <span style={{ fontSize: 14, color: 'var(--tx3)', alignSelf: 'center' }}>{tc('pos_app.page_of', { current: txPage + 1, total: Math.ceil(factoryDispatches.length / TX_PER_PAGE) })}</span>
+                        <button onClick={() => setTxPage(p => Math.min(Math.ceil(factoryDispatches.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= factoryDispatches.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= factoryDispatches.length ? 0.4 : 1, padding: '6px 12px', fontSize: 14 }}>{tc('pos_app.next')}</button>
+                      </div>
+                    )}
+                  </>
+                )
+              ) : sectorTransactions.length === 0 ? (
                 <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                   <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -4170,7 +4272,9 @@ export default function POSPage() {
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, marginBottom: 16 }}>{filterModal.title}</div>
             {filterModal.type === 'sales' && (
               <div>
-                {completedTx.length === 0 ? <div style={{ fontSize: 15, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_completed_sales')}</div> : (
+                {completedTx.length === 0 && (selectedSector !== 'factory' || factoryDispatches.length === 0) ? (
+                  <div style={{ fontSize: 15, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos_app.no_completed_sales')}</div>
+                ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                     {completedTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -4179,6 +4283,16 @@ export default function POSPage() {
                           <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos_app.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                         <div style={{ fontSize: 17, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                      </div>
+                    ))}
+                    {/* Factory's point of sale is an approved dispatch, not a pos_transactions row — see dispatchInScope above. */}
+                    {selectedSector === 'factory' && factoryDispatches.map(d => (
+                      <div key={d.id} style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 500 }}>{d.product_name || tc('pos_app.dispatch_fallback')}{d.quantity != null ? ` × ${d.quantity}` : ''}</div>
+                          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{fmtDate(d.approved_at || d.created_at, { hour: '2-digit', minute: '2-digit' })}{(d.destination || d.notes) ? ` · ${d.destination || d.notes}` : ''}</div>
+                        </div>
+                        <div style={{ fontSize: 17, fontWeight: 700 }}>{fmt(currencySymbol, (Number(d.quantity) || 0) * (Number(d.dispatch_price) || 0))}</div>
                       </div>
                     ))}
                   </div>
