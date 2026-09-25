@@ -105,6 +105,36 @@ function weekKey(date: string | Date): string {
   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`
 }
 
+// Nairobi (UTC+3, no DST) calendar day, not the viewer's browser timezone —
+// same convention as productionDays below and pos-askbiz's copy of this
+// dashboard (app/factory/page.tsx), so "today"/"yesterday" mean the same
+// thing regardless of where this page is opened from.
+function nairobiDayKey(d: Date): string {
+  const n = new Date(d.getTime() + 3 * 3600 * 1000)
+  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
+}
+function shiftDayKey(key: string, deltaDays: number): string {
+  const [y, m, d] = key.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  dt.setUTCDate(dt.getUTCDate() + deltaDays)
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
+}
+function formatDayKey(key: string): string {
+  // timeZone must be pinned explicitly — toLocaleDateString otherwise
+  // renders in the VIEWER's local zone, which can flip the displayed date
+  // by a day (e.g. a US-Pacific viewer would see "23 Sep" for a key whose
+  // Nairobi midnight instant falls in the afternoon of the 23rd their time).
+  return new Date(`${key}T00:00:00+03:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' })
+}
+// Day-of-week of a Nairobi calendar-day key — built from its Y/M/D
+// components directly (not by re-parsing with a +03:00 offset), since that
+// offset would shift the instant back onto the PREVIOUS UTC calendar day and
+// silently return the wrong weekday.
+function isSundayDayKey(key: string): boolean {
+  const [y, m, d] = key.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 0
+}
+
 // Capture product names are free text (dropdown + typed "other"), so the
 // same product shows up as "Sesame seed" and "sesame seed" — different
 // grouping keys for what's really one product. Collapse case/whitespace
@@ -285,10 +315,15 @@ function MiniBars({ items, mode }: { items: { label: string; raw: number; color:
   )
 }
 
-function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakdownNote, chart, chartMode }: {
+function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakdownNote, chart, chartMode, headerRight }: {
   label: string; value: string; sub?: string; accent?: string; onClick?: () => void; active?: boolean
   breakdown?: { label: string; value: string; strong?: boolean }[]; breakdownNote?: string
   chart?: { label: string; raw: number; color: string }[]; chartMode?: 'stack' | 'compare'
+  /** Extra control rendered on its own row under the label (e.g. a day
+   * switcher) — kept off the label row so it has room to breathe on a
+   * narrow grid tile, and repeated in the dialog header below so it stays
+   * usable while the breakdown is open. */
+  headerRight?: React.ReactNode
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false)
   // This card is rendered on both the owner's desktop dashboard and the
@@ -327,7 +362,7 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
       onMouseEnter={e => { if (onClick) e.currentTarget.style.borderColor = accent || ACC }}
       onMouseLeave={e => { if (onClick && !active) e.currentTarget.style.borderColor = 'var(--b)' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: headerRight ? 2 : 6 }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>{label}</div>
         {breakdown && breakdown.length > 0 && (
           // 44x44 hit area (touch-target minimum) around a compact 24px
@@ -354,6 +389,7 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
           </button>
         )}
       </div>
+      {headerRight && <div style={{ marginBottom: 6 }}>{headerRight}</div>}
       <div style={{ fontSize: 22, fontWeight: 800, color: accent || 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{value}</div>
       {sub && <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{sub}</div>}
       {showBreakdown && breakdown && breakdown.length > 0 && (
@@ -402,6 +438,7 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
                 ×
               </button>
             </div>
+            {headerRight && <div style={{ marginBottom: 10 }}>{headerRight}</div>}
             <div style={{ fontSize: 24, fontWeight: 800, color: accent || 'var(--tx)', fontFamily: 'var(--font-sora)', marginBottom: 14 }}>{value}</div>
             {chart && chart.length > 0 && <MiniBars items={chart} mode={chartMode || 'stack'} />}
             {breakdown.map((line, i) => (
@@ -423,6 +460,39 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Inline day-nav control (‹ Today/Yesterday/date › ) ────────
+// Used to scope a single KpiCard to one calendar day instead of the
+// dashboard's usual all-time total — see its `headerRight` prop above.
+// 44x44 hit areas around a compact visual button, same convention as the
+// KpiCard info button, so both meet mobile touch-target size on this same
+// card without widening the row.
+function DaySwitcher({ label, onPrev, onNext, nextDisabled, loading }: {
+  label: string; onPrev: () => void; onNext: () => void; nextDisabled?: boolean; loading?: boolean
+}) {
+  const navBtn = (disabled: boolean): React.CSSProperties => ({
+    width: 44, height: 44, margin: '-12px', flexShrink: 0,
+    background: 'none', border: 'none', padding: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: disabled ? 'default' : 'pointer',
+  })
+  const glyph: React.CSSProperties = {
+    width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--b)',
+    background: 'var(--bg)', color: 'var(--tx2)', fontSize: 11, lineHeight: 1, fontWeight: 700,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 20 }} onClick={e => e.stopPropagation()}>
+      <button type="button" onClick={onPrev} disabled={loading} aria-label="Previous day" style={navBtn(!!loading)}>
+        <span style={glyph}>‹</span>
+      </button>
+      <span style={{ fontSize: 10, fontWeight: 700, color: ACC, minWidth: 52, textAlign: 'center' }}>{loading ? '…' : label}</span>
+      <button type="button" onClick={onNext} disabled={nextDisabled || loading} aria-label="Next day" style={navBtn(!!(nextDisabled || loading))}>
+        <span style={{ ...glyph, opacity: (nextDisabled || loading) ? 0.35 : 1 }}>›</span>
+      </button>
     </div>
   )
 }
@@ -856,6 +926,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
               intakes={intakesConsumed} outputs={outputs} wastages={wastages} packaging={packaging} dispatches={dispatches}
               costForCapture={costForCapture} sellByProduct={sellByProduct}
               totalOutput={totalOutput} currencySymbol={currencySymbol}
+              selectedLocation={selectedLocation} previewCaptures={previewCaptures}
             />
           )}
         </>
@@ -1608,11 +1679,14 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 // ═════════════════════════════════════════════════════════════
 // COSTING SUB-TAB — crown jewel
 // ═════════════════════════════════════════════════════════════
-function CostingView({ intakes, outputs, wastages, packaging, dispatches, costForCapture, sellByProduct, totalOutput, currencySymbol }: {
+function CostingView({ intakes, outputs, wastages, packaging, dispatches, costForCapture, sellByProduct, totalOutput, currencySymbol, selectedLocation, previewCaptures }: {
   intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]; packaging?: FactoryCapture[]; dispatches?: FactoryCapture[]
   costForCapture: (c: FactoryCapture) => number
   sellByProduct: Map<string, number>
   totalOutput: number; currencySymbol: string
+  /** For the day-scoped "Cost per 20L Jerrycan" fetch below only — kept
+   * separate from this view's own (all-time, pre-filtered) props. */
+  selectedLocation?: string; previewCaptures?: any[]
 }) {
   const { tc } = useLang()
 
@@ -1797,6 +1871,96 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // margins table) rather than folded into Cost per 20L Jerrycan.
   const totalProductionCost = totalMaterialCost + totalElectricity + totalOverhead
   const costPerJerrycan = jerrycansProduced > 0 ? totalProductionCost / jerrycansProduced : 0
+
+  // ═══ Daily Cost per 20L Jerrycan (scroll-back view) ═══════════
+  // Everything above is an ALL-TIME average. This section adds a single-day
+  // view of the same "Cost per 20L Jerrycan" card, scoped via its own
+  // ?date= fetch — deliberately NOT a client-side filter over this view's
+  // own (capped at limit=2000) props, since that cap holds fine for an
+  // all-time average spanning months but silently drops older days once
+  // history grows past it. Same class of bug already hit once in
+  // pos-askbiz's Production Log (fixed commit ee21452b) — the capture API
+  // already supports real server-side date filtering for exactly this.
+  const todayNairobi = nairobiDayKey(new Date())
+  const yesterdayNairobi = shiftDayKey(todayNairobi, -1)
+  const [costingDay, setCostingDay] = useState(todayNairobi)
+  const [dayCaptures, setDayCaptures] = useState<FactoryCapture[]>([])
+  const [dayLoading, setDayLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function run() {
+      // Preview/demo harness has no API to call — filter the fixed mock set
+      // client-side instead, same fallback the main captures fetch uses.
+      if (previewCaptures) {
+        const list = (previewCaptures as FactoryCapture[]).filter(c => nairobiDayKey(new Date(c.created_at)) === costingDay)
+        if (!cancelled) setDayCaptures(list)
+        return
+      }
+      setDayLoading(true)
+      try {
+        const params = new URLSearchParams()
+        if (selectedLocation && selectedLocation !== 'all') params.set('location_id', selectedLocation)
+        params.set('date', costingDay)
+        params.set('limit', '2000')
+        const res = await fetch(`/api/pos/factory/capture?${params}`)
+        const data = await res.json()
+        let list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
+        list = Array.isArray(list) ? list.map(c => ({ ...c, product: c.product || (c as any).product_name })) : []
+        if (!cancelled) setDayCaptures(list)
+      } catch (err) {
+        console.error('Failed to fetch day-scoped factory captures:', err)
+        if (!cancelled) setDayCaptures([])
+      } finally {
+        if (!cancelled) setDayLoading(false)
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }, [costingDay, selectedLocation, previewCaptures])
+
+  // Same type grouping (intake+intake_feed, matching the `intakes` prop
+  // this view already receives — see intakesConsumed in the parent) and the
+  // same formulas as the all-time figures above, just fed from the
+  // day-scoped fetch instead — so a single day's number is built exactly
+  // the same way as the all-time average sitting next to it.
+  const dayIntakes = useMemo(() => dayCaptures.filter(c => c.type === 'intake' || c.type === 'intake_feed'), [dayCaptures])
+  const dayOutputs = useMemo(() => dayCaptures.filter(c => c.type === 'output'), [dayCaptures])
+  const dayPackaging = useMemo(() => dayCaptures.filter(c => (c.type as any) === 'packaging'), [dayCaptures])
+  const dayWastages = useMemo(() => dayCaptures.filter(c => c.type === 'wastage'), [dayCaptures])
+
+  const dayJerrycansProduced = useMemo(() => {
+    const fromPackaging = dayPackaging.reduce((sum, c) => (c.product || '').toLowerCase().includes('jerrycan') ? sum + (Number(c.quantity) || 0) : sum, 0)
+    if (fromPackaging > 0) return fromPackaging
+    return dayOutputs.reduce((sum, c) => (c.product || '').toLowerCase().includes('jerrycan') ? sum + (Number(c.quantity) || 0) : sum, 0)
+  }, [dayPackaging, dayOutputs])
+
+  const dayGrossMaterialCost = useMemo(() => dayIntakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [dayIntakes, costForCapture])
+  const dayIntakeQtyTotal = useMemo(() => dayIntakes.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [dayIntakes])
+  const dayAvgSeedCostPerKg = dayIntakeQtyTotal > 0 ? dayGrossMaterialCost / dayIntakeQtyTotal : 0
+  const dayWastageQtyTotal = useMemo(() => dayWastages.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [dayWastages])
+  const dayTotalMaterialCost = Math.max(0, dayGrossMaterialCost - (dayWastageQtyTotal * dayAvgSeedCostPerKg))
+  const dayMaterialPerCan = dayJerrycansProduced > 0 ? dayTotalMaterialCost / dayJerrycansProduced : 0
+
+  // Electricity: same "was this an active working day" logic as
+  // productionDays/totalElectricity above (Sundays excluded — confirmed by
+  // owner the machines never run then), just asking it of one day instead
+  // of counting across all history. Ignores any lifetime manual electricity
+  // override on purpose — that override is a single lump-sum replacement
+  // for the whole tracked period with no day-level resolution, so it can't
+  // tell us what any one specific day cost; the formula estimate is the
+  // only number that IS day-resolvable.
+  const dayHasActivity = dayIntakes.length > 0 || dayOutputs.length > 0 || dayPackaging.length > 0 || dayWastages.length > 0
+  const dayIsActiveWorkingDay = !isSundayDayKey(costingDay) && dayHasActivity
+  const dayElectricityTotal = dayIsActiveWorkingDay ? electricityCostPerDay : 0
+  const dayElectricityPerCan = dayJerrycansProduced > 0 ? dayElectricityTotal / dayJerrycansProduced : 0
+
+  // Overhead has no date on it at all — a single manually-typed lifetime
+  // figure (see totalOverhead above), so there's no real per-day number to
+  // show. Reuse its all-time per-jerrycan rate rather than inventing a
+  // day-specific split with no data behind it; the card labels this clearly.
+  const dayCostPerJerrycan = dayMaterialPerCan + dayElectricityPerCan + overheadPerJerrycan
+  const costingDayLabel = costingDay === todayNairobi ? 'Today' : costingDay === yesterdayNairobi ? 'Yesterday' : formatDayKey(costingDay)
 
   const pieSlices = [
     { label: tc('pos_factory.pieMaterials'), value: totalMaterialCost, color: ACC },
@@ -2200,19 +2364,36 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <KpiCard
-          label="Cost per 20L Jerrycan" value={fmt(currencySymbol, costPerJerrycan)} sub="Material + Electricity + Overhead" accent={ACC}
-          chart={[
-            { label: 'Material', raw: jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0, color: ACC },
-            { label: 'Electricity', raw: electricityCostPerJerrycan, color: '#fbbf24' },
-            { label: 'Overhead', raw: jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0, color: '#a855f7' },
+          label="Cost per 20L Jerrycan"
+          value={dayJerrycansProduced > 0 ? fmt(currencySymbol, dayCostPerJerrycan) : '—'}
+          sub={dayJerrycansProduced > 0 ? `${fmtInt(dayJerrycansProduced)} jerrycan${dayJerrycansProduced === 1 ? '' : 's'} · ${costingDayLabel.toLowerCase()}` : `No jerrycans packaged — ${costingDayLabel.toLowerCase()}`}
+          accent={ACC}
+          headerRight={
+            <DaySwitcher
+              label={costingDayLabel}
+              loading={dayLoading}
+              nextDisabled={costingDay === todayNairobi}
+              onPrev={() => setCostingDay(d => shiftDayKey(d, -1))}
+              onNext={() => setCostingDay(d => shiftDayKey(d, 1))}
+            />
+          }
+          chart={dayJerrycansProduced > 0 ? [
+            { label: 'Material', raw: dayMaterialPerCan, color: ACC },
+            { label: 'Electricity', raw: dayElectricityPerCan, color: '#fbbf24' },
+            { label: 'Overhead', raw: overheadPerJerrycan, color: '#a855f7' },
+          ] : undefined}
+          breakdown={dayJerrycansProduced > 0 ? [
+            { label: 'Material', value: `${fmt(currencySymbol, dayMaterialPerCan)}/can` },
+            { label: 'Electricity', value: `${fmt(currencySymbol, dayElectricityPerCan)}/can` },
+            { label: 'Overhead', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can (lifetime avg)` },
+            { label: 'Cost per jerrycan', value: fmt(currencySymbol, dayCostPerJerrycan), strong: true },
+          ] : [
+            { label: 'Jerrycans packaged', value: '0' },
           ]}
-          breakdown={[
-            { label: 'Material', value: `${fmt(currencySymbol, jerrycansProduced > 0 ? totalMaterialCost / jerrycansProduced : 0)}/can` },
-            { label: 'Electricity', value: `${fmt(currencySymbol, electricityCostPerJerrycan)}/can` },
-            { label: 'Overhead', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can` },
-            { label: 'Cost per jerrycan', value: fmt(currencySymbol, costPerJerrycan), strong: true },
-          ]}
-          breakdownNote={`÷ ${fmtInt(jerrycansProduced)} jerrycans produced. Labor excluded — offset by ~600kg/week of wastage byproduct sold at KSh30/kg.`}
+          breakdownNote={dayJerrycansProduced > 0
+            ? `${costingDayLabel} · ÷ ${fmtInt(dayJerrycansProduced)} jerrycans produced that day. Electricity uses the formula estimate (day-specific manual overrides aren't supported). Overhead shows the lifetime average per can — it has no date of its own. Labor excluded — offset by ~600kg/week of wastage byproduct sold at KSh30/kg.`
+            : `No packaging captures logged for ${costingDayLabel.toLowerCase()}. Use ‹ to check an earlier day.`
+          }
         />
         <KpiCard
           label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)"
@@ -2409,6 +2590,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
           <div>Material cost from intake_arrival captures; electricity allocated based on actual 20L jerrycan output. Labor excluded from this figure — wastage byproduct sales already cover it as a separate income stream (see Labor Cost card for its own number).</div>
           <div style={{ marginTop: 8 }}>Overhead (oil changes, filters, maintenance, misc equipment costs) is KSh0 unless entered manually — edit it in Operating Costs above.</div>
+          <div style={{ marginTop: 8 }}>Everything on this page is an all-time average. Use the ‹ › switcher on the Cost per 20L Jerrycan card above (and in its breakdown) to see one specific day instead.</div>
           <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total 20L jerrycans produced: {fmtInt(jerrycansProduced)}</div>
         </div>
       </div>
