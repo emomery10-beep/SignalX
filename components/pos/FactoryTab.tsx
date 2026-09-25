@@ -1928,12 +1928,24 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const dayOutputs = useMemo(() => dayCaptures.filter(c => c.type === 'output'), [dayCaptures])
   const dayPackaging = useMemo(() => dayCaptures.filter(c => (c.type as any) === 'packaging'), [dayCaptures])
   const dayWastages = useMemo(() => dayCaptures.filter(c => c.type === 'wastage'), [dayCaptures])
+  const dayDispatches = useMemo(() => dayCaptures.filter(c => c.type === 'dispatch'), [dayCaptures])
 
+  // Third fallback tier beyond the lifetime figure's packaging→output chain:
+  // confirmed live (2026-09-25) that this factory stopped logging a separate
+  // 'packaging' capture around Sep 22 and now records finished jerrycans only
+  // at the 'dispatch' step — so a day with real dispatches but no packaging/
+  // output capture would otherwise show a false "0 jerrycans" empty state.
+  // Per-day fallback (not a running total added to dispatch) so a jerrycan
+  // that WAS packaged and only dispatched later isn't double-counted — each
+  // day picks exactly one source, same as the existing two-tier logic did.
   const dayJerrycansProduced = useMemo(() => {
-    const fromPackaging = dayPackaging.reduce((sum, c) => (c.product || '').toLowerCase().includes('jerrycan') ? sum + (Number(c.quantity) || 0) : sum, 0)
+    const sumJerrycans = (list: FactoryCapture[]) => list.reduce((sum, c) => (c.product || '').toLowerCase().includes('jerrycan') ? sum + (Number(c.quantity) || 0) : sum, 0)
+    const fromPackaging = sumJerrycans(dayPackaging)
     if (fromPackaging > 0) return fromPackaging
-    return dayOutputs.reduce((sum, c) => (c.product || '').toLowerCase().includes('jerrycan') ? sum + (Number(c.quantity) || 0) : sum, 0)
-  }, [dayPackaging, dayOutputs])
+    const fromOutput = sumJerrycans(dayOutputs)
+    if (fromOutput > 0) return fromOutput
+    return sumJerrycans(dayDispatches)
+  }, [dayPackaging, dayOutputs, dayDispatches])
 
   const dayGrossMaterialCost = useMemo(() => dayIntakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [dayIntakes, costForCapture])
   const dayIntakeQtyTotal = useMemo(() => dayIntakes.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [dayIntakes])
