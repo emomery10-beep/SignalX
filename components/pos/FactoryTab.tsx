@@ -1759,24 +1759,41 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     return days.size
   }, [intakes, outputs, packaging, wastages])
 
-  // Count total 20L jerrycans produced. Jerrycans are recorded as
-  // 'packaging' type captures, not 'output' — packaging repackages an
-  // already-logged output into sellable units. Fall back to scanning
-  // outputs too, in case a factory type logs jerrycans directly as output.
+  // Count total 20L jerrycans produced. Jerrycans are normally recorded as
+  // 'packaging' type captures (packaging repackages an already-logged
+  // output into sellable units) — but confirmed live (2026-09-25) that this
+  // factory stopped logging a separate packaging capture around 2026-09-22
+  // and now records finished jerrycans only at the dispatch step, so a
+  // single global "packaging, else output" fallback would silently miss
+  // every jerrycan from that point on (dispatch's date range overlaps
+  // packaging's by about a month, which is why this can't just add
+  // dispatch's total on top — that would double-count a jerrycan that was
+  // packaged and only dispatched later). Grouping by day first and picking
+  // one source per day, THEN summing, mirrors the same fallback the
+  // day-scoped "Cost per 20L Jerrycan" card uses, so a day that logged
+  // packaging still uses that (unchanged from before), while a
+  // dispatch-only day is no longer silently dropped from the lifetime total.
   const jerrycansProduced = useMemo(() => {
-    const fromPackaging = (packaging || []).reduce((sum, c) => {
-      if ((c.product || '').toLowerCase().includes('jerrycan')) return sum + (Number(c.quantity) || 0)
-      return sum
-    }, 0)
-    if (fromPackaging > 0) return fromPackaging
-    return outputs.reduce((sum, c) => {
-      // Match products like "Sesame oil - Jerrycan Matungi (20L)"
-      if ((c.product || '').toLowerCase().includes('jerrycan')) {
-        return sum + (Number(c.quantity) || 0)
+    const isJerrycan = (c: FactoryCapture) => (c.product || '').toLowerCase().includes('jerrycan')
+    const byDay = new Map<string, { packaging: number; output: number; dispatch: number }>()
+    const addTo = (list: FactoryCapture[], key: 'packaging' | 'output' | 'dispatch') => {
+      for (const c of list) {
+        if (!isJerrycan(c)) continue
+        const day = nairobiDayKey(new Date(c.created_at))
+        const entry = byDay.get(day) || { packaging: 0, output: 0, dispatch: 0 }
+        entry[key] += Number(c.quantity) || 0
+        byDay.set(day, entry)
       }
-      return sum
-    }, 0)
-  }, [outputs, packaging])
+    }
+    addTo(packaging || [], 'packaging')
+    addTo(outputs, 'output')
+    addTo(dispatches || [], 'dispatch')
+    let total = 0
+    for (const day of byDay.values()) {
+      total += day.packaging > 0 ? day.packaging : day.output > 0 ? day.output : day.dispatch
+    }
+    return total
+  }, [outputs, packaging, dispatches])
 
   // Cost per 20L jerrycan (allocated across actual jerrycan output)
   // Gross cost of ALL seed fed into the press, including the portion that
