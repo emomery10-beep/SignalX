@@ -24,6 +24,11 @@ interface FactoryCapture {
   quantity: number
   unit: string
   notes?: string | null
+  /** Reason a supervisor/manager gave when rejecting this capture (required
+   * server-side on reject, see app/api/pos/factory/capture/route.ts PATCH).
+   * Distinct from `notes`, which is whatever the submitter typed at capture
+   * time (e.g. a dispatch destination) and is often empty for other types. */
+  rejection_reason?: string | null
   photos?: string[] | null
   status: CaptureStatus
   approved_by?: string | null
@@ -1363,7 +1368,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
                     <td style={tdStyle}><TypeBadge type={c.type} /></td>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{c.product || '—'}</td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(Number(c.quantity) || 0)}</td>
-                    <td style={{ ...tdStyle, color: 'var(--tx2)' }}>{c.notes || wasteReason(c.notes)}</td>
+                    <td style={{ ...tdStyle, color: 'var(--tx2)' }}>{c.rejection_reason || c.notes || wasteReason(c.notes)}</td>
                     <td style={{ ...tdStyle, color: 'var(--tx3)' }}>{c.approved_by ? tc('pos_factory.reviewedBy', { name: staffName(c.approved_by) || c.approved_by }) : tc('pos_factory.pendingReview')}</td>
                   </tr>
                 ))}
