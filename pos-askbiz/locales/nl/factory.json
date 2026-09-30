@@ -32,6 +32,7 @@
   "kpi_produced_sub": "eenheden",
   "kpi_wastage": "Uitval",
   "kpi_wastage_sub": "{count} eenheden afgekeurd",
+  "kpi_wastage_input": "{amount} {unit} ingevoerd",
   "kpi_dispatched": "Verzonden",
   "kpi_dispatched_sub": "verzendingen",
   "kpi_efficiency": "Efficiëntie",

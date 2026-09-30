@@ -32,6 +32,7 @@
   "kpi_produced_sub": "unités",
   "kpi_wastage": "Gaspillage",
   "kpi_wastage_sub": "{count} unités mises au rebut",
+  "kpi_wastage_input": "{amount} {unit} en entrée",
   "kpi_dispatched": "Expédiées",
   "kpi_dispatched_sub": "expéditions",
   "kpi_efficiency": "Efficacité",

@@ -32,6 +32,7 @@
   "kpi_produced_sub": "vipande",
   "kpi_wastage": "Upotevu",
   "kpi_wastage_sub": "vipande {count} vimeharibika",
+  "kpi_wastage_input": "{amount} {unit} zilizoingizwa",
   "kpi_dispatched": "Vilivyosafirishwa",
   "kpi_dispatched_sub": "usafirishaji",
   "kpi_efficiency": "Ufanisi",

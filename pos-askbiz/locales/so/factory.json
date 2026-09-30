@@ -32,6 +32,7 @@
   "kpi_produced_sub": "unug",
   "kpi_wastage": "Khasaare",
   "kpi_wastage_sub": "{count} unug la tuuray",
+  "kpi_wastage_input": "{amount} {unit} oo la geliyay",
   "kpi_dispatched": "La diray",
   "kpi_dispatched_sub": "shixnado",
   "kpi_efficiency": "Waxtar",

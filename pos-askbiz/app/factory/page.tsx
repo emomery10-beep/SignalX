@@ -380,6 +380,13 @@ export default function FactoryHub() {
   const wastagePct  = totalFlow > 0 ? (unitsWaste / totalFlow) * 100 : 0
   const efficiency  = unitsInFed > 0 ? Math.min((unitsOut / unitsInFed) * 100, 100) : 0
 
+  // Small context line under the Wastage tile: how much raw material was actually fed
+  // into production that day, so the percentage above isn't read against an unknown
+  // scale. Same feed-based intake as Efficiency, above, for consistency — defaults to
+  // kg (the common case, e.g. sesame seed) when a capture didn't record its own unit.
+  const feedUnit = intakesFeed.find(c => c.batch_ref)?.batch_ref || 'kg'
+  const wastageInputSub = unitsInFed > 0 ? tc('factory.kpi_wastage_input', { amount: unitsInFed.toLocaleString(), unit: feedUnit }) : null
+
   const todayKeyNairobi = nairobiDayKey(new Date())
   const isViewingToday = viewDate === todayKeyNairobi
   const isViewingYesterday = viewDate === shiftDayKey(todayKeyNairobi, -1)
@@ -695,6 +702,9 @@ export default function FactoryHub() {
                     <div style={{ fontSize: 10, color: tokens.hint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{k.label}</div>
                     <div style={{ fontSize: 24, fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.value}</div>
                     <div style={{ fontSize: 10, color: tokens.hint, marginTop: 4 }}>{k.sub}</div>
+                    {i === 1 && wastageInputSub && (
+                      <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2, opacity: 0.75 }}>{wastageInputSub}</div>
+                    )}
                   </>
                 )}
               </div>

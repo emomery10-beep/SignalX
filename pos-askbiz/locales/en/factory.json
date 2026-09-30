@@ -34,6 +34,7 @@
   "kpi_produced_sub": "units",
   "kpi_wastage": "Wastage",
   "kpi_wastage_sub": "{count} units scrapped",
+  "kpi_wastage_input": "{amount} {unit} input",
   "kpi_dispatched": "Dispatched",
   "kpi_dispatched_sub": "shipments",
   "kpi_efficiency": "Efficiency",
