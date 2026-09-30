@@ -38,6 +38,7 @@
   "kpi_efficiency": "Eficiencia",
   "kpi_efficiency_sub": "salida ÷ entrada",
   "kpi_efficiency_sub_ranged": "normal: {min}-{max}%",
+  "kpi_efficiency_stock": "{amount} {unit} en stock",
   "kpi_pending": "Pendiente",
   "kpi_pending_sub": "requiere aprobación",
   "kpi_review": "Revisar →",

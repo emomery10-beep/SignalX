@@ -38,6 +38,7 @@
   "kpi_efficiency": "Efficacité",
   "kpi_efficiency_sub": "production ÷ consommation",
   "kpi_efficiency_sub_ranged": "normal : {min}-{max} %",
+  "kpi_efficiency_stock": "{amount} {unit} en stock",
   "kpi_pending": "En attente",
   "kpi_pending_sub": "approbation requise",
   "kpi_review": "Examiner →",

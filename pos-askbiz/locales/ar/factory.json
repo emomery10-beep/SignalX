@@ -38,6 +38,7 @@
   "kpi_efficiency": "الكفاءة",
   "kpi_efficiency_sub": "الناتج ÷ المدخلات",
   "kpi_efficiency_sub_ranged": "طبيعي: {min}-{max}%",
+  "kpi_efficiency_stock": "{amount} {unit} في المخزون",
   "kpi_pending": "قيد الانتظار",
   "kpi_pending_sub": "تحتاج إلى موافقة",
   "kpi_review": "مراجعة →",

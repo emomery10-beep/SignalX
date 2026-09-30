@@ -38,6 +38,7 @@
   "kpi_efficiency": "Waxtar",
   "kpi_efficiency_sub": "wax-soo-saar ÷ gelin",
   "kpi_efficiency_sub_ranged": "xadka caadiga ah: {min}-{max}%",
+  "kpi_efficiency_stock": "{amount} {unit} oo bakhaarka ku hadhay",
   "kpi_pending": "Sugaya",
   "kpi_pending_sub": "u baahan ogolaansho",
   "kpi_review": "Dib u eeg →",

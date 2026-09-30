@@ -38,6 +38,7 @@
   "kpi_efficiency": "Ufanisi",
   "kpi_efficiency_sub": "mazao ÷ ulazi",
   "kpi_efficiency_sub_ranged": "kawaida: {min}-{max}%",
+  "kpi_efficiency_stock": "{amount} {unit} zimebaki stoo",
   "kpi_pending": "Yanasubiri",
   "kpi_pending_sub": "yanahitaji idhini",
   "kpi_review": "Kagua →",

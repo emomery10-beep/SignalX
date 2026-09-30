@@ -222,6 +222,12 @@ export default function FactoryHub() {
   // Not-yet-releasable holds (curing / regulatory)
   const [openHoldsCount, setOpenHoldsCount] = useState(0)
 
+  // Raw-material stock on hand (all-time arrivals minus all-time feed, never
+  // day-scoped) — sourced from the sesame-production endpoint rather than
+  // re-derived from `captures` here, since that list is capped at the last
+  // 100 rows and would under-count stock for a long-running factory.
+  const [rawStockKg, setRawStockKg] = useState<number | null>(null)
+
   // "At a glance" day being viewed — defaults to today (Nairobi), stepped
   // with the ←/→ switcher. Independent of `captures` below: OEE stays
   // pinned to the real, live today regardless of which day is browsed here.
@@ -307,6 +313,15 @@ export default function FactoryHub() {
     } catch { /* silent */ }
   }, [session])
 
+  const loadRawStock = useCallback(async () => {
+    if (!session) return
+    try {
+      const r = await fetch('/api/pos/factory/sesame-production', { headers: session.headers })
+      const d = r.ok ? await r.json() : {}
+      setRawStockKg(typeof d.remainingArrival === 'number' ? d.remainingArrival : null)
+    } catch { /* silent */ }
+  }, [session])
+
   const loadDayCaptures = useCallback(async (date: string, silent = false) => {
     if (!session) return
     if (!silent) setDayLoading(true)
@@ -340,9 +355,10 @@ export default function FactoryHub() {
     loadShift()
     loadWaybills()
     loadHolds()
-    const interval = setInterval(() => { loadCaptures(true); loadDowntime(); loadQuality(); loadBatches(); loadShift(); loadWaybills(); loadHolds() }, 30_000)
+    loadRawStock()
+    const interval = setInterval(() => { loadCaptures(true); loadDowntime(); loadQuality(); loadBatches(); loadShift(); loadWaybills(); loadHolds(); loadRawStock() }, 30_000)
     return () => clearInterval(interval)
-  }, [authReady, session, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills, loadHolds])
+  }, [authReady, session, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills, loadHolds, loadRawStock])
 
   // Separate effect/interval keyed on viewDate: switching day re-fetches
   // immediately, and the 30s refresh follows whichever day is on screen.
@@ -386,6 +402,14 @@ export default function FactoryHub() {
   // kg (the common case, e.g. sesame seed) when a capture didn't record its own unit.
   const feedUnit = intakesFeed.find(c => c.batch_ref)?.batch_ref || 'kg'
   const wastageInputSub = unitsInFed > 0 ? tc('factory.kpi_wastage_input', { amount: unitsInFed.toLocaleString(), unit: feedUnit }) : null
+
+  // Small context line under Efficiency: raw material still on hand (all-time
+  // arrivals minus all-time feed via /api/pos/factory/sesame-production), so a
+  // low daily efficiency reading can be read against "plenty of stock left" vs
+  // "about to run out." Sesame-specific today, same scope as the "Sesame
+  // Production" quick-action card below — hidden for other factory types since
+  // the endpoint then legitimately returns 0.
+  const rawStockSub = rawStockKg != null && rawStockKg > 0 ? tc('factory.kpi_efficiency_stock', { amount: rawStockKg.toLocaleString(), unit: 'kg' }) : null
 
   const todayKeyNairobi = nairobiDayKey(new Date())
   const isViewingToday = viewDate === todayKeyNairobi
@@ -704,6 +728,9 @@ export default function FactoryHub() {
                     <div style={{ fontSize: 10, color: tokens.hint, marginTop: 4 }}>{k.sub}</div>
                     {i === 1 && wastageInputSub && (
                       <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2, opacity: 0.75 }}>{wastageInputSub}</div>
+                    )}
+                    {i === 3 && rawStockSub && (
+                      <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2, opacity: 0.75 }}>{rawStockSub}</div>
                     )}
                   </>
                 )}

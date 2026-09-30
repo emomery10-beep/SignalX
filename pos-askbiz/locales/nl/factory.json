@@ -38,6 +38,7 @@
   "kpi_efficiency": "Efficiëntie",
   "kpi_efficiency_sub": "output ÷ intake",
   "kpi_efficiency_sub_ranged": "normaal: {min}-{max}%",
+  "kpi_efficiency_stock": "{amount} {unit} op voorraad",
   "kpi_pending": "In behandeling",
   "kpi_pending_sub": "goedkeuring vereist",
   "kpi_review": "Bekijken →",
