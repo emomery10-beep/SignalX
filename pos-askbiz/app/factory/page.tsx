@@ -360,19 +360,25 @@ export default function FactoryHub() {
   const outputs    = dayCaptures.filter(c => c.type === 'output')
   // intake_arrival + old 'intake' (backwards compat) = raw material arriving at factory
   const intakes    = dayCaptures.filter(c => c.type === 'intake' || c.type === 'intake_arrival')
-  const intakesFeed = dayCaptures.filter(c => c.type === 'intake_feed')
+  // Efficiency is output ÷ what was actually fed into production that day, not what
+  // arrived at the gate — a bulk delivery can sit in storage for weeks before being
+  // pressed. 'intake' (legacy, pre-dates the arrival/feed split) counts as feed here,
+  // matching production/page.tsx's yield calc and this file's own label for it above
+  // ("Intake: Feed").
+  const intakesFeed = dayCaptures.filter(c => c.type === 'intake' || c.type === 'intake_feed')
   const wastages   = dayCaptures.filter(c => c.type === 'wastage')
   const dispatches = dayCaptures.filter(c => c.type === 'dispatch')
   const packagings = dayCaptures.filter(c => c.type === 'packaging')
 
   const unitsOut       = outputs.reduce((s, c) => s + (c.quantity || 0), 0)
   const unitsIn        = intakes.reduce((s, c) => s + (c.quantity || 0), 0)
+  const unitsInFed     = intakesFeed.reduce((s, c) => s + (c.quantity || 0), 0)
   const unitsWaste     = wastages.reduce((s, c) => s + (c.quantity || 0), 0)
   const unitsPackaged  = packagings.reduce((s, c) => s + (c.quantity || 0), 0)
 
   const totalFlow   = unitsOut + unitsWaste
   const wastagePct  = totalFlow > 0 ? (unitsWaste / totalFlow) * 100 : 0
-  const efficiency  = unitsIn > 0 ? Math.min((unitsOut / unitsIn) * 100, 100) : 0
+  const efficiency  = unitsInFed > 0 ? Math.min((unitsOut / unitsInFed) * 100, 100) : 0
 
   const todayKeyNairobi = nairobiDayKey(new Date())
   const isViewingToday = viewDate === todayKeyNairobi
@@ -409,7 +415,7 @@ export default function FactoryHub() {
     outputByProduct[c.product_name] = (outputByProduct[c.product_name] || 0) + (c.quantity || 0)
   }
   const dominantProduct = Object.entries(outputByProduct).sort((a, b) => b[1] - a[1])[0]?.[0] || null
-  const efficiencyEvaluation = evaluateYield(unitsIn > 0 ? efficiency : null, dominantProduct, factoryType)
+  const efficiencyEvaluation = evaluateYield(unitsInFed > 0 ? efficiency : null, dominantProduct, factoryType)
   // This file colors every other status via the theme's CSS-var tokens
   // (tokens.success/warning/danger/hint), not raw hex — map the shared
   // yield-status enum onto that same convention rather than introducing a
@@ -463,7 +469,7 @@ export default function FactoryHub() {
     },
     {
       label: tc('factory.kpi_efficiency'),
-      value: unitsIn > 0 ? `${efficiency.toFixed(0)}%` : '—',
+      value: unitsInFed > 0 ? `${efficiency.toFixed(0)}%` : '—',
       // Once a factory-type recipe matches today's dominant product, say so
       // in words too, not just via color — this is the whole point of the
       // fix (sesame oil's genuine 33-63% shouldn't just read as "less red",
