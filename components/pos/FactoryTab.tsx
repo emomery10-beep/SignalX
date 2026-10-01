@@ -111,9 +111,9 @@ function weekKey(date: string | Date): string {
 }
 
 // Nairobi (UTC+3, no DST) calendar day, not the viewer's browser timezone —
-// same convention as productionDays below and pos-askbiz's copy of this
-// dashboard (app/factory/page.tsx), so "today"/"yesterday" mean the same
-// thing regardless of where this page is opened from.
+// same convention as the day-scoped Costing view below and pos-askbiz's
+// copy of this dashboard (app/factory/page.tsx), so "today"/"yesterday"
+// mean the same thing regardless of where this page is opened from.
 function nairobiDayKey(d: Date): string {
   const n = new Date(d.getTime() + 3 * 3600 * 1000)
   return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
@@ -1782,36 +1782,6 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     return totalMachineKW * motorHoursPerDay * ELECTRICITY_RATE_PER_KWH
   }, [totalMachineKW, motorHoursPerDay])
 
-  // Number of distinct calendar days the factory actually had activity,
-  // from real capture timestamps — drives labor/electricity cost so it
-  // scales with the real production period instead of an assumed cadence.
-  // Confirmed by owner: machines only run 6 days/week (never Sundays), so a
-  // Sunday capture (e.g. a dispatch or wastage log with no pressing) is
-  // excluded rather than counted as a full operating day.
-  //
-  // Both the Sunday check AND the day-bucketing must be evaluated in the
-  // factory's own timezone (Nairobi, UTC+3, no DST), not the viewer's
-  // browser timezone. `dayKey`/`new Date(...).getDay()` use the browser's
-  // local clock — so the same data could split one real Nairobi business
-  // day across two different local calendar days (or vice versa), or miss/
-  // over-count Sundays, depending on where the dashboard is opened from. A
-  // fixed +3h shift, read back with UTC getters, gives a stable answer
-  // regardless of viewer location.
-  const productionDays = useMemo(() => {
-    const days = new Set<string>()
-    const addIfWorkingDay = (created_at: string) => {
-      const nairobi = new Date(new Date(created_at).getTime() + 3 * 3600 * 1000)
-      if (nairobi.getUTCDay() === 0) return
-      const key = `${nairobi.getUTCFullYear()}-${String(nairobi.getUTCMonth() + 1).padStart(2, '0')}-${String(nairobi.getUTCDate()).padStart(2, '0')}`
-      days.add(key)
-    }
-    for (const c of intakes) addIfWorkingDay(c.created_at)
-    for (const c of outputs) addIfWorkingDay(c.created_at)
-    for (const c of (packaging || [])) addIfWorkingDay(c.created_at)
-    for (const c of wastages) addIfWorkingDay(c.created_at)
-    return days.size
-  }, [intakes, outputs, packaging, wastages])
-
   // Count total 20L jerrycans produced. Jerrycans are normally recorded as
   // 'packaging' type captures (packaging repackages an already-logged
   // output into sellable units) — but confirmed live (2026-09-25) that this
@@ -1871,11 +1841,13 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const [isEditingStaffRate, setIsEditingStaffRate] = useState(false)
   const effectiveStaffCostPerDay = laborRateMode === 'day' ? staffDayRate : staffHourlyRate * staffHoursPerDay
 
-  // Labor is billed for a fixed, owner-editable number of days (a 4-week/
-  // 28-day cycle by default) rather than the dynamic lifetime "active days"
-  // count used for Electricity below — staff get paid on a regular cycle
-  // regardless of exactly how many days have logged factory activity so
-  // far, and that lifetime count only grows as more history accumulates.
+  // Labor and Electricity are both billed over the same fixed, owner-
+  // editable cycle (a 4-week/28-day default) instead of each using its own
+  // day count — requested by the owner so the two bills run on one
+  // consistent cycle rather than Electricity silently growing on a
+  // different (lifetime "active days") basis than Labor. Edited once, from
+  // the Staff card below, and shared by the Electricity formula so the two
+  // can't drift apart.
   const [laborDays, setLaborDays] = useState(28)
 
   // Manual top-up for ad-hoc labour (casual/temporary workers beyond the
@@ -1894,12 +1866,12 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const [isEditingElectricity, setIsEditingElectricity] = useState(false)
   const isElectricityAmended = electricityOverride != null
 
-  // Labor + electricity cost for the actual period the factory operated
-  // (real distinct days with logged activity), then spread across actual
-  // jerrycan output — not a fixed weekly assumption regardless of volume —
-  // plus any manually entered ad-hoc labour cost on top.
+  // Labor + electricity cost over the same owner-set billing cycle
+  // (laborDays), then spread across actual jerrycan output — not a lifetime
+  // activity count for either — plus any manually entered ad-hoc labour
+  // cost on top.
   const totalLabor = laborDays * effectiveStaffCostPerDay + adhocLaborCost
-  const formulaElectricity = productionDays * electricityCostPerDay
+  const formulaElectricity = laborDays * electricityCostPerDay
   const totalElectricity = isElectricityAmended ? electricityOverride! : formulaElectricity
   const staffCostPerJerrycan = jerrycansProduced > 0 ? totalLabor / jerrycansProduced : 0
   const electricityCostPerJerrycan = jerrycansProduced > 0 ? totalElectricity / jerrycansProduced : 0
@@ -2041,14 +2013,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const dayTotalMaterialCost = Math.max(0, dayGrossMaterialCost - (dayWastageQtyTotal * dayAvgSeedCostPerKg))
   const dayMaterialPerCan = dayJerrycansProduced > 0 ? dayTotalMaterialCost / dayJerrycansProduced : 0
 
-  // Electricity: same "was this an active working day" logic as
-  // productionDays/totalElectricity above (Sundays excluded — confirmed by
-  // owner the machines never run then), just asking it of one day instead
-  // of counting across all history. Ignores any lifetime manual electricity
-  // override on purpose — that override is a single lump-sum replacement
-  // for the whole tracked period with no day-level resolution, so it can't
-  // tell us what any one specific day cost; the formula estimate is the
-  // only number that IS day-resolvable.
+  // Electricity for this one specific day only — independent of the
+  // laborDays-cycle formula above, which bills a flat owner-set number of
+  // days rather than asking day-by-day. Sundays are still excluded here
+  // (confirmed by owner the machines never run then) since this is the one
+  // place still asking "was THIS day actually worked". Ignores any lifetime
+  // manual electricity override on purpose — that override is a single
+  // lump-sum replacement for the whole billing cycle with no day-level
+  // resolution, so it can't tell us what any one specific day cost; the
+  // formula estimate is the only number that IS day-resolvable.
   const dayHasActivity = dayIntakes.length > 0 || dayOutputs.length > 0 || dayPackaging.length > 0 || dayWastages.length > 0
   const dayIsActiveWorkingDay = !isSundayDayKey(costingDay) && dayHasActivity
   const dayElectricityTotal = dayIsActiveWorkingDay ? electricityCostPerDay : 0
@@ -2483,7 +2456,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                       </button>
                     )}
                   </>
-                )} @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh
+                )} @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh × {fmtInt(laborDays)} day{laborDays === 1 ? '' : 's'} <span style={{ color: 'var(--tx3)' }}>(same cycle as Staff)</span>
               </div>
             )}
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
@@ -2677,10 +2650,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Hours/day', value: `${motorHoursPerDay}h` },
             { label: 'Rate', value: `${ELECTRICITY_RATE_PER_KWH} KSh/kWh` },
             { label: 'Cost/day', value: fmt(currencySymbol, electricityCostPerDay) },
-            { label: 'Days active', value: `${fmtInt(productionDays)} days` },
+            { label: 'Days', value: `${fmtInt(laborDays)} days` },
             { label: 'Total', value: fmt(currencySymbol, totalElectricity), strong: true },
           ]}
-          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs ${motorHoursPerDay}h on every active day — click Edit next to the hours above to correct it, or Edit on the Electricity card to override the total cost directly.`}
+          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs ${motorHoursPerDay}h over the same ${fmtInt(laborDays)}-day cycle as Staff above — click Edit next to the hours to correct that, Edit on the Staff card to change the day count, or Edit on the Electricity card to override the total cost directly.`}
         />
         <KpiCard
           label="Overhead Cost" value={fmt(currencySymbol, totalOverhead)} sub={totalOverhead > 0 ? `${fmt(currencySymbol, overheadPerJerrycan)}/jerrycan` : "Not set — defaults to KSh0"} accent="#a855f7"
