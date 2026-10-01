@@ -1740,7 +1740,13 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   // Real operating costs (Kenya rates) — per 20L jerrycan
   const STAFF_COST_PER_DAY = 2400 // KSh
-  const MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
+  const DEFAULT_MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
+  // Editable (not a plain const) — owner-confirmed 9h/day is a starting
+  // assumption, not a measured fact, so it can be corrected in place via
+  // the Edit link on the Electricity card below without having to fall
+  // back to overriding the whole computed total.
+  const [motorHoursPerDay, setMotorHoursPerDay] = useState(DEFAULT_MOTOR_HOURS_PER_DAY)
+  const [isEditingHours, setIsEditingHours] = useState(false)
   // Real machines confirmed by the owner (2026-09-23), replacing the prior
   // placeholder single "1 HP motor" — that number understated real usage by
   // roughly 15x. Researched against manufacturer/supplier listings:
@@ -1771,11 +1777,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const ELECTRICITY_RATE_PER_KWH = 13.44
 
   // Calculate real operating costs
-  const staffCostPerDay = STAFF_COST_PER_DAY
   const totalMachineKW = MACHINES.reduce((s, m) => s + m.kw, 0)
   const electricityCostPerDay = useMemo(() => {
-    return totalMachineKW * MOTOR_HOURS_PER_DAY * ELECTRICITY_RATE_PER_KWH
-  }, [totalMachineKW])
+    return totalMachineKW * motorHoursPerDay * ELECTRICITY_RATE_PER_KWH
+  }, [totalMachineKW, motorHoursPerDay])
 
   // Number of distinct calendar days the factory actually had activity,
   // from real capture timestamps — drives labor/electricity cost so it
@@ -1855,10 +1860,27 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // inflated by material that never made it into a sellable jerrycan.
   const totalMaterialCost = Math.max(0, grossMaterialCost - (wastageQtyTotal * avgSeedCostPerKg))
 
+  // Staff can be paid a flat day rate OR an hourly rate × hours worked per
+  // day — some owners track wages hourly rather than as a flat daily sum.
+  // Defaults preserve the previous flat KSh2,400/day assumption exactly, so
+  // nothing changes for an owner who never opens the editor.
+  const [laborRateMode, setLaborRateMode] = useState<'day' | 'hour'>('day')
+  const [staffDayRate, setStaffDayRate] = useState(STAFF_COST_PER_DAY)
+  const [staffHourlyRate, setStaffHourlyRate] = useState(Math.round(STAFF_COST_PER_DAY / DEFAULT_MOTOR_HOURS_PER_DAY))
+  const [staffHoursPerDay, setStaffHoursPerDay] = useState(DEFAULT_MOTOR_HOURS_PER_DAY)
+  const [isEditingStaffRate, setIsEditingStaffRate] = useState(false)
+  const effectiveStaffCostPerDay = laborRateMode === 'day' ? staffDayRate : staffHourlyRate * staffHoursPerDay
+
+  // Labor is billed for a fixed, owner-editable number of days (a 4-week/
+  // 28-day cycle by default) rather than the dynamic lifetime "active days"
+  // count used for Electricity below — staff get paid on a regular cycle
+  // regardless of exactly how many days have logged factory activity so
+  // far, and that lifetime count only grows as more history accumulates.
+  const [laborDays, setLaborDays] = useState(28)
+
   // Manual top-up for ad-hoc labour (casual/temporary workers beyond the
-  // fixed daily staff rate) — the capture log has no record of casual
-  // hires, so this is entered by hand and added on top of the real-days
-  // calculation below.
+  // staff rate above) — the capture log has no record of casual hires, so
+  // this is entered by hand and added on top of the base calculation below.
   const [adhocLaborCost, setAdhocLaborCost] = useState(0)
   const [isEditingLabor, setIsEditingLabor] = useState(false)
 
@@ -1876,7 +1898,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // (real distinct days with logged activity), then spread across actual
   // jerrycan output — not a fixed weekly assumption regardless of volume —
   // plus any manually entered ad-hoc labour cost on top.
-  const totalLabor = productionDays * staffCostPerDay + adhocLaborCost
+  const totalLabor = laborDays * effectiveStaffCostPerDay + adhocLaborCost
   const formulaElectricity = productionDays * electricityCostPerDay
   const totalElectricity = isElectricityAmended ? electricityOverride! : formulaElectricity
   const staffCostPerJerrycan = jerrycansProduced > 0 ? totalLabor / jerrycansProduced : 0
@@ -2264,8 +2286,17 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (per 20L Jerrycan)</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, fontSize: 10, color: 'var(--tx2)' }}>
           <div>
-            <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               Staff
+              {!isEditingStaffRate && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingStaffRate(true)}
+                  style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Edit rate
+                </button>
+              )}
               {!isEditingLabor && (
                 <button
                   type="button"
@@ -2276,7 +2307,76 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </button>
               )}
             </div>
-            <div>{fmt(currencySymbol, staffCostPerDay)}/day × {fmtInt(productionDays)} active day{productionDays === 1 ? '' : 's'}</div>
+            {isEditingStaffRate ? (
+              <div style={{ marginTop: 2, marginBottom: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setLaborRateMode('day')}
+                    style={{ fontSize: 9, fontWeight: laborRateMode === 'day' ? 700 : 400, color: laborRateMode === 'day' ? ACC : 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: laborRateMode === 'day' ? 'underline' : 'none' }}
+                  >
+                    Per day
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLaborRateMode('hour')}
+                    style={{ fontSize: 9, fontWeight: laborRateMode === 'hour' ? 700 : 400, color: laborRateMode === 'hour' ? ACC : 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: laborRateMode === 'hour' ? 'underline' : 'none' }}
+                  >
+                    Per hour
+                  </button>
+                </div>
+                {laborRateMode === 'day' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 9, color: 'var(--tx3)' }}>KSh/day</span>
+                    <input
+                      type="number"
+                      autoFocus
+                      value={staffDayRate}
+                      onChange={e => setStaffDayRate(Math.max(0, Number(e.target.value) || 0))}
+                      style={{ width: 70, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 9, color: 'var(--tx3)' }}>KSh/hour</span>
+                    <input
+                      type="number"
+                      autoFocus
+                      value={staffHourlyRate}
+                      onChange={e => setStaffHourlyRate(Math.max(0, Number(e.target.value) || 0))}
+                      style={{ width: 60, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                    />
+                    <span style={{ fontSize: 9, color: 'var(--tx3)' }}>× hours/day</span>
+                    <input
+                      type="number"
+                      value={staffHoursPerDay}
+                      onChange={e => setStaffHoursPerDay(Math.max(0, Number(e.target.value) || 0))}
+                      style={{ width: 44, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                    />
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 9, color: 'var(--tx3)' }}>Days</span>
+                  <input
+                    type="number"
+                    value={laborDays}
+                    onChange={e => setLaborDays(Math.max(0, Number(e.target.value) || 0))}
+                    style={{ width: 50, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingStaffRate(false)}
+                  style={{ alignSelf: 'flex-start', fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <div>
+                {fmt(currencySymbol, effectiveStaffCostPerDay)}/day{laborRateMode === 'hour' ? ` (${fmt(currencySymbol, staffHourlyRate)}/hr × ${staffHoursPerDay}h)` : ''} × {fmtInt(laborDays)} day{laborDays === 1 ? '' : 's'}
+              </div>
+            )}
             {isEditingLabor ? (
               <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 9, color: 'var(--tx3)' }}>+ Ad-hoc labour (KSh)</span>
@@ -2340,7 +2440,51 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </button>
               </div>
             ) : (
-              <div>{MACHINES.length} machines, {totalMachineKW.toFixed(1)} kW combined, {MOTOR_HOURS_PER_DAY}h/day @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh</div>
+              <div>
+                {MACHINES.length} machines, {totalMachineKW.toFixed(1)} kW combined,{' '}
+                {isEditingHours ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="number"
+                      autoFocus
+                      min={0}
+                      max={24}
+                      step={0.5}
+                      value={motorHoursPerDay}
+                      onChange={e => setMotorHoursPerDay(Math.max(0, Math.min(24, Number(e.target.value) || 0)))}
+                      style={{ width: 44, padding: '2px 5px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
+                    />
+                    h/day
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingHours(false)}
+                      style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                    >
+                      Done
+                    </button>
+                  </span>
+                ) : (
+                  <>
+                    {motorHoursPerDay}h/day
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingHours(true)}
+                      style={{ fontSize: 9, fontWeight: 600, color: ACC, background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 0 6px', textDecoration: 'underline' }}
+                    >
+                      Edit
+                    </button>
+                    {motorHoursPerDay !== DEFAULT_MOTOR_HOURS_PER_DAY && (
+                      <button
+                        type="button"
+                        onClick={() => setMotorHoursPerDay(DEFAULT_MOTOR_HOURS_PER_DAY)}
+                        style={{ fontSize: 9, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 0 8px', textDecoration: 'underline' }}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </>
+                )} @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh
+              </div>
             )}
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
           </div>
@@ -2505,20 +2649,20 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <KpiCard
           label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa"
           chart={adhocLaborCost > 0 ? [
-            { label: 'Base', raw: productionDays * staffCostPerDay, color: '#60a5fa' },
+            { label: 'Base', raw: laborDays * effectiveStaffCostPerDay, color: '#60a5fa' },
             { label: 'Ad-hoc', raw: adhocLaborCost, color: '#f59e0b' },
           ] : undefined}
           breakdown={[
-            { label: 'Days active', value: `${fmtInt(productionDays)} days` },
-            { label: 'Rate', value: `${fmt(currencySymbol, staffCostPerDay)}/day` },
-            { label: 'Base labor', value: fmt(currencySymbol, productionDays * staffCostPerDay) },
+            { label: 'Days', value: `${fmtInt(laborDays)} days` },
+            { label: 'Rate', value: laborRateMode === 'hour' ? `${fmt(currencySymbol, staffHourlyRate)}/hr × ${staffHoursPerDay}h/day` : `${fmt(currencySymbol, effectiveStaffCostPerDay)}/day` },
+            { label: 'Base labor', value: fmt(currencySymbol, laborDays * effectiveStaffCostPerDay) },
             ...(adhocLaborCost > 0 ? [{ label: '+ Ad-hoc labour', value: fmt(currencySymbol, adhocLaborCost) }] : []),
             { label: 'Total', value: fmt(currencySymbol, totalLabor), strong: true },
           ]}
-          breakdownNote="Days active = distinct calendar days (excl. Sundays) with any intake, output, packaging, or wastage capture logged."
+          breakdownNote="Days is a fixed figure (defaults to 28) that you set yourself — not auto-counted from logged activity. Edit the rate, mode, or day count from the Staff field above."
         />
         <KpiCard
-          label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={isElectricityAmended ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan · manually set` : `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ ${MOTOR_HOURS_PER_DAY}h/day`} accent="#fbbf24"
+          label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={isElectricityAmended ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan · manually set` : `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ ${motorHoursPerDay}h/day`} accent="#fbbf24"
           chart={isElectricityAmended ? [
             { label: 'Formula est.', raw: formulaElectricity, color: '#94a3b8' },
             { label: 'Manually set', raw: electricityOverride!, color: '#fbbf24' },
@@ -2530,13 +2674,13 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           ] : [
             ...MACHINES.map(m => ({ label: m.name, value: `${m.kw.toFixed(2)} kW` })),
             { label: 'Combined', value: `${totalMachineKW.toFixed(2)} kW`, strong: true },
-            { label: 'Hours/day', value: `${MOTOR_HOURS_PER_DAY}h` },
+            { label: 'Hours/day', value: `${motorHoursPerDay}h` },
             { label: 'Rate', value: `${ELECTRICITY_RATE_PER_KWH} KSh/kWh` },
             { label: 'Cost/day', value: fmt(currencySymbol, electricityCostPerDay) },
             { label: 'Days active', value: `${fmtInt(productionDays)} days` },
             { label: 'Total', value: fmt(currencySymbol, totalElectricity), strong: true },
           ]}
-          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs the full ${MOTOR_HOURS_PER_DAY}h on every active day — click Edit on the Electricity card above if that overstates real usage.`}
+          breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs ${motorHoursPerDay}h on every active day — click Edit next to the hours above to correct it, or Edit on the Electricity card to override the total cost directly.`}
         />
         <KpiCard
           label="Overhead Cost" value={fmt(currencySymbol, totalOverhead)} sub={totalOverhead > 0 ? `${fmt(currencySymbol, overheadPerJerrycan)}/jerrycan` : "Not set — defaults to KSh0"} accent="#a855f7"
