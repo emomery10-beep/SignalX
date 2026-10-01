@@ -1594,23 +1594,61 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
   }, [dispatches, sortCol, sortDir])
 
   const pending = dispatches.filter(d => d.status === 'pending')
-  const totalDispatched = dispatches.reduce((s, c) => s + (Number(c.quantity) || 0), 0)
 
-  // weekly dispatch volume
+  // Group dispatched quantity by each capture's own recorded unit instead
+  // of summing every capture's raw quantity as if kg/litres/pcs/boxes/etc.
+  // were interchangeable — the capture form offers a generic unit-pill
+  // list per dispatch (not a fixed unit per factory type), so nothing
+  // guarantees every dispatch here was logged the same way. The headline
+  // figure uses whichever unit accounts for the most volume; anything
+  // else surfaces in the tap-to-expand breakdown instead of being
+  // silently folded into the same total.
+  const dispatchByUnit = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const c of dispatches) {
+      const u = (c.unit || '').trim().toLowerCase()
+      m.set(u, (m.get(u) || 0) + (Number(c.quantity) || 0))
+    }
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1])
+  }, [dispatches])
+  const [dominantUnit, dominantQty] = dispatchByUnit[0] || ['', 0]
+  const otherUnits = dispatchByUnit.slice(1)
+  const unitsDispatchedValue = dominantUnit ? `${fmtInt(dominantQty)} ${dominantUnit}` : fmtInt(dominantQty)
+
+  // weekly dispatch volume — same dominant-unit basis as the KPI above, so
+  // every bar in the chart represents one consistent unit rather than
+  // adding e.g. kg and litres together.
   const weekly = useMemo(() => {
     const m = new Map<string, number>()
-    for (const c of dispatches) m.set(weekKey(c.created_at), (m.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
+    for (const c of dispatches) {
+      if ((c.unit || '').trim().toLowerCase() !== dominantUnit) continue
+      m.set(weekKey(c.created_at), (m.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
+    }
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]))
       .map(([k, v]) => ({ label: k.split('-W')[1] ? `W${k.split('-W')[1]}` : k, value: v }))
-  }, [dispatches])
+  }, [dispatches, dominantUnit])
 
   const weeklyMax = Math.max(1, ...weekly.map(w => w.value))
+  const excludedShipmentCount = otherUnits.reduce((s, [u]) => s + dispatches.filter(c => (c.unit || '').trim().toLowerCase() === u).length, 0)
 
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <KpiCard label={tc('pos_factory.totalShipmentsLabel')} value={fmtInt(dispatches.length)} sub={tc('pos_factory.dispatchCaptures')} accent="#a855f7" />
-        <KpiCard label={tc('pos_factory.unitsDispatchedLabel')} value={fmtInt(totalDispatched)} sub={tc('pos_factory.acrossAllShipments')} accent={ACC} />
+        <KpiCard
+          label={tc('pos_factory.unitsDispatchedLabel')}
+          value={unitsDispatchedValue}
+          sub={tc('pos_factory.acrossAllShipments')}
+          accent={ACC}
+          breakdown={otherUnits.length > 0 ? dispatchByUnit.map(([u, v], i) => ({
+            label: u || '(no unit recorded)',
+            value: fmtInt(v),
+            strong: i === 0,
+          })) : undefined}
+          breakdownNote={otherUnits.length > 0
+            ? `Grouped by the unit recorded on each dispatch — ${dominantUnit || '(no unit recorded)'} accounts for the most volume and is shown above; the rest were logged in a different unit and aren't added into that total.`
+            : undefined}
+        />
         <KpiCard label={tc('pos_factory.pendingDispatchesLabel')} value={fmtInt(pending.length)} sub={tc('pos_factory.awaitingApproval')} accent={pending.length > 0 ? AMBER : GREEN} />
         <KpiCard label={tc('pos_factory.onTimeRateLabel')} value="—" sub={tc('pos_factory.trackingComingSoon')} accent="var(--tx3)" />
       </div>
@@ -1627,6 +1665,11 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
                 <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{w.label}</div>
               </div>
             ))}
+          </div>
+        )}
+        {excludedShipmentCount > 0 && (
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 8 }}>
+            Note: {excludedShipmentCount} shipment{excludedShipmentCount === 1 ? '' : 's'} logged in a different unit {excludedShipmentCount === 1 ? 'is' : 'are'} excluded from this chart — see the Units Dispatched breakdown above.
           </div>
         )}
       </Section>
