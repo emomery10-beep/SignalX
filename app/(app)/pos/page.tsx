@@ -256,11 +256,19 @@ export default function POSPage() {
   const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
 
-  // First-run product tour — walks a new owner through the REAL Add Staff
-  // flow on this same page (spotlight + voice via CoachMark, one step at a
-  // time) instead of a separate wizard page. 0 = not touring. 1-5 map to
-  // the steps below; each advances automatically when its real action
-  // actually happens, never on a timer or a "Next" click.
+  // First-run product tour — walks a new owner through adding their first
+  // REAL product (spotlight + voice via CoachMark, one step at a time) on
+  // this same page, instead of a separate wizard page. 0 = not touring.
+  // 1-4 map to the steps below; each advances automatically when its real
+  // action actually happens, never on a timer or a "Next" click.
+  //
+  // Deliberately targets product-add, not staff-add (an earlier version of
+  // this tour forced new owners onto the Staff tab first) — for the primary
+  // solo-vendor persona there's often no one else to add as staff, so that
+  // version's completion rate was near zero and it blocked users from ever
+  // reaching the dashboard's own "Scan or add your first product" checklist
+  // step. Staff-adding is still available any time from the Staff tab or
+  // that same checklist — it's just no longer the forced first action.
   const [tourStep, setTourStep] = useState(0)
   const POS_TOUR_DONE_KEY = 'askbiz_pos_tour_done'
 
@@ -310,15 +318,15 @@ export default function POSPage() {
 
   // Start the tour once we actually know posEnabled is true (not the null
   // "still loading" state) and it hasn't been done/skipped on this device
-  // before. Forces the Staff tab open too — the Add Staff button this tour
-  // targets only exists in the DOM there.
+  // before. Forces the Inventory tab open too — the Scan/Add product button
+  // this tour targets only exists in the DOM there.
   useEffect(() => {
     if (posEnabled !== true) return
     let done = true
     try { done = localStorage.getItem(POS_TOUR_DONE_KEY) === '1' } catch { /* fail open to "done" — never nag if storage is blocked */ }
     if (!done) {
       trackFunnelEvent('tour_started', { businessType })
-      setTab('staff')
+      setTab('inventory')
       setTourStep(1)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -336,21 +344,6 @@ export default function POSPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posEnabled, businessType])
 
-  // Each effect advances exactly one step, gated on the real state change
-  // that step is actually about. No timers, no "Next" button — the tour
-  // moves at the pace the owner actually moves at.
-  useEffect(() => {
-    if (tourStep === 1 && showAddStaff) setTourStep(2)
-  }, [tourStep, showAddStaff])
-  useEffect(() => {
-    if (tourStep === 2 && newName.trim()) setTourStep(3)
-  }, [tourStep, newName])
-  useEffect(() => {
-    if (tourStep === 3 && (newPhone.trim() || newEmail.trim())) setTourStep(4)
-  }, [tourStep, newPhone, newEmail])
-  useEffect(() => {
-    if (tourStep === 4 && newPin.length >= 4) setTourStep(5)
-  }, [tourStep, newPin])
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
   const [editPhone, setEditPhone] = useState('')
   const [editEmail, setEditEmail] = useState('')
@@ -418,6 +411,26 @@ export default function POSPage() {
 
   // Dual-photo product scan (add product)
   const [showScanModal, setShowScanModal] = useState(false)
+
+  // Tour step-advance effects, placed here (not alongside the tour's other
+  // effects above) because they watch this section's own state — each
+  // advances exactly one step, gated on the real state change that step is
+  // actually about. No timers, no "Next" button — the tour moves at the
+  // pace the owner actually moves at. Step 1 advances on either entry point
+  // (camera scan or manual) since both end up in the same name/price form
+  // below — a camera scan that pre-fills the name and/or price naturally
+  // skips ahead past steps 2/3 on its own, which is correct: nothing to
+  // coach when the AI already filled it in.
+  useEffect(() => {
+    if (tourStep === 1 && (showAddProduct || showScanModal)) setTourStep(2)
+  }, [tourStep, showAddProduct, showScanModal])
+  useEffect(() => {
+    if (tourStep === 2 && newProduct.name.trim()) setTourStep(3)
+  }, [tourStep, newProduct.name])
+  useEffect(() => {
+    if (tourStep === 3 && newProduct.sale_price.trim()) setTourStep(4)
+  }, [tourStep, newProduct.sale_price])
+
   const [scanFront, setScanFront] = useState<string | null>(null)   // base64
   const [scanBack, setScanBack]   = useState<string | null>(null)   // base64
   const [scanFrontThumb, setScanFrontThumb] = useState<string | null>(null)
@@ -847,7 +860,6 @@ export default function POSPage() {
           setNewPin('')
           setNewLocationId('')
           setShowAddStaff(false)
-          if (tourStep > 0) skipTour('completed') // real completion, not a skip — same end state either way
           notify(tc('pos_app.toast_staff_added_template', { name: data.staff.name, template: data.staff.template?.name }))
         } else {
           notify(data.error || tc('pos_app.toast_staff_add_failed'), false)
@@ -1043,7 +1055,7 @@ export default function POSPage() {
     try {
       const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || (selectedSector !== 'all' ? selectedSector : null), expiry_date: newProduct.expiry_date || null, batch_number: newProduct.batch_number || null, supplier: newProduct.supplier || null, brand: newProduct.brand || null, unit: newProduct.unit || 'pcs' }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'pcs' }); setShowAddProduct(false); notify(tc('pos_app.toast_product_added', { name: data.product.name })) }
+      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'pcs' }); setShowAddProduct(false); if (tourStep > 0) skipTour('completed'); notify(tc('pos_app.toast_product_added', { name: data.product.name })) }
     } catch { notify(tc('pos_app.toast_product_add_failed'), false) }
     setAddingProduct(false)
   }
@@ -2145,17 +2157,9 @@ export default function POSPage() {
                     {tc('pos_app.seats_used', { used: activeStaff, total: seatCount })}
                     {atLimit && <span style={{ marginLeft: 8, color: RED, fontWeight: 600 }}>· <a href="/billing" style={{ color: RED }}>{tc('pos_app.add_seats_link')}</a></span>}
                   </div>
-                  {tourStep === 1 ? (
-                    <CoachMark id="pos-tour-add-staff" text={tc('pos_app.tour_step1')} lang={lang}>
-                      <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
-                        {atLimit ? tc('pos_app.upgrade_seats') : tc('pos_app.add_staff')}
-                      </button>
-                    </CoachMark>
-                  ) : (
-                    <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
-                      {atLimit ? tc('pos_app.upgrade_seats') : tc('pos_app.add_staff')}
-                    </button>
-                  )}
+                  <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
+                    {atLimit ? tc('pos_app.upgrade_seats') : tc('pos_app.add_staff')}
+                  </button>
                 </div>
               )
             })()}
@@ -2165,26 +2169,10 @@ export default function POSPage() {
               <div style={{ ...cardStyle, marginBottom: 16 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_staff_member')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {tourStep === 2 ? (
-                    <CoachMark id="pos-tour-name" text={tc('pos_app.tour_step2')} lang={lang}>
-                      <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} autoFocus />
-                    </CoachMark>
-                  ) : (
-                    <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
-                  )}
-                  {tourStep === 3 ? (
-                    <CoachMark id="pos-tour-contact" text={tc('pos_app.tour_step3')} lang={lang}>
-                      <div>
-                        <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={{ ...inputStyle, marginBottom: 10 }} />
-                        <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', marginBottom: 10 }}>{tc('pos_app.or_divider')}</div>
-                        <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
-                      </div>
-                    </CoachMark>
-                  ) : (<>
-                    <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
-                    <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
-                    <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
-                  </>)}
+                  <input placeholder={tc('pos_app.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
+                  <input placeholder={tc('pos_app.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos_app.or_divider')}</div>
+                  <input placeholder={tc('pos_app.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
                     <optgroup label={'🏭 ' + tc('pos_app.role_group_factory')}>
                       <option value="factory-line-operator">👷 {tc('pos_app.role_factory_line_operator')}</option>
@@ -2236,28 +2224,11 @@ export default function POSPage() {
                       {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
                     </select>
                   )}
-                  {tourStep === 4 ? (
-                    <CoachMark id="pos-tour-pin" text={tc('pos_app.tour_step4')} lang={lang}>
-                      <input placeholder={tc('pos_app.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
-                    </CoachMark>
-                  ) : (
-                    <input placeholder={tc('pos_app.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
-                  )}
+                  <input placeholder={tc('pos_app.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {tourStep === 5 ? (
-                      <CoachMark id="pos-tour-save" text={tc('pos_app.tour_step5')} lang={lang}>
-                        <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
-                      </CoachMark>
-                    ) : (
-                      <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
-                    )}
-                    <button onClick={() => { setShowAddStaff(false); if (tourStep > 0) skipTour() }} style={btnSecondary}>{tc('pos_app.cancel')}</button>
+                    <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos_app.adding') : tc('pos_app.add_staff_member')}</button>
+                    <button onClick={() => setShowAddStaff(false)} style={btnSecondary}>{tc('pos_app.cancel')}</button>
                   </div>
-                  {tourStep > 0 && (
-                    <button onClick={() => skipTour()} style={{ background: 'none', border: 'none', color: 'var(--tx3)', fontSize: 13, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginTop: 4, alignSelf: 'center' }}>
-                      {tc('pos_app.tour_skip')}
-                    </button>
-                  )}
                   <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_app.staff_login_hint_pre')}<strong>pos.askbiz.co</strong>{tc('pos_app.staff_login_hint_post')}</div>
                 </div>
               </div>
@@ -2436,9 +2407,17 @@ export default function POSPage() {
               <input ref={scanBackRef}  type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFileSelected(e.target.files[0], 'back')  }} />
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }} style={{ ...btnPrimary, fontSize: 14, background: '#7c3aed' }}>
-                  📷 {tc('pos_app.scan_to_add')}
-                </button>
+                {tourStep === 1 ? (
+                  <CoachMark id="pos-tour-add-product" text={tc('pos_app.tour_product_step1')} lang={lang}>
+                    <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }} style={{ ...btnPrimary, fontSize: 14, background: '#7c3aed' }}>
+                      📷 {tc('pos_app.scan_to_add')}
+                    </button>
+                  </CoachMark>
+                ) : (
+                  <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }} style={{ ...btnPrimary, fontSize: 14, background: '#7c3aed' }}>
+                    📷 {tc('pos_app.scan_to_add')}
+                  </button>
+                )}
                 <button onClick={() => setShowBulkImport(true)} style={{ ...btnSecondary, fontSize: 14 }}>{tc('pos_app.csv_import')}</button>
                 <button onClick={() => setShowAddProduct(true)} style={{ ...btnSecondary, fontSize: 14 }}>{tc('pos_app.manual_add')}</button>
               </div>
@@ -2755,8 +2734,20 @@ export default function POSPage() {
               <div style={{ ...cardStyle, marginBottom: 16 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{tc('pos_app.new_product')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <input placeholder={tc('pos_app.ph_product_name')} value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
-                  <input placeholder={tc('pos_app.ph_sale_price')} type="number" value={newProduct.sale_price} onChange={e => setNewProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                  {tourStep === 2 ? (
+                    <CoachMark id="pos-tour-product-name" text={tc('pos_app.tour_product_step2')} lang={lang}>
+                      <input placeholder={tc('pos_app.ph_product_name')} value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} autoFocus />
+                    </CoachMark>
+                  ) : (
+                    <input placeholder={tc('pos_app.ph_product_name')} value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
+                  )}
+                  {tourStep === 3 ? (
+                    <CoachMark id="pos-tour-product-price" text={tc('pos_app.tour_product_step3')} lang={lang}>
+                      <input placeholder={tc('pos_app.ph_sale_price')} type="number" value={newProduct.sale_price} onChange={e => setNewProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                    </CoachMark>
+                  ) : (
+                    <input placeholder={tc('pos_app.ph_sale_price')} type="number" value={newProduct.sale_price} onChange={e => setNewProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                  )}
                   <input placeholder={tc('pos_app.ph_cost_price_opt')} type="number" value={newProduct.cost_price} onChange={e => setNewProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_starting_stock')} type="number" value={newProduct.stock_qty} onChange={e => setNewProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder={tc('pos_app.ph_low_stock_alert')} type="number" value={newProduct.low_stock_threshold} onChange={e => setNewProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
@@ -2803,9 +2794,20 @@ export default function POSPage() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? tc('pos_app.adding') : tc('pos_app.add_product')}</button>
-                  <button onClick={() => setShowAddProduct(false)} style={btnSecondary}>{tc('pos_app.cancel')}</button>
+                  {tourStep === 4 ? (
+                    <CoachMark id="pos-tour-product-save" text={tc('pos_app.tour_product_step4')} lang={lang}>
+                      <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? tc('pos_app.adding') : tc('pos_app.add_product')}</button>
+                    </CoachMark>
+                  ) : (
+                    <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? tc('pos_app.adding') : tc('pos_app.add_product')}</button>
+                  )}
+                  <button onClick={() => { setShowAddProduct(false); if (tourStep > 0) skipTour() }} style={btnSecondary}>{tc('pos_app.cancel')}</button>
                 </div>
+                {tourStep > 0 && (
+                  <button onClick={() => skipTour()} style={{ background: 'none', border: 'none', color: 'var(--tx3)', fontSize: 13, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginTop: 8 }}>
+                    {tc('pos_app.tour_skip')}
+                  </button>
+                )}
               </div>
             )}
 
