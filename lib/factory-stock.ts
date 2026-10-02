@@ -26,6 +26,10 @@ export interface StockCapture {
 export const JERRYCAN_PRODUCTION_COST = 6000 // KSh per 20L jerrycan
 export const WASTE_COST_PER_KG = 30 // KSh per kg of byproduct waste
 export const DEFAULT_SEED_COST_PER_KG = 30 // only when no purchase price was ever recorded
+// Seed deliveries arrive in 80 kg bags and are priced. An unpriced arrival
+// under this size is a bag count typed as kg (e.g. "28" beside a 2,240 kg =
+// 28 bag delivery), not stock received.
+export const MIN_UNPRICED_ARRIVAL_KG = 500
 
 const DAY_MS = 86_400_000
 
@@ -72,7 +76,9 @@ export function computeFactoryStock(captures: StockCapture[], now: number = Date
   const legacyIsFeed = (c: StockCapture) =>
     c.type === 'intake' && isSeed(c) && !legacyIsArrival(c)
 
-  const isArrival = (c: StockCapture) => (c.type === 'intake_arrival' && isSeed(c)) || legacyIsArrival(c)
+  const isBagCountTypo = (c: StockCapture) =>
+    c.type === 'intake_arrival' && !(n(c.param_value) > 0 && c.param_label === 'intake_price_per_kg') && n(c.quantity) < MIN_UNPRICED_ARRIVAL_KG
+  const isArrival = (c: StockCapture) => (c.type === 'intake_arrival' && isSeed(c) && !isBagCountTypo(c)) || legacyIsArrival(c)
   const isFeed = (c: StockCapture) => (c.type === 'intake_feed' && isSeed(c)) || legacyIsFeed(c)
 
   const seedArrived = sum(isArrival)
