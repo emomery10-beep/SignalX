@@ -59,6 +59,7 @@ interface InventoryItem {
   sale_price?: number // the real `inventory` table's actual column name
   reorder_point?: number
   reorder_level?: number
+  source_type?: string | null // 'factory_dispatch' rows are dispatch-derived, not stock on hand
 }
 
 interface StaffMember {
@@ -1410,72 +1411,43 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
     else { setSortCol(c); setSortDir('asc') }
   }
 
-  // Calculate factory inventory: sesame seed (intake) + jerrycans (produced - dispatched)
+  // Factory stock on hand. All three figures come from the shared
+  // lib/factory-stock calculation (via the sesame-production endpoint), the
+  // same one the pos-askbiz dashboards and synced inventory rows use — so
+  // every screen agrees. Seed = arrivals − feed − seed wastage; cans =
+  // packaging + output − dispatched; waste = produced − dispatched − fed back.
   const factoryInventory = useMemo(() => {
-    const items: InventoryItem[] = []
-
-    // Sesame seed: sum all intake_arrival + intake_feed
-    const seedQuantity = intakes.reduce((sum, c) => {
-      if (c.type === 'intake_arrival' || c.type === 'intake_feed') {
-        return sum + (Number(c.quantity) || 0)
-      }
-      return sum
-    }, 0)
-
-    // Use real costs from sesame production API
-    const seedCost = sesameData?.costPerKg || 0
-    const rawMaterialsCost = sesameData?.rawMaterialsCost || 0
-    const seedsInStock = sesameData?.remainingArrival || 0
-
-    if (seedsInStock > 0) {
-      items.push({
-        name: 'Sesame seed',
-        category: 'raw',
-        quantity: seedsInStock,
-        stock: seedsInStock,
-        unit: 'kg',
-        cost: seedCost,
-        cost_price: seedCost,
-      })
-    }
-
-    // Jerrycans: use real production cost from API
-    const jerrycanProductionCost = 6000 // KSh per can
-    const jerrycansInStock = sesameData?.jerrycansInStock || 0
-    const finishedGoodsValue = sesameData?.finishedGoodsValue || 0
-
-    if (jerrycansInStock > 0) {
-      items.push({
-        name: 'Sesame oil - Jerrycan (20L)',
-        category: 'finished',
-        quantity: jerrycansInStock,
-        stock: jerrycansInStock,
-        unit: 'pcs',
-        cost: jerrycanProductionCost,
-        cost_price: jerrycanProductionCost,
-      })
-    }
-
+    const items: (InventoryItem & { usagePerDay?: number })[] = []
+    if (!sesameData || typeof sesameData.remainingArrival !== 'number') return items
+    const d = sesameData
+    items.push({
+      name: 'Sesame seed', category: 'raw', quantity: d.remainingArrival, unit: 'kg',
+      cost: d.costPerKg || 0, usagePerDay: (d.seedFedLast30 || 0) / 30,
+    })
+    items.push({
+      name: 'Sesame oil - Jerrycan Matungi (20L)', category: 'finished', quantity: d.jerrycansInStock || 0, unit: 'item',
+      cost: d.jerrycanCost || 0, usagePerDay: (d.jerrycansDispatchedLast30 || 0) / 30,
+    })
+    items.push({
+      name: 'Sesame waste', category: 'byproduct', quantity: d.wasteInStock || 0, unit: 'kg',
+      cost: d.wasteCostPerKg || 0, usagePerDay: (d.wasteDispatchedLast30 || 0) / 30,
+    })
     return items
-  }, [intakes, outputs, dispatches, sesameData])
-
-  // usage rate estimate from intake captures (units consumed per day over 30d)
-  const usageByProduct = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const c of intakes) m.set((c.product || '').toLowerCase(), (m.get((c.product || '').toLowerCase()) || 0) + (Number(c.quantity) || 0))
-    const out = new Map<string, number>()
-    m.forEach((v, k) => out.set(k, v / 30))
-    return out
-  }, [intakes])
+  }, [sesameData])
 
   const rows = useMemo(() => {
-    // Combine factory-calculated inventory + static inventory
-    const allItems = [...factoryInventory, ...inv]
+    // Rows synced from dispatches (source_type 'factory_dispatch') hold
+    // dispatched totals, not stock on hand — the computed rows above replace
+    // them. Everything else in the catalogue is shown as stored.
+    const allItems: (InventoryItem & { usagePerDay?: number })[] = [
+      ...factoryInventory,
+      ...inv.filter(i => i.source_type !== 'factory_dispatch'),
+    ]
     const mapped = allItems.map(it => {
       const qty = getQty(it)
       const cost = getCost(it)
       const reorder = getReorder(it)
-      const usage = usageByProduct.get((it.name || '').toLowerCase()) || 0
+      const usage = it.usagePerDay || 0
       const daysOfStock = usage > 0 ? qty / usage : Infinity
       return {
         name: it.name || 'Unnamed',
@@ -1494,7 +1466,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       if (av > bv) return sortDir === 'asc' ? 1 : -1
       return 0
     })
-  }, [inv, factoryInventory, usageByProduct, sortCol, sortDir])
+  }, [inv, factoryInventory, sortCol, sortDir])
 
   const stockValue = useMemo(() => rows.reduce((s, r) => s + r.value, 0), [rows])
   const lowStock = useMemo(() => rows.filter(r => r.low), [rows])

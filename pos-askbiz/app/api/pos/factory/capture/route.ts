@@ -5,7 +5,7 @@ import { hasPermission } from '@/lib/pos-permissions'
 import { logPosAudit } from '@/lib/pos-audit'
 import { matchHoldRule, matchManualHoldRule } from '@/lib/factory-holds'
 import { matchDecayRule } from '@/lib/factory-decay'
-import { syncDispatchToInventory } from '@/lib/factory-dispatch-to-inventory'
+import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
 
 export async function OPTIONS() {
@@ -543,24 +543,13 @@ export async function PATCH(req: NextRequest) {
     metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : (isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
   })
 
-  // Auto-sync dispatch captures to inventory when approved
+  // Any approved capture that moves stock refreshes the factory inventory rows
+  // (recomputed from captures, never incremented — see factory-stock.ts).
+  if (status === 'approved' && STOCK_AFFECTING_TYPES.includes(existing.type)) {
+    await syncFactoryStockToInventory(auth.ownerId)
+  }
+
   if (isDispatchApproval) {
-    // Calculate production cost for jerrycans (6000 KSh each) or use sale_price if available
-    let costPerUnit = 0
-    if (updated.product_name?.includes('Jerrycan')) {
-      costPerUnit = 6000 // KSh per 20L jerrycan
-    }
-    const salePrice = updated.dispatch_price || 0
-
-    await syncDispatchToInventory(
-      auth.ownerId,
-      updated.id,
-      updated.product_name,
-      updated.quantity,
-      costPerUnit,
-      salePrice
-    )
-
     // Send WhatsApp notification to recipient
     await sendDispatchWhatsApp(
       updated.notes, // destination field contains phone or recipient info
