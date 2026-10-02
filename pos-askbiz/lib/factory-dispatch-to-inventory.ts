@@ -13,7 +13,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { computeFactoryStock, JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG, isCan, isWaste } from '@/lib/factory-stock'
+import { computeFactoryStock, JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG, FACTORY_COUNT_REASON, isCan, isWaste } from '@/lib/factory-stock'
 
 export interface DispatchSyncResult {
   success: boolean
@@ -38,7 +38,12 @@ export async function syncFactoryStockToInventory(ownerId: string): Promise<Disp
     if (capErr) throw capErr
 
     const captures = (caps || []) as any[]
-    const stock = computeFactoryStock(captures)
+    const { data: counts } = await service
+      .from('pos_stock_adjustments')
+      .select('product_name, counted_qty, created_at')
+      .eq('owner_id', ownerId)
+      .eq('reason', FACTORY_COUNT_REASON)
+    const stock = computeFactoryStock(captures, Date.now(), (counts || []) as any[])
 
     // Latest approved dispatch price per product, so sale_price tracks what the
     // approver last charged (unchanged behaviour from the old sync).

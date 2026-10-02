@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
+import type { StockKind } from '@/lib/factory-stock'
 
 // ── Color constants ──────────────────────────────────────────
 const GREEN = '#16a34a'
@@ -1393,9 +1394,14 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [sesameData, setSesameData] = useState<any>(null)
 
-  // Fetch sesame production costs for inventory valuation
-  useEffect(() => {
-    fetch('/api/pos/factory/sesame-production')
+  const [openRow, setOpenRow] = useState<string | null>(null)
+  const [countInput, setCountInput] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [countMsg, setCountMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  // Fetch factory stock (single shared calculation, see lib/factory-stock)
+  const loadStock = useCallback(() => {
+    return fetch('/api/pos/factory/sesame-production')
       .then(r => {
         if (!r.ok) throw new Error(`API error: ${r.status}`)
         return r.json()
@@ -1406,6 +1412,24 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       })
       .catch(err => console.error('Sesame data fetch failed:', err))
   }, [])
+  useEffect(() => { loadStock() }, [loadStock])
+
+  const saveCount = async (kind: StockKind, qty: number, beforeLastDelivery = false) => {
+    setSaving(true); setCountMsg(null)
+    try {
+      const res = await fetch('/api/pos/factory/stock-count', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind, counted_qty: qty, before_last_delivery: beforeLastDelivery }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || (res.status === 401 ? 'Only a manager or owner can record a stock count' : 'Could not save the count'))
+      setCountMsg({ ok: true, text: 'Count saved — balance updated.' })
+      setCountInput('')
+      await loadStock()
+    } catch (e: any) {
+      setCountMsg({ ok: false, text: e.message || 'Could not save the count' })
+    } finally { setSaving(false) }
+  }
   const onSort = (c: string) => {
     if (sortCol === c) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(c); setSortDir('asc') }
@@ -1417,19 +1441,19 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   // every screen agrees. Seed = arrivals − feed − seed wastage; cans =
   // packaging + output − dispatched; waste = produced − dispatched − fed back.
   const factoryInventory = useMemo(() => {
-    const items: (InventoryItem & { usagePerDay?: number })[] = []
+    const items: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = []
     if (!sesameData || typeof sesameData.remainingArrival !== 'number') return items
     const d = sesameData
     items.push({
-      name: 'Sesame seed', category: 'raw', quantity: d.remainingArrival, unit: 'kg',
+      kind: 'seed', name: 'Sesame seed', category: 'raw', quantity: d.remainingArrival, unit: 'kg',
       cost: d.costPerKg || 0, usagePerDay: (d.seedFedLast30 || 0) / 30,
     })
     items.push({
-      name: 'Sesame oil - Jerrycan Matungi (20L)', category: 'finished', quantity: d.jerrycansInStock || 0, unit: 'item',
+      kind: 'cans', name: 'Sesame oil - Jerrycan Matungi (20L)', category: 'finished', quantity: d.jerrycansInStock || 0, unit: 'item',
       cost: d.jerrycanCost || 0, usagePerDay: (d.jerrycansDispatchedLast30 || 0) / 30,
     })
     items.push({
-      name: 'Sesame waste', category: 'byproduct', quantity: d.wasteInStock || 0, unit: 'kg',
+      kind: 'waste', name: 'Sesame waste', category: 'byproduct', quantity: d.wasteInStock || 0, unit: 'kg',
       cost: d.wasteCostPerKg || 0, usagePerDay: (d.wasteDispatchedLast30 || 0) / 30,
     })
     return items
@@ -1439,7 +1463,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
     // Rows synced from dispatches (source_type 'factory_dispatch') hold
     // dispatched totals, not stock on hand — the computed rows above replace
     // them. Everything else in the catalogue is shown as stored.
-    const allItems: (InventoryItem & { usagePerDay?: number })[] = [
+    const allItems: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = [
       ...factoryInventory,
       ...inv.filter(i => i.source_type !== 'factory_dispatch'),
     ]
@@ -1452,7 +1476,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       return {
         name: it.name || 'Unnamed',
         category: isRaw(it) ? 'Raw' : isFinished(it) ? 'Finished' : (it.category || '—'),
-        qty, unit: it.unit || '—', cost, reorder, daysOfStock,
+        kind: it.kind, sell: getSell(it), qty, unit: it.unit || '—', cost, reorder, daysOfStock,
         value: qty * cost,
         low: reorder > 0 && qty <= reorder,
       }
@@ -1513,25 +1537,163 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
                 <Th label={tc('pos_factory.colDaysOfStock')} col="daysOfStock" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
               </tr></thead>
               <tbody>
-                {rows.map(r => (
-                  <tr key={r.name} style={{ background: r.low ? 'rgba(220,38,38,.05)' : 'transparent' }}>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{r.low && <span style={{ color: RED, marginRight: 4 }}>●</span>}{r.name}</td>
-                    <td style={tdStyle}>{r.category}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(r.qty)}</td>
-                    <td style={tdStyle}>{r.unit}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmt(currencySymbol, r.cost)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, r.value)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx3)' }}>{r.reorder > 0 ? fmtInt(r.reorder) : '—'}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', color: isFinite(r.daysOfStock) ? (r.daysOfStock < 7 ? RED : 'var(--tx2)') : 'var(--tx3)' }}>
-                      {isFinite(r.daysOfStock) ? `${Math.round(r.daysOfStock)}d` : '—'}
-                    </td>
-                  </tr>
-                ))}
+                {rows.map(r => {
+                  const isOpen = openRow === r.name
+                  return (
+                    <Fragment key={r.name}>
+                      <tr onClick={() => { setOpenRow(isOpen ? null : r.name); setCountMsg(null); setCountInput('') }}
+                          style={{ background: r.low ? 'rgba(220,38,38,.05)' : isOpen ? ACC_BG : 'transparent', cursor: 'pointer' }}>
+                        <td style={{ ...tdStyle, fontWeight: 600 }}>
+                          <span style={{ display: 'inline-block', width: 12, color: 'var(--tx3)' }}>{isOpen ? '▾' : '▸'}</span>
+                          {r.low && <span style={{ color: RED, marginRight: 4 }}>●</span>}{r.name}
+                        </td>
+                        <td style={tdStyle}>{r.category}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(r.qty)}</td>
+                        <td style={tdStyle}>{r.unit}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right' }}>{fmt(currencySymbol, r.cost)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, r.value)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx3)' }}>{r.reorder > 0 ? fmtInt(r.reorder) : '—'}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', color: isFinite(r.daysOfStock) ? (r.daysOfStock < 7 ? RED : 'var(--tx2)') : 'var(--tx3)' }}>
+                          {isFinite(r.daysOfStock) ? `${Math.round(r.daysOfStock)}d` : '—'}
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr>
+                          <td colSpan={8} style={{ ...tdStyle, background: ACC_BG, padding: 14 }}>
+                            <StockDetail row={r} stock={sesameData?.stock} currencySymbol={currencySymbol}
+                              countInput={countInput} setCountInput={setCountInput} saving={saving} countMsg={countMsg} onSave={saveCount} />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         )}
       </Section>
+    </div>
+  )
+}
+
+// ── Expanded detail for an inventory row ─────────────────────
+const fmtWhen = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi' })
+const fmtQty = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 1 })
+
+const KIND_TEXT: Record<StockKind, { in: string; out: string; unit: string }> = {
+  seed: { in: 'Deliveries received', out: 'Fed to machine + seed wastage', unit: 'kg' },
+  cans: { in: 'Packaged / produced', out: 'Dispatched', unit: 'cans' },
+  waste: { in: 'Waste produced', out: 'Dispatched + fed back', unit: 'kg' },
+}
+
+function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, saving, countMsg, onSave }: {
+  row: { name: string; kind?: StockKind; qty: number; unit: string; cost: number; value: number; sell: number; reorder: number }
+  stock: any; currencySymbol: string
+  countInput: string; setCountInput: (v: string) => void; saving: boolean
+  countMsg: { ok: boolean; text: string } | null
+  onSave: (kind: StockKind, qty: number, beforeLastDelivery?: boolean) => void
+}) {
+  const kind = row.kind
+  const line = (label: string, value: string, strong = false, color?: string) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '3px 0', fontSize: 12, fontWeight: strong ? 700 : 400, color }}>
+      <span>{label}</span><span>{value}</span>
+    </div>
+  )
+
+  // Catalogue rows that aren't derived from captures: just the stored facts.
+  if (!kind || !stock?.byKind?.[kind]) {
+    return (
+      <div style={{ maxWidth: 360 }}>
+        {line('In stock', `${fmtQty(row.qty)} ${row.unit}`)}
+        {line('Cost each', fmt(currencySymbol, row.cost))}
+        {row.sell > 0 && line('Selling price', fmt(currencySymbol, row.sell))}
+        {line('Stock value', fmt(currencySymbol, row.value), true)}
+        {row.reorder > 0 && line('Reorder point', fmtQty(row.reorder))}
+      </div>
+    )
+  }
+
+  const k = stock.byKind[kind]
+  const t = KIND_TEXT[kind]
+  const moves: any[] = stock.movements?.[kind] || []
+  const la = kind === 'seed' ? stock.lastArrival : null
+  const gap = la ? k.onHand - la.expected : 0
+  const showGap = !!la && gap > Math.max(50, la.expected * 0.05)
+
+  const submit = () => {
+    const q = Number(countInput)
+    if (countInput.trim() === '' || !Number.isFinite(q) || q < 0) return
+    onSave(kind, q)
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--tx3)', marginBottom: 6 }}>How this is worked out</div>
+        {k.countedAt && line(`Counted ${fmtWhen(k.countedAt)}`, `${fmtQty(k.base)} ${t.unit}`)}
+        {line(k.countedAt ? `+ ${t.in} since` : `+ ${t.in}`, fmtQty(k.in))}
+        {line(k.countedAt ? `− ${t.out} since` : `− ${t.out}`, fmtQty(k.out))}
+        <div style={{ borderTop: '1px solid var(--b)', marginTop: 4 }} />
+        {line('On hand', `${fmtQty(k.onHand)} ${t.unit}`, true)}
+        {line(`Value (${fmt(currencySymbol, row.cost)} each)`, fmt(currencySymbol, row.value))}
+        {!k.countedAt && <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>Built from approved captures only — no physical count recorded yet.</div>}
+
+        {la && (
+          <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: showGap ? 'rgba(202,138,4,.12)' : 'rgba(22,163,74,.08)', border: `1px solid ${showGap ? AMBER : GREEN}44`, fontSize: 11 }}>
+            <div style={{ fontWeight: 700, marginBottom: 2 }}>Latest delivery check</div>
+            {fmtQty(la.qty)} kg arrived {fmtWhen(la.at)}; {fmtQty(la.fedSince)} kg fed since → {fmtQty(la.expected)} kg left from that delivery.
+            {showGap && (
+              <div style={{ marginTop: 6 }}>
+                The balance above is {fmtQty(gap)} kg higher than that. If the older stock is already used up, start the balance from the latest delivery:
+                <div style={{ marginTop: 6 }}>
+                  <button disabled={saving} onClick={(e) => { e.stopPropagation(); if (confirm('Record that the old seed stock was finished before the latest delivery? The balance will restart from that delivery.')) onSave('seed', 0, true) }}
+                    style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, border: `1px solid ${AMBER}`, background: 'transparent', color: AMBER, cursor: 'pointer' }}>
+                    Old stock is used up — start from latest delivery
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div style={{ marginTop: 12 }} onClick={e => e.stopPropagation()}>
+          <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>Record a physical count ({t.unit}, as of now)</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input type="number" min={0} inputMode="decimal" value={countInput} onChange={e => setCountInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') submit() }}
+              placeholder={`e.g. ${fmtQty(k.onHand)}`}
+              style={{ flex: 1, minWidth: 0, padding: '6px 8px', fontSize: 12, borderRadius: 6, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)' }} />
+            <button disabled={saving || countInput.trim() === ''} onClick={submit}
+              style={{ padding: '6px 12px', fontSize: 11, fontWeight: 700, borderRadius: 6, border: 'none', background: ACC, color: '#fff', cursor: 'pointer', opacity: saving || countInput.trim() === '' ? 0.5 : 1 }}>
+              {saving ? 'Saving…' : 'Save count'}
+            </button>
+          </div>
+          {countMsg && <div style={{ fontSize: 11, marginTop: 4, color: countMsg.ok ? GREEN : RED }}>{countMsg.text}</div>}
+        </div>
+      </div>
+
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--tx3)', marginBottom: 6 }}>Recent movements</div>
+        {moves.length === 0 ? <div style={{ fontSize: 11, color: 'var(--tx3)' }}>No movements recorded.</div> : (
+          <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+            {moves.map((m, i) => {
+              const dim = !m.counted || m.dir === 'ignored'
+              return (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '4px 0', borderBottom: '1px solid var(--b)', fontSize: 11, opacity: dim ? 0.5 : 1 }}>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ color: 'var(--tx3)', marginRight: 8 }}>{fmtWhen(m.at)}</span>{m.label}{!m.counted && m.dir !== 'ignored' ? ' (before last count)' : ''}
+                  </span>
+                  <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: m.dir === 'in' ? GREEN : m.dir === 'out' ? RED : 'var(--tx3)', textDecoration: m.dir === 'ignored' ? 'line-through' : undefined }}>
+                    {m.dir === 'in' ? '+' : m.dir === 'out' ? '−' : ''}{fmtQty(m.qty)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

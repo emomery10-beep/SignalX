@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import {
   computeFactoryStock, isWaste,
-  JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG,
+  JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG, FACTORY_COUNT_REASON,
 } from '@/lib/factory-stock'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
@@ -29,7 +29,14 @@ export async function GET(req: NextRequest) {
       return p.includes('sesame seed') || p.includes('sesame oil') || p.includes('sesame waste') || p.includes('jerrycan') || p.includes('mtungi')
     })
 
-    const stock = computeFactoryStock(captures)
+    // Physical stock counts re-anchor the balance (see lib/factory-stock.ts).
+    const { data: counts } = await service
+      .from('pos_stock_adjustments')
+      .select('product_name, counted_qty, created_at')
+      .eq('owner_id', auth.ownerId)
+      .eq('reason', FACTORY_COUNT_REASON)
+
+    const stock = computeFactoryStock(captures, Date.now(), (counts || []) as any[])
     const sum = (pred: (c: any) => boolean) => captures.filter(pred).reduce((s: number, c: any) => s + (Number(c.quantity) || 0), 0)
 
     const intakeArrival = stock.seedArrived
@@ -91,6 +98,7 @@ export async function GET(req: NextRequest) {
       finishedGoodsValue,
       wasteStockValue,
       totalStockValue,
+      stock, // per-product balance breakdown, latest delivery check and recent movements
     })
   } catch (error) {
     console.error('Sesame production error:', error)
