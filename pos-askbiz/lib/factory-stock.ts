@@ -10,7 +10,7 @@
  *
  *   seed  = arrivals − feed − seed wastage
  *   cans  = packaging + jerrycan output − dispatched
- *   waste = waste produced (wastage + output) − dispatched − fed back
+ *   waste = logged wastage − dispatched − fed back (only captures typed 'wastage')
  *
  * A physical count (pos_stock_adjustments, reason 'factory_stock_count')
  * resets a product's balance: stock = counted qty + movements recorded after
@@ -140,7 +140,7 @@ export function classify(captures: StockCapture[]): Movement[] {
       if (c.type === 'packaging' || c.type === 'output') dir = 'in'
       else if (c.type === 'dispatch') dir = 'out'
     } else {
-      if (c.type === 'wastage' || c.type === 'output') { dir = 'in'; label = 'Waste produced' }
+      if (c.type === 'wastage') { dir = 'in'; label = 'Waste logged as wastage' }
       else if (c.type === 'dispatch') dir = 'out'
       else if (c.type === 'intake_feed' || c.type === 'intake') { dir = 'out'; label = 'Fed back to machine' }
     }

@@ -1603,7 +1603,7 @@ const fmtQty = (v: number) => v.toLocaleString(undefined, { maximumFractionDigit
 const KIND_TEXT: Record<StockKind, { in: string; out: string; unit: string }> = {
   seed: { in: 'Deliveries received', out: 'Fed to machine + seed wastage', unit: 'kg' },
   cans: { in: 'Packaged / produced', out: 'Dispatched', unit: 'cans' },
-  waste: { in: 'Waste produced', out: 'Dispatched + fed back', unit: 'kg' },
+  waste: { in: 'Logged as wastage', out: 'Dispatched + fed back', unit: 'kg' },
 }
 
 function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, saving, countMsg, onSave }: {
