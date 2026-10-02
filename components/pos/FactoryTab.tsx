@@ -1423,8 +1423,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || (res.status === 401 ? 'Only a manager or owner can record a stock count' : 'Could not save the count'))
-      setCountMsg({ ok: true, text: 'Count saved — balance updated.' })
-      setCountInput('')
+      setCountMsg({ ok: true, text: 'Saved — stock updated.' })
       await loadStock()
     } catch (e: any) {
       setCountMsg({ ok: false, text: e.message || 'Could not save the count' })
@@ -1541,7 +1540,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
                   const isOpen = openRow === r.name
                   return (
                     <Fragment key={r.name}>
-                      <tr onClick={() => { setOpenRow(isOpen ? null : r.name); setCountMsg(null); setCountInput('') }}
+                      <tr onClick={() => { setOpenRow(isOpen ? null : r.name); setCountMsg(null); setCountInput(r.kind ? String(Math.round(r.qty * 10) / 10) : '') }}
                           style={{ background: r.low ? 'rgba(220,38,38,.05)' : isOpen ? ACC_BG : 'transparent', cursor: 'pointer' }}>
                         <td style={{ ...tdStyle, fontWeight: 600 }}>
                           <span style={{ display: 'inline-block', width: 12, color: 'var(--tx3)' }}>{isOpen ? '▾' : '▸'}</span>
@@ -1659,7 +1658,7 @@ function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, sa
         )}
 
         <div style={{ marginTop: 12 }} onClick={e => e.stopPropagation()}>
-          <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>Record a physical count ({t.unit}, as of now)</div>
+          <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>Edit stock on hand ({t.unit}) — saved as a physical count</div>
           <div style={{ display: 'flex', gap: 6 }}>
             <input type="number" min={0} inputMode="decimal" value={countInput} onChange={e => setCountInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') submit() }}
@@ -1667,7 +1666,7 @@ function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, sa
               style={{ flex: 1, minWidth: 0, padding: '6px 8px', fontSize: 12, borderRadius: 6, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)' }} />
             <button disabled={saving || countInput.trim() === ''} onClick={submit}
               style={{ padding: '6px 12px', fontSize: 11, fontWeight: 700, borderRadius: 6, border: 'none', background: ACC, color: '#fff', cursor: 'pointer', opacity: saving || countInput.trim() === '' ? 0.5 : 1 }}>
-              {saving ? 'Saving…' : 'Save count'}
+              {saving ? 'Saving…' : 'Save stock'}
             </button>
           </div>
           {countMsg && <div style={{ fontSize: 11, marginTop: 4, color: countMsg.ok ? GREEN : RED }}>{countMsg.text}</div>}
