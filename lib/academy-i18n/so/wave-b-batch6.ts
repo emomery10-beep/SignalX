@@ -1,6 +1,6 @@
-import { AcademyTranslation } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB6Translations: Record<string, AcademyTranslation> = {
+export const waveB6Translations: LocaleTranslations = {
   "blockchain-pos-transaction-integrity": {
     "title": "Blockchain-Based Transaction Integrity for Point-of-Sale Systems: Architectural Feasibility and Performance Trade-Offs",
     "description": "Evaluate whether blockchain or distributed-ledger technologies provide meaningful integrity guarantees for POS (nidaamka POS) transaction records and their practical trade-offs.",

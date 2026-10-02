@@ -1,6 +1,6 @@
-import { AcademyTranslation } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB3Translations: Record<string, AcademyTranslation> = {
+export const waveB3Translations: LocaleTranslations = {
   "what-is-sales-pipeline-velocity": {
     "title": "What Is Sales Pipeline Velocity?",
     "description": "Sales pipeline velocity measures how quickly deals move through your pipeline and generate dakhli. Learn the formula and how to improve it.",

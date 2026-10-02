@@ -1,6 +1,6 @@
-import { AcademyArticle } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB3Translations: Record<string, Partial<AcademyArticle>> = {
+export const waveB3Translations: LocaleTranslations = {
   "what-is-safety-stock": {
     title: "Was ist Sicherheits-Bestand?",
     description: "Erfahren Sie, wie Sicherheits-Bestand als Puffer-Inventar gegen Nachfrage-Variabilität und Versorgungskettenunterbrechungen schützt und teure Ausverkäufe verhindert.",

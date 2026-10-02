@@ -53,11 +53,11 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from('pos_notification_settings')
     .select(SELECT_COLUMNS)
     .eq('owner_id', user.id)
-    .maybeSingle()
+    .maybeSingle()) as { data: Partial<typeof DEFAULTS> | null; error: { message: string } | null }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

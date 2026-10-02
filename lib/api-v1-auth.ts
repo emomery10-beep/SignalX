@@ -79,11 +79,11 @@ export async function authenticateApiKey(request: Request): Promise<AuthResult> 
     ) }
   }
 
-  const { data: key, error } = await supabase
+  const { data: key, error } = (await supabase
     .from('api_keys')
     .select('id, user_id, mode, key_env, plan, is_active, requests_month, request_limit_month, request_limit_minute, credit_balance_cents, app_id')
     .eq('key', apiKey)
-    .single()
+    .single()) as { data: ApiKeyRow | null; error: { message: string } | null }
 
   if (error || !key) {
     return { ok: false, response: NextResponse.json(

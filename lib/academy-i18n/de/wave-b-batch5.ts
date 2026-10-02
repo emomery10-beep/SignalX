@@ -1,9 +1,9 @@
-import { AcademyArticle } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
 // Wave B Batch 5: Batches 25-32 (pSEO cluster - ~140 articles)
 // Translations for approximately 140 pSEO filler articles covering academic/business jargon
 // Following locked German glossary: Kassensystem, Gewinn, Umsatz, Bestand, Marge, Kassierer, Beleg, etc.
-export const waveB5Translations: Record<string, Partial<AcademyArticle>> = {
+export const waveB5Translations: LocaleTranslations = {
   // Batch 25-32 article translations structure:
   // Each article includes: title, description, keywords, content (with headings/bodies), keyTakeaways, faq
   // Slugs, categories, difficulty, readTime, relatedSlugs remain unchanged

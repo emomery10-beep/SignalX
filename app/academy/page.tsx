@@ -110,7 +110,7 @@ export default async function AcademyPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
-      <AcademyClient slugMap={articleSlugMap} />
+      <AcademyClient />
     </>
   );
 }

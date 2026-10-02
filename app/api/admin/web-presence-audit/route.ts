@@ -166,7 +166,7 @@ async function runCitationProbes() {
       })
       const groqData = await groqRes.json()
       logUsage({ route: 'admin/web-presence-audit#citation', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
-      const reply       = groqData.choices?.[0]?.message?.content || ''
+      const reply: string = groqData.choices?.[0]?.message?.content || ''
       const hit         = reply.toLowerCase().includes('askbiz')
       const matches     = reply.match(COMPETITOR_PATTERN) ?? []
       const competitors = [...new Set(matches.map(m => m.trim()))]

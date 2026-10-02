@@ -6,6 +6,8 @@ export interface TaxConfig {
   smbRate: number
   smbThreshold: number
   turnoverTax?: { rate: number; minRevenue: number; maxRevenue: number }
+  pensionName?: string
+  pensionMaxPct?: number
   taxAuthority: string
   taxAuthorityShort: string
   complianceSystem?: string

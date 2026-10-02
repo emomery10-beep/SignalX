@@ -181,6 +181,53 @@ export async function sendReceipt(phone: string, receipt: ReceiptSummary): Promi
   return { ok: true }
 }
 
+// ── Send a simple freeform receipt notice via utility template ──────────────
+// For the public /api/v1/whatsapp/send endpoint, whose documented contract
+// (developer-askbiz/app/docs/api-reference/whatsapp-send) is a single `text`
+// string — not the structured ReceiptSummary the internal POS "send receipt"
+// flow (app/api/pos/receipt/route.ts) builds from real transaction data.
+// Template "askbiz_receipt_text" should be:
+//   Category: Utility
+//   Body:     "{{1}}"   ← single variable containing the full receipt text
+//
+// Until this template is approved in Meta Business Manager, sends fail with
+// a clear Meta API error — same fallback posture as sendPurchaseOrder below.
+export async function sendReceiptText(phone: string, text: string): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.META_WHATSAPP_TOKEN
+  const numId = phoneId()
+  if (!token || !numId) return { ok: false, error: 'Meta WhatsApp not configured' }
+
+  const template = process.env.META_RECEIPT_TEXT_TEMPLATE || 'askbiz_receipt_text'
+  const lang     = process.env.META_TEMPLATE_LANG || 'en_GB'
+
+  const res = await fetch(`${BASE}/${numId}/messages`, {
+    method:  'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to:   normalisePhone(phone),
+      type: 'template',
+      template: {
+        name:     template,
+        language: { code: lang },
+        components: [{
+          type:       'body',
+          parameters: [{ type: 'text', text }],
+        }],
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    const msg = err?.error?.message || `Meta API error ${res.status}`
+    console.error('[whatsapp] sendReceiptText failed:', msg)
+    return { ok: false, error: msg }
+  }
+
+  return { ok: true }
+}
+
 // ── Send a purchase order to a supplier via utility template ────────────────
 // Template "askbiz_purchase_order" should be:
 //   Category: Utility

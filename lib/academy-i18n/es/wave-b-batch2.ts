@@ -1,6 +1,6 @@
-import { AcademyI18nTranslation } from './academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB2Translations: Record<string, AcademyI18nTranslation> = {
+export const waveB2Translations: LocaleTranslations = {
   "what-is-a-bill-of-materials": {
     title: "What Is a Bill of Materials?",
     description: "Understand how a bill of materials lists every component, material, and sub-assembly needed to manufacture a product, serving as the foundation for production planning.",

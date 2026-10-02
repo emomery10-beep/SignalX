@@ -95,7 +95,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
         body: "Acties met inkooporders zijn afgeschermd per POS-rol, niet met één alles-of-niets-schakelaar. Owner en Manager kunnen orders bekijken, aanmaken, versturen, ontvangen en als betaald markeren. De rol Inventory kan orders aanmaken en ontvangen (en als betaald markeren) maar kan ze niet versturen — versturen is bewust voorbehouden aan het management. De rollen Supervisor en Branch Manager kunnen orders en hun status bekijken, maar kunnen niet aanmaken, versturen of ontvangen. Als een knop uitgeschakeld lijkt of iemand vertelt je dat ze de optie Versturen niet zien, controleer dan eerst hun toegewezen rol voordat je aanneemt dat er iets kapot is.",
       },
     ],
-    keyTakeawaysHeadingNote: undefined,
     faq: [
       {
         q: "Waarom had AskBiz al artikelen toegevoegd aan mijn nieuwe inkooporder voordat ik iets had getypt?",

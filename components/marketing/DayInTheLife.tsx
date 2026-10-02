@@ -41,7 +41,8 @@ function Icon({ name, size = 22, stroke = 1.5 }: { name: IconName; size?: number
 }
 
 // Visual config per scene; all text lives in landing.day_s{n}_* keys.
-const SCENES = [
+type Scene = { icon: IconName; chipIcon: IconName; ac: string; rev: number; cust: number; profit?: number; dark?: boolean }
+const SCENES: Scene[] = [
   { icon: 'camera',   chipIcon: 'sparkles', ac: '#C97A44', rev: 0,    cust: 0  },
   { icon: 'store',    chipIcon: 'arrow',    ac: '#D98A3F', rev: 340,  cust: 4  },
   { icon: 'flame',    chipIcon: 'flame',    ac: '#2F9E44', rev: 6900, cust: 58 },

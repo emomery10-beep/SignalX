@@ -4,6 +4,15 @@ import { resolvePosAuth } from '@/lib/pos-auth'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
 
+type SesameCaptureRow = {
+  type: string
+  product_name: string | null
+  quantity: number | null
+  param_label: string | null
+  param_value: number | null
+  sale_price: number | null
+}
+
 export async function GET(req: NextRequest) {
   try {
     const auth = await resolvePosAuth(req)
@@ -12,11 +21,11 @@ export async function GET(req: NextRequest) {
     const service = createServiceClient()
 
     // Fetch all sesame captures (approved only) - case-insensitive product matching
-    const { data: allCaptures } = await service
+    const { data: allCaptures } = (await service
       .from('pos_factory_captures')
       .select('*')
       .eq('owner_id', auth.ownerId)
-      .eq('status', 'approved')
+      .eq('status', 'approved')) as { data: SesameCaptureRow[] | null }
 
     // Filter captures with case-insensitive product name matching
     const captures = allCaptures?.filter(c => {

@@ -190,7 +190,6 @@ export const waveABatch2Translations: LocaleTranslations = {
     title: 'Cabbirrada Waxqabadka Shaqaalaha: Iibka Keeshiye kasta, Dakhliga Doorka kasta',
     description:
       "La socoso shaqaalaha ugu iib badan, dakhliga ugu sarreeya soo saara, iyo kuwa qaladka ugu yar geliya — dhammaan boortada AskBiz POS.",
-    category: '',
     keywords: [
       'waxqabadka shaqaalaha POS',
       'iibka keeshiye kasta',
@@ -271,7 +270,6 @@ export const waveABatch2Translations: LocaleTranslations = {
         body: "Ammaanka software-ku waa kaliya nuska sawirka. Qalabkaaga POS — telefoon, tablet, ama terminal — wuxuu sidoo kale u baahan yahay ilaalin jireed. Haddii qof uu xado tablet-kaaga, wuxuu suurtagal u yahay inuu helo gelitaanka nidaamkaaga POS (haddii uu weli galay) iyo xog kasta oo gudaha ku kaydsan. Halkan waa tallaabooyin dhabta ah oo yareeya khatarahan. Marka hore, dami xiritaanka qalabka — u baahan PIN, faraha, ama aqoonsiga wejiga si loo furo qalabka. Labaad, dejii wakhtiga fasax ee AskBiz si POS-ku si toos ah u baxo marka aan waxba dhicin muddo. Saddexaad, haddii qalab la xado, si degdeg ah uga saar qalab la ansixiyay dejinta AskBiz oo bedel aqoonsiyada la wadaagay. Afraad, waligaa ha ka tegin qalabka POS meel bulsho ah adigoo aan la joogin. Xilliga ganacsiga, qalabku waa inuu ku jiraa aragga iyo gaarsiinta shaqaale had iyo jeer. Kadib xilliga shaqada, si ammaan ah u kaydi. Tallaabooyinkan waa kuwo fudud laakiin waxtar leh — xadgudubka jireed ee POS-ka intiisa badan waa fursad la helay, tallaabooyinka aasaasiga ahna waxay ka saaraan fursadda.",
       },
     ],
-    relatedSlugs: [],
     faq: [
       {
         q: 'AskBiz POS ma waafaqsan tahay PCI DSS?',

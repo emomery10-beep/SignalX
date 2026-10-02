@@ -1,6 +1,6 @@
-import { AcademyTranslation } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB1Translations: Record<string, AcademyTranslation> = {
+export const waveB1Translations: LocaleTranslations = {
   "what-is-predictive-analytics": {
     "title": "What Is Predictive Analytics?",
     "description": "Predictive analytics uses historical data and statistical models to forecast future outcomes. Learn how it helps businesses anticipate demand, risk, and opportunity.",

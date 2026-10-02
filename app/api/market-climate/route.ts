@@ -471,7 +471,7 @@ export async function GET(request: NextRequest) {
   // Supplement with POS item names not yet seen in unified_data
   const seenNames = new Set(revenueRankedProducts.map(p => p.name.toLowerCase()))
   const posOnlyTerms = posItems
-    .map(p => (p.name || p.category || '').trim())
+    .map(p => (p.name || '').trim())
     .filter(n => n && !seenNames.has(n.toLowerCase()) && !SERVICE_NOISE.some(s => n.toLowerCase().includes(s)))
     .slice(0, 10)
     .map(name => ({ name, revPct: 0 }))

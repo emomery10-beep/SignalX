@@ -1,6 +1,6 @@
-import { AcademyI18nTranslation } from './academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB5Translations: Record<string, AcademyI18nTranslation> = {
+export const waveB5Translations: LocaleTranslations = {
   "active-learning-pos-anomaly-labeling": {
     title: "Active Learning for Anomaly Labeling in PoS Transaction Streams",
     description: "Discover how active learning reduces the labeling burden for detección de anomalías in PoS data by strategically selecting the most informative transaccións for review.",

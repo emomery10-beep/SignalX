@@ -40,7 +40,7 @@ export default function AgentAdminPage() {
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
   const [mainTab, setMainTab]       = useState<'marketing-specialist'|'agent'|'x'|'security'|'automation'>('marketing-specialist')
-  const [agentTab, setAgentTab]     = useState<'alice'|'victor'|'carolyne'|'ben'|'maya'|'jane'>('alice')
+  const [agentTab, setAgentTab]     = useState<'alice'|'victor'|'carolyne'|'ben'|'maya'|'jane'|'shiillah'>('alice')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])

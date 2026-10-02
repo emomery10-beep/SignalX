@@ -52,7 +52,7 @@ export async function createConnectedAccount(params: CreateConnectedAccountParam
 
     return {
       accountId: account.id,
-      createdAt: new Date(account.created * 1000),
+      createdAt: new Date((account.created ?? Math.floor(Date.now() / 1000)) * 1000),
     }
   } catch (error: any) {
     console.error('[stripe-connect] createConnectedAccount error:', error)
@@ -83,13 +83,15 @@ export async function generateOnboardingLink(connectedAccountId: string, returnU
 }
 
 /**
- * Create a Payment Link (for QR codes)
+ * Create a Checkout Session (for QR codes)
  * Customer scans → Stripe checkout → pays with card
  */
 export async function createPaymentLink(params: CreatePaymentLinkParams) {
   try {
-    const link = await stripe.paymentLinks.create(
+    // Use Checkout Session (not Payment Links) — supports price_data, mode, and one-time payments
+    const session = await stripe.checkout.sessions.create(
       {
+        mode: 'payment',
         line_items: [
           {
             price_data: {
@@ -102,17 +104,21 @@ export async function createPaymentLink(params: CreatePaymentLinkParams) {
             quantity: 1,
           },
         ],
-        mode: 'payment',
-        metadata: params.metadata,
+        payment_method_types: ['card'],
+        metadata: params.metadata || {},
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'}/payment-success`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'}/point-of-sale`,
+        // Expire after 30 minutes — enough for a POS transaction
+        expires_at: Math.floor(Date.now() / 1000) + 1800,
       },
       {
         stripeAccount: params.connected_account_id,
-      } as any
+      }
     )
 
     return {
-      url: link.url,
-      id: link.id,
+      url: session.url!,
+      id: session.id,
     }
   } catch (error: any) {
     console.error('[stripe-connect] createPaymentLink error:', error)

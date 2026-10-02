@@ -226,7 +226,7 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
               tc={tc}
             />
           )}
-          {revenue > 50000 && !cfg.turnoverTax?.applicable && (
+          {revenue > 50000 && !tax.turnoverTax.applicable && (
             <TaxSavingTip
               title={tc('cfo_tax.tip_capital_title')}
               saving={fmt(Math.round(revenue * 0.02 * (cfg.smbRate || 0.19)), sym)}

@@ -17,11 +17,6 @@ export const wavea3Translations: LocaleTranslations = {
       { heading: 'Manejo de productos nuevos en el destino', body: 'A veces transfieres un producto a una sucursal que nunca lo ha almacenado antes. En este caso, el sistema de transferencia debe crear automáticamente un nuevo registro de producto en la sucursal de destino, copiando los detalles del producto (nombre, SKU, precio) del origen. Esto evita la entrada de datos manual y garantiza consistencia. El único campo que difiere es la cantidad de stock, que comienza con la cantidad transferida.' },
       { heading: 'Evitando errores de transferencia', body: 'Los errores más comunes de transferencia: transferir más stock del que la sucursal de origen tiene (el sistema debe bloquear esto), olvidar marcar una transferencia como recibida (el stock queda en limbo), y transferir a la sucursal equivocada (siempre verifica el destino). Mantén las notas de transferencia descriptivas — "reabastecimiento para mercado de fin de semana" es más útil que notas en blanco cuando revisas el historial de transferencias más tarde.' },
     ],
-    keyTakeaways: [
-      'Transfiere stock de forma proactiva basándote en datos de velocidad de venta, no de manera reactiva después de un quiebre de stock.',
-      'Siempre deduce del origen inmediatamente para evitar sobreventa durante la ventana de transferencia.',
-      'Rastrea cada transferencia con un flujo de estado: pendiente, en tránsito, recibido, o cancelado.',
-    ],
     faq: [
       { q: '¿Qué sucede con el stock durante el tránsito?', a: 'Se deduce de la sucursal de origen inmediatamente pero aún no se agrega al destino. El recuento total de inventario entre sucursales se reduce temporalmente por la cantidad transferida hasta que se recibe la transferencia.' },
       { q: '¿Puedo cancelar una transferencia después de que se ha enviado el stock?', a: 'Sí. Cancelar una transferencia en tránsito devuelve el stock a la sucursal de origen en el sistema. Necesitarás devolver físicamente los bienes también.' },

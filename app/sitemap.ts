@@ -262,7 +262,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.6,
           };
         })
-        .filter((entry): entry is MetadataRoute.Sitemap[number] => entry !== null)
+        .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
     ),
 
     // ── HELP: topics + articles ──────────────────────────────────────────────────

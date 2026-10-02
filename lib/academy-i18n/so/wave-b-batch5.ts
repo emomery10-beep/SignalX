@@ -1,6 +1,6 @@
-import { AcademyTranslation } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB5Translations: Record<string, AcademyTranslation> = {
+export const waveB5Translations: LocaleTranslations = {
   "robust-optimization-inventory-model-uncertainty": {
     "title": "Robust Optimization for Inventory Management Under Model Uncertainty: A Distribution-Free Approach Using POS (nidaamka POS) Data",
     "description": "Explore minimax and distributional-robustness frameworks for inventory decisions when demand distributions are uncertain, using POS (nidaamka POS) data to define ambiguity sets.",

@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
   // Detect if this is an expansion question
   const lastUserMessage = [...(messages || [])].reverse().find((m: { role: string }) => m.role === 'user')
-  const questionText = lastUserMessage?.content || ''
+  const questionText: string = lastUserMessage?.content || ''
   const isExpansion = isExpansionQuestion(questionText)
 
   // Build expansion context if needed

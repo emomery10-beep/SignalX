@@ -1,6 +1,6 @@
-import { AcademyTranslation } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB2Translations: Record<string, AcademyTranslation> = {
+export const waveB2Translations: LocaleTranslations = {
   "what-is-enterprise-value": {
     "title": "What Is Enterprise Value?",
     "description": "Learn how enterprise value measures a company's total worth by combining equity value with debt and subtracting cash, providing a clearer picture than market capitalisation alone.",

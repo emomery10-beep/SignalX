@@ -1,6 +1,6 @@
-import { AcademyArticle } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB2Translations: Record<string, Partial<AcademyArticle>> = {
+export const waveB2Translations: LocaleTranslations = {
   "what-is-enterprise-value": {
     title: "Was ist Unternehmens-Wert?",
     description: "Erfahren Sie, wie der Unternehmens-Wert das Gesamtwert eines Unternehmens misst, indem er Eigenkapitalwert und Schulden kombiniert und Bargeld abzieht, was ein klareres Bild als nur Marktkapitalisierung bietet.",

@@ -1,6 +1,6 @@
-import { AcademyArticle } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB4Translations: Record<string, Partial<AcademyArticle>> = {
+export const waveB4Translations: LocaleTranslations = {
   "what-is-just-in-time-inventory": {
     title: "Was ist Just-in-Time-Inventar?",
     description: "Erkunden Sie, wie Just-in-Time-Inventar-Verwaltung Verschwendung minimiert, indem Waren nur empfangen werden, wenn sie im Produktions- oder Verkaufsprozess benötigt werden.",

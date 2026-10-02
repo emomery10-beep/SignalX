@@ -1,6 +1,6 @@
-import { AcademyI18nTranslation } from './academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB1Translations: Record<string, AcademyI18nTranslation> = {
+export const waveB1Translations: LocaleTranslations = {
   "what-is-a-data-pipeline": {
     title: "What Is a Data Pipeline?",
     description: "A data pipeline automates the flow of data from source systems to destinations where it can be analysed. Learn how pipelines work and why they matter.",

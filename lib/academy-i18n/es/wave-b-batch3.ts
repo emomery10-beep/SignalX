@@ -1,6 +1,6 @@
-import { AcademyI18nTranslation } from './academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB3Translations: Record<string, AcademyI18nTranslation> = {
+export const waveB3Translations: LocaleTranslations = {
   "what-is-a-cohort-retention-curve": {
     title: "What Is a Cohort Retention Curve?",
     description: "A cohort retention curve tracks how cliente retention changes over time for groups of clientes who started in the same period. Learn how to read and use them.",

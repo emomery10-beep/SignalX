@@ -1,6 +1,6 @@
-import { AcademyI18nTranslation } from './academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB4Translations: Record<string, AcademyI18nTranslation> = {
+export const waveB4Translations: LocaleTranslations = {
   "algorithmic-inventory-forecasting-micro-retail": {
     title: "Algorithmic Inventory Forecasting in Micro-Retail Environments",
     description: "Explore algoritmoic approaches to inventario predicción tailored for micro-minorista, including sparse-data methods, lightweight ML models, and PoS-driven demand signals.",

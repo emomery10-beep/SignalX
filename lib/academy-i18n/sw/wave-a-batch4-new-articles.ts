@@ -7,8 +7,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
     title: "Maagizo ya Ununuzi: Unda, Tuma na Pokea Maagizo ya Wasambazaji katika AskBiz POS",
     description:
       "Jinsi tile ya Maagizo ya Ununuzi katika POS > Operations inavyofanya kazi kwa uhalisia — kutengeneza agizo lenye kiasi kinachopendekezwa kiotomatiki cha kuagiza tena, kulituma kwa msambazaji wako kupitia WhatsApp, na kupokea hisa (ikiwa ni pamoja na uwasilishaji wa sehemu) bila kugusa jedwali la excel.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "maagizo ya ununuzi",
       "maagizo ya wasambazaji",
@@ -54,7 +52,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
         body: "Vitendo vya agizo la ununuzi vimefungwa kulingana na jukumu la POS, si swichi moja ya wote-au-hakuna. Mmiliki na Meneja wanaweza kuangalia, kuunda, kutuma, kupokea, na kuweka maagizo kama yamelipwa. Jukumu la Hisa (Inventory) linaweza kuunda na kupokea maagizo (na kuyaweka kama yamelipwa) lakini haliwezi kuyatuma — kutuma kumeachwa kwa makusudi kwa uongozi. Majukumu ya Msimamizi na Meneja wa Tawi yanaweza kuangalia maagizo na hali yake lakini hayawezi kuunda, kutuma, au kupokea dhidi yao. Kama kitufe kinaonekana kimezimwa au mtu anakuambia hawezi kuona chaguo la Tuma, angalia jukumu lake alilopewa kabla ya kudhani kuna hitilafu.",
       },
     ],
-    keyTakeawaysNote: undefined,
     faq: [
       {
         q: "Kwa nini AskBiz iliongeza bidhaa kwenye agizo langu jipya la ununuzi kabla sijaandika chochote?",
@@ -81,8 +78,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
   "connect-marketing-ads-sources-askbiz": {
     title: "Unganisha Data Yako ya Masoko: Meta Ads, Google Ads, Google Analytics, Mailchimp na Klaviyo",
     description: "Jinsi ya kuunganisha vyanzo vitano vya Masoko na Matangazo katika AskBiz — Meta Ads, Google Ads, Google Analytics, Mailchimp na Klaviyo — na kile kila kimoja kinacholetea dashibodi yako.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "Meta Ads", "Google Ads", "Google Analytics", "Mailchimp", "Klaviyo",
       "vyanzo vya Masoko na Matangazo", "AskBiz Sources", "matumizi ya matangazo", "ROAS",
@@ -155,8 +150,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
   "connect-gocardless-askbiz": {
     title: "Unganisha GoCardless na AskBiz kwa Malipo ya Direct Debit na Michango",
     description: "Jinsi ya kuunganisha GoCardless katika AskBiz Sources, kile kinachosawazisha, mahali data hiyo inapoishia, na maana yake kwa kikomo cha vyanzo cha mpango wa Free.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "GoCardless", "direct debit", "Bacs", "michango", "mamlaka (mandates)",
       "malipo ya mara kwa mara", "AskBiz Sources", "Kiunganishi cha Payments", "kuunganisha GoCardless",
@@ -220,8 +213,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
   "connect-linnworks-askbiz": {
     title: "Unganisha Linnworks na AskBiz kwa Usawazishaji wa Hisa wa Chaneli Nyingi",
     description: "Mwongozo wa hatua kwa hatua wa kuunganisha Linnworks na AskBiz — kile mtiririko wa OAuth unachofanya, data inayosawazishwa kwa uhalisia, na mara ngapi husasishwa.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: ["Linnworks", "unganisha", "muunganisho", "AskBiz", "hisa", "chaneli nyingi", "Sources", "oda", "utekelezaji", "OAuth"],
     keyTakeaways: [
       "Linnworks iko chini ya Sources > Inventory & Logistics, karibu na Cin7 na ShipStation, na huunganisha kupitia OAuth — unaidhinisha ndani ya Linnworks yenyewe, AskBiz haioni nenosiri kamwe.",
@@ -271,8 +262,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
   "connect-xero-freeagent-askbiz": {
     title: "Unganisha Xero au FreeAgent na AskBiz",
     description: "Jinsi ya kuunganisha Xero au FreeAgent chini ya Sources > Accounting, kile kila kimoja kinachosawazisha ndani ya AskBiz, na jinsi vinavyotofautiana na Sage na Wave katika kategoria ileile.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "Xero", "FreeAgent", "AskBiz Sources", "Viunganishi vya Accounting",
       "unganisha Xero", "unganisha FreeAgent", "usawazishaji wa ankara", "muunganisho wa uhasibu",
@@ -349,8 +338,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
     title: "Unganisha Jumia na AskBiz: Oda, Malipo na Hisa kwa Masoko ya Kiafrika",
     description:
       "Jinsi ya kuunganisha akaunti yako ya Jumia Vendor Center na AskBiz kwa kutumia Client ID na Refresh Token, kinachosawazishwa kwa uhalisia, na kilichobaki nje ya wigo.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "Jumia",
       "Jumia Vendor Center",
@@ -422,8 +409,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
     title: "Risiti Mpya ya Tili ya AskBiz: Muundo wa Orodha ya Bidhaa na VAT Inayobadilika",
     description:
       "Risiti ya WhatsApp AskBiz inayotuma baada ya mauzo sasa ni picha halisi yenye mtindo wa risiti ya duka — kingo zilizoraruliwa, jumla yenye boksi, bakodi ya mapambo — na mstari wake wa VAT huonekana tu kwa biashara zenye nambari halisi ya VAT kwenye rekodi.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "muundo wa risiti",
       "risiti ya tili",
@@ -493,8 +478,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
     title: "Muhtasari Wako wa Kila Siku Sasa Unafika kama Ripoti ya P&L ya WhatsApp",
     description:
       "Ujumbe wa kiotomatiki wa kila siku wa AskBiz sasa unafika kwenye WhatsApp kama ripoti halisi ya mauzo, faida, na hasara ya masaa 24 na siku 7 zilizopita — hivi ndivyo unavyowasha na maana ya namba hizo.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "muhtasari wa kila siku wa WhatsApp",
       "ripoti ya P&L ya WhatsApp",
@@ -564,8 +547,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
     title: "Umesahau PIN Yako ya AskBiz? Ijirekebishe Mwenyewe kupitia WhatsApp",
     description:
       "Jinsi ya kurejesha PIN yako mwenyewe ya kuingia AskBiz bila kuwasiliana na msaada — thibitisha simu yako kupitia WhatsApp na uweke PIN mpya ya tarakimu 4 chini ya dakika moja.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "nimesahau PIN",
       "rekebisha PIN",
@@ -639,8 +620,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
     title: "Kikokotoo cha Zaka cha AskBiz: Jinsi Kinavyofanya Kazi na Mahali pa Kukipata",
     description:
       "Jinsi kichupo cha Zaka katika My Business kinavyokokotoa hali yako ya zaka ya biashara kutoka hisa hai, fedha, madeni ya kupokea na kulipwa, kufuatilia nisabu na haul kiotomatiki, na kukuunganisha na saraka ya hisani mshirika — bure kwa kila mpango.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: [
       "kikokotoo cha zaka",
       "kikokotoo cha zaka kwa biashara",
@@ -715,9 +694,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
   "factory-sector-guide-askbiz": {
     title: "Kuendesha Kiwanda katika AskBiz: Vipande vya Uzalishaji, Ubora, Muda wa Kusimama, Zamu na Nyaraka za Usafirishaji",
     description: "Ziara kamili ya modi ya sekta ya Kiwanda ya AskBiz — kurasa tisa maalum, hatua nne za upigaji picha, majukumu matano ya wafanyakazi wa kiwanda, na violezo 12 vya aina za viwanda vinavyojaza mchakato wako mapema.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
-    difficulty: "Intermediate",
     keywords: [
       "Modi ya Kiwanda",
       "AskBiz",
@@ -789,8 +765,6 @@ export const waveABatch4NewArticlesTranslations: LocaleTranslations = {
   "pos-free-trial-explained-askbiz": {
     title: "Jinsi Kipindi cha Majaribio Bure cha POS cha AskBiz Kinavyofanya Kazi",
     description: "AskBiz POS hutoa kipindi cha majaribio bure cha siku 30, cha mara moja, bila kuhitaji kadi. Hivi ndivyo hasa vya kukidai, kinachojumuisha, na kinachotokea kinapoisha.",
-    category: "AskBiz Tutorials",
-    categorySlug: "askbiz-tutorials",
     keywords: ["majaribio bure ya POS", "AskBiz POS", "majaribio ya siku 30", "hakuna kadi inayohitajika", "pos/activate", "kumalizika kwa majaribio", "malipo"],
     keyTakeaways: [
       "Kipindi cha majaribio bure ni cha POS tu, hudumu siku 30, na hakihitaji kadi — kila akaunti inaweza kukidai mara moja.",

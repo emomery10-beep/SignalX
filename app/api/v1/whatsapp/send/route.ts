@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { authenticateApiKey, recordRequest, debitCredits, checkIdempotency, insufficientCreditsResponse, CORS } from '@/lib/api-v1-auth'
 import { API_PRICE_CENTS } from '@/lib/api-pricing'
-import { sendReceipt, sendPurchaseOrder } from '@/lib/whatsapp'
+import { sendReceiptText, sendPurchaseOrder } from '@/lib/whatsapp'
 
 export const runtime = 'nodejs'
 export const maxDuration = 15
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   if (key.credit_balance_cents < price) return insufficientCreditsResponse(price)
 
   const result = template === 'receipt'
-    ? await sendReceipt(phone, text)
+    ? await sendReceiptText(phone, text)
     : await sendPurchaseOrder(phone, text)
 
   if (!result.ok) {

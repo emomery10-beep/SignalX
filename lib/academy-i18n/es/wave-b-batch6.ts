@@ -1,6 +1,6 @@
-import { AcademyI18nTranslation } from './academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB6Translations: Record<string, AcademyI18nTranslation> = {
+export const waveB6Translations: LocaleTranslations = {
   "adversarial-attacks-pos-ml-models": {
     title: "Adversarial Attacks on ML Models in PoS Systems",
     description: "Analyze adversarial attack vectors metaing aprendizaje automático models deployed in PoS systems, covering evasion, poisoning, and model extraction threats with defense strategies.",

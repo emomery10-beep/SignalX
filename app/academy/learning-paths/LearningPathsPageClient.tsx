@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react'
 import { LEARNING_PATHS, totalArticles } from '@/lib/learning-paths-content'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
+import type { Lang } from '@/lib/i18n'
 import LanguageToggle from '@/components/LanguageToggle'
 import ContinueLearning from './ContinueLearning'
 
@@ -235,7 +236,7 @@ export default function LearningPathsPageClient() {
   )
 }
 
-function PathCard({ path, lang }: { path: typeof PATHS[0]; lang: string }) {
+function PathCard({ path, lang }: { path: typeof PATHS[0]; lang: Lang }) {
   const { tc } = useLang()
   return (
     <Link

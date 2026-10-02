@@ -1,6 +1,6 @@
-import { AcademyArticle } from '../academy-types'
+import type { LocaleTranslations } from '../../academy-i18n-loader'
 
-export const waveB1Translations: Record<string, Partial<AcademyArticle>> = {
+export const waveB1Translations: LocaleTranslations = {
   "what-is-predictive-analytics": {
     title: "Was ist Predictive Analytics?",
     description: "Predictive Analytics nutzt historische Daten und statistische Modelle, um zukünftige Ergebnisse vorherzusagen. Erfahren Sie, wie es Unternehmen hilft, Nachfrage, Risiko und Chancen zu antizipieren.",
@@ -186,7 +186,7 @@ export const waveB1Translations: Record<string, Partial<AcademyArticle>> = {
     ],
     faq: [
       { q: "Wie unterscheidet sich MLOps von DevOps?", a: "DevOps automatisiert Software-Bereitstellung und Operationen. MLOps erweitert dies auf Machine Learning, fügt Fähigkeiten für Daten-Versionierung, Modell-Training-Automatisierung, Experiment-Verfolgung und Modell-Drift-Überwachung hinzu. Der Schlüssel-Unterschied ist, dass ML-Systeme eine zusätzliche Komplexitäts-Dimension haben – die Daten – die traditionelle Software nicht hat." },
-      { q: "Was ist Modell-Drift?", body: "Modell-Drift tritt auf, wenn eines bereitgestellten Modells Leistung über Zeit verschlechtert, weil die echte Daten es verarbeitet von den Daten, auf dem es trainiert wurde, verschoben hat. Konsumentenvorlieben shiften, Marktbedingungen ändern und neue Muster entstehen. Ohne Überwachung und Retraining erosion die Modell-Genauität graduell, möglicherweise zu schlechten Geschäftsentscheidungen führen." },
+      { q: "Was ist Modell-Drift?", a: "Modell-Drift tritt auf, wenn eines bereitgestellten Modells Leistung über Zeit verschlechtert, weil die echte Daten es verarbeitet von den Daten, auf dem es trainiert wurde, verschoben hat. Konsumentenvorlieben shiften, Marktbedingungen ändern und neue Muster entstehen. Ohne Überwachung und Retraining erosion die Modell-Genauität graduell, möglicherweise zu schlechten Geschäftsentscheidungen führen." },
       { q: "Benötigen kleine Teams MLOps?", a: "Selbst kleine Teams, die ein oder zwei Modelle bereitstellen, profitieren von grundlegender MLOps-Praxis: Versionskontrolle, wiederholbare Training, und einfache Überwachung. Full-Scale-MLOps-Plattformen sind Overkill für ein einzelnes Modell, aber die Kern-Praktiken vermeiden das häufige Szenario, in dem ein Data Scientist geht und niemand das Modell, das sie bauten, reproduzieren oder updaten kann." }
     ]
   },
