@@ -359,15 +359,15 @@ function KpiCard({ label, value, sub, accent, onClick, active, breakdown, breakd
 
   return (
     <div
-      onClick={onClick}
+      onClick={onClick ?? (breakdown && breakdown.length > 0 ? () => setShowBreakdown(true) : undefined)}
       style={{
         position: 'relative', padding: 16, borderRadius: 12, background: 'var(--sf)',
         border: active ? `1.5px solid ${accent || ACC}` : '1px solid var(--b)',
-        cursor: onClick ? 'pointer' : 'default', transition: 'border-color .15s',
+        cursor: (onClick || (breakdown && breakdown.length > 0)) ? 'pointer' : 'default', transition: 'border-color .15s',
         boxShadow: active ? `0 0 0 3px ${ACC_BG}` : 'none',
       }}
-      onMouseEnter={e => { if (onClick) e.currentTarget.style.borderColor = accent || ACC }}
-      onMouseLeave={e => { if (onClick && !active) e.currentTarget.style.borderColor = 'var(--b)' }}
+      onMouseEnter={e => { if (onClick || (breakdown && breakdown.length > 0)) e.currentTarget.style.borderColor = accent || ACC }}
+      onMouseLeave={e => { if ((onClick || (breakdown && breakdown.length > 0)) && !active) e.currentTarget.style.borderColor = 'var(--b)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: headerRight ? 2 : 6 }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>{label}</div>
@@ -1499,10 +1499,29 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label={tc('pos_factory.stockValueLabel')} value={fmt(currencySymbol, stockValue)} sub={tc('pos_factory.itemsCount', { n: rows.length })} accent={ACC} />
-        <KpiCard label={tc('pos_factory.rawMaterialsValueLabel')} value={fmt(currencySymbol, rawValue)} sub={tc('pos_factory.rawInventory')} accent="#3b82f6" />
-        <KpiCard label={tc('pos_factory.finishedGoodsValueLabel')} value={fmt(currencySymbol, finishedValue)} sub={tc('pos_factory.finishedInventory')} accent={GREEN} />
-        <KpiCard label={tc('pos_factory.lowStockItemsLabel')} value={fmtInt(lowStock.length)} sub={tc('pos_factory.atBelowReorderPoint')} accent={lowStock.length > 0 ? RED : GREEN} />
+        <KpiCard label={tc('pos_factory.stockValueLabel')} value={fmt(currencySymbol, stockValue)} sub={tc('pos_factory.itemsCount', { n: rows.length })} accent={ACC}
+          breakdown={[
+            ...rows.map(r => ({ label: `${r.name} — ${fmtInt(r.qty)} ${r.unit} × ${fmt(currencySymbol, r.cost)}`, value: fmt(currencySymbol, r.value) })),
+            { label: 'Total stock value', value: fmt(currencySymbol, stockValue), strong: true },
+          ]}
+          breakdownNote="Quantity on hand × cost per unit, for every item in the table below. Tap a row in the table to see how its quantity is worked out." />
+        <KpiCard label={tc('pos_factory.rawMaterialsValueLabel')} value={fmt(currencySymbol, rawValue)} sub={tc('pos_factory.rawInventory')} accent="#3b82f6"
+          breakdown={[
+            ...rows.filter(r => r.category === 'Raw').map(r => ({ label: `${r.name} — ${fmtInt(r.qty)} ${r.unit} × ${fmt(currencySymbol, r.cost)}`, value: fmt(currencySymbol, r.value) })),
+            { label: 'Total raw materials', value: fmt(currencySymbol, rawValue), strong: true },
+          ]}
+          breakdownNote="Seed on hand valued at the quantity-weighted average price paid on deliveries." />
+        <KpiCard label={tc('pos_factory.finishedGoodsValueLabel')} value={fmt(currencySymbol, finishedValue)} sub={tc('pos_factory.finishedInventory')} accent={GREEN}
+          breakdown={[
+            ...rows.filter(r => r.category === 'Finished').map(r => ({ label: `${r.name} — ${fmtInt(r.qty)} ${r.unit} × ${fmt(currencySymbol, r.cost)}`, value: fmt(currencySymbol, r.value) })),
+            { label: 'Total finished goods', value: fmt(currencySymbol, finishedValue), strong: true },
+          ]}
+          breakdownNote="Jerrycans packaged and not yet dispatched, valued at production cost. Sesame waste is a by-product and is counted in total stock value only." />
+        <KpiCard label={tc('pos_factory.lowStockItemsLabel')} value={fmtInt(lowStock.length)} sub={tc('pos_factory.atBelowReorderPoint')} accent={lowStock.length > 0 ? RED : GREEN}
+          breakdown={lowStock.length > 0
+            ? lowStock.map(r => ({ label: `${r.name} — ${fmtInt(r.qty)} ${r.unit} (reorder at ${fmtInt(r.reorder)})`, value: 'Low' }))
+            : [{ label: 'Items at or below their reorder point', value: '0', strong: true }]}
+          breakdownNote={rows.some(r => r.reorder > 0) ? undefined : 'No reorder points are set on these items, so nothing can be flagged as low yet.'} />
       </div>
 
       {lowStock.length > 0 && (
