@@ -18,6 +18,7 @@ import GettingStartedChecklist from '@/components/onboarding/GettingStartedCheck
 import { getTemplateById } from '@/lib/staff-templates'
 import { useLang } from '@/components/LanguageProvider'
 import CoachMark from '@/components/CoachMark'
+import { FACTORY_LOCATION_TYPES } from '@/lib/factory-location-types'
 import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 import { trackFunnelEvent } from '@/lib/funnel-track'
 
@@ -154,7 +155,7 @@ interface FactoryDispatch {
   destination?: string | null
 }
 interface Location {
-  id: string; name: string; address?: string; phone?: string; is_active: boolean
+  id: string; name: string; address?: string; phone?: string; is_active: boolean; kind?: 'branch' | 'factory'; factory_type?: string | null
 }
 type Tab = 'overview' | 'services' | 'staff' | 'staff_templates' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'factory' | 'payments'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
@@ -213,6 +214,14 @@ export default function POSPage() {
   // Tab bar: icon-only on mobile (no room for full labels), text-only on desktop
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
+  // Factory view lists only factory branches (retail branches like "town" never
+  // belong in a factory picker); each factory is its own branch with its own data.
+  const factoryMode = tab === 'factory' || selectedSector === 'factory'
+  const pickerLocations = factoryMode ? locations.filter(l => l.kind === 'factory') : locations
+  const selectedFactoryType = locations.find(l => l.id === selectedLocation)?.factory_type || null
+  useEffect(() => {
+    if (factoryMode && selectedLocation !== 'all' && locations.length > 0 && !locations.some(l => l.id === selectedLocation && l.kind === 'factory')) setSelectedLocation('all')
+  }, [factoryMode, selectedLocation, locations])
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
     window.addEventListener('resize', check)
@@ -1436,8 +1445,8 @@ export default function POSPage() {
               onChange={e => setSelectedLocation(e.target.value)}
               style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              <option value="all">{tc('pos_app.filter_all_branches')}</option>
-              {locations.map(loc => (
+              <option value="all">{factoryMode ? tc('pos_app.filter_all_factories') : tc('pos_app.filter_all_branches')}</option>
+              {pickerLocations.map(loc => (
                 <option key={loc.id} value={loc.id}>{loc.name}</option>
               ))}
             </select>
@@ -2900,6 +2909,15 @@ export default function POSPage() {
                         {expiryDate && !isExpired && !isExpiringSoon && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.exp_short')} {expiryDate.toLocaleDateString('en-GB')}</div>}
                         {item.last_sold_at && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.last_sold', { date: new Date(item.last_sold_at).toLocaleDateString('en-GB') })}</div>}
                       </div>
+              <button onClick={() => {
+                const name = prompt(tc('pos_app.prompt_factory_name'))
+                if (!name?.trim()) return
+                const pick = (prompt(tc('pos_app.prompt_factory_type'), '1') || '').trim()
+                const ftype = FACTORY_LOCATION_TYPES[Math.max(0, Math.min(FACTORY_LOCATION_TYPES.length - 1, (parseInt(pick) || 1) - 1))].id
+                fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), kind: 'factory', factory_type: ftype }) })
+                  .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_factory_created', { name: d.location.name })) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
+              }} style={btnSecondary}>{tc('pos_app.add_factory')}</button>
+              </div>
                       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{fmt(currencySymbol, item.sale_price)}</div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div>
@@ -2913,6 +2931,7 @@ export default function POSPage() {
                           </div>
                         ) : (
                           <div onClick={() => { setRestockId(item.id); setRestockQty('') }} style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer' }} title={tc('pos_app.click_restock')}>
+                        {loc.kind === 'factory' && <span style={{ fontSize: 12, color: ACC, fontWeight: 700 }}>🏭 {FACTORY_LOCATION_TYPES.find(t => t.id === loc.factory_type)?.label || ''}</span>}
                             {item.stock_qty}
                           </div>
                         )}
@@ -3005,6 +3024,7 @@ export default function POSPage() {
             selectedLocation={selectedLocation}
             transactions={sectorTransactions}
             staff={filteredStaff}
+            factoryType={selectedFactoryType}
             inventory={sectorFilteredInventory}
           />
         )}

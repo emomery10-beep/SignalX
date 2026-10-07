@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { getFactoryLocationType } from '@/lib/factory-location-types'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
@@ -73,6 +74,12 @@ const FACTORY_PRODUCTS = [
 ]
 
 interface InventoryItem { id: string; name: string; unit: string | null }
+
+// Product suggestions follow the staff member's own factory (sesame vs coconut).
+function productSuggestions(locationFactoryType: string | null): string[] {
+  const t = getFactoryLocationType(locationFactoryType)
+  return t && t.products.length ? t.products : FACTORY_PRODUCTS
+}
 
 interface OpenHold {
   label: string
@@ -194,6 +201,7 @@ export default function FactoryCapturePage() {
   // output pair can be grouped, and lets a mid-process sellable product
   // (parboiled paddy, dried parchment coffee) be marked as such.
   const [runRef, setRunRef] = useState('')
+  const [locationFactoryType, setLocationFactoryType] = useState<string | null>(null)
   const [isIntermediate, setIsIntermediate] = useState(false)
 
   // ── Auth + inventory load ──────────────────────────────────────────────
@@ -205,6 +213,10 @@ export default function FactoryCapturePage() {
     // material choices here.
     fetchInventory({ ownerId: session.ownerId, staffId: session.staffId || '', sector: 'factory' })
       .then(d => setInventory((d.inventory || []).slice(0, 60)))
+      .catch(() => {})
+    fetch('/api/pos/config', { headers: session.headers })
+      .then(r => r.json())
+      .then(d => setLocationFactoryType(d?.location_factory_type || null))
       .catch(() => {})
     fetch('/api/pos/factory/capture-holds?status=open', { headers: session.headers })
       .then(r => r.json())
@@ -619,7 +631,7 @@ export default function FactoryCapturePage() {
           {product.length > 0 && (
             <div style={{ marginTop: 8, maxHeight: 160, overflowY: 'auto', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 8 }}>
               {/* Predefined factory products */}
-              {FACTORY_PRODUCTS.filter(p => p.toLowerCase().includes(product.toLowerCase())).map(p => (
+              {productSuggestions(locationFactoryType).filter(p => p.toLowerCase().includes(product.toLowerCase())).map(p => (
                 <button
                   key={p}
                   onClick={() => setProduct(p)}

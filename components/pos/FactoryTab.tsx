@@ -72,6 +72,8 @@ interface StaffMember {
 interface FactoryTabProps {
   currencySymbol: string
   selectedLocation: string
+  /** factory_type of the selected factory (null = all / unknown). Non-sesame factories skip the sesame-specific stock rows. */
+  factoryType?: string | null
   transactions: any[]
   staff: any[]
   inventory: any[]
@@ -710,7 +712,7 @@ const tdStyle: React.CSSProperties = { padding: '8px 10px', fontSize: 11, border
 // ═════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═════════════════════════════════════════════════════════════
-export default function FactoryTab({ currencySymbol, selectedLocation, transactions, staff, inventory, previewCaptures }: FactoryTabProps) {
+export default function FactoryTab({ currencySymbol, selectedLocation, factoryType, transactions, staff, inventory, previewCaptures }: FactoryTabProps) {
   const { tc } = useLang()
   const [subTab, setSubTab] = useState<SubTab>('overview')
   const [captures, setCaptures] = useState<FactoryCapture[]>([])
@@ -923,7 +925,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
             <QualityView captures={captures} wastages={wastages} costForCapture={costForCapture} totalWaste={totalWaste} currencySymbol={currencySymbol} staffName={staffName} />
           )}
           {subTab === 'inventory' && (
-            <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} outputs={outputs} dispatches={dispatches} />
+            <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} outputs={outputs} dispatches={dispatches} selectedLocation={selectedLocation} factoryType={factoryType} />
           )}
           {subTab === 'dispatch' && (
             <DispatchView dispatches={dispatches} staffName={staffName} currencySymbol={currencySymbol} />
@@ -971,6 +973,47 @@ function OverviewView(props: {
         <KpiCard label={tc('pos_factory.productionEfficiencyLabel')} value={pct(efficiency)} sub={tc('pos_factory.outputDivIntake')} accent={efficiency >= 80 ? GREEN : AMBER} onClick={() => focusKpi('efficiency', 'costing')} active={kpiFocus === 'efficiency'} />
         <KpiCard label={tc('pos_factory.revenueFromSalesLabel')} value={fmt(currencySymbol, salesRevenue)} sub={tc('pos_factory.allTransactions')} accent={GREEN} />
       </div>
+
+      {/* Side-by-side per-factory comparison — only when "All factories" holds data from 2+ factories */}
+      {(() => {
+        const byFactory = new Map<string, { name: string; output: number; wastage: number; dispatches: number; pending: number }>()
+        for (const c of captures) {
+          const loc = (c as any).location as { id?: string; name?: string } | null | undefined
+          const key = (c as any).location_id || loc?.id || 'none'
+          const row = byFactory.get(key) || { name: loc?.name || 'Unassigned', output: 0, wastage: 0, dispatches: 0, pending: 0 }
+          const q = Number(c.quantity) || 0
+          if (c.type === 'output') row.output += q
+          else if (c.type === 'wastage') row.wastage += q
+          else if (c.type === 'dispatch') row.dispatches += 1
+          if (c.status === 'pending') row.pending += 1
+          byFactory.set(key, row)
+        }
+        if (byFactory.size < 2) return null
+        return (
+          <Section title="By factory">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
+                <thead><tr>
+                  {['Factory', 'Output', 'Wastage', 'Dispatches', 'Pending'].map((h, i) => (
+                    <th key={h} style={{ textAlign: i === 0 ? 'left' : 'right', fontSize: 11, color: 'var(--tx3)', fontWeight: 600, padding: '6px 10px' }}>{h}</th>
+                  ))}
+                </tr></thead>
+                <tbody>
+                  {[...byFactory.values()].sort((a, b) => b.output - a.output).map(r => (
+                    <tr key={r.name}>
+                      <td style={{ ...tdStyle, fontWeight: 600 }}>{r.name}</td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(r.output)}</td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(r.wastage)}</td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(r.dispatches)}</td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(r.pending)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        )
+      })()}
 
       {/* Daily output + wastage chart */}
       <Section title={tc('pos_factory.dailyOutputTitle')} right={<span style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmtInt(periodOutput)} units total</span>}>
@@ -1386,8 +1429,8 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
 // ═════════════════════════════════════════════════════════════
 // INVENTORY SUB-TAB
 // ═════════════════════════════════════════════════════════════
-function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
-  inv: InventoryItem[]; intakes: FactoryCapture[]; currencySymbol: string; outputs?: FactoryCapture[]; dispatches?: FactoryCapture[]
+function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, selectedLocation, factoryType }: {
+  inv: InventoryItem[]; intakes: FactoryCapture[]; currencySymbol: string; outputs?: FactoryCapture[]; dispatches?: FactoryCapture[]; selectedLocation?: string; factoryType?: string | null
 }) {
   const { tc } = useLang()
   const [sortCol, setSortCol] = useState('name')
@@ -1400,8 +1443,9 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   const [countMsg, setCountMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   // Fetch factory stock (single shared calculation, see lib/factory-stock)
+  const locQs = selectedLocation && selectedLocation !== 'all' ? `?location_id=${encodeURIComponent(selectedLocation)}` : ''
   const loadStock = useCallback(() => {
-    return fetch('/api/pos/factory/sesame-production')
+    return fetch(`/api/pos/factory/sesame-production${locQs}`)
       .then(r => {
         if (!r.ok) throw new Error(`API error: ${r.status}`)
         return r.json()
@@ -1411,13 +1455,13 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
         else console.warn('Sesame data is invalid:', data)
       })
       .catch(err => console.error('Sesame data fetch failed:', err))
-  }, [])
+  }, [locQs])
   useEffect(() => { loadStock() }, [loadStock])
 
   const saveCount = async (kind: StockKind, qty: number, beforeLastDelivery = false) => {
     setSaving(true); setCountMsg(null)
     try {
-      const res = await fetch('/api/pos/factory/stock-count', {
+      const res = await fetch(`/api/pos/factory/stock-count${locQs}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kind, counted_qty: qty, before_last_delivery: beforeLastDelivery }),
       })
@@ -1441,6 +1485,9 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
   // packaging + output − dispatched; waste = produced − dispatched − fed back.
   const factoryInventory = useMemo(() => {
     const items: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = []
+    // Only the sesame factory has the seed / jerrycan / waste rows; other
+    // factories (coconut, ...) show their own synced product rows below.
+    if (factoryType && factoryType !== 'sesame_oil') return items
     if (!sesameData || typeof sesameData.remainingArrival !== 'number') return items
     const d = sesameData
     items.push({
@@ -1456,7 +1503,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches }: {
       cost: d.wasteCostPerKg || 0, usagePerDay: (d.wasteDispatchedLast30 || 0) / 30,
     })
     return items
-  }, [sesameData])
+  }, [sesameData, factoryType])
 
   const rows = useMemo(() => {
     // Rows synced from dispatches (source_type 'factory_dispatch') hold

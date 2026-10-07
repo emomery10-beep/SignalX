@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const service = createServiceClient()
   const { data, error } = await service
     .from('pos_locations')
-    .select('id, name, address, phone, is_active, created_at')
+    .select('id, name, address, phone, is_active, created_at, kind, factory_type')
     .eq('owner_id', ownerId)
     .order('created_at', { ascending: true })
 
@@ -24,14 +24,15 @@ export async function POST(req: NextRequest) {
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const service = createServiceClient()
-  const { name, address, phone } = await req.json()
+  const { name, address, phone, kind, factory_type } = await req.json()
+  const isFactory = kind === 'factory'
 
   if (!name?.trim()) return NextResponse.json({ error: 'Location name required' }, { status: 400 })
 
   const { data, error } = await service
     .from('pos_locations')
-    .insert({ owner_id: ownerId, name: name.trim(), address: address || null, phone: phone || null })
-    .select('id, name, address, phone, is_active, created_at')
+    .insert({ owner_id: ownerId, name: name.trim(), address: address || null, phone: phone || null, kind: isFactory ? 'factory' : 'branch', factory_type: isFactory ? (factory_type || 'other') : null })
+    .select('id, name, address, phone, is_active, created_at, kind, factory_type')
     .single()
 
   if (error) {
@@ -48,7 +49,7 @@ export async function PATCH(req: NextRequest) {
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const service = createServiceClient()
-  const { id, name, address, phone, is_active } = await req.json()
+  const { id, name, address, phone, is_active, factory_type } = await req.json()
 
   if (!id) return NextResponse.json({ error: 'Location id required' }, { status: 400 })
 
@@ -56,6 +57,7 @@ export async function PATCH(req: NextRequest) {
   if (name !== undefined) updates.name = name.trim()
   if (address !== undefined) updates.address = address
   if (phone !== undefined) updates.phone = phone
+  if (factory_type !== undefined) updates.factory_type = factory_type
   if (is_active !== undefined) updates.is_active = is_active
 
   const { data, error } = await service
@@ -63,7 +65,7 @@ export async function PATCH(req: NextRequest) {
     .update(updates)
     .eq('id', id)
     .eq('owner_id', ownerId)
-    .select('id, name, address, phone, is_active, created_at')
+    .select('id, name, address, phone, is_active, created_at, kind, factory_type')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -89,6 +91,17 @@ export async function DELETE(req: NextRequest) {
 
   if ((count ?? 0) <= 1) {
     return NextResponse.json({ error: 'You need at least one branch — add a new one before deleting this one' }, { status: 409 })
+  }
+
+  // Deleting a factory would orphan its captures/stock (location_id is set to
+  // null), mixing them back into the account — refuse while it has records.
+  const { count: capCount } = await service
+    .from('pos_factory_captures')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', ownerId)
+    .eq('location_id', id)
+  if ((capCount ?? 0) > 0) {
+    return NextResponse.json({ error: 'This factory has production records. Deactivate it instead of deleting it.' }, { status: 409 })
   }
 
   const { error } = await service

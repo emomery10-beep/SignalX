@@ -25,18 +25,24 @@ export async function POST(req: NextRequest) {
     if (!Number.isFinite(counted) || counted < 0 || counted > 10_000_000) return json({ error: 'Enter a valid quantity' }, 400)
 
     const service = createServiceClient()
-    const { data: caps, error: capErr } = await service
+    // A count belongs to one factory: owner passes ?location_id=, staff use their own branch.
+    const locationId = auth.locationId || null
+    let capQuery = service
       .from('pos_factory_captures')
       .select('type, product_name, quantity, param_label, param_value, created_at')
       .eq('owner_id', auth.ownerId)
       .eq('status', 'approved')
+    if (locationId) capQuery = capQuery.eq('location_id', locationId)
+    const { data: caps, error: capErr } = await capQuery
     if (capErr) return json({ error: capErr.message }, 500)
 
-    const { data: counts } = await service
+    let countQuery = service
       .from('pos_stock_adjustments')
       .select('product_name, counted_qty, created_at')
       .eq('owner_id', auth.ownerId)
       .eq('reason', FACTORY_COUNT_REASON)
+    if (locationId) countQuery = countQuery.eq('location_id', locationId)
+    const { data: counts } = await countQuery
 
     const stock = computeFactoryStock((caps || []) as any[], Date.now(), (counts || []) as any[])
 
@@ -54,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     const { error } = await service.from('pos_stock_adjustments').insert({
       owner_id: auth.ownerId,
+      location_id: locationId,
       adjusted_by: auth.staffId || null,
       product_name: KIND_NAME[kind],
       system_qty: systemQty,

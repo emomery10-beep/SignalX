@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const service = createServiceClient()
   const { data, error } = await service
     .from('pos_locations')
-    .select('id, name, address, phone, is_active, created_at')
+    .select('id, name, address, phone, is_active, created_at, kind, factory_type')
     .eq('owner_id', ownerId)
     .order('created_at', { ascending: true })
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await service
     .from('pos_locations')
     .insert({ owner_id: ownerId, name: name.trim(), address: address || null, phone: phone || null })
-    .select('id, name, address, phone, is_active, created_at')
+    .select('id, name, address, phone, is_active, created_at, kind, factory_type')
     .single()
 
   if (error) {
@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest) {
     .update(updates)
     .eq('id', id)
     .eq('owner_id', ownerId)
-    .select('id, name, address, phone, is_active, created_at')
+    .select('id, name, address, phone, is_active, created_at, kind, factory_type')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

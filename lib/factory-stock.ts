@@ -222,3 +222,36 @@ export function computeFactoryStock(captures: StockCapture[], now: number = Date
     byKind, lastArrival, movements,
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Generic (non-sesame) factories — e.g. coconut. Stock per product name, no
+// sesame-specific naming. Direction by capture type:
+//   intake_arrival / intake → in      intake_feed → out
+//   output / packaging      → in      dispatch    → out
+//   wastage → in when the product is itself a by-product (name has waste/
+//   husk/shell), otherwise out (shrinkage of that product).
+// ─────────────────────────────────────────────────────────────────────────
+export interface GenericStockRow { name: string; unit?: string | null; onHand: number; in: number; out: number; lastDispatchPrice: number }
+
+const isByproductName = (p: string) => /waste|husk|shell/.test(p)
+
+export function computeGenericStock(captures: (StockCapture & { dispatch_price?: number | string | null; unit?: string | null })[]): GenericStockRow[] {
+  const round = (v: number) => Math.round(v * 100) / 100
+  const acc = new Map<string, GenericStockRow & { priceAt: number }>()
+  for (const c of captures) {
+    const raw = (c.product_name || '').trim()
+    const qty = n(c.quantity)
+    if (!raw || !c.type || qty <= 0) continue
+    const key = raw.toLowerCase()
+    let dir: 'in' | 'out' | null = null
+    if (c.type === 'intake_arrival' || c.type === 'intake' || c.type === 'output' || c.type === 'packaging') dir = 'in'
+    else if (c.type === 'intake_feed' || c.type === 'dispatch') dir = 'out'
+    else if (c.type === 'wastage') dir = isByproductName(key) ? 'in' : 'out'
+    if (!dir) continue
+    const row = acc.get(key) || { name: raw, unit: c.unit ?? null, onHand: 0, in: 0, out: 0, lastDispatchPrice: 0, priceAt: 0 }
+    if (dir === 'in') row.in += qty; else row.out += qty
+    if (c.type === 'dispatch' && n(c.dispatch_price) > 0 && ts(c.created_at) >= row.priceAt) { row.lastDispatchPrice = n(c.dispatch_price); row.priceAt = ts(c.created_at) }
+    acc.set(key, row)
+  }
+  return [...acc.values()].map(r => ({ name: r.name, unit: r.unit, in: round(r.in), out: round(r.out), onHand: round(Math.max(0, r.in - r.out)), lastDispatchPrice: r.lastDispatchPrice }))
+}

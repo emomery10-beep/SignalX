@@ -18,11 +18,16 @@ export async function GET(req: NextRequest) {
     // Approved captures only. Stock figures come from lib/factory-stock so this
     // endpoint, the Factory Analytics Inventory tab and the synced `inventory`
     // rows can never disagree.
-    const { data: allCaptures } = await service
+    // Scoped to the selected factory (owner: ?location_id=, staff: their own
+    // branch) so one factory's stock never bleeds into another's. No branch =
+    // whole account, as before.
+    let capQuery = service
       .from('pos_factory_captures')
       .select('*')
       .eq('owner_id', auth.ownerId)
       .eq('status', 'approved')
+    if (auth.locationId) capQuery = capQuery.eq('location_id', auth.locationId)
+    const { data: allCaptures } = await capQuery
 
     const captures = ((allCaptures || []) as any[]).filter((c: any) => {
       const p = (c.product_name || '').toLowerCase()
@@ -30,11 +35,13 @@ export async function GET(req: NextRequest) {
     })
 
     // Physical stock counts re-anchor the balance (see lib/factory-stock.ts).
-    const { data: counts } = await service
+    let countQuery = service
       .from('pos_stock_adjustments')
       .select('product_name, counted_qty, created_at')
       .eq('owner_id', auth.ownerId)
       .eq('reason', FACTORY_COUNT_REASON)
+    if (auth.locationId) countQuery = countQuery.eq('location_id', auth.locationId)
+    const { data: counts } = await countQuery
 
     const stock = computeFactoryStock(captures, Date.now(), (counts || []) as any[])
     const sum = (pred: (c: any) => boolean) => captures.filter(pred).reduce((s: number, c: any) => s + (Number(c.quantity) || 0), 0)

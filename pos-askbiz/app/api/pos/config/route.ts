@@ -46,14 +46,21 @@ export async function GET(req: NextRequest) {
 
   // For staff sessions, return their assigned sector so the POS locks to it
   let staffSector: string | null = null
+  // Per-factory type of the staff member's own branch (an owner can run several
+  // factories — sesame, coconut — so profile.factory_type alone can't say).
+  let locationFactoryType: string | null = null
   if (staffId) {
     const { data: staffRow } = await supabase
       .from('pos_staff')
-      .select('sector')
+      .select('sector, location_id')
       .eq('id', staffId)
       .eq('owner_id', ownerId)
       .single()
     staffSector = staffRow?.sector || null
+    if (staffRow?.location_id) {
+      const { data: loc } = await supabase.from('pos_locations').select('factory_type').eq('id', staffRow.location_id).maybeSingle()
+      locationFactoryType = loc?.factory_type || null
+    }
   }
 
   return NextResponse.json({
@@ -67,5 +74,6 @@ export async function GET(req: NextRequest) {
     // skipped the step. Consumed by the factory Hub + Production log to
     // show type-specific yield ranges instead of a flat 90%/70% threshold.
     factory_type:    profile?.factory_type || null,
+    location_factory_type: locationFactoryType,
   })
 }

@@ -499,7 +499,7 @@ export async function PATCH(req: NextRequest) {
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status, type')
+    .select('id, status, type, location_id')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -546,7 +546,7 @@ export async function PATCH(req: NextRequest) {
   // Any approved capture that moves stock refreshes the factory inventory rows
   // (recomputed from captures, never incremented — see factory-stock.ts).
   if (status === 'approved' && STOCK_AFFECTING_TYPES.includes(existing.type)) {
-    await syncFactoryStockToInventory(auth.ownerId)
+    await syncFactoryStockToInventory(auth.ownerId, existing.location_id || null)
   }
 
   if (isDispatchApproval) {
