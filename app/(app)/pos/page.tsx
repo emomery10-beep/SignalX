@@ -204,16 +204,16 @@ export default function POSPage() {
   }, [posScope, tab, handleSetTab])
   const [seatCount, setSeatCount] = useState(0)
   const [businessType, setBusinessType] = useState('')
+  // POS-persona owners set their shop up free on the real dashboard (products,
+  // staff, branches) and only pay to unlock SELLING — the free trial is closed.
+  // Everyone else (Business Intelligence types) keeps the paid-seats paywall.
+  const isPosPersona = ['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase())
   const [sectorOverride, setSectorOverride] = useState<string | null>(null)
 
   // Locations (multi-branch)
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string>('all')
   const [selectedSector, setSelectedSector] = useState<string>('all')
-
-  // Tab bar: icon-only on mobile (no room for full labels), text-only on desktop
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
   // Factory view lists only factory branches (retail branches like "town" never
   // belong in a factory picker); each factory is its own branch with its own data.
   const factoryMode = tab === 'factory' || selectedSector === 'factory'
@@ -222,6 +222,10 @@ export default function POSPage() {
   useEffect(() => {
     if (factoryMode && selectedLocation !== 'all' && locations.length > 0 && !locations.some(l => l.id === selectedLocation && l.kind === 'factory')) setSelectedLocation('all')
   }, [factoryMode, selectedLocation, locations])
+
+  // Tab bar: icon-only on mobile (no room for full labels), text-only on desktop
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
     window.addEventListener('resize', check)
@@ -281,39 +285,21 @@ export default function POSPage() {
   const [tourStep, setTourStep] = useState(0)
   const POS_TOUR_DONE_KEY = 'askbiz_pos_tour_done'
 
-  // Trial claim, for anyone who lands on this page's paywall without having
-  // claimed it during onboarding (e.g. they picked "Set up my till" and
-  // skipped it, or are just returning to an old bookmark). Same API action
-  // and one-time PIN pattern as onboarding/page.tsx and pos/setup/page.tsx.
-  const [posTrialLoading, setPosTrialLoading] = useState(false)
-  const [posTrialError, setPosTrialError]     = useState('')
-  const [posOwnerPin, setPosOwnerPin]         = useState('')
-  const claimTrialFromPos = async () => {
-    trackFunnelEvent('paywall_trial_clicked', { businessType })
-    setPosTrialLoading(true)
-    setPosTrialError('')
-    try {
-      const res = await fetch('/api/billing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
-      })
-      const d = await res.json()
-      if (d.success) {
-        trackFunnelEvent('paywall_trial_started', { businessType })
-        setPosEnabled(true)
-        if (d.owner_pin) setPosOwnerPin(String(d.owner_pin))
-      } else {
-        trackFunnelEvent('paywall_trial_failed', { businessType, metadata: { error: d.error || null } })
-        setPosTrialError(d.error || tc('pos_app.toast_staff_add_failed'))
-      }
-    } catch {
-      trackFunnelEvent('paywall_trial_failed', { businessType, metadata: { error: 'network' } })
-      setPosTrialError(tc('pos_app.toast_staff_add_failed'))
-    } finally {
-      setPosTrialLoading(false)
-    }
-  }
+  // Till login for the owner. Used to be created inside the (now closed) free
+  // trial grant; now created once, free, the first time a POS-persona owner
+  // lands here — before payment — so the till is ready the moment they
+  // activate. The PIN is only returned by the call that creates it, so it is
+  // shown immediately in the card at the top of the dashboard.
+  const [posOwnerPin, setPosOwnerPin] = useState('')
+  useEffect(() => {
+    if (posEnabled === null || !isPosPersona) return
+    let cancelled = false
+    fetch('/api/pos/owner-pin', { method: 'POST' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!cancelled && d?.owner_pin) setPosOwnerPin(String(d.owner_pin)) })
+      .catch(() => { /* best-effort: staff can still be added from the Staff tab */ })
+    return () => { cancelled = true }
+  }, [posEnabled, isPosPersona])
 
   // reason distinguishes a real finish (tour's real action actually
   // happened — see the tourStep===0-after-save call site) from an explicit
@@ -330,7 +316,8 @@ export default function POSPage() {
   // before. Forces the Inventory tab open too — the Scan/Add product button
   // this tour targets only exists in the DOM there.
   useEffect(() => {
-    if (posEnabled !== true) return
+    // Paid owners, and unpaid POS-persona owners setting up their shop.
+    if (posEnabled === null || (posEnabled === false && !isPosPersona)) return
     let done = true
     try { done = localStorage.getItem(POS_TOUR_DONE_KEY) === '1' } catch { /* fail open to "done" — never nag if storage is blocked */ }
     if (!done) {
@@ -339,7 +326,7 @@ export default function POSPage() {
       setTourStep(1)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posEnabled])
+  }, [posEnabled, isPosPersona])
 
   // Funnel instrumentation: the paywall is the done-screen equivalent for
   // anyone who didn't claim the trial during onboarding (skipped, failed, or
@@ -347,7 +334,7 @@ export default function POSPage() {
   // onboarding_done_pos_shown. Scoped to the same POS-persona business types
   // that get the trial-claim button below, not the paid-seats paywall.
   useEffect(() => {
-    if (posEnabled === false && ['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase())) {
+    if (posEnabled === false && isPosPersona) {
       trackFunnelEvent('paywall_shown', { businessType })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1267,61 +1254,9 @@ export default function POSPage() {
   )
 
   // ── POS NOT ENABLED ────────────────────────────────────
-  if (!posEnabled) return (
+  if (!posEnabled && !isPosPersona) return (
     <div className="page-shell">
       <div className="page-shell-body" style={{ display: 'flex', flexDirection: 'column' }}>
-        {/* POS-persona businesses get a direct trial claim right here instead
-            of a link out to a separate setup wizard (that page now just
-            redirects back to this exact spot anyway — see
-            app/(app)/pos/setup/page.tsx). Claiming flips posEnabled locally,
-            so the page falls straight through to the real dashboard below
-            and the tour picks up from there. Everyone else (Business
-            Intelligence types, which don't get a free POS trial) keeps the
-            original paid-seats paywall unchanged. */}
-        {['retail', 'market_stall', 'food_bev', 'salon', 'repair'].includes((businessType || '').toLowerCase()) ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-            <div style={{ maxWidth: 400, width: '100%' }}>
-              {posOwnerPin ? (
-                <div style={{ padding: '20px 22px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, textAlign: 'center' }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
-                  <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{posOwnerPin}</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 16 }}>{tc('onboarding.till_pin_body')}</div>
-                  <button onClick={() => setPosOwnerPin('')} style={{ padding: '12px 28px', borderRadius: 12, border: 'none', background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', width: '100%' }}>
-                    {tc('onboarding.till_pin_continue')}
-                  </button>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 26, fontWeight: 700, marginBottom: 12 }}>{tc('pos_app.disabled_title')}</div>
-                  <p style={{ fontSize: 16, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 24 }}>{tc('pos_app.disabled_desc')}</p>
-                  <button onClick={claimTrialFromPos} disabled={posTrialLoading} style={{ width: '100%', padding: '13px 28px', borderRadius: 12, border: 'none', background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', cursor: posTrialLoading ? 'wait' : 'pointer', opacity: posTrialLoading ? .7 : 1, marginBottom: 8, boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
-                    {posTrialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
-                  </button>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: posTrialError ? 8 : 20 }}>{tc('billing.pos_no_card')}</div>
-                  {posTrialError && <div role="alert" style={{ fontSize: 13, color: '#b91c1c', marginBottom: 20 }}>{posTrialError}</div>}
-                  <a
-                    href={ONBOARDING_WHATSAPP_GROUP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', padding: '14px 16px', borderRadius: 14, background: 'rgba(37,211,102,.08)', border: '1px solid rgba(37,211,102,.25)', textDecoration: 'none' }}
-                  >
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,211,102,.35)' }} aria-hidden="true">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2.13c-5.45 0-9.9 4.45-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2 22l5.15-1.35a9.9 9.9 0 0 0 4.89 1.28h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.64-1.03-5.13-2.9-7-1.86-1.87-4.35-2.9-7-2.9Zm5.8 14.14c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.8-.11a16 16 0 0 1-1.62-.6c-2.85-1.23-4.7-4.1-4.85-4.3-.14-.2-1.15-1.53-1.15-2.92 0-1.4.73-2.07.99-2.35.26-.28.57-.35.76-.35h.55c.18 0 .42-.03.65.5.24.55.82 1.9.89 2.04.07.14.12.3.02.49-.1.19-.15.3-.3.46-.14.17-.3.37-.43.5-.14.14-.3.29-.13.57.17.28.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.44.28.14.45.12.62-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.66-.17 1.3Z"/></svg>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{tc('onboarding.whatsapp_help_title')}</div>
-                      <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5, marginBottom: 4 }}>{tc('onboarding.whatsapp_help_body')}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#128C7E' }}>{tc('onboarding.whatsapp_help_cta')}</div>
-                    </div>
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
             <div style={{ maxWidth: 480, textAlign: 'center' }}>
               <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
@@ -1349,7 +1284,6 @@ export default function POSPage() {
               </a>
             </div>
           </div>
-        )}
       </div>
     </div>
   )
@@ -1360,6 +1294,31 @@ export default function POSPage() {
       {toast && <Toast msg={toast.msg} ok={toast.ok} onDone={() => setToast(null)} />}
 
       <div className="page-shell-body">
+        {/* One-time till PIN for the owner. Only ever shown by the call that
+            creates it (only the hash is stored), so it must be acknowledged. */}
+        {posOwnerPin && (
+          <div style={{ padding: '18px 20px', borderRadius: 14, background: ACC_BG, border: `1.5px solid ${ACC}`, textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
+            <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{posOwnerPin}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 14 }}>{tc('onboarding.till_pin_body')}</div>
+            <button onClick={() => setPosOwnerPin('')} style={{ padding: '10px 28px', borderRadius: 12, border: 'none', background: ACC, color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
+              {tc('onboarding.till_pin_continue')}
+            </button>
+          </div>
+        )}
+        {/* Setup mode: shop is free to set up, paying unlocks selling. Calm, not
+            blocking — the hard gate is the server's 402 when a sale is attempted. */}
+        {posEnabled === false && isPosPersona && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '14px 18px', borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, marginBottom: 16 }}>
+            <div style={{ flex: '1 1 260px' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{tc('pos_app.setup_banner_title')}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>{tc('pos_app.setup_banner_body')}</div>
+            </div>
+            <a href="/pos/activate" onClick={() => trackFunnelEvent('paywall_activate_clicked', { businessType })} style={{ padding: '11px 22px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap' }}>
+              {tc('pos_app.setup_banner_cta')}
+            </a>
+          </div>
+        )}
         {/* Tabs + action icons in one flush row */}
         <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, alignItems: 'stretch' }}>
           {(posScope === 'audit_only' ? (['audit'] as Tab[]) : (['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[])).filter(Boolean).map(t => {
@@ -2909,15 +2868,6 @@ export default function POSPage() {
                         {expiryDate && !isExpired && !isExpiringSoon && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.exp_short')} {expiryDate.toLocaleDateString('en-GB')}</div>}
                         {item.last_sold_at && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_app.last_sold', { date: new Date(item.last_sold_at).toLocaleDateString('en-GB') })}</div>}
                       </div>
-              <button onClick={() => {
-                const name = prompt(tc('pos_app.prompt_factory_name'))
-                if (!name?.trim()) return
-                const pick = (prompt(tc('pos_app.prompt_factory_type'), '1') || '').trim()
-                const ftype = FACTORY_LOCATION_TYPES[Math.max(0, Math.min(FACTORY_LOCATION_TYPES.length - 1, (parseInt(pick) || 1) - 1))].id
-                fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), kind: 'factory', factory_type: ftype }) })
-                  .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_factory_created', { name: d.location.name })) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
-              }} style={btnSecondary}>{tc('pos_app.add_factory')}</button>
-              </div>
                       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{fmt(currencySymbol, item.sale_price)}</div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div>
@@ -2931,7 +2881,6 @@ export default function POSPage() {
                           </div>
                         ) : (
                           <div onClick={() => { setRestockId(item.id); setRestockQty('') }} style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer' }} title={tc('pos_app.click_restock')}>
-                        {loc.kind === 'factory' && <span style={{ fontSize: 12, color: ACC, fontWeight: 700 }}>🏭 {FACTORY_LOCATION_TYPES.find(t => t.id === loc.factory_type)?.label || ''}</span>}
                             {item.stock_qty}
                           </div>
                         )}
@@ -2953,12 +2902,22 @@ export default function POSPage() {
           <div style={{ maxWidth: 700 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ fontSize: 15, color: 'var(--tx3)' }}>{locations.length === 1 ? tc('pos_app.branch_count_one', { n: locations.length }) : tc('pos_app.branch_count_other', { n: locations.length })}</div>
+              <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => {
                 const name = prompt(tc('pos_app.prompt_branch_name'))
                 if (!name?.trim()) return
                 fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim() }) })
                   .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_branch_created', { name: d.location.name })) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
               }} style={btnPrimary}>{tc('pos_app.add_branch')}</button>
+              <button onClick={() => {
+                const name = prompt(tc('pos_app.prompt_factory_name'))
+                if (!name?.trim()) return
+                const pick = (prompt(tc('pos_app.prompt_factory_type'), '1') || '').trim()
+                const ftype = FACTORY_LOCATION_TYPES[Math.max(0, Math.min(FACTORY_LOCATION_TYPES.length - 1, (parseInt(pick) || 1) - 1))].id
+                fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), kind: 'factory', factory_type: ftype }) })
+                  .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_factory_created', { name: d.location.name })) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
+              }} style={btnSecondary}>{tc('pos_app.add_factory')}</button>
+              </div>
             </div>
             {locations.length === 0 ? (
               <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
@@ -2972,6 +2931,7 @@ export default function POSPage() {
                     <div>
                       <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         {loc.name}
+                        {loc.kind === 'factory' && <span style={{ fontSize: 12, color: ACC, fontWeight: 700 }}>🏭 {FACTORY_LOCATION_TYPES.find(t => t.id === loc.factory_type)?.label || ''}</span>}
                         {!loc.is_active && <span style={{ fontSize: 12, color: RED, fontWeight: 700 }}>{tc('pos_app.inactive')}</span>}
                       </div>
                       {loc.address && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{loc.address}</div>}
@@ -3024,7 +2984,6 @@ export default function POSPage() {
             selectedLocation={selectedLocation}
             transactions={sectorTransactions}
             staff={filteredStaff}
-            factoryType={selectedFactoryType}
             inventory={sectorFilteredInventory}
           />
         )}
@@ -3065,6 +3024,7 @@ export default function POSPage() {
           <FactoryTab
             currencySymbol={currencySymbol}
             selectedLocation={selectedLocation}
+            factoryType={selectedFactoryType}
             transactions={sectorTransactions}
             staff={filteredStaff}
             inventory={sectorFilteredInventory}

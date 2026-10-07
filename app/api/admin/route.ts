@@ -320,6 +320,7 @@ export async function GET(request: NextRequest) {
       'onboarding_trial_clicked', 'onboarding_trial_started', 'onboarding_trial_failed', 'onboarding_trial_skipped',
       'onboarding_finish_clicked',
       'paywall_shown', 'paywall_trial_clicked', 'paywall_trial_started', 'paywall_trial_failed',
+      'paywall_activate_clicked', 'sell_blocked_not_active', 'sell_activate_clicked',
       'tour_started', 'tour_completed', 'tour_skipped',
     ]
     const funnelWindowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()

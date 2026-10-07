@@ -215,14 +215,6 @@ export default function OnboardingPage() {
   const [step,         setStep]         = useState<Step>('business')
   const [saving,       setSaving]       = useState(false)
   const [saveError,    setSaveError]    = useState('')
-  // POS trial claim from the done screen — see startTrialAndContinue() below.
-  const [trialLoading, setTrialLoading] = useState(false)
-  const [trialError,   setTrialError]   = useState('')
-  // One-time PIN reveal — only the hash is stored, so this is the only chance
-  // the owner ever gets to see it. Set only when the API actually created a
-  // fresh pos_staff row (undefined/null otherwise), which holds finish() until
-  // they've seen it instead of navigating them away immediately.
-  const [ownerPin, setOwnerPin] = useState('')
   // Signup passkey nudge — shown once after onboarding actually completes
   // (finish() or the top-level skip()), not before it starts. Setting this
   // swaps the whole step content for <PasskeyNudge>, which itself decides
@@ -423,11 +415,10 @@ export default function OnboardingPage() {
       if (!user) return
       await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
       // Straight to the real dashboard now, not a separate setup wizard —
-      // /pos itself handles both the not-yet-enabled paywall/trial-claim
-      // state and, once enabled, the first-run product tour (see
-      // app/(app)/pos/page.tsx's tourStep). /pos/setup still exists as a
-      // redirect for anyone with an old link, it just no longer does
-      // anything on its own.
+      // /pos itself handles both the not-yet-activated setup mode (free:
+      // products, staff, branches; selling unlocks on payment) and the
+      // first-run product tour (see app/(app)/pos/page.tsx's tourStep).
+      // /pos/setup still exists as a redirect for anyone with an old link.
       setPendingNudge(POS_LANDING_TYPES.has(bizType) ? '/pos' : '/home')
     } catch (e) { console.error(e) } finally { setSaving(false) }
   }
@@ -499,47 +490,6 @@ export default function OnboardingPage() {
     } finally {
       setSaving(false)
     }
-  }
-
-  // Claim the free POS trial right from the done screen (Shopify-pattern:
-  // trial starts at signup, catalogue setup happens after/during it — not
-  // gated behind it). Claiming must never block finishing onboarding, so
-  // finish() always runs after, whether the claim succeeded or not.
-  const startTrialAndContinue = async () => {
-    trackFunnelEvent('onboarding_trial_clicked', { businessType: bizType })
-    setTrialLoading(true)
-    setTrialError('')
-    try {
-      const res = await fetch('/api/billing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
-      })
-      const d = await res.json()
-      if (d.success) {
-        trackFunnelEvent('onboarding_trial_started', { businessType: bizType })
-        // Hold here instead of finishing immediately — the PIN is only ever
-        // shown this once, so the owner needs to actually see it before we
-        // move them on. If no pin came back (they already had a staff row),
-        // there's nothing to show, so continue straight through as before.
-        if (d.owner_pin) {
-          setTrialLoading(false)
-          setOwnerPin(String(d.owner_pin))
-          return
-        }
-      } else {
-        // Most likely already claimed (e.g. a double-click) — not fatal,
-        // continuing to setup still works either way.
-        trackFunnelEvent('onboarding_trial_failed', { businessType: bizType, metadata: { error: d.error || null } })
-        setTrialError(d.error || tc('pos_setup.activate_err'))
-      }
-    } catch {
-      trackFunnelEvent('onboarding_trial_failed', { businessType: bizType, metadata: { error: 'network' } })
-      setTrialError(tc('pos_setup.activate_err'))
-    } finally {
-      setTrialLoading(false)
-    }
-    await finish()
   }
 
   const canNext: Record<Step, boolean> = {
@@ -987,10 +937,7 @@ export default function OnboardingPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6, maxWidth: 380, margin: '0 auto 24px' }}>
                   {[
                     bizType === 'repair' ? tc('onboarding.next_step_job') : tc('onboarding.next_step_catalog'),
-                    // market_stall is the one POS type that skips the team
-                    // step (TEAM_STEP_TYPES in app/(app)/pos/setup/page.tsx
-                    // excludes it) — mirrored here, not imported, since this
-                    // is a route-boundary client/server split, not a shared module.
+                    // market_stall is the one POS type that skips the team step.
                     ...(bizType !== 'market_stall' ? [tc('onboarding.next_step_team')] : []),
                     tc('onboarding.next_step_sell'),
                   ].map((label, i, arr) => (
@@ -1004,33 +951,9 @@ export default function OnboardingPage() {
                   ))}
                 </div>
               )}
-              {isPosPersona && ownerPin && (
-                <div style={{ maxWidth: 340, margin: '0 auto 20px', padding: '18px 20px', borderRadius: 14, background: 'rgba(208,138,89,.08)', border: `1.5px solid ${ACC}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: TX, marginBottom: 6 }}>{tc('onboarding.till_pin_title')}</div>
-                  <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '.15em', color: ACC, margin: '8px 0' }}>{ownerPin}</div>
-                  <div style={{ fontSize: 11, color: TX2, lineHeight: 1.6, marginBottom: 14 }}>{tc('onboarding.till_pin_body')}</div>
-                  <button onClick={() => finish()} disabled={saving} style={{ ...btn, width: '100%' }}>
-                    {saving ? tc('onboarding.done_saving') : tc('onboarding.till_pin_continue')}
-                  </button>
-                </div>
-              )}
-              {isPosPersona && !ownerPin && (
-                <div style={{ maxWidth: 340, margin: '0 auto 20px' }}>
-                  <CoachMark id="onboarding-trial" text={tc('onboarding.coach_trial')} lang={lang}>
-                    <button
-                      onClick={startTrialAndContinue}
-                      disabled={trialLoading || saving}
-                      style={{ ...btn, width: '100%', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (trialLoading || saving) ? .7 : 1, cursor: (trialLoading || saving) ? 'wait' : 'pointer' }}
-                    >
-                      {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
-                    </button>
-                  </CoachMark>
-                  <div style={{ fontSize: 12, color: TX2 }}>{tc('billing.pos_no_card')}</div>
-                </div>
-              )}
-              {(saveError || trialError) && (
+              {saveError && (
                 <div role="alert" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.25)', color: '#b91c1c', fontSize: 11, marginBottom: 16, maxWidth: 400, margin: '0 auto 16px' }}>
-                  {saveError || trialError}
+                  {saveError}
                 </div>
               )}
               <a
@@ -1052,19 +975,11 @@ export default function OnboardingPage() {
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#128C7E' }}>{tc('onboarding.whatsapp_help_cta')}</div>
                 </div>
               </a>
-              {!ownerPin && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-                  {isPosPersona ? (
-                    <button style={ghostBtn} onClick={() => { trackFunnelEvent('onboarding_trial_skipped', { businessType: bizType }); finish() }} disabled={saving || trialLoading}>
-                      {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta_pos')}
-                    </button>
-                  ) : (
-                    <button style={btn} onClick={() => finish()} disabled={saving}>
-                      {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta')}
-                    </button>
-                  )}
-                </div>
-              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
+                <button style={btn} onClick={() => finish()} disabled={saving}>
+                  {saving ? tc('onboarding.done_saving') : (isPosPersona ? tc('onboarding.done_cta_pos') : tc('onboarding.done_cta'))}
+                </button>
+              </div>
             </div>
           )}
 

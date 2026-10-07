@@ -1,42 +1,27 @@
-// Fire-and-forget funnel event logging for the POS trial path (onboarding
-// done -> /pos paywall/trial-claim -> first-run tour). Never blocks or
+// Fire-and-forget funnel event logging for the POS activation path (onboarding
+// done -> /pos setup mode -> first-run tour -> activate/pay). Never blocks or
 // throws — a tracking failure must never interrupt the flow it's observing.
 //
-// The setup_*/activate_* events below predate 2026-08-09's retirement of the
-// pre-payment /pos/setup wizard (commit 66bc1cda) — that page now redirects
-// to /pos on mount before it can ever fire them, and /pos/activate is no
-// longer linked from anywhere live. They're kept here (not removed) only
-// because app/(app)/pos/setup/page.tsx's unreachable-but-preserved wizard
-// code still references them; app/api/admin/route.ts's FUNNEL_STEPS no
-// longer displays them. Do not add new instrumentation against these names.
+// The free trial is closed, and the old pre-payment /pos/setup wizard is gone,
+// so the setup_*, *_trial_* and activate_trial_* events have no emitters left
+// and were removed. Historical rows keep their labels in the admin funnel
+// (app/(app)/admin/page.tsx) until they age out of its 14-day window.
 export const POS_FUNNEL_EVENTS = [
   'onboarding_done_pos_shown',
   'onboarding_finish_clicked',
-  'onboarding_trial_clicked',
-  'onboarding_trial_started',
-  'onboarding_trial_failed',
-  'onboarding_trial_skipped',
   'setup_fork_shown',
-  'setup_capture_opened',
-  'setup_import_opened',
-  'setup_item_added',
-  'setup_ready_clicked',
-  'setup_ready_screen_shown',
-  'setup_activate_clicked',
   'activate_screen_shown',
-  'activate_trial_button_shown',
-  'activate_trial_clicked',
-  'activate_trial_started',
-  'activate_trial_failed',
   'activate_payment_clicked',
   'coach_mark_shown',
   // Live since 2026-08-09's architecture change — the /pos paywall (anyone
   // who didn't claim the trial during onboarding) and the first-run tour
   // that replaces the old wizard.
   'paywall_shown',
-  'paywall_trial_clicked',
-  'paywall_trial_started',
-  'paywall_trial_failed',
+  // Trial closed: setup is free, paying unlocks selling. The banner button on
+  // /pos and the till's "locked" screen are the two activation prompts.
+  'paywall_activate_clicked',
+  'sell_blocked_not_active',
+  'sell_activate_clicked',
   'tour_started',
   'tour_completed',
   'tour_skipped',

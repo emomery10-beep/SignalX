@@ -120,8 +120,6 @@ export default function BillingPage() {
   const [posSuccess,   setPosSuccess]   = useState(false)
   // Trials
   const [trials,       setTrials]       = useState<Record<string, { active: boolean; daysLeft: number; endsAt: string; expired: boolean; used: boolean }>>({})
-  const [trialLoading, setTrialLoading] = useState('')
-  const [trialSuccess, setTrialSuccess] = useState('')
   // Kenyan user detection + PesaPal
   const [isKenyan,          setIsKenyan]          = useState(false)
   const [pesapalLoading,    setPesapalLoading]    = useState('')
@@ -354,38 +352,6 @@ export default function BillingPage() {
     return () => clearInterval(timer)
   }, [waafiStatus, waafiReferenceId])
 
-  const handleStartTrial = async (type: 'pos') => {
-    setTrialLoading(type)
-    setCheckoutError('')
-    try {
-      const res = await fetch('/api/billing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start_trial', type }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setTrialSuccess(type)
-        setTimeout(() => setTrialSuccess(''), 6000)
-        const refresh = await fetch('/api/billing')
-        if (refresh.ok) {
-          const d = await refresh.json()
-          setCurrentPlan(d.subscription?.plan_id || 'free')
-          setUsage(d.usage)
-          setLimits(d.limits)
-          if (d.pos) {
-            setPosEnabled(d.pos.enabled)
-            setPosSeatCount(d.pos.seatCount)
-            if (d.pos.seatCount > 0) setPosSeats(d.pos.seatCount)
-          }
-          if (d.trials) setTrials(d.trials)
-        }
-      } else {
-        setCheckoutError(data.error || tc('billing.alert_something_wrong'))
-      }
-    } catch { setCheckoutError(tc('billing.alert_something_wrong_retry')) }
-    finally { setTrialLoading('') }
-  }
 
   const handlePesapalPosCheckout = async () => {
     setPosLoading(true)
@@ -751,13 +717,6 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* Trial success toasts — role="status" so AT announces them politely */}
-        {trialSuccess === 'pos' && (
-          <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize: 15, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_pos_trial')}</span>
-          </div>
-        )}
         {/* POS success toast */}
         {posSuccess && (
           <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -857,26 +816,6 @@ export default function BillingPage() {
               {trials.pos?.expired && (
                 <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 14, fontWeight: 600, color: '#dc2626' }}>{tc('billing.pos_trial_expired')}</span>
-                </div>
-              )}
-
-              {/* Free trial button — flat colour, no gradient */}
-              {!trials.pos?.used && (
-                <div style={{ marginBottom: 14 }}>
-                  <button
-                    onClick={() => handleStartTrial('pos')}
-                    disabled={trialLoading === 'pos'}
-                    style={{
-                      padding: '13px 24px', borderRadius: 10, border: 'none', minHeight: 44,
-                      background: ACC,
-                      color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      opacity: trialLoading === 'pos' ? .6 : 1,
-                    }}
-                  >
-                    {trialLoading === 'pos' ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
-                  </button>
-                  <div style={{ fontSize: 14, color: 'var(--tx3)', marginTop: 6 }}>{tc('billing.pos_no_card')}</div>
                 </div>
               )}
 

@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "Gültige Telefonnummer eingeben",
   "not_recognised": "Nicht erkannt. Bitte deinen Manager, dich hinzuzufügen.",
-  "different_account": "Anderes Konto verwenden"
+  "different_account": "Anderes Konto verwenden",
+  "not_active_title": "Kasse gesperrt",
+  "not_active_owner": "Aktiviere deine Kasse, um Verkäufe zu erfassen. Deine Produkte und Daten sind sicher.",
+  "not_active_staff": "Diese Kasse ist noch nicht aktiv. Bitte den Inhaber, sie zu aktivieren, und versuche es dann erneut.",
+  "not_active_cta": "Jetzt aktivieren"
 }

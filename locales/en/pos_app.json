@@ -938,5 +938,8 @@
   "poui_toast_sent": "Sent to supplier on WhatsApp",
   "poui_toast_need_qty": "Enter what arrived",
   "poui_toast_receive_err": "Could not receive stock",
-  "poui_toast_received": "Stock received — inventory updated"
+  "poui_toast_received": "Stock received — inventory updated",
+  "setup_banner_title": "Your shop is set up free — activate to start selling",
+  "setup_banner_body": "Add your products, staff and branches now. When you're ready for your first sale, activate your till.",
+  "setup_banner_cta": "Activate to sell →"
 }

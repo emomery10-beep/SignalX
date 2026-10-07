@@ -17,7 +17,6 @@ function buildFeatures(tc: (k: string) => string) {
     tc('billing_paywall.featureExpansion'),
     tc('billing_paywall.featureLiveSync'),
     tc('billing_paywall.featureAlerts'),
-    tc('billing_paywall.featureTrial'),
   ]
 }
 

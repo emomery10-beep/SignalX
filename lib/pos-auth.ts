@@ -2,6 +2,7 @@
 import { NextRequest } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getCallerContext } from '@/lib/team-auth'
+import { posTrialLapsed } from '@/lib/pos-entitlement'
 
 // All valid POS staff roles in hierarchy order (highest → lowest).
 // accountant/auditor are delegated web-session roles (never PIN-authenticate)
@@ -87,6 +88,10 @@ export async function resolvePosOwner(
  * Setup actions (inventory, locations) intentionally stay open pre-payment
  * so a new vendor can build their stall before paying.
  *
+ * The free trial is closed, but pre-closure trial rows still run to their
+ * ends_at. A lapsed, unpaid trial is treated as not entitled right here, in
+ * real time — the pos-trial-expiry cron only tidies the flag afterwards.
+ *
  * Fails closed: if the profile can't be read, selling is blocked.
  */
 export async function posEntitled(ownerId: string): Promise<boolean> {
@@ -96,7 +101,8 @@ export async function posEntitled(ownerId: string): Promise<boolean> {
     .select('pos_enabled')
     .eq('id', ownerId)
     .maybeSingle()
-  return !!data?.pos_enabled
+  if (!data?.pos_enabled) return false
+  return !(await posTrialLapsed(service, ownerId))
 }
 
 async function resolveDelegateLabel(

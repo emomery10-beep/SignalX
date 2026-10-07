@@ -117,8 +117,6 @@
   "next_step_job": "Rekodi kazi yako ya kwanza",
   "next_step_team": "Ongeza timu yako",
   "next_step_sell": "Anza kuuza",
-  "done_pos_trial_title": "Anza jaribio lako la siku 30 la POS",
-  "done_pos_trial_body": "Kaunta kamili, hesabu ya bidhaa, na kuingia kwa wafanyakazi — hakuna kadi inahitajika.",
   "done_cta_pos": "Panga kiotomatiki changu →",
   "whatsapp_help_title": "Unahitaji msaada njiani?",
   "whatsapp_help_body": "Jiunge na kikundi chetu cha huduma kwa wateja cha WhatsApp — tuulize chochote wakati wowote.",
@@ -126,7 +124,6 @@
   "helper_hint": "Gusa spika, au omba msaada.",
   "coach_business": "Gusa picha ya duka lako.",
   "coach_location": "Tumepata nchi yako. Gusa kitufe cha rangi ya machungwa kama ni sahihi.",
-  "coach_trial": "Gusa hapa kuanza jaribio lako bure. Hakuna kadi inahitajika.",
   "till_pin_title": "PIN yako ya kuingia kwenye kaunta",
   "till_pin_body": "Tumia nambari yako ya simu na PIN hii kuingia kwenye kaunta (Uza). Iandike — hutaiona tena, lakini unaweza kuibadilisha baadaye kwenye mipangilio ya Wafanyakazi.",
   "till_pin_continue": "Nimeelewa, endelea →"

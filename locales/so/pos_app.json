@@ -938,5 +938,8 @@
   "poui_toast_sent": "Waxaa loo diray alaab-qeybiyaha WhatsApp",
   "poui_toast_need_qty": "Geli waxa yimid",
   "poui_toast_receive_err": "Kaydka lama heli karin",
-  "poui_toast_received": "Kaydka waa la helay — kaydka waa la cusboonaysiiyay"
+  "poui_toast_received": "Kaydka waa la helay — kaydka waa la cusboonaysiiyay",
+  "setup_banner_title": "Dukaankaagu waa diyaar bilaash — hawlgeli si aad u bilowdo iibinta",
+  "setup_banner_body": "Hadda ku dar alaabtaada, shaqaalaha iyo laamaha. Marka aad diyaar u tahay iibkaaga ugu horreeya, hawlgeli tillkaaga.",
+  "setup_banner_cta": "Hawlgeli si aad u iibiso →"
 }

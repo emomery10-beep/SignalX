@@ -868,5 +868,8 @@
   "toast_branch_deleted": "Filiale gelöscht",
   "resume_setup_title": "Richte deinen Laden fertig ein",
   "resume_setup_desc": "Fast geschafft — füge deine Artikel hinzu und aktiviere deine Kasse.",
-  "resume_setup_cta": "Einrichtung fortsetzen →"
+  "resume_setup_cta": "Einrichtung fortsetzen →",
+  "setup_banner_title": "Dein Shop ist kostenlos eingerichtet — aktiviere die Kasse, um zu verkaufen",
+  "setup_banner_body": "Füge jetzt Produkte, Mitarbeiter und Filialen hinzu. Wenn du bereit für den ersten Verkauf bist, aktiviere deine Kasse.",
+  "setup_banner_cta": "Zum Verkaufen aktivieren →"
 }

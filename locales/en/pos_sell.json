@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "Enter a valid phone number",
   "not_recognised": "Not recognised. Ask your manager to add you.",
-  "different_account": "Use a different account"
+  "different_account": "Use a different account",
+  "not_active_title": "Till locked",
+  "not_active_owner": "Activate your till to start recording sales. Your products and data are safe.",
+  "not_active_staff": "This till isn't active yet. Ask the owner to activate it, then try again.",
+  "not_active_cta": "Activate now"
 }

@@ -24,6 +24,7 @@
     { "path": "/api/cron/lifecycle-emails",           "schedule": "0 10 * * *" },
     { "path": "/api/cron/webhook-delivery",           "schedule": "*/5 * * * *" },
     { "path": "/api/cron/shipment-reconcile",        "schedule": "0 4 * * *" },
-    { "path": "/api/cron/pos-sync-reconcile",        "schedule": "0 5 * * *" }
+    { "path": "/api/cron/pos-sync-reconcile",        "schedule": "0 5 * * *" },
+    { "path": "/api/cron/pos-trial-expiry",          "schedule": "0 4 * * *" }
   ]
 }

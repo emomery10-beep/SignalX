@@ -57,7 +57,6 @@
   "waafipay_try_again": "Mar kale isku day",
   "waafipay_footnote": "Waxaa ku shaqeeya WaafiPay. Kuraasta POS: $5/kursi/bishii. Lacag-bixinta kaadhka ee Stripe ayaa kor sidoo kale la heli karaa.",
 
-  "toast_pos_trial": "Tijaabada POS way bilaabatay! Shaqaalahaagu waxay geli karaan pos.askbiz.co — 30 maalmood oo bilaash ah, ilaa 5 isticmaale.",
   "toast_pos_activated": "Kuraasta POS waa la firfircooneeyay — keeshiyayaashaagu hadda way geli karaan pos.askbiz.co",
 
   "pos_title": "Kuraasta Meesha-Iibka (POS)",
@@ -79,8 +78,6 @@
   "pos_btn_add_seats_one": "Ku dar {n} kursi →",
   "pos_btn_manage": "Maaree diiwaangelinta →",
   "pos_trial_expired": "Gelitaankaagii bilaashka ahaa wuu dhammaaday — hoos ka is-diiwaangeli si aad u sii isticmaasho POS",
-  "pos_btn_start_free": "Bilaash ku bilow — ilaa 5 shaqaale →",
-  "pos_no_card": "Kaadh looma baahna · Gelitaan POS oo buuxa muddo 30 maalmood ah",
   "pos_seat_count_price": "{seats} kursi · {price}/bishii",
   "pos_seat_count_price_one": "{seats} kursi · {price}/bishii",
 
@@ -190,7 +187,7 @@
   "faq_10_q": "Sidee bay u shaqeeyaan kuraasta kooxda?",
   "faq_10_a": "Qorshaha Ganacsiga wuxuu ku jiraa ilaa 5 xubnood oo kooxeed. Qof kastaa wuxuu helaa gelitaankiisa gaarka ah oo leh door — milkiile, maamule, falanqeeye, xisaabiye, iibsade, ama daawade.",
   "faq_11_q": "Sidee bay u shaqeeyaan kuraasta POS?",
-  "faq_11_a": "Bilaash ku bilow — ilaa 5 shaqaale, kaadh looma baahna. Kuraasta POS waa {price}/kursi/bishii. Kursi kastaa wuxuu u oggolaanayaa hal keeshiye ama shaqaale kayd inuu galo pos.askbiz.co iyada oo loo marayo iimayl ama koodhka WhatsApp (OTP) taleefankiisa gaarka ah. Daashboodhka milkiiluhu had iyo jeer bilaash buu ku jiraa.",
+  "faq_11_a": "Dejinta waa bilaash — ku dar alaab, shaqaale iyo laamo adigoon kaadh isticmaalin. Si aad u bilowdo iibinta, kursi kasta oo POS ah waa {price}/kursi/bishii. Kursi kastaa wuxuu u oggolaanayaa hal keeshiye ama shaqaale kayd inuu galo pos.askbiz.co iyada oo loo marayo iimayl ama koodhka WhatsApp (OTP) taleefankiisa gaarka ah. Daashboodhka milkiiluhu had iyo jeer waa ku jiraa. Tijaabo bilaash ah ma jirto.",
   "faq_12_q": "Qiimayaashu ma lacagta gudahayga ayay ku qoran yihiin?",
   "faq_12_a_kes": "Haa — qiimayaashu waxay ku qoran yihiin Shilingka Kenya (KES). Waxaad ku bixin kartaa lacagta mobiilka, kaadhka, ama PesaPal.",
   "faq_12_a_gbp": "Qiimayaashu waxay ku qoran yihiin GBP. Marka aad bixinayso, Stripe wuxuu si otomaatig ah ugu beddelaa lacagtaada gudaha heerka sarrifka hadda.",

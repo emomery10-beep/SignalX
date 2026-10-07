@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "أدخل رقم هاتف صالحًا",
   "not_recognised": "غير معروف. اطلب من مديرك إضافتك.",
-  "different_account": "استخدام حساب آخر"
+  "different_account": "استخدام حساب آخر",
+  "not_active_title": "الصندوق مقفل",
+  "not_active_owner": "فعّل الصندوق لبدء تسجيل المبيعات. منتجاتك وبياناتك بأمان.",
+  "not_active_staff": "هذا الصندوق غير مفعّل بعد. اطلب من المالك تفعيله ثم حاول مرة أخرى.",
+  "not_active_cta": "فعّل الآن"
 }

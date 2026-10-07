@@ -868,5 +868,8 @@
   "toast_branch_deleted": "Filiale supprimée",
   "resume_setup_title": "Terminez la configuration de votre boutique",
   "resume_setup_desc": "Vous y êtes presque : ajoutez vos articles et activez votre caisse.",
-  "resume_setup_cta": "Continuer la configuration →"
+  "resume_setup_cta": "Continuer la configuration →",
+  "setup_banner_title": "Votre boutique est configurée gratuitement — activez la caisse pour vendre",
+  "setup_banner_body": "Ajoutez dès maintenant vos produits, votre équipe et vos succursales. Quand vous êtes prêt pour votre première vente, activez votre caisse.",
+  "setup_banner_cta": "Activer pour vendre →"
 }

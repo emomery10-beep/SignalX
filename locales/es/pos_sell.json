@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "Introduce un número de teléfono válido",
   "not_recognised": "No reconocido. Pide a tu responsable que te añada.",
-  "different_account": "Usar otra cuenta"
+  "different_account": "Usar otra cuenta",
+  "not_active_title": "Caja bloqueada",
+  "not_active_owner": "Activa tu caja para empezar a registrar ventas. Tus productos y datos están seguros.",
+  "not_active_staff": "Esta caja aún no está activa. Pide al propietario que la active e inténtalo de nuevo.",
+  "not_active_cta": "Activar ahora"
 }

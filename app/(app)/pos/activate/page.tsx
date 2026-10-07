@@ -6,7 +6,6 @@ import { useLang } from '@/components/LanguageProvider'
 import { posSeatPrice } from '@/lib/geo'
 import SpeakButton from '@/components/SpeakButton'
 import { trackFunnelEvent } from '@/lib/funnel-track'
-import CoachMark from '@/components/CoachMark'
 
 // ── AskBiz tokens (match onboarding / setup) ─────────────────
 const ACC = '#d08a59'
@@ -29,8 +28,6 @@ export default function PosActivatePage() {
   const [currency, setCurrency] = useState('GBP')
   const [seats, setSeats]       = useState(1) // 1 (owner) + team drafts
   const [error, setError]       = useState('')
-  const [trialAvailable, setTrialAvailable] = useState(false)
-  const [trialLoading, setTrialLoading]     = useState(false)
   // One-time PIN reveal for a fresh owner pos_staff row — only set when
   // start_trial actually created one (empty for paid/webhook confirmations).
   const [ownerPin, setOwnerPin] = useState('')
@@ -91,23 +88,18 @@ export default function PosActivatePage() {
         if (dr.ok) { const d = await dr.json(); if (!cancelled) setSeats(1 + (d.drafts?.length || 0)) }
       } catch { /* default 1 seat */ }
 
-      if (profile?.pos_enabled) { setPhase('active'); return }
-
-      // Free trial is a one-time, server-enforced offer — only surface the
-      // button if this user hasn't already claimed it (avoids a dead-end
-      // "already used" error on click).
-      try {
-        const { data: existingTrial } = await supabase
-          .from('trials')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('trial_type', 'pos')
-          .maybeSingle()
-        if (!cancelled) {
-          setTrialAvailable(!existingTrial)
-          if (!existingTrial) trackFunnelEvent('activate_trial_button_shown', { businessType: profile?.business_type })
-        }
-      } catch { /* default: trial option stays hidden, payment still works */ }
+      // profiles.pos_enabled can be stale for an expired old trial until the
+      // daily cron clears it — /api/billing re-checks expiry (and never locks
+      // anyone who has paid), so confirm with it before declaring "active".
+      let enabled = !!profile?.pos_enabled
+      if (enabled) {
+        try {
+          const r = await fetch('/api/billing')
+          if (r.ok) { const d = await r.json(); enabled = !!d?.pos?.enabled }
+        } catch { /* keep the profile value */ }
+      }
+      if (cancelled) return
+      if (enabled) { setPhase('active'); return }
 
       // Read query params in-effect (avoids the useSearchParams Suspense
       // requirement at build time).
@@ -154,35 +146,6 @@ export default function PosActivatePage() {
       if (d.url) { window.location.href = d.url; return }
       setError(d.error || tc('pos_setup.activate_err')); setPhase('pay')
     } catch { setError(tc('pos_setup.activate_err')); setPhase('pay') }
-  }
-
-  const startTrial = async () => {
-    trackFunnelEvent('activate_trial_clicked', { businessType: bizType })
-    setTrialLoading(true); setError('')
-    try {
-      const res = await fetch('/api/billing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start_trial', type: 'pos' }),
-      })
-      const d = await res.json()
-      if (d.success) {
-        trackFunnelEvent('activate_trial_started', { businessType: bizType })
-        if (d.owner_pin) setOwnerPin(String(d.owner_pin))
-        await provisionTeam()
-        setPhase('active')
-      } else {
-        // Most likely already claimed elsewhere (e.g. the billing page) since
-        // this screen loaded — hide the option rather than offer a dead retry.
-        trackFunnelEvent('activate_trial_failed', { businessType: bizType, metadata: { error: d.error || null } })
-        setTrialAvailable(false)
-        setError(d.error || tc('pos_setup.activate_err'))
-      }
-    } catch {
-      trackFunnelEvent('activate_trial_failed', { businessType: bizType, metadata: { error: 'network' } })
-      setError(tc('pos_setup.activate_err'))
-    }
-    finally { setTrialLoading(false) }
   }
 
   const bigBtn: React.CSSProperties = {
@@ -253,37 +216,15 @@ export default function PosActivatePage() {
               </div>
             ) : (
               <>
-                {trialAvailable && (
-                  <>
-                    <CoachMark id="pos-activate-trial" text={tc('onboarding.coach_trial')} lang={lang}>
-                      <button
-                        style={{ ...bigBtn, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: trialLoading ? .7 : 1, cursor: trialLoading ? 'wait' : 'pointer' }}
-                        onClick={startTrial}
-                        disabled={trialLoading}
-                      >
-                        {trialLoading ? spinner : (
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
-                        )}
-                        {trialLoading ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
-                      </button>
-                    </CoachMark>
-                    <div style={{ fontSize: 13, color: TX3, marginBottom: 18 }}>{tc('billing.pos_no_card')}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-                      <div style={{ flex: 1, height: 1, background: B2 }} />
-                      <span style={{ fontSize: 12, color: TX3, fontWeight: 500 }}>{tc('auth.or')}</span>
-                      <div style={{ flex: 1, height: 1, background: B2 }} />
-                    </div>
-                  </>
-                )}
                 {isKenyan ? (
                   <>
-                    <button style={{ ...(trialAvailable ? ghostBtn : bigBtn), marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payMpesa} disabled={trialLoading}>
+                    <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payMpesa}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="6" y="2" width="10" height="18" rx="2"/><path d="M10 17h2"/><circle cx="18" cy="16" r="4.5"/><path d="M18 13.5v5M16.3 15.3h3.4M16.3 16.7h3.4"/>
                       </svg>
                       {tc('pos_setup.activate_pay_mpesa')}
                     </button>
-                    <button style={{ ...ghostBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard} disabled={trialLoading}>
+                    <button style={{ ...ghostBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>
                       </svg>
@@ -291,14 +232,14 @@ export default function PosActivatePage() {
                     </button>
                   </>
                 ) : (
-                  <button style={{ ...(trialAvailable ? ghostBtn : bigBtn), marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard} disabled={trialLoading}>
+                  <button style={{ ...bigBtn, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }} onClick={payCard}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>
                     </svg>
                     {tc('pos_setup.activate_pay_card')}
                   </button>
                 )}
-                <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 16, cursor: 'pointer', padding: '10px 0', fontFamily: 'inherit' }} onClick={() => router.push('/pos/setup')}>
+                <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 16, cursor: 'pointer', padding: '10px 0', fontFamily: 'inherit' }} onClick={() => router.push('/pos')}>
                   {tc('pos_setup.activate_back_items')}
                 </button>
               </>
@@ -319,7 +260,7 @@ export default function PosActivatePage() {
           <div style={{ textAlign: 'center', paddingTop: 40 }}>
             <p style={{ fontSize: 17, color: TX2, lineHeight: 1.7, marginBottom: 24 }}>{tc('pos_setup.activate_still_pending')}</p>
             <button style={{ ...bigBtn, marginBottom: 10 }} onClick={startPolling}>{tc('pos_setup.activate_check_again')}</button>
-            <button style={ghostBtn} onClick={() => router.push('/pos/setup')}>{tc('pos_setup.activate_back_items')}</button>
+            <button style={ghostBtn} onClick={() => router.push('/pos')}>{tc('pos_setup.activate_back_items')}</button>
           </div>
         )}
 
@@ -356,7 +297,7 @@ export default function PosActivatePage() {
               {tc('pos_setup.activate_cancelled_subtitle')}
             </p>
             <button style={{ ...bigBtn, marginBottom: 10 }} onClick={() => setPhase('pay')}>{tc('pos_setup.activate_retry')}</button>
-            <button style={ghostBtn} onClick={() => router.push('/pos/setup')}>{tc('pos_setup.activate_back_items')}</button>
+            <button style={ghostBtn} onClick={() => router.push('/pos')}>{tc('pos_setup.activate_back_items')}</button>
           </div>
         )}
 

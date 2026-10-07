@@ -938,5 +938,8 @@
   "poui_toast_sent": "Imetumwa kwa msambazaji kupitia WhatsApp",
   "poui_toast_need_qty": "Weka kilichofika",
   "poui_toast_receive_err": "Imeshindwa kupokea bidhaa",
-  "poui_toast_received": "Bidhaa zimepokewa — orodha imesasishwa"
+  "poui_toast_received": "Bidhaa zimepokewa — orodha imesasishwa",
+  "setup_banner_title": "Duka lako limeandaliwa bila malipo — washa ili kuanza kuuza",
+  "setup_banner_body": "Ongeza bidhaa, wafanyakazi na matawi yako sasa. Ukiwa tayari kuuza mara ya kwanza, washa till yako.",
+  "setup_banner_cta": "Washa ili kuuza →"
 }

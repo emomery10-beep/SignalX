@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "Geli lambar telefoon sax ah",
   "not_recognised": "Lama aqoonsan. Weydii maareeyahaaga inuu ku daro.",
-  "different_account": "Isticmaal akoon kale"
+  "different_account": "Isticmaal akoon kale",
+  "not_active_title": "Tillka waa xiran yahay",
+  "not_active_owner": "Hawlgeli tillkaaga si aad u bilowdo diiwaangelinta iibka. Alaabtaada iyo xogtaadu way ammaan yihiin.",
+  "not_active_staff": "Tillkan weli ma hawlgelin. Weydii mulkiilaha inuu hawlgeliyo, dabadeed mar kale isku day.",
+  "not_active_cta": "Hadda hawlgeli"
 }

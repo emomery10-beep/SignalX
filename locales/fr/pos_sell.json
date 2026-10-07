@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "Entrez un numéro de téléphone valide",
   "not_recognised": "Non reconnu. Demandez à votre responsable de vous ajouter.",
-  "different_account": "Utiliser un autre compte"
+  "different_account": "Utiliser un autre compte",
+  "not_active_title": "Caisse verrouillée",
+  "not_active_owner": "Activez votre caisse pour enregistrer des ventes. Vos produits et données sont en sécurité.",
+  "not_active_staff": "Cette caisse n'est pas encore active. Demandez au propriétaire de l'activer, puis réessayez.",
+  "not_active_cta": "Activer maintenant"
 }

@@ -54,5 +54,9 @@
   "phone_placeholder": "712 345678",
   "invalid_phone": "Voer een geldig telefoonnummer in",
   "not_recognised": "Niet herkend. Vraag je manager om je toe te voegen.",
-  "different_account": "Ander account gebruiken"
+  "different_account": "Ander account gebruiken",
+  "not_active_title": "Kassa vergrendeld",
+  "not_active_owner": "Activeer je kassa om verkopen te registreren. Je producten en gegevens zijn veilig.",
+  "not_active_staff": "Deze kassa is nog niet actief. Vraag de eigenaar om hem te activeren en probeer het daarna opnieuw.",
+  "not_active_cta": "Nu activeren"
 }

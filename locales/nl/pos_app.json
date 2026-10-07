@@ -868,5 +868,8 @@
   "toast_branch_deleted": "Filiaal verwijderd",
   "resume_setup_title": "Maak je winkel af",
   "resume_setup_desc": "Je bent er bijna — voeg je artikelen toe en activeer je kassa.",
-  "resume_setup_cta": "Verder met instellen →"
+  "resume_setup_cta": "Verder met instellen →",
+  "setup_banner_title": "Je winkel is gratis ingericht — activeer om te gaan verkopen",
+  "setup_banner_body": "Voeg nu je producten, personeel en filialen toe. Als je klaar bent voor je eerste verkoop, activeer je kassa.",
+  "setup_banner_cta": "Activeer om te verkopen →"
 }

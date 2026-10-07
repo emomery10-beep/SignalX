@@ -41,7 +41,7 @@
   "first_product": {
     "subject": "Ta caisse est prête, {firstName} — il ne manque qu'un produit",
     "heading": "Encore une chose avant de pouvoir vendre.",
-    "body1": "Salut {firstName} — ton essai AskBiz POS est actif depuis quelques jours déjà, mais ton catalogue est encore vide, donc il n'y a rien à encaisser.",
+    "body1": "Salut {firstName} — ta boutique AskBiz POS est configurée, mais ton catalogue est encore vide, donc il n'y a rien à encaisser.",
     "body2": "Ajoute un produit — une photo et un prix suffisent — et tu pourras faire ta première vente en moins d'une minute.",
     "cta": "Ajoute ton premier produit →",
     "closing": "Bloqué sur quelque chose ? Réponds à cet e-mail — une vraie personne le lit.",

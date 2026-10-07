@@ -57,7 +57,6 @@
   "waafipay_try_again": "Try again",
   "waafipay_footnote": "Powered by WaafiPay. POS seats: $5/seat/month. Card payments via Stripe also available above.",
 
-  "toast_pos_trial": "POS trial started! Your staff can log in at pos.askbiz.co — 30 days free, up to 5 users.",
   "toast_pos_activated": "POS seats activated — your cashiers can now log in at pos.askbiz.co",
 
   "pos_title": "Point of Sale Seats",
@@ -79,8 +78,6 @@
   "pos_btn_add_seats_one": "Add {n} seat →",
   "pos_btn_manage": "Manage subscription →",
   "pos_trial_expired": "Your free access has ended — subscribe below to keep using POS",
-  "pos_btn_start_free": "Start free — up to 5 staff →",
-  "pos_no_card": "No card required · Full POS access for 30 days",
   "pos_seat_count_price": "{seats} seats · {price}/month",
   "pos_seat_count_price_one": "{seats} seat · {price}/month",
 
@@ -190,7 +187,7 @@
   "faq_10_q": "How do team seats work?",
   "faq_10_a": "Business plan includes up to 5 team members. Each person gets their own login with a role — owner, admin, analyst, accountant, buyer, or viewer.",
   "faq_11_q": "How do POS seats work?",
-  "faq_11_a": "Start free — up to 5 staff, no card required. POS seats are {price}/seat/month. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.",
+  "faq_11_a": "Setting up is free — add products, staff and branches with no card. To start selling, each POS seat is {price}/seat/month. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included. There is no free trial.",
   "faq_12_q": "Are prices in my local currency?",
   "faq_12_a_kes": "Yes — prices are shown in Kenyan Shillings (KES). You can pay via M-Pesa, Airtel Money, or card through PesaPal.",
   "faq_12_a_gbp": "Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.",

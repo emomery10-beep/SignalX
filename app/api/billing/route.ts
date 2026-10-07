@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { posHasPaid } from '@/lib/pos-entitlement'
 import Stripe from 'stripe'
 import { getOrCreateStripeCustomer } from '@/lib/stripe-customer'
 import { resolvePriceId as resolvePriceIdShared } from '@/lib/stripe-pricing'
-import { hashPin } from '@/lib/pin'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
@@ -46,7 +46,10 @@ export async function GET() {
   let posSeatCount = profileData?.pos_seat_count ?? 0
 
   if (posTrialExpired && posEnabled) {
-    const hasPaidPos = !!profileData?.pos_stripe_subscription_id
+    // Full paid check (Stripe sub OR any completed M-Pesa/PesaPal/WaafiPay
+    // seat payment) — the old Stripe-only check would have switched off
+    // customers who pay by mobile money.
+    const hasPaidPos = !!profileData?.pos_stripe_subscription_id || await posHasPaid(createServiceClient(), user.id)
     if (!hasPaidPos) {
       await supabase.from('profiles').update({ pos_enabled: false, pos_seat_count: 0 }).eq('id', user.id)
       posEnabled = false
@@ -166,87 +169,15 @@ async function handlePost(request: NextRequest) {
     return NextResponse.json({ logged: true })
   }
 
-  // Start free trial (no card required) — POS only. The Growth plan trial is
-  // retired: it's not just unadvertised, new grants are rejected outright.
+  // The free trial is closed for every product and business type: the
+  // account is set up for free (inventory, locations and staff stay open) and
+  // paid activation unlocks selling. Existing trial rows still run to their
+  // ends_at (lib/pos-entitlement.ts); nothing new is granted here.
   if (action === 'start_trial') {
-    const trialType = body.type as string
-    if (trialType === 'growth') {
-      return NextResponse.json({ error: 'The Growth free trial is no longer available' }, { status: 403 })
-    }
-    if (trialType !== 'pos') {
-      return NextResponse.json({ error: 'Invalid trial type' }, { status: 400 })
-    }
-
-    // Check if user already used this trial
-    const { data: existing } = await supabase
-      .from('trials')
-      .select('id, converted')
-      .eq('user_id', user.id)
-      .eq('trial_type', trialType)
-      .single()
-
-    if (existing) {
-      return NextResponse.json({ error: 'You have already used this free trial' }, { status: 400 })
-    }
-
-    const now = new Date()
-    const endsAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-
-    // Insert trial record
-    const { error: trialErr } = await supabase.from('trials').insert({
-      user_id: user.id,
-      trial_type: trialType,
-      started_at: now.toISOString(),
-      ends_at: endsAt.toISOString(),
-    })
-    if (trialErr) {
-      return NextResponse.json({ error: 'Could not start trial' }, { status: 500 })
-    }
-
-    // Enable PoS with up to 5 seats
-    const { error: posErr } = await supabase.from('profiles').update({
-      pos_enabled: true,
-      pos_seat_count: 5,
-    }).eq('id', user.id)
-    if (posErr) {
-      return NextResponse.json({ error: 'Could not start trial' }, { status: 500 })
-    }
-
-    // The till (/sell) only accepts pos_staff PIN login — with no pos_staff
-    // row for the owner, nobody (not even the owner) can ever log in to sell.
-    // Give the owner their own PIN now, once, since it can't be recovered
-    // later (only the hash is stored) — the frontend must show it immediately.
-    let ownerPin: string | null = null
-    const { data: ownerProfile } = await supabase
-      .from('profiles')
-      .select('full_name, phone')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    const orFilters = [
-      ownerProfile?.phone ? `phone.eq.${ownerProfile.phone}` : null,
-      user.email ? `email.eq.${user.email}` : null,
-    ].filter(Boolean).join(',')
-
-    const { data: existingStaff } = orFilters
-      ? await supabase.from('pos_staff').select('id').eq('owner_id', user.id).or(orFilters).maybeSingle()
-      : { data: null }
-
-    if (!existingStaff) {
-      ownerPin = String(Math.floor(1000 + Math.random() * 9000))
-      const { error: staffErr } = await supabase.from('pos_staff').insert({
-        owner_id: user.id,
-        name: ownerProfile?.full_name || 'Owner',
-        phone: ownerProfile?.phone || null,
-        email: ownerProfile?.phone ? null : (user.email || null),
-        role: 'manager',
-        pin_hash: hashPin(ownerPin),
-        active: true,
-      })
-      if (staffErr) ownerPin = null // don't claim success on a silent failure
-    }
-
-    return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString(), owner_pin: ownerPin })
+    return NextResponse.json(
+      { error: 'The free trial is closed — set up your shop free, then activate to start selling', code: 'trial_closed' },
+      { status: 403 },
+    )
   }
 
   // Get or create Stripe customer — shared across main plan, POS seats, and

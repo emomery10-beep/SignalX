@@ -54,5 +54,9 @@
   "phone_placeholder": "0712 345678",
   "invalid_phone": "Nambari ya simu si sahihi",
   "not_recognised": "Haujatambuliwa. Omba msimamizi wako kuongeza habari yako.",
-  "different_account": "Tumia akaunti tofauti"
+  "different_account": "Tumia akaunti tofauti",
+  "not_active_title": "Till imefungwa",
+  "not_active_owner": "Washa till yako ili kuanza kurekodi mauzo. Bidhaa na data yako ziko salama.",
+  "not_active_staff": "Till hii bado haijawashwa. Mwombe mmiliki aiwashe, kisha jaribu tena.",
+  "not_active_cta": "Washa sasa"
 }

@@ -868,5 +868,8 @@
   "toast_branch_deleted": "Sucursal eliminada",
   "resume_setup_title": "Termina de configurar tu tienda",
   "resume_setup_desc": "Ya casi está: añade tus artículos y activa tu caja.",
-  "resume_setup_cta": "Continuar configuración →"
+  "resume_setup_cta": "Continuar configuración →",
+  "setup_banner_title": "Tu tienda está configurada gratis — activa la caja para empezar a vender",
+  "setup_banner_body": "Añade ahora tus productos, personal y sucursales. Cuando estés listo para tu primera venta, activa tu caja.",
+  "setup_banner_cta": "Activar para vender →"
 }

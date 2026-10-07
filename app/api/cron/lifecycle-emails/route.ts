@@ -18,7 +18,9 @@ export const maxDuration = 300
 //                    ago. Bounded for the same reason: long-dead accounts are
 //                    left in peace. Marketing consent (profiles.marketing_emails)
 //                    is respected; the welcome email is a service message.
-//   first_product  — pos_enabled but the catalogue (`inventory`) is still
+//   first_product  — POS account (pos_enabled OR a POS-persona business type —
+//                    the free trial is closed, so new owners aren't enabled until
+//                    they pay) but the catalogue (`inventory`) is still
 //                    empty FIRST_PRODUCT_MIN..MAX_DAYS after signup. Gated on
 //                    real product-catalogue state, not login recency, so it
 //                    can fire even for someone who keeps signing in without
@@ -59,12 +61,22 @@ export async function GET(request: NextRequest) {
   const ids = users.map(u => u.id)
   const { data: profiles } = await service
     .from('profiles')
-    .select('id, full_name, marketing_emails, preferred_locale, registration_country, pos_enabled')
+    .select('id, full_name, marketing_emails, preferred_locale, registration_country, pos_enabled, business_type')
     .in('id', ids)
   const profileById = new Map((profiles || []).map(p => [p.id, p]))
 
   const now = Date.now()
   const day = 86400000
+
+  // The free trial is closed, so a brand-new POS owner is NOT pos_enabled
+  // until they pay — "is a POS account" must also include the POS-persona
+  // business types, otherwise the first-product nudge would stop reaching
+  // exactly the people who are setting up their shop.
+  const POS_PERSONA_TYPES = new Set(['retail', 'market_stall', 'food_bev', 'salon', 'repair'])
+  const isPosAccount = (id: string) => {
+    const p = profileById.get(id)
+    return !!p?.pos_enabled || POS_PERSONA_TYPES.has(String(p?.business_type || '').toLowerCase())
+  }
 
   // Precompute which pos_enabled accounts in the first_product age window
   // already have at least one product — cheaper than a per-user query, and
@@ -73,7 +85,7 @@ export async function GET(request: NextRequest) {
     .filter(u => {
       const createdAgo = now - new Date(u.created_at).getTime()
       return createdAgo >= FIRST_PRODUCT_MIN_DAYS * day && createdAgo <= FIRST_PRODUCT_MAX_DAYS * day
-        && profileById.get(u.id)?.pos_enabled
+        && isPosAccount(u.id)
     })
     .map(u => u.id)
   const { data: invRows } = firstProductCandidateIds.length
@@ -150,7 +162,7 @@ export async function GET(request: NextRequest) {
     // First-product nudge — independent of login recency (see comment at
     // the top of this file); can fire alongside re_engagement above.
     if (createdAgo >= FIRST_PRODUCT_MIN_DAYS * day && createdAgo <= FIRST_PRODUCT_MAX_DAYS * day
-      && profileById.get(user.id)?.pos_enabled && !hasProducts.has(user.id)) {
+      && isPosAccount(user.id) && !hasProducts.has(user.id)) {
       if (optedOut) { results.skipped_unsubscribed++ }
       else await sendFlow(user, 'first_product', firstProductEmail)
     }

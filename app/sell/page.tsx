@@ -7,6 +7,7 @@ import PosStaffLockScreen from '@/components/PosStaffLockScreen'
 import { useLang } from '@/components/LanguageProvider'
 import { localePath, toLocale } from '@/lib/i18n-locale'
 import { COUNTRY_DIAL, toE164 } from '@/lib/geo'
+import { trackFunnelEvent } from '@/lib/funnel-track'
 import {
   savePosStaffSession, clearPosStaffSession, isPosStaffLocked,
   markPosStaffUnlocked, getPosStaffIdentifier, type PosStaffIdentifier,
@@ -71,6 +72,9 @@ export default function SellPage() {
   // Checkout state
   const [paymentType, setPaymentType]   = useState<'cash' | 'card' | 'mobile'>('cash')
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  // The free trial is closed: setup is free, activation unlocks selling. A 402
+  // pos_not_active on checkout is the moment we ask for payment.
+  const [notActive, setNotActive] = useState(false)
   const [customerPhone, setCustomerPhone] = useState('')
   const [processing, setProcessing]     = useState(false)
   const [lastTxId, setLastTxId]         = useState('')
@@ -329,10 +333,14 @@ export default function SellPage() {
           setScreen('receipt')
         }
         // card/mobile: stay on checkout, payment components render below
+      } else if (res.status === 402 && data.code === 'pos_not_active') {
+        // The owner hasn't activated (or their old trial lapsed) — show the
+        // activation prompt, not a generic error, so the owner can pay and
+        // staff know exactly who to ask.
+        setPaymentError(null)
+        setNotActive(true)
+        trackFunnelEvent('sell_blocked_not_active')
       } else if (!res.ok) {
-        // 402 pos_not_active = the owner's subscription/trial isn't active —
-        // surface it instead of failing silently so the cashier can tell the
-        // owner, rather than losing sales to a mystery.
         setPaymentError(data.error || 'Sale could not be recorded — please try again.')
       }
     } catch {
@@ -703,6 +711,25 @@ export default function SellPage() {
       </div>
 
       <div style={{ padding: '16px 20px 40px', background: '#fff', borderTop: '1px solid #e5e2dc' }}>
+        {notActive && (
+          <div role="alert" style={{ marginBottom: 12, padding: '14px 16px', borderRadius: 12, background: 'rgba(208,138,89,.1)', border: `1.5px solid ${ACC}` }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1916', marginBottom: 4 }}>🔒 {tc('pos_sell.not_active_title')}</div>
+            {staff && ['owner', 'manager'].includes(staff.role) ? (
+              <>
+                <div style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.5, marginBottom: 10 }}>{tc('pos_sell.not_active_owner')}</div>
+                <a
+                  href="/pos/activate"
+                  onClick={() => trackFunnelEvent('sell_activate_clicked')}
+                  style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 14, fontWeight: 800, textDecoration: 'none' }}
+                >
+                  {tc('pos_sell.not_active_cta')}
+                </a>
+              </>
+            ) : (
+              <div style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.5 }}>{tc('pos_sell.not_active_staff')}</div>
+            )}
+          </div>
+        )}
         {paymentError && (
           <div style={{ marginBottom: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: 11, color: '#dc2626' }}>
             ⚠ {paymentError}
