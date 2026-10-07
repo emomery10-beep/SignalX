@@ -132,7 +132,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
         {/* CTA */}
         <div style={{ background: TX, borderRadius: 16, padding: '40px 32px', textAlign: 'center', marginBottom: 48 }}>
           <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 12, letterSpacing: '-.02em' }}>
-            Start your free trial today
+            Start free today
           </h2>
           <p style={{ fontSize: 13, color: '#b0b8c8', marginBottom: 28, maxWidth: 420, margin: '0 auto 28px', lineHeight: 1.6 }}>
             Connect your first data source in under 10 minutes. No credit card required. No dashboards to build.

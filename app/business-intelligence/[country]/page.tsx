@@ -34,7 +34,7 @@ export default function CountryHubPage({ params }: Props) {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">{hub.heroHeading}</h1>
           <p className="text-xl text-gray-300 mb-8">{hub.heroSubtitle}</p>
           <Link href="/signin" className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition">
-            Start Free Trial
+            Start Free
           </Link>
         </div>
       </section>
@@ -124,7 +124,7 @@ export default function CountryHubPage({ params }: Props) {
           <h2 className="text-3xl font-bold mb-4">Ready to grow your {hub.country} business?</h2>
           <p className="text-xl mb-8 opacity-90">AskBiz turns your business data into actionable intelligence — no spreadsheets, no consultants.</p>
           <Link href="/signin" className="inline-block bg-white text-orange-600 font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition">
-            Start Free Trial
+            Start Free
           </Link>
         </div>
       </section>

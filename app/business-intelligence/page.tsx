@@ -43,7 +43,7 @@ export default function BusinessIntelligencePage() {
             href="/signin"
             className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition"
           >
-            Start Free Trial
+            Start Free
           </Link>
         </div>
       </section>
@@ -123,7 +123,7 @@ export default function BusinessIntelligencePage() {
             href="/signin"
             className="inline-block bg-white text-orange-600 font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition"
           >
-            Start Free Trial
+            Start Free
           </Link>
         </div>
       </section>

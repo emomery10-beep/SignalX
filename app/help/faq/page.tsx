@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "Quick answers to the most common AskBiz questions — pricing, data sources, security, integrations, billing, and how the AI works.",
   keywords:
-    "askbiz faq, askbiz questions, askbiz pricing, askbiz security, askbiz integrations, how does askbiz work, askbiz free trial",
+    "askbiz faq, askbiz questions, askbiz pricing, askbiz security, askbiz integrations, how does askbiz work, askbiz free plan",
   alternates: { canonical: "https://askbiz.co/help/faq" },
   openGraph: {
     title: "AskBiz FAQ — Frequently Asked Questions",
@@ -28,7 +28,7 @@ const FAQ_SECTIONS = [
       { q: "What is AskBiz?", a: "AskBiz is a camera-first phone POS and daily business tracker for market stalls, street vendors, and small shops. Scan to sell, take cash, card, or mobile money, and see your profit every night — it also connects to tools like Shopify, QuickBooks, Stripe, Amazon, and Xero so you can ask plain-English questions about your business data, track KPIs, set up automated alerts, and generate reports.", slug: "what-is-askbiz" },
       { q: "How long does it take to set up?", a: "Most users are seeing real insights within 5 minutes of signing up. Connect your first data source (e.g. Shopify or QuickBooks), wait for the initial sync (1–5 minutes), and your Business Pulse score and dashboard populate automatically. No data team or technical knowledge required.", slug: "first-5-minutes" },
       { q: "Do I need technical skills or a data team?", a: "No. AskBiz is designed for business owners and managers, not analysts. You interact with your data using plain English — just ask a question. There's nothing to code or configure.", slug: "onboarding-guide" },
-      { q: "Can I try AskBiz before paying?", a: "Yes. AskBiz offers a 14-day free trial with full access to all features. No credit card required to start. After the trial, you choose a plan that fits your business size.", slug: "plans-comparison" },
+      { q: "Can I try AskBiz before paying?", a: "Yes. AskBiz has a free plan with 10 AI questions a month and no credit card required. When you need more you choose a paid plan. For the point-of-sale, setting up your shop is free — add products, staff and branches — and you pay a simple monthly price per seat when you start selling. There is no free trial.", slug: "plans-comparison" },
     ],
   },
   {

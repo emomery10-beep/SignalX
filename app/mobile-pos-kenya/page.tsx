@@ -10,7 +10,7 @@ import SeoPage from '@/components/SeoPage'
 export const metadata: Metadata = {
   title: 'Mobile POS in Kenya — Turn Your Phone Into a POS Machine | AskBiz',
   description:
-    'Free mobile POS for Kenya. Turn any phone into a POS machine — scan with the camera, take M-Pesa, Airtel & cash, track stock. No KSh 30,000 terminal. Works offline. Free to start.',
+    'Mobile POS for Kenya, free to set up. Turn any phone into a POS machine — scan with the camera, take M-Pesa, Airtel & cash, track stock. No KSh 30,000 terminal. Works offline. Free to start.',
   keywords: [
     'mobile POS Kenya', 'mobile POS app Kenya', 'POS app Kenya', 'phone as POS machine',
     'use phone as POS Kenya', 'free mobile POS Kenya', 'M-Pesa POS Kenya', 'POS system Kenya',
@@ -36,7 +36,7 @@ export default function Page() {
       keyword="Mobile POS · Kenya"
       h1="Mobile POS in Kenya: turn your phone into a POS machine"
       subheading="No KSh 30,000 terminal. AskBiz turns the phone already in your pocket into a full point of sale — scan with the camera, take M-Pesa, and know exactly what you made today. Free to start."
-      intro="AskBiz is a mobile POS for Kenya that runs on the phone you already own — no card machine, no Android POS terminal, no hardware to buy. Point your camera at a product to sell it, accept M-Pesa, Airtel Money or cash, track your stock, and see your daily takings and profit every evening. It's a free mobile POS app built for Kenyan shops, kiosks, dukas, salons, food stalls and service businesses — a phone-first point of sale that works on any Android phone or iPhone, even offline."
+      intro="AskBiz is a mobile POS for Kenya that runs on the phone you already own — no card machine, no Android POS terminal, no hardware to buy. Point your camera at a product to sell it, accept M-Pesa, Airtel Money or cash, track your stock, and see your daily takings and profit every evening. It's a mobile POS app, free to set up, built for Kenyan shops, kiosks, dukas, salons, food stalls and service businesses — a phone-first point of sale that works on any Android phone or iPhone, even offline."
       problem={{
         heading: "Why “mobile POS in Kenya” usually means buying a machine",
         body: "Search for a mobile POS in Kenya and you'll mostly find handheld Android POS terminals selling for KSh 21,000 to KSh 45,000 — plus receipt paper, a charger and setup. For a stall, a kiosk or a one-person shop, that's a lot of money tied up in a device that can break, get stolen, or sit idle. Meanwhile the phone in your pocket already has a camera, a screen and M-Pesa. It can do the whole job — no separate machine needed.",
@@ -61,7 +61,7 @@ export default function Page() {
       ]}
       faqs={[
         { q: 'Can I use my phone as a POS machine in Kenya?', a: 'Yes. AskBiz turns any Android phone or iPhone into a full mobile POS — the camera is your scanner, and you take M-Pesa, Airtel Money, cash or card. You don’t need a separate POS machine or card terminal; the phone in your pocket is the point of sale.' },
-        { q: 'Is there a free mobile POS in Kenya?', a: 'Yes — AskBiz is free to start, with no card required. You can sell, take M-Pesa and cash, track stock and see your daily takings on the free plan. Paid plans add extras like unlimited AI questions, multiple branches and team members.' },
+        { q: 'Is there a free mobile POS in Kenya?', a: 'Setting up is free, with no card required: add your products, staff and branches on the phone you already own. Taking sales — M-Pesa and cash — needs an active POS seat, a simple monthly price per seat, so you only pay when you are ready to sell. There is no hardware to buy.' },
         { q: 'Does it work with M-Pesa?', a: 'Yes. M-Pesa is built in, alongside MTN Mobile Money, Airtel Money, cash and card. Every payment is matched to the sale so your books balance at the end of the day.' },
         { q: 'Do I need to buy a POS machine or Android terminal?', a: 'No. Most “mobile POS” options in Kenya are handheld terminals costing KSh 21,000–45,000. AskBiz needs none of that — it runs on the phone you already own, so there is no hardware, no card machine and no upfront cost.' },
         { q: 'What about eTIMS and KRA?', a: 'AskBiz keeps a complete digital record of every sale that you can use for your KRA and eTIMS bookkeeping and share with your accountant. Automated eTIMS e-invoicing to KRA isn’t built in yet — AskBiz focuses on making selling, stock and daily profit effortless on your phone.' },

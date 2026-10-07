@@ -501,7 +501,7 @@ export default function BlogPostView({
 
         {/* CTA */}
         <div style={{ background: TX, borderRadius: 16, padding: 'clamp(20px,4vw,32px)', marginBottom: 48, textAlign: 'center' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>14-day free trial · No credit card needed</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>Free plan · No credit card needed</div>
           <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(17px,3vw,22px)', fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-.02em' }}>
             {clusterCta?.headline || post.cta?.heading || post.cta?.text || 'See this data for your own business'}
           </h3>
@@ -510,7 +510,7 @@ export default function BlogPostView({
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href={localePath(clusterCta?.href || post.cta?.href || '/signin', toLocale(lang))} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
-              {clusterCta?.cta || 'Start free trial →'}
+              {clusterCta?.cta || 'Start free →'}
             </Link>
             <Link href={localePath('/pricing', toLocale(lang))} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 20px', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.8)', borderRadius: 10, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
               See pricing

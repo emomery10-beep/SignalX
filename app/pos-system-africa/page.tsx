@@ -49,7 +49,7 @@ export default function Page() {
         { q: 'Can I run branches in more than one country from one account?', a: 'Yes. Each branch can carry its own currency and tax setting, stock can transfer between branches, and everything rolls up into a single consolidated dashboard, which is useful for operators trading across borders.' },
         { q: 'Does it need a strong internet connection to work?', a: 'No. AskBiz is built to keep working when the connection drops — sales are saved on the device and sync automatically once you are back online, which matters across large parts of the continent where signal is inconsistent.' },
         { q: 'Do I need to buy a card machine or terminal?', a: 'No. AskBiz runs on the phone you already own, using the camera as a barcode scanner. There is no hardware to import, ship, or maintain, which keeps costs down and setup fast wherever you are.' },
-        { q: 'Is the free plan available in every country, or just Kenya?', a: 'The free plan is available everywhere AskBiz operates — you can run real sales, track stock, and use 10 free AI questions a month with no credit card, regardless of which African market you are trading in.' },
+        { q: 'Is free setup available in every country, or just Kenya?', a: 'Free setup is available everywhere AskBiz operates — add products, staff and branches, and use 10 free AI questions a month on the business tracker, with no credit card, in any African market. Taking sales needs an active POS seat, priced in your local currency, so you only pay when you are ready to sell.' },
       ]}
       cta={{
         heading: 'One POS system, built for how Africa actually trades',

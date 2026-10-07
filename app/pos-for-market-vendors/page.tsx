@@ -48,7 +48,7 @@ export default function Page() {
         { q: 'Do I need a card machine or any equipment?', a: 'No. The phone in your pocket is the whole till. The camera does the scanning, mobile money and cash do the payments, and there is no terminal, printer or scanner to buy. That is why it can be free to start.' },
         { q: 'What if I cannot read English well?', a: 'AskBiz leans on photos, big buttons and simple icons instead of long text, and is available in Swahili and Somali with more languages coming. The camera-first design means much of the work is pointing and tapping, not reading.' },
         { q: 'Does it work without internet?', a: 'Yes. You can keep selling with no signal — sales are stored on the phone and sync automatically when the network returns, so a dead spot in the market never costs you a sale.' },
-        { q: 'How much does it cost?', a: 'It is free to start, with no card required. You can sell, take mobile money, track stock and see your daily takings on the free plan. Paid plans add extras like unlimited AI questions, multiple stalls or branches, and team members.' },
+        { q: 'How much does it cost?', a: 'Setting up is free, with no card required: add your goods and staff. Taking sales needs an active POS seat, a simple monthly price per seat, so you only pay when you are ready to sell. There is no terminal, printer or scanner to buy.' },
       ]}
       cta={{
         heading: "Put the notebook down",

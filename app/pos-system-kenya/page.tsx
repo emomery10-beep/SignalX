@@ -3,11 +3,11 @@ import SeoPage from '@/components/SeoPage'
 import { buildSeoHreflangMap } from '@/lib/seo-i18n-slugs'
 
 export const metadata: Metadata = {
-  title: 'POS System Kenya — Mobile Money, Offline-Ready, Free to Start | AskBiz',
-  description: 'A POS system built for how Kenyan businesses actually work: M-Pesa and Airtel Money built in, runs on the phone you already own, keeps selling with no signal, and free to start.',
+  title: 'POS System Kenya — Mobile Money, Offline-Ready, Free to Set Up | AskBiz',
+  description: 'A POS system built for how Kenyan businesses actually work: M-Pesa and Airtel Money built in, runs on the phone you already own, keeps selling with no signal, and free to set up.',
   keywords: ['POS system Kenya', 'point of sale Kenya', 'POS Kenya', 'till system Kenya', 'M-Pesa POS system', 'business software Kenya'],
   openGraph: {
-    title: 'POS System Kenya — Mobile Money, Offline-Ready, Free to Start',
+    title: 'POS System Kenya — Mobile Money, Offline-Ready, Free to Set Up',
     description: 'M-Pesa built in, works on any phone, keeps selling offline. The POS system built for how Kenyan businesses actually operate.',
     url: 'https://askbiz.co/pos-system-kenya',
   },
@@ -19,7 +19,7 @@ export default function Page() {
     <SeoPage
       keyword="POS System Kenya"
       h1="A POS System Built for How Kenyan Businesses Actually Work"
-      subheading="M-Pesa and Airtel Money built in, runs on the phone you already carry, and keeps ringing up sales even when the network drops. One system for a single kiosk or a chain of branches — free to start, no terminal to buy."
+      subheading="M-Pesa and Airtel Money built in, runs on the phone you already carry, and keeps ringing up sales even when the network drops. One system for a single kiosk or a chain of branches — free to set up, no terminal to buy."
       intro="'POS system' in Kenya usually means one of two things: an imported till built for a country where card payments are the norm, or a stripped-down inventory app with no way to take mobile money. Neither matches how business is actually done here — a customer paying by M-Pesa, a shopkeeper checking stock from their phone, a signal that comes and goes depending on the day. AskBiz is a POS system built the other way round, starting from mobile money and the phone in your pocket rather than bolting them on afterward. Whether you run a single shop, a market stall, a pharmacy counter, a restaurant, or several branches across town, the same system handles the sale, the stock, and the numbers — and it works whether you're online or not."
       problem={{
         heading: 'Most POS systems assume a shop that looks nothing like yours',
@@ -48,12 +48,12 @@ export default function Page() {
         { q: 'Do I need to buy any hardware to use it?', a: 'No. AskBiz runs on the Android phone or iPhone you already have. The camera acts as your barcode scanner, so there is no separate scanner, card machine, or till hardware to buy.' },
         { q: 'What happens to my sales if the internet goes down?', a: 'Nothing is lost. AskBiz keeps working offline using a local cache on the device, and every sale you make while offline syncs automatically the moment you are back on a network.' },
         { q: 'Can I run more than one branch on the same account?', a: 'Yes. Each branch can have its own currency and tax settings, you can transfer stock between branches, and everything rolls up into one dashboard so you can see the whole business at once.' },
-        { q: 'Is there really a free plan, or is it a trial?', a: 'It is a real free plan, not a countdown. You can take actual mobile money and cash sales, track stock, and get 10 free AI questions a month with no credit card. Paid tiers add unlimited AI questions, multi-branch, and team seats when you need them.' },
+        { q: 'Is there a free trial?', a: 'No — we closed the free trial. Setting up your shop is free: add products, staff and branches with no credit card. Taking sales needs an active seat, a simple monthly price per seat, so you only pay when you are ready to sell.' },
         { q: 'Will this help with eTIMS or my accountant?', a: 'AskBiz keeps a clean, itemised digital record of every sale, which is exactly the kind of record you need for eTIMS bookkeeping or to hand to an accountant. It does not submit anything to KRA on your behalf — it makes sure your own records are accurate and ready.' },
       ]}
       cta={{
         heading: 'Start running your business on a POS system built for Kenya',
-        body: 'M-Pesa built in, works on your phone, keeps selling offline. Set it up in minutes, no card required.',
+        body: 'M-Pesa built in, works on your phone, keeps selling offline. Set it up free in minutes, no card required — pay only when you start selling.',
       }}
       relatedPages={[
         { href: '/retail-pos-kenya', label: 'POS for retail shops' },

@@ -48,14 +48,14 @@ export default function Page() {
         keyword="Utauza"
         h1="Utauza — Uza kwa Simu Yako. It's AskBiz for East Africa."
         subheading="Utauza means “you will sell” in Kiswahili. It's the East African name for AskBiz: a camera-first phone POS that takes M-Pesa, Airtel and MTN money for market stalls, kiosks and shops. Same app, same account — a name that speaks to the market."
-        intro="Utauza and AskBiz are the same product. AskBiz is the global name; Utauza — Kiswahili for “you will sell” — is what it's called across East Africa, because a till for Kenyan and Tanzanian traders should carry a name traders recognise. Whether you find us as Utauza or AskBiz, you get the same thing: a phone-first point of sale built for market stalls, street vendors and small shops. Point your camera at a product to add it, take payment by M-Pesa, Airtel Money, MTN Mobile Money or cash, and see exactly what you made at the end of the day. No terminal, no spreadsheet, free to start. This page exists so that anyone searching for Utauza lands in the right place and knows it's AskBiz underneath."
+        intro="Utauza and AskBiz are the same product. AskBiz is the global name; Utauza — Kiswahili for “you will sell” — is what it's called across East Africa, because a till for Kenyan and Tanzanian traders should carry a name traders recognise. Whether you find us as Utauza or AskBiz, you get the same thing: a phone-first point of sale built for market stalls, street vendors and small shops. Point your camera at a product to add it, take payment by M-Pesa, Airtel Money, MTN Mobile Money or cash, and see exactly what you made at the end of the day. No terminal, no spreadsheet, free to set up. This page exists so that anyone searching for Utauza lands in the right place and knows it's AskBiz underneath."
         problem={{
           heading: "Why the name Utauza matters",
           body: "A trader in Nairobi or Dar es Salaam shouldn't have to translate an English product name before deciding whether a business tool is for them. “Utauza” — you will sell — says exactly what it does, in the language of the market. Global software rarely bothers; it ships one English name everywhere and hopes. We built the East African identity on purpose so the product feels like it belongs here, not like it was flown in. If you heard about Utauza from another vendor, a WhatsApp group, or a market, this is it.",
         }}
         solution={{
           heading: "One product, the name that fits your market",
-          body: "Utauza is AskBiz with an East African name and an East-African-first design: M-Pesa, Airtel and MTN money native; Kiswahili in the app; offline support for weak networks; and a camera-first flow that works even if you'd rather not type. Sign in as Utauza or AskBiz and it's the same account, the same data, the same free-to-start plan. You can switch the app to Kiswahili, take mobile money from the first sale, and know your money tonight — under whichever name you found us.",
+          body: "Utauza is AskBiz with an East African name and an East-African-first design: M-Pesa, Airtel and MTN money native; Kiswahili in the app; offline support for weak networks; and a camera-first flow that works even if you'd rather not type. Sign in as Utauza or AskBiz and it's the same account, the same data, the same free-to-set-up plan. You can switch the app to Kiswahili, take mobile money from the first sale, and know your money tonight — under whichever name you found us.",
         }}
         features={[
           { icon: '🗣️', title: '“You will sell”', body: 'Utauza is Kiswahili for “you will sell” — the East African name for AskBiz, built for traders who speak the market’s language.' },
@@ -63,7 +63,7 @@ export default function Page() {
           { icon: '📷', title: 'Camera-first till', body: 'Snap or scan a product to add it. Sell faster than writing it in a notebook — no hardware required.' },
           { icon: '🌍', title: 'Kiswahili built in', body: 'Use the app in Kiswahili, with the same account and data whether you call it Utauza or AskBiz.' },
           { icon: '📶', title: 'Offline ready', body: 'Keep selling with no signal; sales sync automatically when the network comes back.' },
-          { icon: '🆓', title: 'Free to start', body: 'Sell, take mobile money and track your day on the free plan — no card, no terminal, no monthly fee.' },
+          { icon: '🆓', title: 'Free to set up', body: 'Add your goods, staff and branches with no card and no terminal. You pay a simple monthly price per seat only when you start selling.' },
         ]}
         howItWorks={[
           { step: '1', title: 'Open Utauza on your phone', body: 'Utauza and AskBiz are the same app — open it on any Android phone or iPhone and set the language to Kiswahili if you like.' },
@@ -77,11 +77,11 @@ export default function Page() {
           { q: 'Which countries use the Utauza name?', a: 'Utauza is the name used across East Africa — Kenya, Tanzania, Uganda, Rwanda and Burundi — where Kiswahili is widely spoken. Elsewhere the product is known as AskBiz. The underlying app is identical.' },
           { q: 'Can I use the app in Kiswahili?', a: 'Yes. The app is available in Kiswahili, and you can switch languages in settings. Mobile money, offline support and the camera-first till all work the same in any language.' },
           { q: 'Does Utauza take M-Pesa?', a: 'Yes — M-Pesa, Airtel Money and MTN Mobile Money are supported natively, with each payment matched to its sale and your daily total automatically. There is no terminal to buy.' },
-          { q: 'Is Utauza free?', a: 'Yes, it is free to start with no card required. You can sell, take mobile money and cash, track stock and see your daily takings on the free plan. Paid plans add unlimited AI questions, multiple branches and team seats.' },
+          { q: 'Is Utauza free?', a: 'Setting up is free with no card required: add your products, staff and branches. Taking sales needs an active POS seat, a simple monthly price per seat, so you only pay when you are ready to sell.' },
         ]}
         cta={{
           heading: "Anza na Utauza — bure",
-          body: "Utauza is AskBiz for East Africa. Add your goods, take M-Pesa, and know your money tonight — free to start, no card needed.",
+          body: "Utauza is AskBiz for East Africa. Add your goods, take M-Pesa, and know your money tonight — set up free, no card needed.",
         }}
         relatedPages={[
           { href: '/sw', label: 'AskBiz kwa Kiswahili' },

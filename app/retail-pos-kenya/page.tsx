@@ -49,11 +49,11 @@ export default function Page() {
         { q: 'How does AskBiz help with shrinkage?', a: 'AI reviews transactions for the patterns that usually signal shrinkage — unusual voids, repeated discounts, or price overrides — and flags them so you can look into a specific till or shift rather than discovering a loss months later.' },
         { q: 'Is M-Pesa really built in, or do I still reconcile it by hand?', a: 'It is built in. When a customer pays by M-Pesa, Airtel Money or MTN Mobile Money, that payment is matched to the sale automatically, so you are not cross-checking mobile money statements against till receipts at the end of the day.' },
         { q: 'Can AskBiz help with reordering stock?', a: 'Yes. AI suggests reorder quantities based on your sales patterns and current stock levels, and low-stock alerts tell you before an item runs out.' },
-        { q: 'Is there a free way to try this before paying for anything?', a: 'Yes. The free plan lets you run real sales, scan real barcodes, and take real M-Pesa payments with no credit card required. Paid tiers add unlimited AI questions, multi-branch, and team seats when you need them.' },
+        { q: 'Is there a free way to try this before paying for anything?', a: 'There is no free trial, but setting up is free: add your products, scan real barcodes, and invite staff with no credit card. Taking sales — including M-Pesa payments — needs an active POS seat, a simple monthly price per seat, so you only pay when you are ready to sell.' },
       ]}
       cta={{
         heading: "Put your retail shop on a phone-based till",
-        body: "Scan with the camera, take M-Pesa without the reconciliation headache, and see every branch from one screen. Start free, no card required.",
+        body: "Scan with the camera, take M-Pesa without the reconciliation headache, and see every branch from one screen. Set up free, no card required.",
       }}
       relatedPages={[
         { href: '/point-of-sale/retail', label: 'Retail POS — full feature detail' },
