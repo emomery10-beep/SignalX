@@ -871,5 +871,6 @@
   "resume_setup_cta": "Continuer la configuration →",
   "setup_banner_title": "Votre boutique est configurée gratuitement — activez la caisse pour vendre",
   "setup_banner_body": "Ajoutez dès maintenant vos produits, votre équipe et vos succursales. Quand vous êtes prêt pour votre première vente, activez votre caisse.",
-  "setup_banner_cta": "Activer pour vendre →"
+  "setup_banner_cta": "Activer pour vendre →",
+  "staff_filtered_branch": "{shown} sur {total} employés · {branch}"
 }

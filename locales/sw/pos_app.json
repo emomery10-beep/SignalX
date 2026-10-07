@@ -941,5 +941,6 @@
   "poui_toast_received": "Bidhaa zimepokewa — orodha imesasishwa",
   "setup_banner_title": "Duka lako limeandaliwa bila malipo — washa ili kuanza kuuza",
   "setup_banner_body": "Ongeza bidhaa, wafanyakazi na matawi yako sasa. Ukiwa tayari kuuza mara ya kwanza, washa till yako.",
-  "setup_banner_cta": "Washa ili kuuza →"
+  "setup_banner_cta": "Washa ili kuuza →",
+  "staff_filtered_branch": "Inaonyesha {shown} kati ya wafanyakazi {total} · {branch}"
 }

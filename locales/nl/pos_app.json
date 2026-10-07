@@ -871,5 +871,6 @@
   "resume_setup_cta": "Verder met instellen →",
   "setup_banner_title": "Je winkel is gratis ingericht — activeer om te gaan verkopen",
   "setup_banner_body": "Voeg nu je producten, personeel en filialen toe. Als je klaar bent voor je eerste verkoop, activeer je kassa.",
-  "setup_banner_cta": "Activeer om te verkopen →"
+  "setup_banner_cta": "Activeer om te verkopen →",
+  "staff_filtered_branch": "{shown} van {total} medewerkers · {branch}"
 }

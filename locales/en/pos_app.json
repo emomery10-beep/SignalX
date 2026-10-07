@@ -941,5 +941,6 @@
   "poui_toast_received": "Stock received — inventory updated",
   "setup_banner_title": "Your shop is set up free — activate to start selling",
   "setup_banner_body": "Add your products, staff and branches now. When you're ready for your first sale, activate your till.",
-  "setup_banner_cta": "Activate to sell →"
+  "setup_banner_cta": "Activate to sell →",
+  "staff_filtered_branch": "Showing {shown} of {total} staff · {branch}"
 }

@@ -628,9 +628,13 @@ export default function POSPage() {
   }, [selectedSector])
 
   // Sector-filtered staff list
-  const filteredStaff = useMemo(() =>
-    selectedSector === 'all' ? staff : staff.filter(s => (s.sector || 'retail') === selectedSector),
-    [staff, selectedSector])
+  // Also scoped to the selected branch/factory: each factory is its own branch,
+  // so picking "Kanamai factory sesame" must not list coconut's staff. Staff
+  // with no branch assigned only appear under "all".
+  const filteredStaff = useMemo(() => {
+    const bySector = selectedSector === 'all' ? staff : staff.filter(s => (s.sector || 'retail') === selectedSector)
+    return selectedLocation === 'all' ? bySector : bySector.filter(s => s.location_id === selectedLocation)
+  }, [staff, selectedSector, selectedLocation])
 
   const txMatchesSector = (t: Transaction) => {
     if (selectedSector === 'all') return true
@@ -2203,9 +2207,11 @@ export default function POSPage() {
             )}
 
             {/* Staff list */}
-            {selectedSector !== 'all' && (
+            {(selectedSector !== 'all' || selectedLocation !== 'all') && (
               <div style={{ fontSize: 14, color: 'var(--tx3)', marginBottom: 10 }}>
-                {tc('pos_app.staff_filtered', { shown: filteredStaff.length, total: staff.length, sector: selectedSector })}
+                {selectedLocation !== 'all'
+                  ? tc('pos_app.staff_filtered_branch', { shown: filteredStaff.length, total: staff.length, branch: locations.find(l => l.id === selectedLocation)?.name || '' })
+                  : tc('pos_app.staff_filtered', { shown: filteredStaff.length, total: staff.length, sector: selectedSector })}
               </div>
             )}
             {filteredStaff.length === 0 ? (

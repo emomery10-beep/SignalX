@@ -871,5 +871,6 @@
   "resume_setup_cta": "Continuar configuración →",
   "setup_banner_title": "Tu tienda está configurada gratis — activa la caja para empezar a vender",
   "setup_banner_body": "Añade ahora tus productos, personal y sucursales. Cuando estés listo para tu primera venta, activa tu caja.",
-  "setup_banner_cta": "Activar para vender →"
+  "setup_banner_cta": "Activar para vender →",
+  "staff_filtered_branch": "Mostrando {shown} de {total} empleados · {branch}"
 }

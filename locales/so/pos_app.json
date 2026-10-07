@@ -941,5 +941,6 @@
   "poui_toast_received": "Kaydka waa la helay — kaydka waa la cusboonaysiiyay",
   "setup_banner_title": "Dukaankaagu waa diyaar bilaash — hawlgeli si aad u bilowdo iibinta",
   "setup_banner_body": "Hadda ku dar alaabtaada, shaqaalaha iyo laamaha. Marka aad diyaar u tahay iibkaaga ugu horreeya, hawlgeli tillkaaga.",
-  "setup_banner_cta": "Hawlgeli si aad u iibiso →"
+  "setup_banner_cta": "Hawlgeli si aad u iibiso →",
+  "staff_filtered_branch": "Waxaa la tusayaa {shown} ka mid ah {total} shaqaale · {branch}"
 }
