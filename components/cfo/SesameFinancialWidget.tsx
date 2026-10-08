@@ -1,15 +1,40 @@
 'use client'
 import { useState, useEffect } from 'react'
 
+// Shape of GET /api/pos/factory/sesame-production (only the fields used here)
+interface SesameApi {
+  totalRevenue?: number
+  costOfGoods?: number
+  grossMargin?: number
+  totalStockValue?: number
+  feedCost?: number
+  jerrycansDispatched?: number
+  jerrycanCost?: number
+}
+
 interface SesameData {
   revenue: number
   gross_profit: number
   gross_margin_pct: number
   inventory_value: number
-  costBreakdown: {
-    feed: number
-    jerrycans: number
-    waste: number
+  costBreakdown: { feed: number; jerrycans: number; waste: number }
+}
+
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+
+function toSesameData(d: SesameApi): SesameData | null {
+  const revenue = num(d.totalRevenue)
+  const cogs = num(d.costOfGoods)
+  // Accounts with no sesame factory activity get an all-zero payload; hide the widget.
+  if (revenue === 0 && cogs === 0 && num(d.totalStockValue) === 0) return null
+  const feed = num(d.feedCost)
+  const jerrycans = num(d.jerrycansDispatched) * num(d.jerrycanCost)
+  return {
+    revenue,
+    gross_profit: num(d.grossMargin),
+    gross_margin_pct: revenue > 0 ? (num(d.grossMargin) / revenue) * 100 : 0,
+    inventory_value: num(d.totalStockValue),
+    costBreakdown: { feed, jerrycans, waste: Math.max(0, cogs - feed - jerrycans) },
   }
 }
 
@@ -22,8 +47,7 @@ export default function SesameFinancialWidget({ period = 'this_month' }: { perio
       try {
         const res = await fetch(`/api/pos/factory/sesame-production`)
         if (res.ok) {
-          const d = await res.json()
-          setData(d)
+          setData(toSesameData(await res.json()))
         }
       } catch (e) {
         console.error('Sesame widget load error:', e)
@@ -69,7 +93,7 @@ export default function SesameFinancialWidget({ period = 'this_month' }: { perio
 
         <div style={{ background: 'var(--ev)', borderRadius: 8, padding: 12 }}>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 3 }}>Inventory Value</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#BLUE' }}>{fmtCurrency(data.inventory_value)}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#3B82F6' }}>{fmtCurrency(data.inventory_value)}</div>
         </div>
       </div>
 
