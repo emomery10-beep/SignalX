@@ -7,7 +7,7 @@ import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
 import { hasPermission } from '@/lib/pos-permissions'
-import { allowedFactoryProducts, isSeedOnlyStep } from '@/lib/factory-product-rules'
+import { allowedFactoryProducts, isSeedOnlyStep, resolveFactoryType } from '@/lib/factory-product-rules'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ export default function FactoryCapturePage() {
       .catch(() => {})
     fetch('/api/pos/config', { headers: session.headers })
       .then(r => r.json())
-      .then(d => setLocationFactoryType(d?.location_factory_type || d?.factory_type || null))
+      .then(d => setLocationFactoryType(resolveFactoryType(d?.location_factory_type, d?.factory_type)))
       .catch(() => {})
     fetch('/api/pos/factory/capture-holds?status=open', { headers: session.headers })
       .then(r => r.json())

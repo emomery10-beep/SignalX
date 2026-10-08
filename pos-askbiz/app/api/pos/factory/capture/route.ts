@@ -6,7 +6,7 @@ import { logPosAudit } from '@/lib/pos-audit'
 import { matchHoldRule, matchManualHoldRule } from '@/lib/factory-holds'
 import { matchDecayRule } from '@/lib/factory-decay'
 import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
-import { allowedFactoryProducts } from '@/lib/factory-product-rules'
+import { allowedFactoryProducts, resolveFactoryType } from '@/lib/factory-product-rules'
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
 
 export async function OPTIONS() {
@@ -212,15 +212,13 @@ export async function POST(req: NextRequest) {
   // typo or invented line can never enter stock, yield or dispatch reporting.
   if (typeof product_name === 'string' && product_name.trim()) {
     const capLocationId = location_id || auth.locationId || null
-    let factoryType: string | null = null
+    let locType: string | null = null
     if (capLocationId) {
       const { data: loc } = await service.from('pos_locations').select('factory_type').eq('id', capLocationId).maybeSingle()
-      factoryType = loc?.factory_type || null
+      locType = loc?.factory_type || null
     }
-    if (!factoryType) {
-      const { data: prof } = await service.from('profiles').select('factory_type').eq('id', auth.ownerId).maybeSingle()
-      factoryType = prof?.factory_type || null
-    }
+    const { data: prof } = await service.from('profiles').select('factory_type').eq('id', auth.ownerId).maybeSingle()
+    const factoryType = resolveFactoryType(locType, prof?.factory_type)
     let invQuery = service.from('inventory').select('name').eq('owner_id', auth.ownerId).eq('sector', 'factory')
     if (capLocationId) invQuery = invQuery.eq('location_id', capLocationId)
     const { data: invRows } = await invQuery
