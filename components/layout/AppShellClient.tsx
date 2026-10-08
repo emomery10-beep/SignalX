@@ -180,7 +180,7 @@ function ProfilePanel({ user, onClose, onSignOut }: {
 }
 
 export default function AppShellClient({ user, conversations, children }: {
-  user: { id: string; name: string; email: string; plan: string; bizType?: string; currency?: string; currencySymbol?: string; region?: string; sectorHints?: string }
+  user: { id: string; name: string; email: string; businessName?: string; plan: string; bizType?: string; currency?: string; currencySymbol?: string; region?: string; sectorHints?: string }
   conversations: { id: string; title?: string; created_at: string }[]
   children: React.ReactNode
 }) {
@@ -212,7 +212,7 @@ export default function AppShellClient({ user, conversations, children }: {
   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   useEffect(() => {
-    setUser({ id: user.id, name: user.name, email: user.email, plan: user.plan as any, initials })
+    setUser({ id: user.id, name: user.name, email: user.email, businessName: user.businessName || '', plan: user.plan as any, initials })
     updateSettings({ bizType: user.bizType as any })
   }, [user, setUser, updateSettings, initials])
 
@@ -520,7 +520,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-sora)' }}>
                   {user.name}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'capitalize' }}>{user.plan} plan</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: user.businessName ? 'none' : 'capitalize' }}>{user.businessName || `${user.plan} plan`}</div>
               </div>
             </div>
             <LanguageToggle compact />

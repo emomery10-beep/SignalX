@@ -216,11 +216,12 @@ function sourceMeta(type: string) {
 // ── PANELS ────────────────────────────────────────────────────────────────────
 
 function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
-  const { user } = useStore()
+  const { user, setUser } = useStore()
   const { tc } = useLang()
   const supabase = createClient()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName]   = useState('')
+  const [businessName, setBusinessName] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved]   = useState(false)
   const [passkeyStatus, setPasskeyStatus] = useState<'idle' | 'enrolling' | 'enrolled' | 'error'>('idle')
@@ -232,6 +233,7 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
       if (d && !d.error) {
         setFirstName(d.first_name || '')
         setLastName(d.last_name  || '')
+        setBusinessName(d.business_name || '')
       }
     })
     // Check if user already has a passkey registered
@@ -251,7 +253,8 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
   const save = async () => {
     setSaving(true)
     try {
-      await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ first_name: firstName.trim(), last_name: lastName.trim() }) })
+      await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ first_name: firstName.trim(), last_name: lastName.trim(), business_name: businessName.trim() }) })
+      setUser({ businessName: businessName.trim() })
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     } finally { setSaving(false) }
   }
@@ -322,6 +325,10 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
             <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.last_name')}</label>
             <input style={inp} value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('settings.last_name')}/>
           </div>
+        </div>
+        <div style={{ padding: '0 20px 16px' }}>
+          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_business_name')}</label>
+          <input style={inp} value={businessName} maxLength={120} onChange={e => setBusinessName(e.target.value)} placeholder="e.g. Acme Ltd"/>
         </div>
         <div style={{ padding: '0 20px 16px' }}>
           <SaveRow onClick={save} saving={saving} saved={saved} label={tc('settings.update_name')}/>

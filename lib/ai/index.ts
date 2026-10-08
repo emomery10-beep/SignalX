@@ -75,6 +75,7 @@ export function buildSystemPrompt(opts: {
   benchmarkContext?: string   // collective intelligence: anonymised cross-business benchmarks
   businessMemory?: string     // persistent facts learned from past conversations
   userName?: string
+  businessName?: string
   simulateMode?: boolean
   cfoMode?: boolean
   locale?: string             // user's interface language — AI replies in it
@@ -84,7 +85,7 @@ export function buildSystemPrompt(opts: {
     activeFile, datasetSummary, expansionContext, marketContext,
     searchContext, trackingContext, freightContext, parcelContext,
     costContext, posContext, benchmarkContext, businessMemory,
-    userName, simulateMode, cfoMode, locale,
+    userName, businessName, simulateMode, cfoMode, locale,
   } = opts
 
   // Thin per-language wrapper — the ONLY language-specific part of the prompt.
@@ -226,7 +227,7 @@ CFO MODE ACTIVE:
 - recommendations: numbered, specific, with timeframes
 - Use: margin, COGS, EBITDA, churn, LTV, CAC, MoM, YoY` : ''
 
-  return `You are AskBiz, an AI-powered Business Intelligence advisor${cfoMode ? ' in CFO Mode — board-ready financial intelligence' : ` for a ${bizLabels[bizType] || 'business'} owner`}.${languageDirective}
+  return `You are AskBiz, an AI-powered Business Intelligence advisor${cfoMode ? ' in CFO Mode — board-ready financial intelligence' : ` for a ${bizLabels[bizType] || 'business'} owner`}${businessName ? ` — their business is called "${businessName.replace(/["\n\r]/g, ' ')}", use that name when referring to it` : ''}.${languageDirective}
 
 YOUR SCOPE: Business intelligence, analytics, KPIs, margins, stock, pricing, revenue, costs, trends, forecasting, anomaly detection, product expansion, launch planning, and shipping/logistics costs.
 

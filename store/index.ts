@@ -9,6 +9,7 @@ interface UserState {
   initials: string
   plan: 'free' | 'growth' | 'business'
   avatarUrl?: string
+  businessName?: string
 }
 
 interface SettingsState {

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   // Fetch user profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_type, currency, currency_symbol, region, sector_hints')
+    .select('business_name, business_type, currency, currency_symbol, region, sector_hints')
     .eq('id', user.id)
     .single()
 
@@ -2049,6 +2049,7 @@ export async function POST(request: NextRequest) {
     datasetSummary,
     expansionContext: expansionContext || undefined,
     userName: userName || user.email?.split('@')[0] || 'there',
+    businessName: profile?.business_name || undefined,
     marketContext: marketContext || undefined,
     searchContext: searchContext || undefined,
     trackingContext: trackingContext || undefined,

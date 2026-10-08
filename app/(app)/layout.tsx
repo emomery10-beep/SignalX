@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, business_type, currency, currency_symbol, plan, plan_id, region, sector_hints, onboarded, must_change_pin')
+    .select('full_name, business_name, business_type, currency, currency_symbol, plan, plan_id, region, sector_hints, onboarded, must_change_pin')
     .eq('id', user.id)
     .single()
 
@@ -60,6 +60,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           id: user.id,
           name: profile?.full_name || user.email?.split('@')[0] || 'User',
           email: user.email || '',
+          businessName: profile?.business_name || '',
           // plan_id, not the legacy `plan` column — see memory:
           // profiles-plan-column-drift-bug. `plan`'s own default ('starter')
           // isn't even a real plan in the pricing/limits vocabulary
