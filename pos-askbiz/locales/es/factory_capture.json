@@ -78,5 +78,9 @@
   "hold_warning_cancel": "Cancelar",
   "hold_warning_override": "Despachar de todos modos",
   "log_another": "+ Registrar otro",
-  "back_to_hub": "Volver al Hub"
+  "back_to_hub": "Volver al Hub",
+  "error_no_products_configured": "No hay productos para este paso. Pide a tu administrador que añada el producto en Inventario.",
+  "add_product_line": "Añadir línea de producto",
+  "new_product_placeholder": "Nombre del nuevo producto",
+  "add_product_btn": "Añadir"
 }

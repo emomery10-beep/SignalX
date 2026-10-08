@@ -78,5 +78,9 @@
   "hold_warning_cancel": "Annuler",
   "hold_warning_override": "Expédier quand même",
   "log_another": "+ Enregistrer une autre entrée",
-  "back_to_hub": "Retour au tableau de bord"
+  "back_to_hub": "Retour au tableau de bord",
+  "error_no_products_configured": "Aucun produit pour cette étape. Demandez à votre administrateur d'ajouter le produit dans l'Inventaire.",
+  "add_product_line": "Ajouter une ligne de produit",
+  "new_product_placeholder": "Nom du nouveau produit",
+  "add_product_btn": "Ajouter"
 }

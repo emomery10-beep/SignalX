@@ -79,5 +79,9 @@
   "hold_warning_override": "Safirisha hata hivyo",
   "log_another": "+ Andika Nyingine",
   "back_to_hub": "Rudi kwenye Kituo Kikuu",
-  "success_pending_sync": "Imehifadhiwa kwenye kifaa hiki — itapakiwa mtandaoni ukirudi mtandaoni."
+  "success_pending_sync": "Imehifadhiwa kwenye kifaa hiki — itapakiwa mtandaoni ukirudi mtandaoni.",
+  "error_no_products_configured": "Hakuna bidhaa kwa hatua hii. Mwombe msimamizi aongeze bidhaa kwenye Hesabu ya Bidhaa.",
+  "add_product_line": "Ongeza bidhaa mpya",
+  "new_product_placeholder": "Jina la bidhaa mpya",
+  "add_product_btn": "Ongeza"
 }

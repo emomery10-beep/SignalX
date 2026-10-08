@@ -78,5 +78,9 @@
   "hold_warning_cancel": "إلغاء",
   "hold_warning_override": "شحن على أي حال",
   "log_another": "+ تسجيل آخر",
-  "back_to_hub": "العودة إلى الرئيسية"
+  "back_to_hub": "العودة إلى الرئيسية",
+  "error_no_products_configured": "لا توجد منتجات لهذه الخطوة. اطلب من المسؤول إضافة المنتج في المخزون.",
+  "add_product_line": "إضافة منتج جديد",
+  "new_product_placeholder": "اسم المنتج الجديد",
+  "add_product_btn": "إضافة"
 }

@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { getFactoryLocationType } from '@/lib/factory-location-types'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
+import { hasPermission } from '@/lib/pos-permissions'
+import { allowedFactoryProducts, isSeedOnlyStep } from '@/lib/factory-product-rules'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -58,28 +59,7 @@ const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets'
 
 const WASTAGE_REASON_KEYS = ['reason_damaged', 'reason_spoiled', 'reason_qc_reject', 'reason_machine_fault', 'reason_contamination', 'reason_overproduction', 'reason_other']
 
-// Predefined factory products — common across most production types
-const FACTORY_PRODUCTS = [
-  'Sesame seed',
-  'Sesame oil',
-  'Sesame waste',
-  'Sesame oil - Jerrycan Matungi (20L)',
-  'Matungi',
-  'Sunflower oil',
-  'Coconut oil',
-  'Palm oil',
-  'Shea butter',
-  'Soybean oil',
-  'Groundnut oil',
-]
-
 interface InventoryItem { id: string; name: string; unit: string | null }
-
-// Product suggestions follow the staff member's own factory (sesame vs coconut).
-function productSuggestions(locationFactoryType: string | null): string[] {
-  const t = getFactoryLocationType(locationFactoryType)
-  return t && t.products.length ? t.products : FACTORY_PRODUCTS
-}
 
 interface OpenHold {
   label: string
@@ -202,7 +182,32 @@ export default function FactoryCapturePage() {
   // (parboiled paddy, dried parchment coffee) be marked as such.
   const [runRef, setRunRef] = useState('')
   const [locationFactoryType, setLocationFactoryType] = useState<string | null>(null)
+  const [newLine, setNewLine] = useState('')
+  const [addingLine, setAddingLine] = useState(false)
+  const [lineError, setLineError] = useState('')
+  const canAddProductLine = hasPermission(session?.role, 'inventory.manage') && !isSeedOnlyStep(locationFactoryType, captureType)
+  const productOptions = allowedFactoryProducts(locationFactoryType, captureType, inventory.map(i => i.name))
   const [isIntermediate, setIsIntermediate] = useState(false)
+
+  // Managers/owner only — floor staff pick from the list, never add to it.
+  async function addProductLine() {
+    const name = newLine.trim()
+    if (!name || !session) return
+    setAddingLine(true); setLineError('')
+    try {
+      const res = await fetch('/api/pos/factory/product-lines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify({ name, unit }),
+      })
+      const d = await res.json()
+      if (!res.ok) { setLineError(d?.error || 'Could not add'); return }
+      setInventory(prev => prev.some(i => i.id === d.product.id) ? prev : [...prev, d.product])
+      setProduct(d.product.name)
+      setNewLine('')
+    } catch { setLineError(tc('factory_capture.error_network')) }
+    finally { setAddingLine(false) }
+  }
 
   // ── Auth + inventory load ──────────────────────────────────────────────
   useEffect(() => {
@@ -216,7 +221,7 @@ export default function FactoryCapturePage() {
       .catch(() => {})
     fetch('/api/pos/config', { headers: session.headers })
       .then(r => r.json())
-      .then(d => setLocationFactoryType(d?.location_factory_type || null))
+      .then(d => setLocationFactoryType(d?.location_factory_type || d?.factory_type || null))
       .catch(() => {})
     fetch('/api/pos/factory/capture-holds?status=open', { headers: session.headers })
       .then(r => r.json())
@@ -336,7 +341,7 @@ export default function FactoryCapturePage() {
   async function submit() {
     if (!captureType || !photoUrl || !session) return
     const resolvedNotes = captureType === 'wastage' ? selectedReason || notes.trim() : notes.trim()
-    if (!product.trim() || product === '__other__') { setSaveError(tc('factory_capture.error_select_product')); return }
+    if (!product.trim() || product === '__other__' || !productOptions.includes(product.trim())) { setSaveError(tc('factory_capture.error_select_product')); return }
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError(tc('factory_capture.error_valid_quantity')); return }
     if (captureType === 'wastage' && !resolvedNotes) { setSaveError(tc('factory_capture.error_wastage_reason')); return }
     if (captureType === 'dispatch' && !notes.trim()) { setSaveError(tc('factory_capture.error_destination')); return }
@@ -622,38 +627,44 @@ export default function FactoryCapturePage() {
         {/* Product selector — predefined + custom */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.product_label')}</div>
-          <input
-            value={product}
-            onChange={e => setProduct(e.target.value)}
-            placeholder="Select or type product..."
-            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${product ? selectedType.color + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
-          />
-          {product.length > 0 && (
-            <div style={{ marginTop: 8, maxHeight: 160, overflowY: 'auto', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 8 }}>
-              {/* Predefined factory products */}
-              {productSuggestions(locationFactoryType).filter(p => p.toLowerCase().includes(product.toLowerCase())).map(p => (
+          {/* Pick-only: staff cannot type a new product line. New lines are added
+              by the admin in Inventory (see lib/factory-product-rules.ts). */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {productOptions.length === 0 && (
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', padding: '12px 4px' }}>{tc('factory_capture.error_no_products_configured')}</div>
+            )}
+            {productOptions.map(p => {
+              const active = product === p
+              return (
                 <button
                   key={p}
                   onClick={() => setProduct(p)}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '8px 12px', color: '#f1f5f9', fontSize: 14, cursor: 'pointer', borderRadius: 6, transition: 'background 100ms' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  style={{ textAlign: 'left', background: active ? selectedType.color + '22' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${active ? selectedType.color : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, fontWeight: active ? 700 : 500, cursor: 'pointer', minHeight: 48 }}
                 >
                   {p}
                 </button>
-              ))}
-              {/* Inventory items */}
-              {inventory.filter(i => i.name.toLowerCase().includes(product.toLowerCase())).map(i => (
+              )
+            })}
+          </div>
+          {canAddProductLine && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('factory_capture.add_product_line')}</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={newLine}
+                  onChange={e => setNewLine(e.target.value)}
+                  placeholder={tc('factory_capture.new_product_placeholder')}
+                  style={{ flex: 1, minWidth: 0, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '12px 14px', fontSize: 14, outline: 'none' }}
+                />
                 <button
-                  key={i.id}
-                  onClick={() => setProduct(i.name)}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', padding: '8px 12px', color: '#cbd5e1', fontSize: 13, cursor: 'pointer', borderRadius: 6, transition: 'background 100ms' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  onClick={addProductLine}
+                  disabled={addingLine || !newLine.trim()}
+                  style={{ padding: '0 18px', borderRadius: 12, border: 'none', background: selectedType.color, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: addingLine || !newLine.trim() ? 0.5 : 1, minHeight: 44 }}
                 >
-                  {i.name} <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>({i.unit || 'unit'})</span>
+                  {tc('factory_capture.add_product_btn')}
                 </button>
-              ))}
+              </div>
+              {lineError && <div style={{ color: '#f87171', fontSize: 12, marginTop: 6 }}>{lineError}</div>}
             </div>
           )}
         </div>

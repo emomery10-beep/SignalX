@@ -78,5 +78,9 @@
   "hold_warning_cancel": "Annuleren",
   "hold_warning_override": "Toch verzenden",
   "log_another": "+ Nog een registreren",
-  "back_to_hub": "Terug naar hub"
+  "back_to_hub": "Terug naar hub",
+  "error_no_products_configured": "Geen producten voor deze stap. Vraag je beheerder het product toe te voegen in Voorraad.",
+  "add_product_line": "Nieuwe productlijn toevoegen",
+  "new_product_placeholder": "Naam nieuw product",
+  "add_product_btn": "Toevoegen"
 }

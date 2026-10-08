@@ -79,5 +79,9 @@
   "hold_warning_override": "Dir Si Kastaba",
   "log_another": "+ Diiwaan-geli Mid Kale",
   "back_to_hub": "Ku noqo Hubka",
-  "success_pending_sync": "Waxaa lagu kaydiyay qalabkan — waxaa la soo geli doonaa marka aad internetka ku soo noqoto."
+  "success_pending_sync": "Waxaa lagu kaydiyay qalabkan — waxaa la soo geli doonaa marka aad internetka ku soo noqoto.",
+  "error_no_products_configured": "Alaab uma diyaarsana tillaabadan. Weydii maamulahaaga inuu alaabta ku daro Kaydka.",
+  "add_product_line": "Ku dar alaab cusub",
+  "new_product_placeholder": "Magaca alaabta cusub",
+  "add_product_btn": "Ku dar"
 }

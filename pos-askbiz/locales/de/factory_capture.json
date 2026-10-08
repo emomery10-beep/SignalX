@@ -78,5 +78,9 @@
   "hold_warning_cancel": "Abbrechen",
   "hold_warning_override": "Trotzdem versenden",
   "log_another": "+ Weiteres erfassen",
-  "back_to_hub": "Zurück zur Übersicht"
+  "back_to_hub": "Zurück zur Übersicht",
+  "error_no_products_configured": "Keine Produkte für diesen Schritt. Bitten Sie Ihren Admin, das Produkt im Bestand hinzuzufügen.",
+  "add_product_line": "Neue Produktlinie hinzufügen",
+  "new_product_placeholder": "Name des neuen Produkts",
+  "add_product_btn": "Hinzufügen"
 }

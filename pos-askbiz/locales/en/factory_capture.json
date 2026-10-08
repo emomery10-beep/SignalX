@@ -83,5 +83,9 @@
   "hold_warning_override": "Dispatch anyway",
   "log_another": "+ Log Another",
   "back_to_hub": "Back to Hub",
-  "success_pending_sync": "Saved on this device — will upload once you're back online."
+  "success_pending_sync": "Saved on this device — will upload once you're back online.",
+  "error_no_products_configured": "No products set up for this step. Ask your admin to add the product in Inventory.",
+  "add_product_line": "Add new product line",
+  "new_product_placeholder": "New product name",
+  "add_product_btn": "Add"
 }

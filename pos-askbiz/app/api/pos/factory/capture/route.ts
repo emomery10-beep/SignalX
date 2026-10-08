@@ -6,6 +6,7 @@ import { logPosAudit } from '@/lib/pos-audit'
 import { matchHoldRule, matchManualHoldRule } from '@/lib/factory-holds'
 import { matchDecayRule } from '@/lib/factory-decay'
 import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
+import { allowedFactoryProducts } from '@/lib/factory-product-rules'
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
 
 export async function OPTIONS() {
@@ -204,6 +205,30 @@ export async function POST(req: NextRequest) {
   }
 
   const service = createServiceClient()
+
+  // Product lines are admin-controlled: a capture may only use a product from
+  // the factory's dropdown (built-in defaults + products the owner/manager
+  // added to this factory's Inventory). Free-typed names are rejected so a
+  // typo or invented line can never enter stock, yield or dispatch reporting.
+  if (typeof product_name === 'string' && product_name.trim()) {
+    const capLocationId = location_id || auth.locationId || null
+    let factoryType: string | null = null
+    if (capLocationId) {
+      const { data: loc } = await service.from('pos_locations').select('factory_type').eq('id', capLocationId).maybeSingle()
+      factoryType = loc?.factory_type || null
+    }
+    if (!factoryType) {
+      const { data: prof } = await service.from('profiles').select('factory_type').eq('id', auth.ownerId).maybeSingle()
+      factoryType = prof?.factory_type || null
+    }
+    let invQuery = service.from('inventory').select('name').eq('owner_id', auth.ownerId).eq('sector', 'factory')
+    if (capLocationId) invQuery = invQuery.eq('location_id', capLocationId)
+    const { data: invRows } = await invQuery
+    const allowed = allowedFactoryProducts(factoryType, captureType, (invRows || []).map((r: any) => r.name))
+    if (!allowed.some(n => n.trim().toLowerCase() === product_name.trim().toLowerCase())) {
+      return json({ error: 'product_not_allowed', message: 'This product is not set up for this step. Ask your admin to add it in Inventory.' }, 400)
+    }
+  }
 
   // Optional production-run tagging (intake/output only) — find-or-create
   // by a human-typed reference, same UX pattern app/factory/batch/page.tsx
