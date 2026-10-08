@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveCfoReader } from '@/lib/cfo-auth'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
 import { getDateRange } from '@/lib/cfo-date-range'
@@ -7,11 +8,11 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const access = await resolveCfoReader()
+  if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status })
+  const { ownerId, db: supabase } = access.reader
 
-  const sym = await getCurrencySymbol(supabase, user.id)
+  const sym = await getCurrencySymbol(supabase, ownerId)
   const now = new Date()
 
   const periodKey = new URL(req.url).searchParams.get('period') || 'all'
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   let posQuery = supabase
     .from('pos_transactions')
     .select('id, total, customer_id, created_at, payment_type, payment_status, status, notes')
-    .eq('owner_id', user.id)
+    .eq('owner_id', ownerId)
     .in('payment_status', ['pending', 'failed'])
     .neq('status', 'refunded')
     .order('created_at', { ascending: true })
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   let ecomQuery = supabase
     .from('unified_data')
     .select('source_record_id, product_name, source_type, net_revenue, record_date, payment_status, customer_region')
-    .eq('user_id', user.id)
+    .eq('user_id', ownerId)
     .in('payment_status', ['pending', 'authorized', 'partially_paid', 'PENDING', 'AWAITING_PAYMENT'])
     .order('record_date', { ascending: true })
     .limit(200)
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
     supabase
       .from('cfo_receivables')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .order('due_date', { ascending: true }),
 
     posQuery,
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     items.push({
       id: `pos_${tx.id}`,
-      user_id: user.id,
+      user_id: ownerId,
       type: 'receivable',
       counterparty: `POS Sale #${tx.id.slice(0, 8)}`,
       amount: tx.total || 0,
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
 
     items.push({
       id: `ecom_${key}`,
-      user_id: user.id,
+      user_id: ownerId,
       type: 'receivable',
       counterparty: `${label} — ${g.count} unpaid order${g.count > 1 ? 's' : ''}`,
       amount: Math.round(g.total * 100) / 100,

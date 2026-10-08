@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveCfoReader } from '@/lib/cfo-auth'
 import { createClient } from '@/lib/supabase/server'
 
 function json(data: unknown, status = 200) {
@@ -38,14 +39,14 @@ interface BudgetShape { revenue: number; cogs: number; fixed_costs: number; net_
 
 // GET — the current user's monthly budget target
 export async function GET() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return json({ error: 'Unauthorised' }, 401)
+  const access = await resolveCfoReader()
+  if (!access.ok) return json({ error: access.error }, access.status)
+  const { ownerId, db: supabase } = access.reader
 
   const { data, error } = await supabase
     .from('cfo_budgets')
     .select('revenue, cogs, fixed_costs, net_profit, updated_at')
-    .eq('user_id', user.id)
+    .eq('user_id', ownerId)
     .maybeSingle()
 
   if (error) {

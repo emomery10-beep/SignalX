@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveCfoReader } from '@/lib/cfo-auth'
 import { createClient } from '@/lib/supabase/server'
 import { getUserLocale } from '@/lib/get-currency'
 
@@ -14,11 +15,11 @@ function isLikelySku(sku: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const access = await resolveCfoReader()
+  if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status })
+  const { user, ownerId, isOwner, db: supabase } = access.reader
 
-  const { currencySymbol: sym } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
+  const { currencySymbol: sym } = await getUserLocale(supabase, ownerId, isOwner ? ((user.user_metadata as { phone?: string } | undefined)?.phone || user.phone) : undefined)
 
   // Fetch from both sources in parallel
   const [{ data: posProducts }, { data: unifiedProducts }] = await Promise.all([
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     supabase
       .from('inventory')
       .select('id, name, category, sale_price, cost_price, stock_qty, low_stock_threshold, sku, supplier, active')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('active', true)
       .limit(500),
 
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     supabase
       .from('unified_data')
       .select('product_name, category, source_type, sku, selling_price, cost_price, units_sold, stock_level, stock_movement, low_stock_flag')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .order('record_date', { ascending: false })
       .limit(5000),
   ])

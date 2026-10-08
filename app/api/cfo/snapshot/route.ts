@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { resolveCfoReader } from '@/lib/cfo-auth'
 import { getUserLocale } from '@/lib/get-currency'
 import { getDateRange } from '@/lib/cfo-date-range'
+import { createServiceClient } from '@/lib/supabase/server'
+import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture } from '@/lib/factory-financials'
+import { FACTORY_COUNT_REASON } from '@/lib/factory-stock'
+import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -12,6 +16,7 @@ const SOURCE_LABELS: Record<string, string> = {
   ebay: 'eBay',
   etsy: 'Etsy',
   pos: 'POS',
+  factory: 'Factory',
   stripe: 'Stripe',
   google_sheets: 'Google Sheets',
   manual_csv: 'Manual CSV',
@@ -24,15 +29,25 @@ const SOURCE_LABELS: Record<string, string> = {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Owner → own RLS-scoped client; team member with CFO access → owner's data (see lib/cfo-auth.ts)
+  const access = await resolveCfoReader()
+  if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status })
+  const { user, ownerId, isOwner, db: supabase } = access.reader
 
-  const { currencySymbol: sym, countryCode } = await getUserLocale(supabase, user.id, (user.user_metadata as { phone?: string } | undefined)?.phone || user.phone)
+  const { currencySymbol: sym, countryCode } = await getUserLocale(supabase, ownerId, isOwner ? ((user.user_metadata as { phone?: string } | undefined)?.phone || user.phone) : undefined)
   const params = new URL(request.url).searchParams
   const now = new Date()
 
   const periodKey = params.get('period') || 'this_month'
+  // Segment: all (default) | retail | factory. `factory` = one pos_locations id (kind='factory')
+  // and implies the factory segment. Factories never ring pos_transactions (verified
+  // 0 of 1,153 rows), so retail = everything in the existing POS/ecommerce queries.
+  const factoryParam = params.get('factory') || ''
+  const segParam = params.get('segment')
+  const segment: 'all' | 'retail' | 'factory' =
+    factoryParam || segParam === 'factory' ? 'factory' : segParam === 'retail' ? 'retail' : 'all'
+  const includeRetail = segment !== 'factory'
+  const includeFactory = segment !== 'retail'
   const { start, end, compStart, compEnd } = getDateRange(periodKey, now)
 
   // 6-month lookback for pnl_monthly — always anchored to TODAY, not the period's end date
@@ -41,7 +56,7 @@ export async function GET(request: NextRequest) {
   const sixMonthsAgoDate = new Date(now.getFullYear(), now.getMonth() - 5, 1)
   const sixMonthsAgo = sixMonthsAgoDate.toISOString().split('T')[0]
 
-  const [
+  let [
     { data: unified },
     { data: unifiedComp },
     { data: posTx },
@@ -63,7 +78,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, gross_margin, cost_price, units_sold, product_name, category, source_type')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .neq('channel', 'pos')                    // POS revenue captured via pos_transactions — exclude to prevent double-counting (channel, not source_type: POS rows use source_type 'askbiz_pos'/'askbiz_pos_daily_agg', never the literal 'pos')
       .gte('record_date', start)
       .lte('record_date', end)
@@ -72,7 +87,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, cost_price, units_sold, source_type')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .neq('channel', 'pos')                    // same guard for comparison period
       .gte('record_date', compStart)
       .lte('record_date', compEnd)
@@ -80,7 +95,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('total, created_at, status')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('status', 'completed')
       .gte('created_at', start + 'T00:00:00')
       .lte('created_at', end + 'T23:59:59')
@@ -88,7 +103,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('total, created_at, status')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('status', 'completed')
       .gte('created_at', compStart + 'T00:00:00')
       .lte('created_at', compEnd + 'T23:59:59')
@@ -97,7 +112,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('created_at, pos_items!transaction_id(qty, cost_price)')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('status', 'completed')
       .gte('created_at', compStart + 'T00:00:00')
       .lte('created_at', compEnd + 'T23:59:59')
@@ -105,35 +120,35 @@ export async function GET(request: NextRequest) {
     supabase
       .from('cost_profile_overrides')
       .select('overrides')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .single(),
     supabase
       .from('health_scores')
       .select('score, label, components, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single(),
     supabase
       .from('inventory')
       .select('id, name, sale_price, cost_price, stock_qty, low_stock_threshold, category')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('active', true)
       .limit(500),
     supabase
       .from('shipments')
       .select('tracking_number, carrier_name, track_status, total_value, unit_cost, quantity, delay_days, daily_financing_cost, financial_impact, working_capital_days, order_date, expected_arrival, actual_arrival, is_at_risk, shipment_type')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .in('track_status', ['InTransit', 'Pickup', 'Pending', 'OutForDelivery'])
       .limit(200),
     supabase
       .from('cfo_receivables')
       .select('type, amount, status')
-      .eq('user_id', user.id),
+      .eq('user_id', ownerId),
     supabase
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, cost_price, units_sold')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .neq('channel', 'pos')                    // exclude POS — captured via pos_transactions
       .gte('record_date', sixMonthsAgo)
       .lte('record_date', todayStr)
@@ -142,7 +157,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('total, created_at')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('status', 'completed')
       .gte('created_at', sixMonthsAgo + 'T00:00:00')
       .lte('created_at', todayStr + 'T23:59:59')      // always today, not period end
@@ -151,7 +166,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('created_at, status, pos_items!transaction_id(name, qty, unit_price, cost_price)')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('status', 'completed')
       .gte('created_at', start + 'T00:00:00')
       .lte('created_at', end + 'T23:59:59')
@@ -160,7 +175,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('created_at, pos_items!transaction_id(qty, cost_price)')
-      .eq('owner_id', user.id)
+      .eq('owner_id', ownerId)
       .eq('status', 'completed')
       .gte('created_at', sixMonthsAgo + 'T00:00:00')
       .lte('created_at', todayStr + 'T23:59:59')      // always today, not period end
@@ -169,27 +184,80 @@ export async function GET(request: NextRequest) {
     supabase
       .from('cfo_expenses')
       .select('date, amount, category')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .gte('date', start)
       .lte('date', end),
     // Stage 2b: tracked expenses — 6-month window (for pnl_monthly)
     supabase
       .from('cfo_expenses')
       .select('date, amount, category')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .gte('date', sixMonthsAgo)
       .lte('date', todayStr),                          // always today, not period end
     // Stage 2c: tracked expenses — comparison period (for apples-to-apples net profit)
     supabase
       .from('cfo_expenses')
       .select('date, amount, category')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerId)
       .gte('date', compStart)
       .lte('date', compEnd),
   ])
 
+  // --- Segment filter: blank whichever side is out of scope before anything is aggregated ---
+  if (!includeRetail) {
+    unified = []; unifiedComp = []; posTx = []; posTxComp = []; posItemsComp = []
+    unified6m = []; posTx6m = []; posItemRows = []; posItems6m = []; posProducts = []
+  }
+  // Expenses have no location tag, so they cannot be split between retail and factory.
+  // They (and the monthly overhead estimate) only count in the combined view.
+  const expensesAllocated = segment === 'all'
+  if (!expensesAllocated) { cfoExpenses = []; cfoExpenses6m = []; cfoExpensesComp = [] }
+
+  // --- Factory: approved captures from the owner's factory locations (service client, owner-scoped) ---
+  const svc = createServiceClient()
+  const { data: factoryLocs } = await svc
+    .from('pos_locations')
+    .select('id, name, factory_type')
+    .eq('owner_id', ownerId)
+    .eq('kind', 'factory')
+  const factories = (factoryLocs || []) as { id: string; name: string; factory_type: string | null }[]
+  const scopeIds = factoryParam ? factories.filter(f => f.id === factoryParam).map(f => f.id) : factories.map(f => f.id)
+
+  const win = { start, end, compStart, compEnd, monthlyFrom: sixMonthsAgo, monthlyTo: todayStr }
+  // Each factory is costed with its own saved settings (labour/electricity/overhead), falling back to
+  // the owner's country default — Kenya pre-filled, everywhere else unset (see lib/factory-cost-defaults.ts).
+  const factoryResults: { id: string; name: string; type: string | null; fin: ReturnType<typeof computeFactoryFinancials> }[] = []
+  if (includeFactory && scopeIds.length > 0) {
+    const [{ data: capRows }, { data: countRows }, { data: settingRows }] = await Promise.all([
+      svc.from('pos_factory_captures')
+        .select('location_id, type, product_name, quantity, dispatch_price, param_label, param_value, created_at')
+        .eq('owner_id', ownerId).eq('status', 'approved').in('location_id', scopeIds).limit(20000),
+      svc.from('pos_stock_adjustments')
+        .select('location_id, product_name, counted_qty, created_at')
+        .eq('owner_id', ownerId).eq('reason', FACTORY_COUNT_REASON).in('location_id', scopeIds),
+      svc.from('pos_factory_cost_settings')
+        .select('location_id, staff_per_day, electricity_per_day, overhead')
+        .eq('owner_id', ownerId).in('location_id', scopeIds),
+    ])
+    const settingsBy = new Map((settingRows || []).map((r: any) => [r.location_id as string, r]))
+    for (const f of factories.filter(x => scopeIds.includes(x.id))) {
+      const saved: any = settingsBy.get(f.id)
+      const settings = saved
+        ? { configured: true, staffPerDay: Number(saved.staff_per_day), electricityPerDay: Number(saved.electricity_per_day), overhead: Number(saved.overhead) }
+        : factoryCostDefaultsFor(countryCode)
+      factoryResults.push({
+        id: f.id, name: f.name, type: f.factory_type,
+        fin: computeFactoryFinancials(
+          ((capRows || []) as FactoryCapture[]).filter(c => c.location_id === f.id),
+          ((countRows || []) as any[]).filter(c => c.location_id === f.id),
+          win, Date.now(), settings),
+      })
+    }
+  }
+  const factoryFin = mergeFactoryFinancials(factoryResults.map(r => r.fin))
+
   const overrides = (overridesRow?.overrides || {}) as Record<string, any>
-  const monthlyFixedCosts =
+  const monthlyFixedCosts = !expensesAllocated ? 0 :
     overrides.monthly_fixed_costs || overrides.monthlyFixedCosts ||
     Number(params.get('monthly_fixed_costs') || 0)
   const cashBalance =
@@ -261,6 +329,17 @@ export async function GET(request: NextRequest) {
   const totalPosItemCogs = Array.from(posItemCogsMap.values()).reduce((s, c) => s + c, 0)
   if (sourceMap.has('pos')) sourceMap.get('pos')!.cogs = totalPosItemCogs
 
+  // Factory dispatch revenue + dated production cost (see lib/factory-financials.ts)
+  for (const [date, v] of factoryFin.daily.entries()) {
+    if (!dailyMap.has(date)) dailyMap.set(date, { revenue: 0, cogs: 0 })
+    const d = dailyMap.get(date)!
+    d.revenue += v.revenue
+    d.cogs += v.cogs
+  }
+  if (factoryFin.revenue > 0 || factoryFin.cogs > 0) {
+    sourceMap.set('factory', { revenue: factoryFin.revenue, cogs: factoryFin.cogs, orders: factoryFin.dispatches })
+  }
+
   const dailyData = Array.from(dailyMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, v]) => ({ date, ...v }))
@@ -289,6 +368,7 @@ export async function GET(request: NextRequest) {
   for (const tx of posTxComp || []) {
     compRevenue += tx.total || 0
   }
+  compRevenue += factoryFin.compRevenue
   // Add comparison-period POS COGS from line items (mirrors current-period logic)
   let compPosCogs = 0
   for (const tx of posItemsComp || []) {
@@ -304,7 +384,7 @@ export async function GET(request: NextRequest) {
     .filter(e => COGS_CATEGORIES.has(e.category))
     .reduce((s: number, e: any) => s + (e.amount || 0), 0)
   // Use POS COGS if available, else fall back to unified_data COGS + expense-tracked COGS
-  compCogs = compPosCogs > 0 ? compPosCogs : compCogs + compTrackedCogsTotal
+  compCogs = compPosCogs + factoryFin.compCogs > 0 ? compPosCogs + factoryFin.compCogs : compCogs + compTrackedCogsTotal
   const compGrossProfit = compRevenue - compCogs
   const compPeriodDays = Math.max(daysBetween(compStart, compEnd), 1)
   // Include comparison-period tracked expenses so net profit comparison is apples-to-apples
@@ -319,7 +399,8 @@ export async function GET(request: NextRequest) {
     const threshold = p.low_stock_threshold || 5
     return (p.stock_qty || 0) <= threshold
   }).length
-  const inventoryValueAtCost = products.reduce((s, p) => s + ((p.cost_price || 0) * (p.stock_qty || 0)), 0)
+  const retailInventoryAtCost = products.reduce((s, p) => s + ((p.cost_price || 0) * (p.stock_qty || 0)), 0)
+  const inventoryValueAtCost = retailInventoryAtCost + factoryFin.stockValue
   const inventoryValueAtRetail = products.reduce((s, p) => s + ((p.sale_price || 0) * (p.stock_qty || 0)), 0)
   const stockoutRate = totalProducts > 0 ? (lowOrOos / totalProducts) * 100 : 0
 
@@ -519,6 +600,13 @@ export async function GET(request: NextRequest) {
     monthlyMap.get(month)!.cogs += cogs
   }
 
+  for (const [month, v] of factoryFin.monthly.entries()) {
+    if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, cogs: 0 })
+    const m = monthlyMap.get(month)!
+    m.revenue += v.revenue
+    m.cogs += v.cogs
+  }
+
   const pnlMonthly = Array.from(monthlyMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, v]) => {
@@ -572,6 +660,11 @@ export async function GET(request: NextRequest) {
       p.units += qty
     }
   }
+  for (const [name, f] of factoryFin.products.entries()) {
+    if (!productMap.has(name)) productMap.set(name, { category: 'Factory', revenue: 0, cogs: 0, units: 0 })
+    const p = productMap.get(name)!
+    p.revenue += f.revenue; p.cogs += f.cogs; p.units += f.units
+  }
   const marginByProduct = Array.from(productMap.entries())
     // Drop pure catalog noise: products that neither earned revenue nor sold a unit
     .filter(([, p]) => p.revenue > 0 || p.units > 0)
@@ -612,6 +705,17 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     period: { start, end, compStart, compEnd, key: periodKey },
+    segment: {
+      key: segment,
+      factory_id: factoryParam || null,
+      expenses_allocated: expensesAllocated,
+      // Dispatches in the period still waiting for an approver to set dispatch_price (not in revenue)
+      unpriced_dispatches: factoryFin.unpricedDispatches,
+      factory_stock_value: Math.round(factoryFin.stockValue),
+      // How each factory's COGS was worked out (pool, unit cost, assumptions, anything missing)
+      factory_costs: factoryResults.map(r => ({ location_id: r.id, name: r.name, type: r.type, ...r.fin.cost })),
+    },
+    factories: factories.map(f => ({ id: f.id, name: f.name, type: f.factory_type })),
     currency_symbol: sym,
     country_code: countryCode,
     kpis,
@@ -661,6 +765,7 @@ export async function GET(request: NextRequest) {
       days_with_data: dailyData.length,
       has_ecommerce: (unified?.length || 0) > 0,
       has_pos: (posTx?.length || 0) > 0,
+      has_factory: factoryFin.revenue > 0 || factoryFin.cogs > 0,
       has_shipments: inTransitCount > 0,
     },
     source_breakdown: sourceBreakdown,

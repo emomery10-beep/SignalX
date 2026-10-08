@@ -39,13 +39,16 @@ import ChurnAnalytics from './ChurnAnalytics'
 import FinancingReadiness from './FinancingReadiness'
 import ThreeWayForecast from './ThreeWayForecast'
 import RecoveredRevenue from './RecoveredRevenue'
-import SesameFinancialWidget from './SesameFinancialWidget'
+import SegmentSwitcher, { type CfoSegment, type CfoFactory } from './SegmentSwitcher'
+import { FactoryCostNotes, type SegmentInfo } from './FactoryCostNotes'
 import { loadCostConfig, sumFixed } from './CostConfigDrawer'
 
 interface SnapshotData {
   period: { start: string; end: string; compStart: string; compEnd: string; key: string }
   currency_symbol: string
   country_code?: string | null
+  segment?: SegmentInfo
+  factories?: CfoFactory[]
   kpis: any[]
   alerts: any[]
   chart: any[]
@@ -182,26 +185,31 @@ export default function CfoDashboard({ onAsk }: Props) {
   const subTabs = buildSubTabs(tc)
   const [subTab, setSubTab] = useState<SubTab>('dashboard')
   const [period, setPeriod] = useState('this_month')
+  const [segment, setSegment] = useState<CfoSegment>({ key: 'all', factoryId: null })
+  // Keep the switcher visible while a segment is loading / when a segment has no data
+  const [factories, setFactories] = useState<CfoFactory[]>([])
   const [data, setData] = useState<SnapshotData | null>(null)
   const [loading, setLoading] = useState(true)
   const [recTotals, setRecTotals] = useState<{ receivables: number; payables: number }>({ receivables: 0, payables: 0 })
   const [quickScanOpen, setQuickScanOpen] = useState(false)
 
-  const fetchData = useCallback((p: string) => {
+  const fetchData = useCallback((p: string, seg: CfoSegment) => {
     setLoading(true)
     const cfg = loadCostConfig()
     const fixedTotal = sumFixed(cfg)
     const url = `/api/cfo/snapshot?period=${p}` +
+      (seg.key !== 'all' ? `&segment=${seg.key}` : '') +
+      (seg.factoryId ? `&factory=${encodeURIComponent(seg.factoryId)}` : '') +
       (cfg.cashBalance > 0 ? `&cash_balance=${cfg.cashBalance}` : '') +
       (fixedTotal > 0 ? `&monthly_fixed_costs=${fixedTotal}` : '')
     fetch(url)
       .then(r => r.ok ? r.json() : null)
-      .then(d => setData(d))
+      .then(d => { setData(d); if (d?.factories) setFactories(d.factories) })
       .catch(() => setData(null))
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetchData(period) }, [period, fetchData])
+  useEffect(() => { fetchData(period, segment) }, [period, segment, fetchData])
 
   // Restore sub-tab from ?sub= on mount — this is the read-side of the
   // voice-nav convention documented in lib/voiceDiscovery.ts: voice-nav (or a
@@ -294,6 +302,10 @@ export default function CfoDashboard({ onAsk }: Props) {
 
         {/* Period selector */}
         <PeriodSelector value={period} onChange={changePeriod} />
+
+        {/* Retail / Factory (only when the account has a factory) */}
+        <SegmentSwitcher value={segment} factories={factories} onChange={setSegment} />
+        {!loading && <FactoryCostNotes info={data?.segment} sym={data?.currency_symbol || '$'} />}
       </div>
 
       {/* ─── DASHBOARD VIEW ─── */}
@@ -445,8 +457,6 @@ export default function CfoDashboard({ onAsk }: Props) {
 
           {/* Cash Flow section */}
           <CashFlowCountdown onAsk={onAsk} />
-          {/* Sesame Production Financial (Optional Add-on) */}
-          <SesameFinancialWidget period={period} />
         </div>
       )}
 
@@ -511,7 +521,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               sourceBreakdown={data.source_breakdown}
               currencySymbol={sym}
               onAsk={onAsk}
-              onConfigSaved={() => fetchData(period)}
+              onConfigSaved={() => fetchData(period, segment)}
             />
           ) : loading ? (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_cashflow')}</div>

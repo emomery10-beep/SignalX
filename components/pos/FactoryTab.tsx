@@ -1938,7 +1938,6 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const { tc } = useLang()
 
   // Real operating costs (Kenya rates) — per 20L jerrycan
-  const STAFF_COST_PER_DAY = 2400 // KSh
   const DEFAULT_MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
   // Editable (not a plain const) — owner-confirmed 9h/day is a starting
   // assumption, not a measured fact, so it can be corrected in place via
@@ -1977,9 +1976,16 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   // Calculate real operating costs
   const totalMachineKW = MACHINES.reduce((s, m) => s + m.kw, 0)
+  // Saved per-factory rates (shared with the CFO) load below. Until the owner has
+  // saved their own electricity/day, only Kenya falls back to the machine formula —
+  // other countries start unset (0) instead of inheriting Kenya's tariff and machines.
+  const [ratesCountry, setRatesCountry] = useState<string | null>(null)
+  const [ratesSaved, setRatesSaved] = useState(false)
+  const [electricityPerDayInput, setElectricityPerDayInput] = useState<number | null>(null)
   const electricityCostPerDay = useMemo(() => {
-    return totalMachineKW * motorHoursPerDay * ELECTRICITY_RATE_PER_KWH
-  }, [totalMachineKW, motorHoursPerDay])
+    if (electricityPerDayInput != null) return electricityPerDayInput
+    return ratesCountry === 'KE' ? totalMachineKW * motorHoursPerDay * ELECTRICITY_RATE_PER_KWH : 0
+  }, [electricityPerDayInput, ratesCountry, totalMachineKW, motorHoursPerDay])
 
   // Count total 20L jerrycans produced. Jerrycans are normally recorded as
   // 'packaging' type captures (packaging repackages an already-logged
@@ -2034,8 +2040,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // Defaults preserve the previous flat KSh2,400/day assumption exactly, so
   // nothing changes for an owner who never opens the editor.
   const [laborRateMode, setLaborRateMode] = useState<'day' | 'hour'>('day')
-  const [staffDayRate, setStaffDayRate] = useState(STAFF_COST_PER_DAY)
-  const [staffHourlyRate, setStaffHourlyRate] = useState(Math.round(STAFF_COST_PER_DAY / DEFAULT_MOTOR_HOURS_PER_DAY))
+  // Starts at 0 and is filled from the factory's saved rates / country default (Kenya: 2,400).
+  const [staffDayRate, setStaffDayRate] = useState(0)
+  const [staffHourlyRate, setStaffHourlyRate] = useState(0)
   const [staffHoursPerDay, setStaffHoursPerDay] = useState(DEFAULT_MOTOR_HOURS_PER_DAY)
   const [isEditingStaffRate, setIsEditingStaffRate] = useState(false)
   const effectiveStaffCostPerDay = laborRateMode === 'day' ? staffDayRate : staffHourlyRate * staffHoursPerDay
@@ -2121,6 +2128,65 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // real number for what they spent.
   const [overheadOverride, setOverheadOverride] = useState(0)
   const [isEditingOverhead, setIsEditingOverhead] = useState(false)
+
+  // Per-factory labour / electricity / overhead rates, saved so the CFO uses the same numbers.
+  const ratesQs = selectedLocation && selectedLocation !== 'all' ? `?location_id=${encodeURIComponent(selectedLocation)}` : ''
+  const [rateStaff, setRateStaff] = useState('')
+  const [rateElec, setRateElec] = useState('')
+  const [rateBill, setRateBill] = useState('')
+  const [rateOverhead, setRateOverhead] = useState('')
+  const [ratesConfigured, setRatesConfigured] = useState(false)
+  const [ratesBusy, setRatesBusy] = useState(false)
+  const [ratesMsg, setRatesMsg] = useState<string | null>(null)
+  useEffect(() => {
+    let live = true
+    fetch(`/api/pos/factory/cost-settings${ratesQs}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!live || !d) return
+        setRatesCountry(d.country_code || null)
+        setRatesSaved(!!d.saved)
+        const st = d.settings
+        setRatesConfigured(!!st?.configured)
+        if (st?.configured) {
+          setLaborRateMode('day')
+          setStaffDayRate(st.staffPerDay)
+          setStaffHourlyRate(Math.round(st.staffPerDay / DEFAULT_MOTOR_HOURS_PER_DAY))
+          setOverheadOverride(st.overhead)
+          setRateStaff(String(st.staffPerDay)); setRateOverhead(String(st.overhead || ''))
+          // Saved electricity/day wins; an unsaved Kenya default keeps using the machine formula.
+          if (d.saved) { setElectricityPerDayInput(st.electricityPerDay); setRateElec(String(st.electricityPerDay)) }
+          else { setElectricityPerDayInput(null); setRateElec(String(st.electricityPerDay)) }
+        } else {
+          setElectricityPerDayInput(null); setStaffDayRate(0); setStaffHourlyRate(0); setOverheadOverride(0)
+          setRateStaff(''); setRateElec(''); setRateOverhead('')
+        }
+      })
+      .catch(() => {})
+    return () => { live = false }
+  }, [ratesQs])
+  const saveRates = async () => {
+    setRatesMsg(null)
+    const staff = Number(rateStaff)
+    const bill = Number(rateBill)
+    const elec = bill > 0 ? Math.round(bill / 26) : Number(rateElec) // monthly bill ÷ 26 working days (Mon–Sat)
+    if (!Number.isFinite(staff) || staff < 0 || !Number.isFinite(elec) || elec < 0) { setRatesMsg('Enter valid amounts'); return }
+    setRatesBusy(true)
+    try {
+      const res = await fetch(`/api/pos/factory/cost-settings${ratesQs}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          staff_per_day: staff, electricity_per_day: elec, overhead: Number(rateOverhead) || 0,
+          electricity_basis: bill > 0 ? { mode: 'monthly_bill', monthly_bill: bill, working_days: 26 } : { mode: 'per_day' },
+        }),
+      })
+      if (!res.ok) { const e = await res.json().catch(() => ({})); setRatesMsg(e.error || 'Could not save'); return }
+      setLaborRateMode('day'); setStaffDayRate(staff); setStaffHourlyRate(Math.round(staff / DEFAULT_MOTOR_HOURS_PER_DAY))
+      setElectricityPerDayInput(elec); setRateElec(String(elec)); setRateBill('')
+      setOverheadOverride(Number(rateOverhead) || 0)
+      setRatesConfigured(true); setRatesSaved(true); setRatesMsg('Saved — the CFO now uses these rates')
+    } catch { setRatesMsg('Could not save') } finally { setRatesBusy(false) }
+  }
   const totalOverhead = overheadOverride
   const overheadPerJerrycan = jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0
   // Labor excluded from the jerrycan cost roll-up at the owner's request —
@@ -2453,6 +2519,54 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
   return (
     <div>
+      {/* Cost rates — saved per factory, shared with the CFO */}
+      <div style={{ padding: 14, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'var(--tx)' }}>Your cost rates ({currencySymbol})</div>
+        <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 10 }}>
+          Labour and electricity per working day, saved for this factory. The CFO uses the same numbers.
+        </div>
+        {selectedLocation === 'all' || !selectedLocation ? (
+          <div role="status" style={{ fontSize: 11, color: 'var(--tx2)' }}>Select a factory above to set its rates.</div>
+        ) : (
+          <>
+            {!ratesConfigured && (
+              <div role="status" style={{ fontSize: 11, color: 'var(--tx)', marginBottom: 10 }}>
+                Not set yet. Labour and electricity are left out of cost until you enter your own rates.
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10 }}>
+              {([
+                ['rate-staff', 'Labour per working day', rateStaff, setRateStaff],
+                ['rate-elec', 'Electricity per working day', rateElec, setRateElec],
+                ['rate-bill', 'or monthly electricity bill', rateBill, setRateBill],
+                ['rate-oh', 'Overhead (total, optional)', rateOverhead, setRateOverhead],
+              ] as const).map(([id, label, val, set]) => (
+                <label key={id} htmlFor={id} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10, color: 'var(--tx2)' }}>
+                  {label}
+                  <input
+                    id={id} type="number" inputMode="decimal" min={0} value={val}
+                    onChange={e => set(e.target.value)}
+                    style={{ minHeight: 40, padding: '0 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 13 }}
+                  />
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+              <button
+                type="button" onClick={saveRates} disabled={ratesBusy}
+                style={{ minHeight: 40, padding: '0 16px', borderRadius: 9999, border: 'none', background: ACC, color: '#fff', fontSize: 12, fontWeight: 600, cursor: ratesBusy ? 'default' : 'pointer', opacity: ratesBusy ? 0.6 : 1 }}
+              >
+                {ratesBusy ? 'Saving…' : ratesSaved ? 'Update rates' : 'Save rates'}
+              </button>
+              {ratesMsg && <span role="status" style={{ fontSize: 11, color: 'var(--tx2)' }}>{ratesMsg}</span>}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 8 }}>
+              A monthly bill is divided by 26 working days. If you fill both electricity boxes, the bill is used.
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Real Operating Costs */}
       <div style={{ padding: 14, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (per 20L Jerrycan)</div>

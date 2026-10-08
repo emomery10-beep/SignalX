@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveCfoReader } from '@/lib/cfo-auth'
 import { createClient } from '@/lib/supabase/server'
 
 function json(data: unknown, status = 200) {
@@ -38,9 +39,9 @@ function json(data: unknown, status = 200) {
 
 // GET — list expenses for the current user
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return json({ error: 'Unauthorised' }, 401)
+  const access = await resolveCfoReader()
+  if (!access.ok) return json({ error: access.error }, access.status)
+  const { ownerId, db: supabase } = access.reader
 
   const url = new URL(req.url)
   const limit = Math.min(Number(url.searchParams.get('limit') || 200), 500)
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from('cfo_expenses')
     .select('id, vendor, date, amount, category, notes, receipt_url, created_at')
-    .eq('user_id', user.id)
+    .eq('user_id', ownerId)
     .order('date', { ascending: false })
     .limit(limit)
 
