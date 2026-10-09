@@ -7,6 +7,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture } from '@/lib/factory-financials'
 import { FACTORY_COUNT_REASON } from '@/lib/factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
+import { resolveEffectiveFactoryType } from '@/lib/factory-costing-profiles'
 
 const SOURCE_LABELS: Record<string, string> = {
   shopify: 'Shopify',
@@ -251,17 +252,21 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
         .eq('owner_id', ownerId).in('location_id', scopeIds),
     ])
     const settingsBy = new Map((settingRows || []).map((r: any) => [r.location_id as string, r]))
+    // A branch typed 'other'/unset takes the owner's profile factory type.
+    const { data: profRow } = await svc.from('profiles').select('factory_type').eq('id', ownerId).maybeSingle()
+    const profileFactoryType = (profRow as any)?.factory_type || null
     for (const f of factories.filter(x => scopeIds.includes(x.id))) {
       const saved: any = settingsBy.get(f.id)
+      const effectiveType = resolveEffectiveFactoryType(f.factory_type, profileFactoryType)
       const settings = saved
         ? { configured: true, staffPerDay: Number(saved.staff_per_day), electricityPerDay: Number(saved.electricity_per_day), overhead: Number(saved.overhead) }
-        : factoryCostDefaultsFor(countryCode)
+        : factoryCostDefaultsFor(countryCode, effectiveType)
       factoryResults.push({
         id: f.id, name: f.name, type: f.factory_type,
         fin: computeFactoryFinancials(
           ((capRows || []) as FactoryCapture[]).filter(c => c.location_id === f.id),
           ((countRows || []) as any[]).filter(c => c.location_id === f.id),
-          win, Date.now(), settings),
+          win, Date.now(), settings, effectiveType),
       })
     }
   }

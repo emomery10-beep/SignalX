@@ -1,7 +1,7 @@
 /**
  * Factory Type Template Registry
  *
- * Combines the 12 per-type template files in this directory into one
+ * Combines the per-type template files in this directory into one
  * registry, keyed by the exact `profiles.factory_type` value each
  * represents (supabase/migrations/20260724000009_profiles_factory_type.sql).
  * This is what the onboarding factory-type step and the admin settings
@@ -16,6 +16,9 @@
  */
 
 import sesameOil from './sesame_oil'
+import groundnutOil from './groundnut_oil'
+import sunflowerOil from './sunflower_oil'
+import palmOil from './palm_oil'
 import water from './water'
 import maizeMilling from './maize_milling'
 import cassava from './cassava'
@@ -101,6 +104,9 @@ export interface FactoryTypeTemplate {
 // constraint in 20260724000009_profiles_factory_type.sql plus 'other'.
 export const FACTORY_TYPE_TEMPLATES: FactoryTypeTemplate[] = [
   sesameOil,
+  groundnutOil,
+  sunflowerOil,
+  palmOil,
   water,
   maizeMilling,
   cassava,

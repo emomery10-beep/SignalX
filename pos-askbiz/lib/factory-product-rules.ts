@@ -14,19 +14,18 @@ import { getFactoryTypeTemplate } from './factory-templates'
 export type FactoryCaptureStep =
   'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
-const SEED = 'Sesame seed'
-const OIL = 'Sesame oil'
-const WASTE = 'Sesame waste'
-const CAN = 'Sesame oil - Jerrycan Matungi (20L)'
-
-const SESAME_BY_STEP: Record<FactoryCaptureStep, string[]> = {
-  intake_arrival: [SEED],
-  intake_feed: [SEED],
-  intake: [SEED],
-  output: [OIL, WASTE],
-  packaging: [CAN],
-  dispatch: [OIL, WASTE, CAN],
-  wastage: [SEED, OIL, WASTE],
+/** Per-step product names for an oil-pressing crop (sesame, groundnut, sunflower, palm). */
+function oilByStep(o: NonNullable<ReturnType<typeof getFactoryLocationType>>['oil']): Record<FactoryCaptureStep, string[]> {
+  const { seed, oil, waste, can } = o!
+  return {
+    intake_arrival: [seed],
+    intake_feed: [seed],
+    intake: [seed],
+    output: [oil, ...waste],
+    packaging: [...can],
+    dispatch: [oil, ...waste, ...can],
+    wastage: [seed, oil, ...waste],
+  }
 }
 
 /**
@@ -46,7 +45,7 @@ const uniq = (names: string[]) => Array.from(new Set(names.map(n => n.trim()).fi
 export function defaultFactoryProducts(factoryType: string | null | undefined, step: FactoryCaptureStep | null): string[] {
   const t = getFactoryLocationType(factoryType)
   if (t && t.products.length) {
-    if (t.id === 'sesame_oil' && step) return SESAME_BY_STEP[step] || []
+    if (t.oil && step) return oilByStep(t.oil)[step] || []
     return t.products
   }
   // Every other registered factory type (dairy, cassava, maize, rice, bakery,
@@ -61,9 +60,9 @@ export function defaultFactoryProducts(factoryType: string | null | undefined, s
   return uniq([...inputs, ...outputs])
 }
 
-/** Sesame arrival/feed is seed only; admin-added inventory must not pad it. */
+/** Oil-crop arrival/feed is raw seed/fruit only; admin-added inventory must not pad it. */
 export function isSeedOnlyStep(factoryType: string | null | undefined, step: FactoryCaptureStep | null): boolean {
-  return getFactoryLocationType(factoryType)?.id === 'sesame_oil' &&
+  return !!getFactoryLocationType(factoryType)?.oil &&
     (step === 'intake' || step === 'intake_arrival' || step === 'intake_feed')
 }
 

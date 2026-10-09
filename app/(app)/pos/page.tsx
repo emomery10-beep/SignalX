@@ -19,6 +19,7 @@ import { getTemplateById } from '@/lib/staff-templates'
 import { useLang } from '@/components/LanguageProvider'
 import CoachMark from '@/components/CoachMark'
 import { FACTORY_LOCATION_TYPES } from '@/lib/factory-location-types'
+import { resolveEffectiveFactoryType } from '@/lib/factory-costing-profiles'
 import { ONBOARDING_WHATSAPP_GROUP_URL } from '@/lib/whatsapp'
 import { trackFunnelEvent } from '@/lib/funnel-track'
 
@@ -218,7 +219,15 @@ export default function POSPage() {
   // belong in a factory picker); each factory is its own branch with its own data.
   const factoryMode = tab === 'factory' || selectedSector === 'factory'
   const pickerLocations = factoryMode ? locations.filter(l => l.kind === 'factory') : locations
-  const selectedFactoryType = locations.find(l => l.id === selectedLocation)?.factory_type || null
+  // A factory's own type wins; one saved as 'other'/unset takes the type picked at registration.
+  const [profileFactoryType, setProfileFactoryType] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/profile').then(r => (r.ok ? r.json() : null)).then(d => setProfileFactoryType(d?.factory_type || null)).catch(() => {})
+  }, [])
+  const selectedFactoryType = resolveEffectiveFactoryType(locations.find(l => l.id === selectedLocation)?.factory_type, profileFactoryType)
+  const [addFactoryOpen, setAddFactoryOpen] = useState(false)
+  const [newFactoryName, setNewFactoryName] = useState('')
+  const [newFactoryType, setNewFactoryType] = useState<string>(FACTORY_LOCATION_TYPES[0].id)
   useEffect(() => {
     if (factoryMode && selectedLocation !== 'all' && locations.length > 0 && !locations.some(l => l.id === selectedLocation && l.kind === 'factory')) setSelectedLocation('all')
   }, [factoryMode, selectedLocation, locations])
@@ -2915,16 +2924,30 @@ export default function POSPage() {
                 fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim() }) })
                   .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_branch_created', { name: d.location.name })) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
               }} style={btnPrimary}>{tc('pos_app.add_branch')}</button>
-              <button onClick={() => {
-                const name = prompt(tc('pos_app.prompt_factory_name'))
-                if (!name?.trim()) return
-                const pick = (prompt(tc('pos_app.prompt_factory_type'), '1') || '').trim()
-                const ftype = FACTORY_LOCATION_TYPES[Math.max(0, Math.min(FACTORY_LOCATION_TYPES.length - 1, (parseInt(pick) || 1) - 1))].id
-                fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), kind: 'factory', factory_type: ftype }) })
-                  .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_factory_created', { name: d.location.name })) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
-              }} style={btnSecondary}>{tc('pos_app.add_factory')}</button>
+              <button onClick={() => setAddFactoryOpen(o => !o)} style={btnSecondary}>{tc('pos_app.add_factory')}</button>
               </div>
             </div>
+            {addFactoryOpen && (
+              <div style={{ ...cardStyle, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, color: 'var(--tx2)' }}>
+                  {tc('pos_app.prompt_factory_name')}
+                  <input value={newFactoryName} onChange={e => setNewFactoryName(e.target.value)} style={{ minHeight: 44, padding: '0 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 15 }} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, color: 'var(--tx2)' }}>
+                  Factory type
+                  <select value={newFactoryType} onChange={e => setNewFactoryType(e.target.value)} style={{ minHeight: 44, padding: '0 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 15 }}>
+                    {FACTORY_LOCATION_TYPES.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
+                  </select>
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button style={btnPrimary} disabled={!newFactoryName.trim()} onClick={() => {
+                    fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newFactoryName.trim(), kind: 'factory', factory_type: newFactoryType }) })
+                      .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(tc('pos_app.toast_factory_created', { name: d.location.name })); setNewFactoryName(''); setAddFactoryOpen(false) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
+                  }}>{tc('pos_app.add_factory')}</button>
+                  <button style={btnSecondary} onClick={() => setAddFactoryOpen(false)}>Cancel</button>
+                </div>
+              </div>
+            )}
             {locations.length === 0 ? (
               <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                 <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos_app.no_branches_yet')}</div>

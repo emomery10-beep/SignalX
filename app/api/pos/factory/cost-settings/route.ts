@@ -14,8 +14,15 @@ async function resolveFactory(auth: { ownerId: string; locationId: string | null
   const locationId = auth.locationId || new URL(req.url).searchParams.get('location_id')
   if (!locationId) return null
   const service = createServiceClient()
-  const { data } = await service.from('pos_locations').select('id, kind').eq('id', locationId).eq('owner_id', auth.ownerId).maybeSingle()
-  return data && data.kind === 'factory' ? locationId : null
+  const { data } = await service.from('pos_locations').select('id, kind, factory_type').eq('id', locationId).eq('owner_id', auth.ownerId).maybeSingle()
+  if (!data || data.kind !== 'factory') return null
+  // The branch's own type wins; 'other'/unset falls back to the owner's profile type.
+  let type: string | null = data.factory_type || null
+  if (!type || type === 'other') {
+    const { data: prof } = await service.from('profiles').select('factory_type').eq('id', auth.ownerId).maybeSingle()
+    type = (prof as any)?.factory_type || type
+  }
+  return { id: locationId as string, type }
 }
 
 export async function GET(req: NextRequest) {
@@ -23,7 +30,8 @@ export async function GET(req: NextRequest) {
     // Wage rates are sensitive — managers/owners only, same bar as saving them.
     const auth = await resolvePosAuth(req, 'manager')
     if (!auth) return json({ error: 'Unauthorised' }, 401)
-    const locationId = await resolveFactory(auth, req)
+    const factory = await resolveFactory(auth, req)
+    const locationId = factory?.id || null
 
     const service = createServiceClient()
     const [{ data: row }, locale] = await Promise.all([
@@ -32,7 +40,7 @@ export async function GET(req: NextRequest) {
         : Promise.resolve({ data: null }),
       getUserLocale(service, auth.ownerId),
     ])
-    const defaults = factoryCostDefaultsFor(locale.countryCode)
+    const defaults = factoryCostDefaultsFor(locale.countryCode, factory?.type)
     if (row) {
       return json({
         saved: true, country_code: locale.countryCode, currency: locale.currency,

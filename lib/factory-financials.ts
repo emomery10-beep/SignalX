@@ -29,6 +29,7 @@
 // `unpricedDispatches` so the UI can say revenue is awaiting approver pricing
 // rather than inventing a figure.
 import { computeFactoryStock, type StockCapture, type StockCount } from '@/lib/factory-stock'
+import { getCostingProfile, isPackagedName, isByproductName } from '@/lib/factory-costing-profiles'
 
 export interface FactoryCapture extends StockCapture {
   location_id?: string | null
@@ -96,8 +97,8 @@ const dayOf = (iso?: string | null) => (iso || '').split('T')[0]
 const within = (d: string, from: string, to: string) => d !== '' && d >= from && d <= to
 const lower = (c: StockCapture) => (c.product_name || '').toLowerCase()
 
-const isCan = (c: StockCapture) => /jerry\s?can|mtungi|matungi/.test(lower(c))
-const isByproduct = (c: StockCapture) => /waste|cake|husk|shell|chaff/.test(lower(c))
+const legacyIsCan = (c: StockCapture) => /jerry\s?can|mtungi|matungi/.test(lower(c))
+const legacyIsByproduct = (c: StockCapture) => /waste|cake|husk|shell|chaff/.test(lower(c))
 const PRODUCTION_TYPES = new Set(['intake_feed', 'intake', 'output', 'packaging', 'wastage'])
 
 // Factory-day key in Nairobi time (UTC+3) — same basis the Factory tab uses.
@@ -122,7 +123,18 @@ export function computeFactoryFinancials(
   w: FactoryWindow,
   now: number = Date.now(),
   settings: FactoryCostSettings = NO_SETTINGS,
+  // The factory's type decides what counts as a finished unit and a by-product
+  // (cans for oil, bottles for water, plain units elsewhere). Omitted = the
+  // legacy jerrycan/waste name rules.
+  factoryType?: string | null,
 ): FactoryFinancials {
+  const profile = factoryType === undefined ? null : getCostingProfile(factoryType)
+  const isCan = (c: StockCapture): boolean => profile
+    ? (isPackagedName(profile, c.product_name) && !isByproductName(profile, c.product_name)) ||
+      // A packaging capture is a finished unit whatever its product is called.
+      (c.type === 'packaging' && !isByproductName(profile, c.product_name))
+    : legacyIsCan(c)
+  const isByproduct = (c: StockCapture): boolean => profile ? isByproductName(profile, c.product_name) : legacyIsByproduct(c)
   const out: FactoryFinancials = {
     daily: new Map(), monthly: new Map(), products: new Map(),
     revenue: 0, cogs: 0, compRevenue: 0, compCogs: 0,

@@ -30,11 +30,10 @@ export interface FactoryTypeOption {
 // water first, as the two real businesses this was researched against) —
 // preserve this order rather than re-sorting alphabetically.
 export const FACTORY_TYPE_OPTIONS: FactoryTypeOption[] = [
-  {
-    id: 'sesame_oil',
-    label: 'Cooking Oil Pressing (Sesame / Groundnut / Sunflower / Palm)',
-    icon: '🫒',
-  },
+  { id: 'sesame_oil', label: 'Sesame Oil Pressing', icon: '🫒' },
+  { id: 'groundnut_oil', label: 'Groundnut Oil Pressing', icon: '🥜' },
+  { id: 'sunflower_oil', label: 'Sunflower Oil Pressing', icon: '🌻' },
+  { id: 'palm_oil', label: 'Palm Oil Processing', icon: '🌴' },
   {
     id: 'water',
     label: 'Packaged Drinking Water (Sachet / Bottled)',

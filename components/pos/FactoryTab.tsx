@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
+import { getCostingProfile, unitNaming, isPackagedName, isByproductName, isRawIntakeName, oilKgPerUnit, hasDefaultMachines } from '@/lib/factory-costing-profiles'
 import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
@@ -181,25 +182,6 @@ function outputQtyInKg(c: FactoryCapture): number | null {
   if (unit === '' || unit === 'kg' || unit === 'kgs') return qty
   if (unit === 'litres' || unit === 'liters' || unit === 'litre' || unit === 'liter' || unit === 'l') return qty * OIL_KG_PER_LITRE
   return null
-}
-
-// A 20L jerrycan of oil, in kg — used to turn pressed oil into "can equivalents"
-// so cost per can doesn't depend on which day somebody logged the packaging.
-const OIL_KG_PER_CAN = 20 * OIL_KG_PER_LITRE
-// Packaged cans are logged under inconsistent names ("…Jerrycan Matungi (20L)",
-// "Mtungi 20 L", sometimes just "Sesame oil"), so a plain 'jerrycan' substring
-// match silently drops real cans.
-function isJerrycanName(name?: string | null): boolean {
-  return /jerry|mtungi|matungi|\b20\s*l\b/i.test(name || '')
-}
-// Press cake / by-product — the same seed's other output, not lost seed.
-function isCakeName(name?: string | null): boolean {
-  return /waste|cake|husk/i.test(name || '')
-}
-// Re-fed intermediates (oil or cake pushed back through) are already costed
-// where they were first made — only raw seed adds material cost.
-function isRawIntakeName(name?: string | null): boolean {
-  return !/oil|waste|cake/i.test(name || '')
 }
 
 // The real `inventory` table (this factory's actual stock — everything
@@ -951,6 +933,8 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
           )}
           {subTab === 'costing' && (
             <CostingView
+              key={`${selectedLocation}:${factoryType || ''}`}
+              factoryType={factoryType}
               intakes={intakesConsumed} outputs={outputs} wastages={wastages} packaging={packaging} dispatches={dispatches}
               costForCapture={costForCapture} sellByProduct={sellByProduct}
               totalOutput={totalOutput} currencySymbol={currencySymbol}
@@ -1945,7 +1929,8 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 // ═════════════════════════════════════════════════════════════
 // COSTING SUB-TAB — crown jewel
 // ═════════════════════════════════════════════════════════════
-function CostingView({ intakes, outputs, wastages, packaging, dispatches, costForCapture, sellByProduct, totalOutput, currencySymbol, selectedLocation, previewCaptures }: {
+function CostingView({ intakes, outputs, wastages, packaging, dispatches, costForCapture, sellByProduct, totalOutput, currencySymbol, selectedLocation, previewCaptures, factoryType }: {
+  factoryType?: string | null
   intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]; packaging?: FactoryCapture[]; dispatches?: FactoryCapture[]
   costForCapture: (c: FactoryCapture) => number
   sellByProduct: Map<string, number>
@@ -1956,7 +1941,17 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 }) {
   const { tc } = useLang()
 
-  // Real operating costs (Kenya rates) — per 20L jerrycan
+  // Everything type-specific (what is raw material, the sellable unit, the
+  // by-product) comes from the factory's type — never from sesame names.
+  const P = getCostingProfile(factoryType)
+  const [unitLitres, setUnitLitres] = useState<number | null>(P.defaultUnitLitres)
+  const U = unitNaming(P, unitLitres)
+  const isPackaged = (n?: string | null) => isPackagedName(P, n)
+  const isCake = (n?: string | null) => isByproductName(P, n)
+  const isRaw = (n?: string | null) => isRawIntakeName(P, n)
+  const withMachines = hasDefaultMachines(factoryType)
+
+  // Real operating costs — per sellable unit
   const DEFAULT_MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
   // Editable (not a plain const) — owner-confirmed 9h/day is a starting
   // assumption, not a measured fact, so it can be corrected in place via
@@ -2003,8 +1998,8 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const [electricityPerDayInput, setElectricityPerDayInput] = useState<number | null>(null)
   const electricityCostPerDay = useMemo(() => {
     if (electricityPerDayInput != null) return electricityPerDayInput
-    return ratesCountry === 'KE' ? totalMachineKW * motorHoursPerDay * ELECTRICITY_RATE_PER_KWH : 0
-  }, [electricityPerDayInput, ratesCountry, totalMachineKW, motorHoursPerDay])
+    return ratesCountry === 'KE' && withMachines ? totalMachineKW * motorHoursPerDay * ELECTRICITY_RATE_PER_KWH : 0
+  }, [electricityPerDayInput, ratesCountry, withMachines, totalMachineKW, motorHoursPerDay])
 
   // Count total 20L jerrycans produced. Jerrycans are normally recorded as
   // 'packaging' type captures (packaging repackages an already-logged
@@ -2025,7 +2020,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     const addTo = (list: FactoryCapture[], key: 'packaging' | 'output' | 'dispatch') => {
       for (const c of list) {
         // A packaging capture IS a packaged can whatever its product name says.
-        if (key !== 'packaging' && !isJerrycanName(c.product)) continue
+        if (key !== 'packaging' && !isPackaged(c.product)) continue
         const day = nairobiDayKey(new Date(c.created_at))
         const entry = byDay.get(day) || { packaging: 0, output: 0, dispatch: 0 }
         entry[key] += Number(c.quantity) || 0
@@ -2045,15 +2040,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // Cost per 20L jerrycan (allocated across actual jerrycan output)
   // Gross cost of ALL seed fed into the press, including the portion that
   // ended up as wastage rather than oil.
-  const seedIntakes = useMemo(() => intakes.filter(c => isRawIntakeName(c.product)), [intakes])
+  const seedIntakes = useMemo(() => intakes.filter(c => isRaw(c.product)), [intakes])
   const grossMaterialCost = useMemo(() => seedIntakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [seedIntakes, costForCapture])
   const intakeQtyTotal = useMemo(() => seedIntakes.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [seedIntakes])
   const avgSeedCostPerKg = intakeQtyTotal > 0 ? grossMaterialCost / intakeQtyTotal : 0
   const wastageQtyTotal = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [wastages])
   // Press cake is a by-product of the same seed, not seed that vanished. Real
   // losses (spilled seed, rejected oil) are the non-cake wastage rows.
-  const cakeQtyTotal = useMemo(() => wastages.filter(c => isCakeName(c.product)).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [wastages])
-  const lossCostTotal = useMemo(() => wastages.filter(c => !isCakeName(c.product)).reduce((s, c) => s + (Number(c.quantity) || 0) * (costForCapture(c) || avgSeedCostPerKg), 0), [wastages, costForCapture, avgSeedCostPerKg])
+  const cakeQtyTotal = useMemo(() => wastages.filter(c => isCake(c.product)).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [wastages])
+  const lossCostTotal = useMemo(() => wastages.filter(c => !isCake(c.product)).reduce((s, c) => s + (Number(c.quantity) || 0) * (costForCapture(c) || avgSeedCostPerKg), 0), [wastages, costForCapture, avgSeedCostPerKg])
 
   // Staff can be paid a flat day rate OR an hourly rate × hours worked per
   // day — some owners track wages hourly rather than as a flat daily sum.
@@ -2112,7 +2107,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const { wastageSoldQty, wasteSaleRevenue, wasteSoldPricedQty } = useMemo(() => {
     let qty = 0, pricedQty = 0, revenue = 0
     for (const c of (dispatches || [])) {
-      if (isCakeName(c.product)) {
+      if (isCake(c.product)) {
         const q = Number(c.quantity) || 0
         qty += q
         // The approver's price lives in dispatch_price; sale_price is only a
@@ -2169,6 +2164,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // 26 used for the electricity bill).
   const LABOUR_DAYS = { day: 1, week: 6, month: 26 } as const
   const [rateLabourPeriod, setRateLabourPeriod] = useState<'day' | 'week' | 'month'>('day')
+  const [rateUnitLitres, setRateUnitLitres] = useState('')
   const [rateStaff, setRateStaff] = useState('')
   const [rateElec, setRateElec] = useState('')
   const [rateBill, setRateBill] = useState('')
@@ -2191,6 +2187,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           setStaffDayRate(st.staffPerDay)
           setStaffHourlyRate(Math.round(st.staffPerDay / DEFAULT_MOTOR_HOURS_PER_DAY))
           setOverheadOverride(st.overhead)
+          const ul = Number(d.electricity_basis?.unit?.litres)
+          setUnitLitres(ul > 0 ? ul : P.defaultUnitLitres)
+          setRateUnitLitres(ul > 0 ? String(ul) : P.defaultUnitLitres ? String(P.defaultUnitLitres) : '')
           const lb = d.electricity_basis?.labour
           if (lb && (lb.period === 'day' || lb.period === 'week' || lb.period === 'month') && Number(lb.amount) >= 0) {
             setRateLabourPeriod(lb.period); setRateStaff(String(lb.amount))
@@ -2204,6 +2203,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         } else {
           setElectricityPerDayInput(null); setStaffDayRate(0); setStaffHourlyRate(0); setOverheadOverride(0)
           setRateStaff(''); setRateElec(''); setRateOverhead('')
+          const ul = Number(d.electricity_basis?.unit?.litres)
+          setUnitLitres(ul > 0 ? ul : P.defaultUnitLitres)
+          setRateUnitLitres(ul > 0 ? String(ul) : P.defaultUnitLitres ? String(P.defaultUnitLitres) : '')
         }
       })
       .catch(() => {})
@@ -2211,6 +2213,8 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   }, [ratesQs])
   const saveRates = async () => {
     setRatesMsg(null)
+    const unitL = Number(rateUnitLitres)
+    if (P.defaultUnitLitres != null && (!Number.isFinite(unitL) || unitL <= 0)) { setRatesMsg('Enter a valid pack size'); return }
     const labourAmount = Number(rateStaff)
     const staff = Math.round((labourAmount / LABOUR_DAYS[rateLabourPeriod]) * 100) / 100
     const bill = Number(rateBill)
@@ -2225,6 +2229,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           electricity_basis: {
             ...(bill > 0 ? { mode: 'monthly_bill', monthly_bill: bill, working_days: 26 } : { mode: 'per_day' }),
             labour: { period: rateLabourPeriod, amount: labourAmount },
+            ...(P.defaultUnitLitres != null ? { unit: { litres: unitL } } : {}),
           },
         }),
       })
@@ -2232,6 +2237,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       setLaborRateMode('day'); setStaffDayRate(staff); setStaffHourlyRate(Math.round(staff / DEFAULT_MOTOR_HOURS_PER_DAY))
       setElectricityPerDayInput(elec); setRateElec(String(elec)); setRateBill('')
       setOverheadOverride(Number(rateOverhead) || 0)
+      if (P.defaultUnitLitres != null) setUnitLitres(unitL)
       setRatesConfigured(true); setRatesSaved(true); setRatesMsg('Saved — the CFO now uses these rates')
     } catch { setRatesMsg('Could not save') } finally { setRatesBusy(false) }
   }
@@ -2294,7 +2300,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // same formulas as the all-time figures above, just fed from the
   // day-scoped fetch instead — so a single day's number is built exactly
   // the same way as the all-time average sitting next to it.
-  const dayIntakes = useMemo(() => dayCaptures.filter(c => (c.type === 'intake' || c.type === 'intake_feed') && isRawIntakeName(c.product)), [dayCaptures])
+  const dayIntakes = useMemo(() => dayCaptures.filter(c => (c.type === 'intake' || c.type === 'intake_feed') && isRaw(c.product)), [dayCaptures])
   const dayOutputs = useMemo(() => dayCaptures.filter(c => c.type === 'output'), [dayCaptures])
   const dayPackaging = useMemo(() => dayCaptures.filter(c => (c.type as any) === 'packaging'), [dayCaptures])
   const dayWastages = useMemo(() => dayCaptures.filter(c => c.type === 'wastage'), [dayCaptures])
@@ -2305,7 +2311,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // dividing a day's seed cost by that day's packaging count gave nonsense or
   // "—". The day's cost is spread over the oil it actually pressed instead.
   const dayJerrycansProduced = useMemo(() => {
-    const sumCans = (list: FactoryCapture[], anyName: boolean) => list.reduce((sum, c) => (anyName || isJerrycanName(c.product)) ? sum + (Number(c.quantity) || 0) : sum, 0)
+    const sumCans = (list: FactoryCapture[], anyName: boolean) => list.reduce((sum, c) => (anyName || isPackaged(c.product)) ? sum + (Number(c.quantity) || 0) : sum, 0)
     const fromPackaging = sumCans(dayPackaging, true)
     if (fromPackaging > 0) return fromPackaging
     const fromOutput = sumCans(dayOutputs, false)
@@ -2313,20 +2319,25 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     return sumCans(dayDispatches, false)
   }, [dayPackaging, dayOutputs, dayDispatches])
 
-  // Oil pressed that day, in 20L-can equivalents (jerrycan-named outputs are
-  // already counted in cans).
+  // What the day pressed / treated / made, in sellable units (cans, bottles,
+  // or plain units for count-type factories) — so the day's cost is spread
+  // over what it actually produced, whatever day the packing was logged.
   const dayCanEquivalents = useMemo(() => {
-    let kg = 0, cans = 0
+    let units = 0
+    const unitKg = unitLitres ? oilKgPerUnit(unitLitres) : 0
     for (const c of dayOutputs) {
-      if (isJerrycanName(c.product)) { cans += Number(c.quantity) || 0; continue }
-      if (!/oil/i.test(c.product || '')) continue
-      kg += outputQtyInKg(c) ?? 0
+      const qty = Number(c.quantity) || 0
+      if (P.kind === 'count') { if (!isCake(c.product)) units += qty; continue }
+      if (isPackaged(c.product)) { units += qty; continue }
+      if (P.product && !P.product.test(c.product || '')) continue
+      if (P.kind === 'oil') { if (unitKg > 0) units += (outputQtyInKg(c) ?? 0) / unitKg }
+      else if (unitLitres) units += qty / unitLitres
     }
-    return cans + kg / OIL_KG_PER_CAN
-  }, [dayOutputs])
+    return units
+  }, [dayOutputs, P, unitLitres])
 
   const dayGrossMaterialCost = useMemo(() => dayIntakes.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [dayIntakes, costForCapture])
-  const dayCakeQty = useMemo(() => dayWastages.filter(c => isCakeName(c.product)).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [dayWastages])
+  const dayCakeQty = useMemo(() => dayWastages.filter(c => isCake(c.product)).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [dayWastages])
   // Same by-product credit as the lifetime figure: cake is worth money, it
   // isn't seed that disappeared.
   const dayTotalMaterialCost = Math.max(0, dayGrossMaterialCost - dayCakeQty * effectiveWastePricePerKg)
@@ -2395,6 +2406,19 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     return sellByProduct.get(k) || 0
   }, [actualSellSumsByProduct, sellByProduct])
 
+  // The factory's real packaged SKU (most-dispatched packaged product), for
+  // sell-price matching; falls back to the type's default label.
+  const packagedLabel = useMemo(() => {
+    const qty = new Map<string, number>()
+    for (const d of (dispatches || [])) {
+      const n = (d.product || '').trim()
+      if (n && isPackaged(n) && !isCake(n)) qty.set(n, (qty.get(n) || 0) + (Number(d.quantity) || 0))
+    }
+    let best = '', bestQty = 0
+    qty.forEach((q, n) => { if (q > bestQty) { best = n; bestQty = q } })
+    return best || P.defaultPackagedLabel
+  }, [dispatches, P])
+
   const stdVsActual = useMemo(() => {
     const m = new Map<string, { label: string; actualCost: number; intakeQty: number; outputQty: number }>()
     for (const c of intakes) {
@@ -2417,7 +2441,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       // Superseded by the dedicated jerrycan row below, which uses the
       // correct per-jerrycan basis — showing bulk "Sesame oil" here too
       // would duplicate it under a mismatched per-kg cost.
-      .filter(v => norm(v.label) !== 'sesame oil')
+      .filter(v => !(P.product && P.product.test(v.label)))
       .map(v => {
         // A raw material (Sesame seed) is genuinely bought (has real
         // intake) — its true cost is what you paid per kg of intake, NOT
@@ -2447,7 +2471,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     // view: material cost per jerrycan (this table is specifically
     // Material Cost) against the real dispatch-weighted sell price for
     // that exact product name.
-    const jerrycanLabel = 'Sesame oil - Jerrycan Matungi (20L)'
+    const jerrycanLabel = packagedLabel
     const jerrycanRows = []
     if (jerrycansProduced > 0) {
       const actualPerUnit = totalMaterialCost / jerrycansProduced
@@ -2455,7 +2479,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       jerrycanRows.push({ product: jerrycanLabel, actualPerUnit, standard: std, variance: std > 0 ? actualPerUnit - std : 0 })
     }
     return [...bulkRows, ...jerrycanRows]
-  }, [intakes, outputs, costForCapture, sellPriceFor, totalMaterialCost, jerrycansProduced])
+  }, [intakes, outputs, costForCapture, sellPriceFor, totalMaterialCost, jerrycansProduced, packagedLabel])
 
   // Output captures whose unit couldn't be safely converted onto a kg basis
   // (see outputQtyInKg) — excluded from stdVsActual/margins above; surfaced
@@ -2474,7 +2498,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     const cakeByWeek = new Map<string, number>()
     const jerrycansByWeek = new Map<string, number>()
     for (const c of seedIntakes) intakeByWeek.set(weekKey(c.created_at), (intakeByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0) * costForCapture(c))
-    for (const c of wastages) if (isCakeName(c.product)) cakeByWeek.set(weekKey(c.created_at), (cakeByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
+    for (const c of wastages) if (isCake(c.product)) cakeByWeek.set(weekKey(c.created_at), (cakeByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
     // Finished jerrycans are logged as 'packaging' captures, not 'output'
     // (see jerrycansProduced above) — this loop only ever checked outputs,
     // so jerrycansByWeek stayed empty and every week showed KSh0. Mirror the
@@ -2482,7 +2506,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     const hasPackagingJerrycans = (packaging || []).length > 0
     const jerrycanSource = hasPackagingJerrycans ? (packaging || []) : outputs
     for (const c of jerrycanSource) {
-      if (hasPackagingJerrycans || isJerrycanName(c.product)) {
+      if (hasPackagingJerrycans || isPackaged(c.product)) {
         jerrycansByWeek.set(weekKey(c.created_at), (jerrycansByWeek.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
       }
     }
@@ -2521,7 +2545,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     const bulkRows = Array.from(outByProduct.values())
       .filter(v => isLikelyRealProduct(v.label))
       // Superseded by the dedicated jerrycan row below — see stdVsActual.
-      .filter(v => norm(v.label) !== 'sesame oil')
+      .filter(v => !(P.product && P.product.test(v.label)))
       .map(v => {
         // Raw material (real intake, e.g. Sesame seed): cost per kg of what
         // was actually bought — not divided by an unrelated output-stage
@@ -2541,7 +2565,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         // dedicated jerrycan row below instead, which uses the
         // already-correct costPerJerrycan directly rather than
         // reconstructing it here.
-        const isJerrycanUnit = /jerrycan|mtungi/i.test(v.label)
+        const isJerrycanUnit = isPackaged(v.label)
         const electricityOverhead = isJerrycanUnit ? staffCostPerJerrycan + electricityCostPerJerrycan + overheadPerJerrycan : 0
         const fullCost = matPerUnit + electricityOverhead
         const sell = sellPriceFor(v.label)
@@ -2554,7 +2578,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     // here is costPerJerrycan (already material + electricity + overhead,
     // all correctly per-jerrycan, labour included) so
     // this row needs no separate "material only" caveat.
-    const jerrycanLabel = 'Sesame oil - Jerrycan Matungi (20L)'
+    const jerrycanLabel = packagedLabel
     const jerrycanRows = []
     if (jerrycansProduced > 0 && costPerJerrycan > 0) {
       const sell = sellPriceFor(jerrycanLabel)
@@ -2562,7 +2586,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       jerrycanRows.push({ product: jerrycanLabel, fullCost: costPerJerrycan, sell, margin, hasSell: sell > 0, fullCostIsMaterialOnly: false })
     }
     return [...bulkRows, ...jerrycanRows].sort((a, b) => b.margin - a.margin)
-  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost, jerrycansProduced, costPerJerrycan])
+  }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost, jerrycansProduced, costPerJerrycan, packagedLabel])
 
   return (
     <div>
@@ -2607,6 +2631,19 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </div>
               )}
             </div>
+            {P.defaultUnitLitres != null && (
+              <div style={{ marginBottom: 12 }}>
+                <label htmlFor="rate-unit" style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10, color: 'var(--tx2)', maxWidth: 260 }}>
+                  Pack size you sell (litres) — costs are worked out per {U.title}
+                  <input
+                    id="rate-unit" type="number" inputMode="decimal" min={0} step="any" value={rateUnitLitres}
+                    onChange={e => setRateUnitLitres(e.target.value)}
+                    style={{ minHeight: 40, padding: '0 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 13 }}
+                  />
+                </label>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>e.g. 20 for a jerrycan, 1 or 0.5 for a bottle. Save to apply.</div>
+              </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10 }}>
               {([
                 ['rate-elec', 'Electricity per working day', rateElec, setRateElec],
@@ -2641,7 +2678,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
       {/* Real Operating Costs */}
       <div style={{ padding: 14, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (per 20L Jerrycan)</div>
+        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: ACC }}>Operating Costs (per {U.title})</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, fontSize: 10, color: 'var(--tx2)' }}>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -2756,7 +2793,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             ) : adhocLaborCost > 0 ? (
               <div style={{ fontSize: 9, color: ACC, marginTop: 2 }}>+ {fmt(currencySymbol, adhocLaborCost)} ad-hoc labour added</div>
             ) : null}
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, staffCostPerJerrycan)}/{U.noun}</div>
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2798,6 +2835,9 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </button>
               </div>
             ) : (
+              !withMachines || electricityPerDayInput != null ? (
+              <div>{fmt(currencySymbol, electricityCostPerDay)}/working day × {fmtInt(laborDays)} day{laborDays === 1 ? '' : 's'} <span style={{ color: 'var(--tx3)' }}>(your saved rate — change it under Your cost rates)</span></div>
+              ) : (
               <div>
                 {MACHINES.length} machines, {totalMachineKW.toFixed(1)} kW combined,{' '}
                 {isEditingHours ? (
@@ -2843,13 +2883,14 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                   </>
                 )} @ {ELECTRICITY_RATE_PER_KWH} KSh/kWh × {fmtInt(laborDays)} day{laborDays === 1 ? '' : 's'} <span style={{ color: 'var(--tx3)' }}>(same cycle as Staff)</span>
               </div>
+              )
             )}
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>≈ {fmt(currencySymbol, electricityCostPerJerrycan)}/{U.noun}</div>
           </div>
           <div>
-            <div style={{ marginBottom: 2, fontWeight: 600 }}>Seeds (Material)</div>
-            <div>From intake_arrival prices, net of press-cake value</div>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} across {fmtInt(jerrycansProduced)} jerrycans (gross seed {fmt(currencySymbol, grossMaterialCost)} less {fmt(currencySymbol, cakeCredit)} press-cake value)</div>
+            <div style={{ marginBottom: 2, fontWeight: 600 }}>{P.rawLabel}</div>
+            <div>From intake_arrival prices{P.byproduct ? `, net of ${P.byproductNoun} value` : ''}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalMaterialCost)} across {fmtInt(jerrycansProduced)} {U.plural} (gross {fmt(currencySymbol, grossMaterialCost)}{P.byproduct ? <> less {fmt(currencySymbol, cakeCredit)} {P.byproductNoun} value</> : ''})</div>
           </div>
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2885,11 +2926,12 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             ) : (
               <div>{totalOverhead > 0 ? 'Manually set' : 'Not tracked — no maintenance/misc-cost captures'}</div>
             )}
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalOverhead)} total{totalOverhead > 0 && jerrycansProduced > 0 ? ` (${fmt(currencySymbol, overheadPerJerrycan)}/jerrycan)` : ''}</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalOverhead)} total{totalOverhead > 0 && jerrycansProduced > 0 ? ` (${fmt(currencySymbol, overheadPerJerrycan)}/${U.noun})` : ''}</div>
           </div>
+          {P.byproduct && (
           <div>
             <div style={{ marginBottom: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-              Wastage Sale Price (per kg)
+              {P.byproductNoun[0].toUpperCase() + P.byproductNoun.slice(1)} Sale Price (per kg)
               {!isWastePriceAmended && (
                 <button
                   type="button"
@@ -2937,17 +2979,18 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
               </>
             )}
           </div>
+          )}
         </div>
       </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
         <KpiCard
-          label="Cost per 20L Jerrycan"
+          label={`Cost per ${U.title}`}
           value={dayCanEquivalents > 0 ? fmt(currencySymbol, dayCostPerJerrycan) : '—'}
           sub={dayCanEquivalents > 0
-            ? `≈${fmtInt(Math.round(dayCanEquivalents))} cans pressed${dayJerrycansProduced > 0 ? ` · ${fmtInt(dayJerrycansProduced)} packaged` : ''} · ${costingDayLabel.toLowerCase()}`
-            : `No oil pressed — ${costingDayLabel.toLowerCase()}`}
+            ? `≈${fmtInt(Math.round(dayCanEquivalents))} ${U.plural} made${dayJerrycansProduced > 0 ? ` · ${fmtInt(dayJerrycansProduced)} packaged` : ''} · ${costingDayLabel.toLowerCase()}`
+            : `No output logged — ${costingDayLabel.toLowerCase()}`}
           accent={ACC}
           headerRight={
             <DaySwitcher
@@ -2965,21 +3008,21 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Overhead', raw: overheadPerJerrycan, color: '#a855f7' },
           ] : undefined}
           breakdown={dayCanEquivalents > 0 ? [
-            { label: 'Material (net of cake)', value: `${fmt(currencySymbol, dayMaterialPerCan)}/can` },
-            { label: 'Labour', value: `${fmt(currencySymbol, dayLaborPerCan)}/can` },
-            { label: 'Electricity', value: `${fmt(currencySymbol, dayElectricityPerCan)}/can` },
-            { label: 'Overhead', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can (lifetime avg)` },
-            { label: 'Cost per jerrycan', value: fmt(currencySymbol, dayCostPerJerrycan), strong: true },
+            { label: P.byproduct ? `Material (net of ${P.byproductNoun})` : 'Material', value: `${fmt(currencySymbol, dayMaterialPerCan)}/${U.noun}` },
+            { label: 'Labour', value: `${fmt(currencySymbol, dayLaborPerCan)}/${U.noun}` },
+            { label: 'Electricity', value: `${fmt(currencySymbol, dayElectricityPerCan)}/${U.noun}` },
+            { label: 'Overhead', value: `${fmt(currencySymbol, overheadPerJerrycan)}/${U.noun} (lifetime avg)` },
+            { label: `Cost per ${U.noun}`, value: fmt(currencySymbol, dayCostPerJerrycan), strong: true },
           ] : [
-            { label: 'Oil pressed', value: '0 cans' },
+            { label: 'Output', value: `0 ${U.plural}` },
           ]}
           breakdownNote={dayCanEquivalents > 0
-            ? `${costingDayLabel} · the day's seed, labour and electricity ÷ ≈${fmtInt(Math.round(dayCanEquivalents))} cans of oil pressed that day (oil kg ÷ ${OIL_KG_PER_CAN.toFixed(1)}kg per 20L can), so it doesn't depend on when cans were packaged. Material is net of the press cake's value. Overhead shows the lifetime average per can.`
-            : `No oil output logged for ${costingDayLabel.toLowerCase()}. Use ‹ to check an earlier day.`
+            ? `${costingDayLabel} · the day's material, labour and electricity ÷ ≈${fmtInt(Math.round(dayCanEquivalents))} ${U.plural} made that day${P.kind === 'oil' && unitLitres ? ` (oil kg ÷ ${oilKgPerUnit(unitLitres).toFixed(1)}kg per ${U.title})` : P.kind === 'liquid' && unitLitres ? ` (litres ÷ ${unitLitres}L per ${U.noun})` : ''}, so it doesn't depend on when packing was logged.${P.byproduct ? ` Material is net of the ${P.byproductNoun} value.` : ''} Overhead shows the lifetime average per ${U.noun}.`
+            : `No output logged for ${costingDayLabel.toLowerCase()}. Use ‹ to check an earlier day.`
           }
         />
         <KpiCard
-          label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} jerrycans produced`} accent="var(--tx)"
+          label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(jerrycansProduced)} ${U.plural} produced`} accent="var(--tx)"
           chart={[
             { label: 'Material', raw: totalMaterialCost, color: ACC },
             { label: 'Labour', raw: totalLabor, color: '#34d399' },
@@ -2993,25 +3036,25 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             { label: 'Overhead', value: fmt(currencySymbol, totalOverhead) },
             { label: 'Total', value: fmt(currencySymbol, totalProductionCost), strong: true },
           ]}
-          breakdownNote="Material is net of the press cake's value; labour uses your saved rate over the billing cycle."
+          breakdownNote={`${P.byproduct ? `Material is net of the ${P.byproductNoun} value; l` : 'L'}abour uses your saved rate over the billing cycle.`}
         />
         <KpiCard
-          label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub="Net of press-cake value" accent="#3b82f6"
+          label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub={P.byproduct ? `Net of ${P.byproductNoun} value` : 'Gross input cost'} accent="#3b82f6"
           chart={[
             { label: 'Net material', raw: totalMaterialCost, color: '#3b82f6' },
-            { label: 'Cake value credited', raw: cakeCredit, color: GREEN },
+            { label: 'By-product value credited', raw: cakeCredit, color: GREEN },
           ]}
           breakdown={[
-            { label: 'Seed intake (all)', value: `${fmtInt(intakeQtyTotal)}kg` },
+            { label: 'Raw intake (all)', value: `${fmtInt(intakeQtyTotal)}kg` },
             { label: 'Avg. price/kg', value: `${fmt(currencySymbol, avgSeedCostPerKg)}/kg` },
-            { label: 'Gross seed cost', value: fmt(currencySymbol, grossMaterialCost) },
-            { label: 'Less press-cake value', value: `− ${fmt(currencySymbol, cakeCredit)}` },
+            { label: 'Gross material cost', value: fmt(currencySymbol, grossMaterialCost) },
+            { label: `Less ${P.byproductNoun} value`, value: `− ${fmt(currencySymbol, cakeCredit)}` },
             { label: 'Net material cost', value: fmt(currencySymbol, totalMaterialCost), strong: true },
           ]}
-          breakdownNote="Seed price from intake_arrival captures. Press cake is a by-product of the same seed, so its value (sold + in stock) is credited against cost rather than removing seed."
+          breakdownNote={`Price from intake_arrival captures.${P.byproduct ? ` ${P.byproductNoun[0].toUpperCase()}${P.byproductNoun.slice(1)} is a by-product of the same input, so its value (sold + in stock) is credited against cost rather than removing material.` : ""}`}
         />
         <KpiCard
-          label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/jerrycan`} accent="#60a5fa"
+          label="Labor Cost" value={fmt(currencySymbol, totalLabor)} sub={`${fmt(currencySymbol, staffCostPerJerrycan)}/${U.noun}`} accent="#60a5fa"
           chart={adhocLaborCost > 0 ? [
             { label: 'Base', raw: laborDays * effectiveStaffCostPerDay, color: '#60a5fa' },
             { label: 'Ad-hoc', raw: adhocLaborCost, color: '#f59e0b' },
@@ -3026,7 +3069,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           breakdownNote="Days is a fixed figure (defaults to 28) that you set yourself — not auto-counted from logged activity. Edit the rate, mode, or day count from the Staff field above."
         />
         <KpiCard
-          label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={isElectricityAmended ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan · manually set` : `${fmt(currencySymbol, electricityCostPerJerrycan)}/jerrycan @ ${motorHoursPerDay}h/day`} accent="#fbbf24"
+          label="Electricity Cost" value={fmt(currencySymbol, totalElectricity)} sub={isElectricityAmended ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/${U.noun} · manually set` : withMachines && electricityPerDayInput == null ? `${fmt(currencySymbol, electricityCostPerJerrycan)}/${U.noun} @ ${motorHoursPerDay}h/day` : `${fmt(currencySymbol, electricityCostPerJerrycan)}/${U.noun}`} accent="#fbbf24"
           chart={isElectricityAmended ? [
             { label: 'Formula est.', raw: formulaElectricity, color: '#94a3b8' },
             { label: 'Manually set', raw: electricityOverride!, color: '#fbbf24' },
@@ -3047,13 +3090,14 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           breakdownNote={isElectricityAmended ? "Overridden — click Edit on the Electricity card above to change or reset." : `Assumes the motor runs ${motorHoursPerDay}h over the same ${fmtInt(laborDays)}-day cycle as Staff above — click Edit next to the hours to correct that, Edit on the Staff card to change the day count, or Edit on the Electricity card to override the total cost directly.`}
         />
         <KpiCard
-          label="Overhead Cost" value={fmt(currencySymbol, totalOverhead)} sub={totalOverhead > 0 ? `${fmt(currencySymbol, overheadPerJerrycan)}/jerrycan` : "Not set — defaults to KSh0"} accent="#a855f7"
+          label="Overhead Cost" value={fmt(currencySymbol, totalOverhead)} sub={totalOverhead > 0 ? `${fmt(currencySymbol, overheadPerJerrycan)}/${U.noun}` : "Not set — defaults to KSh0"} accent="#a855f7"
           breakdown={[
             { label: 'Overhead', value: fmt(currencySymbol, totalOverhead), strong: true },
-            { label: 'Per jerrycan', value: `${fmt(currencySymbol, overheadPerJerrycan)}/can` },
+            { label: `Per ${U.noun}`, value: `${fmt(currencySymbol, overheadPerJerrycan)}/${U.noun}` },
           ]}
           breakdownNote="No formula behind this — oil changes, filters, maintenance, and misc equipment costs aren't tracked as captures, so this stays KSh0 until you enter a real number below."
         />
+        {P.byproduct && (<>
         <KpiCard
           label="Wastage Sale Value (in stock)" value={fmt(currencySymbol, wasteSaleValue)} sub={`${fmtInt(wastageInStockQty)}kg unsold @ ${isWastePriceAmended ? 'amended' : usingActualWastePrice ? 'actual' : 'estimated'} ${fmt(currencySymbol, effectiveWastePricePerKg)}/kg`} accent={GREEN}
           chart={[
@@ -3080,14 +3124,15 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           ]}
           chartMode="compare"
           breakdown={[
-            { label: 'Seed/oil actually lost', value: `− ${fmt(currencySymbol, wastageCostTotal)}` },
+            { label: 'Material actually lost', value: `− ${fmt(currencySymbol, wastageCostTotal)}` },
             { label: 'Revenue recovered (sold)', value: `+ ${fmt(currencySymbol, wasteSaleRevenue)}` },
             { label: 'Value in stock (unsold)', value: `+ ${fmt(currencySymbol, wasteSaleValue)}` },
             { label: 'Net position', value: `${netWastagePosition >= 0 ? '+' : '−'}${fmt(currencySymbol, Math.abs(netWastagePosition))}`, strong: true },
           ]}
-          breakdownNote="Real losses are non-cake wastage (spilled seed, rejected oil). Press cake is not a loss — its value is already credited against Material Cost."
+          breakdownNote={`Real losses are wastage that isn't ${P.byproductNoun} (spilled or rejected material). ${P.byproductNoun[0].toUpperCase()}${P.byproductNoun.slice(1)} is not a loss — its value is already credited against Material Cost.`}
 
         />
+        </>)}
       </div>
 
       {/* Material cost breakdown pie */}
@@ -3106,7 +3151,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
       {excludedOutputUnits.count > 0 && (
         <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 8 }}>
-          Note: {excludedOutputUnits.count} output record{excludedOutputUnits.count === 1 ? '' : 's'} ({fmtInt(excludedOutputUnits.qty)} units logged in an unrecognized unit — pcs/200g, whose own notes suggest they meant 20L jerrycans, not that literal unit) are excluded from the two tables below until corrected in the Production log.
+          Note: {excludedOutputUnits.count} output record{excludedOutputUnits.count === 1 ? '' : 's'} ({fmtInt(excludedOutputUnits.qty)} units logged in an unrecognised unit such as pcs/200g) are excluded from the two tables below until corrected in the Production log.
         </div>
       )}
 
@@ -3164,7 +3209,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
               </tbody>
             </table>
             {margins.some(r => r.fullCostIsMaterialOnly) && (
-              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 6 }}>* Material cost only — labor, electricity and overhead are currently allocated per 20L jerrycan, so they're only added for jerrycan-denominated rows.</div>
+              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 6 }}>* Material cost only — labour, electricity and overhead are allocated per {U.noun}, so they're only added for {U.noun}-denominated rows.</div>
             )}
           </div>
         )}
@@ -3172,12 +3217,12 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
 
       {/* Cost notes */}
       <div style={{ padding: 16, borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Per 20L Jerrycan</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Per {U.title}</div>
         <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
-          <div>Material cost from intake_arrival captures; electricity allocated based on actual 20L jerrycan output. Labour is included at your saved rate; press-cake value is credited against material.</div>
+          <div>Material cost from intake_arrival captures; electricity allocated based on actual {U.title} output. Labour is included at your saved rate{P.byproduct ? `; ${P.byproductNoun} value is credited against material` : ''}.</div>
           <div style={{ marginTop: 8 }}>Overhead (oil changes, filters, maintenance, misc equipment costs) is KSh0 unless entered manually — edit it in Operating Costs above.</div>
-          <div style={{ marginTop: 8 }}>Everything on this page is an all-time average. Use the ‹ › switcher on the Cost per 20L Jerrycan card above (and in its breakdown) to see one specific day instead.</div>
-          <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total 20L jerrycans produced: {fmtInt(jerrycansProduced)}</div>
+          <div style={{ marginTop: 8 }}>Everything on this page is an all-time average. Use the ‹ › switcher on the Cost per {U.title} card above (and in its breakdown) to see one specific day instead.</div>
+          <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total {U.title} produced: {fmtInt(jerrycansProduced)}</div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 /**
- * Factory Type Template — Cooking Oil Pressing (Sesame / Groundnut / Sunflower / Palm)
+ * Factory Type Template — Sesame Oil Pressing
  *
  * Per-factory-type starter content for the factory onboarding flow and
  * admin settings, once a business picks profiles.factory_type =
@@ -19,11 +19,8 @@
  * imports this file yet; it is additive groundwork for the factory-type
  * onboarding/settings UI.
  *
- * One factory_type value, one shared pressing process, four different
- * oilseeds: sesame, groundnut, sunflower and palm each get their own
- * recipe row below because their yields differ enormously (18-76%), but
- * stageGuidance is shared since intake → clean/roast → press →
- * filter/bottle → dispatch is the same shape whichever seed is running.
+ * Sesame only — groundnut, sunflower and palm each have their own
+ * template now, because moisture, conditioning and yield differ by crop.
  */
 
 export interface FactoryTypeTemplate {
@@ -46,7 +43,7 @@ export interface FactoryTypeTemplate {
 
 const sesameOilTemplate: FactoryTypeTemplate = {
   id: 'sesame_oil',
-  label: 'Cooking Oil Pressing (Sesame / Groundnut / Sunflower / Palm)',
+  label: 'Sesame Oil Pressing',
   icon: '🫒',
   stageGuidance: [
     {
@@ -81,38 +78,8 @@ const sesameOilTemplate: FactoryTypeTemplate = {
       yield_max_pct: 63,
       notes: 'Field-verified small-expeller result is around 36% for unroasted seed; roasting the seed first can push this up to roughly 63%. Both figures are genuine data points for the same seed, not a typo — check whether your batch was roasted before deciding whether actual output looks healthy or low.',
     },
-    {
-      input_product_name: 'Groundnut',
-      input_unit: 'kg',
-      output_product_name: 'Groundnut oil',
-      output_unit: 'litres',
-      expected_yield_pct: 76,
-      yield_min_pct: 68,
-      yield_max_pct: 80,
-      notes: 'Screw-press oil recovery from shelled kernel typically runs 73-80%, improving toward the top end with proper seed conditioning before pressing. That figure is measured from shelled kernel, not whole nut in shell — shelling itself only recovers roughly 68-72% kernel weight from the whole nut, so the 68% floor here really reflects a different, earlier step than the 80% ceiling. Track shelling loss and pressing loss separately if you can, rather than reading this as one continuous measurement.',
-    },
-    {
-      input_product_name: 'Sunflower seed',
-      input_unit: 'kg',
-      output_product_name: 'Sunflower oil',
-      output_unit: 'litres',
-      expected_yield_pct: 25,
-      yield_min_pct: 20,
-      yield_max_pct: 30,
-      notes: 'Based on ram-press field data from small-scale Tanzanian oil presses; screw presses or better-conditioned seed may recover somewhat more.',
-    },
-    {
-      input_product_name: 'Palm fruit',
-      input_unit: 'kg',
-      output_product_name: 'Palm oil',
-      output_unit: 'litres',
-      expected_yield_pct: 18,
-      yield_min_pct: 12,
-      yield_max_pct: 24,
-      notes: 'This is first-pressing yield as a percentage of fresh-fruit-bunch weight; overall extraction efficiency (how much of the oil actually present in the fruit gets recovered) ranges 55-90% depending on press type. Palm fruit also yields a second, separate product — palm-kernel oil, pressed from the nut inside the fruit — track that on its own recipe row and its own timeline rather than folding it into this one.',
-    },
   ],
-  sourceNote: 'Yield ranges are drawn from small-scale oil-pressing field data and published FAO/academic references — actual results will vary by seed quality, equipment and technique. The four oilseeds above are different enough in yield (18-76%) that mixing them up when logging a recipe would produce a meaningless comparison, so pick the row that matches the seed actually being pressed.',
+  sourceNote: 'Yield ranges are drawn from small-scale oil-pressing field data and published FAO/academic references — actual results will vary by seed quality, equipment and technique. ',
 }
 
 export default sesameOilTemplate
