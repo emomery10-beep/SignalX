@@ -37,6 +37,17 @@ function json(data: unknown, status = 200) {
   -- create index if not exists cfo_expenses_source_record_id on cfo_expenses (user_id, source_record_id);
 */
 
+// Which part of the business an expense belongs to. 'shared' (default) = not allocated.
+async function checkedTag(supabase: ReturnType<typeof createClient>, userId: string, segment: unknown, locationId: unknown):
+  Promise<{ ok: true; segment: 'shared' | 'retail' | 'factory'; location_id: string | null } | { ok: false; error: string }> {
+  const seg = segment === 'retail' || segment === 'factory' ? segment : 'shared'
+  if (seg !== 'factory') return { ok: true, segment: seg, location_id: null }
+  if (!locationId) return { ok: true, segment: 'factory', location_id: null } // all factories
+  const { data } = await supabase.from('pos_locations').select('id, kind').eq('id', String(locationId)).eq('owner_id', userId).maybeSingle()
+  if (!data || data.kind !== 'factory') return { ok: false, error: 'Choose one of your factories' }
+  return { ok: true, segment: 'factory', location_id: data.id }
+}
+
 // GET — list expenses for the current user
 export async function GET(req: NextRequest) {
   const access = await resolveCfoReader()
@@ -48,7 +59,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('cfo_expenses')
-    .select('id, vendor, date, amount, category, notes, receipt_url, created_at')
+    .select('id, vendor, date, amount, category, notes, receipt_url, created_at, segment, location_id')
     .eq('user_id', ownerId)
     .order('date', { ascending: false })
     .limit(limit)
@@ -68,7 +79,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return json({ error: 'Unauthorised' }, 401)
 
-  let body: { vendor: string; date: string; amount: number; category?: string; notes?: string; receipt_url?: string }
+  let body: { vendor: string; date: string; amount: number; category?: string; notes?: string; receipt_url?: string; segment?: string; location_id?: string | null }
   try {
     body = await req.json()
   } catch {
@@ -81,6 +92,9 @@ export async function POST(req: NextRequest) {
   if (!date) return json({ error: 'date is required' }, 400)
   if (typeof amount !== 'number' || amount < 0) return json({ error: 'amount must be a non-negative number' }, 400)
 
+  const tag = await checkedTag(supabase, user.id, body.segment, body.location_id)
+  if (!tag.ok) return json({ error: tag.error }, 400)
+
   const { data, error } = await supabase
     .from('cfo_expenses')
     .insert({
@@ -91,8 +105,10 @@ export async function POST(req: NextRequest) {
       category,
       notes: notes || null,
       receipt_url: receipt_url || null,
+      segment: tag.segment,
+      location_id: tag.location_id,
     })
-    .select('id, vendor, date, amount, category, notes, receipt_url, created_at')
+    .select('id, vendor, date, amount, category, notes, receipt_url, created_at, segment, location_id')
     .single()
 
   if (error) {
@@ -109,7 +125,7 @@ export async function PATCH(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return json({ error: 'Unauthorised' }, 401)
 
-  let body: { id: string; vendor?: string; date?: string; amount?: number; category?: string; notes?: string }
+  let body: { id: string; vendor?: string; date?: string; amount?: number; category?: string; notes?: string; segment?: string; location_id?: string | null }
   try {
     body = await req.json()
   } catch {
@@ -125,13 +141,19 @@ export async function PATCH(req: NextRequest) {
   if (fields.amount !== undefined) updates.amount = fields.amount
   if (fields.category !== undefined) updates.category = fields.category
   if (fields.notes !== undefined) updates.notes = fields.notes || null
+  if (fields.segment !== undefined) {
+    const tag = await checkedTag(supabase, user.id, fields.segment, fields.location_id)
+    if (!tag.ok) return json({ error: tag.error }, 400)
+    updates.segment = tag.segment
+    updates.location_id = tag.location_id
+  }
 
   const { data, error } = await supabase
     .from('cfo_expenses')
     .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, vendor, date, amount, category, notes, receipt_url, created_at')
+    .select('id, vendor, date, amount, category, notes, receipt_url, created_at, segment, location_id')
     .single()
 
   if (error) return json({ error: error.message }, 500)

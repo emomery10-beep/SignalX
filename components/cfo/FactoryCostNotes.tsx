@@ -19,6 +19,7 @@ export interface FactoryCostInfo {
   unitCost: number
   complete: boolean
   missing: string[]
+  sources?: { labour: string; electricity: string; overhead: string }
 }
 
 export interface SegmentInfo {
@@ -34,6 +35,9 @@ const MISSING_TEXT: Record<string, string> = {
   raw_material_price: 'no priced raw-material delivery yet',
   finished_goods_output: 'no finished cans produced yet',
 }
+
+// 'actual' = real tagged expenses, 'mixed' = real for some months and estimated for the rest.
+const srcNote = (s?: string) => s === 'actual' ? ', actual spend' : s === 'mixed' ? ', part actual spend' : ', estimate'
 
 export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined; sym: string }) {
   if (!info) return null
@@ -61,9 +65,9 @@ export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined;
             <tbody>
               {([
                 [`Raw material (${Math.round(f.rawKgFed).toLocaleString()} kg × ${fmt(f.rawCostPerKg)})`, fmt(f.material)],
-                [`Electricity (${f.workingDays} working days)`, fmt(f.electricity)],
-                [`Labour (${f.workingDays} working days)`, fmt(f.labour)],
-                ...(f.overhead > 0 ? [['Overhead', fmt(f.overhead)]] : []),
+                [`Electricity (${f.workingDays} working days${srcNote(f.sources?.electricity)})`, fmt(f.electricity)],
+                [`Labour (${f.workingDays} working days${srcNote(f.sources?.labour)})`, fmt(f.labour)],
+                ...(f.overhead > 0 ? [[`Overhead (${f.workingDays} working days${srcNote(f.sources?.overhead)})`, fmt(f.overhead)]] : []),
                 ['Production cost pool', fmt(f.pool)],
                 [`Cans produced`, f.cansProduced.toLocaleString()],
               ] as string[][]).map(([l, v]) => (

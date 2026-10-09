@@ -16,6 +16,9 @@ const KENYA: FactoryCostSettings = {
   overhead: 0,
 }
 
+/** Working days in a month (Mon–Sat) — converts a monthly overhead into a per-working-day cost. */
+export const WORKING_DAYS_PER_MONTH = 26
+
 const UNSET: FactoryCostSettings = { configured: false, staffPerDay: 0, electricityPerDay: 0, overhead: 0 }
 
 // The Kenya numbers (labour rate, press machines) were confirmed for the owner's

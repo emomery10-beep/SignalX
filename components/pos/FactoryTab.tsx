@@ -4,6 +4,7 @@ import { getCostingProfile, unitNaming, isPackagedName, isByproductName, isRawIn
 import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
+import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
 
 // ── Color constants ──────────────────────────────────────────
 const GREEN = '#16a34a'
@@ -2149,12 +2150,11 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const cakeCredit = cakeQtyTotal * effectiveWastePricePerKg
   const totalMaterialCost = Math.max(0, grossMaterialCost - cakeCredit)
 
-  // Overhead (oil changes, filters, maintenance, misc equipment costs) has
-  // no real capture data behind it — was a flat 5% guess on top of the
-  // other components. Now an explicit manual entry, defaulting to KSh0 so
-  // it never inflates the cost figures unless the owner actually enters a
-  // real number for what they spent.
-  const [overheadOverride, setOverheadOverride] = useState(0)
+  // Overhead (rent, repairs, oil changes, filters, water, security …) has no
+  // capture data behind it, so it is a MONTHLY amount the owner enters (default
+  // 0, so it never inflates cost on a guess). Like labour and electricity it is
+  // charged per working day: monthly ÷ 26 × the billing-cycle days.
+  const [overheadOverride, setOverheadOverride] = useState(0) // per month
   const [isEditingOverhead, setIsEditingOverhead] = useState(false)
 
   // Per-factory labour / electricity / overhead rates, saved so the CFO uses the same numbers.
@@ -2241,7 +2241,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       setRatesConfigured(true); setRatesSaved(true); setRatesMsg('Saved — the CFO now uses these rates')
     } catch { setRatesMsg('Could not save') } finally { setRatesBusy(false) }
   }
-  const totalOverhead = overheadOverride
+  const totalOverhead = (overheadOverride / WORKING_DAYS_PER_MONTH) * laborDays
   const overheadPerJerrycan = jerrycansProduced > 0 ? totalOverhead / jerrycansProduced : 0
   // Labour is part of the cost of a can (owner-entered rate; see "Your cost
   // rates"). Press-cake sales are credited against material instead.
@@ -2648,7 +2648,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
               {([
                 ['rate-elec', 'Electricity per working day', rateElec, setRateElec],
                 ['rate-bill', 'or monthly electricity bill', rateBill, setRateBill],
-                ['rate-oh', 'Overhead (total, optional)', rateOverhead, setRateOverhead],
+                ['rate-oh', 'Overhead per month (rent, repairs, filters…)', rateOverhead, setRateOverhead],
               ] as const).map(([id, label, val, set]) => (
                 <label key={id} htmlFor={id} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10, color: 'var(--tx2)' }}>
                   {label}
@@ -2907,7 +2907,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
             </div>
             {isEditingOverhead ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>KSh</span>
+                <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{currencySymbol} per month</span>
                 <input
                   type="number"
                   autoFocus
@@ -2924,7 +2924,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </button>
               </div>
             ) : (
-              <div>{totalOverhead > 0 ? 'Manually set' : 'Not tracked — no maintenance/misc-cost captures'}</div>
+              <div>{overheadOverride > 0 ? `${fmt(currencySymbol, overheadOverride)}/month ÷ ${WORKING_DAYS_PER_MONTH} working days` : 'Not set — enter your monthly overhead'}</div>
             )}
             <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{fmt(currencySymbol, totalOverhead)} total{totalOverhead > 0 && jerrycansProduced > 0 ? ` (${fmt(currencySymbol, overheadPerJerrycan)}/${U.noun})` : ''}</div>
           </div>
@@ -3220,7 +3220,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Cost Per {U.title}</div>
         <div style={{ fontSize: 10, color: 'var(--tx3)', maxWidth: 500, margin: '0 auto', lineHeight: 1.5 }}>
           <div>Material cost from intake_arrival captures; electricity allocated based on actual {U.title} output. Labour is included at your saved rate{P.byproduct ? `; ${P.byproductNoun} value is credited against material` : ''}.</div>
-          <div style={{ marginTop: 8 }}>Overhead (oil changes, filters, maintenance, misc equipment costs) is KSh0 unless entered manually — edit it in Operating Costs above.</div>
+          <div style={{ marginTop: 8 }}>Overhead (rent, repairs, oil changes, filters, water, security) is {currencySymbol}0 until you enter a monthly amount — edit it in Operating Costs above. It is spread per working day, like labour and electricity.</div>
           <div style={{ marginTop: 8 }}>Everything on this page is an all-time average. Use the ‹ › switcher on the Cost per {U.title} card above (and in its breakdown) to see one specific day instead.</div>
           <div style={{ marginTop: 8, fontSize: 9, fontStyle: 'italic' }}>Total {U.title} produced: {fmtInt(jerrycansProduced)}</div>
         </div>

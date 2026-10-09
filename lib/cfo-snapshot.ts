@@ -4,7 +4,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { getUserLocale } from '@/lib/get-currency'
 import { getDateRange } from '@/lib/cfo-date-range'
 import { createServiceClient } from '@/lib/supabase/server'
-import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture } from '@/lib/factory-financials'
+import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture, type FactoryActuals } from '@/lib/factory-financials'
 import { FACTORY_COUNT_REASON } from '@/lib/factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { resolveEffectiveFactoryType } from '@/lib/factory-costing-profiles'
@@ -195,21 +195,21 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
     // Stage 2a: tracked expenses — current period (split by category into COGS or fixed costs)
     supabase
       .from('cfo_expenses')
-      .select('date, amount, category')
+      .select('date, amount, category, segment, location_id')
       .eq('user_id', ownerId)
       .gte('date', start)
       .lte('date', end),
     // Stage 2b: tracked expenses — 6-month window (for pnl_monthly)
     supabase
       .from('cfo_expenses')
-      .select('date, amount, category')
+      .select('date, amount, category, segment, location_id')
       .eq('user_id', ownerId)
       .gte('date', sixMonthsAgo)
       .lte('date', todayStr),                          // always today, not period end
     // Stage 2c: tracked expenses — comparison period (for apples-to-apples net profit)
     supabase
       .from('cfo_expenses')
-      .select('date, amount, category')
+      .select('date, amount, category, segment, location_id')
       .eq('user_id', ownerId)
       .gte('date', compStart)
       .lte('date', compEnd),
@@ -220,10 +220,9 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
     unified = []; unifiedComp = []; posTx = []; posTxComp = []; posItemsComp = []
     unified6m = []; posTx6m = []; posItemRows = []; posItems6m = []; posProducts = []
   }
-  // Expenses have no location tag, so they cannot be split between retail and factory.
-  // They (and the monthly overhead estimate) only count in the combined view.
+  // Untagged ('shared') expenses cannot be split between retail and factory, so they (and the
+  // monthly overhead estimate) only count in the combined view. Tagged ones follow their segment.
   const expensesAllocated = segment === 'all'
-  if (!expensesAllocated) { cfoExpenses = []; cfoExpenses6m = []; cfoExpensesComp = [] }
 
   // --- Factory: approved captures from the owner's factory locations (service client, owner-scoped) ---
   const svc = createServiceClient()
@@ -235,12 +234,29 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
   const factories = (factoryLocs || []) as { id: string; name: string; factory_type: string | null }[]
   const scopeIds = factoryParam ? factories.filter(f => f.id === factoryParam).map(f => f.id) : factories.map(f => f.id)
 
+  // Expenses tagged to a factory are charged through that factory's cost pool (labour = Payroll,
+  // electricity = Utilities, overhead = everything else except stock purchases and Equipment), so in
+  // the combined view they must NOT also count as fixed costs. Equipment is capital, and stock
+  // purchases are cash-flow/COGS-fallback items: both keep their existing treatment.
+  const POOL_EXCLUDED = new Set(['Supplier / Stock Purchase', 'Equipment'])
+  const inFactoryPool = (category: string) => !POOL_EXCLUDED.has(category)
+  const hasFactories = scopeIds.length > 0
+  const filterExpenses = (rows: any[] | null) => (rows || []).filter((e: any) => {
+    const seg = e.segment || 'shared'
+    if (segment === 'all') return !(hasFactories && seg === 'factory' && inFactoryPool(e.category))
+    if (segment === 'retail') return seg === 'retail'
+    return seg === 'factory' && !inFactoryPool(e.category) && (!factoryParam || !e.location_id || e.location_id === factoryParam)
+  })
+  cfoExpenses = filterExpenses(cfoExpenses)
+  cfoExpenses6m = filterExpenses(cfoExpenses6m)
+  cfoExpensesComp = filterExpenses(cfoExpensesComp)
+
   const win = { start, end, compStart, compEnd, monthlyFrom: sixMonthsAgo, monthlyTo: todayStr }
   // Each factory is costed with its own saved settings (labour/electricity/overhead), falling back to
   // the owner's country default — Kenya pre-filled, everywhere else unset (see lib/factory-cost-defaults.ts).
   const factoryResults: { id: string; name: string; type: string | null; fin: ReturnType<typeof computeFactoryFinancials> }[] = []
   if (includeFactory && scopeIds.length > 0) {
-    const [{ data: capRows }, { data: countRows }, { data: settingRows }] = await Promise.all([
+    const [{ data: capRows }, { data: countRows }, { data: settingRows }, { data: taggedRows }] = await Promise.all([
       svc.from('pos_factory_captures')
         .select('location_id, type, product_name, quantity, dispatch_price, param_label, param_value, created_at')
         .eq('owner_id', ownerId).eq('status', 'approved').in('location_id', scopeIds).limit(20000),
@@ -250,7 +266,30 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       svc.from('pos_factory_cost_settings')
         .select('location_id, staff_per_day, electricity_per_day, overhead')
         .eq('owner_id', ownerId).in('location_id', scopeIds),
+      // Real spend tagged to a factory (all time, to match the all-time unit cost)
+      supabase.from('cfo_expenses')
+        .select('date, amount, category, location_id')
+        .eq('user_id', ownerId).eq('segment', 'factory').lte('date', todayStr).limit(5000),
     ])
+    // Tagged to one factory → that factory. Tagged 'all factories' (no location) → split equally.
+    const actualsBy = new Map<string, FactoryActuals>()
+    const actualsFor = (id: string) => {
+      let a = actualsBy.get(id)
+      if (!a) { a = { labour: {}, electricity: {}, overhead: {} }; actualsBy.set(id, a) }
+      return a
+    }
+    for (const e of (taggedRows || []) as any[]) {
+      if (!inFactoryPool(e.category)) continue
+      const targets = e.location_id ? [e.location_id as string] : factories.map(f => f.id)
+      const month = String(e.date || '').slice(0, 7)
+      if (!month || targets.length === 0) continue
+      const share = (Number(e.amount) || 0) / targets.length
+      for (const t of targets) {
+        const a = actualsFor(t)
+        const bucket = e.category === 'Payroll' ? a.labour : e.category === 'Utilities' ? a.electricity : a.overhead
+        bucket[month] = (bucket[month] || 0) + share
+      }
+    }
     const settingsBy = new Map((settingRows || []).map((r: any) => [r.location_id as string, r]))
     // A branch typed 'other'/unset takes the owner's profile factory type.
     const { data: profRow } = await svc.from('profiles').select('factory_type').eq('id', ownerId).maybeSingle()
@@ -266,7 +305,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
         fin: computeFactoryFinancials(
           ((capRows || []) as FactoryCapture[]).filter(c => c.location_id === f.id),
           ((countRows || []) as any[]).filter(c => c.location_id === f.id),
-          win, Date.now(), settings, effectiveType),
+          win, Date.now(), settings, effectiveType, actualsBy.get(f.id)),
       })
     }
   }

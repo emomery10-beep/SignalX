@@ -38,6 +38,8 @@ interface Expense {
   notes: string
   receipt_url?: string | null
   created_at: string
+  segment?: 'shared' | 'retail' | 'factory'
+  location_id?: string | null
 }
 
 interface Props {
@@ -71,6 +73,12 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Omit<ScannedExpense, 'confidence'>>({ vendor: '', date: '', amount: 0, category: 'Other', notes: '' })
   const [isMobile, setIsMobile] = useState(false)
+  // Which part of the business an expense belongs to ('' = shared / not allocated).
+  // Only offered when the account has a factory: factory-tagged spend feeds that
+  // factory's cost per unit (Payroll → labour, Utilities → electricity, rest → overhead).
+  const [factories, setFactories] = useState<{ id: string; name: string }[]>([])
+  const [manualTag, setManualTag] = useState('')
+  const [editTag, setEditTag] = useState('')
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640)
     check()
@@ -119,14 +127,26 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
   }, [])
 
   useEffect(() => { fetchExpenses() }, [fetchExpenses])
+  useEffect(() => {
+    fetch('/api/pos/locations').then(r => (r.ok ? r.json() : null)).then(j => {
+      setFactories(((j?.locations || []) as any[]).filter(l => l.kind === 'factory').map(l => ({ id: l.id, name: l.name })))
+    }).catch(() => {})
+  }, [])
 
-  const saveExpense = async (expense: Omit<ScannedExpense, 'confidence'>) => {
+  const tagBody = (tag: string) => tag === 'retail' ? { segment: 'retail', location_id: null }
+    : tag === 'factory' ? { segment: 'factory', location_id: null }
+    : tag.startsWith('factory:') ? { segment: 'factory', location_id: tag.slice(8) }
+    : { segment: 'shared', location_id: null }
+  const tagOf = (e: Expense) => e.segment === 'retail' ? 'retail' : e.segment === 'factory' ? (e.location_id ? `factory:${e.location_id}` : 'factory') : ''
+  const tagLabel = (e: Expense) => e.segment === 'retail' ? 'Retail' : e.segment === 'factory' ? (factories.find(f => f.id === e.location_id)?.name || 'Factory') : null
+
+  const saveExpense = async (expense: Omit<ScannedExpense, 'confidence'>, tag = '') => {
     setSaving(true)
     try {
       const res = await fetch('/api/cfo/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(expense),
+        body: JSON.stringify({ ...expense, ...tagBody(tag) }),
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
@@ -140,6 +160,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
       setShowScanner(false)
       setShowManual(false)
       setManualForm({ vendor: '', date: new Date().toISOString().split('T')[0], amount: 0, category: 'Other', notes: '' })
+      setManualTag('')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : tc('cfo_expenses.toast_generic_save_failed')
       showToast(`❌ ${msg}`)
@@ -158,6 +179,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
   const startEdit = (e: Expense) => {
     setEditingId(e.id)
     setEditForm({ vendor: e.vendor, date: e.date, amount: e.amount, category: e.category, notes: e.notes || '' })
+    setEditTag(tagOf(e))
   }
 
   const cancelEdit = () => setEditingId(null)
@@ -169,7 +191,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
       const res = await fetch('/api/cfo/expenses', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingId, ...editForm }),
+        body: JSON.stringify({ id: editingId, ...editForm, ...tagBody(editTag) }),
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
@@ -328,6 +350,20 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
                   {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
                 </select>
               </div>
+              <div>
+                {factories.length > 0 && (
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'left' }}>
+                  Applies to
+                  <select value={manualTag} onChange={ev => setManualTag(ev.target.value)} style={{ ...inputStyle, cursor: 'pointer', marginTop: 4 }}>
+                    <option value="">Shared (not allocated)</option>
+                    <option value="retail">Retail</option>
+                    {factories.length === 1
+                      ? <option value="factory">Factory</option>
+                      : (<><option value="factory">All factories</option>{factories.map(f => <option key={f.id} value={`factory:${f.id}`}>{f.name}</option>)}</>)}
+                  </select>
+                </label>
+              )}
+              </div>
             </div>
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_notes')}</label>
@@ -336,7 +372,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setShowManual(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_expenses.cancel')}</button>
               <button
-                onClick={() => saveExpense(manualForm)}
+                onClick={() => saveExpense(manualForm, manualTag)}
                 disabled={!manualForm.vendor || !manualForm.amount || saving}
                 style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!manualForm.vendor || !manualForm.amount) ? 0.5 : 1 }}
               >
@@ -457,6 +493,18 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
                         <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
                           {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
                         </select>
+                        {factories.length > 0 && (
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'left' }}>
+                  Applies to
+                  <select value={editTag} onChange={ev => setEditTag(ev.target.value)} style={{ ...cellInput, cursor: 'pointer', marginTop: 4 }}>
+                    <option value="">Shared (not allocated)</option>
+                    <option value="retail">Retail</option>
+                    {factories.length === 1
+                      ? <option value="factory">Factory</option>
+                      : (<><option value="factory">All factories</option>{factories.map(f => <option key={f.id} value={`factory:${f.id}`}>{f.name}</option>)}</>)}
+                  </select>
+                </label>
+              )}
                         <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder="0.00" style={{ ...cellInput, textAlign: 'right' }} />
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={cancelEdit} style={{ flex: 1, padding: '9px', borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>{tc('cfo_expenses.cancel')}</button>
@@ -475,6 +523,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 7px', borderRadius: 5, background: 'var(--ev)', whiteSpace: 'nowrap' }}>{catLabel(e.category)}</span>
+                            {tagLabel(e) && <span style={{ fontSize: 10, color: 'var(--tx2)', padding: '2px 7px', borderRadius: 5, border: '1px solid var(--b2)', whiteSpace: 'nowrap' }}>{tagLabel(e)}</span>}
                             <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{e.date}</span>
                           </div>
                           <div style={{ display: 'flex', gap: 4 }}>
@@ -526,6 +575,18 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
                         <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
                           {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
                         </select>
+                        {factories.length > 0 && (
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'left' }}>
+                  Applies to
+                  <select value={editTag} onChange={ev => setEditTag(ev.target.value)} style={{ ...cellInput, cursor: 'pointer', marginTop: 4 }}>
+                    <option value="">Shared (not allocated)</option>
+                    <option value="retail">Retail</option>
+                    {factories.length === 1
+                      ? <option value="factory">Factory</option>
+                      : (<><option value="factory">All factories</option>{factories.map(f => <option key={f.id} value={`factory:${f.id}`}>{f.name}</option>)}</>)}
+                  </select>
+                </label>
+              )}
                         <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={{ ...cellInput, textAlign: 'right' }} />
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button onClick={saveEdit} disabled={saving || !editForm.vendor} title={tc('cfo_expenses.title_save')} style={{ flex: 1, height: 28, borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓</button>
@@ -538,6 +599,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Prop
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
                           {e.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.notes}</div>}
+                          {tagLabel(e) && <span style={{ display: 'inline-block', marginTop: 3, fontSize: 10, color: 'var(--tx2)', padding: '1px 6px', borderRadius: 5, border: '1px solid var(--b2)', whiteSpace: 'nowrap' }}>{tagLabel(e)}</span>}
                         </div>
                         <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{catLabel(e.category)}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(e.amount)}</span>

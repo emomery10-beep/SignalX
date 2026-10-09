@@ -9,7 +9,7 @@
 //   pool        = raw material fed × weighted purchase price per kg
 //               + electricity (per working day)
 //               + labour      (per working day)
-//               + overhead    (manual, default 0)
+//               + overhead    (monthly amount ÷ 26 working days × working days)
 //   unit cost   = pool ÷ finished cans produced
 //   COGS        = cans dispatched in the period × unit cost
 //
@@ -30,6 +30,7 @@
 // rather than inventing a figure.
 import { computeFactoryStock, type StockCapture, type StockCount } from '@/lib/factory-stock'
 import { getCostingProfile, isPackagedName, isByproductName } from '@/lib/factory-costing-profiles'
+import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
 
 export interface FactoryCapture extends StockCapture {
   location_id?: string | null
@@ -60,6 +61,15 @@ const NO_SETTINGS: FactoryCostSettings = { configured: false, staffPerDay: 0, el
 
 interface Bucket { revenue: number; cogs: number }
 
+/** Money actually spent (expenses tagged to this factory), by month 'YYYY-MM'. A month with an
+ *  actual amount uses it instead of the per-day estimate for that category. */
+export interface FactoryActuals {
+  labour: Record<string, number>       // Payroll
+  electricity: Record<string, number>  // Utilities
+  overhead: Record<string, number>     // Rent, supplies, repairs, other (not Equipment / stock purchases)
+}
+export type CostSource = 'actual' | 'estimate' | 'mixed'
+
 export interface FactoryCostBreakdown {
   rawKgFed: number
   rawCostPerKg: number
@@ -75,6 +85,7 @@ export interface FactoryCostBreakdown {
   complete: boolean         // false when raw price, cans, or labour/electricity settings are missing → COGS understated
   missing: string[]         // which inputs are missing, e.g. ['labour_electricity_rates']
   assumptions: FactoryCostSettings
+  sources: { labour: CostSource; electricity: CostSource; overhead: CostSource }
 }
 
 export interface FactoryFinancials {
@@ -114,7 +125,7 @@ function add(map: Map<string, Bucket>, key: string, revenue: number, cogs: numbe
 
 const emptyCost = (a: FactoryCostSettings): FactoryCostBreakdown => ({
   rawKgFed: 0, rawCostPerKg: 0, material: 0, workingDays: 0, electricity: 0, labour: 0, overhead: 0,
-  byproductCredit: 0, pool: 0, cansProduced: 0, unitCost: 0, complete: true, missing: [], assumptions: a, // no activity → nothing to cost, nothing to warn about
+  byproductCredit: 0, pool: 0, cansProduced: 0, unitCost: 0, complete: true, missing: [], assumptions: a, sources: { labour: 'estimate', electricity: 'estimate', overhead: 'estimate' }, // no activity → nothing to cost, nothing to warn about
 })
 
 export function computeFactoryFinancials(
@@ -127,6 +138,8 @@ export function computeFactoryFinancials(
   // (cans for oil, bottles for water, plain units elsewhere). Omitted = the
   // legacy jerrycan/waste name rules.
   factoryType?: string | null,
+  // Tagged expenses (real spend). Where a month has one, it replaces the estimate.
+  actuals?: FactoryActuals,
 ): FactoryFinancials {
   const profile = factoryType === undefined ? null : getCostingProfile(factoryType)
   const isCan = (c: StockCapture): boolean => profile
@@ -192,21 +205,40 @@ export function computeFactoryFinancials(
   }
 
   const material = fedKg * rawCostPerKg
-  const electricity = activeDays.size * settings.electricityPerDay
-  const labour = activeDays.size * settings.staffPerDay
-  const pool = material + electricity + labour + settings.overhead
+  // Per category: a month with real tagged spend uses it; other months use the per-working-day estimate.
+  const monthDays = new Map<string, number>()
+  for (const d of activeDays) monthDays.set(d.slice(0, 7), (monthDays.get(d.slice(0, 7)) || 0) + 1)
+  const blend = (perDay: number, actual?: Record<string, number>): { total: number; source: CostSource } => {
+    let total = 0, withActual = 0
+    const months = new Set<string>([...monthDays.keys(), ...Object.keys(actual || {})])
+    for (const m of months) {
+      const a = actual?.[m] || 0
+      if (a > 0) { total += a; withActual++ } else total += (monthDays.get(m) || 0) * perDay
+    }
+    const covered = [...monthDays.keys()].every(m => (actual?.[m] || 0) > 0)
+    return { total, source: withActual === 0 ? 'estimate' : covered ? 'actual' : 'mixed' }
+  }
+  const eB = blend(settings.electricityPerDay, actuals?.electricity)
+  const lB = blend(settings.staffPerDay, actuals?.labour)
+  // settings.overhead is a MONTHLY amount (rent, repairs, filters, water …): charged per working day like labour/electricity.
+  const oB = blend(settings.overhead / WORKING_DAYS_PER_MONTH, actuals?.overhead)
+  const electricity = eB.total
+  const labour = lB.total
+  const overheadCost = oB.total
+  const pool = material + electricity + labour + overheadCost
   const unitCost = cansProduced > 0 ? pool / cansProduced : 0
   const missing: string[] = []
   if (!(rawCostPerKg > 0)) missing.push('raw_material_price')
   if (!(cansProduced > 0)) missing.push('finished_goods_output')
-  if (!settings.configured) missing.push('labour_electricity_rates')
+  if (!settings.configured && !(lB.source === 'actual' && eB.source === 'actual')) missing.push('labour_electricity_rates')
   out.cost = {
     rawKgFed: Math.round(fedKg), rawCostPerKg: Math.round(rawCostPerKg * 100) / 100,
     material: Math.round(material), workingDays: activeDays.size,
-    electricity: Math.round(electricity), labour: Math.round(labour), overhead: settings.overhead,
+    electricity: Math.round(electricity), labour: Math.round(labour), overhead: Math.round(overheadCost),
     byproductCredit: Math.round(byproductCredit), pool: Math.round(pool),
     cansProduced: Math.round(cansProduced), unitCost: Math.round(unitCost),
     complete: missing.length === 0, missing, assumptions: settings,
+    sources: { labour: lB.source, electricity: eB.source, overhead: oB.source },
   }
 
   // ── Stock value: raw on hand + cans on hand at unit cost ──────────────────
