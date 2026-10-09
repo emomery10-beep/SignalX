@@ -323,7 +323,7 @@ export default function FactoryCapturePage() {
     // the generic weight/count units — leave it blank so the details screen
     // shows the typeable size field instead of defaulting to something
     // meaningless like "kg".
-    setUnit(t === 'packaging' ? '' : (inventory.length > 0 ? (inventory[0].unit || 'kg') : 'kg'))
+    setUnit(t === 'packaging' ? '' : 'kg')
     setMarkSold(false)
     setSalePrice('')
     setBuyerName('')
@@ -633,18 +633,18 @@ export default function FactoryCapturePage() {
             {productOptions.length === 0 && (
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', padding: '12px 4px' }}>{tc('factory_capture.error_no_products_configured')}</div>
             )}
-            {productOptions.map(p => {
-              const active = product === p
-              return (
-                <button
-                  key={p}
-                  onClick={() => setProduct(p)}
-                  style={{ textAlign: 'left', background: active ? selectedType.color + '22' : 'rgba(255,255,255,0.06)', border: `1.5px solid ${active ? selectedType.color : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, fontWeight: active ? 700 : 500, cursor: 'pointer', minHeight: 48 }}
-                >
-                  {p}
-                </button>
-              )
-            })}
+            {productOptions.length > 0 && (
+              <select
+                value={productOptions.includes(product) ? product : ''}
+                onChange={e => setProduct(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${product ? selectedType.color : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, fontWeight: 600, outline: 'none', minHeight: 48, boxSizing: 'border-box' }}
+              >
+                {!productOptions.includes(product) && <option value="" style={{ background: '#0a0f1e' }}>{tc('factory_capture.product_label')}</option>}
+                {productOptions.map(p => (
+                  <option key={p} value={p} style={{ background: '#0a0f1e', color: '#f1f5f9' }}>{p}</option>
+                ))}
+              </select>
+            )}
           </div>
           {canAddProductLine && (
             <div style={{ marginTop: 12 }}>
