@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
 import TeamPanel from '@/components/intelligence/TeamPanel'
+import InvestorsPanel from '@/components/intelligence/InvestorsPanel'
 import LogisticsPulseCard from '@/components/LogisticsPulseCard'
 import CourierPulseCard from '@/components/intelligence/CourierPulseCard'
 import SupplierScorecard from '@/components/intelligence/SupplierScorecard'
@@ -125,7 +126,7 @@ export default function IntelligencePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    const validTabs = ['overview','team','logistics','market','cfo','actions','zakat']
+    const validTabs = ['overview','team','investors','logistics','market','cfo','actions','zakat']
     // Legacy deep-links: shipments/courier now live inside the merged Logistics tab
     if (t === 'shipments') { setTab('logistics'); setLogisticsView('outgoing'); return }
     if (t === 'courier')   { setTab('logistics'); setLogisticsView('incoming'); return }
@@ -270,6 +271,7 @@ export default function IntelligencePage() {
     { id: 'overview',     label: tc('intelligence.tab_overview'),   icon: TAB_ICONS.overview },
     { id: 'cfo',          label: tc('intelligence.tab_cfo'),        icon: TAB_ICONS.cfo,        locked: !canCfo },
     { id: 'team',         label: tc('intelligence.tab_team'),       icon: TAB_ICONS.team },
+    { id: 'investors',    label: 'Investors',                       icon: TAB_ICONS.cfo },
     { id: 'logistics',    label: tc('intelligence.tab_logistics'),  icon: TAB_ICONS.logistics },
     { id: 'market',       label: tc('intelligence.tab_market'),     icon: TAB_ICONS.market },
     { id: 'actions',      label: tc('intelligence.tab_actions'),    icon: TAB_ICONS.actions },
@@ -779,6 +781,7 @@ export default function IntelligencePage() {
         {/* ─── ALERTS ─── */}
         {/* ─── TEAM ─── */}
         {tab === 'team' && <div className="intel-content"><TeamPanel/></div>}
+        {tab === 'investors' && <div className="intel-content"><InvestorsPanel onOpenTeam={() => setTab('team')}/></div>}
 
         {/* ─── SHIPMENTS ─── */}
         {/* ─── LOGISTICS (merged Ships + Courier) ─── */}

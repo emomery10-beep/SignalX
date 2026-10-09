@@ -57,7 +57,7 @@ export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined;
       {costed.map(f => (
         <div key={f.location_id} style={{ padding: 14, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>{f.name}: how cost per can is worked out</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: 'var(--tx2)' }}>
+          <table style={{ display: 'table', width: '100%', borderCollapse: 'collapse', fontSize: 12, color: 'var(--tx2)' }}>
             <tbody>
               {([
                 [`Raw material (${Math.round(f.rawKgFed).toLocaleString()} kg × ${fmt(f.rawCostPerKg)})`, fmt(f.material)],

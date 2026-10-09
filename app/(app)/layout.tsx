@@ -18,6 +18,34 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq('id', user.id)
     .single()
 
+  // Investors (team role) only ever see their own page: no business onboarding, no
+  // navigation into the rest of the app. Every business API also refuses them.
+  const { data: membership } = await supabase
+    .from('team_members')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (membership?.role === 'investor') {
+    if (profile?.must_change_pin) redirect('/change-pin')
+    const logicalPath = headers().get('x-pathname') || ''
+    // Only redirect when the path is known — an empty header must never cause a redirect loop.
+    if (logicalPath && !logicalPath.startsWith('/investor')) redirect('/investor')
+    const investorLang = resolveLocale({
+      cookie: cookies().get('askbiz_lang')?.value,
+      country: headers().get('x-vercel-ip-country'),
+    })
+    return (
+      <LanguageProvider
+        initialLang={investorLang}
+        initialCatalog={getCatalog(investorLang)}
+        enCatalog={investorLang !== DEFAULT_LOCALE ? CATALOG_EN : undefined}
+      >
+        {children}
+      </LanguageProvider>
+    )
+  }
+
   // First-time users go through onboarding (/onboarding lives outside this route group
   // so this redirect does not loop back through this layout).
   if (profile && !profile.onboarded) {

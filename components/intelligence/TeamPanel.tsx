@@ -24,6 +24,7 @@ const ROLE_META: Record<string, { color: string; bg: string; label: string; shor
   business_partner: { color: '#be123c', bg: 'rgba(190,18,60,.08)',  label: 'Business Partner', short: 'Full POS access' },
   buyer:            { color: '#b45309', bg: 'rgba(180,83,9,.08)',   label: 'Buyer',            short: 'Inventory & POS only' },
   viewer:           { color: '#5a5652', bg: 'rgba(90,86,82,.07)',   label: 'Viewer',           short: 'Read-only access' },
+  investor:         { color: '#4f46e5', bg: 'rgba(79,70,229,.08)',  label: 'Investor',         short: 'Own investment & returns only' },
 }
 
 const ROLE_PERMS: Record<string, Record<string, 'full' | 'edit' | 'view' | 'none'>> = {
@@ -35,10 +36,11 @@ const ROLE_PERMS: Record<string, Record<string, 'full' | 'edit' | 'view' | 'none
   business_partner: { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
   buyer:            { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'view', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
   viewer:           { Dashboards: 'view', 'AI chat': 'view', 'Business tools': 'view', 'CFO reports': 'view', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
+  investor:         { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'none', 'Data sources': 'none', POS: 'none', Team: 'none', Settings: 'none', Billing: 'none' },
 }
 
 const AREAS = ['Dashboards', 'AI chat', 'Business tools', 'CFO reports', 'Data sources', 'POS', 'Team', 'Settings', 'Billing']
-const ROLES_ORDER = ['owner', 'admin', 'analyst', 'accountant', 'auditor', 'business_partner', 'buyer', 'viewer']
+const ROLES_ORDER = ['owner', 'admin', 'analyst', 'accountant', 'auditor', 'business_partner', 'buyer', 'viewer', 'investor']
 
 const ROLE_ICONS: Record<string, string> = {
   owner: 'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z',

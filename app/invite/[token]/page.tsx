@@ -84,6 +84,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
     accountant:       '/pos?tab=audit',
     auditor:          '/pos?tab=audit',
     business_partner: '/pos',
+    investor:         '/investor',
   }
 
   const acceptInvite = async (token: any) => {
@@ -135,7 +136,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
     }
   }
 
-  const roleInfo = invite ? (ROLE_LABELS[invite.role] || { label: invite.role, desc: '' }) : null
+  const roleInfo = invite ? (invite.role === 'investor' ? { label: 'Investor', desc: 'See your own investment and what it has earned. Nothing else in the business is shown.' } : (ROLE_LABELS[invite.role] || { label: invite.role, desc: '' })) : null
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4f3f1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>

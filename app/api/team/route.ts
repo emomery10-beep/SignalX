@@ -7,7 +7,7 @@ import { logPosAudit } from '@/lib/pos-audit'
 
 export const runtime = 'nodejs'
 
-const VALID_ROLES = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer', 'auditor', 'business_partner']
+const VALID_ROLES = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer', 'auditor', 'business_partner', 'investor']
 
 // Roles that resolve to real POS access (see lib/pos-auth.ts resolvePosAuth /
 // resolvePosAuditAccess) — granting or revoking one of these is logged to the
@@ -21,6 +21,8 @@ export async function GET() {
 
   // Team members see their org's team; owners see their own team
   const { orgId, role } = await getCallerContext(user.id, supabase)
+  // Investors must never see who else is on the team (other investors' names/emails).
+  if (role === 'investor') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: members } = await supabase
     .from('team_members')

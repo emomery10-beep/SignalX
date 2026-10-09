@@ -160,7 +160,7 @@ export async function middleware(request: NextRequest) {
     '/home', '/ask', '/chat', '/intelligence', '/files',
     '/alerts', '/forecasts', '/templates',
     '/admin', '/sources', '/billing', '/onboarding',
-    '/settings', '/expansion', '/invite', '/change-pin',
+    '/settings', '/expansion', '/invite', '/change-pin', '/investor',
   ]
 
   function applySecurityHeaders(res: typeof response) {
