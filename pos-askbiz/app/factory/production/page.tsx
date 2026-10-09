@@ -96,6 +96,18 @@ function typeLabel(tc: Tc, type: CaptureType): string {
 
 const STATUS_COLOR: Record<string, string> = { pending: WARN, approved: GOOD, rejected: BAD }
 
+// Every non-packaging capture is shown in kg so the log reads uniformly.
+// Packaging is counted in items; the container size stays in the product name.
+function kgDisplay(c: { type: string; quantity: number | null; batch_ref: string | null }): { qty: number | null; unit: string } {
+  if (c.type === 'packaging') return { qty: c.quantity, unit: 'items' }
+  const u = (c.batch_ref || 'kg').trim().toLowerCase()
+  if (c.quantity != null) {
+    if (u === 'tonnes' || u === 'tonne' || u === 't') return { qty: Math.round(c.quantity * 1000 * 100) / 100, unit: 'kg' }
+    if (u === 'g') return { qty: Math.round(c.quantity) / 1000, unit: 'kg' }
+  }
+  return { qty: c.quantity, unit: 'kg' }
+}
+
 function fmtDate(iso: string) {
   const d = new Date(iso)
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' +
@@ -534,8 +546,8 @@ export default function ProductionLogPage() {
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: '12px 14px', color: '#e2e8f0' }}>{c.quantity ?? '—'}</td>
-                        <td style={{ padding: '12px 14px', color: '#64748b' }}>{c.batch_ref || '—'}</td>
+                        <td style={{ padding: '12px 14px', color: '#e2e8f0' }}>{kgDisplay(c).qty ?? '—'}</td>
+                        <td style={{ padding: '12px 14px', color: '#64748b' }}>{kgDisplay(c).unit || '—'}</td>
                         <td style={{ padding: '12px 14px' }}>
                           <span style={{ background: `${STATUS_COLOR[c.status]}22`, color: STATUS_COLOR[c.status], padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>{tc('factory_production.status_' + c.status)}</span>
                         </td>
@@ -566,7 +578,7 @@ export default function ProductionLogPage() {
 
             <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <Field label={tc('factory_production.detail_product')} value={displayProduct(detail.product_name)} />
-              <Field label={tc('factory_production.detail_quantity')} value={`${detail.quantity ?? '—'} ${detail.batch_ref || ''}`.trim()} />
+              <Field label={tc('factory_production.detail_quantity')} value={`${kgDisplay(detail).qty ?? '—'} ${kgDisplay(detail).unit}`.trim()} />
               <Field label={tc('factory_production.detail_status')} value={tc('factory_production.status_' + detail.status)} valueColor={STATUS_COLOR[detail.status]} />
               <Field label={tc('factory_production.detail_logged')} value={fmtDate(detail.created_at)} />
               <Field label={tc('factory_production.detail_operator')} value={detail.captured_by_staff?.name || '—'} />

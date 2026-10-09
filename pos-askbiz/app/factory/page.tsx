@@ -871,7 +871,7 @@ export default function FactoryHub() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recent.map(c => {
                 const m = TYPE_META[c.type]
-                const unit = c.batch_ref || ''
+                const unit = c.type === 'packaging' ? 'items' : 'kg'
                 return (
                   <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 14, padding: '12px 14px', transition: 'border-color 150ms', cursor: 'default' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = `${m.color}40` }}

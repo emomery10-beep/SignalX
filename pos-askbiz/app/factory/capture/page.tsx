@@ -680,13 +680,7 @@ export default function FactoryCapturePage() {
             {captureType === 'packaging' ? (
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tc('factory_capture.container_count_label')}</span>
             ) : (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 160 }}>
-                {UNITS.slice(0, 5).map(u => (
-                  <button key={u} onClick={() => setUnit(u)} style={{ padding: '4px 10px', borderRadius: 20, border: `1.5px solid ${unit === u ? selectedType.color : 'rgba(255,255,255,0.15)'}`, background: unit === u ? `${selectedType.color}20` : 'transparent', color: unit === u ? selectedType.color : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: unit === u ? 700 : 400, cursor: 'pointer' }}>
-                    {u}
-                  </button>
-                ))}
-              </div>
+              <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>kg</span>
             )}
           </div>
         </div>

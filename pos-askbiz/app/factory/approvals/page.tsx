@@ -243,7 +243,7 @@ export default function ApprovalsPage() {
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>{c.product_name || tc('factory_approvals.product_unspecified')}</div>
                     <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 2 }}>
-                      {c.quantity != null ? `${c.quantity} ${c.batch_ref || ''}`.trim() : tc('factory_approvals.no_quantity')}
+                      {c.quantity != null ? `${c.quantity} ${c.type === 'packaging' ? 'items' : 'kg'}` : tc('factory_approvals.no_quantity')}
                     </div>
                     {c.notes && <div style={{ fontSize: 13, color: '#cbd5e1', marginTop: 8, background: '#0f172a', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>{c.notes}</div>}
                     {c.sale_price != null && (
@@ -306,7 +306,7 @@ export default function ApprovalsPage() {
         <div onClick={() => !busy && setRejecting(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 440, border: `1px solid ${BAD}55` }}>
             <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>{tc('factory_approvals.reject_modal_title')}</div>
-            <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>{TYPE_META[rejecting.type].icon} {rejecting.product_name || tc('factory_approvals.product_unspecified_short')} · {rejecting.quantity ?? '—'} {rejecting.batch_ref || ''}</div>
+            <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>{TYPE_META[rejecting.type].icon} {rejecting.product_name || tc('factory_approvals.product_unspecified_short')} · {rejecting.quantity ?? '—'} {rejecting.type === 'packaging' ? 'items' : 'kg'}</div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{tc('factory_approvals.reason_label')}</label>
             <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} autoFocus placeholder={tc('factory_approvals.reason_placeholder')}
               style={{ width: '100%', padding: '12px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#f1f5f9', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'system-ui, sans-serif' }} />
