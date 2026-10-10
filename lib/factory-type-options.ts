@@ -34,6 +34,7 @@ export const FACTORY_TYPE_OPTIONS: FactoryTypeOption[] = [
   { id: 'groundnut_oil', label: 'Groundnut Oil Pressing', icon: '🥜' },
   { id: 'sunflower_oil', label: 'Sunflower Oil Pressing', icon: '🌻' },
   { id: 'palm_oil', label: 'Palm Oil Processing', icon: '🌴' },
+  { id: 'coconut_oil', label: 'Coconut Oil Pressing', icon: '🥥' },
   {
     id: 'water',
     label: 'Packaged Drinking Water (Sachet / Bottled)',

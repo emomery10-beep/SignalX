@@ -1493,6 +1493,10 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
     // factories (coconut, ...) show their own synced product rows below.
     if (factoryType && factoryType !== 'sesame_oil') return items
     if (!sesameData || typeof sesameData.remainingArrival !== 'number') return items
+    // No type on record (older accounts, or a sign-up that skipped the picker):
+    // only treat it as a sesame factory if it has actually logged sesame seed.
+    // Otherwise a new coconut/other factory would see sesame rows it never made.
+    if (!factoryType && !(sesameData.totalArrival > 0 || sesameData.totalFeedUsed > 0)) return items
     const d = sesameData
     items.push({
       kind: 'seed', name: 'Sesame seed', category: 'raw', quantity: d.remainingArrival, unit: 'kg',

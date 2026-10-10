@@ -19,6 +19,7 @@ import sesameOil from './sesame_oil'
 import groundnutOil from './groundnut_oil'
 import sunflowerOil from './sunflower_oil'
 import palmOil from './palm_oil'
+import coconutOil from './coconut_oil'
 import water from './water'
 import maizeMilling from './maize_milling'
 import cassava from './cassava'
@@ -107,6 +108,7 @@ export const FACTORY_TYPE_TEMPLATES: FactoryTypeTemplate[] = [
   groundnutOil,
   sunflowerOil,
   palmOil,
+  coconutOil,
   water,
   maizeMilling,
   cassava,
