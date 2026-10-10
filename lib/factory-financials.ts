@@ -31,6 +31,7 @@
 import { computeFactoryStock, type StockCapture, type StockCount } from '@/lib/factory-stock'
 import { getCostingProfile, isPackagedName, isByproductName } from '@/lib/factory-costing-profiles'
 import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
+import { computeCycleUnitCost, type FactoryCycle } from '@/lib/factory-unit-cost'
 
 export interface FactoryCapture extends StockCapture {
   location_id?: string | null
@@ -86,6 +87,8 @@ export interface FactoryCostBreakdown {
   missing: string[]         // which inputs are missing, e.g. ['labour_electricity_rates']
   assumptions: FactoryCostSettings
   sources: { labour: CostSource; electricity: CostSource; overhead: CostSource }
+  /** Set when cost per can was worked out over the factory's cost cycle (see lib/factory-unit-cost). */
+  cycle?: { from: string; to: string; days: number; chargedDays: number; basis: 'cycle' | 'all_time'; cakeCredit: number; cakeKg: number; cakePricePerKg: number }
 }
 
 export interface FactoryFinancials {
@@ -140,6 +143,9 @@ export function computeFactoryFinancials(
   factoryType?: string | null,
   // Tagged expenses (real spend). Where a month has one, it replaces the estimate.
   actuals?: FactoryActuals,
+  // The factory's cost cycle (last N days, or a date range). When given, cost per can is worked out over that
+  // cycle — the same calculation the Factory Inventory and Costing tabs use — instead of one all-history average.
+  cycle?: FactoryCycle,
 ): FactoryFinancials {
   const profile = factoryType === undefined ? null : getCostingProfile(factoryType)
   const isCan = (c: StockCapture): boolean => profile
@@ -226,7 +232,7 @@ export function computeFactoryFinancials(
   const labour = lB.total
   const overheadCost = oB.total
   const pool = material + electricity + labour + overheadCost
-  const unitCost = cansProduced > 0 ? pool / cansProduced : 0
+  let unitCost = cansProduced > 0 ? pool / cansProduced : 0
   const missing: string[] = []
   if (!(rawCostPerKg > 0)) missing.push('raw_material_price')
   if (!(cansProduced > 0)) missing.push('finished_goods_output')
@@ -239,6 +245,24 @@ export function computeFactoryFinancials(
     cansProduced: Math.round(cansProduced), unitCost: Math.round(unitCost),
     complete: missing.length === 0, missing, assumptions: settings,
     sources: { labour: lB.source, electricity: eB.source, overhead: oB.source },
+  }
+
+  // Cycle method: replaces the all-history average with this factory's cycle cost. The cake credit is NOT
+  // taken off here (cake sales are revenue below — netting them off cost too would count them twice).
+  if (cycle) {
+    const cc = computeCycleUnitCost(captures, settings, cycle, factoryType, now, actuals)
+    if (cc.unitsProduced > 0) {
+      unitCost = cc.unitCostBeforeCake
+      const poolBefore = cc.material + cc.labour + cc.electricity + cc.overhead
+      out.cost = {
+        ...out.cost,
+        rawKgFed: Math.round(cc.rawKgFed), rawCostPerKg: cc.rawCostPerKg, material: cc.material, workingDays: cc.chargedDays,
+        electricity: cc.electricity, labour: cc.labour, overhead: cc.overhead, pool: Math.round(poolBefore),
+        cansProduced: Math.round(cc.unitsProduced), unitCost: Math.round(unitCost),
+        complete: cc.complete, missing: cc.missing, sources: cc.sources,
+        cycle: { from: cc.from, to: cc.to, days: cc.cycleDays, chargedDays: cc.chargedDays, basis: cc.basis, cakeCredit: cc.cakeCredit, cakeKg: cc.cakeKg, cakePricePerKg: cc.cakePricePerKg },
+      }
+    }
   }
 
   // ── Stock value: raw on hand + cans on hand at unit cost ──────────────────

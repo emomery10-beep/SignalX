@@ -1494,7 +1494,11 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
     const d = sesameData
     // Which kind of factory this is: its saved type, else what the cost calculation inferred from what it logged.
     const effType = (factoryType && factoryType !== 'other' ? factoryType : d.cycleCost?.factoryType) || null
-    const isSesame = effType === 'sesame_oil' || (!effType && (d.totalArrival > 0 || d.totalFeedUsed > 0))
+    // The account's own type is only a default: an owner whose profile says sesame (the only oil on the old
+    // sign-up list) but who runs a coconut factory must not see sesame rows. Sesame rows show when this factory
+    // really has sesame activity, or when a specific factory is selected whose type is sesame.
+    const hasSesameActivity = d.totalArrival > 0 || d.totalFeedUsed > 0 || d.jerrycansProduced > 0 || d.jerrycansDispatched > 0 || d.wasteInStock > 0
+    const isSesame = hasSesameActivity || (effType === 'sesame_oil' && !!selectedLocation && selectedLocation !== 'all')
     if (!isSesame) {
       // Any other factory (coconut, groundnut, water, …): its own products, costed from its own production
       // over its cost cycle — never the sesame rows, never a fixed price.

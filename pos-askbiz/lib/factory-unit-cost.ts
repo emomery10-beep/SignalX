@@ -65,6 +65,9 @@ export interface CycleUnitCost {
   pool: number
   unitsProduced: number
   unitCost: number
+  /** Cost per unit WITHOUT the cake credit — what the CFO uses, because cake sales are already counted as revenue there. */
+  unitCostBeforeCake: number
+  sources: { labour: 'estimate' | 'actual' | 'mixed'; electricity: 'estimate' | 'actual' | 'mixed'; overhead: 'estimate' | 'actual' | 'mixed' }
   wasteCostPerKg: number   // what a kg of by-product is worth (its real sale price; 0 if it never sold)
   complete: boolean
   missing: string[]
@@ -109,12 +112,23 @@ function effectiveType(factoryType: string | null | undefined, captures: UnitCos
   return factoryType || null
 }
 
+/** Money actually spent (expenses tagged to this factory), by month 'YYYY-MM'. A month with an actual amount
+ *  replaces the per-day estimate for that category, pro-rated to the cycle's days in that month. */
+export interface UnitCostActuals {
+  labour?: Record<string, number>
+  electricity?: Record<string, number>
+  overhead?: Record<string, number>
+}
+
+const daysInMonthOf = (ym: string) => { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate() }
+
 export function computeCycleUnitCost(
   captures: UnitCostCapture[],
   settings: UnitCostSettings,
   cycle: FactoryCycle,
   factoryType: string | null | undefined,
   now: number = Date.now(),
+  actuals?: UnitCostActuals,
 ): CycleUnitCost {
   const type = effectiveType(factoryType, captures)
   const P = getCostingProfile(type)
@@ -178,21 +192,40 @@ export function computeCycleUnitCost(
     const units = canPackOut > 0 ? canPackOut : canDispatched
     const start = firstProd && firstProd > from ? firstProd : from
     const charged = units > 0 || fedKg > 0 ? Math.max(1, dayDiff(start, to) + 1) : 0
-    const labour = charged * settings.staffPerDay
-    const electricity = charged * settings.electricityPerDay
-    const overhead = charged * (settings.overhead / 26)
+    // Per category: months with real tagged spend use it (pro-rated to the charged days in that month);
+    // every other month uses the factory's saved per-day estimate.
+    const blend = (perDay: number, actual?: Record<string, number>): { total: number; source: 'estimate' | 'actual' | 'mixed' } => {
+      if (charged === 0) return { total: 0, source: 'estimate' }
+      const perMonth = new Map<string, number>()
+      for (let i = 0; i < charged; i++) { const ym = shiftDay(to, -i).slice(0, 7); perMonth.set(ym, (perMonth.get(ym) || 0) + 1) }
+      let total = 0, withActual = 0
+      for (const [ym, days] of perMonth) {
+        const a = actual?.[ym] || 0
+        if (a > 0) { total += a * (days / daysInMonthOf(ym)); withActual++ } else total += days * perDay
+      }
+      return { total, source: withActual === 0 ? 'estimate' : withActual === perMonth.size ? 'actual' : 'mixed' }
+    }
+    const lB = blend(settings.staffPerDay, actuals?.labour)
+    const eB = blend(settings.electricityPerDay, actuals?.electricity)
+    const oB = blend(settings.overhead / 26, actuals?.overhead)
+    const labour = lB.total
+    const electricity = eB.total
+    const overhead = oB.total
     const cakeCredit = Math.min(material, cakeKg * cakePrice)
     const pool = Math.max(0, material - cakeCredit) + labour + electricity + overhead
+    const poolBeforeCake = material + labour + electricity + overhead
     const missing: string[] = []
     if (!(overallPrice > 0)) missing.push('raw_material_price')
     if (!(units > 0)) missing.push('finished_goods_output')
-    if (!settings.configured) missing.push('labour_electricity_rates')
+    if (!settings.configured && !(lB.source === 'actual' && eB.source === 'actual')) missing.push('labour_electricity_rates')
     return {
       factoryType: type, from, to, cycleDays, chargedDays: charged, basis,
       rawKgFed: Math.round(fedKg * 100) / 100, rawCostPerKg: Math.round(overallPrice * 100) / 100,
       material: Math.round(material), cakeKg: Math.round(cakeKg * 100) / 100, cakePricePerKg: Math.round(cakePrice * 100) / 100,
       cakeCredit: Math.round(cakeCredit), labour: Math.round(labour), electricity: Math.round(electricity), overhead: Math.round(overhead),
       pool: Math.round(pool), unitsProduced: units, unitCost: units > 0 ? Math.round(pool / units) : 0,
+      unitCostBeforeCake: units > 0 ? Math.round(poolBeforeCake / units) : 0,
+      sources: { labour: lB.source, electricity: eB.source, overhead: oB.source },
       wasteCostPerKg: Math.round(cakePrice * 100) / 100,
       complete: missing.length === 0, missing,
     }

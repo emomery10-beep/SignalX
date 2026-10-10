@@ -5,6 +5,7 @@ import { getUserLocale } from '@/lib/get-currency'
 import { getDateRange } from '@/lib/cfo-date-range'
 import { createServiceClient } from '@/lib/supabase/server'
 import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture, type FactoryActuals } from '@/lib/factory-financials'
+import { parseCycle } from '@/lib/factory-unit-cost'
 import { FACTORY_COUNT_REASON } from '@/lib/factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { resolveEffectiveFactoryType } from '@/lib/factory-costing-profiles'
@@ -264,7 +265,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
         .select('location_id, product_name, counted_qty, created_at')
         .eq('owner_id', ownerId).eq('reason', FACTORY_COUNT_REASON).in('location_id', scopeIds),
       svc.from('pos_factory_cost_settings')
-        .select('location_id, staff_per_day, electricity_per_day, overhead')
+        .select('location_id, staff_per_day, electricity_per_day, overhead, electricity_basis')
         .eq('owner_id', ownerId).in('location_id', scopeIds),
       // Real spend tagged to a factory (all time, to match the all-time unit cost)
       supabase.from('cfo_expenses')
@@ -305,7 +306,9 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
         fin: computeFactoryFinancials(
           ((capRows || []) as FactoryCapture[]).filter(c => c.location_id === f.id),
           ((countRows || []) as any[]).filter(c => c.location_id === f.id),
-          win, Date.now(), settings, effectiveType, actualsBy.get(f.id)),
+          win, Date.now(), settings, effectiveType, actualsBy.get(f.id),
+          // Cost per can is worked out over this factory's own cost cycle (default last 28 days), same as its Inventory/Costing tabs.
+          parseCycle(saved?.electricity_basis)),
       })
     }
   }

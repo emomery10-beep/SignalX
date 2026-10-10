@@ -20,6 +20,8 @@ export interface FactoryCostInfo {
   complete: boolean
   missing: string[]
   sources?: { labour: string; electricity: string; overhead: string }
+  /** Present when cost per can was worked out over the factory's cost cycle. */
+  cycle?: { from: string; to: string; days: number; chargedDays: number; basis: 'cycle' | 'all_time'; cakeCredit: number; cakeKg: number; cakePricePerKg: number }
 }
 
 export interface SegmentInfo {
@@ -38,6 +40,8 @@ const MISSING_TEXT: Record<string, string> = {
 
 // 'actual' = real tagged expenses, 'mixed' = real for some months and estimated for the rest.
 const srcNote = (s?: string) => s === 'actual' ? ', actual spend' : s === 'mixed' ? ', part actual spend' : ', estimate'
+
+const fmtDay = (d: string) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 
 export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined; sym: string }) {
   if (!info) return null
@@ -60,14 +64,20 @@ export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined;
       )}
       {costed.map(f => (
         <div key={f.location_id} style={{ padding: 14, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>{f.name}: how cost per can is worked out</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: f.cycle ? 2 : 10 }}>{f.name}: how cost per can is worked out</div>
+          {f.cycle && (
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 10 }}>
+              {f.cycle.basis === 'all_time' ? 'Nothing was finished in the cost cycle, so all production so far is used' : `Cost cycle: ${fmtDay(f.cycle.from)} – ${fmtDay(f.cycle.to)} (${f.cycle.days} days)`}
+              {' · '}change it under Factory → Costing → Your cost rates
+            </div>
+          )}
           <table style={{ display: 'table', width: '100%', borderCollapse: 'collapse', fontSize: 12, color: 'var(--tx2)' }}>
             <tbody>
               {([
                 [`Raw material (${Math.round(f.rawKgFed).toLocaleString()} kg × ${fmt(f.rawCostPerKg)})`, fmt(f.material)],
-                [`Electricity (${f.workingDays} working days${srcNote(f.sources?.electricity)})`, fmt(f.electricity)],
-                [`Labour (${f.workingDays} working days${srcNote(f.sources?.labour)})`, fmt(f.labour)],
-                ...(f.overhead > 0 ? [[`Overhead (${f.workingDays} working days${srcNote(f.sources?.overhead)})`, fmt(f.overhead)]] : []),
+                [`Electricity (${f.workingDays} ${f.cycle ? 'days' : 'working days'}${srcNote(f.sources?.electricity)})`, fmt(f.electricity)],
+                [`Labour (${f.workingDays} ${f.cycle ? 'days' : 'working days'}${srcNote(f.sources?.labour)})`, fmt(f.labour)],
+                ...(f.overhead > 0 ? [[`Overhead (${f.workingDays} ${f.cycle ? 'days' : 'working days'}${srcNote(f.sources?.overhead)})`, fmt(f.overhead)]] : []),
                 ['Production cost pool', fmt(f.pool)],
                 [`Cans produced`, f.cansProduced.toLocaleString()],
               ] as string[][]).map(([l, v]) => (
