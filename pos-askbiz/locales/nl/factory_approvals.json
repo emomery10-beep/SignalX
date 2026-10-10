@@ -39,6 +39,13 @@
   "access_denied_subtitle": "Alleen een supervisor, manager of eigenaar kan openstaande registraties bekijken en goedkeuren.",
   "dispatch_price_label": "Verzendprijs (per eenheid)",
   "dispatch_price_hint": "Automatisch ingevuld met {default} — u kunt dit aanpassen vóór goedkeuring",
+  "dispatch_price_hint_none": "Voer de prijs per eenheid in waartegen deze levering is verkocht",
   "dispatch_price_total": "Totaal: {total}",
-  "error_valid_dispatch_price": "Voer een geldige verzendprijs in."
+  "error_valid_dispatch_price": "Voer een geldige verzendprijs in.",
+  "whatsapp_label": "WhatsApp van klant",
+  "whatsapp_hint": "Optioneel — stuur de klant een bericht vóór goedkeuring",
+  "whatsapp_placeholder": "WhatsApp van klant (bijv. 254712345678)",
+  "whatsapp_send": "WhatsApp sturen",
+  "whatsapp_message": "Hallo! Uw zending wacht op goedkeuring: {product}, {qty} kg{dest}. Wij bevestigen zodra deze is goedgekeurd.",
+  "whatsapp_dest": " naar {dest}"
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
 import {
   computeFactoryStock, computeGenericStock, isWaste, FACTORY_COUNT_REASON,
 } from '@/lib/factory-stock'
@@ -79,12 +80,15 @@ export async function GET(req: NextRequest) {
     const wasteSoldCost = stock.wasteDispatched * WASTE_COST_PER_KG
     const wasteStockValue = stock.wasteKg * WASTE_COST_PER_KG
 
-    const productRevenue = captures
-      .filter(c => c.type === 'dispatch' && c.sale_price && (c.product_name === 'Sesame oil' || c.product_name === 'Sesame waste'))
-      .reduce((s: number, c: any) => s + ((c.sale_price || 0) * (c.quantity || 1)), 0)
-    const jerrycanSalePrice = 8000 // KSh per can
-    const totalRevenue = productRevenue + jerrycansDispatched * jerrycanSalePrice
-
+    // Revenue is what approvers actually priced each dispatch at (dispatch_price, per unit); the older
+    // sale_price field is only a fallback. Unpriced dispatches carry no revenue until they are priced —
+    // there is no assumed price per jerrycan.
+    const totalRevenue = captures
+      .filter((c: any) => c.type === 'dispatch')
+      .reduce((s: number, c: any) => {
+        const price = Number(c.dispatch_price) > 0 ? Number(c.dispatch_price) : Number(c.sale_price) > 0 ? Number(c.sale_price) : 0
+        return s + price * (Number(c.quantity) || 0)
+      }, 0)
     const costOfGoods = feedCost + jerrycansDispatched * JERRYCAN_PRODUCTION_COST + wasteSoldCost
     const grossMargin = totalRevenue - costOfGoods
 
@@ -92,7 +96,13 @@ export async function GET(req: NextRequest) {
     const finishedGoodsValue = jerrycansInStock * JERRYCAN_PRODUCTION_COST
     const totalStockValue = rawMaterialsCost + finishedGoodsValue + wasteStockValue
 
+    // Dispatch prices are owner/production-manager only. Revenue and margin
+    // both reveal them (revenue / quantity, or margin + COGS), and so does the
+    // last-dispatch price on generic stock rows — blank all three for everyone else.
+    const canSeePrices = hasPermission(auth.role, 'capture.approve_dispatch')
+
     return NextResponse.json({
+      pricesHidden: !canSeePrices,
       totalArrival: intakeArrival,
       totalFeedUsed: intakeFeed,
       seedWasted: stock.seedWasted,
@@ -111,14 +121,14 @@ export async function GET(req: NextRequest) {
       seedFedLast30: stock.seedFedLast30,
       jerrycansDispatchedLast30: stock.cansDispatchedLast30,
       wasteDispatchedLast30: stock.wasteDispatchedLast30,
-      totalRevenue,
+      totalRevenue: canSeePrices ? totalRevenue : 0,
       costOfGoods,
-      grossMargin,
+      grossMargin: canSeePrices ? grossMargin : 0,
       rawMaterialsCost,
       finishedGoodsValue,
       wasteStockValue,
       totalStockValue,
-      genericStock,
+      genericStock: canSeePrices ? genericStock : genericStock.map((r: any) => ({ ...r, lastDispatchPrice: 0 })),
       cycleCost, // unit cost over the factory's cost cycle, with the full breakdown behind it
       stock, // per-product balance breakdown, latest delivery check and recent movements
     })

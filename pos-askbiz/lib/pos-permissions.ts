@@ -38,7 +38,8 @@ export type PosPermission =
   | 'camera.dispatch'       // photograph outbound dispatch
   | 'camera.packaging'      // photograph bulk output packaged into sized containers
   // Approvals (supervisor+)
-  | 'capture.approve'       // approve pending camera captures
+  | 'capture.approve'       // approve pending camera captures (all types except dispatch)
+  | 'capture.approve_dispatch' // approve dispatches + see/set their price (owner, production manager only)
   | 'hold.clear'            // clear a not-yet-releasable batch hold (curing/regulatory)
   // Reports
   | 'reports.view'          // view shift + production reports
@@ -89,7 +90,7 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'shift.open', 'shift.close', 'shift.view',
     'staff.manage',
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch', 'camera.packaging',
-    'capture.approve', 'hold.clear',
+    'capture.approve', 'capture.approve_dispatch', 'hold.clear',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
     'batch.log', 'batch.view',
@@ -128,7 +129,7 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     // own Supabase-cookie session on the separate owner dashboard.
     'staff.manage',
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch', 'camera.packaging',
-    'capture.approve', 'hold.clear',
+    'capture.approve', 'capture.approve_dispatch', 'hold.clear',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
     'batch.log', 'batch.view',
@@ -171,6 +172,9 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'inventory.view', 'inventory.manage',
     'sales.view',
     'camera.intake',
+    // Inventory manager approves every capture except dispatches — those
+    // carry the sale price, which only the production manager may see.
+    'capture.approve',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.receive', 'purchase_order.pay',
     'batch.view', 'downtime.view', 'waybill.view',
   ],
@@ -181,7 +185,7 @@ const ROLE_PERMISSIONS: Record<PosRole | FactoryOnlyRole, PosPermission[]> = {
     'sales.view', 'sales.view_all',
     'inventory.view',
     'shift.view',
-    'capture.approve',
+    'capture.approve', 'capture.approve_dispatch',
     'reports.view', 'reports.financial',
     'purchase_order.view',
   ],

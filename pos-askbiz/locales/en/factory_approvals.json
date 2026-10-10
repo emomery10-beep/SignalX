@@ -41,6 +41,13 @@
   "access_denied_subtitle": "Only a supervisor, manager, or owner can view and approve pending captures.",
   "dispatch_price_label": "Dispatch price (per unit)",
   "dispatch_price_hint": "Auto-filled at {default} — you can adjust it before approving",
+  "dispatch_price_hint_none": "Enter the price per unit this dispatch was sold at",
   "dispatch_price_total": "Total: {total}",
-  "error_valid_dispatch_price": "Enter a valid dispatch price."
+  "error_valid_dispatch_price": "Enter a valid dispatch price.",
+  "whatsapp_label": "Customer WhatsApp",
+  "whatsapp_hint": "Optional — message the customer before you approve",
+  "whatsapp_placeholder": "Customer WhatsApp (e.g. 254712345678)",
+  "whatsapp_send": "Send WhatsApp",
+  "whatsapp_message": "Hello! Your dispatch is awaiting approval: {product}, {qty} kg{dest}. We will confirm once it is approved.",
+  "whatsapp_dest": " to {dest}"
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner, resolvePosAuth } from '@/lib/pos-auth'
 import { logPosAudit } from '@/lib/pos-audit'
+import { hasPermission } from '@/lib/pos-permissions'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -44,7 +45,14 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ inventory: data, total: count })
+  // Factory-dispatch rows carry the approver's dispatch price as sale_price —
+  // owner / production manager only (capture.approve_dispatch).
+  const canSeeDispatchPrice = hasPermission(auth.role, 'capture.approve_dispatch')
+  const inventory = canSeeDispatchPrice
+    ? data
+    : (data || []).map((r: any) => r.source_type === 'factory_dispatch' ? { ...r, sale_price: 0 } : r)
+
+  return NextResponse.json({ inventory, total: count })
 }
 
 // POST — add a new product (inventory staff only) — fix #10

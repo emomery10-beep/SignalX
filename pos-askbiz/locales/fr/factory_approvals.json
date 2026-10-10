@@ -39,6 +39,13 @@
   "access_denied_subtitle": "Seul un superviseur, un gestionnaire ou le propriétaire peut consulter et approuver les saisies en attente.",
   "dispatch_price_label": "Prix d'expédition (par unité)",
   "dispatch_price_hint": "Pré-rempli à {default} — modifiable avant l'approbation",
+  "dispatch_price_hint_none": "Saisissez le prix unitaire auquel cette expédition a été vendue",
   "dispatch_price_total": "Total : {total}",
-  "error_valid_dispatch_price": "Saisissez un prix d'expédition valide."
+  "error_valid_dispatch_price": "Saisissez un prix d'expédition valide.",
+  "whatsapp_label": "WhatsApp du client",
+  "whatsapp_hint": "Facultatif — écrivez au client avant d'approuver",
+  "whatsapp_placeholder": "WhatsApp du client (ex. 254712345678)",
+  "whatsapp_send": "Envoyer WhatsApp",
+  "whatsapp_message": "Bonjour ! Votre expédition est en attente d'approbation : {product}, {qty} kg{dest}. Nous confirmerons dès l'approbation.",
+  "whatsapp_dest": " vers {dest}"
 }

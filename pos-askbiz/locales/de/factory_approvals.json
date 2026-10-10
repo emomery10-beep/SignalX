@@ -39,6 +39,13 @@
   "access_denied_subtitle": "Nur ein Supervisor, Manager oder Inhaber kann ausstehende Erfassungen einsehen und genehmigen.",
   "dispatch_price_label": "Versandpreis (pro Einheit)",
   "dispatch_price_hint": "Automatisch mit {default} ausgefüllt — vor der Genehmigung änderbar",
+  "dispatch_price_hint_none": "Geben Sie den Preis pro Einheit ein, zu dem diese Lieferung verkauft wurde",
   "dispatch_price_total": "Gesamt: {total}",
-  "error_valid_dispatch_price": "Bitte einen gültigen Versandpreis eingeben."
+  "error_valid_dispatch_price": "Bitte einen gültigen Versandpreis eingeben.",
+  "whatsapp_label": "WhatsApp des Kunden",
+  "whatsapp_hint": "Optional — Kunden vor der Genehmigung benachrichtigen",
+  "whatsapp_placeholder": "WhatsApp des Kunden (z. B. 254712345678)",
+  "whatsapp_send": "WhatsApp senden",
+  "whatsapp_message": "Hallo! Ihre Lieferung wartet auf Genehmigung: {product}, {qty} kg{dest}. Wir bestätigen, sobald sie genehmigt ist.",
+  "whatsapp_dest": " nach {dest}"
 }

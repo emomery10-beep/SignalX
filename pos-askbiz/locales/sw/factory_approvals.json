@@ -39,6 +39,13 @@
   "access_denied_subtitle": "Ni msimamizi, meneja, au mmiliki pekee anayeweza kuona na kuidhinisha rekodi zinazosubiri.",
   "dispatch_price_label": "Bei ya usafirishaji (kwa kila kipimo)",
   "dispatch_price_hint": "Imejazwa awali kwa {default} — unaweza kubadilisha kabla ya kuidhinisha",
+  "dispatch_price_hint_none": "Weka bei kwa kila kipimo ambayo usafirishaji huu uliuzwa",
   "dispatch_price_total": "Jumla: {total}",
-  "error_valid_dispatch_price": "Weka bei sahihi ya usafirishaji."
+  "error_valid_dispatch_price": "Weka bei sahihi ya usafirishaji.",
+  "whatsapp_label": "WhatsApp ya mteja",
+  "whatsapp_hint": "Si lazima — mtumie mteja ujumbe kabla ya kuidhinisha",
+  "whatsapp_placeholder": "WhatsApp ya mteja (mfano 254712345678)",
+  "whatsapp_send": "Tuma WhatsApp",
+  "whatsapp_message": "Habari! Usafirishaji wako unasubiri idhini: {product}, kilo {qty}{dest}. Tutakuthibitishia mara utakapoidhinishwa.",
+  "whatsapp_dest": " kwenda {dest}"
 }

@@ -37,7 +37,8 @@ export type PosPermission =
   | 'camera.wastage'        // photograph defects / wastage
   | 'camera.dispatch'       // photograph outbound dispatch
   // Approvals (supervisor+)
-  | 'capture.approve'       // approve pending camera captures
+  | 'capture.approve'       // approve pending camera captures (all types except dispatch)
+  | 'capture.approve_dispatch' // approve dispatches + see/set their price (owner, production manager only)
   // Reports
   | 'reports.view'          // view shift + production reports
   | 'reports.financial'     // view financial reports (revenue, margins)
@@ -59,7 +60,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'shift.open', 'shift.close', 'shift.view',
     'staff.manage',
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
-    'capture.approve',
+    'capture.approve', 'capture.approve_dispatch',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
   ],
@@ -70,7 +71,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'service.view', 'service.manage', 'service.parts',
     'shift.open', 'shift.close', 'shift.view',
     'camera.intake', 'camera.output', 'camera.wastage', 'camera.dispatch',
-    'capture.approve',
+    'capture.approve', 'capture.approve_dispatch',
     'reports.view', 'reports.financial',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.send', 'purchase_order.receive', 'purchase_order.pay',
   ],
@@ -97,6 +98,8 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'inventory.view', 'inventory.manage',
     'sales.view',
     'camera.intake',
+    // Approves every capture except dispatches (those carry the sale price).
+    'capture.approve',
     'purchase_order.view', 'purchase_order.create', 'purchase_order.receive', 'purchase_order.pay',
   ],
   cashier: [
@@ -106,7 +109,7 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
     'sales.view', 'sales.view_all',
     'inventory.view',
     'shift.view',
-    'capture.approve',
+    'capture.approve', 'capture.approve_dispatch',
     'reports.view', 'reports.financial',
     'purchase_order.view',
   ],

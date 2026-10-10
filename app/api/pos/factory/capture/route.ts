@@ -36,7 +36,7 @@ const CAPTURE_PERMISSION: Record<CaptureType, Parameters<typeof hasPermission>[1
 // permission could read dispatch_price for their own approved dispatches.
 // Confirmed live 2026-09-22.
 function redactDispatchPriceForNonApprovers<T extends Record<string, unknown>>(capture: T, role: string | null | undefined): T {
-  if (!capture || hasPermission(role, 'capture.approve')) return capture
+  if (!capture || hasPermission(role, 'capture.approve_dispatch')) return capture
   return { ...capture, dispatch_price: null }
 }
 
@@ -135,6 +135,13 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
 
+  // No factory chosen and exactly ONE active factory → it is that one (else the capture never shows under it).
+  let effLocationId: string | null = location_id || auth.locationId || null
+  if (!effLocationId) {
+    const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
+    if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
+  }
+
   // Upload photo to Supabase Storage
   let photoUrl = ''
   let storageMode: 'supabase' | 'fallback' = 'supabase'
@@ -168,7 +175,7 @@ export async function POST(req: NextRequest) {
     .from('pos_factory_captures')
     .insert({
       owner_id:     auth.ownerId,
-      location_id:  location_id || auth.locationId || null,
+      location_id:  effLocationId,
       shift_id:     shift_id || null,
       captured_by:  auth.staffId || null,
       type:         captureType,
@@ -225,12 +232,15 @@ export async function PATCH(req: NextRequest) {
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status')
+    .select('id, status, type')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
 
   if (!existing) return json({ error: 'Capture not found' }, 404)
+  if (existing.type === 'dispatch' && !hasPermission(auth.role, 'capture.approve_dispatch')) {
+    return json({ error: 'Only the production manager or owner can approve or reject dispatches' }, 403)
+  }
   if (existing.status !== 'pending') {
     return json({ error: `Capture is already ${existing.status}` }, 400)
   }

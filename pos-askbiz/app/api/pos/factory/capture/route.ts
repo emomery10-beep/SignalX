@@ -40,20 +40,18 @@ const CAPTURE_PERMISSION: Record<CaptureType, Parameters<typeof hasPermission>[1
 // packaging just repackages an output that may already be marked sold.
 const SALE_ANNOTATABLE_TYPES: CaptureType[] = ['output', 'wastage']
 
-// Default per-unit dispatch price, used when an approver approves a
-// dispatch capture without amending the auto-filled value. Mirrors the
-// hardcoded per-jerrycan production cost below (costPerUnit) — this is the
-// same kind of single-product shortcut, requested directly by the owner.
-// Keep in sync with the matching default in app/factory/approvals/page.tsx.
-const DEFAULT_DISPATCH_PRICE = 8000
+// There is no default dispatch price: every factory (sesame, coconut, anything else) sells at its own price, so
+// the approver enters it. The approvals screen only suggests the factory's last approved price for the same product.
 
 // dispatch_price is set ONLY by the approver at approval time (PATCH below)
 // and must never reach the staff member who submitted the dispatch capture
 // — confirmed requirement, not merely a nice-to-have. Strip it from any
-// response reaching a role without capture.approve. Mirrors
+// response reaching a role without capture.approve_dispatch (owner and
+// production manager only — shift supervisors and inventory managers can
+// approve other captures but never see dispatch prices). Mirrors
 // redactPricingForEngineer in app/api/pos/service-jobs/route.ts.
 function redactDispatchPriceForNonApprovers<T extends Record<string, unknown>>(capture: T, role: string): T {
-  if (!capture || hasPermission(role, 'capture.approve')) return capture
+  if (!capture || hasPermission(role, 'capture.approve_dispatch')) return capture
   return { ...capture, dispatch_price: null }
 }
 
@@ -135,7 +133,27 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query
   if (error) return json({ error: error.message }, 500)
 
-  const captures = (data || []).map(c => redactDispatchPriceForNonApprovers(c, auth.role))
+  // Approvers get a suggested dispatch price on pending dispatches: this factory's last approved price for the
+  // same product. Nothing is suggested for a product that has never been priced.
+  const suggestedPrice = new Map<string, number>()
+  if (hasPermission(auth.role, 'capture.approve_dispatch') && (data || []).some((c: any) => c.type === 'dispatch' && c.status === 'pending')) {
+    const { data: priced } = await service
+      .from('pos_factory_captures')
+      .select('product_name, location_id, dispatch_price')
+      .eq('owner_id', auth.ownerId).eq('type', 'dispatch').eq('status', 'approved').gt('dispatch_price', 0)
+      .order('created_at', { ascending: false }).limit(300)
+    for (const r of (priced || []) as any[]) {
+      const k = `${r.location_id || ''}|${(r.product_name || '').trim().toLowerCase()}`
+      if (!suggestedPrice.has(k)) suggestedPrice.set(k, Number(r.dispatch_price))
+    }
+  }
+  const captures = (data || []).map((c: any) => {
+    const safe: any = redactDispatchPriceForNonApprovers(c, auth.role)
+    if (c.type === 'dispatch' && c.status === 'pending' && suggestedPrice.size > 0) {
+      safe.suggested_dispatch_price = suggestedPrice.get(`${c.location_id || ''}|${(c.product_name || '').trim().toLowerCase()}`) ?? null
+    }
+    return safe
+  })
   return json({ captures, total: count })
 }
 
@@ -206,12 +224,20 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
 
+  // A capture belongs to a factory. When none was chosen and the owner has exactly ONE active factory, it is that
+  // one — otherwise the capture is saved with no factory and never shows under it (a new account's first intake).
+  let effLocationId: string | null = location_id || auth.locationId || null
+  if (!effLocationId) {
+    const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
+    if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
+  }
+
   // Product lines are admin-controlled: a capture may only use a product from
   // the factory's dropdown (built-in defaults + products the owner/manager
   // added to this factory's Inventory). Free-typed names are rejected so a
   // typo or invented line can never enter stock, yield or dispatch reporting.
   if (typeof product_name === 'string' && product_name.trim()) {
-    const capLocationId = location_id || auth.locationId || null
+    const capLocationId = effLocationId
     let locType: string | null = null
     if (capLocationId) {
       const { data: loc } = await service.from('pos_locations').select('factory_type').eq('id', capLocationId).maybeSingle()
@@ -353,7 +379,7 @@ export async function POST(req: NextRequest) {
     .from('pos_factory_captures')
     .insert({
       owner_id:     auth.ownerId,
-      location_id:  location_id || auth.locationId || null,
+      location_id:  effLocationId,
       shift_id:     shift_id || null,
       captured_by:  auth.staffId || null,
       type:         captureType,
@@ -398,7 +424,7 @@ export async function POST(req: NextRequest) {
       const { data: retryCapture, error: retryErr } = await service
         .from('pos_factory_captures')
         .insert({
-          owner_id: auth.ownerId, location_id: location_id || auth.locationId || null, shift_id: shift_id || null,
+          owner_id: auth.ownerId, location_id: effLocationId, shift_id: shift_id || null,
           captured_by: auth.staffId || null, type: captureType, status: 'pending', photo_url: photoUrl,
           storage: storageMode, product_name: product_name || null, batch_ref: batch_ref || null,
           quantity: quantity ?? null, notes: notes || null, sale_price, buyer_name,
@@ -495,7 +521,7 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'Only supervisor, manager, or owner can approve captures' }, 403)
   }
 
-  const { id, status, rejection_reason, dispatch_price } = await req.json()
+  const { id, status, rejection_reason, dispatch_price, customer_phone } = await req.json()
 
   if (!id || !status) return json({ error: 'id and status required' }, 400)
   if (!['approved', 'rejected'].includes(status)) {
@@ -505,7 +531,7 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'rejection_reason required when rejecting a capture' }, 400)
   }
 
-  // Approver-set dispatch price (see DEFAULT_DISPATCH_PRICE above) — only
+  // Approver-set dispatch price (no default — see the note above) — only
   // meaningful when approving a dispatch capture, validated up front so a
   // bad value 400s before anything is written.
   let resolvedDispatchPrice: number | null = null
@@ -528,14 +554,24 @@ export async function PATCH(req: NextRequest) {
     .maybeSingle()
 
   if (!existing) return json({ error: 'Capture not found' }, 404)
+  if (existing.type === 'dispatch' && !hasPermission(auth.role, 'capture.approve_dispatch')) {
+    return json({ error: 'Only the production manager or owner can approve or reject dispatches' }, 403)
+  }
   if (existing.status !== 'pending') {
     return json({ error: `Capture is already ${existing.status}` }, 400)
   }
 
   const isDispatchApproval = status === 'approved' && existing.type === 'dispatch'
   if (isDispatchApproval && resolvedDispatchPrice === null) {
-    resolvedDispatchPrice = DEFAULT_DISPATCH_PRICE
+    return json({ error: 'Enter the dispatch price (per unit) before approving' }, 400)
   }
+
+  // The approver can add or correct the customer's WhatsApp number (the
+  // dispatcher may have left it blank); it lives in buyer_name like the
+  // dispatcher's own entry.
+  const approverPhone = isDispatchApproval && typeof customer_phone === 'string'
+    ? customer_phone.replace(/\D/g, '').slice(0, 20)
+    : ''
 
   const { data: updated, error } = await service
     .from('pos_factory_captures')
@@ -545,6 +581,7 @@ export async function PATCH(req: NextRequest) {
       approved_at:      status === 'approved' ? new Date().toISOString() : null,
       rejection_reason: status === 'rejected' ? rejection_reason.trim() : null,
       ...(isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
+      ...(approverPhone.length >= 8 ? { buyer_name: approverPhone } : {}),
     })
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
@@ -573,14 +610,15 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (isDispatchApproval) {
-    // Send WhatsApp notification to recipient
-    await sendDispatchWhatsApp(
-      updated.notes, // destination field contains phone or recipient info
-      updated.product_name,
-      updated.quantity,
-      updated.notes,
-      updated.dispatch_price || null
-    )
+    // Tell the customer it's approved. The number the dispatcher logged lives
+    // in buyer_name; a send failure must never fail the approval itself.
+    await sendDispatchWhatsApp(auth.ownerId, updated.buyer_name, {
+      kind: 'approved',
+      productName: updated.product_name,
+      quantity: updated.quantity,
+      destination: updated.notes,
+      price: updated.dispatch_price || null,
+    })
   }
 
   return json({ capture: updated })

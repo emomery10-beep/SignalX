@@ -39,6 +39,13 @@
   "access_denied_subtitle": "Kaliya kormeeraha, maareeyaha, ama milkiilaha ayaa arki kara oo ansixin kara qaabilaadaha sugaya.",
   "dispatch_price_label": "Qiimaha diridda (hal halbeeg)",
   "dispatch_price_hint": "Waxaa si toos ah loogu buuxiyay {default} — waad bedeli kartaa ka hor inta aadan ansixin",
+  "dispatch_price_hint_none": "Geli qiimaha halkii cutub ee loogu iibiyay diridan",
   "dispatch_price_total": "Wadarta: {total}",
-  "error_valid_dispatch_price": "Geli qiime sax ah oo diridda ah."
+  "error_valid_dispatch_price": "Geli qiime sax ah oo diridda ah.",
+  "whatsapp_label": "WhatsApp-ka macmiilka",
+  "whatsapp_hint": "Ikhtiyaari — macmiilka farriin u dir ka hor inta aadan ansixin",
+  "whatsapp_placeholder": "WhatsApp-ka macmiilka (tusaale 254712345678)",
+  "whatsapp_send": "Dir WhatsApp",
+  "whatsapp_message": "Salaan! Diriddaada waxay sugaysaa ansixin: {product}, {qty} kg{dest}. Waan ku xaqiijin doonaa marka la ansixiyo.",
+  "whatsapp_dest": " ku socota {dest}"
 }

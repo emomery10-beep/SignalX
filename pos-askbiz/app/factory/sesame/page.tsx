@@ -26,8 +26,12 @@ interface ProductionData {
   jerrycansProduced: number
   jerrycansDispatched: number
   jerrycansInStock: number
+  jerrycanCost?: number
+  wasteCostPerKg?: number
+  stock?: { wasteDispatched?: number }
 
-  // Revenue
+  // Revenue (zeroed + pricesHidden for roles that may not see dispatch prices)
+  pricesHidden?: boolean
   totalRevenue: number
   costOfGoods: number
   grossMargin: number
@@ -176,7 +180,7 @@ export default function SesameProductionPage() {
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Finished Goods (Jerrycans)</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{(data.finishedGoodsValue || 0).toLocaleString()} KSh</div>
-              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{data.jerrycansInStock} cans × 6000 KSh</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{data.jerrycansInStock} cans × {Math.round(data.jerrycanCost || 0).toLocaleString()} KSh</div>
             </div>
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Total Stock Value</div>
@@ -190,32 +194,32 @@ export default function SesameProductionPage() {
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>💰 Revenue & Profitability</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 16 }}>
-            <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
+            {!data.pricesHidden && <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Total Revenue</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{data.totalRevenue.toLocaleString()} KSh</div>
-            </div>
+            </div>}
             <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Cost of Goods</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: RED }}>{data.costOfGoods.toLocaleString()} KSh</div>
             </div>
-            <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
+            {!data.pricesHidden && <div style={{ background: '#0f172a', borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>Gross Margin</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: GREEN }}>{data.grossMargin.toLocaleString()} KSh</div>
               <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{data.totalRevenue > 0 ? ((data.grossMargin / data.totalRevenue) * 100).toFixed(1) : 0}% margin</div>
-            </div>
+            </div>}
           </div>
 
           {/* Cost breakdown */}
           <div style={{ background: '#0f172a', borderRadius: 8, padding: 12 }}>
             <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>Cost Breakdown</div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
-              Sesame seed: {data.feedCost.toLocaleString()} KSh ({data.totalFeedUsed.toLocaleString()} kg @ 30 KSh/kg)
+              Sesame seed: {data.feedCost.toLocaleString()} KSh ({data.totalFeedUsed.toLocaleString()} kg @ {(data.costPerKg || 0).toFixed(2)} KSh/kg)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>
-              Jerrycans sold: {(((data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)) * 6000).toLocaleString()} KSh ({(data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)} sold × 6000 KSh)
+              Jerrycans sold: {(((data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)) * (data.jerrycanCost || 0)).toLocaleString()} KSh ({(data.jerrycansProduced || 0) - (data.jerrycansInStock || 0)} sold × {Math.round(data.jerrycanCost || 0).toLocaleString()} KSh)
             </div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>
-              Waste sold: {((data.wastage > 0 ? Math.max(0, data.wastage - 0) : 0) * 30).toLocaleString()} KSh (cost of waste dispatched)
+              Waste sold: {Math.round((data.stock?.wasteDispatched || 0) * (data.wasteCostPerKg || 0)).toLocaleString()} KSh (cost of waste dispatched)
             </div>
           </div>
         </div>

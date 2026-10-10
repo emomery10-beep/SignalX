@@ -14,11 +14,8 @@ const GOOD = '#22c55e'
 const WARN = '#f59e0b'
 const BAD = '#ef4444'
 
-// Single-product default — the owner only dispatches one product line, so
-// every dispatch approval starts pre-filled with this price and can be
-// amended right here before approving. Keep in sync with the server-side
-// fallback (DEFAULT_DISPATCH_PRICE in app/api/pos/factory/capture/route.ts).
-const DEFAULT_DISPATCH_PRICE = 8000
+// No default dispatch price: every factory sells at its own price. The field starts at this factory's last approved
+// price for the same product (suggested_dispatch_price from the API) or empty, and the approver enters the price.
 
 type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
 
@@ -36,6 +33,7 @@ interface Capture {
   sale_price?: number | null
   buyer_name?: string | null
   dispatch_price?: number | null
+  suggested_dispatch_price?: number | null
 }
 
 // Sky-blue matches the "packaging" defect category on the Quality screen
@@ -77,11 +75,30 @@ export default function ApprovalsPage() {
   const [rejecting, setRejecting] = useState<Capture | null>(null)
   const [reason, setReason] = useState('')
 
-  // Approver-editable dispatch price, per capture id — pre-filled with
-  // DEFAULT_DISPATCH_PRICE, amendable right up until Approve is pressed.
+  // Approver-editable dispatch price, per capture id — starts at the last approved price for this product (or
+  // empty if it was never priced) and is amendable right up until Approve is pressed.
   const [dispatchPrices, setDispatchPrices] = useState<Record<string, string>>({})
   function dispatchPriceFor(c: Capture) {
-    return dispatchPrices[c.id] ?? String(DEFAULT_DISPATCH_PRICE)
+    return dispatchPrices[c.id] ?? (c.suggested_dispatch_price ? String(c.suggested_dispatch_price) : '')
+  }
+
+  // Customer WhatsApp, per capture id — pre-filled from the number the
+  // dispatcher logged (stored in buyer_name for dispatch captures), editable
+  // so the approver can message the customer before signing off.
+  const [waNumbers, setWaNumbers] = useState<Record<string, string>>({})
+  function waNumberFor(c: Capture) {
+    return waNumbers[c.id] ?? (c.buyer_name || '').replace(/\D/g, '')
+  }
+  function sendWhatsApp(c: Capture) {
+    const num = waNumberFor(c)
+    if (num.length < 8) return
+    const dest = (c.notes || '').trim()
+    const text = tc('factory_approvals.whatsapp_message', {
+      product: c.product_name || '',
+      qty: c.quantity ?? '',
+      dest: dest ? tc('factory_approvals.whatsapp_dest', { dest }) : '',
+    })
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
   }
 
   // photo lightbox
@@ -100,7 +117,10 @@ export default function ApprovalsPage() {
     try {
       const res = await fetch('/api/pos/factory/capture?status=pending&limit=100', { headers: session.headers })
       const data = res.ok ? await res.json() : { captures: [] }
-      setCaptures(data.captures || [])
+      // Dispatches carry the sale price — only roles with capture.approve_dispatch
+      // (owner, production manager) see or decide them; the PATCH enforces it too.
+      const canDispatch = hasPermission(session.role, 'capture.approve_dispatch')
+      setCaptures((data.captures || []).filter((c: Capture) => c.type !== 'dispatch' || canDispatch))
     } catch (e) {
       console.error('Approvals load error:', e)
     } finally {
@@ -113,19 +133,20 @@ export default function ApprovalsPage() {
     let dispatch_price: number | undefined
     if (status === 'approved' && c.type === 'dispatch') {
       const parsed = Number(dispatchPriceFor(c))
-      if (!Number.isFinite(parsed) || parsed < 0) {
+      if (dispatchPriceFor(c).trim() === '' || !Number.isFinite(parsed) || parsed < 0) {
         setError(tc('factory_approvals.error_valid_dispatch_price'))
         return
       }
       dispatch_price = parsed
     }
+    const customer_phone = status === 'approved' && c.type === 'dispatch' && waNumberFor(c).length >= 8 ? waNumberFor(c) : undefined
     setBusy(c.id)
     setError(null)
     try {
       const res = await fetch('/api/pos/factory/capture', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}) }),
+        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}) }),
       })
       if (res.status === 405) {
         // PATCH not supported on this deployment — surface clearly
@@ -264,21 +285,47 @@ export default function ApprovalsPage() {
                         </label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <input
-                            type="number" inputMode="decimal" min="0"
+                            type="number" inputMode="decimal" min="0" placeholder="0"
                             value={dispatchPriceFor(c)}
                             disabled={working}
                             onChange={e => setDispatchPrices(prev => ({ ...prev, [c.id]: e.target.value }))}
                             style={{ width: 120, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                           />
-                          {c.quantity != null && (
+                          {c.quantity != null && dispatchPriceFor(c).trim() !== '' && (
                             <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>
                               {tc('factory_approvals.dispatch_price_total', { total: (Number(dispatchPriceFor(c)) * c.quantity).toLocaleString() })}
                             </span>
                           )}
                         </div>
                         <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
-                          {tc('factory_approvals.dispatch_price_hint', { default: DEFAULT_DISPATCH_PRICE.toLocaleString() })}
+                          {c.suggested_dispatch_price
+                            ? tc('factory_approvals.dispatch_price_hint', { default: Number(c.suggested_dispatch_price).toLocaleString() })
+                            : tc('factory_approvals.dispatch_price_hint_none')}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Customer WhatsApp — message the customer before approving.
+                        Opens WhatsApp with a pre-filled "awaiting approval" note. */}
+                    {c.type === 'dispatch' && (
+                      <div style={{ marginTop: 10, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px' }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          📱 {tc('factory_approvals.whatsapp_label')}
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <input
+                            type="tel" inputMode="tel"
+                            value={waNumberFor(c)}
+                            onChange={e => setWaNumbers(prev => ({ ...prev, [c.id]: e.target.value.replace(/\D/g, '') }))}
+                            placeholder={tc('factory_approvals.whatsapp_placeholder')}
+                            style={{ flex: 1, minWidth: 150, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                          />
+                          <button type="button" onClick={() => sendWhatsApp(c)} disabled={waNumberFor(c).length < 8}
+                            style={{ background: '#25D366', border: 'none', color: '#052e16', padding: '9px 14px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: waNumberFor(c).length < 8 ? 'not-allowed' : 'pointer', opacity: waNumberFor(c).length < 8 ? 0.4 : 1 }}>
+                            💬 {tc('factory_approvals.whatsapp_send')}
+                          </button>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>{tc('factory_approvals.whatsapp_hint')}</div>
                       </div>
                     )}
 

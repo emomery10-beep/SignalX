@@ -20,6 +20,7 @@ export type PosAuditEvent =
   // Factory captures
   | 'capture.submitted'
   | 'capture.approved'
+  | 'capture.dispatch_notified'
   | 'capture.rejected'
   // Transactions
   | 'transaction.refund'

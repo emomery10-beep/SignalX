@@ -1,66 +1,74 @@
 /**
- * Send WhatsApp notification when factory dispatch is approved.
+ * WhatsApp notifications for factory dispatches, sent through the shared
+ * `askbiz_notification` Utility template (lib/whatsapp.ts sendNotification) —
+ * the same one repair, salon, restaurant and logistics already use.
  *
- * Sends dispatch details to recipient via WhatsApp:
- * - Product name & quantity
- * - Destination
- * - Approval timestamp
- * - Price (if set)
+ * Two moments: "awaiting approval" (manager presses Send on the approvals
+ * screen, before signing off) and "approved" (automatic, on approval).
+ *
+ * The customer's number is logged by the dispatcher into buyer_name on the
+ * capture (see app/factory/capture/page.tsx). Meta rejects newlines in
+ * template parameters, so messages are single-line.
  */
+import { createServiceClient } from '@/lib/supabase/server'
+import { COUNTRY_DIAL } from '@/lib/phone'
+import { sendNotification } from '@/lib/whatsapp'
 
 export interface WhatsAppResult {
   success: boolean
+  skipped?: boolean
   messageId?: string
   error?: string
 }
 
-export async function sendDispatchWhatsApp(
-  phoneNumber: string | null,
-  productName: string | null,
-  quantity: number | null,
-  destination: string | null,
-  price: number | null
-): Promise<WhatsAppResult> {
-  // WhatsApp phone validation and sending
-  if (!phoneNumber?.trim()) {
-    return { success: true } // No phone, skip silently
-  }
+export type DispatchMessageKind = 'pending' | 'approved'
 
-  try {
-    const cleanPhone = phoneNumber.replace(/\D/g, '')
-    if (cleanPhone.length < 10) {
-      return { success: true } // Invalid phone, skip
-    }
-
-    const message = formatDispatchMessage(productName, quantity, destination, price)
-
-    // Log the intent (actual sending requires WhatsApp Business API setup)
-    console.log(`[WhatsApp] Dispatch notification queued for ${cleanPhone}: ${message}`)
-
-    // TODO: Integrate with WhatsApp Business API when credentials available
-    // For now, this logs the message that would be sent
-    return { success: true, messageId: `msg_${Date.now()}` }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('WhatsApp dispatch notification failed:', message)
-    return { success: false, error: message }
-  }
+export interface DispatchMessageInput {
+  kind: DispatchMessageKind
+  productName: string | null
+  quantity: number | null
+  destination: string | null
+  price?: number | null
 }
 
-function formatDispatchMessage(
-  productName: string | null,
-  quantity: number | null,
-  destination: string | null,
-  price: number | null
-): string {
-  let msg = `🚚 *Dispatch Approved*\n\n`
+export function formatDispatchMessage(m: DispatchMessageInput): string {
+  const qty = m.quantity != null ? `${m.quantity} kg` : ''
+  const what = [m.productName, qty].filter(Boolean).join(', ')
+  const to = m.destination?.trim() ? ` to ${m.destination.trim()}` : ''
+  if (m.kind === 'pending') {
+    return `🚚 Dispatch update: your dispatch (${what || 'goods'}${to}) is awaiting approval. We will confirm as soon as it is approved.`
+  }
+  const price = m.price ? ` Unit price: ${m.price.toLocaleString()}.` : ''
+  return `🚚 Dispatch approved: ${what || 'goods'}${to} is ready for dispatch.${price}`
+}
 
-  if (productName) msg += `📦 Product: *${productName}*\n`
-  if (quantity) msg += `⚖️ Quantity: *${quantity} kg*\n`
-  if (destination) msg += `📍 Destination: *${destination}*\n`
-  if (price) msg += `💰 Unit Price: *${price.toLocaleString()}*\n`
+export function cleanWhatsAppNumber(raw: string | null | undefined): string {
+  return (raw || '').replace(/\D/g, '')
+}
 
-  msg += `\n✅ Ready for dispatch`
+export async function sendDispatchWhatsApp(
+  ownerId: string,
+  phoneNumber: string | null | undefined,
+  message: DispatchMessageInput
+): Promise<WhatsAppResult> {
+  const phone = cleanWhatsAppNumber(phoneNumber)
+  if (phone.length < 8) return { success: true, skipped: true } // no usable number
 
-  return msg
+  try {
+    const service = createServiceClient()
+    const { data: profile } = await service
+      .from('profiles')
+      .select('country_code')
+      .eq('id', ownerId)
+      .maybeSingle()
+    const dialHint = COUNTRY_DIAL.find(c => c.code === profile?.country_code)?.dial
+
+    const res = await sendNotification(phone, formatDispatchMessage(message), dialHint)
+    if (!res.ok) return { success: false, error: res.error }
+    return { success: true, messageId: res.messageId }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[factory-dispatch-whatsapp] send failed:', msg)
+    return { success: false, error: msg }
+  }
 }

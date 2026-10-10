@@ -39,6 +39,13 @@
   "access_denied_subtitle": "يمكن فقط للمشرف أو المدير أو المالك عرض التسجيلات المعلّقة والموافقة عليها.",
   "dispatch_price_label": "سعر الشحن (للوحدة الواحدة)",
   "dispatch_price_hint": "معبأ تلقائياً بـ {default} — يمكنك تعديله قبل الموافقة",
+  "dispatch_price_hint_none": "أدخل سعر الوحدة الذي بيعت به هذه الشحنة",
   "dispatch_price_total": "الإجمالي: {total}",
-  "error_valid_dispatch_price": "أدخل سعر شحن صالحاً."
+  "error_valid_dispatch_price": "أدخل سعر شحن صالحاً.",
+  "whatsapp_label": "واتساب العميل",
+  "whatsapp_hint": "اختياري — راسل العميل قبل الموافقة",
+  "whatsapp_placeholder": "واتساب العميل (مثال 254712345678)",
+  "whatsapp_send": "إرسال واتساب",
+  "whatsapp_message": "مرحباً! شحنتك بانتظار الموافقة: {product}، {qty} كغ{dest}. سنؤكد لك فور الموافقة.",
+  "whatsapp_dest": " إلى {dest}"
 }

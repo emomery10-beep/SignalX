@@ -39,6 +39,13 @@
   "access_denied_subtitle": "Solo un supervisor, gerente o propietario puede ver y aprobar los registros pendientes.",
   "dispatch_price_label": "Precio de despacho (por unidad)",
   "dispatch_price_hint": "Rellenado automáticamente con {default} — puedes ajustarlo antes de aprobar",
+  "dispatch_price_hint_none": "Introduce el precio por unidad al que se vendió este despacho",
   "dispatch_price_total": "Total: {total}",
-  "error_valid_dispatch_price": "Introduce un precio de despacho válido."
+  "error_valid_dispatch_price": "Introduce un precio de despacho válido.",
+  "whatsapp_label": "WhatsApp del cliente",
+  "whatsapp_hint": "Opcional — escribe al cliente antes de aprobar",
+  "whatsapp_placeholder": "WhatsApp del cliente (p. ej. 254712345678)",
+  "whatsapp_send": "Enviar WhatsApp",
+  "whatsapp_message": "¡Hola! Tu despacho está pendiente de aprobación: {product}, {qty} kg{dest}. Te confirmaremos cuando se apruebe.",
+  "whatsapp_dest": " a {dest}"
 }
