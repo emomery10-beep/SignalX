@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import {
-  computeFactoryStock, KIND_NAME, FACTORY_COUNT_REASON,
-  JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG, type StockKind,
+  computeFactoryStock, KIND_NAME, FACTORY_COUNT_REASON, type StockKind,
 } from '@/lib/factory-stock'
+import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
 
@@ -55,7 +55,9 @@ export async function POST(req: NextRequest) {
     // system_qty = what the books said at the moment of the count
     const asOf = computeFactoryStock(((caps || []) as any[]).filter(c => new Date(c.created_at).getTime() <= new Date(at).getTime()), new Date(at).getTime(), (counts || []) as any[])
     const systemQty = kind === 'seed' ? asOf.seedKg : kind === 'cans' ? asOf.cans : asOf.wasteKg
-    const unitCost = kind === 'seed' ? stock.seedCostPerKg : kind === 'cans' ? JERRYCAN_PRODUCTION_COST : WASTE_COST_PER_KG
+    // Cans and waste are valued at this factory's own cost over its cost cycle, not a fixed price.
+    const cycleCost = kind === 'seed' ? null : await loadCycleUnitCost(service, auth.ownerId, locationId)
+    const unitCost = kind === 'seed' ? stock.seedCostPerKg : kind === 'cans' ? (cycleCost?.unitCost ?? 0) : (cycleCost?.wasteCostPerKg ?? 0)
     const variance = counted - systemQty
 
     const { error } = await service.from('pos_stock_adjustments').insert({

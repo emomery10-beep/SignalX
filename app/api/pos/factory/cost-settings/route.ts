@@ -71,7 +71,15 @@ export async function POST(req: NextRequest) {
     const elec = money(body.electricity_per_day)
     const overhead = body.overhead === undefined ? 0 : money(body.overhead)
     if (staff == null || elec == null || overhead == null) return json({ error: 'Enter valid amounts' }, 400)
-    const basis = body.electricity_basis && typeof body.electricity_basis === 'object' ? body.electricity_basis : null
+    let basis = body.electricity_basis && typeof body.electricity_basis === 'object' ? body.electricity_basis : null
+    // A save from a screen that doesn't know about the cost cycle or pack size (the pos-askbiz rates page) must not
+    // wipe them. Keep what is already saved; a stale labour entry is dropped when the new save didn't restate it,
+    // because staff_per_day just changed and the old entry would no longer match it.
+    const { data: prev } = await service.from('pos_factory_cost_settings').select('electricity_basis').eq('location_id', locationId).maybeSingle()
+    const prevBasis = prev?.electricity_basis && typeof prev.electricity_basis === 'object' ? { ...(prev.electricity_basis as Record<string, unknown>) } : {}
+    if (!(basis && 'labour' in basis)) delete (prevBasis as any).labour
+    basis = { ...prevBasis, ...(basis || {}) }
+    if (Object.keys(basis).length === 0) basis = null
 
     const { error } = await service.from('pos_factory_cost_settings').upsert({
       location_id: locationId, owner_id: auth.ownerId,

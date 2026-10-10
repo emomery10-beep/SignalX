@@ -13,7 +13,8 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { computeFactoryStock, computeGenericStock, JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG, FACTORY_COUNT_REASON, isCan, isWaste } from '@/lib/factory-stock'
+import { computeFactoryStock, computeGenericStock, FACTORY_COUNT_REASON, isCan, isWaste } from '@/lib/factory-stock'
+import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
 
 export interface DispatchSyncResult {
   success: boolean
@@ -59,6 +60,11 @@ export async function syncFactoryStockToInventory(ownerId: string, locationId: s
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       return rows.length ? Number(rows[0].dispatch_price) : 0
     }
+
+    // Cost of a can / kg of by-product = this factory's own production cost over its cost cycle.
+    const cycleCost = await loadCycleUnitCost(service, ownerId, locationId)
+    const JERRYCAN_PRODUCTION_COST = cycleCost?.unitCost ?? 0
+    const WASTE_COST_PER_KG = cycleCost?.wasteCostPerKg ?? 0
 
     const targets = [
       { name: CAN_NAME, qty: stock.cans, unit: 'item', cost: JERRYCAN_PRODUCTION_COST, sale: lastPrice(isCan), has: stock.cansProduced + stock.cansDispatched > 0 },

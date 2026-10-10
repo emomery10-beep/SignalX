@@ -55,7 +55,9 @@ const name = (c: { product_name?: string | null }) => (c.product_name || '').toL
 const ts = (v?: string | null) => (v ? new Date(v).getTime() : 0)
 
 export const isSeed = (c: { product_name?: string | null }) => { const p = name(c); return p.includes('sesame seed') && !p.includes('oil') && !p.includes('waste') }
-export const isCan = (c: { product_name?: string | null }) => { const p = name(c); return p.includes('jerrycan') || p.includes('mtungi') }
+// 'jerrycan' alone also matches another crop's cans ("Coconut oil - Jerrycan (20L)") — those are not sesame stock.
+const OTHER_CROP = /coconut|copra|groundnut|peanut|sunflower|palm|shea|soy/
+export const isCan = (c: { product_name?: string | null }) => { const p = name(c); return (p.includes('jerrycan') || p.includes('mtungi')) && !OTHER_CROP.test(p) }
 export const isWaste = (c: { product_name?: string | null }) => name(c).includes('sesame waste')
 
 export function kindOf(c: { product_name?: string | null }): StockKind | null {

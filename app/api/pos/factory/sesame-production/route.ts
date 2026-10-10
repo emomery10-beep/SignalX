@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import {
-  computeFactoryStock, isWaste,
-  JERRYCAN_PRODUCTION_COST, WASTE_COST_PER_KG, FACTORY_COUNT_REASON,
+  computeFactoryStock, computeGenericStock, isWaste, FACTORY_COUNT_REASON,
 } from '@/lib/factory-stock'
+import { loadCycleUnitCost, stockRoleOf } from '@/lib/factory-unit-cost'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
 
@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
 
     const captures = ((allCaptures || []) as any[]).filter((c: any) => {
       const p = (c.product_name || '').toLowerCase()
-      return p.includes('sesame seed') || p.includes('sesame oil') || p.includes('sesame waste') || p.includes('jerrycan') || p.includes('mtungi')
+      // 'jerrycan' alone also matches another crop's cans ("Coconut oil - Jerrycan (20L)"): those are not sesame stock.
+      const otherCrop = /coconut|copra|groundnut|peanut|sunflower|palm|shea|soy/.test(p)
+      return p.includes('sesame seed') || p.includes('sesame oil') || p.includes('sesame waste') || ((p.includes('jerrycan') || p.includes('mtungi')) && !otherCrop)
     })
 
     // Physical stock counts re-anchor the balance (see lib/factory-stock.ts).
@@ -61,6 +63,17 @@ export async function GET(req: NextRequest) {
     const jerrycansProduced = stock.cansProduced
     const jerrycansDispatched = stock.cansDispatched
     const jerrycansInStock = stock.cans
+
+    // What a finished unit and a kg of by-product cost comes from this factory's own production over its
+    // cost cycle (lib/factory-unit-cost) — never a fixed price. Nothing produced yet = 0, shown as "—".
+    const cycleCost = await loadCycleUnitCost(service, auth.ownerId, auth.locationId)
+    const JERRYCAN_PRODUCTION_COST = cycleCost?.unitCost ?? 0
+    const WASTE_COST_PER_KG = cycleCost?.wasteCostPerKg ?? 0
+
+    // Per-product stock for factories that are not the sesame press (coconut, groundnut, water, …), each product
+    // tagged with its role so the Inventory tab can cost it: raw material, finished unit or by-product.
+    const genericStock = computeGenericStock(((allCaptures || []) as any[]).filter((c: any) => c.status === 'approved' || c.status == null))
+      .map(r => ({ ...r, role: stockRoleOf(cycleCost?.factoryType, r.name) }))
 
     // Waste sold is COGS; waste still in stock is inventory value
     const wasteSoldCost = stock.wasteDispatched * WASTE_COST_PER_KG
@@ -105,6 +118,8 @@ export async function GET(req: NextRequest) {
       finishedGoodsValue,
       wasteStockValue,
       totalStockValue,
+      genericStock,
+      cycleCost, // unit cost over the factory's cost cycle, with the full breakdown behind it
       stock, // per-product balance breakdown, latest delivery check and recent movements
     })
   } catch (error) {

@@ -5,6 +5,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
 import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
+import { parseCycle, cycleWindow, DEFAULT_CYCLE_DAYS, MAX_CYCLE_DAYS, type FactoryCycle } from '@/lib/factory-unit-cost'
 
 // ── Color constants ──────────────────────────────────────────
 const GREEN = '#16a34a'
@@ -1489,15 +1490,25 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
   // packaging + output − dispatched; waste = produced − dispatched − fed back.
   const factoryInventory = useMemo(() => {
     const items: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = []
-    // Only the sesame factory has the seed / jerrycan / waste rows; other
-    // factories (coconut, ...) show their own synced product rows below.
-    if (factoryType && factoryType !== 'sesame_oil') return items
     if (!sesameData || typeof sesameData.remainingArrival !== 'number') return items
-    // No type on record (older accounts, or a sign-up that skipped the picker):
-    // only treat it as a sesame factory if it has actually logged sesame seed.
-    // Otherwise a new coconut/other factory would see sesame rows it never made.
-    if (!factoryType && !(sesameData.totalArrival > 0 || sesameData.totalFeedUsed > 0)) return items
     const d = sesameData
+    // Which kind of factory this is: its saved type, else what the cost calculation inferred from what it logged.
+    const effType = (factoryType && factoryType !== 'other' ? factoryType : d.cycleCost?.factoryType) || null
+    const isSesame = effType === 'sesame_oil' || (!effType && (d.totalArrival > 0 || d.totalFeedUsed > 0))
+    if (!isSesame) {
+      // Any other factory (coconut, groundnut, water, …): its own products, costed from its own production
+      // over its cost cycle — never the sesame rows, never a fixed price.
+      const cc = d.cycleCost
+      for (const r of (Array.isArray(d.genericStock) ? d.genericStock : [])) {
+        if (r.role === 'bulk') continue // pressed oil before packing: counted once it is packed into jerrycans
+        const cost = r.role === 'finished' ? (cc?.unitCost || 0) : r.role === 'raw' ? (cc?.rawCostPerKg || 0) : r.role === 'byproduct' ? (cc?.wasteCostPerKg || 0) : 0
+        items.push({
+          name: r.name, category: r.role === 'raw' ? 'raw' : r.role === 'finished' ? 'finished' : r.role === 'byproduct' ? 'byproduct' : '',
+          quantity: r.onHand, unit: r.role === 'finished' ? 'item' : (r.unit || 'kg'), cost,
+        })
+      }
+      return items
+    }
     items.push({
       kind: 'seed', name: 'Sesame seed', category: 'raw', quantity: d.remainingArrival, unit: 'kg',
       cost: d.costPerKg || 0, usagePerDay: (d.seedFedLast30 || 0) / 30,
@@ -1519,7 +1530,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
     // them. Everything else in the catalogue is shown as stored.
     const allItems: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = [
       ...factoryInventory,
-      ...inv.filter(i => i.source_type !== 'factory_dispatch'),
+      ...inv.filter(i => i.source_type !== 'factory_dispatch' && !factoryInventory.some(f => (f.name || '').toLowerCase() === (i.name || '').toLowerCase())),
     ]
     const mapped = allItems.map(it => {
       const qty = getQty(it)
@@ -1934,7 +1945,7 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 // ═════════════════════════════════════════════════════════════
 // COSTING SUB-TAB — crown jewel
 // ═════════════════════════════════════════════════════════════
-function CostingView({ intakes, outputs, wastages, packaging, dispatches, costForCapture, sellByProduct, totalOutput, currencySymbol, selectedLocation, previewCaptures, factoryType }: {
+function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wastagesAll, packaging: packagingAll, dispatches: dispatchesAll, costForCapture, sellByProduct, totalOutput, currencySymbol, selectedLocation, previewCaptures, factoryType }: {
   factoryType?: string | null
   intakes: FactoryCapture[]; outputs: FactoryCapture[]; wastages: FactoryCapture[]; packaging?: FactoryCapture[]; dispatches?: FactoryCapture[]
   costForCapture: (c: FactoryCapture) => number
@@ -1955,6 +1966,41 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const isCake = (n?: string | null) => isByproductName(P, n)
   const isRaw = (n?: string | null) => isRawIntakeName(P, n)
   const withMachines = hasDefaultMachines(factoryType)
+
+  // ── Cost cycle ───────────────────────────────────────────────
+  // Every cost on this tab is worked out over one cycle (last 28 days by default; the owner can change the
+  // number of days or pick an exact date range, saved per factory under "Your cost rates"). Materials fed,
+  // cans made, cake made and the labour / electricity / overhead days all come from the same window.
+  const [cycle, setCycle] = useState<FactoryCycle>({ mode: 'days', days: DEFAULT_CYCLE_DAYS })
+  const cycleWin = useMemo(() => cycleWindow(cycle), [cycle])
+  const inCycle = useCallback((c: FactoryCapture) => {
+    const d = nairobiDayKey(new Date(c.created_at))
+    return d >= cycleWin.from && d <= cycleWin.to
+  }, [cycleWin])
+  const intakes = useMemo(() => intakesAll.filter(inCycle), [intakesAll, inCycle])
+  const outputs = useMemo(() => outputsAll.filter(inCycle), [outputsAll, inCycle])
+  const wastages = useMemo(() => wastagesAll.filter(inCycle), [wastagesAll, inCycle])
+  const packaging = useMemo(() => (packagingAll || []).filter(inCycle), [packagingAll, inCycle])
+  const dispatches = useMemo(() => (dispatchesAll || []).filter(inCycle), [dispatchesAll, inCycle])
+  // Days before the factory's first production are not charged (a factory that started last week is not
+  // billed 28 days of wages).
+  const firstProdDay = useMemo(() => {
+    let first = ''
+    for (const list of [intakesAll, outputsAll, wastagesAll, packagingAll || []]) {
+      for (const c of list) { const d = nairobiDayKey(new Date(c.created_at)); if (!first || d < first) first = d }
+    }
+    return first
+  }, [intakesAll, outputsAll, wastagesAll, packagingAll])
+  const chargedDays = useMemo(() => {
+    if (!firstProdDay) return cycleWin.days
+    const start = firstProdDay > cycleWin.from ? firstProdDay : cycleWin.from
+    if (start > cycleWin.to) return 0
+    return Math.max(1, Math.round((Date.parse(cycleWin.to + 'T00:00:00Z') - Date.parse(start + 'T00:00:00Z')) / 86_400_000) + 1)
+  }, [firstProdDay, cycleWin])
+  const [rateCycleMode, setRateCycleMode] = useState<'days' | 'range'>('days')
+  const [rateCycleDays, setRateCycleDays] = useState(String(DEFAULT_CYCLE_DAYS))
+  const [rateCycleFrom, setRateCycleFrom] = useState('')
+  const [rateCycleTo, setRateCycleTo] = useState('')
 
   // Real operating costs — per sellable unit
   const DEFAULT_MOTOR_HOURS_PER_DAY = 9 // confirmed by owner — not 24/7
@@ -2074,7 +2120,11 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   // different (lifetime "active days") basis than Labor. Edited once, from
   // the Staff card below, and shared by the Electricity formula so the two
   // can't drift apart.
-  const [laborDays, setLaborDays] = useState(28)
+  const laborDays = chargedDays
+  const setLaborDays = (n: number) => {
+    const days = Math.min(MAX_CYCLE_DAYS, Math.max(1, Math.floor(n) || 1))
+    setCycle({ mode: 'days', days }); setRateCycleMode('days'); setRateCycleDays(String(days))
+  }
 
   // Manual top-up for ad-hoc labour (casual/temporary workers beyond the
   // staff rate above) — the capture log has no record of casual hires, so
@@ -2102,7 +2152,8 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
   const staffCostPerJerrycan = jerrycansProduced > 0 ? totalLabor / jerrycansProduced : 0
   const electricityCostPerJerrycan = jerrycansProduced > 0 ? totalElectricity / jerrycansProduced : 0
   // Manual fallback price, only used until real wastage sale data exists
-  const [wastagePerUnitCost, setWastagePerUnitCost] = useState(30)
+  // Sesame keeps its long-standing KSh 30/kg; any other factory has no guessed cake price (0 until it sells some).
+  const [wastagePerUnitCost, setWastagePerUnitCost] = useState(factoryType === 'sesame_oil' || (!factoryType && intakesAll.some(c => /sesame/i.test(c.product || ''))) ? 30 : 0)
   // Manual override — lets the user amend the price even once actual dispatch
   // data exists (e.g. the realized average is skewed by an early low-price sale).
   const [wastagePriceOverride, setWastagePriceOverride] = useState<number | null>(null)
@@ -2184,6 +2235,10 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
         if (!live || !d) return
         setRatesCountry(d.country_code || null)
         setRatesSaved(!!d.saved)
+        const cy = parseCycle(d.electricity_basis)
+        setCycle(cy)
+        setRateCycleMode(cy.mode)
+        if (cy.mode === 'days') setRateCycleDays(String(cy.days)); else { setRateCycleFrom(cy.from); setRateCycleTo(cy.to) }
         const st = d.settings
         setRatesConfigured(!!st?.configured)
         if (st?.configured) {
@@ -2222,6 +2277,16 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
     const labourAmount = Number(rateStaff)
     const staff = Math.round((labourAmount / LABOUR_DAYS[rateLabourPeriod]) * 100) / 100
     const bill = Number(rateBill)
+    let newCycle: FactoryCycle
+    if (rateCycleMode === 'range') {
+      const spanOk = rateCycleFrom && rateCycleTo && rateCycleFrom <= rateCycleTo && (Date.parse(rateCycleTo + 'T00:00:00Z') - Date.parse(rateCycleFrom + 'T00:00:00Z')) / 86_400_000 < MAX_CYCLE_DAYS
+      if (!spanOk) { setRatesMsg('Pick a start date on or before the end date (at most a year)'); return }
+      newCycle = { mode: 'range', from: rateCycleFrom, to: rateCycleTo }
+    } else {
+      const dn = Math.floor(Number(rateCycleDays))
+      if (!Number.isFinite(dn) || dn < 1 || dn > MAX_CYCLE_DAYS) { setRatesMsg(`Cycle days must be between 1 and ${MAX_CYCLE_DAYS}`); return }
+      newCycle = { mode: 'days', days: dn }
+    }
     const elec = bill > 0 ? Math.round(bill / 26) : Number(rateElec) // monthly bill ÷ 26 working days (Mon–Sat)
     if (!Number.isFinite(staff) || staff < 0 || !Number.isFinite(elec) || elec < 0) { setRatesMsg('Enter valid amounts'); return }
     setRatesBusy(true)
@@ -2233,6 +2298,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
           electricity_basis: {
             ...(bill > 0 ? { mode: 'monthly_bill', monthly_bill: bill, working_days: 26 } : { mode: 'per_day' }),
             labour: { period: rateLabourPeriod, amount: labourAmount },
+            cycle: newCycle,
             ...(P.defaultUnitLitres != null ? { unit: { litres: unitL } } : {}),
           },
         }),
@@ -2241,6 +2307,7 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
       setLaborRateMode('day'); setStaffDayRate(staff); setStaffHourlyRate(Math.round(staff / DEFAULT_MOTOR_HOURS_PER_DAY))
       setElectricityPerDayInput(elec); setRateElec(String(elec)); setRateBill('')
       setOverheadOverride(Number(rateOverhead) || 0)
+      setCycle(newCycle)
       if (P.defaultUnitLitres != null) setUnitLitres(unitL)
       setRatesConfigured(true); setRatesSaved(true); setRatesMsg('Saved — the CFO now uses these rates')
     } catch { setRatesMsg('Could not save') } finally { setRatesBusy(false) }
@@ -2635,6 +2702,42 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                 </div>
               )}
             </div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: 'var(--tx2)', marginBottom: 6 }}>Cost cycle — the period each cost per {U.noun} is worked out over</div>
+              <div role="group" aria-label="Cost cycle type" style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                {([['days', 'Last number of days'], ['range', 'Exact dates']] as const).map(([k, lbl]) => (
+                  <button
+                    key={k} type="button" onClick={() => setRateCycleMode(k)} aria-pressed={rateCycleMode === k}
+                    style={{ minHeight: 36, padding: '0 14px', borderRadius: 9999, fontSize: 11, fontWeight: rateCycleMode === k ? 700 : 500, cursor: 'pointer', border: rateCycleMode === k ? `1.5px solid ${ACC}` : '1px solid var(--b)', background: rateCycleMode === k ? ACC_BG : 'var(--sf)', color: rateCycleMode === k ? ACC : 'var(--tx2)' }}
+                  >{lbl}</button>
+                ))}
+              </div>
+              {rateCycleMode === 'days' ? (
+                <label htmlFor="rate-cycle-days" style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10, color: 'var(--tx2)', maxWidth: 260 }}>
+                  Days in the cycle (default {DEFAULT_CYCLE_DAYS})
+                  <input
+                    id="rate-cycle-days" type="number" inputMode="numeric" min={1} max={MAX_CYCLE_DAYS} value={rateCycleDays}
+                    onChange={e => setRateCycleDays(e.target.value)}
+                    style={{ minHeight: 40, padding: '0 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 13 }}
+                  />
+                </label>
+              ) : (
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {([['rate-cycle-from', 'From', rateCycleFrom, setRateCycleFrom], ['rate-cycle-to', 'To', rateCycleTo, setRateCycleTo]] as const).map(([id, label, val, set]) => (
+                    <label key={id} htmlFor={id} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10, color: 'var(--tx2)' }}>
+                      {label}
+                      <input
+                        id={id} type="date" value={val} onChange={e => set(e.target.value)}
+                        style={{ minHeight: 40, padding: '0 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 13 }}
+                      />
+                    </label>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 6 }}>
+                Now showing {cycleWin.from} to {cycleWin.to} ({cycleWin.days} days{chargedDays !== cycleWin.days ? `; ${chargedDays} charged — days before your first production are free` : ''}). Material, {U.plural} made, labour, electricity and overhead all use this same period. Save to apply.
+              </div>
+            </div>
             {P.defaultUnitLitres != null && (
               <div style={{ marginBottom: 12 }}>
                 <label htmlFor="rate-unit" style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10, color: 'var(--tx2)', maxWidth: 260 }}>
@@ -2758,8 +2861,8 @@ function CostingView({ intakes, outputs, wastages, packaging, dispatches, costFo
                   <span style={{ fontSize: 9, color: 'var(--tx3)' }}>Days</span>
                   <input
                     type="number"
-                    value={laborDays}
-                    onChange={e => setLaborDays(Math.max(0, Number(e.target.value) || 0))}
+                    value={cycleWin.days}
+                    onChange={e => setLaborDays(Number(e.target.value) || 1)}
                     style={{ width: 50, padding: '4px 6px', borderRadius: 6, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', fontSize: 10, fontFamily: 'inherit' }}
                   />
                 </div>
