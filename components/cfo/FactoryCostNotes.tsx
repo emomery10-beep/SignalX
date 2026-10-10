@@ -41,7 +41,7 @@ const MISSING_TEXT: Record<string, string> = {
 // 'actual' = real tagged expenses, 'mixed' = real for some months and estimated for the rest.
 const srcNote = (s?: string) => s === 'actual' ? ', actual spend' : s === 'mixed' ? ', part actual spend' : ', estimate'
 
-const fmtDay = (d: string) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+const fmtDay = (d: string) => new Date(d + 'T00:00:00Z').toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' })
 
 export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined; sym: string }) {
   if (!info) return null
