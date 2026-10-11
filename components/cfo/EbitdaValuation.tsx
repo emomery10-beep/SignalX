@@ -38,7 +38,7 @@ interface Props {
   }>
   currencySymbol: string
   countryCode?: string | null
-  onAsk: (prompt: string) => void
+  onAsk?: (prompt: string) => void
 }
 
 /* ================================================================== */
@@ -486,10 +486,10 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
                 {tc('cfo_ebitda.reset')}
               </button>
             )}
-            <button onClick={() => onAsk(tc('cfo_ebitda.ask_ai_prompt', { ebitda: fmt(ebitda, sym), margin: ebitdaMargin.toFixed(1), adjusted: fmt(adjustedEbitda, sym), sde: fmt(sde, sym), revenue: fmt(totals.revenue, sym), industry: ind.label, quality: Math.round(qualityPct), multiple, valuation: fmt(valuation, sym) }))}
+            {onAsk && <button onClick={() => onAsk(tc('cfo_ebitda.ask_ai_prompt', { ebitda: fmt(ebitda, sym), margin: ebitdaMargin.toFixed(1), adjusted: fmt(adjustedEbitda, sym), sde: fmt(sde, sym), revenue: fmt(totals.revenue, sym), industry: ind.label, quality: Math.round(qualityPct), multiple, valuation: fmt(valuation, sym) }))}
               style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
               {tc('cfo_ebitda.ask_ai')}
-            </button>
+            </button>}
           </div>
         </div>
 

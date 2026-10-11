@@ -1,6 +1,4 @@
 {
-  "help_statusbanner": {
-    "viewUpdates": "View updates →",
-    "dismiss": "Dismiss status banner"
-  }
+  "viewUpdates": "View updates →",
+  "dismiss": "Dismiss status banner"
 }

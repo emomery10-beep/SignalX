@@ -11,7 +11,9 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getCallerContext, type CallerRole } from '@/lib/team-auth'
 
 // Mirrors 'CFO reports' view/full in ROLE_PERMS (components/intelligence/TeamPanel.tsx).
-const CFO_READ_ROLES: CallerRole[] = ['owner', 'admin', 'analyst', 'accountant', 'viewer']
+// 'investor' is read-only here and sees only the snapshot-backed Dashboard / P&L / Reports
+// (CfoDashboard readOnly); the expenses, receivables and AI endpoints stay closed to them.
+const CFO_READ_ROLES: CallerRole[] = ['owner', 'admin', 'analyst', 'accountant', 'viewer', 'investor']
 
 export interface CfoReader {
   user: User

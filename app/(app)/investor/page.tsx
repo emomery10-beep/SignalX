@@ -4,6 +4,7 @@
 // the API (/api/investor/me) returns nothing about anyone else.
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import CfoDashboard from '@/components/cfo/CfoDashboard'
 
 interface Line { label: string; value: number | string; kind: 'money' | 'pct' | 'text' | 'count' }
 interface Investment {
@@ -22,6 +23,7 @@ const niceDate = (d: string) => new Date(d + 'T00:00:00Z').toLocaleDateString(un
 export default function InvestorPage() {
   const [data, setData] = useState<Payload | null>(null)
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [view, setView] = useState<'mine' | 'company'>('mine')
 
   useEffect(() => {
     fetch('/api/investor/me')
@@ -58,7 +60,25 @@ export default function InvestorPage() {
         </button>
       </header>
 
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px 48px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div role="tablist" aria-label="Investor views" style={{ maxWidth: 720, margin: '0 auto', padding: '12px 16px 0', display: 'flex', gap: 8 }}>
+        {([['mine', 'My investment'], ['company', 'Company reports']] as const).map(([id, label]) => (
+          <button
+            key={id} type="button" role="tab" aria-selected={view === id} onClick={() => setView(id)}
+            style={{ minHeight: 44, padding: '0 16px', borderRadius: 9999, border: '1px solid var(--b2)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 600,
+              background: view === id ? 'var(--tx)' : 'transparent', color: view === id ? 'var(--bg)' : 'var(--tx2)' }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'company' && (
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '16px 16px 48px' }}>
+          <CfoDashboard readOnly />
+        </div>
+      )}
+
+      <div hidden={view !== 'mine'} style={{ maxWidth: 720, margin: '0 auto', padding: '20px 16px 48px', display: view === 'mine' ? 'flex' : 'none', flexDirection: 'column', gap: 16 }}>
         {state === 'loading' && <p role="status" style={{ fontSize: 15, color: 'var(--tx2)' }}>Loading…</p>}
         {state === 'error' && <p role="alert" style={{ fontSize: 15, color: 'var(--tx)' }}>We couldn’t load your investment. Please refresh, or ask the business owner to check your invite.</p>}
         {state === 'ok' && data && data.investments.length === 0 && (

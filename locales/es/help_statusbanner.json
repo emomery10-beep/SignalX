@@ -1,6 +1,4 @@
 {
-  "help_statusbanner": {
-    "viewUpdates": "Ver actualizaciones →",
-    "dismiss": "Cerrar banner de estado"
-  }
+  "viewUpdates": "Ver actualizaciones →",
+  "dismiss": "Cerrar banner de estado"
 }

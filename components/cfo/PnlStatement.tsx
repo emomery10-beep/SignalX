@@ -46,7 +46,7 @@ interface Props {
     pct_of_total: number
   }>
   currencySymbol: string
-  onAsk: (prompt: string) => void
+  onAsk?: (prompt: string) => void
 }
 
 /* ------------------------------------------------------------------ */
@@ -406,7 +406,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               {tc('cfo_pnl.header_subtitle', { sym })}
             </p>
           </div>
-          <button
+          {onAsk && <button
             onClick={() => onAsk(tc('cfo_pnl.ask_ai_prompt'))}
             style={{
               fontSize: 12,
@@ -421,7 +421,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
             }}
           >
             {tc('cfo_pnl.ask_ai')}
-          </button>
+          </button>}
         </div>
 
         {/* ---- Waterfall ---- */}

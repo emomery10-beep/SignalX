@@ -7,7 +7,7 @@ interface Props {
   totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
   pnlMonthly?: Array<{ month: string; revenue: number; cogs: number; fixed: number; net: number; gross_margin_pct: number; net_margin_pct: number }>
   currencySymbol: string
-  onAsk: (prompt: string) => void
+  onAsk?: (prompt: string) => void
 }
 
 const CARD: React.CSSProperties = { borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }
@@ -68,7 +68,7 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
             {isProfitable ? tc('cfo_breakeven.badgeAbove') : tc('cfo_breakeven.badgeToGo', { amount: fmt(revenueToGo, sym) })}
           </span>
         </div>
-        <button onClick={() => onAsk(tc('cfo_breakeven.askPrompt', {
+        {onAsk && <button onClick={() => onAsk(tc('cfo_breakeven.askPrompt', {
             breakEven: fmt(breakEvenRevenue, sym),
             revenue: fmt(revenue, sym),
             pct: rawProgressPct.toFixed(0),
@@ -78,7 +78,7 @@ export default function DynamicBreakEven({ totals, pnlMonthly, currencySymbol: s
           }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_breakeven.askAi')}
-        </button>
+        </button>}
       </div>
 
       <div style={{ padding: '16px 18px' }}>

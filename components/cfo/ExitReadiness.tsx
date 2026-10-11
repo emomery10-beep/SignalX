@@ -10,7 +10,7 @@ interface Props {
   pnlMonthly?: Array<{ month: string; revenue: number; cogs: number; fixed: number; net: number; gross_margin_pct: number; net_margin_pct: number }>
   dataQuality: { days_with_data: number; has_ecommerce: boolean; has_pos: boolean }
   currencySymbol: string
-  onAsk: (prompt: string) => void
+  onAsk?: (prompt: string) => void
 }
 
 const CARD: React.CSSProperties = { borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }
@@ -197,7 +197,7 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
             {tc('cfo_exit.grade_badge', { grade, label: gradeLabel })}
           </span>
         </div>
-        <button onClick={() => onAsk(tc('cfo_exit.ask_prompt', {
+        {onAsk && <button onClick={() => onAsk(tc('cfo_exit.ask_prompt', {
             pct,
             grade,
             weaknesses: weaknesses.map(w => w.label + ' (' + w.score + '/' + w.maxScore + ')').join(', '),
@@ -207,7 +207,7 @@ export default function ExitReadiness({ totals, cash, comparison, pnlMonthly, da
           }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_exit.ask_ai')}
-        </button>
+        </button>}
       </div>
 
       <div style={{ padding: '16px 18px' }}>

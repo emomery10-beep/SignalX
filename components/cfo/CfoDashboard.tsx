@@ -176,13 +176,21 @@ const buildSubTabs = (tc: (k: string, vars?: Record<string, string | number>) =>
   { id: 'reports', label: tc('cfo_dashboard.tab_reports') },
 ]
 
+// Sub-tabs an investor (readOnly) may open — everything else stays owner/team only.
+const READ_ONLY_TABS: SubTab[] = ['dashboard', 'pnl', 'reports']
+
 interface Props {
-  onAsk: (prompt: string) => void
+  onAsk?: (prompt: string) => void
+  /** Investor view: Dashboard / P&L / Reports only, no Ask-AI, no writes, no extra APIs. */
+  readOnly?: boolean
 }
 
-export default function CfoDashboard({ onAsk }: Props) {
+export default function CfoDashboard({ onAsk: onAskProp, readOnly = false }: Props) {
   const { tc } = useLang()
-  const subTabs = buildSubTabs(tc)
+  const onAsk = readOnly ? undefined : onAskProp
+  // Tabs an investor can never open still type-require a handler.
+  const ownerAsk = onAsk ?? (() => {})
+  const subTabs = buildSubTabs(tc).filter(t => !readOnly || READ_ONLY_TABS.includes(t.id))
   const [subTab, setSubTab] = useState<SubTab>('dashboard')
   const [period, setPeriod] = useState('this_month')
   const [segment, setSegment] = useState<CfoSegment>({ key: 'all', factoryId: null })
@@ -216,8 +224,9 @@ export default function CfoDashboard({ onAsk }: Props) {
   // deep link) navigates to e.g. /intelligence?tab=cfo&sub=expenses, and this
   // reads that param back into local state using the same VOICE_SUBROUTES ids.
   useEffect(() => {
-    setSubTab(readSubParam(window.location.search, SUB_TAB_IDS, 'dashboard'))
-  }, [])
+    const fromUrl = readSubParam(window.location.search, SUB_TAB_IDS, 'dashboard')
+    setSubTab(readOnly && !READ_ONLY_TABS.includes(fromUrl) ? 'dashboard' : fromUrl)
+  }, [readOnly])
 
   const changePeriod = (p: string) => {
     setPeriod(p)
@@ -227,6 +236,7 @@ export default function CfoDashboard({ onAsk }: Props) {
   // and a voice-nav landing both leave the URL in the same consistent,
   // bookmarkable/shareable state.
   const changeSubTab = (id: SubTab) => {
+    if (readOnly && !READ_ONLY_TABS.includes(id)) return
     setSubTab(id)
     const url = new URL(window.location.href)
     url.searchParams.set('sub', id)
@@ -438,7 +448,7 @@ export default function CfoDashboard({ onAsk }: Props) {
           )}
 
           {/* AI Insights */}
-          {!loading && data && (
+          {!readOnly && !loading && data && (
             <CfoAiInsight data={data} countryCode={countryCode} onAsk={onAsk} />
           )}
 
@@ -453,10 +463,10 @@ export default function CfoDashboard({ onAsk }: Props) {
           )}
 
           {/* Payment Recovery summary */}
-          <RecoveredRevenue currencySymbol={sym} onAsk={onAsk} />
+          {!readOnly && <RecoveredRevenue currencySymbol={sym} onAsk={ownerAsk} />}
 
           {/* Cash Flow section */}
-          <CashFlowCountdown onAsk={onAsk} />
+          {!readOnly && <CashFlowCountdown onAsk={onAsk} />}
         </div>
       )}
 
@@ -509,7 +519,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             />
           )}
 
-          <CashFlowCountdown onAsk={onAsk} />
+          {!readOnly && <CashFlowCountdown onAsk={onAsk} />}
 
           {!loading && data?.totals ? (
             <CashFlowStatement
@@ -520,7 +530,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               receivablesSummary={data.receivables_summary}
               sourceBreakdown={data.source_breakdown}
               currencySymbol={sym}
-              onAsk={onAsk}
+              onAsk={ownerAsk}
               onConfigSaved={() => fetchData(period, segment)}
             />
           ) : loading ? (
@@ -540,7 +550,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               marginByChannel={data.margin_by_channel}
               pnlMonthly={data.pnl_monthly}
               currencySymbol={sym}
-              onAsk={onAsk}
+              onAsk={ownerAsk}
             />
           ) : loading ? (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_margins')}</div>
@@ -561,7 +571,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               totals={data.totals}
               marginByProduct={data.margin_by_product}
               currencySymbol={sym}
-              onAsk={onAsk}
+              onAsk={ownerAsk}
             />
           )}
 
@@ -571,7 +581,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               pnlMonthly={data.pnl_monthly}
               marginByChannel={data.margin_by_channel}
               currencySymbol={sym}
-              onAsk={onAsk}
+              onAsk={ownerAsk}
             />
           )}
 
@@ -615,7 +625,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               cash={data.cash}
               receivablesSummary={data.receivables_summary}
               currencySymbol={sym}
-              onAsk={onAsk}
+              onAsk={ownerAsk}
             />
           )}
         </div>
@@ -694,7 +704,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                     monthlyBaseline={monthlyBaseline}
                     cash={data.cash}
                     currencySymbol={sym}
-                    onAsk={onAsk}
+                    onAsk={ownerAsk}
                   />
                   <ThreeWayForecast
                     pnlMonthly={data.pnl_monthly ?? []}
@@ -702,7 +712,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                     monthlyBaseline={monthlyBaseline}
                     receivablesSummary={data.receivables_summary}
                     currencySymbol={sym}
-                    onAsk={onAsk}
+                    onAsk={ownerAsk}
                   />
                 </>
               )

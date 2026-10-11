@@ -24,7 +24,7 @@ const ROLE_META: Record<string, { color: string; bg: string; label: string; shor
   business_partner: { color: '#be123c', bg: 'rgba(190,18,60,.08)',  label: 'Business Partner', short: 'Full POS access' },
   buyer:            { color: '#b45309', bg: 'rgba(180,83,9,.08)',   label: 'Buyer',            short: 'Inventory & POS only' },
   viewer:           { color: '#5a5652', bg: 'rgba(90,86,82,.07)',   label: 'Viewer',           short: 'Read-only access' },
-  investor:         { color: '#4f46e5', bg: 'rgba(79,70,229,.08)',  label: 'Investor',         short: 'Own investment & returns only' },
+  investor:         { color: '#4f46e5', bg: 'rgba(79,70,229,.08)',  label: 'Investor',         short: 'Own returns + read-only CFO' },
 }
 
 const ROLE_PERMS: Record<string, Record<string, 'full' | 'edit' | 'view' | 'none'>> = {
@@ -36,7 +36,7 @@ const ROLE_PERMS: Record<string, Record<string, 'full' | 'edit' | 'view' | 'none
   business_partner: { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
   buyer:            { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'view', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
   viewer:           { Dashboards: 'view', 'AI chat': 'view', 'Business tools': 'view', 'CFO reports': 'view', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
-  investor:         { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'none', 'Data sources': 'none', POS: 'none', Team: 'none', Settings: 'none', Billing: 'none' },
+  investor:         { Dashboards: 'none', 'AI chat': 'none', 'Business tools': 'none', 'CFO reports': 'view', 'Data sources': 'none', POS: 'none', Team: 'none', Settings: 'none', Billing: 'none' },
 }
 
 const AREAS = ['Dashboards', 'AI chat', 'Business tools', 'CFO reports', 'Data sources', 'POS', 'Team', 'Settings', 'Billing']

@@ -8,7 +8,7 @@ interface Props {
   cash: { balance: number; monthly_fixed: number; runway_months: number | null; daily_net_burn: number }
   inventory: { total_products: number; low_or_oos: number; stockout_rate: number; value_at_cost: number; value_at_retail: number }
   currencySymbol: string
-  onAsk: (prompt: string) => void
+  onAsk?: (prompt: string) => void
 }
 
 const CARD: React.CSSProperties = { borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }
@@ -133,7 +133,7 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
             {overallLabel}
           </span>
         </div>
-        <button onClick={() => onAsk(tc('cfo_benchmarks.askPrompt', {
+        {onAsk && <button onClick={() => onAsk(tc('cfo_benchmarks.askPrompt', {
             industry: industry.name,
             grossMargin: userGrossMargin.toFixed(1),
             gmLow: industry.grossMargin[0],
@@ -150,7 +150,7 @@ export default function IndustryBenchmarks({ totals, cash, inventory, currencySy
           }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
           {tc('cfo_benchmarks.askAi')}
-        </button>
+        </button>}
       </div>
 
       <div style={{ padding: '16px 18px' }}>
