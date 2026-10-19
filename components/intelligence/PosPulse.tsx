@@ -6,6 +6,8 @@ import { useLang } from '@/components/LanguageProvider'
 
 interface PosPulseProps {
   onAsk: (prompt: string) => void
+  /** The account's own currency symbol; falls back to a timezone guess only when it is not known. */
+  currencySymbol?: string
 }
 
 interface DailyBucket { date: string; label: string; revenue: number; cost: number; txns: number; avgBasket: number }
@@ -67,7 +69,7 @@ function detectSector(bt: string): { label: string; emoji: string } {
   return { label: 'POS Pulse', emoji: '📊' }
 }
 
-export default function PosPulse({ onAsk }: PosPulseProps) {
+export default function PosPulse({ onAsk, currencySymbol }: PosPulseProps) {
   const { tc } = useLang()
   const [sales, setSales] = useState<SalesData | null>(null)
   const [lowStock, setLowStock] = useState<LowStockItem[]>([])
@@ -311,7 +313,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
   const hoursRemaining = Math.max(0, 20 - nowHour) // assume 8pm close
   const projectedToday = sales && hoursElapsed > 0 ? (sales.todayRevenue / hoursElapsed) * (hoursElapsed + hoursRemaining) : 0
 
-  const fmt = (v: number) => `${sym}${v.toLocaleString('en', { maximumFractionDigits: 0 })}`
+  const fmt = (v: number) => `${currencySymbol || sym}${v.toLocaleString('en', { maximumFractionDigits: 0 })}`
 
   // KPI deep-dive definitions
   type KpiMeta = { id: string; label: string; value: string; color: string; status: 'good' | 'warning' | 'critical'; icon: string; benchmark: string; tips: string[]; action: string; askPrompt: string }

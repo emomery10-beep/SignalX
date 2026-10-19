@@ -239,9 +239,15 @@ async function getFactoryData(service: any, ownerId: string, startDate: Date) {
   }
 
   const total = captures.length
-  const wastageCount = byType['wastage']?.count || 0
-  const outputCount  = byType['output']?.count  || 0
-  const intakeCount  = byType['intake']?.count  || 0
+
+  // Efficiency maths uses APPROVED captures only (a pending or rejected capture is not stock) and compares
+  // quantities, not row counts. Raw material fed to production is 'intake_feed' (older accounts logged 'intake');
+  // 'intake_arrival' is delivery, not consumption.
+  const approvedCaps = captures.filter((c: any) => c.status === 'approved')
+  const qtyOf = (types: string[]) => approvedCaps.filter((c: any) => types.includes(c.type)).reduce((s: number, c: any) => s + (Number(c.quantity) || 0), 0)
+  const fedQty = qtyOf(['intake_feed', 'intake'])
+  const outputQty = qtyOf(['output'])
+  const wastageQty = qtyOf(['wastage'])
 
   // Average approval lag (hours)
   const approvedWithTimes = captures.filter((c: any) => c.approved_at && c.created_at)
@@ -255,9 +261,9 @@ async function getFactoryData(service: any, ownerId: string, startDate: Date) {
     total_captures: total,
     by_type: byType,
     status_breakdown: { pending, approved, rejected },
-    wastage_rate_pct: total > 0 ? +((wastageCount / total) * 100).toFixed(1) : 0,
+    wastage_rate_pct: fedQty > 0 ? +((wastageQty / fedQty) * 100).toFixed(1) : null, // wastage as a share of raw material fed to production (approved, by quantity)
     rejection_rate_pct: (approved + rejected) > 0 ? +((rejected / (approved + rejected)) * 100).toFixed(1) : 0,
-    output_vs_intake_ratio: intakeCount > 0 ? +(outputCount / intakeCount).toFixed(2) : null,
+    output_vs_intake_ratio: fedQty > 0 && outputQty > 0 ? +(outputQty / fedQty).toFixed(2) : null, // output quantity ÷ raw fed (approved)
     avg_approval_lag_hours: avgApprovalLagHrs,
     pending_approvals: pending,
     unique_batches: new Set(captures.map((c: any) => c.batch_ref).filter(Boolean)).size,

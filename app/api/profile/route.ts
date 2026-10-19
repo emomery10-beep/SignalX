@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sanitizeName } from '@/lib/sanitize'
+import { createServiceClient } from '@/lib/supabase/server'
+import { ensureFactoryLocation } from '@/lib/ensure-factory-location'
 
 export async function GET() {
   const supabase = createClient()
@@ -62,5 +64,10 @@ export async function PATCH(request: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Registering as a manufacturer (or picking a factory type) creates the owner's default factory straight away.
+  if (data && (update.business_type === 'manufacturer' || update.factory_type)) {
+    try { await ensureFactoryLocation(createServiceClient(), user.id) } catch (e) { console.error('ensureFactoryLocation failed:', e) }
+  }
   return NextResponse.json(data)
 }

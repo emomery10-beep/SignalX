@@ -1,3 +1,4 @@
+import { ensureFactoryLocation } from '@/lib/ensure-factory-location'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
@@ -230,6 +231,9 @@ export async function POST(req: NextRequest) {
   if (!effLocationId) {
     const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
     if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
+    // A manufacturer who never created a factory still gets one (from their registration answers), so this
+    // capture reaches production, the CFO and Intelligence instead of floating with no factory.
+    else if (!onlyFactory || onlyFactory.length === 0) effLocationId = await ensureFactoryLocation(service, auth.ownerId)
   }
 
   // Product lines are admin-controlled: a capture may only use a product from

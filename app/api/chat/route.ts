@@ -10,6 +10,7 @@ import { detectExportIntent, buildExportMarketsResult } from '@/lib/ai/export-ma
 import { detectSocialIntent, buildSocialResult } from '@/lib/ai/social-intelligence'
 import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
 import { resolveLocale } from '@/lib/i18n-locale'
+import { buildCfoSnapshot } from '@/lib/cfo-snapshot'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -567,7 +568,7 @@ export async function POST(request: NextRequest) {
     const isRestaurantOpsQuestion = /\bcovers?\b|dine.?in|takeaway|\bkitchen\b|\bwaiter(s)?\b|\bchef(s)?\b|food waste|wasted (food|ingredients)|menu item|table turn/i.test(q)
     const isRepairJobQuestion = /repair (job|ticket)|service (job|ticket)|device (repair|drop.?off)|turnaround time|fix(ed)? (a |the )?(phone|device|laptop)/i.test(q)
     const isLogisticsFleetQuestion = /\bmy (truck|trucks|fleet)\b|which driver|undelivered parcel|parcel(s)?\s+.*\b(undelivered|in transit|delivered|status)\b|route (efficiency|performance)/i.test(q)
-    const isFactoryQuestion = /\bfactory\b|production batch|\bbatch(es)?\b|\bwaybill(s)?\b|manufactur|production (yield|output)/i.test(q)
+    const isFactoryQuestion = /\bfactory\b|production batch|\bbatch(es)?\b|\bwaybill(s)?\b|manufactur|production (yield|output)|\b(i|we) (have )?(produced|pressed|dispatched)\b|\bproduction\b|\byield\b|\bwastage\b|raw material|cost per (can|unit|jerrycan|litre|bottle)|\b(jerrycans?|copra|mtungi)\b|\bintake\b/i.test(q)
     const isSalonQuestion = /\bsalon\b|\bappointment(s)?\b|\bbooking(s)?\b|\bstylist(s)?\b|no.?show|haircut|client visit/i.test(q)
     // Widened to cover direct-debit collection too — gocardless mandates/payments are
     // conceptually the same "is my money actually being collected?" question as the POS
@@ -1585,7 +1586,8 @@ export async function POST(request: NextRequest) {
     if (isFactoryQuestion) {
       const [batchRes, captureRes, waybillRes] = await Promise.all([
         service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
-        service.from('pos_factory_captures').select('type, quantity, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
+        // Approved captures only (a pending or rejected capture is not stock), uncapped enough for a busy factory.
+        service.from('pos_factory_captures').select('type, quantity, product_name, created_at').eq('owner_id', user.id).eq('status', 'approved').gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(10000),
         service.from('pos_factory_waybills').select('destination, product_name, quantity, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
       ])
       if (batchRes.error) console.error('pos_factory_batches query error:', batchRes.error.message)
@@ -1633,15 +1635,38 @@ export async function POST(request: NextRequest) {
           posContext += `${batches.length} batch(es): ${Object.entries(byBatchStatus).map(([s, c]) => `${c} ${s}`).join(', ')}.\n`
         }
         if (captures.length > 0) {
-          const byType: Record<string, number> = {}
-          const qtyByType: Record<string, number> = {}
+          // Per product and per capture type — never one total across products, because kg of seed, litres of oil and
+          // cans are different units and a single "N units" figure means nothing.
+          const perProduct = new Map<string, Record<string, number>>()
+          const countByType: Record<string, number> = {}
           for (const c of captures as any[]) {
-            byType[c.type] = (byType[c.type] || 0) + 1
-            qtyByType[c.type] = (qtyByType[c.type] || 0) + (Number(c.quantity) || 0)
+            countByType[c.type] = (countByType[c.type] || 0) + 1
+            const name = (c.product_name || 'Unnamed product').trim()
+            const row = perProduct.get(name) || {}
+            row[c.type] = (row[c.type] || 0) + (Number(c.quantity) || 0)
+            perProduct.set(name, row)
           }
-          posContext += `Production captures: ${Object.entries(byType).map(([t, c]) => `${c} ${t}${qtyByType[t] ? ` (${qtyByType[t]} units)` : ''}`).join(', ')}.\n`
-          if (qtyByType.wastage > 0) posContext += `⚠ Wastage recorded: ${qtyByType.wastage} units across ${byType.wastage} log(s).\n`
+          posContext += `Approved production captures (${captures.length}): ${Object.entries(countByType).map(([t, c]) => `${c} ${t}`).join(', ')}.\n`
+          posContext += `Quantities by product (as recorded; each product keeps its own unit):\n`
+          for (const [name, row] of Array.from(perProduct.entries()).slice(0, 25)) {
+            posContext += `- ${name}: ${Object.entries(row).map(([t, q]) => `${t} ${Math.round(q * 100) / 100}`).join(', ')}\n`
+          }
+          if ((captures as any[]).length >= 10000) posContext += `Note: the capture list was capped at 10,000 rows, so totals may be a lower bound.\n`
         }
+
+        // Money and stock for the factory, from the same CFO figures the Intelligence page shows, so answers agree with it.
+        try {
+          const snap: any = await buildCfoSnapshot({
+            supabase, ownerId: user.id, user, isOwner: true,
+            params: new URLSearchParams({ period: 'this_month', segment: 'factory' }),
+          })
+          if (snap?.totals && (snap.totals.revenue > 0 || snap.totals.cogs > 0 || snap.segment?.factory_stock_value > 0)) {
+            const sy = snap.currency_symbol || ''
+            posContext += `Factory finances this month (priced dispatches only): revenue ${sy}${snap.totals.revenue}, production cost ${sy}${snap.totals.cogs}, gross profit ${sy}${snap.totals.gross_profit} (${snap.totals.gross_margin_pct}% margin). Stock value on hand ${sy}${snap.segment?.factory_stock_value ?? 0}.\n`
+            if (snap.segment?.unpriced_dispatches > 0) posContext += `${snap.segment.unpriced_dispatches} dispatch(es) are still waiting for an approver to set a price and are not in revenue.\n`
+            for (const f of (snap.factories || []).slice(0, 6)) posContext += `Factory: ${f.name} (${f.type || 'type not set'}).\n`
+          }
+        } catch (e) { console.error('chat factory snapshot failed:', e) }
         if (waybills.length > 0) {
           posContext += `${waybills.length} dispatch waybill(s) totaling ${waybills.reduce((s: number, w: any) => s + (Number(w.quantity) || 0), 0)} units.\n`
         }

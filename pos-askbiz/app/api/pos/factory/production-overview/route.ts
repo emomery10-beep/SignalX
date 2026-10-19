@@ -159,7 +159,9 @@ export async function GET(req: NextRequest) {
         revenue: canSeePrices ? revenue : 0, cogs, margin: canSeePrices ? revenue - cogs : 0,
         soldUnits: round(finishedDispatched), byproductSoldCost,
       },
-      products: canSeePrices ? rows : rows.map(r => ({ ...r, lastDispatchPrice: 0 })),
+      products: (canSeePrices ? rows : rows.map(r => ({ ...r, lastDispatchPrice: 0 })))
+        // Captures carry no unit column, so name the unit from the product's role.
+        .map(r => ({ ...r, unit: r.unit || (r.role === 'finished' ? unit.plural : 'kg') })),
     })
   } catch (error) {
     console.error('Production overview error:', error)

@@ -17,6 +17,7 @@ import MarketClimate from '@/components/cfo/MarketClimate'
 import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
 import TopProducts from '@/components/intelligence/TopProducts'
 import PosPulse from '@/components/intelligence/PosPulse'
+import FactoryPulse from '@/components/intelligence/FactoryPulse'
 import DailyActions from '@/components/intelligence/DailyActions'
 import ZakatCalculator from '@/components/intelligence/ZakatCalculator'
 import CrossSectorIntel from '@/components/intelligence/CrossSectorIntel'
@@ -67,7 +68,7 @@ export default function IntelligencePage() {
   const [anomalies, setAnomalies] = useState<any[]>([])
   const [loadingHealth, setLoadingHealth] = useState(true)
   const [scoreHistory, setScoreHistory] = useState<any[]>([])
-  const [connectedCount, setConnectedCount] = useState(0)
+  const [connectedBase, setConnectedCount] = useState(0)
   const [totalSources] = useState(31)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -79,7 +80,12 @@ export default function IntelligencePage() {
   const [greetingName, setGreetingName] = useState('')
 
   // Overview summary state
+  const [hasRetailPos, setHasRetailPos] = useState(false)
   const [cfoSnapshot, setCfoSnapshot] = useState<any>(null)
+  // A factory's dispatches live in pos_factory_captures, not pos_transactions, so it is its own connected source.
+  const hasFactoryData = !!(cfoSnapshot?.factories?.length > 0 && cfoSnapshot?.data_quality?.has_factory)
+  const connectedCount = connectedBase + (hasFactoryData ? 1 : 0)
+  const isFactoryOnly = !!(cfoSnapshot?.factories?.length > 0 && !hasRetailPos && !cfoSnapshot?.data_quality?.has_pos)
   const [logisticsHealth, setLogisticsHealth] = useState<any>(null)
   const [courierSummary, setCourierSummary] = useState<any>(null)
   // Logistics merged tab — sub-view: 'outgoing' (ships) | 'incoming' (courier)
@@ -231,6 +237,7 @@ export default function IntelligencePage() {
     ]).then(([sources, txns]) => {
       const externalCount = Array.isArray(sources) ? sources.length : 0
       const hasPosData = txns && ((Array.isArray(txns) && txns.length > 0) || (txns.transactions && txns.transactions.length > 0))
+      setHasRetailPos(!!hasPosData)
       setConnectedCount(externalCount + (hasPosData ? 1 : 0))
     })
   }, [])
@@ -624,7 +631,10 @@ export default function IntelligencePage() {
                   transition: 'box-shadow 300ms ease, border-color 300ms ease',
                   boxShadow: waterfallDrill === 'Stock Cost' ? '0 0 0 2px #6366F140' : 'none',
                 }}>
-                  <PosPulse onAsk={askAskBiz} />
+                  {/* Factories never ring pos_transactions, so a factory-only account would see an empty retail card. */}
+                  {isFactoryOnly
+                    ? <FactoryPulse snapshot={cfoSnapshot} onAsk={askAskBiz} />
+                    : <PosPulse onAsk={askAskBiz} currencySymbol={cfoSnapshot?.currency_symbol} />}
                 </div>
               </div>
 
