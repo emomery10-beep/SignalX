@@ -197,6 +197,7 @@ export default function FactoryHub() {
   const [loading, setLoading]   = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [factoryType, setFactoryType] = useState<string | null>(null)
+  const [overviewTile, setOverviewTile] = useState<{ label: string; icon: string } | null>(null)
 
   // Downtime / OEE state
   const [activeDowntime, setActiveDowntime]     = useState<ActiveDowntime[]>([])
@@ -316,9 +317,10 @@ export default function FactoryHub() {
   const loadRawStock = useCallback(async () => {
     if (!session) return
     try {
-      const r = await fetch('/api/pos/factory/sesame-production', { headers: session.headers })
+      const r = await fetch('/api/pos/factory/production-overview', { headers: session.headers })
       const d = r.ok ? await r.json() : {}
-      setRawStockKg(typeof d.remainingArrival === 'number' ? d.remainingArrival : null)
+      setRawStockKg(typeof d.raw?.remaining === 'number' ? d.raw.remaining : null)
+      setOverviewTile(d.label ? { label: d.label, icon: d.icon || '🏭' } : null)
     } catch { /* silent */ }
   }, [session])
 
@@ -404,11 +406,10 @@ export default function FactoryHub() {
   const wastageInputSub = unitsInFed > 0 ? tc('factory.kpi_wastage_input', { amount: unitsInFed.toLocaleString(), unit: feedUnit }) : null
 
   // Small context line under Efficiency: raw material still on hand (all-time
-  // arrivals minus all-time feed via /api/pos/factory/sesame-production), so a
+  // arrivals minus all-time feed via /api/pos/factory/production-overview), so a
   // low daily efficiency reading can be read against "plenty of stock left" vs
-  // "about to run out." Sesame-specific today, same scope as the "Sesame
-  // Production" quick-action card below — hidden for other factory types since
-  // the endpoint then legitimately returns 0.
+  // "about to run out." Works for every factory type — the overview
+  // endpoint classifies raw material from how it was captured.
   const rawStockSub = rawStockKg != null && rawStockKg > 0 ? tc('factory.kpi_efficiency_stock', { amount: rawStockKg.toLocaleString(), unit: 'kg' }) : null
 
   const todayKeyNairobi = nairobiDayKey(new Date())
@@ -799,7 +800,7 @@ export default function FactoryHub() {
         {/* ── Quick actions ─────────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
           {[
-            { label: 'Sesame Production', sub: 'Real-time intake, yield & inventory', icon: <span style={{ fontSize: 20 }}>🌾</span>, color: '#f59e0b', href: '/factory/sesame', span: false },
+            { label: overviewTile?.label || 'Production overview', sub: 'Real-time intake, yield & inventory', icon: <span style={{ fontSize: 20 }} aria-hidden="true">{overviewTile?.icon || '🏭'}</span>, color: '#f59e0b', href: '/factory/overview', span: false },
             { label: tc('factory.action_production_log'), sub: tc('factory.action_production_log_sub'), icon: <IconClipboard size={20} />, color: tokens.intake, href: '/factory/production', span: false },
             { label: tc('factory.action_approvals'), sub: tc('factory.action_approvals_sub', { count: pending }), icon: <IconCheckSquare size={20} />, color: pending > 0 ? tokens.danger : tokens.success, href: '/factory/approvals', span: false },
             { label: tc('factory.action_quality_check'), sub: qualityOpen > 0 ? tc(qualityOpen > 1 ? 'factory.action_quality_open_other' : 'factory.action_quality_open_one', { count: qualityOpen }) : tc('factory.action_quality_log'), icon: <IconShield size={20} />, color: qualityCriticals > 0 ? tokens.danger : qualityOpen > 0 ? tokens.warning : tokens.intake, href: '/factory/quality', span: false },

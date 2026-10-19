@@ -116,7 +116,7 @@ export default function SesameReconciliationPage() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => router.push('/factory/sesame')} style={{ background: '#334155', border: 'none', color: '#94a3b8', width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 18 }}>←</button>
+          <button onClick={() => router.push('/factory/overview')} style={{ background: '#334155', border: 'none', color: '#94a3b8', width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 18 }}>←</button>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: BLUE }}>🔗 Reconciliation</div>
             <div style={{ fontSize: 12, color: '#94a3b8' }}>Track sesame oil through all stages</div>
