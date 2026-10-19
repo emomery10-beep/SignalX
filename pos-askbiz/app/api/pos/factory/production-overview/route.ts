@@ -32,7 +32,14 @@ export async function GET(req: NextRequest) {
     const service = createServiceClient()
 
     const cycleCost = await loadCycleUnitCost(service, auth.ownerId, auth.locationId)
-    const factoryType = cycleCost?.factoryType || null
+    // An owner looking at the whole account (no factory picked) with factories of different types has no single
+    // "type": show neutral wording and derive everything from the captures instead of the first factory's type.
+    let mixed = false
+    if (!auth.locationId) {
+      const { data: facs } = await service.from('pos_locations').select('factory_type').eq('owner_id', auth.ownerId).eq('kind', 'factory')
+      mixed = new Set(((facs || []) as any[]).map(f => f.factory_type).filter((t: string | null) => t && t !== 'other')).size > 1
+    }
+    const factoryType = mixed ? null : (cycleCost?.factoryType || null)
     const template = getFactoryTypeTemplate(factoryType)
     const P = getCostingProfile(factoryType)
     const canSeePrices = hasPermission(auth.role, 'capture.approve_dispatch')
@@ -40,7 +47,7 @@ export async function GET(req: NextRequest) {
     const recipe = template?.suggestedRecipes?.[0]
     const base = {
       factoryType,
-      label: template?.label || 'Production',
+      label: template?.label || 'Production overview',
       icon: template?.icon || '🏭',
       rawLabel: P.rawLabel,
       byproductNoun: P.byproductNoun,
@@ -56,7 +63,7 @@ export async function GET(req: NextRequest) {
       return json({
         ...base,
         raw: { arrived: r.totalArrival, used: r.totalFeedUsed, remaining: r.remainingArrival, ratePerUnit: r.costPerKg, cost: r.feedCost, unit: 'kg', names: ['Sesame seed'] },
-        output: { main: r.oilProduced, mainUnit: 'L', mainLabel: 'Oil produced', byproduct: r.wastage, byproductUnit: 'kg', yield: r.yield },
+        output: { main: r.oilProduced, mainUnit: 'L', mainLabel: 'Oil produced', byproduct: r.wastage, byproductUnit: 'kg', yield: r.totalFeedUsed > 0 ? r.yield : null },
         units: { produced: r.jerrycansProduced, dispatched: r.jerrycansDispatched, inStock: r.jerrycansInStock, unitCost: r.jerrycanCost },
         value: { raw: r.rawMaterialsCost, finished: r.finishedGoodsValue, byproduct: r.wasteStockValue, total: r.totalStockValue },
         money: { revenue: r.totalRevenue, cogs: r.costOfGoods, margin: r.grossMargin, soldUnits: (r.jerrycansProduced || 0) - (r.jerrycansInStock || 0), byproductSoldCost: Math.round((r.stock?.wasteDispatched || 0) * (r.wasteCostPerKg || 0)) },
@@ -86,7 +93,9 @@ export async function GET(req: NextRequest) {
     const roleOf = (name: string): Role => {
       const f = seen.get(name.trim().toLowerCase())
       if (!f) return 'other'
-      if (isByproductName(P, name)) return 'byproduct'
+      // Count-type factories (bakery, soap…) share one broad by-product pattern ("cake", "bran"…) that also names real
+      // products — a bakery's cake is what it sells — so there only items logged as wastage are by-products.
+      if (isByproductName(P, name) && (P.kind !== 'count' || f.waste)) return 'byproduct'
       if (f.pack) return 'finished'
       if (f.out) return P.kind !== 'count' && P.product?.test(name) && !/jerry|can|bottle|pack|\b\d+\s*l\b/i.test(name) ? 'bulk' : 'finished'
       if (f.in || f.feed) return 'raw'

@@ -64,13 +64,34 @@ export default function FactoryProductionOverviewPage() {
   const [data, setData] = useState<Overview | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
+  // Owners can run several factories (e.g. sesame + coconut): they pick one so figures never blend. PIN staff are tied to their branch.
+  const [factories, setFactories] = useState<{ id: string; name: string }[]>([])
+  const [factoryId, setFactoryId] = useState('')
+  const [factoriesReady, setFactoriesReady] = useState(false)
+  const ownerPicks = !!session && !session.isPin
+
+  useEffect(() => {
+    if (!authReady || !session) return
+    if (!ownerPicks) { setFactoriesReady(true); return }
+    fetch('/api/pos/locations', { headers: session.headers })
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => {
+        const list = ((j?.locations || []) as any[]).filter(l => l.kind === 'factory').map(l => ({ id: l.id as string, name: (l.name as string) || 'Factory' }))
+        setFactories(list)
+        if (list.length > 0) setFactoryId(list[0].id)
+      })
+      .catch(() => {})
+      .finally(() => setFactoriesReady(true))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady, session?.ownerId, ownerPicks])
 
   const load = useCallback(async () => {
     if (!session) return
     setLoading(true)
     setFailed(false)
     try {
-      const res = await fetch('/api/pos/factory/production-overview', { headers: session.headers })
+      const qs = ownerPicks && factoryId ? `?location_id=${encodeURIComponent(factoryId)}` : ''
+      const res = await fetch(`/api/pos/factory/production-overview${qs}`, { headers: session.headers })
       if (!res.ok) throw new Error(String(res.status))
       setData(await res.json())
     } catch (e) {
@@ -79,11 +100,11 @@ export default function FactoryProductionOverviewPage() {
     } finally {
       setLoading(false)
     }
-  }, [session])
+  }, [session, ownerPicks, factoryId])
 
   useEffect(() => {
-    if (authReady && session) load()
-  }, [authReady, session, load])
+    if (authReady && session && factoriesReady) load()
+  }, [authReady, session, factoriesReady, load])
 
   const shell = (msg: string) => (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9' }}>{msg}</div>
@@ -129,6 +150,15 @@ export default function FactoryProductionOverviewPage() {
       </header>
 
       <main style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
+        {ownerPicks && factories.length > 1 && (
+          <div style={{ marginBottom: 20 }}>
+            <label htmlFor="factory-pick" style={{ display: 'block', fontSize: 12, color: MUTED, marginBottom: 6 }}>Factory</label>
+            <select id="factory-pick" value={factoryId} onChange={e => setFactoryId(e.target.value)}
+              style={{ background: '#1e293b', color: '#f1f5f9', border: '1px solid #334155', borderRadius: 8, minHeight: 44, padding: '0 12px', fontSize: 14, minWidth: 220 }}>
+              {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </div>
+        )}
         {!hasAnything && (
           <Section title="Nothing logged yet">
             <p style={{ margin: '0 0 12px', color: MUTED, fontSize: 14, lineHeight: 1.5 }}>
