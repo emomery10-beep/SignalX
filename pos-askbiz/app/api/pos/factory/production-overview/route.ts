@@ -4,7 +4,7 @@ import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { computeGenericStock } from '@/lib/factory-stock'
 import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
-import { getCostingProfile, isByproductName, unitNaming } from '@/lib/factory-costing-profiles'
+import { getCostingProfile, isByproductName, isPackagedName, unitNaming } from '@/lib/factory-costing-profiles'
 import { getFactoryTypeTemplate } from '@/lib/factory-templates'
 import { GET as sesameGet } from '../sesame-production/route'
 
@@ -77,87 +77,76 @@ export async function GET(req: NextRequest) {
     const { data } = await q
     const caps = (data || []) as any[]
 
-    // Classify each product by how it was captured.
-    const seen = new Map<string, { in: boolean; out: boolean; pack: boolean; feed: boolean; waste: boolean }>()
-    for (const c of caps) {
-      const k = (c.product_name || '').trim().toLowerCase()
-      if (!k) continue
-      const f = seen.get(k) || { in: false, out: false, pack: false, feed: false, waste: false }
-      if (c.type === 'intake_arrival' || c.type === 'intake') f.in = true
-      if (c.type === 'intake_feed') f.feed = true
-      if (c.type === 'output') f.out = true
-      if (c.type === 'packaging') f.pack = true
-      if (c.type === 'wastage') f.waste = true
-      seen.set(k, f)
-    }
-    const roleOf = (name: string): Role => {
-      const f = seen.get(name.trim().toLowerCase())
-      if (!f) return 'other'
-      // Count-type factories (bakery, soap…) share one broad by-product pattern ("cake", "bran"…) that also names real
-      // products — a bakery's cake is what it sells — so there only items logged as wastage are by-products.
-      if (isByproductName(P, name) && (P.kind !== 'count' || f.waste)) return 'byproduct'
-      if (f.pack) return 'finished'
-      if (f.out) return P.kind !== 'count' && P.product?.test(name) && !/jerry|can|bottle|pack|\b\d+\s*l\b/i.test(name) ? 'bulk' : 'finished'
-      if (f.in || f.feed) return 'raw'
-      return 'finished'
-    }
+    // Everything below is read from the capture TYPE (arrival / feed / output / wastage / packaging / dispatch), not from
+    // product names: staff pick names from a dropdown and real accounts mis-file them (a coconut press logging its oil
+    // output as "Copra"), so the type is the only reliable signal. Names only decide what counts as a packaged unit.
+    const qtyOf = (pred: (c: any) => boolean) => caps.filter(pred).reduce((s, c) => s + n(c.quantity), 0)
+    const nm = (c: any) => (c.product_name || '').trim()
+    const isByp = (c: any) => isByproductName(P, nm(c))
+    const isPack = (c: any) => isPackagedName(P, nm(c)) && !isByp(c)
 
-    // The generic stock helper only knows waste/husk/shell as by-products, so e.g. coconut or groundnut cake
-    // would read as stock leaving. A by-product arrives when it is produced (output / wastage) and leaves when dispatched.
-    const rows = computeGenericStock(caps).map(r => {
-      const role = roleOf(r.name)
-      if (role !== 'byproduct') return { ...r, role }
-      const mine = caps.filter(c => (c.product_name || '').trim().toLowerCase() === r.name.trim().toLowerCase())
-      const inQ = mine.filter(c => c.type === 'wastage' || c.type === 'output' || c.type === 'packaging').reduce((s, c) => s + n(c.quantity), 0)
-      const outQ = mine.filter(c => c.type === 'dispatch' || c.type === 'intake_feed').reduce((s, c) => s + n(c.quantity), 0)
-      return { ...r, role, in: round(inQ), out: round(outQ), onHand: round(Math.max(0, inQ - outQ)) }
-    })
-    const sumRows = (role: Role, k: 'in' | 'out' | 'onHand') => rows.filter(r => r.role === role).reduce((s, r) => s + r[k], 0)
-
-    const rawArrived = sumRows('raw', 'in')
-    const rawUsed = sumRows('raw', 'out')
-    const rawRemaining = sumRows('raw', 'onHand')
+    const rawArrived = qtyOf(c => c.type === 'intake_arrival')
+    const rawUsed = qtyOf(c => c.type === 'intake_feed' || c.type === 'intake')
+    // Raw on hand = arrived − fed − sold as-is, over all raw products together (the same rule the CFO figures use), because
+    // arrivals and feeds are often filed under different names for the same material ("Coconut copra" in, "Copra" fed).
+    const rawNames = new Set(caps.filter(c => ['intake_arrival', 'intake_feed', 'intake'].includes(c.type)).map(c => nm(c).toLowerCase()))
+    const rawSoldAsIs = qtyOf(c => c.type === 'dispatch' && rawNames.has(nm(c).toLowerCase()) && !isPack(c))
+    const rawRemaining = Math.max(0, rawArrived - rawUsed - rawSoldAsIs)
     const rawRate = cycleCost?.rawCostPerKg || 0
     const feedCost = rawUsed * rawRate
+    const rawUnit = 'kg'
+    const rawNameList = Array.from(new Set(caps.filter(c => c.type === 'intake_arrival').map(nm).filter(Boolean)))
 
-    const bulkProduced = sumRows('bulk', 'in')
-    const byproductKg = caps.filter(c => c.type === 'wastage' && isByproductName(P, c.product_name)).reduce((s, c) => s + n(c.quantity), 0)
-    const rawUnit = rows.find(r => r.role === 'raw')?.unit || 'kg'
-    const bulkUnit = rows.find(r => r.role === 'bulk')?.unit || null
-    const unitsComparable = !bulkUnit || bulkUnit === rawUnit || /^kg/i.test(bulkUnit) === /^kg/i.test(rawUnit)
-    const yieldPct = bulkProduced > 0 && rawUsed > 0 && unitsComparable ? (bulkProduced / rawUsed) * 100 : null
+    // Count-type factories (bakery, soap, blocks…) make finished units directly at "output"; process factories (oil,
+    // water) produce a bulk product at "output" and pack it into units at "packaging".
+    const countKind = P.kind === 'count'
+    const bulkProduced = countKind ? 0 : qtyOf(c => c.type === 'output' && !isByp(c))
+    const byproductKg = qtyOf(c => c.type === 'wastage' && (isByp(c) || !countKind))
+    const unitsProduced = countKind ? qtyOf(c => c.type === 'output' && !isByp(c)) + qtyOf(c => c.type === 'packaging') : qtyOf(c => c.type === 'packaging' && !isByp(c))
+    const rawDispatchNames = rawNames
+    const unitsDispatched = qtyOf(c => c.type === 'dispatch' && !isByp(c) && (countKind ? !rawDispatchNames.has(nm(c).toLowerCase()) : isPack(c)))
+    const unitsInStock = Math.max(0, unitsProduced - unitsDispatched)
+    const yieldPct = bulkProduced > 0 && rawUsed > 0 ? (bulkProduced / rawUsed) * 100 : null
+    const outputNames = Array.from(new Set(caps.filter(c => c.type === 'output' && !isByp(c)).map(nm).filter(Boolean)))
 
-    const finishedProduced = sumRows('finished', 'in')
-    const finishedDispatched = sumRows('finished', 'out')
-    const finishedInStock = sumRows('finished', 'onHand')
     const unitCost = cycleCost?.unitCost || 0
     const byproductCostPerKg = cycleCost?.wasteCostPerKg || 0
-    const byproductSold = rows.filter(r => r.role === 'byproduct').reduce((s, r) => s + r.out, 0)
-    const byproductOnHand = sumRows('byproduct', 'onHand')
+    const byproductSold = qtyOf(c => c.type === 'dispatch' && isByp(c))
+    const byproductOnHand = Math.max(0, byproductKg - byproductSold)
 
     const revenue = caps.filter(c => c.type === 'dispatch').reduce((s, c) => {
       const price = n(c.dispatch_price) > 0 ? n(c.dispatch_price) : n(c.sale_price) > 0 ? n(c.sale_price) : 0
       return s + price * n(c.quantity)
     }, 0)
     const byproductSoldCost = Math.round(byproductSold * byproductCostPerKg)
-    const cogs = feedCost + finishedDispatched * unitCost + byproductSoldCost
+    const cogs = feedCost + unitsDispatched * unitCost + byproductSoldCost
     const rawValue = rawRemaining * rawRate
-    const finishedValue = finishedInStock * unitCost
+    const finishedValue = unitsInStock * unitCost
     const byproductValue = byproductOnHand * byproductCostPerKg
+
+    // Product table: the stock ledger per product, exactly as recorded, with a role so it reads sensibly.
+    const roleOf = (name: string): Role => {
+      const k = name.trim().toLowerCase()
+      if (rawNames.has(k)) return 'raw'
+      if (isByproductName(P, name) && (!countKind || caps.some(c => nm(c).toLowerCase() === k && c.type === 'wastage'))) return 'byproduct'
+      if (isPackagedName(P, name) || countKind) return 'finished'
+      return 'bulk'
+    }
+    const rows = computeGenericStock(caps).map(r => ({ ...r, role: roleOf(r.name) }))
 
     return json({
       ...base,
-      raw: { arrived: round(rawArrived), used: round(rawUsed), remaining: round(rawRemaining), ratePerUnit: rawRate, cost: feedCost, unit: rawUnit, names: rows.filter(r => r.role === 'raw').map(r => r.name) },
+      raw: { arrived: round(rawArrived), used: round(rawUsed), remaining: round(rawRemaining), ratePerUnit: rawRate, cost: feedCost, unit: rawUnit, names: rawNameList },
       output: {
-        main: round(bulkProduced), mainUnit: bulkUnit || rawUnit,
-        mainLabel: rows.find(r => r.role === 'bulk') ? `${rows.find(r => r.role === 'bulk')!.name} produced` : null,
+        main: round(bulkProduced), mainUnit: 'kg',
+        mainLabel: outputNames.length ? `${outputNames.slice(0, 2).join(' / ')} produced` : null,
         byproduct: round(byproductKg), byproductUnit: 'kg', yield: yieldPct,
       },
-      units: { produced: round(finishedProduced), dispatched: round(finishedDispatched), inStock: round(finishedInStock), unitCost },
+      units: { produced: round(unitsProduced), dispatched: round(unitsDispatched), inStock: round(unitsInStock), unitCost },
       value: { raw: rawValue, finished: finishedValue, byproduct: byproductValue, total: rawValue + finishedValue + byproductValue },
       money: {
         revenue: canSeePrices ? revenue : 0, cogs, margin: canSeePrices ? revenue - cogs : 0,
-        soldUnits: round(finishedDispatched), byproductSoldCost,
+        soldUnits: round(unitsDispatched), byproductSoldCost,
       },
       products: (canSeePrices ? rows : rows.map(r => ({ ...r, lastDispatchPrice: 0 })))
         // Captures carry no unit column, so name the unit from the product's role.
