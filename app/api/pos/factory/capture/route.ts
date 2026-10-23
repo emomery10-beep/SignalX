@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { logPosAudit } from '@/lib/pos-audit'
+import { productOnHand } from '@/lib/factory-onhand'
+import { ownerFactoryTimeZone, zoneDayStart, zoneDayEnd } from '@/lib/factory-time'
 import { signPayload } from '@/lib/factory-photos'
 import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
 
@@ -92,17 +94,13 @@ export async function GET(req: NextRequest) {
   if (status)      query = query.eq('status', status)
   if (shift_id)    query = query.eq('shift_id', shift_id)
   if (location_id) query = query.eq('location_id', location_id)
+  const tz = await ownerFactoryTimeZone(service, auth.ownerId)
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    // Nairobi (UTC+3, no DST) calendar day, not raw UTC — a capture made
-    // after ~9pm Nairobi time is already "tomorrow" in UTC, so a plain UTC
-    // midnight boundary silently puts it under the wrong date. Same
-    // convention as components/pos/FactoryTab.tsx's day-bucketing fix
-    // (commit 139d94f1) and pos-askbiz's copy of this route.
-    const start = new Date(`${date}T00:00:00+03:00`)
-    const end = new Date(start.getTime() + 24 * 3600 * 1000)
+    // The factory's own calendar day (its country's time zone), not the raw UTC one: a capture made late
+    // evening is already "tomorrow" in UTC, and a Lagos factory is an hour behind Nairobi.
     query = query
-      .gte('created_at', start.toISOString())
-      .lt('created_at',  end.toISOString())
+      .gte('created_at', zoneDayStart(date, tz).toISOString())
+      .lt('created_at',  zoneDayEnd(date, tz).toISOString())
   }
   if (from) query = query.gte('created_at', from)
   if (to)   query = query.lte('created_at', to)
@@ -116,7 +114,7 @@ export async function GET(req: NextRequest) {
   if (error) return json({ error: error.message }, 500)
 
   const captures = (data || []).map((c: Record<string, unknown>) => redactDispatchPriceForNonApprovers(c, auth.role))
-  return jsonSigned({ captures, total: count })
+  return jsonSigned({ captures, total: count, time_zone: tz })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -139,7 +137,43 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'Only supervisor, manager, or owner can approve captures' }, 403)
   }
 
-  const { id, status, rejection_reason, dispatch_price } = await req.json()
+  const body = await req.json()
+  const { id, status, rejection_reason, dispatch_price } = body
+
+  // ── Void: take an APPROVED capture back out (wrong quantity, wrong product, duplicate) ─────────
+  // Stock, the CFO and every report count approved captures only, so flipping it back removes it from all of
+  // them at once; the audit log keeps who approved it, who voided it and why.
+  if (body.action === 'void') {
+    const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 500) : ''
+    if (!reason) return json({ error: 'A reason is required to void a capture' }, 400)
+    const svc = createServiceClient()
+    const { data: cap } = await svc
+      .from('pos_factory_captures')
+      .select('id, status, type, location_id, captured_by, approved_by, dispatch_price')
+      .eq('id', body.id).eq('owner_id', auth.ownerId).maybeSingle()
+    if (!cap) return json({ error: 'Capture not found' }, 404)
+    if (cap.status !== 'approved') return json({ error: 'Only an approved capture can be voided' }, 400)
+    if (cap.type === 'dispatch' && !hasPermission(auth.role, 'capture.approve_dispatch')) {
+      return json({ error: 'Only the production manager or owner can void a dispatch' }, 403)
+    }
+    if (auth.staffId && (cap.captured_by === auth.staffId || cap.approved_by === auth.staffId)) {
+      return json({ error: 'You cannot void a capture you submitted or approved. Ask another approver.' }, 403)
+    }
+    const { data: voided, error: voidErr } = await svc
+      .from('pos_factory_captures')
+      .update({ status: 'rejected', rejection_reason: `Voided after approval: ${reason}` })
+      .eq('id', body.id).eq('owner_id', auth.ownerId).eq('status', 'approved')
+      .select('id').maybeSingle()
+    if (voidErr) return json({ error: voidErr.message }, 500)
+    if (!voided) return json({ error: 'Capture was already changed by someone else' }, 409)
+    logPosAudit({
+      auth, event: 'capture.voided', entityType: 'factory_capture', entityId: body.id,
+      fromValue: 'approved', toValue: 'rejected',
+      metadata: { reason, type: cap.type, originally_approved_by: cap.approved_by || null, dispatch_price: cap.dispatch_price ?? null },
+    })
+    if (STOCK_AFFECTING_TYPES.includes(cap.type)) await syncFactoryStockToInventory(auth.ownerId, cap.location_id || null)
+    return json({ ok: true })
+  }
 
   if (!id || !status) return json({ error: 'id and status required' }, 400)
   if (!['approved', 'rejected'].includes(status)) {
@@ -163,7 +197,7 @@ export async function PATCH(req: NextRequest) {
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status, type, location_id, captured_by')
+    .select('id, status, type, location_id, captured_by, product_name, quantity')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -183,6 +217,24 @@ export async function PATCH(req: NextRequest) {
   const isDispatchApproval = status === 'approved' && existing.type === 'dispatch'
   if (isDispatchApproval && resolvedDispatchPrice === null) {
     return json({ error: 'Enter the dispatch price (per unit) before approving' }, 400)
+  }
+
+  // Guard rail: a dispatch bigger than everything logged as made or received for that product. The approver
+  // can still go ahead (production is often logged late), but has to say so, and the override is audited.
+  let overStock: { onHand: number; requested: number } | null = null
+  if (isDispatchApproval && existing.product_name && Number(existing.quantity) > 0) {
+    let q = service.from('pos_factory_captures').select('type, product_name, quantity').eq('owner_id', auth.ownerId).eq('status', 'approved')
+    if (existing.location_id) q = q.eq('location_id', existing.location_id)
+    const { data: approvedCaps } = await q.limit(20000)
+    const { onHand } = productOnHand((approvedCaps || []) as any[], existing.product_name)
+    if (Number(existing.quantity) > onHand + 1e-9) overStock = { onHand: Math.max(0, Math.round(onHand * 100) / 100), requested: Number(existing.quantity) }
+    if (overStock && body.allow_over_stock !== true) {
+      return json({
+        error: 'over_stock',
+        message: `Only ${overStock.onHand} of ${existing.product_name} is recorded as made or received, but this dispatch is ${overStock.requested}. Approve anyway?`,
+        on_hand: overStock.onHand, requested: overStock.requested,
+      }, 409)
+    }
   }
 
   const { data: updated, error } = await service
@@ -213,7 +265,7 @@ export async function PATCH(req: NextRequest) {
     event: status === 'approved' ? 'capture.approved' : 'capture.rejected',
     entityType: 'factory_capture', entityId: id,
     toValue: status,
-    metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : (isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
+    metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : (isDispatchApproval ? { dispatch_price: resolvedDispatchPrice, ...(overStock ? { over_stock_override: overStock } : {}) } : {}),
   })
 
   // Any approved capture that moves stock refreshes the factory inventory rows (the POS app does the same).

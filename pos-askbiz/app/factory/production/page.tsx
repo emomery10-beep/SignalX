@@ -7,6 +7,8 @@ import LanguageToggle from '@/components/LanguageToggle'
 import { evaluateYield, YIELD_STATUS_COLOR } from '@/lib/factory-yield'
 import { getFactoryTypeTemplate } from '@/lib/factory-templates'
 import { compressImageToDataUrl } from '@/lib/pos-image-compress'
+import { factoryDayKey, setFactoryTz } from '@/lib/factory-tz-client'
+import { hasPermission } from '@/lib/pos-permissions'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -64,8 +66,7 @@ function daysLeft(iso: string): number {
 // Nairobi (UTC+3, no DST) "yesterday" as YYYY-MM-DD, for the date filter's
 // quick button — matches the capture API's own Nairobi day boundary.
 function yesterdayNairobiKey(): string {
-  const n = new Date(Date.now() + 3 * 3600 * 1000 - 24 * 3600 * 1000)
-  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
+  return factoryDayKey(new Date(Date.now() - 24 * 3600 * 1000)) // yesterday on the factory's own clock
 }
 
 // Expired = red; expiring within 4h = amber; otherwise not shown as a
@@ -171,6 +172,31 @@ export default function ProductionLogPage() {
       .finally(() => setDetailHoldsLoading(false))
   }, [detail, session])
 
+  // Take an approved capture back out (wrong quantity or product, duplicate). Needs a reason; the server
+  // blocks voiding your own capture and records who approved it, who voided it and why.
+  const [voiding, setVoiding] = useState(false)
+  async function voidDetail() {
+    if (!session || !detail) return
+    const reason = window.prompt(tc('factory_production.void_prompt'))?.trim()
+    if (!reason) return
+    setVoiding(true)
+    try {
+      const res = await fetch('/api/pos/factory/capture', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify({ id: detail.id, action: 'void', reason }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { window.alert(data.error || tc('factory_production.void_failed')); return }
+      setDetail(null)
+      await load()
+    } catch {
+      window.alert(tc('factory_production.void_failed'))
+    } finally {
+      setVoiding(false)
+    }
+  }
+
   async function load(date?: string) {
     if (!session) return
     setLoading(true)
@@ -178,6 +204,7 @@ export default function ProductionLogPage() {
       const qs = date ? `&date=${date}` : ''
       const res = await fetch(`/api/pos/factory/capture?limit=100${qs}`, { headers: session.headers })
       const data = res.ok ? await res.json() : { captures: [] }
+      setFactoryTz(data.time_zone)
       setCaptures(data.captures || [])
     } catch (e) {
       console.error('Production log load error:', e)
@@ -640,6 +667,13 @@ export default function ProductionLogPage() {
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('factory_production.detail_notes')}</div>
                 <div style={{ fontSize: 14, color: '#e2e8f0', lineHeight: 1.5 }}>{detail.notes}</div>
               </div>
+            )}
+
+            {detail.status === 'approved' && session && hasPermission(session.role, detail.type === 'dispatch' ? 'capture.approve_dispatch' : 'capture.approve') && (
+              <button onClick={voidDetail} disabled={voiding}
+                style={{ width: '100%', marginBottom: 12, padding: '12px 14px', borderRadius: 10, border: `1px solid ${BAD}`, background: 'transparent', color: BAD, fontWeight: 700, fontSize: 13, cursor: voiding ? 'not-allowed' : 'pointer', opacity: voiding ? 0.6 : 1 }}>
+                {tc('factory_production.void_button')}
+              </button>
             )}
 
             {detail.status === 'rejected' && detail.rejection_reason && (

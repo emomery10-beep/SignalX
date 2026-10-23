@@ -64,5 +64,8 @@
   "runs_title": "Wareegga Wax-soo-saarka",
   "runs_hint": "sawirrada loo calaamadeeyay isla wareegga",
   "runs_in": "{qty} {product} galay",
-  "runs_out": "{qty} {product} baxay"
+  "runs_out": "{qty} {product} baxay",
+  "void_button": "Burburi diiwaankan",
+  "void_prompt": "Maxaa diiwaankan loo burburinayaa? (waa lagama maarmaan)",
+  "void_failed": "Lama burburin karin diiwaankan."
 }

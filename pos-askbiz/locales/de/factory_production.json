@@ -64,5 +64,8 @@
   "runs_title": "Nach Produktionslauf",
   "runs_hint": "für Einträge, die mit demselben Lauf markiert sind",
   "runs_in": "{qty} {product} ein",
-  "runs_out": "{qty} {product} aus"
+  "runs_out": "{qty} {product} aus",
+  "void_button": "Diese Erfassung stornieren",
+  "void_prompt": "Warum wird diese Erfassung storniert? (Pflichtfeld)",
+  "void_failed": "Diese Erfassung konnte nicht storniert werden."
 }

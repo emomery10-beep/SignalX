@@ -64,5 +64,8 @@
   "runs_title": "Par cycle de production",
   "runs_hint": "pour les captures liées au même cycle de production",
   "runs_in": "{qty} {product} en entrée",
-  "runs_out": "{qty} {product} en sortie"
+  "runs_out": "{qty} {product} en sortie",
+  "void_button": "Annuler cet enregistrement",
+  "void_prompt": "Pourquoi annuler cet enregistrement ? (obligatoire)",
+  "void_failed": "Impossible d'annuler cet enregistrement."
 }

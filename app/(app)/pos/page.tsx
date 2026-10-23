@@ -3185,7 +3185,14 @@ export default function POSPage() {
                                 onClick={async () => {
                                   const body: Record<string, unknown> = { id: c.id, status: 'approved' }
                                   if (c.type === 'dispatch') body.dispatch_price = dispatchPriceInput[c.id]
-                                  const res = await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+                                  let res = await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+                                  if (res.status === 409) {
+                                    // More leaving than was ever logged as made or received: ask, then send the override.
+                                    const info = await res.clone().json().catch(() => ({}))
+                                    if (info.error === 'over_stock' && window.confirm(info.message)) {
+                                      res = await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, allow_over_stock: true }) })
+                                    }
+                                  }
                                   if (!res.ok) {
                                     const err = await res.json().catch(() => ({}))
                                     notify(err.error || tc('pos_app.toast_capture_rejected'), false)

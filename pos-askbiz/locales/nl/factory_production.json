@@ -64,5 +64,8 @@
   "runs_title": "Per productierun",
   "runs_hint": "voor registraties met dezelfde productierun",
   "runs_in": "{qty} {product} in",
-  "runs_out": "{qty} {product} uit"
+  "runs_out": "{qty} {product} uit",
+  "void_button": "Deze registratie annuleren",
+  "void_prompt": "Waarom wordt deze registratie geannuleerd? (verplicht)",
+  "void_failed": "Deze registratie kon niet worden geannuleerd."
 }

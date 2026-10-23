@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logPosAudit } from '@/lib/pos-audit'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
     // A save from a screen that doesn't know about the cost cycle or pack size (the pos-askbiz rates page) must not
     // wipe them. Keep what is already saved; a stale labour entry is dropped when the new save didn't restate it,
     // because staff_per_day just changed and the old entry would no longer match it.
-    const { data: prev } = await service.from('pos_factory_cost_settings').select('electricity_basis').eq('location_id', locationId).maybeSingle()
+    const { data: prev } = await service.from('pos_factory_cost_settings').select('electricity_basis, staff_per_day, electricity_per_day, overhead').eq('location_id', locationId).maybeSingle()
     const prevBasis = prev?.electricity_basis && typeof prev.electricity_basis === 'object' ? { ...(prev.electricity_basis as Record<string, unknown>) } : {}
     if (!(basis && 'labour' in basis)) delete (prevBasis as any).labour
     basis = { ...prevBasis, ...(basis || {}) }
@@ -97,6 +98,14 @@ export async function POST(req: NextRequest) {
       electricity_basis: basis, updated_at: new Date().toISOString(),
     }, { onConflict: 'location_id' })
     if (error) return json({ error: error.message }, 500)
+    // Cost rates re-cost every past period, so each change leaves a record of who moved what, from what.
+    if (!prev || Number(prev.staff_per_day) !== staff || Number(prev.electricity_per_day) !== elec || Number(prev.overhead) !== overhead) {
+      logPosAudit({
+        auth, event: 'factory.rates_changed', entityType: 'factory_cost_settings', entityId: locationId,
+        fromValue: prev ? JSON.stringify({ staff_per_day: Number(prev.staff_per_day), electricity_per_day: Number(prev.electricity_per_day), overhead: Number(prev.overhead) }) : undefined,
+        toValue: JSON.stringify({ staff_per_day: staff, electricity_per_day: elec, overhead }),
+      })
+    }
     return json({ ok: true })
   } catch (e) {
     console.error('cost-settings POST error:', e)

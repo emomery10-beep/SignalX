@@ -129,7 +129,7 @@ export default function ApprovalsPage() {
     }
   }
 
-  async function decide(c: Capture, status: 'approved' | 'rejected', rejection_reason?: string) {
+  async function decide(c: Capture, status: 'approved' | 'rejected', rejection_reason?: string, allowOverStock = false) {
     if (!session) return
     let dispatch_price: number | undefined
     if (status === 'approved' && c.type === 'dispatch') {
@@ -147,7 +147,7 @@ export default function ApprovalsPage() {
       const res = await fetch('/api/pos/factory/capture', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}) }),
+        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}), ...(allowOverStock ? { allow_over_stock: true } : {}) }),
       })
       if (res.status === 405) {
         // PATCH not supported on this deployment — surface clearly
@@ -157,6 +157,13 @@ export default function ApprovalsPage() {
         return
       }
       const data = await res.json().catch(() => ({}))
+      if (res.status === 409 && data.error === 'over_stock') {
+        // More leaving than was ever logged as made or received. The approver may know better (production
+        // logged late), so ask, and send the override explicitly so it is recorded.
+        setBusy(null)
+        if (window.confirm(data.message)) await decide(c, status, rejection_reason, true)
+        return
+      }
       if (!res.ok) {
         setError(data.error || tc('factory_approvals.error_action_failed'))
         setBusy(null)

@@ -64,5 +64,8 @@
   "runs_title": "حسب تشغيلة الإنتاج",
   "runs_hint": "للإدخالات الموسومة بنفس التشغيلة",
   "runs_in": "{qty} {product} وارد",
-  "runs_out": "{qty} {product} صادر"
+  "runs_out": "{qty} {product} صادر",
+  "void_button": "إلغاء هذا التسجيل",
+  "void_prompt": "ما سبب إلغاء هذا التسجيل؟ (مطلوب)",
+  "void_failed": "تعذّر إلغاء هذا التسجيل."
 }

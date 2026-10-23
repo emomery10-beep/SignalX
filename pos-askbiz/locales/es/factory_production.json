@@ -64,5 +64,8 @@
   "runs_title": "Por corrida de producción",
   "runs_hint": "para capturas etiquetadas con la misma corrida",
   "runs_in": "{qty} {product} entrada",
-  "runs_out": "{qty} {product} salida"
+  "runs_out": "{qty} {product} salida",
+  "void_button": "Anular este registro",
+  "void_prompt": "¿Por qué se anula este registro? (obligatorio)",
+  "void_failed": "No se pudo anular este registro."
 }

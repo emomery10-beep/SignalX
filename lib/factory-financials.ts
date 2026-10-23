@@ -32,9 +32,11 @@ import { computeFactoryStock, type StockCapture, type StockCount } from '@/lib/f
 import { getCostingProfile, isPackagedName, isByproductName } from '@/lib/factory-costing-profiles'
 import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
 import { computeCycleUnitCost, type FactoryCycle } from '@/lib/factory-unit-cost'
+import { dayOfInZone, DEFAULT_FACTORY_TZ } from '@/lib/factory-time'
 
 export interface FactoryCapture extends StockCapture {
   location_id?: string | null
+  approved_at?: string | null
   dispatch_price?: number | string | null
 }
 
@@ -107,7 +109,6 @@ export interface FactoryFinancials {
 }
 
 const num = (v: unknown) => Number(v) || 0
-const dayOf = (iso?: string | null) => (iso || '').split('T')[0]
 const within = (d: string, from: string, to: string) => d !== '' && d >= from && d <= to
 const lower = (c: StockCapture) => (c.product_name || '').toLowerCase()
 
@@ -115,8 +116,6 @@ const legacyIsCan = (c: StockCapture) => /jerry\s?can|mtungi|matungi/.test(lower
 const legacyIsByproduct = (c: StockCapture) => /waste|cake|husk|shell|chaff/.test(lower(c))
 const PRODUCTION_TYPES = new Set(['intake_feed', 'intake', 'output', 'packaging', 'wastage'])
 
-// Factory-day key in Nairobi time (UTC+3) — same basis the Factory tab uses.
-const nairobiDay = (iso: string) => new Date(new Date(iso).getTime() + 3 * 3_600_000).toISOString().slice(0, 10)
 const isSunday = (day: string) => new Date(day + 'T00:00:00Z').getUTCDay() === 0
 
 function add(map: Map<string, Bucket>, key: string, revenue: number, cogs: number) {
@@ -146,7 +145,10 @@ export function computeFactoryFinancials(
   // The factory's cost cycle (last N days, or a date range). When given, cost per can is worked out over that
   // cycle — the same calculation the Factory Inventory and Costing tabs use — instead of one all-history average.
   cycle?: FactoryCycle,
+  // The factory's own clock (see lib/factory-time). Every day bucket below is a day on that clock.
+  tz: string = DEFAULT_FACTORY_TZ,
 ): FactoryFinancials {
+  const dayOf = (iso?: string | null) => (iso ? dayOfInZone(new Date(iso).getTime(), tz) : '')
   const profile = factoryType === undefined ? null : getCostingProfile(factoryType)
   const isCan = (c: StockCapture): boolean => profile
     ? (isPackagedName(profile, c.product_name) && !isByproductName(profile, c.product_name)) ||
@@ -185,7 +187,7 @@ export function computeFactoryFinancials(
   const activeDays = new Set<string>()
   for (const c of captures) {
     if (c.created_at && c.type && PRODUCTION_TYPES.has(c.type)) {
-      const d = nairobiDay(c.created_at)
+      const d = dayOfInZone(new Date(c.created_at).getTime(), tz)
       if (!isSunday(d)) activeDays.add(d)
     }
   }
@@ -250,7 +252,7 @@ export function computeFactoryFinancials(
   // Cycle method: replaces the all-history average with this factory's cycle cost. The cake credit is NOT
   // taken off here (cake sales are revenue below — netting them off cost too would count them twice).
   if (cycle) {
-    const cc = computeCycleUnitCost(captures, settings, cycle, factoryType, now, actuals)
+    const cc = computeCycleUnitCost(captures, settings, cycle, factoryType, now, actuals, tz)
     if (cc.unitsProduced > 0) {
       unitCost = cc.unitCostBeforeCake
       const poolBefore = cc.material + cc.labour + cc.electricity + cc.overhead
@@ -299,7 +301,10 @@ export function computeFactoryFinancials(
   // Revenue (priced dispatches only) and COGS (cans dispatched × unit cost).
   for (const c of captures) {
     if (c.type !== 'dispatch') continue
-    const date = dayOf(c.created_at)
+    // Revenue belongs to the day the dispatch was approved and priced, not the day it was photographed:
+    // an approver pricing yesterday's load this morning books it this morning. Older rows without an
+    // approval time fall back to the capture time.
+    const date = dayOf(c.approved_at || c.created_at)
     const qty = num(c.quantity)
     if (qty <= 0 || !date) continue
     const price = num(c.dispatch_price)

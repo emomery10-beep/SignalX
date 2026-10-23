@@ -64,5 +64,8 @@
   "runs_title": "Kwa Awamu ya Uzalishaji",
   "runs_hint": "kwa rekodi zilizo na awamu sawa",
   "runs_in": "{qty} {product} zimeingia",
-  "runs_out": "{qty} {product} zimetoka"
+  "runs_out": "{qty} {product} zimetoka",
+  "void_button": "Futa rekodi hii",
+  "void_prompt": "Kwa nini rekodi hii inafutwa? (lazima)",
+  "void_failed": "Imeshindwa kufuta rekodi hii."
 }

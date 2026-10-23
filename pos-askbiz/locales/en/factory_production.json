@@ -66,5 +66,8 @@
   "runs_title": "By Production Run",
   "runs_hint": "for captures tagged with the same run",
   "runs_in": "{qty} {product} in",
-  "runs_out": "{qty} {product} out"
+  "runs_out": "{qty} {product} out",
+  "void_button": "Void this capture",
+  "void_prompt": "Why is this capture being voided? (required)",
+  "void_failed": "Could not void this capture."
 }

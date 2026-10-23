@@ -21,6 +21,7 @@
  */
 import { getCostingProfile, isPackagedName, isByproductName, isRawIntakeName } from '@/lib/factory-costing-profiles'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
+import { dayOfInZone, factoryTimeZone, DEFAULT_FACTORY_TZ } from '@/lib/factory-time'
 
 export const DEFAULT_CYCLE_DAYS = 28
 export const MAX_CYCLE_DAYS = 366
@@ -74,8 +75,6 @@ export interface CycleUnitCost {
 }
 
 const num = (v: unknown) => Number(v) || 0
-const NAIROBI_MS = 3 * 3_600_000
-export const nairobiDayOf = (ms: number) => new Date(ms + NAIROBI_MS).toISOString().slice(0, 10)
 const dayDiff = (a: string, b: string) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86_400_000)
 const shiftDay = (day: string, delta: number) => new Date(Date.parse(day + 'T00:00:00Z') + delta * 86_400_000).toISOString().slice(0, 10)
 const isDay = (s: unknown): s is string => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s + 'T00:00:00Z'))
@@ -91,10 +90,10 @@ export function parseCycle(basis: unknown): FactoryCycle {
   return { mode: 'days', days: DEFAULT_CYCLE_DAYS }
 }
 
-/** The calendar window (Nairobi days, inclusive) a cycle covers. */
-export function cycleWindow(cycle: FactoryCycle, now: number = Date.now()): { from: string; to: string; days: number } {
+/** The calendar window (days on the factory's clock, inclusive) a cycle covers. */
+export function cycleWindow(cycle: FactoryCycle, now: number = Date.now(), tz: string = DEFAULT_FACTORY_TZ): { from: string; to: string; days: number } {
   if (cycle.mode === 'range') return { from: cycle.from, to: cycle.to, days: dayDiff(cycle.from, cycle.to) + 1 }
-  const to = nairobiDayOf(now)
+  const to = dayOfInZone(now, tz)
   return { from: shiftDay(to, -(cycle.days - 1)), to, days: cycle.days }
 }
 
@@ -129,10 +128,11 @@ export function computeCycleUnitCost(
   factoryType: string | null | undefined,
   now: number = Date.now(),
   actuals?: UnitCostActuals,
+  tz: string = DEFAULT_FACTORY_TZ,
 ): CycleUnitCost {
   const type = effectiveType(factoryType, captures)
   const P = getCostingProfile(type)
-  const dayOfCap = (c: UnitCostCapture) => (c.created_at ? nairobiDayOf(new Date(c.created_at).getTime()) : '')
+  const dayOfCap = (c: UnitCostCapture) => (c.created_at ? dayOfInZone(new Date(c.created_at).getTime(), tz) : '')
   const name = (c: UnitCostCapture) => (c.product_name || '').trim()
   const isRaw = (c: UnitCostCapture) => isRawIntakeName(P, name(c))
   const isBy = (c: UnitCostCapture) => isByproductName(P, name(c))
@@ -231,11 +231,11 @@ export function computeCycleUnitCost(
     }
   }
 
-  const w = cycleWindow(cycle, now)
+  const w = cycleWindow(cycle, now, tz)
   const inCycle = build(w.from, w.to, w.days, 'cycle')
   if (inCycle.unitsProduced > 0 || !firstProd) return inCycle
   // Nothing was finished in this cycle (a quiet month): value stock on the whole history instead of showing 0.
-  const today = nairobiDayOf(now)
+  const today = dayOfInZone(now, tz)
   const all = build(firstProd, today, dayDiff(firstProd, today) + 1, 'all_time')
   return all.unitsProduced > 0 ? all : inCycle
 }
@@ -306,7 +306,7 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
           basis = row.electricity_basis
         }
       }
-      results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now))
+      results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now, undefined, factoryTimeZone(country)))
     }
     if (results.length === 0) return null
     if (results.length === 1) return results[0]
@@ -317,6 +317,7 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
       ...first, material: sum('material'), cakeCredit: sum('cakeCredit'), labour: sum('labour'), electricity: sum('electricity'),
       overhead: sum('overhead'), pool: sum('pool'), unitsProduced: units, rawKgFed: sum('rawKgFed'),
       unitCost: units > 0 ? Math.round(sum('pool') / units) : 0,
+      unitCostBeforeCake: units > 0 ? Math.round((sum('pool') + sum('cakeCredit')) / units) : 0,
       complete: results.every(r => r.complete), missing: Array.from(new Set(results.flatMap(r => r.missing))),
     }
   } catch (e) {

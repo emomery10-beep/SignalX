@@ -6,6 +6,7 @@ import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
 import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
 import { parseCycle, cycleWindow, DEFAULT_CYCLE_DAYS, MAX_CYCLE_DAYS, type FactoryCycle } from '@/lib/factory-unit-cost'
+import { factoryDayKey, getFactoryTz, setFactoryTz } from '@/lib/factory-tz-client'
 
 // ── Color constants ──────────────────────────────────────────
 const GREEN = '#16a34a'
@@ -97,9 +98,9 @@ function pct(n: number): string {
   return `${(isFinite(n) ? n : 0).toFixed(1)}%`
 }
 
+// A day on the FACTORY's clock (its country's time zone), not the viewer's browser clock.
 function dayKey(date: string | Date): string {
-  const d = new Date(date)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return factoryDayKey(date)
 }
 
 function shortDate(date: string | Date): string {
@@ -122,8 +123,7 @@ function weekKey(date: string | Date): string {
 // copy of this dashboard (app/factory/page.tsx), so "today"/"yesterday"
 // mean the same thing regardless of where this page is opened from.
 function nairobiDayKey(d: Date): string {
-  const n = new Date(d.getTime() + 3 * 3600 * 1000)
-  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
+  return factoryDayKey(d) // name kept for the many call sites; it is the factory's own day, whatever the country
 }
 function shiftDayKey(key: string, deltaDays: number): string {
   const [y, m, d] = key.split('-').map(Number)
@@ -136,7 +136,7 @@ function formatDayKey(key: string): string {
   // renders in the VIEWER's local zone, which can flip the displayed date
   // by a day (e.g. a US-Pacific viewer would see "23 Sep" for a key whose
   // Nairobi midnight instant falls in the afternoon of the 23rd their time).
-  return new Date(`${key}T00:00:00+03:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' })
+  return new Date(`${key}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 }
 // Day-of-week of a Nairobi calendar-day key — built from its Y/M/D
 // components directly (not by re-parsing with a +03:00 offset), since that
@@ -736,6 +736,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
       params.set('limit', '2000')
       const res = await fetch(`/api/pos/factory/capture?${params}`)
       const data = await res.json()
+      setFactoryTz(data?.time_zone)
       let list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
       // Map API response fields (product_name) to component interface (product)
       list = Array.isArray(list) ? list.map(c => ({ ...c, product: c.product || (c as any).product_name })) : []
@@ -1667,7 +1668,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
 
 // ── Expanded detail for an inventory row ─────────────────────
 const fmtWhen = (iso: string) =>
-  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi' })
+  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: getFactoryTz() })
 const fmtQty = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 1 })
 
 const KIND_TEXT: Record<StockKind, { in: string; out: string; unit: string }> = {
@@ -2356,6 +2357,7 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
         params.set('limit', '2000')
         const res = await fetch(`/api/pos/factory/capture?${params}`)
         const data = await res.json()
+        setFactoryTz(data?.time_zone)
         let list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
         list = Array.isArray(list) ? list.map(c => ({ ...c, product: c.product || (c as any).product_name })) : []
         if (!cancelled) setDayCaptures(list)

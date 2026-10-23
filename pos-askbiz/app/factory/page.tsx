@@ -5,6 +5,7 @@ import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import { evaluateYield, type YieldStatus } from '@/lib/factory-yield'
+import { factoryDayKey, setFactoryTz } from '@/lib/factory-tz-client'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
 const tokens = {
@@ -79,8 +80,7 @@ function isToday(iso: string) {
 // do on the API side and on that other dashboard, regardless of where this
 // page is opened from.
 function nairobiDayKey(d: Date): string {
-  const n = new Date(d.getTime() + 3 * 3600 * 1000)
-  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}-${String(n.getUTCDate()).padStart(2, '0')}`
+  return factoryDayKey(d) // the factory's own calendar day (its country's time zone), whatever the name says
 }
 function shiftDayKey(key: string, deltaDays: number): string {
   const [y, m, d] = key.split('-').map(Number)
@@ -89,7 +89,7 @@ function shiftDayKey(key: string, deltaDays: number): string {
   return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
 }
 function formatDayKey(key: string) {
-  return new Date(`${key}T00:00:00+03:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return new Date(`${key}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 }
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
@@ -243,6 +243,7 @@ export default function FactoryHub() {
     try {
       const r = await fetch('/api/pos/factory/capture?limit=100', { headers: session.headers })
       const d = r.ok ? await r.json() : { captures: [] }
+      setFactoryTz(d.time_zone)
       setCaptures(d.captures || [])
     } catch { /* silent */ } finally {
       setLoading(false)
@@ -330,6 +331,7 @@ export default function FactoryHub() {
     try {
       const r = await fetch(`/api/pos/factory/capture?date=${date}`, { headers: session.headers })
       const d = r.ok ? await r.json() : { captures: [] }
+      setFactoryTz(d.time_zone)
       setDayCaptures(d.captures || [])
     } catch { /* silent */ } finally {
       setDayLoading(false)
