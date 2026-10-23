@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} Tag(e) verbleibend",
   "hold_warning_regulatory": "Wartet auf manuelle Freigabe",
   "hold_warning_cancel": "Abbrechen",
-  "hold_warning_override": "Trotzdem versenden"
+  "hold_warning_override": "Trotzdem versenden",
+  "link_label": "Zu welcher Lieferung gehört diese Ladung? (optional)",
+  "link_none": "Nicht verknüpft",
+  "delivered_badge": "Geliefert",
+  "confirm_delivered": "Lieferung bestätigen",
+  "received_by_prompt": "Wer hat es erhalten? (Name, optional)"
 }

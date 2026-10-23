@@ -82,5 +82,9 @@
   "error_no_products_configured": "Geen producten voor deze stap. Vraag je beheerder het product toe te voegen in Voorraad.",
   "add_product_line": "Nieuwe productlijn toevoegen",
   "new_product_placeholder": "Naam nieuw product",
-  "add_product_btn": "Toevoegen"
+  "add_product_btn": "Toevoegen",
+  "customer_label": "Klant (wie koopt)",
+  "customer_placeholder": "Naam klant",
+  "supplier_label": "Leverancier (wie leverde)",
+  "supplier_placeholder": "Naam leverancier of boer"
 }

@@ -156,6 +156,9 @@ export default function FactoryCapturePage() {
   // approver enters it (with an auto-filled default) at approval time.
   // See app/factory/approvals/page.tsx and the PATCH handler below.
   const [dispatchWhatsApp, setDispatchWhatsApp] = useState('')
+  // Who bought it (dispatch) / who supplied it (raw-material delivery), picked from names used before or typed new.
+  const [partyName, setPartyName] = useState('')
+  const [parties, setParties] = useState<{ id: string; name: string; phone: string | null }[]>([])
   const [showProductDropdown, setShowProductDropdown] = useState(false)
   const [filteredProducts, setFilteredProducts] = useState<string[]>([])
 
@@ -210,6 +213,15 @@ export default function FactoryCapturePage() {
   }
 
   // ── Auth + inventory load ──────────────────────────────────────────────
+  useEffect(() => {
+    const kind = captureType === 'dispatch' ? 'customer' : captureType === 'intake_arrival' ? 'supplier' : null
+    if (!kind || !session) { setParties([]); return }
+    fetch(`/api/pos/factory/parties?kind=${kind}`, { headers: session.headers })
+      .then(r => (r.ok ? r.json() : { parties: [] }))
+      .then(d => setParties(d.parties || []))
+      .catch(() => setParties([]))
+  }, [captureType, session])
+
   useEffect(() => {
     if (!authReady || !session) return
     // Scope to the factory sector — without this the query returns the
@@ -327,6 +339,7 @@ export default function FactoryCapturePage() {
     setMarkSold(false)
     setSalePrice('')
     setBuyerName('')
+    setPartyName('')
     setPendingHoldWarning(null)
     setRecordParam(false)
     setParamLabel('')
@@ -371,6 +384,7 @@ export default function FactoryCapturePage() {
       ...((captureType === 'intake' || captureType === 'output') && runRef.trim() ? { run_ref: runRef.trim() } : {}),
       ...(captureType === 'output' && isIntermediate ? { is_intermediate: true } : {}),
       ...(captureType === 'dispatch' && dispatchWhatsApp.trim() ? { buyer_name: dispatchWhatsApp.trim() } : {}),
+      ...((captureType === 'dispatch' || captureType === 'intake_arrival') && partyName.trim() ? { party_name: partyName.trim() } : {}),
       ...(captureType === 'intake_feed' && feedCostPerKg.trim() && !isNaN(Number(feedCostPerKg)) ? { param_label: 'feed_cost_per_kg', param_value: Number(feedCostPerKg) } : {}),
       ...(captureType === 'intake_arrival' && intakePricePerKg.trim() && !isNaN(Number(intakePricePerKg)) ? { param_label: 'intake_price_per_kg', param_value: Number(intakePricePerKg) } : {}),
     }
@@ -419,6 +433,7 @@ export default function FactoryCapturePage() {
     setMarkSold(false)
     setSalePrice('')
     setBuyerName('')
+    setPartyName('')
     setPendingHoldWarning(null)
     setRecordParam(false)
     setParamLabel('')
@@ -822,6 +837,21 @@ export default function FactoryCapturePage() {
               />
             </div>
             <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.customer_label')}</div>
+              <input
+                list="factory-customers"
+                value={partyName}
+                onChange={e => {
+                  setPartyName(e.target.value)
+                  const hit = parties.find(p => p.name.toLowerCase() === e.target.value.trim().toLowerCase())
+                  if (hit?.phone && !dispatchWhatsApp) setDispatchWhatsApp(hit.phone)
+                }}
+                placeholder={tc('factory_capture.customer_placeholder')}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${partyName ? PURPLE + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <datalist id="factory-customers">{parties.map(p => <option key={p.id} value={p.name} />)}</datalist>
+            </div>
+            <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>📱 WhatsApp number (optional)</div>
               <input
                 type="tel"
@@ -838,6 +868,15 @@ export default function FactoryCapturePage() {
         {/* Intake arrival price tracking — intake_arrival only */}
         {captureType === 'intake_arrival' && (
           <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.supplier_label')}</div>
+            <input
+              list="factory-suppliers"
+              value={partyName}
+              onChange={e => setPartyName(e.target.value)}
+              placeholder={tc('factory_capture.supplier_placeholder')}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${partyName ? GREEN + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box', marginBottom: 20 }}
+            />
+            <datalist id="factory-suppliers">{parties.map(p => <option key={p.id} value={p.name} />)}</datalist>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>💵 Purchase price per kg</div>
             <input
               type="number"

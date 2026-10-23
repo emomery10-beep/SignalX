@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "WhatsApp des Kunden (z. B. 254712345678)",
   "whatsapp_send": "WhatsApp senden",
   "whatsapp_message": "Hallo! Ihre Lieferung wartet auf Genehmigung: {product}, {qty} kg{dest}. Wir bestätigen, sobald sie genehmigt ist.",
-  "whatsapp_dest": " nach {dest}"
+  "whatsapp_dest": " nach {dest}",
+  "money_title": "Zahlung",
+  "money_paid_now": "Jetzt bezahlt (optional)",
+  "money_due": "Restbetrag fällig bis",
+  "money_hint": "Leer lassen, wenn noch nichts bezahlt wurde. Spätere Zahlungen unter Geld erfassen.",
+  "method_cash": "Bar",
+  "method_mobile_money": "Mobile Money",
+  "method_bank": "Bank",
+  "method_cheque": "Scheck",
+  "method_other": "Andere"
 }

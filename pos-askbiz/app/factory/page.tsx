@@ -6,6 +6,7 @@ import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import { evaluateYield, type YieldStatus } from '@/lib/factory-yield'
 import { factoryDayKey, setFactoryTz } from '@/lib/factory-tz-client'
+import { hasPermission } from '@/lib/pos-permissions'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
 const tokens = {
@@ -811,6 +812,10 @@ export default function FactoryHub() {
             { label: tc('factory.action_scan_waybill'), sub: waybillTotal > 0 ? (waybillOnTimeRate !== null ? tc('factory.action_waybill_on_time', { rate: waybillOnTimeRate }) : tc('factory.action_waybill_dispatched', { count: waybillTotal })) : tc('factory.action_waybill_log'), icon: <IconTruck size={20} />, color: tokens.warning, href: '/factory/waybill', span: false },
             { label: tc('factory.action_machine_down'), sub: activeDowntime.length > 0 ? tc(activeDowntime.length > 1 ? 'factory.action_downtime_active_other' : 'factory.action_downtime_active_one', { count: activeDowntime.length }) : tc('factory.action_downtime_report'), icon: <IconAlertTriangle size={20} />, color: activeDowntime.length > 0 ? tokens.danger : tokens.hint, href: '/factory/downtime', span: true },
             { label: tc('factory.action_staff'), sub: tc('factory.action_staff_sub'), icon: <IconUsers size={20} />, color: tokens.accent, href: '/factory/staff', span: false },
+            // Approvers only — who owes the factory, whom it owes, and recording payments.
+            ...(session && hasPermission(session.role, 'capture.approve')
+              ? [{ label: tc('factory_money.title'), sub: tc('factory_money.subtitle'), icon: <span style={{ fontSize: 20 }}>💰</span>, color: tokens.success, href: '/factory/money', span: false }]
+              : []),
             // Owner / managers only — sets the labour, electricity and overhead rates the CFO uses.
             ...(session && ['owner', 'manager', 'branch_manager', 'factory-production-manager'].includes(session.role)
               ? [{ label: 'Cost rates', sub: 'Labour, electricity & overhead', icon: <span style={{ fontSize: 20 }}>⚙️</span>, color: tokens.accent, href: '/factory/rates', span: false }]

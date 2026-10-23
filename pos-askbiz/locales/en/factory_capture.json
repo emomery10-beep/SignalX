@@ -87,5 +87,9 @@
   "error_no_products_configured": "No products set up for this step. Ask your admin to add the product in Inventory.",
   "add_product_line": "Add new product line",
   "new_product_placeholder": "New product name",
-  "add_product_btn": "Add"
+  "add_product_btn": "Add",
+  "customer_label": "Customer (who is buying)",
+  "customer_placeholder": "Customer name",
+  "supplier_label": "Supplier (who delivered)",
+  "supplier_placeholder": "Supplier or farmer name"
 }

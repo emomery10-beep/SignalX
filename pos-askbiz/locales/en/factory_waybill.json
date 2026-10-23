@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} day(s) remaining",
   "hold_warning_regulatory": "Awaiting manual clearance",
   "hold_warning_cancel": "Cancel",
-  "hold_warning_override": "Dispatch anyway"
+  "hold_warning_override": "Dispatch anyway",
+  "link_label": "Which dispatch is this load? (optional)",
+  "link_none": "Not linked",
+  "delivered_badge": "Delivered",
+  "confirm_delivered": "Confirm delivered",
+  "received_by_prompt": "Who received it? (name, optional)"
 }

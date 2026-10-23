@@ -71,3 +71,9 @@ export async function ownedShiftId(service: any, ownerId: string, shiftId: unkno
   const { data } = await service.from('pos_shifts').select('id').eq('id', shiftId).eq('owner_id', ownerId).maybeSingle()
   return data ? shiftId : null
 }
+
+/** Digits only for a party's phone (7-15 digits), else ''. */
+export function normalisePartyPhone(v: unknown): string {
+  const d = typeof v === 'string' ? v.replace(/\D/g, '') : ''
+  return d.length >= 7 && d.length <= 15 ? d : ''
+}

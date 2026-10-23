@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "WhatsApp ya mteja (mfano 254712345678)",
   "whatsapp_send": "Tuma WhatsApp",
   "whatsapp_message": "Habari! Usafirishaji wako unasubiri idhini: {product}, kilo {qty}{dest}. Tutakuthibitishia mara utakapoidhinishwa.",
-  "whatsapp_dest": " kwenda {dest}"
+  "whatsapp_dest": " kwenda {dest}",
+  "money_title": "Malipo",
+  "money_paid_now": "Imelipwa sasa (hiari)",
+  "money_due": "Salio lilipwe kufikia",
+  "money_hint": "Acha wazi kama hakuna kilicholipwa bado. Rekodi malipo ya baadaye katika Fedha.",
+  "method_cash": "Pesa taslimu",
+  "method_mobile_money": "Pesa ya simu",
+  "method_bank": "Benki",
+  "method_cheque": "Hundi",
+  "method_other": "Nyingine"
 }

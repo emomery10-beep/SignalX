@@ -49,5 +49,14 @@
   "whatsapp_placeholder": "Customer WhatsApp (e.g. 254712345678)",
   "whatsapp_send": "Send WhatsApp",
   "whatsapp_message": "Hello! Your dispatch is awaiting approval: {product}, {qty} kg{dest}. We will confirm once it is approved.",
-  "whatsapp_dest": " to {dest}"
+  "whatsapp_dest": " to {dest}",
+  "money_title": "Payment",
+  "money_paid_now": "Paid now (optional)",
+  "money_due": "Balance due by",
+  "money_hint": "Leave blank if nothing was paid yet. Record later payments in Money.",
+  "method_cash": "Cash",
+  "method_mobile_money": "Mobile money",
+  "method_bank": "Bank",
+  "method_cheque": "Cheque",
+  "method_other": "Other"
 }

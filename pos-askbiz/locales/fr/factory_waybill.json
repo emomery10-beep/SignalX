@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} jour(s) restant(s)",
   "hold_warning_regulatory": "En attente de validation manuelle",
   "hold_warning_cancel": "Annuler",
-  "hold_warning_override": "Expédier quand même"
+  "hold_warning_override": "Expédier quand même",
+  "link_label": "À quelle expédition appartient ce chargement ? (facultatif)",
+  "link_none": "Non lié",
+  "delivered_badge": "Livré",
+  "confirm_delivered": "Confirmer la livraison",
+  "received_by_prompt": "Qui l'a reçu ? (nom, facultatif)"
 }

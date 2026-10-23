@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "WhatsApp-ka macmiilka (tusaale 254712345678)",
   "whatsapp_send": "Dir WhatsApp",
   "whatsapp_message": "Salaan! Diriddaada waxay sugaysaa ansixin: {product}, {qty} kg{dest}. Waan ku xaqiijin doonaa marka la ansixiyo.",
-  "whatsapp_dest": " ku socota {dest}"
+  "whatsapp_dest": " ku socota {dest}",
+  "money_title": "Lacag bixin",
+  "money_paid_now": "Hadda la bixiyey (ikhtiyaari)",
+  "money_due": "Hadhaaga waa in la bixiyaa ka hor",
+  "money_hint": "Banaan ka dhig haddii wax aan weli la bixin. Lacagaha dambe ku diiwaan geli Lacag.",
+  "method_cash": "Lacag caddaan",
+  "method_mobile_money": "Lacag mobaylka",
+  "method_bank": "Bangi",
+  "method_cheque": "Jeeg",
+  "method_other": "Mid kale"
 }

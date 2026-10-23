@@ -7,6 +7,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture, type FactoryActuals } from '@/lib/factory-financials'
 import { parseCycle } from '@/lib/factory-unit-cost'
 import { factoryTimeZone } from '@/lib/factory-time'
+import { computeMoney, type MoneyReport } from '@/lib/factory-money'
 import { FACTORY_COUNT_REASON } from '@/lib/factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { resolveEffectiveFactoryType } from '@/lib/factory-costing-profiles'
@@ -257,6 +258,9 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
   // Each factory is costed with its own saved settings (labour/electricity/overhead), falling back to
   // the owner's country default — Kenya pre-filled, everywhere else unset (see lib/factory-cost-defaults.ts).
   const factoryResults: { id: string; name: string; type: string | null; fin: ReturnType<typeof computeFactoryFinancials> }[] = []
+  // Who owes the factory / whom it owes, from approved dispatches and deliveries less recorded payments.
+  // null until the money-loop tables exist (migration 20261024000001) or when no factory is in scope.
+  let factoryMoney: (MoneyReport & { collectedInPeriod: number; paidOutInPeriod: number; topDebtors: { name: string; outstanding: number; days_overdue: number }[] }) | null = null
   if (includeFactory && scopeIds.length > 0) {
     const [{ data: capRows }, { data: countRows }, { data: settingRows }, { data: taggedRows }] = await Promise.all([
       svc.from('pos_factory_captures')
@@ -312,6 +316,35 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
           parseCycle(saved?.electricity_basis), factoryTimeZone(countryCode)),
       })
     }
+  }
+  if (includeFactory && scopeIds.length > 0) {
+    try {
+      const [capQ, payQ, partyQ] = await Promise.all([
+        svc.from('pos_factory_captures')
+          .select('id, type, status, location_id, party_id, product_name, quantity, dispatch_price, param_label, param_value, due_date, created_at, approved_at')
+          .eq('owner_id', ownerId).eq('status', 'approved').in('type', ['dispatch', 'intake_arrival']).in('location_id', scopeIds).limit(20000),
+        svc.from('pos_factory_payments').select('capture_id, direction, amount, paid_at, location_id').eq('owner_id', ownerId).in('location_id', scopeIds).limit(50000),
+        svc.from('pos_factory_parties').select('id, name, phone').eq('owner_id', ownerId),
+      ])
+      if (!capQ.error && !payQ.error) {
+        const tz = factoryTimeZone(countryCode)
+        const rep0 = computeMoney((capQ.data || []) as any[], (payQ.data || []) as any[], (partyQ.data || []) as any[], Date.now(), tz)
+        const inWin = (iso: string | null) => { const d = String(iso || '').slice(0, 10); return d >= win.start && d <= win.end }
+        const sumPaid = (dir: string) => ((payQ.data || []) as any[]).filter(p => p.direction === dir && inWin(p.paid_at)).reduce((a, p) => a + Number(p.amount), 0)
+        const byParty = new Map<string, { name: string; outstanding: number; days_overdue: number }>()
+        for (const r of rep0.receivables) {
+          const k = r.party_id || r.capture_id
+          const e = byParty.get(k) || { name: r.party_name || '—', outstanding: 0, days_overdue: 0 }
+          e.outstanding += r.outstanding; e.days_overdue = Math.max(e.days_overdue, r.days_overdue)
+          byParty.set(k, e)
+        }
+        factoryMoney = {
+          ...rep0,
+          collectedInPeriod: Math.round(sumPaid('in')), paidOutInPeriod: Math.round(sumPaid('out')),
+          topDebtors: [...byParty.values()].sort((a, b) => b.outstanding - a.outstanding).slice(0, 5).map(d => ({ ...d, outstanding: Math.round(d.outstanding) })),
+        }
+      }
+    } catch (e) { console.error('factory money load failed (CFO continues without it):', e) }
   }
   const factoryFin = mergeFactoryFinancials(factoryResults.map(r => r.fin))
 
@@ -598,9 +631,11 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
 
   // --- Receivables / Payables totals ---
   const receivableItems = receivables || []
-  const totalReceivables = receivableItems.filter(r => r.type === 'receivable').reduce((s, r) => s + (r.amount || 0), 0)
-  const totalPayables = receivableItems.filter(r => r.type === 'payable').reduce((s, r) => s + (r.amount || 0), 0)
-  const overdueReceivables = receivableItems.filter(r => r.type === 'receivable' && r.status !== 'current').reduce((s, r) => s + (r.amount || 0), 0)
+  // The owner's hand-entered tracker plus what the factory's own records say is owed. (An owner who also keeps a
+  // factory customer in the manual tracker would see that debt twice — the Receivables screen says so.)
+  const totalReceivables = receivableItems.filter(r => r.type === 'receivable').reduce((s, r) => s + (r.amount || 0), 0) + (factoryMoney?.arTotal || 0)
+  const totalPayables = receivableItems.filter(r => r.type === 'payable').reduce((s, r) => s + (r.amount || 0), 0) + (factoryMoney?.apTotal || 0)
+  const overdueReceivables = receivableItems.filter(r => r.type === 'receivable' && r.status !== 'current').reduce((s, r) => s + (r.amount || 0), 0) + (factoryMoney?.arOverdue || 0)
 
   // --- Daily chart data ---
   const chartData = dailyData.map(d => ({
@@ -749,6 +784,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
     else if (r.status === 'overdue_60') receivablesAging.overdue_60 += amt
     else if (r.status === 'overdue_90') receivablesAging.overdue_90 += amt
   }
+  if (factoryMoney) for (const k of ['current', 'overdue_30', 'overdue_60', 'overdue_90'] as const) receivablesAging[k] += factoryMoney.aging[k]
   receivablesAging.current = Math.round(receivablesAging.current)
   receivablesAging.overdue_30 = Math.round(receivablesAging.overdue_30)
   receivablesAging.overdue_60 = Math.round(receivablesAging.overdue_60)
@@ -771,6 +807,13 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       // Dispatches in the period still waiting for an approver to set dispatch_price (not in revenue)
       unpriced_dispatches: factoryFin.unpricedDispatches,
       factory_stock_value: Math.round(factoryFin.stockValue),
+      // Cash side of the factory: owed to it, owed by it, and what actually moved in the period.
+      factory_money: factoryMoney ? {
+        ar: Math.round(factoryMoney.arTotal), ap: Math.round(factoryMoney.apTotal),
+        ar_overdue: Math.round(factoryMoney.arOverdue), ap_overdue: Math.round(factoryMoney.apOverdue),
+        collected_in_period: factoryMoney.collectedInPeriod, paid_out_in_period: factoryMoney.paidOutInPeriod,
+        top_debtors: factoryMoney.topDebtors,
+      } : null,
       // How each factory's COGS was worked out (pool, unit cost, assumptions, anything missing)
       factory_costs: factoryResults.map(r => ({ location_id: r.id, name: r.name, type: r.type, ...r.fin.cost })),
     },

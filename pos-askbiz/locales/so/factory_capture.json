@@ -83,5 +83,9 @@
   "error_no_products_configured": "Alaab uma diyaarsana tillaabadan. Weydii maamulahaaga inuu alaabta ku daro Kaydka.",
   "add_product_line": "Ku dar alaab cusub",
   "new_product_placeholder": "Magaca alaabta cusub",
-  "add_product_btn": "Ku dar"
+  "add_product_btn": "Ku dar",
+  "customer_label": "Macmiilka (cidda iibsanaysa)",
+  "customer_placeholder": "Magaca macmiilka",
+  "supplier_label": "Alaab-qeybiyaha (cidda keentay)",
+  "supplier_placeholder": "Magaca alaab-qeybiyaha ama beeralayda"
 }

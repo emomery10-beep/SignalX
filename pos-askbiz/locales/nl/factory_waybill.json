@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} dag(en) resterend",
   "hold_warning_regulatory": "In afwachting van handmatige vrijgave",
   "hold_warning_cancel": "Annuleren",
-  "hold_warning_override": "Toch verzenden"
+  "hold_warning_override": "Toch verzenden",
+  "link_label": "Bij welke levering hoort deze lading? (optioneel)",
+  "link_none": "Niet gekoppeld",
+  "delivered_badge": "Geleverd",
+  "confirm_delivered": "Levering bevestigen",
+  "received_by_prompt": "Wie heeft het ontvangen? (naam, optioneel)"
 }

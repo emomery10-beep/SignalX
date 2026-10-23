@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "WhatsApp van klant (bijv. 254712345678)",
   "whatsapp_send": "WhatsApp sturen",
   "whatsapp_message": "Hallo! Uw zending wacht op goedkeuring: {product}, {qty} kg{dest}. Wij bevestigen zodra deze is goedgekeurd.",
-  "whatsapp_dest": " naar {dest}"
+  "whatsapp_dest": " naar {dest}",
+  "money_title": "Betaling",
+  "money_paid_now": "Nu betaald (optioneel)",
+  "money_due": "Restbedrag te betalen vóór",
+  "money_hint": "Laat leeg als er nog niets is betaald. Registreer latere betalingen bij Geld.",
+  "method_cash": "Contant",
+  "method_mobile_money": "Mobiel geld",
+  "method_bank": "Bank",
+  "method_cheque": "Cheque",
+  "method_other": "Overig"
 }

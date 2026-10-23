@@ -4,6 +4,8 @@ import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
+import { moneySchemaReady } from '@/lib/factory-parties'
+import { ownerFactoryTimeZone, dayOfInZone, zoneDayStart, zoneDayEnd } from '@/lib/factory-time'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -69,19 +71,25 @@ export async function GET(req: NextRequest) {
   }
 
   const service = createServiceClient()
+  const linked = await moneySchemaReady(service) // capture_id / delivered_at / received_by exist
 
   // Recent dispatches — no date filter, just the most recent N.
   const { data: waybills, error: listErr } = await service
     .from('pos_factory_waybills')
-    .select('id, waybill_ref, destination, product_name, quantity, photo_url, scheduled_at, dispatched_at, is_on_time, vehicle_ref')
+    .select(linked
+      ? 'id, waybill_ref, destination, product_name, quantity, photo_url, scheduled_at, dispatched_at, is_on_time, vehicle_ref, capture_id, delivered_at, received_by'
+      : 'id, waybill_ref, destination, product_name, quantity, photo_url, scheduled_at, dispatched_at, is_on_time, vehicle_ref')
     .eq('owner_id', auth.ownerId)
     .order('dispatched_at', { ascending: false })
     .limit(20)
 
   if (listErr) return json({ error: listErr.message }, 500)
 
-  // Today's stats — scoped to the current UTC calendar day only.
-  const { gte, lt } = todayUtcBounds()
+  // Today's stats — today on the factory's own clock, not UTC.
+  const tz = await ownerFactoryTimeZone(service, auth.ownerId)
+  const today = dayOfInZone(Date.now(), tz)
+  const gte = zoneDayStart(today, tz).toISOString()
+  const lt = zoneDayEnd(today, tz).toISOString()
   const { data: todayRows, error: statsErr } = await service
     .from('pos_factory_waybills')
     .select('is_on_time, quantity')
@@ -142,6 +150,14 @@ export async function POST(req: NextRequest) {
   const locCheck = await resolveOwnedLocation(service, auth, location_id)
   if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
 
+  // Optional: the dispatch this load belongs to (so a load is never keyed in twice with different numbers).
+  let linkedCaptureId: string | null = null
+  if (typeof body.capture_id === 'string' && body.capture_id && await moneySchemaReady(service)) {
+    const { data: cap } = await service.from('pos_factory_captures').select('id').eq('id', body.capture_id).eq('owner_id', auth.ownerId).eq('type', 'dispatch').maybeSingle()
+    if (!cap) return json({ error: 'That dispatch was not found' }, 400)
+    linkedCaptureId = cap.id
+  }
+
   // Idempotency: dedupe BEFORE uploading the photo, so a replay never
   // re-uploads a duplicate blob for a waybill that's already recorded.
   const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
@@ -185,6 +201,7 @@ export async function POST(req: NextRequest) {
     storage:       storageMode,
     dispatched_by: auth.staffId || null,
     client_tx_id:  clientTxId,
+    ...(linkedCaptureId ? { capture_id: linkedCaptureId } : {}),
   }
 
   const { data: waybill, error } = await service
@@ -232,4 +249,25 @@ export async function POST(req: NextRequest) {
   })
 
   return jsonSigned({ waybill }, 201)
+}
+
+// ─────────────────────────────────────────────────────────────
+// PATCH — confirm a load arrived. Body: { id, received_by? }
+// ─────────────────────────────────────────────────────────────
+export async function PATCH(req: NextRequest) {
+  const auth = await resolvePosAuth(req)
+  if (!auth) return json({ error: 'Unauthorised' }, 401)
+  if (!hasPermission(auth.role, 'waybill.log')) return json({ error: 'Your role does not have permission to confirm deliveries' }, 403)
+  const body = await req.json().catch(() => ({}))
+  if (typeof body.id !== 'string') return json({ error: 'id required' }, 400)
+  const service = createServiceClient()
+  if (!(await moneySchemaReady(service))) return json({ error: 'Delivery confirmation is not set up yet' }, 503)
+  const { data: updated, error } = await service.from('pos_factory_waybills')
+    .update({ delivered_at: new Date().toISOString(), received_by: clipText(body.received_by, 120) })
+    .eq('id', body.id).eq('owner_id', auth.ownerId).is('delivered_at', null)
+    .select('id, delivered_at, received_by').maybeSingle()
+  if (error) return json({ error: error.message }, 500)
+  if (!updated) return json({ error: 'Not found, or already confirmed delivered' }, 409)
+  logPosAudit({ auth, event: 'waybill.logged', entityType: 'factory_waybill', entityId: updated.id, toValue: 'delivered', metadata: { received_by: updated.received_by } })
+  return json({ waybill: updated })
 }

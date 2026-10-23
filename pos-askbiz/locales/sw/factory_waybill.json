@@ -55,5 +55,10 @@
   "hold_warning_days": "siku {count} zilizobaki",
   "hold_warning_regulatory": "Inasubiri kuondolewa kwa mkono",
   "hold_warning_cancel": "Futa",
-  "hold_warning_override": "Safirisha hata hivyo"
+  "hold_warning_override": "Safirisha hata hivyo",
+  "link_label": "Mzigo huu ni wa usafirishaji upi? (hiari)",
+  "link_none": "Haijaunganishwa",
+  "delivered_badge": "Imefika",
+  "confirm_delivered": "Thibitisha imefika",
+  "received_by_prompt": "Nani aliipokea? (jina, hiari)"
 }

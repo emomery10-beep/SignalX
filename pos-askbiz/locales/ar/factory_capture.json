@@ -82,5 +82,9 @@
   "error_no_products_configured": "لا توجد منتجات لهذه الخطوة. اطلب من المسؤول إضافة المنتج في المخزون.",
   "add_product_line": "إضافة منتج جديد",
   "new_product_placeholder": "اسم المنتج الجديد",
-  "add_product_btn": "إضافة"
+  "add_product_btn": "إضافة",
+  "customer_label": "العميل (المشتري)",
+  "customer_placeholder": "اسم العميل",
+  "supplier_label": "المورد (من سلّم)",
+  "supplier_placeholder": "اسم المورد أو المزارع"
 }

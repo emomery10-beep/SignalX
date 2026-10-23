@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "WhatsApp du client (ex. 254712345678)",
   "whatsapp_send": "Envoyer WhatsApp",
   "whatsapp_message": "Bonjour ! Votre expédition est en attente d'approbation : {product}, {qty} kg{dest}. Nous confirmerons dès l'approbation.",
-  "whatsapp_dest": " vers {dest}"
+  "whatsapp_dest": " vers {dest}",
+  "money_title": "Paiement",
+  "money_paid_now": "Payé maintenant (facultatif)",
+  "money_due": "Solde à payer avant le",
+  "money_hint": "Laissez vide si rien n'a encore été payé. Enregistrez les paiements suivants dans Argent.",
+  "method_cash": "Espèces",
+  "method_mobile_money": "Mobile money",
+  "method_bank": "Banque",
+  "method_cheque": "Chèque",
+  "method_other": "Autre"
 }

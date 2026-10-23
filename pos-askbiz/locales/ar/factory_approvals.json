@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "واتساب العميل (مثال 254712345678)",
   "whatsapp_send": "إرسال واتساب",
   "whatsapp_message": "مرحباً! شحنتك بانتظار الموافقة: {product}، {qty} كغ{dest}. سنؤكد لك فور الموافقة.",
-  "whatsapp_dest": " إلى {dest}"
+  "whatsapp_dest": " إلى {dest}",
+  "money_title": "الدفع",
+  "money_paid_now": "المدفوع الآن (اختياري)",
+  "money_due": "موعد سداد الرصيد",
+  "money_hint": "اتركه فارغًا إن لم يُدفع شيء بعد. سجّل الدفعات اللاحقة في قسم المال.",
+  "method_cash": "نقدًا",
+  "method_mobile_money": "المحفظة المحمولة",
+  "method_bank": "بنك",
+  "method_cheque": "شيك",
+  "method_other": "أخرى"
 }

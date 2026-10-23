@@ -82,5 +82,9 @@
   "error_no_products_configured": "Aucun produit pour cette étape. Demandez à votre administrateur d'ajouter le produit dans l'Inventaire.",
   "add_product_line": "Ajouter une ligne de produit",
   "new_product_placeholder": "Nom du nouveau produit",
-  "add_product_btn": "Ajouter"
+  "add_product_btn": "Ajouter",
+  "customer_label": "Client (qui achète)",
+  "customer_placeholder": "Nom du client",
+  "supplier_label": "Fournisseur (qui a livré)",
+  "supplier_placeholder": "Nom du fournisseur ou de l'agriculteur"
 }

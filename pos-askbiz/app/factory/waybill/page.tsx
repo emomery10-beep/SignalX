@@ -31,6 +31,9 @@ interface Waybill {
   dispatched_at: string
   is_on_time: boolean | null
   vehicle_ref: string | null
+  capture_id?: string | null
+  delivered_at?: string | null
+  received_by?: string | null
 }
 
 interface HubData {
@@ -116,6 +119,9 @@ export default function WaybillPage() {
 
   // Details form
   const [destination, setDestination] = useState('')
+  // The dispatch (priced by the approver later) this load belongs to, so the same load isn't keyed in twice.
+  const [dispatchOptions, setDispatchOptions] = useState<{ id: string; product_name: string | null; quantity: number | null; notes: string | null }[]>([])
+  const [linkedCaptureId, setLinkedCaptureId] = useState('')
   const [waybillRef,  setWaybillRef]  = useState('')
   const [productName, setProductName] = useState('')
   const [quantity,    setQuantity]    = useState('')
@@ -152,6 +158,26 @@ export default function WaybillPage() {
       setOpenHolds(d.holds || [])
     } catch { /* silent — warning just won't show, not fatal */ }
   }, [session])
+
+  useEffect(() => {
+    if (!session) return
+    fetch('/api/pos/factory/capture?type=dispatch&limit=30', { headers: session.headers })
+      .then(r => (r.ok ? r.json() : { captures: [] }))
+      .then(d => setDispatchOptions((d.captures || []).filter((c: any) => c.status !== 'rejected').map((c: any) => ({ id: c.id, product_name: c.product_name, quantity: c.quantity, notes: c.notes }))))
+      .catch(() => setDispatchOptions([]))
+  }, [session])
+
+  async function confirmDelivered(w: Waybill) {
+    if (!session) return
+    const receivedBy = window.prompt(tc('factory_waybill.received_by_prompt')) ?? null
+    if (receivedBy === null) return
+    const r = await fetch('/api/pos/factory/waybill', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...session.headers },
+      body: JSON.stringify({ id: w.id, received_by: receivedBy.trim() || undefined }),
+    })
+    if (r.ok) setHubData(h => h ? { ...h, waybills: h.waybills.map(x => x.id === w.id ? { ...x, delivered_at: new Date().toISOString(), received_by: receivedBy.trim() || null } : x) } : h)
+  }
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -228,6 +254,7 @@ export default function WaybillPage() {
       if (vehicleRef.trim())  body.vehicle_ref  = vehicleRef.trim()
       if (scheduledAt)        body.scheduled_at = new Date(scheduledAt).toISOString()
       if (notes.trim())       body.notes        = notes.trim()
+      if (linkedCaptureId)    body.capture_id   = linkedCaptureId
 
       const r = await fetch('/api/pos/factory/waybill', {
         method: 'POST',
@@ -327,6 +354,26 @@ export default function WaybillPage() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {dispatchOptions.length > 0 && (
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('factory_waybill.link_label')}</label>
+              <select value={linkedCaptureId}
+                onChange={e => {
+                  const id = e.target.value
+                  setLinkedCaptureId(id)
+                  const d = dispatchOptions.find(x => x.id === id)
+                  if (d) {
+                    if (!destination.trim() && d.notes) setDestination(d.notes)
+                    if (!productName.trim() && d.product_name) setProductName(d.product_name)
+                    if (!quantity && d.quantity != null) setQuantity(String(d.quantity))
+                  }
+                }}
+                style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', borderRadius: 10, padding: '12px 14px', color: 'var(--pos-ink)', fontSize: 15, boxSizing: 'border-box' }}>
+                <option value="">{tc('factory_waybill.link_none')}</option>
+                {dispatchOptions.map(d => <option key={d.id} value={d.id}>{[d.product_name, d.quantity != null ? d.quantity : null, d.notes].filter(Boolean).join(' · ')}</option>)}
+              </select>
+            </div>
+          )}
           {/* Destination — required */}
           <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('factory_waybill.field_destination')}</label>
@@ -517,7 +564,7 @@ export default function WaybillPage() {
 
           {/* Actions */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <button onClick={() => { setCapturedImage(null); setDestination(''); setWaybillRef(''); setProductName(''); setQuantity(''); setVehicleRef(''); setScheduledAt(''); setNotes(''); setStage('viewfinder') }}
+            <button onClick={() => { setCapturedImage(null); setDestination(''); setWaybillRef(''); setProductName(''); setQuantity(''); setVehicleRef(''); setScheduledAt(''); setNotes(''); setLinkedCaptureId(''); setStage('viewfinder') }}
               style={{ padding: '14px', background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)`, borderRadius: 14, color: tokens.warning, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
               {tc('factory_waybill.btn_scan_another')}
             </button>
@@ -654,6 +701,11 @@ export default function WaybillPage() {
                     <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, flexShrink: 0, background: `${badgeColor}18`, color: badgeColor, border: `1px solid ${badgeColor}30` }}>
                       {badgeLabel}
                     </span>
+                    {w.delivered_at ? (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, flexShrink: 0, color: tokens.success, border: `1px solid ${tokens.success}40` }}>✓ {tc('factory_waybill.delivered_badge')}</span>
+                    ) : w.capture_id !== undefined ? (
+                      <button onClick={() => confirmDelivered(w)} style={{ fontSize: 11, fontWeight: 700, padding: '6px 10px', borderRadius: 20, flexShrink: 0, background: 'transparent', color: tokens.warning, border: `1px solid ${tokens.warning}60`, cursor: 'pointer' }}>{tc('factory_waybill.confirm_delivered')}</button>
+                    ) : null}
                   </div>
                 )
               })}

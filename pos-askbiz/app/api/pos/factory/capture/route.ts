@@ -13,7 +13,8 @@ import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factor
 import { allowedFactoryProducts, resolveFactoryType } from '@/lib/factory-product-rules'
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
 import { normalisePhone, phoneFields, capturePhone } from '@/lib/customer-phone'
-import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation, ownedShiftId } from '@/lib/pos-input'
+import { moneySchemaReady, findOrCreateParty } from '@/lib/factory-parties'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation, ownedShiftId, MAX_MONEY } from '@/lib/pos-input'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -249,6 +250,14 @@ export async function POST(req: NextRequest) {
   // A dispatch's customer phone (the dispatcher's WhatsApp field) goes to customer_phone, not buyer_name.
   const dispatchPhone = captureType === 'dispatch' ? normalisePhone(body.buyer_name ?? body.customer_phone) : ''
   const phoneExtra = await phoneFields(service, dispatchPhone)
+
+  // Who bought it (dispatch) or who supplied it (raw-material delivery): the start of the money trail.
+  const partyKind = captureType === 'dispatch' ? 'customer' : captureType === 'intake_arrival' ? 'supplier' : null
+  let partyExtra: Record<string, string> = {}
+  if (partyKind && typeof body.party_name === 'string' && body.party_name.trim() && await moneySchemaReady(service)) {
+    const partyId = await findOrCreateParty(service, auth.ownerId, partyKind, body.party_name, dispatchPhone)
+    if (partyId) partyExtra = { party_id: partyId }
+  }
   if (!effLocationId) {
     const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
     if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
@@ -390,6 +399,7 @@ export async function POST(req: NextRequest) {
       sale_price,
       buyer_name,
       ...phoneExtra,
+      ...partyExtra,
       param_label,
       param_value,
       param_unit,
@@ -581,7 +591,7 @@ export async function PATCH(req: NextRequest) {
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status, type, location_id, captured_by, product_name, quantity')
+    .select('id, status, type, location_id, captured_by, product_name, quantity, param_label, param_value')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -609,6 +619,28 @@ export async function PATCH(req: NextRequest) {
   const approverPhone = isDispatchApproval ? normalisePhone(customer_phone) : ''
   const approverPhoneFields = approverPhone ? await phoneFields(service, approverPhone) : {}
 
+  // Money taken or paid out at the moment of approval: what the customer paid now (dispatch) or what was paid
+  // to the supplier at delivery (raw material), and when the rest is due. Everything after that is recorded
+  // from the Money screen. Only offered once the money-loop tables exist.
+  const takesMoney = status === 'approved' && (existing.type === 'dispatch' || existing.type === 'intake_arrival')
+  const moneyReady = takesMoney && await moneySchemaReady(service)
+  let paidNow = 0
+  let paidMethod = 'cash'
+  let dueDate: string | null = null
+  if (moneyReady) {
+    const paidParsed = parseOptionalAmount(body.amount_paid, 'amount_paid', MAX_MONEY)
+    if (!paidParsed.ok) return json({ error: paidParsed.error }, 400)
+    paidNow = paidParsed.value || 0
+    if (typeof body.payment_method === 'string' && ['cash', 'mobile_money', 'bank', 'cheque', 'other'].includes(body.payment_method)) paidMethod = body.payment_method
+    if (typeof body.due_date === 'string' && body.due_date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(body.due_date) || Number.isNaN(Date.parse(body.due_date))) return json({ error: 'due_date must be YYYY-MM-DD' }, 400)
+      dueDate = body.due_date
+    }
+    const unitPrice = existing.type === 'dispatch' ? Number(resolvedDispatchPrice) : (existing.param_label === 'intake_price_per_kg' ? Number(existing.param_value) : 0)
+    const total = (Number(existing.quantity) || 0) * (unitPrice || 0)
+    if (paidNow > 0 && paidNow > total + 0.005) return json({ error: `Amount paid (${paidNow}) is more than the total (${Math.round(total * 100) / 100})` }, 400)
+  }
+
   // Guard rail: a dispatch bigger than everything logged as made or received for that product. The approver
   // can still go ahead (production is often logged late), but has to say so, and the override is audited.
   let overStock: { onHand: number; requested: number } | null = null
@@ -635,6 +667,7 @@ export async function PATCH(req: NextRequest) {
       approved_at:      status === 'approved' ? new Date().toISOString() : null,
       rejection_reason: status === 'rejected' ? rejection_reason.trim() : null,
       ...(isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
+      ...(moneyReady && dueDate ? { due_date: dueDate } : {}),
       ...approverPhoneFields,
     })
     .eq('id', id)
@@ -660,6 +693,16 @@ export async function PATCH(req: NextRequest) {
     toValue: status,
     metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : (isDispatchApproval ? { dispatch_price: resolvedDispatchPrice, ...(overStock ? { over_stock_override: overStock } : {}) } : {}),
   })
+
+  if (moneyReady && paidNow > 0) {
+    const { error: payErr } = await service.from('pos_factory_payments').insert({
+      owner_id: auth.ownerId, location_id: existing.location_id || null, capture_id: id, party_id: (updated as any).party_id || null,
+      direction: existing.type === 'dispatch' ? 'in' : 'out', amount: paidNow, method: paidMethod,
+      recorded_by: auth.staffId || null, client_tx_id: `approve-${id}`,
+    })
+    if (payErr) console.error('Payment at approval failed (approval itself succeeded):', payErr.message)
+    else logPosAudit({ auth, event: 'payment.recorded', entityType: 'factory_capture', entityId: id, toValue: String(paidNow), metadata: { direction: existing.type === 'dispatch' ? 'in' : 'out', method: paidMethod, at: 'approval' } })
+  }
 
   // Any approved capture that moves stock refreshes the factory inventory rows
   // (recomputed from captures, never incremented — see factory-stock.ts).

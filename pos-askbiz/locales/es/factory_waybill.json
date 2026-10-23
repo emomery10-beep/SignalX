@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} día(s) restante(s)",
   "hold_warning_regulatory": "En espera de liberación manual",
   "hold_warning_cancel": "Cancelar",
-  "hold_warning_override": "Despachar de todos modos"
+  "hold_warning_override": "Despachar de todos modos",
+  "link_label": "¿A qué despacho pertenece esta carga? (opcional)",
+  "link_none": "Sin vincular",
+  "delivered_badge": "Entregado",
+  "confirm_delivered": "Confirmar entrega",
+  "received_by_prompt": "¿Quién la recibió? (nombre, opcional)"
 }

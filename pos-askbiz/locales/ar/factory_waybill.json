@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} يوم متبقٍ",
   "hold_warning_regulatory": "في انتظار التخليص اليدوي",
   "hold_warning_cancel": "إلغاء",
-  "hold_warning_override": "إرسال على أي حال"
+  "hold_warning_override": "إرسال على أي حال",
+  "link_label": "أي شحنة هذه الحمولة؟ (اختياري)",
+  "link_none": "غير مرتبطة",
+  "delivered_badge": "تم التسليم",
+  "confirm_delivered": "تأكيد التسليم",
+  "received_by_prompt": "من استلمها؟ (الاسم، اختياري)"
 }

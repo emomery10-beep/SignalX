@@ -82,5 +82,9 @@
   "error_no_products_configured": "Keine Produkte für diesen Schritt. Bitten Sie Ihren Admin, das Produkt im Bestand hinzuzufügen.",
   "add_product_line": "Neue Produktlinie hinzufügen",
   "new_product_placeholder": "Name des neuen Produkts",
-  "add_product_btn": "Hinzufügen"
+  "add_product_btn": "Hinzufügen",
+  "customer_label": "Kunde (wer kauft)",
+  "customer_placeholder": "Kundenname",
+  "supplier_label": "Lieferant (wer geliefert hat)",
+  "supplier_placeholder": "Name des Lieferanten oder Landwirts"
 }

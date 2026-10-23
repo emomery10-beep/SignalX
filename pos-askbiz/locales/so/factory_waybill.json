@@ -55,5 +55,10 @@
   "hold_warning_days": "{count} maalmood ayaa hadhay",
   "hold_warning_regulatory": "Waxaa la sugayaa ansixinta gacanta",
   "hold_warning_cancel": "Jooji",
-  "hold_warning_override": "Dir Si Kastaba"
+  "hold_warning_override": "Dir Si Kastaba",
+  "link_label": "Rarkani waa kee dirista? (ikhtiyaari)",
+  "link_none": "Lama xiriirin",
+  "delivered_badge": "La gaarsiiyey",
+  "confirm_delivered": "Xaqiiji in la gaarsiiyey",
+  "received_by_prompt": "Yaa qaatay? (magac, ikhtiyaari)"
 }

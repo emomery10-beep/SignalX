@@ -47,5 +47,14 @@
   "whatsapp_placeholder": "WhatsApp del cliente (p. ej. 254712345678)",
   "whatsapp_send": "Enviar WhatsApp",
   "whatsapp_message": "¡Hola! Tu despacho está pendiente de aprobación: {product}, {qty} kg{dest}. Te confirmaremos cuando se apruebe.",
-  "whatsapp_dest": " a {dest}"
+  "whatsapp_dest": " a {dest}",
+  "money_title": "Pago",
+  "money_paid_now": "Pagado ahora (opcional)",
+  "money_due": "Saldo a pagar antes de",
+  "money_hint": "Déjalo vacío si aún no se pagó nada. Registra pagos posteriores en Dinero.",
+  "method_cash": "Efectivo",
+  "method_mobile_money": "Dinero móvil",
+  "method_bank": "Banco",
+  "method_cheque": "Cheque",
+  "method_other": "Otro"
 }

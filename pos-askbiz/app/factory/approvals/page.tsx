@@ -79,6 +79,11 @@ export default function ApprovalsPage() {
   // Approver-editable dispatch price, per capture id — starts at the last approved price for this product (or
   // empty if it was never priced) and is amendable right up until Approve is pressed.
   const [dispatchPrices, setDispatchPrices] = useState<Record<string, string>>({})
+  // Payment taken at approval (what the customer paid now / what was paid the supplier), how, and when the
+  // balance falls due. Recorded as a payment; later ones go through the Money screen.
+  const [paidNow, setPaidNow] = useState<Record<string, string>>({})
+  const [payMethod, setPayMethod] = useState<Record<string, string>>({})
+  const [dueDates, setDueDates] = useState<Record<string, string>>({})
   function dispatchPriceFor(c: Capture) {
     return dispatchPrices[c.id] ?? (c.suggested_dispatch_price ? String(c.suggested_dispatch_price) : '')
   }
@@ -147,7 +152,12 @@ export default function ApprovalsPage() {
       const res = await fetch('/api/pos/factory/capture', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}), ...(allowOverStock ? { allow_over_stock: true } : {}) }),
+        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}),
+          ...(status === 'approved' && (c.type === 'dispatch' || c.type === 'intake_arrival') ? {
+            ...(Number(paidNow[c.id]) > 0 ? { amount_paid: Number(paidNow[c.id]), payment_method: payMethod[c.id] || 'cash' } : {}),
+            ...(dueDates[c.id] ? { due_date: dueDates[c.id] } : {}),
+          } : {}),
+          ...(allowOverStock ? { allow_over_stock: true } : {}) }),
       })
       if (res.status === 405) {
         // PATCH not supported on this deployment — surface clearly
@@ -334,6 +344,29 @@ export default function ApprovalsPage() {
                           </button>
                         </div>
                         <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>{tc('factory_approvals.whatsapp_hint')}</div>
+                      </div>
+                    )}
+
+                    {/* Payment — what was paid at hand-over, and when the rest is due. */}
+                    {(c.type === 'dispatch' || c.type === 'intake_arrival') && (
+                      <div style={{ marginTop: 10, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px' }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          💰 {tc('factory_approvals.money_title')}
+                        </label>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <input type="number" inputMode="decimal" min="0" disabled={working}
+                            value={paidNow[c.id] ?? ''} onChange={e => setPaidNow(p => ({ ...p, [c.id]: e.target.value }))}
+                            placeholder={tc('factory_approvals.money_paid_now')}
+                            style={{ flex: 1, minWidth: 120, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 16 }} />
+                          <select value={payMethod[c.id] || 'cash'} disabled={working} onChange={e => setPayMethod(p => ({ ...p, [c.id]: e.target.value }))}
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 14 }}>
+                            {['cash', 'mobile_money', 'bank', 'cheque', 'other'].map(m => <option key={m} value={m} style={{ color: '#000' }}>{tc('factory_approvals.method_' + m)}</option>)}
+                          </select>
+                        </div>
+                        <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', margin: '8px 0 4px' }}>{tc('factory_approvals.money_due')}</label>
+                        <input type="date" disabled={working} value={dueDates[c.id] ?? ''} onChange={e => setDueDates(p => ({ ...p, [c.id]: e.target.value }))}
+                          style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 14 }} />
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>{tc('factory_approvals.money_hint')}</div>
                       </div>
                     )}
 
