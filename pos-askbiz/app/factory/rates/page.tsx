@@ -135,15 +135,15 @@ export default function FactoryRatesPage() {
               <input id="r-staff" type="number" inputMode="decimal" min={0} value={staff} onChange={e => setStaff(e.target.value)} style={field} />
             </label>
             <label htmlFor="r-elec" style={lab}>
-              Electricity per working day
+              Electricity and generator fuel per working day
               <input id="r-elec" type="number" inputMode="decimal" min={0} value={elec} onChange={e => setElec(e.target.value)} style={field} />
             </label>
             <label htmlFor="r-bill" style={lab}>
-              or your monthly electricity bill (we divide it by {WORKING_DAYS_PER_MONTH} working days)
+              or your monthly electricity and fuel spend (we divide it by {WORKING_DAYS_PER_MONTH} working days)
               <input id="r-bill" type="number" inputMode="decimal" min={0} value={bill} onChange={e => setBill(e.target.value)} style={field} />
             </label>
             <label htmlFor="r-oh" style={lab}>
-              Overhead per month (rent, repairs, filters, water…)
+              Overhead per month (rent, repairs, filters, water, equipment wear and tear…)
               <input id="r-oh" type="number" inputMode="decimal" min={0} value={overhead} onChange={e => setOverhead(e.target.value)} style={field} />
             </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

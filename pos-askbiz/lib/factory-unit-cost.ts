@@ -68,6 +68,13 @@ export interface CycleUnitCost {
   unitCost: number
   /** Cost per unit WITHOUT the cake credit — what the CFO uses, because cake sales are already counted as revenue there. */
   unitCostBeforeCake: number
+  /**
+   * Cost per unit for EACH finished product (lower-cased name), before the cake credit. Present only when the
+   * factory makes two or more finished products and every one has a known selling price: the shared cost is
+   * then split in proportion to sales value, so a 5,000 cake no longer costs the same as a 50 bun. Otherwise
+   * absent and the single `unitCostBeforeCake` applies to everything.
+   */
+  perProduct?: Record<string, number>
   sources: { labour: 'estimate' | 'actual' | 'mixed'; electricity: 'estimate' | 'actual' | 'mixed'; overhead: 'estimate' | 'actual' | 'mixed' }
   wasteCostPerKg: number   // what a kg of by-product is worth (its real sale price; 0 if it never sold)
   complete: boolean
@@ -161,6 +168,20 @@ export function computeCycleUnitCost(
   }
   const cakePrice = byQty > 0 ? byRev / byQty : (type === 'sesame_oil' ? 30 : 0)
 
+  // Quantity-weighted selling price of each finished product (all history): the weight for splitting shared cost.
+  const priceByProduct = new Map<string, number>()
+  {
+    const acc = new Map<string, { rev: number; qty: number }>()
+    for (const c of captures) {
+      if (c.type !== 'dispatch' || !(num(c.dispatch_price) > 0) || !(num(c.quantity) > 0) || !isUnit(c)) continue
+      const k = name(c).toLowerCase()
+      const e = acc.get(k) || { rev: 0, qty: 0 }
+      e.rev += num(c.quantity) * num(c.dispatch_price); e.qty += num(c.quantity)
+      acc.set(k, e)
+    }
+    for (const [k, e] of acc) priceByProduct.set(k, e.rev / e.qty)
+  }
+
   // The factory's first day of production: days before it are never charged.
   let firstProd = ''
   for (const c of captures) {
@@ -176,6 +197,8 @@ export function computeCycleUnitCost(
 
   const build = (from: string, to: string, cycleDays: number, basis: CycleUnitCost['basis']): CycleUnitCost => {
     let fedKg = 0, material = 0, canPackOut = 0, canDispatched = 0, cakeKg = 0
+    const madeBy = new Map<string, number>()       // finished product → units packed/made in the cycle
+    const dispatchedBy = new Map<string, number>() // finished product → units dispatched in the cycle (fallback when nothing is packed)
     for (const c of captures) {
       const d = dayOfCap(c)
       if (!d || d < from || d > to) continue
@@ -184,8 +207,9 @@ export function computeCycleUnitCost(
       const legacyFeed = c.type === 'intake' && !!c.created_at && new Date(c.created_at).getTime() >= firstFeed
       if ((c.type === 'intake_feed' || legacyFeed) && isRaw(c)) { fedKg += q; material += q * priceOf(c) }
       if (isUnit(c)) {
-        if (c.type === 'packaging' || c.type === 'output') canPackOut += q
-        else if (c.type === 'dispatch') canDispatched += q
+        const pk = name(c).toLowerCase()
+        if (c.type === 'packaging' || c.type === 'output') { canPackOut += q; madeBy.set(pk, (madeBy.get(pk) || 0) + q) }
+        else if (c.type === 'dispatch') { canDispatched += q; dispatchedBy.set(pk, (dispatchedBy.get(pk) || 0) + q) }
       }
       if ((c.type === 'wastage' || c.type === 'output') && isBy(c)) cakeKg += q
     }
@@ -218,6 +242,22 @@ export function computeCycleUnitCost(
     if (!(overallPrice > 0)) missing.push('raw_material_price')
     if (!(units > 0)) missing.push('finished_goods_output')
     if (!settings.configured && !(lB.source === 'actual' && eB.source === 'actual')) missing.push('labour_electricity_rates')
+    // Joint-cost split by sales value, only when it can be done honestly (2+ finished products, all priced).
+    let perProduct: Record<string, number> | undefined
+    const produced = canPackOut > 0 ? madeBy : dispatchedBy
+    if (units > 0 && produced.size >= 2) {
+      let weightSum = 0
+      let allPriced = true
+      for (const [pk, qty] of produced) {
+        const price = priceByProduct.get(pk)
+        if (!(price && price > 0)) { allPriced = false; break }
+        weightSum += qty * price
+      }
+      if (allPriced && weightSum > 0) {
+        perProduct = {}
+        for (const [pk] of produced) perProduct[pk] = Math.round((poolBeforeCake * (priceByProduct.get(pk) as number)) / weightSum)
+      }
+    }
     return {
       factoryType: type, from, to, cycleDays, chargedDays: charged, basis,
       rawKgFed: Math.round(fedKg * 100) / 100, rawCostPerKg: Math.round(overallPrice * 100) / 100,
@@ -225,6 +265,7 @@ export function computeCycleUnitCost(
       cakeCredit: Math.round(cakeCredit), labour: Math.round(labour), electricity: Math.round(electricity), overhead: Math.round(overhead),
       pool: Math.round(pool), unitsProduced: units, unitCost: units > 0 ? Math.round(pool / units) : 0,
       unitCostBeforeCake: units > 0 ? Math.round(poolBeforeCake / units) : 0,
+      ...(perProduct ? { perProduct } : {}),
       sources: { labour: lB.source, electricity: eB.source, overhead: oB.source },
       wasteCostPerKg: Math.round(cakePrice * 100) / 100,
       complete: missing.length === 0, missing,

@@ -807,6 +807,8 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       // Dispatches in the period still waiting for an approver to set dispatch_price (not in revenue)
       unpriced_dispatches: factoryFin.unpricedDispatches,
       factory_stock_value: Math.round(factoryFin.stockValue),
+      // Finished goods and raw material written off as wastage in the period, valued at cost (not inside COGS)
+      factory_wastage_value: Math.round(factoryFin.wastageValue),
       // Cash side of the factory: owed to it, owed by it, and what actually moved in the period.
       factory_money: factoryMoney ? {
         ar: Math.round(factoryMoney.arTotal), ap: Math.round(factoryMoney.apTotal),

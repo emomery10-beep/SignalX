@@ -90,6 +90,8 @@ export interface FactoryCostBreakdown {
   assumptions: FactoryCostSettings
   sources: { labour: CostSource; electricity: CostSource; overhead: CostSource }
   /** Set when cost per can was worked out over the factory's cost cycle (see lib/factory-unit-cost). */
+  /** Cost per unit by finished product (lower-cased name) when shared cost was split by sales value. */
+  perProduct?: Record<string, number>
   cycle?: { from: string; to: string; days: number; chargedDays: number; basis: 'cycle' | 'all_time'; cakeCredit: number; cakeKg: number; cakePricePerKg: number }
 }
 
@@ -105,6 +107,8 @@ export interface FactoryFinancials {
   unpricedDispatches: number
   unpricedQty: number
   stockValue: number
+  /** Value of finished goods and raw material written off as wastage in the period (informational: not in COGS). */
+  wastageValue: number
   cost: FactoryCostBreakdown
 }
 
@@ -159,7 +163,7 @@ export function computeFactoryFinancials(
   const out: FactoryFinancials = {
     daily: new Map(), monthly: new Map(), products: new Map(),
     revenue: 0, cogs: 0, compRevenue: 0, compCogs: 0,
-    dispatches: 0, unpricedDispatches: 0, unpricedQty: 0, stockValue: 0,
+    dispatches: 0, unpricedDispatches: 0, unpricedQty: 0, stockValue: 0, wastageValue: 0,
     cost: emptyCost(settings),
   }
   if (captures.length === 0) return out
@@ -251,17 +255,19 @@ export function computeFactoryFinancials(
 
   // Cycle method: replaces the all-history average with this factory's cycle cost. The cake credit is NOT
   // taken off here (cake sales are revenue below — netting them off cost too would count them twice).
+  let perProduct: Record<string, number> | undefined
   if (cycle) {
     const cc = computeCycleUnitCost(captures, settings, cycle, factoryType, now, actuals, tz)
     if (cc.unitsProduced > 0) {
       unitCost = cc.unitCostBeforeCake
+      perProduct = cc.perProduct
       const poolBefore = cc.material + cc.labour + cc.electricity + cc.overhead
       out.cost = {
         ...out.cost,
         rawKgFed: Math.round(cc.rawKgFed), rawCostPerKg: cc.rawCostPerKg, material: cc.material, workingDays: cc.chargedDays,
         electricity: cc.electricity, labour: cc.labour, overhead: cc.overhead, pool: Math.round(poolBefore),
         cansProduced: Math.round(cc.unitsProduced), unitCost: Math.round(unitCost),
-        complete: cc.complete, missing: cc.missing, sources: cc.sources,
+        complete: cc.complete, missing: cc.missing, sources: cc.sources, ...(perProduct ? { perProduct } : {}),
         cycle: { from: cc.from, to: cc.to, days: cc.cycleDays, chargedDays: cc.chargedDays, basis: cc.basis, cakeCredit: cc.cakeCredit, cakeKg: cc.cakeKg, cakePricePerKg: cc.cakePricePerKg },
       }
     }
@@ -313,8 +319,23 @@ export function computeFactoryFinancials(
       if (price <= 0) { out.unpricedDispatches++; out.unpricedQty += qty }
     }
     // Unpriced dispatches carry neither revenue nor cost until an approver prices them (keeps margin matched).
-    if (price > 0) book(date, qty * price, isCan(c) ? qty * unitCost : 0, (c.product_name || 'Unknown').trim(), qty)
+    // A factory with several priced products carries a cost per product; otherwise one blended cost applies.
+    const costPer = perProduct?.[(c.product_name || '').trim().toLowerCase()] ?? unitCost
+    if (price > 0) book(date, qty * price, isCan(c) ? qty * costPer : 0, (c.product_name || 'Unknown').trim(), qty)
   }
+
+  // Wastage written off in the period, at cost: finished goods at their unit cost, raw material at its purchase
+  // price. By-products (cake, husk) are not a loss. Normal shrinkage during processing is already inside the unit
+  // cost (material fed is charged, units made are what's left), so this is the visible, avoidable loss to watch.
+  for (const c of captures) {
+    if (c.type !== 'wastage' || isByproduct(c)) continue
+    const day = dayOf(c.created_at)
+    const qty = num(c.quantity)
+    if (qty <= 0 || !within(day, w.start, w.end)) continue
+    const key = (c.product_name || '').trim().toLowerCase()
+    out.wastageValue += isCan(c) ? qty * (perProduct?.[key] ?? unitCost) : qty * rawCostPerKg
+  }
+  out.wastageValue = Math.round(out.wastageValue)
 
   return out
 }
@@ -337,6 +358,7 @@ export function mergeFactoryFinancials(list: FactoryFinancials[]): FactoryFinanc
     out.compRevenue += f.compRevenue; out.compCogs += f.compCogs
     out.dispatches += f.dispatches; out.unpricedDispatches += f.unpricedDispatches; out.unpricedQty += f.unpricedQty
     out.stockValue += f.stockValue
+    out.wastageValue += f.wastageValue
   }
   return out
 }
