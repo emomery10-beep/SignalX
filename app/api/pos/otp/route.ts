@@ -18,6 +18,12 @@ const pinAttempts = new Map<string, { count: number; resetAt: number }>()
 const MAX_ATTEMPTS = 5
 const WINDOW_MS = 5 * 60 * 1000 // 5-minute window
 
+// Per-staff lockout kept in the database (same table and rules as pos-askbiz's login). The in-memory limiter
+// above resets on every cold start and is per serverless instance, so on its own it barely slows a 4-digit
+// PIN guesser; this one is durable and shared.
+const DB_MAX_ATTEMPTS = 5
+const DB_LOCKOUT_MS = 15 * 60 * 1000
+
 function checkPinRateLimit(key: string): { allowed: boolean; remaining: number } {
   const now = Date.now()
   const rec = pinAttempts.get(key)
@@ -112,7 +118,25 @@ export async function POST(req: NextRequest) {
     if (!staff) return json({ error: 'Staff account not found or deactivated' }, 404)
     if (!staff.pin_hash) return json({ error: 'No PIN set — ask your manager to set your PIN in the dashboard.' }, 403)
 
-    if (!verifyPin(String(pin), staff.pin_hash, staff.id)) return json({ error: 'Incorrect PIN' }, 401)
+    const { data: attempt } = await supabase.from('pos_staff_pin_attempts').select('*').eq('staff_id', staff.id).maybeSingle()
+    if (attempt?.locked_until && new Date(attempt.locked_until) > new Date()) {
+      const retryMins = Math.ceil((new Date(attempt.locked_until).getTime() - Date.now()) / 60000)
+      return json({ error: `Too many attempts. Try again in ${retryMins} minute${retryMins === 1 ? '' : 's'}.` }, 429)
+    }
+
+    if (!verifyPin(String(pin), staff.pin_hash, staff.id)) {
+      const failedCount = (attempt?.failed_count || 0) + 1
+      const locked = failedCount >= DB_MAX_ATTEMPTS
+      await supabase.from('pos_staff_pin_attempts').upsert({
+        staff_id: staff.id,
+        failed_count: locked ? 0 : failedCount,
+        locked_until: locked ? new Date(Date.now() + DB_LOCKOUT_MS).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      })
+      if (locked) return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429)
+      return json({ error: 'Incorrect PIN', attemptsRemaining: DB_MAX_ATTEMPTS - failedCount }, 401)
+    }
+    if (attempt) await supabase.from('pos_staff_pin_attempts').delete().eq('staff_id', staff.id)
 
     // Clear rate limit on successful auth
     clearPinRateLimit(id.key)

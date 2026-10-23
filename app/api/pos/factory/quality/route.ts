@@ -78,73 +78,11 @@ export async function GET(req: NextRequest) {
 // ── POST — log a quality defect event ────────────────────────────────────────
 // Body: { defect_type, severity, photo (base64), product_name?, batch_ref?,
 //         quantity_affected?, notes?, location_id? }
-export async function POST(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
-  if (!auth) return json({ error: 'Unauthorised' }, 401)
-
-  if (!hasPermission(auth.role, 'camera.output') && !hasPermission(auth.role, 'camera.wastage')) {
-    return json({ error: 'Access denied' }, 403)
-  }
-
-  const body = await req.json()
-  const { defect_type, severity, image, product_name, batch_ref, quantity_affected, notes, location_id } = body
-
-  if (!image)       return json({ error: 'image required' }, 400)
-  if (!defect_type || !VALID_DEFECT_TYPES.includes(defect_type)) {
-    return json({ error: `defect_type must be one of: ${VALID_DEFECT_TYPES.join(', ')}` }, 400)
-  }
-  if (severity && !VALID_SEVERITIES.includes(severity)) {
-    return json({ error: `severity must be one of: ${VALID_SEVERITIES.join(', ')}` }, 400)
-  }
-
-  const service = createServiceClient()
-  const { data, error } = await service
-    .from('pos_factory_quality')
-    .insert({
-      owner_id:          auth.ownerId,
-      location_id:       location_id || auth.locationId || null,
-      defect_type,
-      severity:          severity || 'major',
-      product_name:      product_name?.trim() || null,
-      batch_ref:         batch_ref?.trim() || null,
-      quantity_affected: quantity_affected != null ? Number(quantity_affected) : null,
-      photo_url:         image as string,
-      storage:           'fallback',
-      notes:             notes?.trim() || null,
-      reported_by:       auth.staffId || null,
-    })
-    .select()
-    .single()
-
-  if (error) return json({ error: error.message }, 500)
-  return json({ event: data }, 201)
-}
-
-// ── PATCH — update status (resolve / accept risk) ────────────────────────────
-export async function PATCH(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
-  if (!auth) return json({ error: 'Unauthorised' }, 401)
-
-  if (!hasPermission(auth.role, 'capture.approve')) {
-    return json({ error: 'Access denied — approvers only' }, 403)
-  }
-
-  const body = await req.json()
-  const { id, status } = body
-  if (!id)                                          return json({ error: 'id required' }, 400)
-  if (!status || !['resolved', 'accepted_risk'].includes(status)) {
-    return json({ error: 'status must be resolved or accepted_risk' }, 400)
-  }
-
-  const service = createServiceClient()
-  const { data, error } = await service
-    .from('pos_factory_quality')
-    .update({ status })
-    .eq('id', id)
-    .eq('owner_id', auth.ownerId)
-    .select()
-    .single()
-
-  if (error) return json({ error: error.message }, 500)
-  return json({ event: data })
-}
+// ─────────────────────────────────────────────────────────────
+// POST / PATCH — retired. This is an older copy of the route that lives in the POS app (pos.askbiz.co),
+// which validates photos, locations and quantities. Nothing calls this one; leaving the write handlers
+// open here only gave a second, unvalidated way into the same data.
+// ─────────────────────────────────────────────────────────────
+const retired = () => json({ error: 'Moved: use the AskBiz POS app (pos.askbiz.co).' }, 410)
+export async function POST() { return retired() }
+export async function PATCH() { return retired() }

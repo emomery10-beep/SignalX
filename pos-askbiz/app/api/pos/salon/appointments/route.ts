@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
         })
         return fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+          headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '', 'x-owner-id': auth.ownerId },
           body: JSON.stringify({
             notification_type: 'salon_booking',
             recipient_phone: clientPhone,

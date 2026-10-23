@@ -308,7 +308,7 @@ export async function POST(req: NextRequest) {
 
     fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+      headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '', 'x-owner-id': auth.ownerId },
       body: JSON.stringify({
         notification_type: 'service_intake',
         recipient_phone: customer_phone,
@@ -468,7 +468,7 @@ export async function PATCH(req: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-staff-id': auth.staffId || '',
+          'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '',
           'x-owner-id': auth.ownerId,
         },
         body: JSON.stringify({
@@ -501,7 +501,7 @@ export async function PATCH(req: NextRequest) {
       // Collection receipt
       fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+        headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '', 'x-owner-id': auth.ownerId },
         body: JSON.stringify({
           notification_type: 'service_collected',
           recipient_phone: phone,
@@ -519,7 +519,7 @@ export async function PATCH(req: NextRequest) {
       // Warranty info (sent separately)
       fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-owner-id': auth.ownerId },
+        headers: { 'Content-Type': 'application/json', 'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '', 'x-owner-id': auth.ownerId },
         body: JSON.stringify({
           notification_type: 'service_warranty',
           recipient_phone: phone,

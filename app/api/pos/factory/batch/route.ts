@@ -89,111 +89,11 @@ export async function GET(req: NextRequest) {
 // ── POST — scan a batch at a checkpoint ──────────────────────────────────────
 // Body: { batch_ref, checkpoint, image, product_name?, notes?, create_if_missing? }
 // If batch_ref exists → log event; if not and create_if_missing → create batch + log
-export async function POST(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
-  if (!auth) return json({ error: 'Unauthorised' }, 401)
-
-  if (!hasPermission(auth.role, 'camera.output') && !hasPermission(auth.role, 'camera.wastage')) {
-    return json({ error: 'Access denied' }, 403)
-  }
-
-  const body = await req.json()
-  const { batch_ref, checkpoint, image, product_name, notes, create_if_missing, location_id } = body
-
-  if (!image)       return json({ error: 'image required' }, 400)
-  if (!batch_ref?.trim()) return json({ error: 'batch_ref required' }, 400)
-  if (!checkpoint || !VALID_CHECKPOINTS.includes(checkpoint)) {
-    return json({ error: `checkpoint must be one of: ${VALID_CHECKPOINTS.join(', ')}` }, 400)
-  }
-
-  const service = createServiceClient()
-  const ref = (batch_ref as string).trim().toUpperCase()
-
-  // Find or create batch
-  let { data: batch } = await service
-    .from('pos_factory_batches')
-    .select('id, status')
-    .eq('owner_id', auth.ownerId)
-    .eq('batch_ref', ref)
-    .maybeSingle()
-
-  if (!batch) {
-    if (!create_if_missing) {
-      return json({ error: 'Batch not found. Set create_if_missing=true to create it.' }, 404)
-    }
-    const { data: newBatch, error: createErr } = await service
-      .from('pos_factory_batches')
-      .insert({
-        owner_id:     auth.ownerId,
-        location_id:  location_id || auth.locationId || null,
-        batch_ref:    ref,
-        product_name: (product_name as string)?.trim() || null,
-        status:       'active',
-      })
-      .select()
-      .single()
-    if (createErr) return json({ error: createErr.message }, 500)
-    batch = newBatch
-  }
-
-  // Log the event
-  const { data: event, error: evErr } = await service
-    .from('pos_factory_batch_events')
-    .insert({
-      owner_id:   auth.ownerId,
-      batch_id:   batch!.id,
-      checkpoint,
-      photo_url:  image as string,
-      storage:    'fallback',
-      notes:      (notes as string)?.trim() || null,
-      scanned_by: auth.staffId || null,
-    })
-    .select()
-    .single()
-  if (evErr) return json({ error: evErr.message }, 500)
-
-  // Auto-complete batch when dispatched
-  if (checkpoint === 'dispatch') {
-    await service
-      .from('pos_factory_batches')
-      .update({ status: 'completed' })
-      .eq('id', batch!.id)
-  }
-
-  // Return batch + all its events for the trail display
-  const { data: allEvents } = await service
-    .from('pos_factory_batch_events')
-    .select('id, checkpoint, photo_url, created_at')
-    .eq('batch_id', batch!.id)
-    .order('created_at', { ascending: true })
-
-  return json({ event, batch: { ...batch, events: allEvents || [] } }, 201)
-}
-
-// ── PATCH — update batch status ───────────────────────────────────────────────
-export async function PATCH(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
-  if (!auth) return json({ error: 'Unauthorised' }, 401)
-
-  if (!hasPermission(auth.role, 'capture.approve')) {
-    return json({ error: 'Access denied — approvers only' }, 403)
-  }
-
-  const { id, status } = await req.json()
-  if (!id) return json({ error: 'id required' }, 400)
-  if (!status || !VALID_STATUSES.includes(status)) {
-    return json({ error: 'status must be active, completed, or on_hold' }, 400)
-  }
-
-  const service = createServiceClient()
-  const { data, error } = await service
-    .from('pos_factory_batches')
-    .update({ status })
-    .eq('id', id)
-    .eq('owner_id', auth.ownerId)
-    .select()
-    .single()
-
-  if (error) return json({ error: error.message }, 500)
-  return json({ batch: data })
-}
+// ─────────────────────────────────────────────────────────────
+// POST / PATCH — retired. This is an older copy of the route that lives in the POS app (pos.askbiz.co),
+// which validates photos, locations and quantities. Nothing calls this one; leaving the write handlers
+// open here only gave a second, unvalidated way into the same data.
+// ─────────────────────────────────────────────────────────────
+const retired = () => json({ error: 'Moved: use the AskBiz POS app (pos.askbiz.co).' }, 410)
+export async function POST() { return retired() }
+export async function PATCH() { return retired() }

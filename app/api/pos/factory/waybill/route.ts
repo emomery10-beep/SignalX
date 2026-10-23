@@ -72,49 +72,10 @@ export async function GET(req: NextRequest) {
 // ── POST — log a waybill scan ─────────────────────────────────────────────────
 // Body: { destination, image, waybill_ref?, product_name?, quantity?,
 //         scheduled_at? (ISO string), vehicle_ref?, notes? }
-export async function POST(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
-  if (!auth) return json({ error: 'Unauthorised' }, 401)
-
-  if (!hasPermission(auth.role, 'camera.output') && !hasPermission(auth.role, 'camera.wastage')) {
-    return json({ error: 'Access denied' }, 403)
-  }
-
-  const body = await req.json()
-  const { destination, image, waybill_ref, product_name, quantity, scheduled_at, vehicle_ref, notes, location_id } = body
-
-  if (!image)               return json({ error: 'image required — photograph the waybill' }, 400)
-  if (!destination?.trim()) return json({ error: 'destination required' }, 400)
-
-  // Validate scheduled_at if provided
-  let scheduledAtISO: string | null = null
-  if (scheduled_at) {
-    const d = new Date(scheduled_at)
-    if (isNaN(d.getTime())) return json({ error: 'scheduled_at must be a valid ISO date' }, 400)
-    scheduledAtISO = d.toISOString()
-  }
-
-  const service = createServiceClient()
-  const { data, error } = await service
-    .from('pos_factory_waybills')
-    .insert({
-      owner_id:       auth.ownerId,
-      location_id:    location_id || auth.locationId || null,
-      waybill_ref:    waybill_ref?.trim() || null,
-      destination:    destination.trim(),
-      product_name:   product_name?.trim() || null,
-      quantity:       quantity ? Number(quantity) : null,
-      photo_url:      image as string,
-      storage:        'fallback',
-      scheduled_at:   scheduledAtISO,
-      dispatched_at:  new Date().toISOString(),
-      vehicle_ref:    vehicle_ref?.trim() || null,
-      notes:          notes?.trim() || null,
-      dispatched_by:  auth.staffId || null,
-    })
-    .select()
-    .single()
-
-  if (error) return json({ error: error.message }, 500)
-  return json({ waybill: data }, 201)
-}
+// ─────────────────────────────────────────────────────────────
+// POST / PATCH — retired. This is an older copy of the route that lives in the POS app (pos.askbiz.co),
+// which validates photos, locations and quantities. Nothing calls this one; leaving the write handlers
+// open here only gave a second, unvalidated way into the same data.
+// ─────────────────────────────────────────────────────────────
+const retired = () => json({ error: 'Moved: use the AskBiz POS app (pos.askbiz.co).' }, 410)
+export async function POST() { return retired() }

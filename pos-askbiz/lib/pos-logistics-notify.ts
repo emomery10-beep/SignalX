@@ -51,7 +51,7 @@ export function notifyParcelEvent(
     .single()
     .then(({ data: profile }) => {
       const businessName = (profile as { business_name?: string } | null)?.business_name || 'the courier'
-      const headers = { 'Content-Type': 'application/json', 'x-staff-id': staffId || '', 'x-owner-id': ownerId }
+      const headers = { 'Content-Type': 'application/json', 'x-staff-id': staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '', 'x-owner-id': ownerId }
 
       const send = (template: string, phone: string, data: Record<string, unknown>) =>
         fetch(new URL('/api/pos/notifications/send', req.url).toString(), {
