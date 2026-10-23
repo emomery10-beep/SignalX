@@ -60,5 +60,19 @@
   "link_none": "Nicht verknüpft",
   "delivered_badge": "Geliefert",
   "confirm_delivered": "Lieferung bestätigen",
-  "received_by_prompt": "Wer hat es erhalten? (Name, optional)"
+  "received_by_prompt": "Wer hat es erhalten? (Name, optional)",
+  "dn_title": "Lieferschein",
+  "dn_no": "Nr.",
+  "dn_date": "Datum",
+  "dn_customer": "Kunde",
+  "dn_destination": "Geliefert an",
+  "dn_item": "Produkt",
+  "dn_qty": "Menge",
+  "dn_vehicle": "Fahrzeug",
+  "dn_waybill": "Frachtbrief-Nr.",
+  "dn_dispatched_by": "Versendet von",
+  "dn_received_by": "Empfangen von (Name und Unterschrift)",
+  "dn_print": "Drucken",
+  "dn_not_found": "Lieferung nicht gefunden",
+  "delivery_note_button": "Lieferschein"
 }

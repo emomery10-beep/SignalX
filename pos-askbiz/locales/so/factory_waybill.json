@@ -60,5 +60,19 @@
   "link_none": "Lama xiriirin",
   "delivered_badge": "La gaarsiiyey",
   "confirm_delivered": "Xaqiiji in la gaarsiiyey",
-  "received_by_prompt": "Yaa qaatay? (magac, ikhtiyaari)"
+  "received_by_prompt": "Yaa qaatay? (magac, ikhtiyaari)",
+  "dn_title": "Warqadda gaarsiinta",
+  "dn_no": "Lambarka",
+  "dn_date": "Taariikhda",
+  "dn_customer": "Macmiilka",
+  "dn_destination": "Waxaa loo gaarsiiyey",
+  "dn_item": "Badeecada",
+  "dn_qty": "Qadarka",
+  "dn_vehicle": "Gaadhiga",
+  "dn_waybill": "Tixraaca waybill",
+  "dn_dispatched_by": "Wuxuu diray",
+  "dn_received_by": "Qaatay (magac iyo saxiixa)",
+  "dn_print": "Daabac",
+  "dn_not_found": "Gaarsiinta lama helin",
+  "delivery_note_button": "Warqadda gaarsiinta"
 }

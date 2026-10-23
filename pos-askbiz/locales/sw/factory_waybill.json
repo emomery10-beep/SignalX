@@ -60,5 +60,19 @@
   "link_none": "Haijaunganishwa",
   "delivered_badge": "Imefika",
   "confirm_delivered": "Thibitisha imefika",
-  "received_by_prompt": "Nani aliipokea? (jina, hiari)"
+  "received_by_prompt": "Nani aliipokea? (jina, hiari)",
+  "dn_title": "Hati ya uwasilishaji",
+  "dn_no": "Na.",
+  "dn_date": "Tarehe",
+  "dn_customer": "Mteja",
+  "dn_destination": "Inapelekwa kwa",
+  "dn_item": "Bidhaa",
+  "dn_qty": "Kiasi",
+  "dn_vehicle": "Gari",
+  "dn_waybill": "Nambari ya waybill",
+  "dn_dispatched_by": "Imetumwa na",
+  "dn_received_by": "Imepokelewa na (jina na sahihi)",
+  "dn_print": "Chapisha",
+  "dn_not_found": "Uwasilishaji haupatikani",
+  "delivery_note_button": "Hati ya uwasilishaji"
 }

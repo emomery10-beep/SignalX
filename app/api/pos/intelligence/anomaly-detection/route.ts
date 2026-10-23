@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
 import { getDailyCache, setDailyCache } from '@/lib/ai-daily-cache'
+import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
+import { PACKAGED_NAME } from '@/lib/factory-costing-profiles'
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
@@ -257,7 +259,39 @@ async function getFactoryData(service: any, ownerId: string, startDate: Date) {
       }, 0) / approvedWithTimes.length).toFixed(1)
     : null
 
+  // Things that are anomalies by definition, worked out here rather than left for the model to guess at:
+  // dispatches sold for less than they cost to make, approvals that overrode the stock check, and approvals
+  // taken back (voided) after the fact.
+  let belowCost = { count: 0, shortfall: 0, examples: [] as string[] }
+  try {
+    const cost = await loadCycleUnitCost(service, ownerId, null)
+    if (cost && cost.unitCostBeforeCake > 0) {
+      const { data: sold } = await service.from('pos_factory_captures')
+        .select('product_name, quantity, dispatch_price')
+        .eq('owner_id', ownerId).eq('status', 'approved').eq('type', 'dispatch').gt('dispatch_price', 0)
+        .gte('created_at', startDate.toISOString()).limit(2000)
+      for (const d of (sold || []) as any[]) {
+        const key = String(d.product_name || '').trim().toLowerCase()
+        const unit = cost.perProduct?.[key] ?? (PACKAGED_NAME.test(key) && !/waste|cake|husk|shell/.test(key) ? cost.unitCostBeforeCake : 0)
+        if (unit > 0 && Number(d.dispatch_price) < unit) {
+          belowCost.count++
+          belowCost.shortfall += (unit - Number(d.dispatch_price)) * (Number(d.quantity) || 0)
+          if (belowCost.examples.length < 3) belowCost.examples.push(`${d.product_name}: sold at ${d.dispatch_price}, costs ${unit}`)
+        }
+      }
+      belowCost.shortfall = Math.round(belowCost.shortfall)
+    }
+  } catch (e) { console.error('anomaly below-cost check failed:', e) }
+  const { data: auditRows } = await service.from('pos_audit_log')
+    .select('event, metadata').eq('owner_id', ownerId).in('event', ['capture.approved', 'capture.voided'])
+    .gte('created_at', startDate.toISOString()).limit(3000)
+  const overStockOverrides = ((auditRows || []) as any[]).filter(r => r.event === 'capture.approved' && r.metadata?.over_stock_override).length
+  const voidedApprovals = ((auditRows || []) as any[]).filter(r => r.event === 'capture.voided').length
+
   return {
+    dispatches_sold_below_cost: belowCost,
+    approvals_overriding_stock_check: overStockOverrides,
+    approvals_voided_after_the_fact: voidedApprovals,
     total_captures: total,
     by_type: byType,
     status_breakdown: { pending, approved, rejected },
@@ -358,6 +392,8 @@ function buildAnalysisPrompt(data: Record<string, any>, periodDays: number): str
       '8. Approval bottlenecks (pending captures, slow approval lag)',
       '9. Rejection spikes — potential quality control issues',
       '10. Batch-level anomalies in production flow',
+      '11. Dispatches sold below their cost to make (dispatches_sold_below_cost) — name the product and the loss',
+      '12. Approvals that overrode the stock check, or were voided after approval — repeated use can point to missing records or fraud',
     )
   }
   if (data.logistics) {

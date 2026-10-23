@@ -669,6 +669,13 @@ export default function ProductionLogPage() {
               </div>
             )}
 
+            {detail.type === 'dispatch' && detail.status !== 'rejected' && (
+              <button onClick={() => window.open(`/factory/delivery-note?id=${detail.id}`, '_blank', 'noopener')}
+                style={{ width: '100%', marginBottom: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid #475569', background: 'transparent', color: '#e2e8f0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                {tc('factory_waybill.delivery_note_button')}
+              </button>
+            )}
+
             {detail.status === 'approved' && session && hasPermission(session.role, detail.type === 'dispatch' ? 'capture.approve_dispatch' : 'capture.approve') && (
               <button onClick={voidDetail} disabled={voiding}
                 style={{ width: '100%', marginBottom: 12, padding: '12px 14px', borderRadius: 10, border: `1px solid ${BAD}`, background: 'transparent', color: BAD, fontWeight: 700, fontSize: 13, cursor: voiding ? 'not-allowed' : 'pointer', opacity: voiding ? 0.6 : 1 }}>

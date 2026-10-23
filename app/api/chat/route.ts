@@ -1665,6 +1665,21 @@ export async function POST(request: NextRequest) {
             posContext += `Factory finances this month (priced dispatches only): revenue ${sy}${snap.totals.revenue}, production cost ${sy}${snap.totals.cogs}, gross profit ${sy}${snap.totals.gross_profit} (${snap.totals.gross_margin_pct}% margin). Stock value on hand ${sy}${snap.segment?.factory_stock_value ?? 0}.\n`
             if (snap.segment?.unpriced_dispatches > 0) posContext += `${snap.segment.unpriced_dispatches} dispatch(es) are still waiting for an approver to set a price and are not in revenue.\n`
             for (const f of (snap.factories || []).slice(0, 6)) posContext += `Factory: ${f.name} (${f.type || 'type not set'}).\n`
+            // What each unit costs to make (and per product when the factory makes several), cash owed both ways,
+            // and what was written off — so margin, credit and loss questions are answered from the CFO's own numbers.
+            for (const fc of (snap.segment?.factory_costs || []).slice(0, 6)) {
+              if (!(fc.unitCost > 0)) continue
+              const per = fc.perProduct ? Object.entries(fc.perProduct).map(([n, c]) => `${n} ${sy}${c}`).join(', ') : ''
+              posContext += `${fc.name}: cost to make one finished unit ${sy}${fc.unitCost}${per ? ` (by product: ${per})` : ''}${fc.complete ? '' : ' — understated, some inputs not recorded yet'}.\n`
+            }
+            const fm = snap.segment?.factory_money
+            if (fm && (fm.ar > 0 || fm.ap > 0)) {
+              posContext += `Money owed: customers owe the factory ${sy}${fm.ar} (${sy}${fm.ar_overdue} overdue); the factory owes suppliers ${sy}${fm.ap} (${sy}${fm.ap_overdue} overdue).`
+              if (fm.top_debtors?.length) posContext += ` Biggest debtors: ${fm.top_debtors.map((d: any) => `${d.name} ${sy}${d.outstanding}${d.days_overdue > 0 ? ` (${d.days_overdue} days late)` : ''}`).join(', ')}.`
+              posContext += `\n`
+            }
+            if (fm && (fm.collected_in_period > 0 || fm.paid_out_in_period > 0)) posContext += `Cash this month: ${sy}${fm.collected_in_period} collected from customers, ${sy}${fm.paid_out_in_period} paid to suppliers.\n`
+            if (snap.segment?.factory_wastage_value > 0) posContext += `Written off as wastage this month (at cost): ${sy}${snap.segment.factory_wastage_value}.\n`
           }
         } catch (e) { console.error('chat factory snapshot failed:', e) }
         if (waybills.length > 0) {

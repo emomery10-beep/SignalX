@@ -60,5 +60,19 @@
   "link_none": "غير مرتبطة",
   "delivered_badge": "تم التسليم",
   "confirm_delivered": "تأكيد التسليم",
-  "received_by_prompt": "من استلمها؟ (الاسم، اختياري)"
+  "received_by_prompt": "من استلمها؟ (الاسم، اختياري)",
+  "dn_title": "إشعار تسليم",
+  "dn_no": "رقم",
+  "dn_date": "التاريخ",
+  "dn_customer": "العميل",
+  "dn_destination": "يُسلَّم إلى",
+  "dn_item": "المنتج",
+  "dn_qty": "الكمية",
+  "dn_vehicle": "المركبة",
+  "dn_waybill": "مرجع بوليصة الشحن",
+  "dn_dispatched_by": "أرسلها",
+  "dn_received_by": "استلمها (الاسم والتوقيع)",
+  "dn_print": "طباعة",
+  "dn_not_found": "لم يتم العثور على التسليم",
+  "delivery_note_button": "إشعار تسليم"
 }

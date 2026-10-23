@@ -60,5 +60,19 @@
   "link_none": "Non lié",
   "delivered_badge": "Livré",
   "confirm_delivered": "Confirmer la livraison",
-  "received_by_prompt": "Qui l'a reçu ? (nom, facultatif)"
+  "received_by_prompt": "Qui l'a reçu ? (nom, facultatif)",
+  "dn_title": "Bon de livraison",
+  "dn_no": "N°",
+  "dn_date": "Date",
+  "dn_customer": "Client",
+  "dn_destination": "Livré à",
+  "dn_item": "Produit",
+  "dn_qty": "Quantité",
+  "dn_vehicle": "Véhicule",
+  "dn_waybill": "Réf. lettre de voiture",
+  "dn_dispatched_by": "Expédié par",
+  "dn_received_by": "Reçu par (nom et signature)",
+  "dn_print": "Imprimer",
+  "dn_not_found": "Livraison introuvable",
+  "delivery_note_button": "Bon de livraison"
 }

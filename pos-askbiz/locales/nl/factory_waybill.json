@@ -60,5 +60,19 @@
   "link_none": "Niet gekoppeld",
   "delivered_badge": "Geleverd",
   "confirm_delivered": "Levering bevestigen",
-  "received_by_prompt": "Wie heeft het ontvangen? (naam, optioneel)"
+  "received_by_prompt": "Wie heeft het ontvangen? (naam, optioneel)",
+  "dn_title": "Afleverbon",
+  "dn_no": "Nr.",
+  "dn_date": "Datum",
+  "dn_customer": "Klant",
+  "dn_destination": "Geleverd aan",
+  "dn_item": "Product",
+  "dn_qty": "Hoeveelheid",
+  "dn_vehicle": "Voertuig",
+  "dn_waybill": "Vrachtbrief ref",
+  "dn_dispatched_by": "Verzonden door",
+  "dn_received_by": "Ontvangen door (naam en handtekening)",
+  "dn_print": "Afdrukken",
+  "dn_not_found": "Levering niet gevonden",
+  "delivery_note_button": "Afleverbon"
 }

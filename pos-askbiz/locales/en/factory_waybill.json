@@ -60,5 +60,19 @@
   "link_none": "Not linked",
   "delivered_badge": "Delivered",
   "confirm_delivered": "Confirm delivered",
-  "received_by_prompt": "Who received it? (name, optional)"
+  "received_by_prompt": "Who received it? (name, optional)",
+  "dn_title": "Delivery note",
+  "dn_no": "No.",
+  "dn_date": "Date",
+  "dn_customer": "Customer",
+  "dn_destination": "Delivered to",
+  "dn_item": "Product",
+  "dn_qty": "Quantity",
+  "dn_vehicle": "Vehicle",
+  "dn_waybill": "Waybill ref",
+  "dn_dispatched_by": "Dispatched by",
+  "dn_received_by": "Received by (name and signature)",
+  "dn_print": "Print",
+  "dn_not_found": "Delivery not found",
+  "delivery_note_button": "Delivery note"
 }

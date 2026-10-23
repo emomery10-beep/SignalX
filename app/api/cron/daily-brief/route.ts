@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendWhatsApp, salesBriefWhatsApp } from '@/lib/notifications/whatsapp'
+import { factoryBriefLines } from '@/lib/factory-alerts'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const { data: users } = await supabase
     .from('profiles')
-    .select('id, business_name, currency_symbol, whatsapp_number, notify_whatsapp')
+    .select('id, business_name, currency_symbol, whatsapp_number, notify_whatsapp, country_code')
     .not('onboarded', 'is', null)
     .eq('pos_enabled', true)
 
@@ -102,10 +103,19 @@ export async function GET(request: NextRequest) {
 
       generated++
 
-      const ok = await sendWhatsApp(
-        profile.whatsapp_number,
-        salesBriefWhatsApp({ businessName: profile.business_name || 'Your business', symbol, last24h, last7d }),
-      )
+      // A factory owner also hears what is stuck, late or quiet. With no shop sales the sales block is noise, so
+      // a factory-only brief carries just the factory lines.
+      const factoryLines = await factoryBriefLines(supabase, profile.id, symbol, (profile as any).country_code || null)
+      const hasShopActivity = last7d.sales > 0 || last7d.losses > 0
+      const businessName = profile.business_name || 'Your business'
+      let message = salesBriefWhatsApp({ businessName, symbol, last24h, last7d })
+      if (factoryLines.length > 0) {
+        const block = factoryLines.join('\n')
+        message = hasShopActivity
+          ? message.replace('\nhttps://askbiz.co/home', `\n🏭 *Factory*\n${block}\n\nhttps://askbiz.co/home`)
+          : `🏭 *AskBiz Factory — ${businessName}*\n\n${block}\n\nhttps://askbiz.co/home`
+      }
+      const ok = await sendWhatsApp(profile.whatsapp_number, message)
       if (ok) {
         sent++
         await supabase.from('daily_briefs').update({ whatsapp_sent: true }).eq('user_id', profile.id).eq('date', today)

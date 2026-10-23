@@ -60,5 +60,19 @@
   "link_none": "Sin vincular",
   "delivered_badge": "Entregado",
   "confirm_delivered": "Confirmar entrega",
-  "received_by_prompt": "¿Quién la recibió? (nombre, opcional)"
+  "received_by_prompt": "¿Quién la recibió? (nombre, opcional)",
+  "dn_title": "Nota de entrega",
+  "dn_no": "N.º",
+  "dn_date": "Fecha",
+  "dn_customer": "Cliente",
+  "dn_destination": "Entregado a",
+  "dn_item": "Producto",
+  "dn_qty": "Cantidad",
+  "dn_vehicle": "Vehículo",
+  "dn_waybill": "Ref. de carta de porte",
+  "dn_dispatched_by": "Despachado por",
+  "dn_received_by": "Recibido por (nombre y firma)",
+  "dn_print": "Imprimir",
+  "dn_not_found": "Entrega no encontrada",
+  "delivery_note_button": "Nota de entrega"
 }

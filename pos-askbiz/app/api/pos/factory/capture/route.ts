@@ -124,6 +124,8 @@ export async function GET(req: NextRequest) {
   if (type)     query = query.eq('type', type)
   if (status)   query = query.eq('status', status)
   if (shift_id) query = query.eq('shift_id', shift_id)
+  const captureId = searchParams.get('id')
+  if (captureId && /^[0-9a-f-]{36}$/i.test(captureId)) query = query.eq('id', captureId)
   const tz = await ownerFactoryTimeZone(service, auth.ownerId)
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     // The factory's own calendar day (its country's time zone), not the raw UTC one: a capture made late
