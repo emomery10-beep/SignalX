@@ -55,7 +55,7 @@ const nextConfig = {
         headers: [
           { key: 'Access-Control-Allow-Origin',  value: 'https://pos.askbiz.co' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PATCH, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, x-staff-id, x-owner-id' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, x-staff-id, x-owner-id, x-staff-token' },
         ],
       },
     ]

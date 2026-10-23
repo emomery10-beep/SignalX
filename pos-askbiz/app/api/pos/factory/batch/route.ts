@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -119,7 +120,8 @@ export async function POST(req: NextRequest) {
   if (!checkpoint || !(CHECKPOINTS as readonly string[]).includes(checkpoint)) {
     return json({ error: `checkpoint must be one of: ${CHECKPOINTS.join(', ')}` }, 400)
   }
-  if (!image) return json({ error: 'image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
 
   const batchRef = batch_ref.trim()
   const cp = checkpoint as Checkpoint

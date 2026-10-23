@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { hashPin, verifyPin, needsRehash } from '@/lib/pin'
+import { signStaffToken } from '@/lib/pos-staff-token'
 
 // CORS is handled globally by next.config.js headers() for all /api/pos/* routes.
 export async function OPTIONS() {
@@ -118,11 +119,14 @@ export async function POST(req: NextRequest) {
 
     // Transparently upgrade legacy (SHA-256) hashes to scrypt on successful login.
     // Best-effort — never fail login if the upgrade write errors.
+    let currentPinHash: string = staff.pin_hash
     if (needsRehash(staff.pin_hash)) {
       try {
-        await supabase.from('pos_staff')
-          .update({ pin_hash: hashPin(String(pin)) })
+        const upgraded = hashPin(String(pin))
+        const { error: rehashErr } = await supabase.from('pos_staff')
+          .update({ pin_hash: upgraded })
           .eq('id', staff.id)
+        if (!rehashErr) currentPinHash = upgraded
       } catch { /* ignore — login still succeeds */ }
     }
 
@@ -137,8 +141,12 @@ export async function POST(req: NextRequest) {
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', staff.id)
 
+    // Signed session credential, bound to the PIN just verified. null while POS_STAFF_TOKEN_SECRET is unset.
+    const token = signStaffToken({ staffId: staff.id, ownerId: staff.owner_id, pinHash: currentPinHash })
+
     return json({
       verified: true,
+      token,
       staff: {
         id: staff.id,
         name: staff.name,

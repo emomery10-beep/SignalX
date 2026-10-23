@@ -1,6 +1,7 @@
 // Shared POS authentication helper — #21 extract duplicated resolveOwnerId
 import { NextRequest } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { STAFF_TOKEN_HEADER, verifyStaffToken, staffTokenRequired, pinStamp } from '@/lib/pos-staff-token'
 import { getCallerContext } from '@/lib/team-auth'
 import { posTrialLapsed } from '@/lib/pos-entitlement'
 
@@ -115,6 +116,16 @@ async function resolveDelegateLabel(
   return `${name} (${teamRole.replace('_', ' ')})`
 }
 
+// Counts how many requests still authenticate with bare headers, so enforcement can be switched on
+// (POS_REQUIRE_STAFF_TOKEN=1) only once this goes quiet. At most one log line per minute per instance.
+let lastLegacyLog = 0
+function noteLegacyStaffAuth(req: NextRequest, staffId: string) {
+  const now = Date.now()
+  if (now - lastLegacyLog < 60_000) return
+  lastLegacyLog = now
+  console.warn(`[pos-auth] legacy staff headers (no token) staff=${staffId} path=${new URL(req.url).pathname}`)
+}
+
 export async function resolvePosAuth(
   req: NextRequest,
   requiredRole?: string,
@@ -144,21 +155,38 @@ export async function resolvePosAuth(
     return null
   }
 
-  // PIN-auth staff: headers x-staff-id + x-owner-id
-  const staffId = req.headers.get('x-staff-id')
-  const ownerId = req.headers.get('x-owner-id')
+  // PIN-auth staff. A signed x-staff-token (issued by /api/pos/otp after a correct PIN) is the real
+  // credential. Bare x-staff-id + x-owner-id headers are still accepted while sessions migrate (logged
+  // below) and stop working once POS_REQUIRE_STAFF_TOKEN=1.
+  const token = req.headers.get(STAFF_TOKEN_HEADER)
+  let staffId = req.headers.get('x-staff-id')
+  let ownerId = req.headers.get('x-owner-id')
+  let claims: ReturnType<typeof verifyStaffToken> = null
+  if (token) {
+    // A presented token must be valid: never fall back to the bare headers when it is forged or expired.
+    claims = verifyStaffToken(token)
+    if (!claims) return null
+    if ((staffId && staffId !== claims.staffId) || (ownerId && ownerId !== claims.ownerId)) return null
+    staffId = claims.staffId
+    ownerId = claims.ownerId
+  } else if (staffTokenRequired()) {
+    return null
+  }
   if (!staffId || !ownerId) return null
+  if (!claims) noteLegacyStaffAuth(req, staffId)
 
   const service = createServiceClient()
   const { data: staff } = await service
     .from('pos_staff')
-    .select('id, role, location_id')
+    .select('id, role, location_id, pin_hash')
     .eq('id', staffId)
     .eq('owner_id', ownerId)
     .eq('active', true)
     .maybeSingle()
 
   if (!staff) return null
+  // A changed PIN revokes every token issued under the old one.
+  if (claims && claims.pv !== pinStamp((staff as any).pin_hash)) return null
   // Use hierarchy: manager/supervisor can access routes requiring lower roles
   if (requiredRole && !roleCanAccess(staff.role, requiredRole)) return null
 

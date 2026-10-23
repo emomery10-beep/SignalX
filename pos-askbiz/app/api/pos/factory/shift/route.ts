@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 import type { PosAuditEvent } from '@/lib/pos-audit'
 
@@ -147,6 +148,8 @@ export async function POST(req: NextRequest) {
   const { shift_name, custom_name, image, target_units, location_id } = body
 
   if (!shift_name || !image) return json({ error: 'shift_name and image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
   if (!SHIFT_NAMES.includes(shift_name)) {
     return json({ error: 'shift_name must be Morning, Afternoon, Night, or Custom' }, 400)
   }
@@ -160,6 +163,8 @@ export async function POST(req: NextRequest) {
   }
 
   const service = createServiceClient()
+  const locCheck = await resolveOwnedLocation(service, auth, location_id)
+  if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
 
   // Idempotency: dedupe BEFORE checking for an active shift or uploading a
   // photo, so an offline-queue replay of an already-applied open never
@@ -203,7 +208,7 @@ export async function POST(req: NextRequest) {
     .from('pos_factory_production_shifts')
     .insert({
       owner_id:        auth.ownerId,
-      location_id:     location_id || auth.locationId || null,
+      location_id:     locCheck.locationId,
       shift_name,
       custom_name:     shift_name === 'Custom' ? ((custom_name || '').trim() || null) : null,
       target_units:    targetUnitsNum,
@@ -259,6 +264,8 @@ export async function PATCH(req: NextRequest) {
 
   const { id, image } = await req.json()
   if (!id || !image) return json({ error: 'id and image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
 
   const service = createServiceClient()
 

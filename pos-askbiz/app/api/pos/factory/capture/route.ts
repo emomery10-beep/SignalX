@@ -9,6 +9,7 @@ import { matchDecayRule } from '@/lib/factory-decay'
 import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
 import { allowedFactoryProducts, resolveFactoryType } from '@/lib/factory-product-rules'
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation, ownedShiftId } from '@/lib/pos-input'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
   // trust that from the server side. Treat a literal '__other__' the same
   // as "no product name" rather than let the placeholder leak into
   // reporting (e.g. the /factory/production Yield Summary).
-  const product_name = body.product_name === '__other__' ? null : body.product_name
+  const product_name: string | null = typeof body.product_name === 'string' && body.product_name !== '__other__' ? body.product_name.trim().slice(0, 200) || null : null
 
   if (!type || !image) return json({ error: 'type and image required' }, 400)
   if (!['intake', 'intake_arrival', 'intake_feed', 'output', 'wastage', 'dispatch', 'packaging'].includes(type)) {
@@ -187,6 +188,14 @@ export async function POST(req: NextRequest) {
     return json({ error: `Your role does not have permission to submit ${type} captures` }, 403)
   }
 
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
+  const qtyParsed = parseOptionalAmount(quantity, 'quantity')
+  if (!qtyParsed.ok) return json({ error: qtyParsed.error }, 400)
+  const qtyValue = qtyParsed.value
+  const batchRef = clipText(batch_ref, 64)
+  const notesText = clipText(notes, 2000)
+
   // Optional "this was sold" annotation — only meaningful on output/wastage
   // (see SALE_ANNOTATABLE_TYPES above). Silently dropped rather than
   // rejected on other types, since the client always knows which type it's
@@ -196,7 +205,7 @@ export async function POST(req: NextRequest) {
   if (SALE_ANNOTATABLE_TYPES.includes(captureType)) {
     if (body.sale_price !== undefined && body.sale_price !== null && body.sale_price !== '') {
       const parsed = Number(body.sale_price)
-      if (!Number.isFinite(parsed) || parsed < 0) {
+      if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1_000_000_000) {
         return json({ error: 'sale_price must be a non-negative number' }, 400)
       }
       sale_price = parsed
@@ -227,7 +236,10 @@ export async function POST(req: NextRequest) {
 
   // A capture belongs to a factory. When none was chosen and the owner has exactly ONE active factory, it is that
   // one — otherwise the capture is saved with no factory and never shows under it (a new account's first intake).
-  let effLocationId: string | null = location_id || auth.locationId || null
+  const locCheck = await resolveOwnedLocation(service, auth, location_id)
+  if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
+  const shiftIdOwned = await ownedShiftId(service, auth.ownerId, shift_id)
+  let effLocationId: string | null = locCheck.locationId
   if (!effLocationId) {
     const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
     if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
@@ -384,16 +396,16 @@ export async function POST(req: NextRequest) {
     .insert({
       owner_id:     auth.ownerId,
       location_id:  effLocationId,
-      shift_id:     shift_id || null,
+      shift_id:     shiftIdOwned,
       captured_by:  auth.staffId || null,
       type:         captureType,
       status:       'pending',
       photo_url:    photoUrl,
       storage:      storageMode,
       product_name: product_name || null,
-      batch_ref:    batch_ref    || null,
-      quantity:     quantity     ?? null,
-      notes:        notes        || null,
+      batch_ref:    batchRef,
+      quantity:     qtyValue,
+      notes:        notesText,
       client_tx_id: clientTxId,
       sale_price,
       buyer_name,
@@ -428,10 +440,10 @@ export async function POST(req: NextRequest) {
       const { data: retryCapture, error: retryErr } = await service
         .from('pos_factory_captures')
         .insert({
-          owner_id: auth.ownerId, location_id: effLocationId, shift_id: shift_id || null,
+          owner_id: auth.ownerId, location_id: effLocationId, shift_id: shiftIdOwned,
           captured_by: auth.staffId || null, type: captureType, status: 'pending', photo_url: photoUrl,
-          storage: storageMode, product_name: product_name || null, batch_ref: batch_ref || null,
-          quantity: quantity ?? null, notes: notes || null, sale_price, buyer_name,
+          storage: storageMode, product_name: product_name || null, batch_ref: batchRef,
+          quantity: qtyValue, notes: notesText, sale_price, buyer_name,
           param_label, param_value, param_unit, production_run_id, is_intermediate,
         })
         .select('*, captured_by_staff:pos_staff!captured_by(id, name, role), location:pos_locations!location_id(id, name)')
@@ -440,7 +452,7 @@ export async function POST(req: NextRequest) {
       logPosAudit({
         auth, event: 'capture.submitted', entityType: 'factory_capture', entityId: retryCapture.id,
         toValue: captureType,
-        metadata: { product_name: product_name || null, batch_ref: batch_ref || null, quantity: quantity ?? null, storage: storageMode, sale_price, buyer_name, param_label, param_value, param_unit, run_ref: run_ref || null, is_intermediate },
+        metadata: { product_name: product_name || null, batch_ref: batchRef, quantity: qtyValue, storage: storageMode, sale_price, buyer_name, param_label, param_value, param_unit, run_ref: run_ref || null, is_intermediate },
       })
       return json({ capture: retryCapture }, 201)
     }
@@ -450,7 +462,7 @@ export async function POST(req: NextRequest) {
   logPosAudit({
     auth, event: 'capture.submitted', entityType: 'factory_capture', entityId: capture.id,
     toValue: captureType,
-    metadata: { product_name: product_name || null, batch_ref: batch_ref || null, quantity: quantity ?? null, storage: storageMode, sale_price, buyer_name, param_label, param_value, param_unit, run_ref: run_ref || null, is_intermediate },
+    metadata: { product_name: product_name || null, batch_ref: batchRef, quantity: qtyValue, storage: storageMode, sale_price, buyer_name, param_label, param_value, param_unit, run_ref: run_ref || null, is_intermediate },
   })
 
   // Auto-create a not-yet-releasable hold, and/or set a shelf-life expiry,
@@ -552,7 +564,7 @@ export async function PATCH(req: NextRequest) {
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status, type, location_id')
+    .select('id, status, type, location_id, captured_by')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -563,6 +575,10 @@ export async function PATCH(req: NextRequest) {
   }
   if (existing.status !== 'pending') {
     return json({ error: `Capture is already ${existing.status}` }, 400)
+  }
+  // Segregation of duties: a staff member never signs off their own capture (the owner's own session can).
+  if (auth.staffId && existing.captured_by && existing.captured_by === auth.staffId) {
+    return json({ error: 'You cannot approve or reject your own capture. Ask another approver.' }, 403)
   }
 
   const isDispatchApproval = status === 'approved' && existing.type === 'dispatch'
@@ -589,15 +605,19 @@ export async function PATCH(req: NextRequest) {
     })
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
+    // Only a still-pending capture can be actioned: two approvers (or a double tap) racing here would
+    // otherwise both succeed, double-sync stock and send the customer two WhatsApp messages.
+    .eq('status', 'pending')
     .select(`
       *,
       captured_by_staff:pos_staff!captured_by(id, name, role),
       approved_by_staff:pos_staff!approved_by(id, name, role),
       location:pos_locations!location_id(id, name)
     `)
-    .single()
+    .maybeSingle()
 
   if (error) return json({ error: error.message }, 500)
+  if (!updated) return json({ error: 'Capture was already actioned by someone else' }, 409)
 
   logPosAudit({
     auth,

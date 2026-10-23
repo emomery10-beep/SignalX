@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -147,7 +148,10 @@ export async function POST(req: NextRequest) {
     location_id, batch_id, capture_id,
   } = body
 
-  if (!image) return json({ error: 'image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
+  const affectedParsed = parseOptionalAmount(quantity_affected, 'quantity_affected')
+  if (!affectedParsed.ok) return json({ error: affectedParsed.error }, 400)
 
   const outcome: 'pass' | 'fail' = body.outcome === 'pass' ? 'pass' : 'fail'
 
@@ -165,6 +169,8 @@ export async function POST(req: NextRequest) {
   }
 
   const service = createServiceClient()
+  const locCheck = await resolveOwnedLocation(service, auth, location_id)
+  if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
 
   // Idempotency: a client_tx_id makes retries and offline-queue replays
   // safe. Dedupe BEFORE uploading the photo, so a replay never re-uploads
@@ -224,17 +230,17 @@ export async function POST(req: NextRequest) {
 
   const insertRow = {
     owner_id:           auth.ownerId,
-    location_id:        location_id || auth.locationId || null,
+    location_id:        locCheck.locationId,
     batch_id:           batch_id   || null,
     capture_id:         capture_id || null,
     outcome,
     defect_type:        defect_type || null,
     severity:           severity    || null,
-    quantity_affected:  quantity_affected ?? null,
+    quantity_affected:  affectedParsed.value,
     product_name:       product_name || null,
     photo_url:          photoUrl,
     storage:            storageMode,
-    notes:              notes || null,
+    notes:              clipText(notes, 2000),
     inspected_by:       auth.staffId || null,
     client_tx_id:       clientTxId,
   }

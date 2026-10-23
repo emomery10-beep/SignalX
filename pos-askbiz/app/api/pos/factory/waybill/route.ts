@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -126,9 +127,14 @@ export async function POST(req: NextRequest) {
   if (!destination || typeof destination !== 'string' || !destination.trim()) {
     return json({ error: 'destination required' }, 400)
   }
-  if (!image) return json({ error: 'image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
+  const qtyParsed = parseOptionalAmount(quantity, 'quantity')
+  if (!qtyParsed.ok) return json({ error: qtyParsed.error }, 400)
 
   const service = createServiceClient()
+  const locCheck = await resolveOwnedLocation(service, auth, location_id)
+  if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
 
   // Idempotency: dedupe BEFORE uploading the photo, so a replay never
   // re-uploads a duplicate blob for a waybill that's already recorded.
@@ -188,16 +194,16 @@ export async function POST(req: NextRequest) {
 
   const insertPayload = {
     owner_id:      auth.ownerId,
-    location_id:   location_id || auth.locationId || null,
-    destination:   destination.trim(),
-    waybill_ref:   waybill_ref  ? String(waybill_ref).trim()  : null,
-    product_name:  product_name ? String(product_name).trim() : null,
-    quantity:      quantity ?? null,
-    vehicle_ref:   vehicle_ref  ? String(vehicle_ref).trim()  : null,
+    location_id:   locCheck.locationId,
+    destination:   destination.trim().slice(0, 300),
+    waybill_ref:   clipText(waybill_ref, 64),
+    product_name:  clipText(product_name, 200),
+    quantity:      qtyParsed.value,
+    vehicle_ref:   clipText(vehicle_ref, 64),
     scheduled_at:  scheduled_at || null,
     dispatched_at: dispatchedAt.toISOString(),
     is_on_time:    isOnTime,
-    notes:         notes || null,
+    notes:         clipText(notes, 2000),
     photo_url:     photoUrl,
     storage:       storageMode,
     dispatched_by: auth.staffId || null,

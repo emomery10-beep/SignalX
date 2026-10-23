@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -159,7 +160,8 @@ export async function POST(req: NextRequest) {
   const { reason, image, location_id } = body
   const machineName = (typeof body.machine_name === 'string' && body.machine_name.trim()) || 'Machine'
 
-  if (!image) return json({ error: 'image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
   if (!reason || !DOWNTIME_REASONS.includes(reason as DowntimeReason)) {
     return json({ error: `reason must be one of ${DOWNTIME_REASONS.join(', ')}` }, 400)
   }
@@ -182,7 +184,9 @@ export async function POST(req: NextRequest) {
     } catch { /* dedupe is best-effort — never block a report on it */ }
   }
 
-  const resolvedLocationId = location_id || auth.locationId || null
+  const locCheck = await resolveOwnedLocation(service, auth, location_id)
+  if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
+  const resolvedLocationId = locCheck.locationId
   const machineId = await resolveMachineId(service, auth.ownerId, resolvedLocationId, machineName)
 
   const upload = await uploadDowntimePhoto(service, auth.ownerId, 'start', image as string)
@@ -242,6 +246,8 @@ export async function PATCH(req: NextRequest) {
 
   const { id, image } = await req.json()
   if (!id || !image) return json({ error: 'id and image required' }, 400)
+  const imgErr = imageProblem(image)
+  if (imgErr) return json({ error: imgErr }, 400)
 
   const service = createServiceClient()
 

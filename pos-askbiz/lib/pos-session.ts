@@ -6,6 +6,7 @@ export const POS_SESSION_MAX_AGE_MS = 10 * 60 * 60 * 1000
 
 const SESSION_KEY = 'pos_staff'
 const STARTED_KEY = 'pos_staff_session_started'
+export const TOKEN_KEY = 'pos_staff_token'
 
 export function markPosSessionStarted() {
   localStorage.setItem(STARTED_KEY, String(Date.now()))
@@ -14,6 +15,7 @@ export function markPosSessionStarted() {
 export function clearPosSession() {
   localStorage.removeItem(SESSION_KEY)
   localStorage.removeItem(STARTED_KEY)
+  localStorage.removeItem(TOKEN_KEY)
 }
 
 // No recorded start time (e.g. a session created before this feature shipped)

@@ -116,6 +116,7 @@ function LoginPageContent() {
       setLoading(false)
       if (!res.ok) { setError(data.error || tc('pos_login.err_pin_incorrect')); return }
       localStorage.setItem('pos_staff', JSON.stringify(data.staff))
+      if (data.token) localStorage.setItem('pos_staff_token', data.token); else localStorage.removeItem('pos_staff_token')
       markPosSessionStarted()
       router.push(getLoginDest(data.staff.role))
     } catch { setLoading(false); setError(tc('pos_login.err_network')) }
