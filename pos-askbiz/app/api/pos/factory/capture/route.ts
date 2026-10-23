@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { logPosAudit } from '@/lib/pos-audit'
 import { matchHoldRule, matchManualHoldRule } from '@/lib/factory-holds'
 import { matchDecayRule } from '@/lib/factory-decay'
 import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
 import { allowedFactoryProducts, resolveFactoryType } from '@/lib/factory-product-rules'
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
+import { normalisePhone, phoneFields, capturePhone } from '@/lib/customer-phone'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation, ownedShiftId } from '@/lib/pos-input'
 
 export async function OPTIONS() {
@@ -17,6 +19,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch' | 'packaging'
@@ -156,7 +163,7 @@ export async function GET(req: NextRequest) {
     }
     return safe
   })
-  return json({ captures, total: count })
+  return jsonSigned({ captures, total: count })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -240,6 +247,10 @@ export async function POST(req: NextRequest) {
   if (!locCheck.ok) return json({ error: locCheck.error }, locCheck.status)
   const shiftIdOwned = await ownedShiftId(service, auth.ownerId, shift_id)
   let effLocationId: string | null = locCheck.locationId
+
+  // A dispatch's customer phone (the dispatcher's WhatsApp field) goes to customer_phone, not buyer_name.
+  const dispatchPhone = captureType === 'dispatch' ? normalisePhone(body.buyer_name ?? body.customer_phone) : ''
+  const phoneExtra = await phoneFields(service, dispatchPhone)
   if (!effLocationId) {
     const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
     if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
@@ -321,47 +332,18 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (!dupeErr && dupe) return json({ capture: dupe, deduped: true }, 200)
+      if (!dupeErr && dupe) return jsonSigned({ capture: dupe, deduped: true }, 200)
     } catch { /* dedupe is best-effort — never block a capture on it */ }
   }
 
   // Upload photo to Supabase Storage
-  let photoUrl = ''
-  let storageMode: 'supabase' | 'fallback' = 'supabase'
-
-  try {
-    const base64Data = (image as string).replace(/^data:image\/\w+;base64,/, '')
-    const buffer     = Buffer.from(base64Data, 'base64')
-    const filename   = `${auth.ownerId}/${type}_${Date.now()}.jpg`
-
-    const { error: uploadErr } = await service.storage
-      .from('factory-captures')
-      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-    if (uploadErr) {
-      // Bucket may not exist yet — fall back to data URL
-      console.error('factory-captures storage upload failed:', uploadErr.message)
-      photoUrl    = `data:image/jpeg;base64,${base64Data}`
-      storageMode = 'fallback'
-    } else {
-      // factory-captures is a private bucket — a public URL 404s in the
-      // browser. Sign it instead (10-year expiry: these photos need to
-      // stay viewable indefinitely, not just for one session).
-      const { data: signedData, error: signErr } = await service.storage
-        .from('factory-captures')
-        .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
-      if (signErr || !signedData?.signedUrl) {
-        console.error('factory-captures signed URL failed:', signErr?.message)
-        photoUrl    = `data:image/jpeg;base64,${base64Data}`
-        storageMode = 'fallback'
-      } else {
-        photoUrl = signedData.signedUrl
-      }
-    }
-  } catch (err) {
-    console.error('Factory capture upload error:', err)
-    return json({ error: 'Image upload failed' }, 500)
+  const stored = await storeFactoryPhoto(service, 'factory-captures', auth.ownerId, type, image as string)
+  if (!stored.ok) {
+    console.error('Factory photo upload failed:', stored.error)
+    return json({ error: 'Photo storage is unavailable right now. Please try again.' }, 503)
   }
+  const photoUrl = stored.ref
+  const storageMode: 'supabase' | 'fallback' = 'supabase'
 
   // Tag this capture with the owner's currently-active factory PRODUCTION
   // shift (pos_factory_production_shifts — output targets / floor photos),
@@ -409,6 +391,7 @@ export async function POST(req: NextRequest) {
       client_tx_id: clientTxId,
       sale_price,
       buyer_name,
+      ...phoneExtra,
       param_label,
       param_value,
       param_unit,
@@ -432,7 +415,7 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (dupe) return json({ capture: dupe, deduped: true }, 200)
+      if (dupe) return jsonSigned({ capture: dupe, deduped: true }, 200)
     }
     // Live schema may predate the client_tx_id migration — never fail a
     // capture because an optional column is missing.
@@ -443,7 +426,7 @@ export async function POST(req: NextRequest) {
           owner_id: auth.ownerId, location_id: effLocationId, shift_id: shiftIdOwned,
           captured_by: auth.staffId || null, type: captureType, status: 'pending', photo_url: photoUrl,
           storage: storageMode, product_name: product_name || null, batch_ref: batchRef,
-          quantity: qtyValue, notes: notesText, sale_price, buyer_name,
+          quantity: qtyValue, notes: notesText, sale_price, buyer_name: buyer_name ?? (dispatchPhone || null),
           param_label, param_value, param_unit, production_run_id, is_intermediate,
         })
         .select('*, captured_by_staff:pos_staff!captured_by(id, name, role), location:pos_locations!location_id(id, name)')
@@ -454,7 +437,7 @@ export async function POST(req: NextRequest) {
         toValue: captureType,
         metadata: { product_name: product_name || null, batch_ref: batchRef, quantity: qtyValue, storage: storageMode, sale_price, buyer_name, param_label, param_value, param_unit, run_ref: run_ref || null, is_intermediate },
       })
-      return json({ capture: retryCapture }, 201)
+      return jsonSigned({ capture: retryCapture }, 201)
     }
     return json({ error: error.message }, 500)
   }
@@ -522,7 +505,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return json({ capture }, 201)
+  return jsonSigned({ capture }, 201)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -589,9 +572,8 @@ export async function PATCH(req: NextRequest) {
   // The approver can add or correct the customer's WhatsApp number (the
   // dispatcher may have left it blank); it lives in buyer_name like the
   // dispatcher's own entry.
-  const approverPhone = isDispatchApproval && typeof customer_phone === 'string'
-    ? customer_phone.replace(/\D/g, '').slice(0, 20)
-    : ''
+  const approverPhone = isDispatchApproval ? normalisePhone(customer_phone) : ''
+  const approverPhoneFields = approverPhone ? await phoneFields(service, approverPhone) : {}
 
   const { data: updated, error } = await service
     .from('pos_factory_captures')
@@ -601,7 +583,7 @@ export async function PATCH(req: NextRequest) {
       approved_at:      status === 'approved' ? new Date().toISOString() : null,
       rejection_reason: status === 'rejected' ? rejection_reason.trim() : null,
       ...(isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
-      ...(approverPhone.length >= 8 ? { buyer_name: approverPhone } : {}),
+      ...approverPhoneFields,
     })
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
@@ -636,7 +618,7 @@ export async function PATCH(req: NextRequest) {
   if (isDispatchApproval) {
     // Tell the customer it's approved. The number the dispatcher logged lives
     // in buyer_name; a send failure must never fail the approval itself.
-    await sendDispatchWhatsApp(auth.ownerId, updated.buyer_name, {
+    await sendDispatchWhatsApp(auth.ownerId, capturePhone(updated), {
       kind: 'approved',
       productName: updated.product_name,
       quantity: updated.quantity,
@@ -645,5 +627,5 @@ export async function PATCH(req: NextRequest) {
     })
   }
 
-  return json({ capture: updated })
+  return jsonSigned({ capture: updated })
 }

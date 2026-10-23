@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
@@ -10,6 +11,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 // A hold is "open" if it hasn't been manually cleared AND (it has no fixed
@@ -65,7 +71,7 @@ export async function GET(req: NextRequest) {
   const holds = (data || []).map(h => ({ ...h, is_open: isOpen(h) }))
   const filtered = status ? holds.filter(h => (status === 'open' ? h.is_open : !h.is_open)) : holds
 
-  return json({ holds: filtered, openCount: holds.filter(h => h.is_open).length })
+  return jsonSigned({ holds: filtered, openCount: holds.filter(h => h.is_open).length })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -95,28 +101,12 @@ export async function PATCH(req: NextRequest) {
   if (existing.cleared_at) return json({ error: 'This hold is already cleared' }, 400)
 
   // Upload the clearance photo — same bucket/pattern as pos_factory_captures.
-  let photoUrl = ''
-  try {
-    const base64Data = (image as string).replace(/^data:image\/\w+;base64,/, '')
-    const buffer = Buffer.from(base64Data, 'base64')
-    const filename = `${auth.ownerId}/hold-clear_${Date.now()}.jpg`
-
-    const { error: uploadErr } = await service.storage
-      .from('factory-captures')
-      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-    if (uploadErr) {
-      photoUrl = `data:image/jpeg;base64,${base64Data}`
-    } else {
-      const { data: signedData, error: signErr } = await service.storage
-        .from('factory-captures')
-        .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
-      photoUrl = !signErr && signedData?.signedUrl ? signedData.signedUrl : `data:image/jpeg;base64,${base64Data}`
-    }
-  } catch (err) {
-    console.error('Hold clearance photo upload error:', err)
-    return json({ error: 'Image upload failed' }, 500)
+  const stored = await storeFactoryPhoto(service, 'factory-captures', auth.ownerId, 'hold-clear', image as string)
+  if (!stored.ok) {
+    console.error('Factory photo upload failed:', stored.error)
+    return json({ error: 'Photo storage is unavailable right now. Please try again.' }, 503)
   }
+  const photoUrl = stored.ref
 
   const { data: updated, error } = await service
     .from('pos_factory_capture_holds')
@@ -137,5 +127,5 @@ export async function PATCH(req: NextRequest) {
     metadata: { label: updated.label },
   })
 
-  return json({ hold: updated })
+  return jsonSigned({ hold: updated })
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
@@ -11,6 +12,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 const CHECKPOINTS = ['intake', 'in_progress', 'qc_pass', 'qc_fail', 'dispatch'] as const
@@ -93,7 +99,7 @@ export async function GET(req: NextRequest) {
   if (error) return json({ error: error.message }, 500)
 
   const batches = await attachEvents(service, (data || []) as BatchRow[])
-  return json({ batches })
+  return jsonSigned({ batches })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -148,50 +154,20 @@ export async function POST(req: NextRequest) {
           .maybeSingle()
         if (dupeBatch) {
           const [withEvents] = await attachEvents(service, [dupeBatch as BatchRow])
-          return json({ batch: withEvents, deduped: true }, 200)
+          return jsonSigned({ batch: withEvents, deduped: true }, 200)
         }
       }
     } catch { /* dedupe is best-effort — never block a submission on it */ }
   }
 
   // Upload photo to Supabase Storage
-  let photoUrl = ''
-  let storageMode: 'supabase' | 'fallback' = 'supabase'
-
-  try {
-    const base64Data = (image as string).replace(/^data:image\/\w+;base64,/, '')
-    const buffer     = Buffer.from(base64Data, 'base64')
-    const safeRef    = batchRef.replace(/[^a-zA-Z0-9_-]/g, '_')
-    const filename   = `${auth.ownerId}/${safeRef}_${cp}_${Date.now()}.jpg`
-
-    const { error: uploadErr } = await service.storage
-      .from('factory-batch-events')
-      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-    if (uploadErr) {
-      // Bucket may not exist yet — fall back to data URL
-      console.error('factory-batch-events storage upload failed:', uploadErr.message)
-      photoUrl    = `data:image/jpeg;base64,${base64Data}`
-      storageMode = 'fallback'
-    } else {
-      // factory-batch-events is a private bucket — a public URL 404s in the
-      // browser. Sign it instead (10-year expiry: these photos need to
-      // stay viewable indefinitely, not just for one session).
-      const { data: signedData, error: signErr } = await service.storage
-        .from('factory-batch-events')
-        .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
-      if (signErr || !signedData?.signedUrl) {
-        console.error('factory-batch-events signed URL failed:', signErr?.message)
-        photoUrl    = `data:image/jpeg;base64,${base64Data}`
-        storageMode = 'fallback'
-      } else {
-        photoUrl = signedData.signedUrl
-      }
-    }
-  } catch (err) {
-    console.error('Factory batch upload error:', err)
-    return json({ error: 'Image upload failed' }, 500)
+  const stored = await storeFactoryPhoto(service, 'factory-batch-events', auth.ownerId, `${String(batch_ref).trim().replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40)}_${checkpoint}`, image as string)
+  if (!stored.ok) {
+    console.error('Factory photo upload failed:', stored.error)
+    return json({ error: 'Photo storage is unavailable right now. Please try again.' }, 503)
   }
+  const photoUrl = stored.ref
+  const storageMode: 'supabase' | 'fallback' = 'supabase'
 
   // Find-or-create the batch by (owner_id, batch_ref)
   const { data: existingBatch, error: findErr } = await service
@@ -303,5 +279,5 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  return json({ batch: batchWithEvents }, batchCreated ? 201 : 200)
+  return jsonSigned({ batch: batchWithEvents }, batchCreated ? 201 : 200)
 }

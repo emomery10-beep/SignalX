@@ -4,6 +4,7 @@ import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { logPosAudit } from '@/lib/pos-audit'
 import { sendDispatchWhatsApp, cleanWhatsAppNumber } from '@/lib/factory-dispatch-whatsapp'
+import { capturePhone, phoneFields } from '@/lib/customer-phone'
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
   const service = createServiceClient()
   const { data: capture } = await service
     .from('pos_factory_captures')
-    .select('id, type, status, product_name, quantity, notes, buyer_name')
+    .select('*') // '*': customer_phone may not exist until its migration is applied
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
   if (capture.type !== 'dispatch') return json({ error: 'Only dispatch captures can be notified' }, 400)
   if (capture.status !== 'pending') return json({ error: `Capture is already ${capture.status}` }, 400)
 
-  const number = cleanWhatsAppNumber(phone) || cleanWhatsAppNumber(capture.buyer_name)
+  const number = cleanWhatsAppNumber(phone) || capturePhone(capture)
   if (number.length < 8) return json({ error: 'Enter a valid WhatsApp number' }, 400)
 
   const result = await sendDispatchWhatsApp(auth.ownerId, number, {
@@ -46,8 +47,8 @@ export async function POST(req: NextRequest) {
   if (!result.success) return json({ error: result.error || 'WhatsApp send failed' }, 502)
 
   // Keep the number on the capture so the approval message reaches it too.
-  if (number !== cleanWhatsAppNumber(capture.buyer_name)) {
-    await service.from('pos_factory_captures').update({ buyer_name: number }).eq('id', id).eq('owner_id', auth.ownerId)
+  if (number !== capturePhone(capture)) {
+    await service.from('pos_factory_captures').update(await phoneFields(service, number)).eq('id', id).eq('owner_id', auth.ownerId)
   }
 
   logPosAudit({

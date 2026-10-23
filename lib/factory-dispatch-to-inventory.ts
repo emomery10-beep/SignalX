@@ -1,0 +1,168 @@
+/**
+ * Keep the factory rows of the POS `inventory` table equal to the real stock
+ * on hand, recomputed from approved captures (see lib/factory-stock.ts — the
+ * same calculation every factory screen uses).
+ *
+ * This used to ADD each dispatched quantity to stock_qty. A dispatch means
+ * goods LEFT the factory, so the rows ended up holding cumulative dispatched
+ * totals (174 "in stock" cans that were all sold). Now any approved capture
+ * that can change stock triggers a full recompute instead of an increment, so
+ * the value is always derived and can't drift.
+ *
+ * Non-fatal: failures don't block the approval; they're logged.
+ */
+
+import { createServiceClient } from '@/lib/supabase/server'
+import { computeFactoryStock, computeGenericStock, FACTORY_COUNT_REASON, isCan, isWaste } from '@/lib/factory-stock'
+import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
+
+export interface DispatchSyncResult {
+  success: boolean
+  error?: string
+}
+
+// Capture types that move factory stock.
+export const STOCK_AFFECTING_TYPES = ['intake', 'intake_arrival', 'intake_feed', 'output', 'packaging', 'wastage', 'dispatch']
+
+const CAN_NAME = 'Sesame oil - Jerrycan Matungi (20L)'
+const WASTE_NAME = 'Sesame waste'
+
+export async function syncFactoryStockToInventory(ownerId: string, locationId: string | null = null): Promise<DispatchSyncResult> {
+  try {
+    const service = createServiceClient()
+
+    // Stock is per factory: only this branch's captures/counts feed this
+    // branch's inventory rows. No branch (legacy/owner-wide) = whole account.
+    let capQuery = service
+      .from('pos_factory_captures')
+      .select('type, product_name, quantity, param_label, param_value, created_at, dispatch_price')
+      .eq('owner_id', ownerId)
+      .eq('status', 'approved')
+    if (locationId) capQuery = capQuery.eq('location_id', locationId)
+    const { data: caps, error: capErr } = await capQuery
+    if (capErr) throw capErr
+
+    const captures = (caps || []) as any[]
+    let countQuery = service
+      .from('pos_stock_adjustments')
+      .select('product_name, counted_qty, created_at')
+      .eq('owner_id', ownerId)
+      .eq('reason', FACTORY_COUNT_REASON)
+    if (locationId) countQuery = countQuery.eq('location_id', locationId)
+    const { data: counts } = await countQuery
+    const stock = computeFactoryStock(captures, Date.now(), (counts || []) as any[])
+
+    // Latest approved dispatch price per product, so sale_price tracks what the
+    // approver last charged (unchanged behaviour from the old sync).
+    const lastPrice = (pred: (c: any) => boolean): number => {
+      const rows = captures
+        .filter(c => c.type === 'dispatch' && pred(c) && Number(c.dispatch_price) > 0)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      return rows.length ? Number(rows[0].dispatch_price) : 0
+    }
+
+    // Cost of a can / kg of by-product = this factory's own production cost over its cost cycle.
+    const cycleCost = await loadCycleUnitCost(service, ownerId, locationId)
+    const JERRYCAN_PRODUCTION_COST = cycleCost?.unitCost ?? 0
+    const WASTE_COST_PER_KG = cycleCost?.wasteCostPerKg ?? 0
+
+    const targets = [
+      { name: CAN_NAME, qty: stock.cans, unit: 'item', cost: JERRYCAN_PRODUCTION_COST, sale: lastPrice(isCan), has: stock.cansProduced + stock.cansDispatched > 0 },
+      { name: WASTE_NAME, qty: stock.wasteKg, unit: 'kg', cost: WASTE_COST_PER_KG, sale: lastPrice(isWaste), has: stock.wasteProduced + stock.wasteDispatched > 0 },
+    ]
+
+    // Rows already tagged to this factory, plus untagged legacy rows (adopted
+    // below by stamping the branch on them).
+    let rowsQuery = service
+      .from('inventory')
+      .select('id, name, stock_qty, cost_price, sale_price, source_type, location_id')
+      .eq('owner_id', ownerId)
+      .eq('sector', 'factory')
+    if (locationId) rowsQuery = rowsQuery.or(`location_id.eq.${locationId},location_id.is.null`)
+    const { data: rows, error: rowsErr } = await rowsQuery
+    if (rowsErr) throw rowsErr
+
+    const canonical = new Set(targets.map(t => t.name.toLowerCase()))
+
+    for (const t of targets) {
+      if (!t.has) continue
+      const existing = (rows || []).find((r: any) => (r.name || '').toLowerCase() === t.name.toLowerCase())
+      if (existing) {
+        const { error } = await service.from('inventory').update({
+          stock_qty: t.qty,
+          unit: t.unit,
+          source_type: 'factory_dispatch',
+          cost_price: t.cost,
+          sale_price: t.sale > 0 ? t.sale : existing.sale_price,
+          ...(locationId ? { location_id: locationId } : {}),
+        }).eq('id', existing.id)
+        if (error) throw error
+      } else {
+        // sale_price is NOT NULL on this table.
+        const { error } = await service.from('inventory').insert({
+          owner_id: ownerId, name: t.name, sector: 'factory', stock_qty: t.qty, unit: t.unit,
+          source_type: 'factory_dispatch', cost_price: t.cost, sale_price: t.sale > 0 ? t.sale : 0,
+          location_id: locationId,
+        })
+        if (error) throw error
+      }
+    }
+
+    // Legacy dispatch-derived rows under non-canonical names (old product
+    // aliases such as "Mtungi 20 L", customer names typed as a product) were
+    // cumulative dispatch totals — they are not stock. Zero them.
+    for (const r of rows || []) {
+      if (r.source_type === 'factory_dispatch' && !canonical.has((r.name || '').toLowerCase()) && Number(r.stock_qty) !== 0) {
+        const { error } = await service.from('inventory').update({ stock_qty: 0 }).eq('id', r.id)
+        if (error) throw error
+      }
+    }
+
+    return { success: true }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : (err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : String(err))
+    console.error('Factory stock sync failed:', message)
+    return { success: false, error: message }
+  }
+}
+
+// Per-product stock for a non-sesame factory, written to inventory rows tagged
+// with the branch (source_type 'factory_generic'). Recomputed, never incremented.
+async function syncGenericFactoryStock(service: ReturnType<typeof createServiceClient>, ownerId: string, locationId: string): Promise<DispatchSyncResult> {
+  const { data: caps, error: capErr } = await service
+    .from('pos_factory_captures')
+    .select('type, product_name, quantity, created_at, dispatch_price')
+    .eq('owner_id', ownerId)
+    .eq('location_id', locationId)
+    .eq('status', 'approved')
+  if (capErr) throw capErr
+
+  const products = computeGenericStock((caps || []) as any[])
+  const { data: rows, error: rowsErr } = await service
+    .from('inventory')
+    .select('id, name, sale_price')
+    .eq('owner_id', ownerId)
+    .eq('sector', 'factory')
+    .eq('location_id', locationId)
+  if (rowsErr) throw rowsErr
+
+  for (const p of products) {
+    const existing = (rows || []).find((r: any) => (r.name || '').toLowerCase() === p.name.toLowerCase())
+    if (existing) {
+      const { error } = await service.from('inventory').update({
+        stock_qty: p.onHand, source_type: 'factory_generic',
+        sale_price: p.lastDispatchPrice > 0 ? p.lastDispatchPrice : existing.sale_price,
+      }).eq('id', existing.id)
+      if (error) throw error
+    } else {
+      // sale_price is NOT NULL on this table.
+      const { error } = await service.from('inventory').insert({
+        owner_id: ownerId, location_id: locationId, name: p.name, sector: 'factory',
+        stock_qty: p.onHand, unit: p.unit || 'kg', source_type: 'factory_generic',
+        cost_price: 0, sale_price: p.lastDispatchPrice > 0 ? p.lastDispatchPrice : 0,
+      })
+      if (error) throw error
+    }
+  }
+  return { success: true }
+}

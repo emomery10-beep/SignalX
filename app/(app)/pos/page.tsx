@@ -458,6 +458,8 @@ export default function POSPage() {
 
   // Factory captures
   const [factoryCaptures, setFactoryCaptures] = useState<any[]>([])
+  // Price per unit typed by the approver for each pending dispatch (a dispatch can't be approved without one).
+  const [dispatchPriceInput, setDispatchPriceInput] = useState<Record<string, string>>({})
   const [factoryLoading, setFactoryLoading] = useState(false)
   const [factoryIntelligence, setFactoryIntelligence] = useState<any>(null)
   const [factoryIntelLoading, setFactoryIntelLoading] = useState(false)
@@ -3169,9 +3171,26 @@ export default function POSPage() {
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                              {c.type === 'dispatch' && (
+                                <input
+                                  type="number" inputMode="decimal" min="0" step="any"
+                                  value={dispatchPriceInput[c.id] ?? ''}
+                                  onChange={e => setDispatchPriceInput(p => ({ ...p, [c.id]: e.target.value }))}
+                                  placeholder={currencySymbol}
+                                  aria-label={currencySymbol}
+                                  style={{ width: 90, fontSize: 14, borderRadius: 8, border: '1px solid var(--b)', padding: '6px 8px', background: 'var(--sf)', color: 'var(--tx)' }}
+                                />
+                              )}
                               <button
                                 onClick={async () => {
-                                  await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: c.id, status: 'approved' }) })
+                                  const body: Record<string, unknown> = { id: c.id, status: 'approved' }
+                                  if (c.type === 'dispatch') body.dispatch_price = dispatchPriceInput[c.id]
+                                  const res = await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+                                  if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}))
+                                    notify(err.error || tc('pos_app.toast_capture_rejected'), false)
+                                    return
+                                  }
                                   setFactoryCaptures(prev => prev.map(x => x.id === c.id ? { ...x, status: 'approved' } : x))
                                   notify(tc('pos_app.toast_capture_approved'))
                                 }}
@@ -3181,7 +3200,12 @@ export default function POSPage() {
                               <button
                                 onClick={async () => {
                                   const reason = prompt(tc('pos_app.prompt_rejection_reason')) || ''
-                                  await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: c.id, status: 'rejected', rejection_reason: reason }) })
+                                  const res = await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: c.id, status: 'rejected', rejection_reason: reason }) })
+                                  if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}))
+                                    notify(err.error || tc('pos_app.toast_capture_rejected'), false)
+                                    return
+                                  }
                                   setFactoryCaptures(prev => prev.map(x => x.id === c.id ? { ...x, status: 'rejected' } : x))
                                   notify(tc('pos_app.toast_capture_rejected'), false)
                                 }}

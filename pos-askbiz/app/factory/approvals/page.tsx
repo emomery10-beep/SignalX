@@ -32,6 +32,7 @@ interface Capture {
   captured_by_staff?: { id: string; name: string; role: string } | null
   sale_price?: number | null
   buyer_name?: string | null
+  customer_phone?: string | null
   dispatch_price?: number | null
   suggested_dispatch_price?: number | null
 }
@@ -87,7 +88,7 @@ export default function ApprovalsPage() {
   // so the approver can message the customer before signing off.
   const [waNumbers, setWaNumbers] = useState<Record<string, string>>({})
   function waNumberFor(c: Capture) {
-    return waNumbers[c.id] ?? (c.buyer_name || '').replace(/\D/g, '')
+    return waNumbers[c.id] ?? ((c.customer_phone || c.buyer_name || '')).replace(/\D/g, '')
   }
   function sendWhatsApp(c: Capture) {
     const num = waNumberFor(c)

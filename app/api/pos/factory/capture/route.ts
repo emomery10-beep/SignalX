@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { logPosAudit } from '@/lib/pos-audit'
+import { signPayload } from '@/lib/factory-photos'
+import { syncFactoryStockToInventory, STOCK_AFFECTING_TYPES } from '@/lib/factory-dispatch-to-inventory'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -10,6 +12,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 type CaptureType = 'intake' | 'intake_arrival' | 'intake_feed' | 'output' | 'wastage' | 'dispatch'
@@ -67,7 +74,7 @@ export async function GET(req: NextRequest) {
   const from        = searchParams.get('from')  // ISO datetime, inclusive
   const to          = searchParams.get('to')    // ISO datetime, inclusive
   const page        = Math.max(0, parseInt(searchParams.get('page')  || '0'))
-  const limit       = Math.min(2000, parseInt(searchParams.get('limit') || '2000'))
+  const limit       = Math.min(2000, Math.max(1, parseInt(searchParams.get('limit') || '2000') || 2000))
 
   let query = service
     .from('pos_factory_captures')
@@ -109,100 +116,15 @@ export async function GET(req: NextRequest) {
   if (error) return json({ error: error.message }, 500)
 
   const captures = (data || []).map((c: Record<string, unknown>) => redactDispatchPriceForNonApprovers(c, auth.role))
-  return json({ captures, total: count })
+  return jsonSigned({ captures, total: count })
 }
 
 // ─────────────────────────────────────────────────────────────
-// POST — submit a new capture
-// Body: { type, image (base64), shift_id?, product_name?, batch_ref?, quantity?, notes? }
+// POST — retired. Captures are submitted from the POS app (pos.askbiz.co), whose route validates the
+// product list, packaging, holds and photos. This older copy had none of that and nothing calls it.
 // ─────────────────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
-  const auth = await resolvePosAuth(req)
-  if (!auth) return json({ error: 'Unauthorised' }, 401)
-
-  const body = await req.json()
-  const { type, image, shift_id, product_name, batch_ref, quantity, notes, location_id } = body
-
-  if (!type || !image) return json({ error: 'type and image required' }, 400)
-  if (!['intake', 'output', 'wastage', 'dispatch'].includes(type)) {
-    return json({ error: 'type must be intake, output, wastage, or dispatch' }, 400)
-  }
-
-  const captureType = type as CaptureType
-  if (!hasPermission(auth.role, CAPTURE_PERMISSION[captureType])) {
-    return json({ error: `Your role does not have permission to submit ${type} captures` }, 403)
-  }
-
-  const service = createServiceClient()
-
-  // No factory chosen and exactly ONE active factory → it is that one (else the capture never shows under it).
-  let effLocationId: string | null = location_id || auth.locationId || null
-  if (!effLocationId) {
-    const { data: onlyFactory } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').eq('is_active', true).limit(2)
-    if (onlyFactory && onlyFactory.length === 1) effLocationId = onlyFactory[0].id
-  }
-
-  // Upload photo to Supabase Storage
-  let photoUrl = ''
-  let storageMode: 'supabase' | 'fallback' = 'supabase'
-
-  try {
-    const base64Data = (image as string).replace(/^data:image\/\w+;base64,/, '')
-    const buffer     = Buffer.from(base64Data, 'base64')
-    const filename   = `${auth.ownerId}/${type}_${Date.now()}.jpg`
-
-    const { error: uploadErr } = await service.storage
-      .from('factory-captures')
-      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-    if (uploadErr) {
-      // Bucket may not exist yet — fall back to data URL
-      console.error('factory-captures storage upload failed:', uploadErr.message)
-      photoUrl    = `data:image/jpeg;base64,${base64Data}`
-      storageMode = 'fallback'
-    } else {
-      const { data: urlData } = service.storage
-        .from('factory-captures')
-        .getPublicUrl(filename)
-      photoUrl = urlData.publicUrl
-    }
-  } catch (err) {
-    console.error('Factory capture upload error:', err)
-    return json({ error: 'Image upload failed' }, 500)
-  }
-
-  const { data: capture, error } = await service
-    .from('pos_factory_captures')
-    .insert({
-      owner_id:     auth.ownerId,
-      location_id:  effLocationId,
-      shift_id:     shift_id || null,
-      captured_by:  auth.staffId || null,
-      type:         captureType,
-      status:       'pending',
-      photo_url:    photoUrl,
-      storage:      storageMode,
-      product_name: product_name || null,
-      batch_ref:    batch_ref    || null,
-      quantity:     quantity     ?? null,
-      notes:        notes        || null,
-    })
-    .select(`
-      *,
-      captured_by_staff:pos_staff!captured_by(id, name, role),
-      location:pos_locations!location_id(id, name)
-    `)
-    .single()
-
-  if (error) return json({ error: error.message }, 500)
-
-  logPosAudit({
-    auth, event: 'capture.submitted', entityType: 'factory_capture', entityId: capture.id,
-    toValue: captureType,
-    metadata: { product_name: product_name || null, batch_ref: batch_ref || null, quantity: quantity ?? null, storage: storageMode },
-  })
-
-  return json({ capture }, 201)
+export async function POST() {
+  return json({ error: 'Submit captures from the AskBiz POS app (pos.askbiz.co).' }, 410)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -217,7 +139,7 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'Only supervisor, manager, or owner can approve captures' }, 403)
   }
 
-  const { id, status, rejection_reason } = await req.json()
+  const { id, status, rejection_reason, dispatch_price } = await req.json()
 
   if (!id || !status) return json({ error: 'id and status required' }, 400)
   if (!['approved', 'rejected'].includes(status)) {
@@ -227,12 +149,21 @@ export async function PATCH(req: NextRequest) {
     return json({ error: 'rejection_reason required when rejecting a capture' }, 400)
   }
 
+  let resolvedDispatchPrice: number | null = null
+  if (dispatch_price !== undefined && dispatch_price !== null && dispatch_price !== '') {
+    const parsed = Number(dispatch_price)
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1_000_000_000) {
+      return json({ error: 'dispatch_price must be a non-negative number' }, 400)
+    }
+    resolvedDispatchPrice = parsed
+  }
+
   const service = createServiceClient()
 
   // Confirm capture belongs to this owner and is still pending
   const { data: existing } = await service
     .from('pos_factory_captures')
-    .select('id, status, type')
+    .select('id, status, type, location_id, captured_by')
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
     .maybeSingle()
@@ -244,6 +175,15 @@ export async function PATCH(req: NextRequest) {
   if (existing.status !== 'pending') {
     return json({ error: `Capture is already ${existing.status}` }, 400)
   }
+  if (auth.staffId && existing.captured_by && existing.captured_by === auth.staffId) {
+    return json({ error: 'You cannot approve or reject your own capture. Ask another approver.' }, 403)
+  }
+  // An approved dispatch with no price is revenue the CFO can never count, so it needs one up front
+  // (the POS app's approvals screen enforces the same rule).
+  const isDispatchApproval = status === 'approved' && existing.type === 'dispatch'
+  if (isDispatchApproval && resolvedDispatchPrice === null) {
+    return json({ error: 'Enter the dispatch price (per unit) before approving' }, 400)
+  }
 
   const { data: updated, error } = await service
     .from('pos_factory_captures')
@@ -252,26 +192,34 @@ export async function PATCH(req: NextRequest) {
       approved_by:      auth.staffId || null,
       approved_at:      status === 'approved' ? new Date().toISOString() : null,
       rejection_reason: status === 'rejected' ? rejection_reason.trim() : null,
+      ...(isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
     })
     .eq('id', id)
     .eq('owner_id', auth.ownerId)
+    .eq('status', 'pending')
     .select(`
       *,
       captured_by_staff:pos_staff!captured_by(id, name, role),
       approved_by_staff:pos_staff!approved_by(id, name, role),
       location:pos_locations!location_id(id, name)
     `)
-    .single()
+    .maybeSingle()
 
   if (error) return json({ error: error.message }, 500)
+  if (!updated) return json({ error: 'Capture was already actioned by someone else' }, 409)
 
   logPosAudit({
     auth,
     event: status === 'approved' ? 'capture.approved' : 'capture.rejected',
     entityType: 'factory_capture', entityId: id,
     toValue: status,
-    metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : {},
+    metadata: status === 'rejected' ? { rejection_reason: rejection_reason.trim() } : (isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
   })
 
-  return json({ capture: updated })
+  // Any approved capture that moves stock refreshes the factory inventory rows (the POS app does the same).
+  if (status === 'approved' && STOCK_AFFECTING_TYPES.includes(existing.type)) {
+    await syncFactoryStockToInventory(auth.ownerId, existing.location_id || null)
+  }
+
+  return jsonSigned({ capture: updated })
 }

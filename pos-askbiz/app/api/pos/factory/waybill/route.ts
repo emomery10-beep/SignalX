@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
@@ -11,6 +12,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 // Private Supabase Storage bucket for waybill dispatch photos. Mirrors the
@@ -147,47 +153,18 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (!dupeErr && dupe) return json({ waybill: dupe, deduped: true }, 200)
+      if (!dupeErr && dupe) return jsonSigned({ waybill: dupe, deduped: true }, 200)
     } catch { /* dedupe is best-effort — never block a submission on it */ }
   }
 
   // Upload photo to Supabase Storage
-  let photoUrl = ''
-  let storageMode: 'supabase' | 'fallback' = 'supabase'
-
-  try {
-    const base64Data = (image as string).replace(/^data:image\/\w+;base64,/, '')
-    const buffer     = Buffer.from(base64Data, 'base64')
-    const filename   = `${auth.ownerId}/waybill_${Date.now()}.jpg`
-
-    const { error: uploadErr } = await service.storage
-      .from(WAYBILL_BUCKET)
-      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-    if (uploadErr) {
-      // Bucket may not exist yet — fall back to data URL
-      console.error(`${WAYBILL_BUCKET} storage upload failed:`, uploadErr.message)
-      photoUrl    = `data:image/jpeg;base64,${base64Data}`
-      storageMode = 'fallback'
-    } else {
-      // Private bucket — a public URL 404s in the browser. Sign it instead
-      // (10-year expiry: these photos need to stay viewable indefinitely,
-      // not just for one session).
-      const { data: signedData, error: signErr } = await service.storage
-        .from(WAYBILL_BUCKET)
-        .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
-      if (signErr || !signedData?.signedUrl) {
-        console.error(`${WAYBILL_BUCKET} signed URL failed:`, signErr?.message)
-        photoUrl    = `data:image/jpeg;base64,${base64Data}`
-        storageMode = 'fallback'
-      } else {
-        photoUrl = signedData.signedUrl
-      }
-    }
-  } catch (err) {
-    console.error('Waybill photo upload error:', err)
-    return json({ error: 'Image upload failed' }, 500)
+  const stored = await storeFactoryPhoto(service, WAYBILL_BUCKET, auth.ownerId, 'waybill', image as string)
+  if (!stored.ok) {
+    console.error('Factory photo upload failed:', stored.error)
+    return json({ error: 'Photo storage is unavailable right now. Please try again.' }, 503)
   }
+  const photoUrl = stored.ref
+  const storageMode: 'supabase' | 'fallback' = 'supabase'
 
   const dispatchedAt = new Date()
   const isOnTime = computeIsOnTime(scheduled_at, dispatchedAt)
@@ -225,7 +202,7 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (dupe) return json({ waybill: dupe, deduped: true }, 200)
+      if (dupe) return jsonSigned({ waybill: dupe, deduped: true }, 200)
     }
     // Live schema may predate the client_tx_id column — never fail a
     // waybill submission because an optional column is missing.
@@ -243,7 +220,7 @@ export async function POST(req: NextRequest) {
         toValue: retryWaybill.destination,
         metadata: { waybill_ref: retryWaybill.waybill_ref, is_on_time: retryWaybill.is_on_time, storage: storageMode },
       })
-      return json({ waybill: retryWaybill }, 201)
+      return jsonSigned({ waybill: retryWaybill }, 201)
     }
     return json({ error: error.message }, 500)
   }
@@ -254,5 +231,5 @@ export async function POST(req: NextRequest) {
     metadata: { waybill_ref: waybill.waybill_ref, is_on_time: waybill.is_on_time, storage: storageMode },
   })
 
-  return json({ waybill }, 201)
+  return jsonSigned({ waybill }, 201)
 }

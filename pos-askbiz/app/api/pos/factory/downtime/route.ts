@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 
@@ -11,6 +12,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 const DOWNTIME_REASONS = ['breakdown', 'changeover', 'no_materials', 'quality_hold', 'planned_maintenance', 'other'] as const
@@ -30,37 +36,12 @@ async function uploadDowntimePhoto(
   label: string,
   image: string,
 ): Promise<{ url: string; storage: 'supabase' | 'fallback' } | null> {
-  try {
-    const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
-    const buffer     = Buffer.from(base64Data, 'base64')
-    const filename   = `${ownerId}/${label}_${Date.now()}.jpg`
-
-    const { error: uploadErr } = await service.storage
-      .from(DOWNTIME_PHOTOS_BUCKET)
-      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-    if (uploadErr) {
-      // Bucket may not exist yet — fall back to data URL
-      console.error(`${DOWNTIME_PHOTOS_BUCKET} storage upload failed:`, uploadErr.message)
-      return { url: `data:image/jpeg;base64,${base64Data}`, storage: 'fallback' }
-    }
-
-    // Private bucket — a public URL 404s in the browser. Sign it instead
-    // (10-year expiry: these photos need to stay viewable indefinitely).
-    const { data: signedData, error: signErr } = await service.storage
-      .from(DOWNTIME_PHOTOS_BUCKET)
-      .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
-
-    if (signErr || !signedData?.signedUrl) {
-      console.error(`${DOWNTIME_PHOTOS_BUCKET} signed URL failed:`, signErr?.message)
-      return { url: `data:image/jpeg;base64,${base64Data}`, storage: 'fallback' }
-    }
-
-    return { url: signedData.signedUrl, storage: 'supabase' }
-  } catch (err) {
-    console.error('Downtime photo upload error:', err)
+  const stored = await storeFactoryPhoto(service, DOWNTIME_PHOTOS_BUCKET, ownerId, label, image)
+  if (!stored.ok) {
+    console.error('Downtime photo upload failed:', stored.error)
     return null
   }
+  return { url: stored.ref, storage: 'supabase' }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -141,7 +122,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query
   if (error) return json({ error: error.message }, 500)
 
-  return json({ activeEvents: data })
+  return jsonSigned({ activeEvents: data })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -180,7 +161,7 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (!dupeErr && dupe) return json({ event: dupe, deduped: true }, 200)
+      if (!dupeErr && dupe) return jsonSigned({ event: dupe, deduped: true }, 200)
     } catch { /* dedupe is best-effort — never block a report on it */ }
   }
 
@@ -218,7 +199,7 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (dupe) return json({ event: dupe, deduped: true }, 200)
+      if (dupe) return jsonSigned({ event: dupe, deduped: true }, 200)
     }
     return json({ error: error.message }, 500)
   }
@@ -229,7 +210,7 @@ export async function POST(req: NextRequest) {
     metadata: { machine_name: machineName, machine_id: machineId, storage: upload.storage },
   })
 
-  return json({ event }, 201)
+  return jsonSigned({ event }, 201)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -294,5 +275,5 @@ export async function PATCH(req: NextRequest) {
     metadata: { duration_minutes: durationMinutes, storage: upload.storage },
   })
 
-  return json({ event: updated })
+  return jsonSigned({ event: updated })
 }

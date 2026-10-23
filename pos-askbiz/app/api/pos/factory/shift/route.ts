@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { storeFactoryPhoto, signPayload } from '@/lib/factory-photos'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation } from '@/lib/pos-input'
 import { logPosAudit } from '@/lib/pos-audit'
 import type { PosAuditEvent } from '@/lib/pos-audit'
@@ -21,6 +22,11 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
+}
+
+// Same as json(), but swaps any stored photo reference (sb://bucket/path) for a short-lived signed URL.
+async function jsonSigned(data: unknown, status = 200) {
+  return json(await signPayload(createServiceClient(), data), status)
 }
 
 const PRODUCTION_SHIFT_OPENED_EVENT: PosAuditEvent = 'shift.production_opened'
@@ -66,32 +72,9 @@ async function uploadShiftPhoto(
   label: 'start' | 'end',
   image: string,
 ): Promise<{ url: string; storage: 'supabase' | 'fallback' }> {
-  const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
-  const buffer = Buffer.from(base64Data, 'base64')
-  const filename = `${ownerId}/${label}_${Date.now()}.jpg`
-
-  const { error: uploadErr } = await service.storage
-    .from(SHIFT_BUCKET)
-    .upload(filename, buffer, { contentType: 'image/jpeg', upsert: false })
-
-  if (uploadErr) {
-    // Bucket may not exist yet — fall back to data URL, same as factory-captures
-    console.error(`${SHIFT_BUCKET} storage upload failed:`, uploadErr.message)
-    return { url: `data:image/jpeg;base64,${base64Data}`, storage: 'fallback' }
-  }
-
-  // Private bucket — a public URL 404s in the browser. Sign it instead
-  // (10-year expiry: these photos need to stay viewable indefinitely).
-  const { data: signedData, error: signErr } = await service.storage
-    .from(SHIFT_BUCKET)
-    .createSignedUrl(filename, 60 * 60 * 24 * 365 * 10)
-
-  if (signErr || !signedData?.signedUrl) {
-    console.error(`${SHIFT_BUCKET} signed URL failed:`, signErr?.message)
-    return { url: `data:image/jpeg;base64,${base64Data}`, storage: 'fallback' }
-  }
-
-  return { url: signedData.signedUrl, storage: 'supabase' }
+  const stored = await storeFactoryPhoto(service, SHIFT_BUCKET, ownerId, label, image)
+  if (!stored.ok) throw new Error(stored.error || 'Photo storage unavailable')
+  return { url: stored.ref, storage: 'supabase' }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -130,7 +113,7 @@ export async function GET(req: NextRequest) {
 
   if (recentErr) return json({ error: recentErr.message }, 500)
 
-  return json({ activeShift, recentShifts: recentShifts || [] })
+  return jsonSigned({ activeShift, recentShifts: recentShifts || [] })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -178,7 +161,7 @@ export async function POST(req: NextRequest) {
         .eq('owner_id', auth.ownerId)
         .eq('client_tx_id', clientTxId)
         .maybeSingle()
-      if (!dupeErr && dupe) return json({ shift: dupe, deduped: true }, 200)
+      if (!dupeErr && dupe) return jsonSigned({ shift: dupe, deduped: true }, 200)
     } catch { /* dedupe is best-effort — never block a shift-open on it */ }
   }
 
@@ -232,7 +215,7 @@ export async function POST(req: NextRequest) {
           .eq('owner_id', auth.ownerId)
           .eq('client_tx_id', clientTxId)
           .maybeSingle()
-        if (dupe) return json({ shift: dupe, deduped: true }, 200)
+        if (dupe) return jsonSigned({ shift: dupe, deduped: true }, 200)
       }
       return json({ error: 'A production shift is already active. End it before starting a new one.' }, 409)
     }
@@ -248,7 +231,7 @@ export async function POST(req: NextRequest) {
     metadata: { custom_name: (shift as any).custom_name, target_units: targetUnitsNum, storage: photo.storage },
   })
 
-  return json({ shift }, 201)
+  return jsonSigned({ shift }, 201)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -324,5 +307,5 @@ export async function PATCH(req: NextRequest) {
     metadata: { actual_output: actualOutput, duration_minutes: durationMinutes, storage: photo.storage },
   })
 
-  return json({ shift: updated })
+  return jsonSigned({ shift: updated })
 }
