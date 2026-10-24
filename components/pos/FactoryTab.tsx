@@ -4,8 +4,8 @@ import { getCostingProfile, unitNaming, isPackagedName, isByproductName, isRawIn
 import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
-import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
-import { parseCycle, cycleWindow, DEFAULT_CYCLE_DAYS, MAX_CYCLE_DAYS, type FactoryCycle } from '@/lib/factory-unit-cost'
+import { WORKING_DAYS_PER_MONTH, factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
+import { effectiveType as inferFactoryType, parseCycle, cycleWindow, DEFAULT_CYCLE_DAYS, MAX_CYCLE_DAYS, type FactoryCycle } from '@/lib/factory-unit-cost'
 import { factoryDayKey, getFactoryTz, setFactoryTz } from '@/lib/factory-tz-client'
 
 // ── Color constants ──────────────────────────────────────────
@@ -771,6 +771,9 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
   const packaging = useMemo(() => captures.filter(c => (c.type as any) === 'packaging'), [captures])
   const wastages = useMemo(() => captures.filter(c => c.type === 'wastage'), [captures])
   const dispatches = useMemo(() => captures.filter(c => c.type === 'dispatch'), [captures])
+  // "All factories" has no single type, so the tab used the generic count profile and read kg of oil as units.
+  // Infer it from what was logged (same rule the CFO and Inventory use) so a sesame line is costed per jerrycan.
+  const costingType = useMemo(() => inferFactoryType(factoryType, captures.map(c => ({ product_name: c.product }))), [factoryType, captures])
 
   // ── Core KPIs ──────────────────────────────────────────────
   const todayKey = dayKey(new Date())
@@ -929,15 +932,15 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
             <QualityView captures={captures} wastages={wastages} costForCapture={costForCapture} totalWaste={totalWaste} currencySymbol={currencySymbol} staffName={staffName} />
           )}
           {subTab === 'inventory' && (
-            <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} outputs={outputs} dispatches={dispatches} selectedLocation={selectedLocation} factoryType={factoryType} />
+            <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} outputs={outputs} dispatches={dispatches} selectedLocation={selectedLocation} factoryType={costingType} />
           )}
           {subTab === 'dispatch' && (
             <DispatchView dispatches={dispatches} staffName={staffName} currencySymbol={currencySymbol} />
           )}
           {subTab === 'costing' && (
             <CostingView
-              key={`${selectedLocation}:${factoryType || ''}`}
-              factoryType={factoryType}
+              key={`${selectedLocation}:${costingType || ''}`}
+              factoryType={costingType}
               intakes={intakesConsumed} outputs={outputs} wastages={wastages} packaging={packaging} dispatches={dispatches}
               costForCapture={costForCapture} sellByProduct={sellByProduct}
               totalOutput={totalOutput} currencySymbol={currencySymbol}
@@ -2265,7 +2268,13 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
           if (d.saved) { setElectricityPerDayInput(st.electricityPerDay); setRateElec(String(st.electricityPerDay)) }
           else { setElectricityPerDayInput(null); setRateElec(String(st.electricityPerDay)) }
         } else {
-          setElectricityPerDayInput(null); setStaffDayRate(0); setStaffHourlyRate(0); setOverheadOverride(0)
+          // No saved row (e.g. "All factories"): use the country/type default shown in the Staff and Electricity cards.
+          const def = factoryCostDefaultsFor(d.country_code, factoryType)
+          if (def.configured) {
+            setStaffDayRate(def.staffPerDay); setStaffHourlyRate(Math.round(def.staffPerDay / DEFAULT_MOTOR_HOURS_PER_DAY))
+            setOverheadOverride(def.overhead)
+          } else { setStaffDayRate(0); setStaffHourlyRate(0); setOverheadOverride(0) }
+          setElectricityPerDayInput(null)
           setRateStaff(''); setRateElec(''); setRateOverhead('')
           const ul = Number(d.electricity_basis?.unit?.litres)
           setUnitLitres(ul > 0 ? ul : P.defaultUnitLitres)

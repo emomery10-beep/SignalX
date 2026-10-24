@@ -112,7 +112,7 @@ const TYPE_CLUES: [RegExp, string][] = [
   [/sesame/i, 'sesame_oil'], [/coconut|copra/i, 'coconut_oil'], [/groundnut|peanut/i, 'groundnut_oil'],
   [/sunflower/i, 'sunflower_oil'], [/palm/i, 'palm_oil'],
 ]
-function effectiveType(factoryType: string | null | undefined, captures: UnitCostCapture[]): string | null {
+export function effectiveType(factoryType: string | null | undefined, captures: UnitCostCapture[]): string | null {
   if (factoryType && factoryType !== 'other') return factoryType
   for (const [re, t] of TYPE_CLUES) if (captures.some(c => re.test(c.product_name || ''))) return t
   return factoryType || null
