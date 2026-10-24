@@ -28,6 +28,7 @@ interface Overview {
   value: { raw: number; finished: number; byproduct: number; total: number }
   money: { revenue: number; cogs: number; margin: number; soldUnits: number; byproductSoldCost: number }
   products: { name: string; unit?: string | null; onHand: number; in: number; out: number; lastDispatchPrice: number; role?: string }[]
+  unitNotes?: { converted: number; excluded: { product: string; unit: string; quantity: number; captures: number }[] }
 }
 
 const ROLE_LABEL: Record<string, string> = { raw: 'Raw material', bulk: 'Intermediate', finished: 'Finished', byproduct: 'By-product', other: 'Other' }
@@ -150,6 +151,14 @@ export default function FactoryProductionOverviewPage() {
       </header>
 
       <main style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
+        {data.unitNotes && data.unitNotes.excluded.length > 0 && (
+          <div role="status" style={{ background: '#451a03', border: `1px solid ${AMBER}`, color: '#fde68a', borderRadius: 12, padding: 16, marginBottom: 20, fontSize: 14, lineHeight: 1.5 }}>
+            <strong style={{ display: 'block', marginBottom: 4 }}>Not counted in the kg totals</strong>
+            {data.unitNotes.excluded.map(e => (
+              <div key={`${e.product}-${e.unit}`}>{e.quantity.toLocaleString()} {e.unit} of {e.product || 'an item'} ({e.captures} {e.captures === 1 ? 'entry' : 'entries'}) was logged in {e.unit}, which can&apos;t be added to kilograms. Log it again in kg to include it.</div>
+            ))}
+          </div>
+        )}
         {ownerPicks && factories.length > 1 && (
           <div style={{ marginBottom: 20 }}>
             <label htmlFor="factory-pick" style={{ display: 'block', fontSize: 12, color: MUTED, marginBottom: 6 }}>Factory</label>

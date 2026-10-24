@@ -6,6 +6,7 @@ import { getDateRange } from '@/lib/cfo-date-range'
 import { createServiceClient } from '@/lib/supabase/server'
 import { computeFactoryFinancials, mergeFactoryFinancials, type FactoryCapture, type FactoryActuals } from '@/lib/factory-financials'
 import { parseCycle } from '@/lib/factory-unit-cost'
+import { normalizeCaptureUnits } from '@/lib/factory-units'
 import { factoryTimeZone } from '@/lib/factory-time'
 import { computeMoney, type MoneyReport } from '@/lib/factory-money'
 import { FACTORY_COUNT_REASON } from '@/lib/factory-stock'
@@ -264,7 +265,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
   if (includeFactory && scopeIds.length > 0) {
     const [{ data: capRows }, { data: countRows }, { data: settingRows }, { data: taggedRows }] = await Promise.all([
       svc.from('pos_factory_captures')
-        .select('location_id, type, product_name, quantity, dispatch_price, param_label, param_value, created_at, approved_at')
+        .select('location_id, type, product_name, quantity, batch_ref, dispatch_price, param_label, param_value, created_at, approved_at')
         .eq('owner_id', ownerId).eq('status', 'approved').in('location_id', scopeIds).limit(20000),
       svc.from('pos_stock_adjustments')
         .select('location_id, product_name, counted_qty, created_at')
@@ -309,7 +310,8 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       factoryResults.push({
         id: f.id, name: f.name, type: f.factory_type,
         fin: computeFactoryFinancials(
-          ((capRows || []) as FactoryCapture[]).filter(c => c.location_id === f.id),
+          // Quantities into one unit before costing (g/tonnes/oil litres → kg; piece counts left out).
+          normalizeCaptureUnits(((capRows || []) as FactoryCapture[]).filter(c => c.location_id === f.id) as any[], effectiveType).captures as FactoryCapture[],
           ((countRows || []) as any[]).filter(c => c.location_id === f.id),
           win, Date.now(), settings, effectiveType, actualsBy.get(f.id),
           // Cost per can is worked out over this factory's own cost cycle (default last 28 days), same as its Inventory/Costing tabs.

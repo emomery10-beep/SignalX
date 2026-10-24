@@ -6,7 +6,8 @@ import { computeGenericStock } from '@/lib/factory-stock'
 import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
 import { getCostingProfile, isByproductName, isPackagedName, unitNaming } from '@/lib/factory-costing-profiles'
 import { getFactoryTypeTemplate } from '@/lib/factory-templates'
-import { GET as sesameGet } from '../sesame-production/route'
+import { normalizeCaptureUnits } from '@/lib/factory-units'
+import { GET as sesameGet } from '@/lib/factory-sesame-production'
 
 /**
  * Production overview for ANY factory type.
@@ -68,6 +69,7 @@ export async function GET(req: NextRequest) {
         value: { raw: r.rawMaterialsCost, finished: r.finishedGoodsValue, byproduct: r.wasteStockValue, total: r.totalStockValue },
         money: { revenue: r.totalRevenue, cogs: r.costOfGoods, margin: r.grossMargin, soldUnits: (r.jerrycansProduced || 0) - (r.jerrycansInStock || 0), byproductSoldCost: Math.round((r.stock?.wasteDispatched || 0) * (r.wasteCostPerKg || 0)) },
         products: (r.genericStock || []).length ? r.genericStock : [],
+        unitNotes: r.unitNotes || { converted: 0, excluded: [] },
       })
     }
 
@@ -75,7 +77,15 @@ export async function GET(req: NextRequest) {
     let q = service.from('pos_factory_captures').select('*').eq('owner_id', auth.ownerId).eq('status', 'approved')
     if (auth.locationId) q = q.eq('location_id', auth.locationId)
     const { data } = await q
-    const caps = (data || []) as any[]
+    // Every quantity into one unit before anything is added up (g/tonnes/oil litres → kg; counts left out and reported).
+    // With the whole account in view each capture is read against its own factory's type.
+    let typeByLoc = new Map<string, string | null>()
+    if (!auth.locationId) {
+      const { data: facs } = await service.from('pos_locations').select('id, factory_type').eq('owner_id', auth.ownerId).eq('kind', 'factory')
+      typeByLoc = new Map(((facs || []) as any[]).map(f => [f.id as string, (f.factory_type as string) || null]))
+    }
+    const units = normalizeCaptureUnits((data || []) as any[], (c: any) => (c.location_id && typeByLoc.has(c.location_id) ? typeByLoc.get(c.location_id) : factoryType))
+    const caps = units.captures
 
     // Everything below is read from the capture TYPE (arrival / feed / output / wastage / packaging / dispatch), not from
     // product names: staff pick names from a dropdown and real accounts mis-file them (a coconut press logging its oil
@@ -151,6 +161,7 @@ export async function GET(req: NextRequest) {
       products: (canSeePrices ? rows : rows.map(r => ({ ...r, lastDispatchPrice: 0 })))
         // Captures carry no unit column, so name the unit from the product's role.
         .map(r => ({ ...r, unit: r.unit || (r.role === 'finished' ? unit.plural : 'kg') })),
+      unitNotes: { converted: units.converted, excluded: units.excluded },
     })
   } catch (error) {
     console.error('Production overview error:', error)

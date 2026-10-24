@@ -7,6 +7,7 @@ import { compressImageToDataUrl } from '@/lib/pos-image-compress'
 import { fetchInventory } from '@/lib/pos-inventory-fetch'
 import { bulkUpsertResourceFromApi, isResourceCacheStale } from '@/lib/pos-resource-cache'
 import { hasPermission } from '@/lib/pos-permissions'
+import { allowedUnitsFor } from '@/lib/factory-units'
 import { allowedFactoryProducts, isSeedOnlyStep, resolveFactoryType } from '@/lib/factory-product-rules'
 import { enqueueOfflineWrite, replayOfflineQueue, generateClientTxId, OfflineQueueQuotaError } from '@/lib/pos-offline-queue'
 
@@ -189,6 +190,8 @@ export default function FactoryCapturePage() {
   const [addingLine, setAddingLine] = useState(false)
   const [lineError, setLineError] = useState('')
   const canAddProductLine = hasPermission(session?.role, 'inventory.manage') && !isSeedOnlyStep(locationFactoryType, captureType)
+  // Oil and liquid factories weigh raw material and product (kg / litres), so piece counts can't be mixed into the totals.
+  const unitChoices = allowedUnitsFor(locationFactoryType, captureType) || UNITS.slice(0, 5)
   const productOptions = allowedFactoryProducts(locationFactoryType, captureType, inventory.map(i => i.name))
   const [isIntermediate, setIsIntermediate] = useState(false)
 
@@ -696,7 +699,7 @@ export default function FactoryCapturePage() {
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tc('factory_capture.container_count_label')}</span>
             ) : (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 160 }}>
-                {UNITS.slice(0, 5).map(u => (
+                {unitChoices.map(u => (
                   <button key={u} onClick={() => setUnit(u)} style={{ padding: '4px 10px', borderRadius: 20, border: `1.5px solid ${unit === u ? selectedType.color : 'rgba(255,255,255,0.15)'}`, background: unit === u ? `${selectedType.color}20` : 'transparent', color: unit === u ? selectedType.color : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: unit === u ? 700 : 400, cursor: 'pointer' }}>
                     {u}
                   </button>

@@ -20,6 +20,7 @@
  * apps are deployed separately. Change both together.
  */
 import { getCostingProfile, isPackagedName, isByproductName, isRawIntakeName } from '@/lib/factory-costing-profiles'
+import { normalizeCaptureUnits } from './factory-units'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { dayOfInZone, factoryTimeZone, DEFAULT_FACTORY_TZ } from '@/lib/factory-time'
 
@@ -38,6 +39,7 @@ export interface UnitCostCapture {
   param_value?: number | string | null
   dispatch_price?: number | string | null
   created_at?: string | null
+  batch_ref?: string | null
 }
 
 export interface UnitCostSettings {
@@ -296,11 +298,11 @@ export function stockRoleOf(factoryType: string | null | undefined, productName:
 
 // ── Server side: load a factory's captures, saved rates and cycle, and cost it ─────────────
 
-async function fetchAllCaptures(service: any, ownerId: string, locationId: string | null): Promise<UnitCostCapture[]> {
+async function fetchAllCaptures(service: any, ownerId: string, locationId: string | null, factoryType: string | null): Promise<UnitCostCapture[]> {
   const out: UnitCostCapture[] = []
   for (let from = 0; from < 50_000; from += 1000) {
     let q = service.from('pos_factory_captures')
-      .select('type, product_name, quantity, param_label, param_value, dispatch_price, created_at')
+      .select('type, product_name, quantity, batch_ref, param_label, param_value, dispatch_price, created_at')
       .eq('owner_id', ownerId).eq('status', 'approved')
     if (locationId) q = q.eq('location_id', locationId)
     const { data, error } = await q.order('created_at', { ascending: true }).range(from, from + 999)
@@ -308,7 +310,8 @@ async function fetchAllCaptures(service: any, ownerId: string, locationId: strin
     out.push(...(data as UnitCostCapture[]))
     if (data.length < 1000) break
   }
-  return out
+  // One unit for every quantity (g/tonnes/oil litres → kg; piece counts left out) so costs and yields compare like with like.
+  return normalizeCaptureUnits(out, factoryType).captures
 }
 
 async function ownerCountry(service: any, ownerId: string): Promise<{ country: string | null; profileType: string | null }> {
@@ -336,7 +339,7 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
     const results: CycleUnitCost[] = []
     for (const f of factories) {
       const type = f.type && f.type !== 'other' ? f.type : (profileType && profileType !== 'other' ? profileType : null)
-      const caps = await fetchAllCaptures(service, ownerId, f.id)
+      const caps = await fetchAllCaptures(service, ownerId, f.id, type)
       if (caps.length === 0) continue
       let settings: UnitCostSettings = factoryCostDefaultsFor(country, type)
       let basis: unknown = null
