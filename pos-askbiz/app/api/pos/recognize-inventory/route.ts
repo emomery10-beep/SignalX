@@ -4,6 +4,9 @@ import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
 import { visionAI } from '@/lib/vision-ai'
 
+// Vision providers can take several seconds and may fail over; don't cut them off at the default limit
+export const maxDuration = 60
+
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })

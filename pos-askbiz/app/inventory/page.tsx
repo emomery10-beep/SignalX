@@ -150,26 +150,30 @@ export default function InventoryPage() {
     canvasRef.current.height = videoRef.current.videoHeight
     ctx.drawImage(videoRef.current, 0, 0)
     canvasRef.current.toBlob(async (blob) => {
-      if (blob) { handleImageCapture(new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' })); handleCloseCamera() }
+      if (!blob) return
+      // Keep the preview open while the AI reads the photo so the cashier sees progress
+      // and any error; it only closes once a product was actually recognised.
+      const ok = await handleImageCapture(new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' }))
+      if (ok) handleCloseCamera()
     }, 'image/jpeg', 0.9)
   }
 
-  const handleImageCapture = async (file: File) => {
-    if (!staff) return
+  const handleImageCapture = async (file: File): Promise<boolean> => {
+    if (!staff) return false
     setRecognizing(true)
+    setCameraError('')
+    let ok = false
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve((reader.result as string).split(',')[1])
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      // Downscale first: a raw phone-camera JPEG can exceed Vercel's 4.5MB body limit,
+      // which returns a non-JSON 413 and used to fail silently.
+      const base64 = await fileToBase64(file)
       const res = await fetch(`${API}/api/pos/recognize-inventory`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...posHeaders(staff) },
         body: JSON.stringify({ image: base64 }),
+        signal: AbortSignal.timeout(40_000),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (data.products?.length > 0) {
         setRecognizedProducts(data.products)
         // Auto-open modal for first product
@@ -181,9 +185,16 @@ export default function InventoryPage() {
           cost_price: firstProduct.cost_price || '',
           stock_qty: (firstProduct.quantity || 1).toString()
         })
+        ok = true
+      } else {
+        setCameraError(res.ok ? tc('inventory.err_scan_read') : tc('inventory.err_scan_failed'))
       }
-    } catch (err) { console.error('Error:', err) }
+    } catch (err) {
+      console.error('Error:', err)
+      setCameraError(tc('inventory.err_scan_failed'))
+    }
     setRecognizing(false)
+    return ok
   }
 
   // ── Dual-photo scan helpers ──────────────────────────────────
@@ -618,6 +629,7 @@ export default function InventoryPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.9)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 600, borderRadius: 12, marginBottom: 16 }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
+          {cameraError && <div role="alert" style={{ color: '#fff', background: 'rgba(220,38,38,.85)', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12, maxWidth: 600 }}>{cameraError}</div>}
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 14, fontWeight: 700 }}>{recognizing ? tc('inventory.processing') : tc('inventory.capture_photo')}</button>
             <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('inventory.cancel')}</button>

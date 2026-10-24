@@ -1,18 +1,17 @@
-// NOTE: Groq decommissioned 'meta-llama/llama-4-scout-17b-16e-instruct' (announced
-// 2026-06-17); it no longer appears in Groq's supported-models list at all, so every
-// request against it now fails outright. 'qwen/qwen3.6-27b' is Groq's current
-// vision-capable model (image + text input, JSON mode) as of 2026-07, but it's a
-// preview model with a tight 8K-tokens-per-minute cap — a single realistic product
-// photo call costs ~1.8-2K tokens, so back-to-back scans routinely 429. Gemini is
-// the primary provider now; Groq and Haiku are fallbacks.
-//
-// 'gemini-2.5-flash' (and other dated Gemini models) return 404 "no longer available
-// to new users" on this project's key — use the 'gemini-flash-latest' alias instead,
-// which Google keeps pointed at a live model (currently resolves to gemini-3.6-flash)
-// so it doesn't go stale the way a pinned dated model can.
-const GEMINI_MODEL      = 'gemini-flash-latest'
-const GROQ_VISION_MODEL = 'qwen/qwen3.6-27b'
+// Provider notes (verified live 2026-10-24):
+// - 'gemini-flash-latest' now resolves to gemini-3.8-flash, which is under heavy demand:
+//   requests hang for 30s+ or return 503, and it ignores thinkingBudget (thinking tokens
+//   eat the whole maxOutputTokens, leaving empty text). Nothing in the app timed out, so
+//   scans just sat there and then failed. 'gemini-3.1-flash-lite' answers in ~2s with no
+//   thinking tokens, so it is primary and the alias is only a fallback.
+// - Dated models like 'gemini-2.5-flash' 404 ("no longer available to new users") on this key.
+// - Groq's 'qwen/qwen3.6-27b' vision model no longer exists (404 model_not_found), so the
+//   Groq fallback was removed rather than burning a round-trip on every failover.
+// - The Anthropic key currently returns "credit balance is too low", so Haiku is a
+//   fallback in name only until the account is topped up.
+const GEMINI_MODELS     = ['gemini-3.1-flash-lite', 'gemini-flash-latest']
 const HAIKU_MODEL       = 'claude-haiku-4-5-20251001'
+const PROVIDER_TIMEOUT_MS = 12_000
 
 export interface VisionResult {
   text:  string
@@ -22,140 +21,107 @@ export interface VisionResult {
 
 /**
  * Runs a vision prompt against an image.
- * Primary: Gemini (gemini-flash-latest).
- * Fallback 1: Groq qwen3.6-27b, on any non-2xx response (inc. 429 rate-limit).
- * Fallback 2: Claude Haiku, if Groq also fails.
+ * Tries each Gemini model in GEMINI_MODELS, then Claude Haiku. Every call has a hard
+ * timeout so a hung provider fails over instead of leaving the cashier waiting.
  */
 export async function visionAI(
   image: string,
   prompt: string,
   maxTokens = 300,
 ): Promise<VisionResult> {
-  const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
+  const failures: string[] = []
+
+  for (const model of GEMINI_MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inline_data: { mime_type: 'image/jpeg', data: image } },
+                { text: prompt },
+              ],
+            }],
+            // Thinking tokens count against maxOutputTokens; budget 1 is the closest to
+            // "off" the API accepts (0 is rejected). Lite models don't think, so skip it.
+            generationConfig: {
+              maxOutputTokens: maxTokens,
+              ...(model.includes('lite') ? {} : { thinkingConfig: { thinkingBudget: 1 } }),
+            },
+          }),
+        },
+      )
+      if (!res.ok) {
+        const body = await res.text().catch(() => '<unreadable body>')
+        console.error(`[vision-ai] ${model} failed: ${res.status} — ${body.slice(0, 300)}`)
+        failures.push(`${model} ${res.status}`)
+        continue
+      }
+      const data = await res.json()
+      const text = (data.candidates?.[0]?.content?.parts || [])
+        .filter((p: any) => !p.thought && typeof p.text === 'string')
+        .map((p: any) => p.text)
+        .join('')
+      if (text) {
+        return {
+          text,
+          model,
+          usage: {
+            input_tokens:  data.usageMetadata?.promptTokenCount ?? 0,
+            output_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+          },
+        }
+      }
+      // 2xx with no text: cut off by thinking tokens or safety-filtered.
+      console.error(`[vision-ai] ${model} returned empty text:`, JSON.stringify(data).slice(0, 500))
+      failures.push(`${model} empty`)
+    } catch (err: any) {
+      console.error(`[vision-ai] ${model} threw:`, err?.name, err?.message)
+      failures.push(`${model} ${err?.name === 'TimeoutError' ? 'timeout' : 'error'}`)
+    }
+  }
+
+  // Last resort: Claude Haiku
+  try {
+    const haikuRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: 'image/jpeg', data: image } },
-            { text: prompt },
+        model: HAIKU_MODEL,
+        max_tokens: maxTokens,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: image } },
+            { type: 'text', text: prompt },
           ],
         }],
-        // thinkingBudget: 0 is rejected as invalid by this model; 1 is the effective
-        // "off" — without it, extended thinking silently eats most of maxOutputTokens
-        // (measured: 285 of a 300 cap) and truncates the JSON answer mid-string.
-        generationConfig: { maxOutputTokens: maxTokens, thinkingConfig: { thinkingBudget: 1 } },
       }),
-    }
-  )
-
-  if (geminiRes.ok) {
-    const data = await geminiRes.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    if (text) {
+    })
+    const haikuData = await haikuRes.json()
+    if (haikuRes.ok) {
       return {
-        text,
-        model: GEMINI_MODEL,
-        usage: {
-          input_tokens:  data.usageMetadata?.promptTokenCount ?? 0,
-          output_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
-        },
+        text:  haikuData.content?.[0]?.text || '',
+        model: HAIKU_MODEL,
+        usage: { input_tokens: haikuData.usage?.input_tokens ?? 0, output_tokens: haikuData.usage?.output_tokens ?? 0 },
       }
     }
-    // 2xx with no text usually means the response was cut off or safety-filtered —
-    // log it and fall through to Groq rather than return an empty result.
-    console.error('[vision-ai] Gemini returned empty text:', JSON.stringify(data).slice(0, 500))
-  } else {
-    const geminiErrBody = await geminiRes.text().catch(() => '<unreadable body>')
-    console.error(`[vision-ai] Gemini vision call failed: ${geminiRes.status} ${geminiRes.statusText} — ${geminiErrBody}`)
+    console.error(`[vision-ai] Claude Haiku fallback failed: ${haikuRes.status} —`, JSON.stringify(haikuData))
+    failures.push(`haiku ${haikuRes.status}`)
+  } catch (err: any) {
+    console.error('[vision-ai] Claude Haiku threw:', err?.name, err?.message)
+    failures.push('haiku error')
   }
 
-  // Fallback 1: Groq qwen3.6-27b
-  //
-  // reasoning_effort/reasoning_format matter here: qwen3.6-27b is a hybrid
-  // thinking model that defaults to thinking-mode-on (reasoning_format
-  // "raw") when these are omitted, and reasoning tokens count against
-  // max_tokens — same class of bug as Gemini's thinkingBudget above.
-  // Confirmed in production: every Groq-fallback scan in the last 30 days
-  // hit the max_tokens cap exactly (4/4), vs. 25-40 tokens for Gemini/Haiku
-  // on the same short JSON-answer task — the model was very likely burning
-  // the whole budget on hidden <think> content and never reaching the
-  // actual JSON, which then fails all of route.ts's parse strategies.
-  // reasoning_effort:'none' is Groq's documented setting for this kind of
-  // quick-extraction task (vs. 'default' for math/coding); reasoning_format
-  // 'hidden' is kept too so any reasoning that still happens doesn't get
-  // returned as part of the answer text.
-  const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_VISION_MODEL,
-      max_tokens: maxTokens,
-      reasoning_effort: 'none',
-      reasoning_format: 'hidden',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
-          { type: 'text', text: prompt },
-        ],
-      }],
-    }),
-  })
-
-  if (groqRes.ok) {
-    const data = await groqRes.json()
-    return {
-      text:  data.choices?.[0]?.message?.content || '',
-      model: GROQ_VISION_MODEL,
-      usage: { input_tokens: data.usage?.prompt_tokens ?? 0, output_tokens: data.usage?.completion_tokens ?? 0 },
-    }
-  }
-
-  // Groq failed too — log the real reason server-side before falling back further,
-  // so this is debuggable next time instead of just surfacing as a generic
-  // "could not identify" to the cashier.
-  const groqErrBody = await groqRes.text().catch(() => '<unreadable body>')
-  console.error(`[vision-ai] Groq vision call failed: ${groqRes.status} ${groqRes.statusText} — ${groqErrBody}`)
-
-  // Fallback 2: Claude Haiku
-  const haikuRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: HAIKU_MODEL,
-      max_tokens: maxTokens,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: image } },
-          { type: 'text', text: prompt },
-        ],
-      }],
-    }),
-  })
-
-  const haikuData = await haikuRes.json()
-
-  if (!haikuRes.ok) {
-    // Previously this fell through silently — .content?.[0]?.text on an error body
-    // is always undefined, so it returned an empty string as if recognition simply
-    // found nothing, masking auth/rate-limit/model errors as "could not identify
-    // product". Log the real error and let the caller's catch block handle it
-    // (routes already return a proper 5xx with a "temporarily unavailable" message).
-    console.error(`[vision-ai] Claude Haiku fallback also failed: ${haikuRes.status} ${haikuRes.statusText} —`, JSON.stringify(haikuData))
-    throw new Error(`Vision providers unavailable (gemini ${geminiRes.status}, groq ${groqRes.status}, haiku ${haikuRes.status})`)
-  }
-
-  return {
-    text:  haikuData.content?.[0]?.text || '',
-    model: HAIKU_MODEL,
-    usage: { input_tokens: haikuData.usage?.input_tokens ?? 0, output_tokens: haikuData.usage?.output_tokens ?? 0 },
-  }
+  // Surface a real error so routes return a proper 5xx instead of "could not identify".
+  throw new Error(`Vision providers unavailable (${failures.join(', ')})`)
 }
