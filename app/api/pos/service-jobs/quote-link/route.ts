@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '',
+      'x-staff-id': auth.staffId || '', 'x-staff-token': req.headers.get('x-staff-token') || '', cookie: req.headers.get('cookie') || '',
       'x-owner-id': auth.ownerId,
     },
     body: JSON.stringify({

@@ -128,7 +128,7 @@ export default function FactoryRatesPage() {
               </p>
             )}
             <p style={{ fontSize: 13, color: '#94a3b8' }}>
-              Amounts are in {currency || 'your currency'}. Labour and electricity are charged for each working day (Monday to Saturday); overhead is a monthly figure spread over {WORKING_DAYS_PER_MONTH} working days.
+              Amounts are in {currency || 'your currency'}. Labour and electricity are charged for every day of your cost cycle from your first day of production (28 days unless you change the cycle under Costing), whether or not you work Sundays; overhead is a monthly figure divided by {WORKING_DAYS_PER_MONTH} and charged for the same days.
             </p>
             <label htmlFor="r-staff" style={lab}>
               Labour per working day

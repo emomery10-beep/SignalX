@@ -165,5 +165,13 @@
   "colSellingPrice": "Qiimaha Iibka",
   "colMargin": "Faa'iido",
   "overheadComingSoonTitle": "Qaybinta Kharashka Guud ee Ku-saleysan Hawsha — dhawaan ayuu imanayaa",
-  "overheadComingSoonDesc": "Qaybi kirada, adeegyada iyo qiimo-dhaca qalabka guud ahaan khadadka badeecooyinka iyadoo la eegayo saacadaha mishiinka iyo boosaska sagxadda. Hadda kharashka guud waxaa lagu dabaqaa sida {pct}% siman oo ah alaabta + shaqada."
+  "overheadComingSoonDesc": "Qaybi kirada, adeegyada iyo qiimo-dhaca qalabka guud ahaan khadadka badeecooyinka iyadoo la eegayo saacadaha mishiinka iyo boosaska sagxadda. Hadda kharashka guud waxaa lagu dabaqaa sida {pct}% siman oo ah alaabta + shaqada.",
+  "money_strip_title": "Bishan — lambarrada CFO ee isku mid ah",
+  "money_revenue": "Iibka",
+  "money_gross_profit": "Faa'iidada guud",
+  "money_margin": "Hidde {pct}%",
+  "money_owed": "Macaamiishu way ku leeyihiin",
+  "money_overdue": "{amount} way dhaaftay waqtigii",
+  "money_stock": "Qiimaha kaydka",
+  "money_unpriced": "{count} dirid weli waxay u baahan yihiin qiimo"
 }

@@ -301,6 +301,18 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       }
     }
     const settingsBy = new Map((settingRows || []).map((r: any) => [r.location_id as string, r]))
+    // Dated rate changes per factory, so a past month keeps the labour/electricity/overhead rates it really had.
+    const rateHistory = new Map<string, { from: string; staffPerDay: number; electricityPerDay: number; overhead: number }[]>()
+    {
+      const { data: hrows, error: herr } = await svc.from('pos_factory_cost_rate_history')
+        .select('location_id, effective_from, staff_per_day, electricity_per_day, overhead')
+        .eq('owner_id', ownerId).in('location_id', scopeIds).order('effective_from', { ascending: true })
+      if (!herr) for (const h of (hrows || []) as any[]) {
+        const list = rateHistory.get(h.location_id) || []
+        list.push({ from: String(h.effective_from), staffPerDay: Number(h.staff_per_day) || 0, electricityPerDay: Number(h.electricity_per_day) || 0, overhead: Number(h.overhead) || 0 })
+        rateHistory.set(h.location_id, list)
+      }
+    }
     // A branch typed 'other'/unset takes the owner's profile factory type.
     const { data: profRow } = await svc.from('profiles').select('factory_type').eq('id', ownerId).maybeSingle()
     const profileFactoryType = (profRow as any)?.factory_type || null
@@ -308,7 +320,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       const saved: any = settingsBy.get(f.id)
       const effectiveType = resolveEffectiveFactoryType(f.factory_type, profileFactoryType)
       const settings = saved
-        ? { configured: true, staffPerDay: Number(saved.staff_per_day), electricityPerDay: Number(saved.electricity_per_day), overhead: Number(saved.overhead) }
+        ? { configured: true, staffPerDay: Number(saved.staff_per_day), electricityPerDay: Number(saved.electricity_per_day), overhead: Number(saved.overhead), ...(rateHistory.get(f.id)?.length ? { history: rateHistory.get(f.id) } : {}) }
         : factoryCostDefaultsFor(countryCode, effectiveType)
       factoryResults.push({
         id: f.id, name: f.name, type: f.factory_type,
@@ -815,6 +827,8 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       factory_data_capped: factoryCapped,
       // Finished goods and raw material written off as wastage in the period, valued at cost (not inside COGS)
       factory_wastage_value: Math.round(factoryFin.wastageValue),
+      // Factory sales in the period at the day they were approved (the cash flow chart counts sales this way, not when paid)
+      factory_revenue: Math.round(factoryFin.revenue),
       // Cash side of the factory: owed to it, owed by it, and what actually moved in the period.
       factory_money: factoryMoney ? {
         ar: Math.round(factoryMoney.arTotal), ap: Math.round(factoryMoney.apTotal),

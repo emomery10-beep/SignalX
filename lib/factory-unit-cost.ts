@@ -42,8 +42,13 @@ export interface UnitCostCapture {
   batch_ref?: string | null
 }
 
+/** One dated change of a factory's cost rates: valid from `from` (a factory day) until the next row. */
+export interface CostRateRow { from: string; staffPerDay: number; electricityPerDay: number; overhead: number }
+
 export interface UnitCostSettings {
   configured: boolean
+  /** Dated rate changes, oldest first. With these, each past day is costed at the rates that applied THEN. */
+  history?: CostRateRow[]
   staffPerDay: number
   electricityPerDay: number
   overhead: number // per MONTH
@@ -220,20 +225,36 @@ export function computeCycleUnitCost(
     const charged = units > 0 || fedKg > 0 ? Math.max(1, dayDiff(start, to) + 1) : 0
     // Per category: months with real tagged spend use it (pro-rated to the charged days in that month);
     // every other month uses the factory's saved per-day estimate.
-    const blend = (perDay: number, actual?: Record<string, number>): { total: number; source: 'estimate' | 'actual' | 'mixed' } => {
+    // `perDay` may be one flat rate or a function of the day (when the factory's rates changed over time).
+    const blend = (perDay: number | ((day: string) => number), actual?: Record<string, number>): { total: number; source: 'estimate' | 'actual' | 'mixed' } => {
       if (charged === 0) return { total: 0, source: 'estimate' }
       const perMonth = new Map<string, number>()
-      for (let i = 0; i < charged; i++) { const ym = shiftDay(to, -i).slice(0, 7); perMonth.set(ym, (perMonth.get(ym) || 0) + 1) }
+      const estimateByMonth = new Map<string, number>() // sum of the per-day estimate over that month's charged days
+      for (let i = 0; i < charged; i++) {
+        const day = shiftDay(to, -i)
+        const ym = day.slice(0, 7)
+        perMonth.set(ym, (perMonth.get(ym) || 0) + 1)
+        estimateByMonth.set(ym, (estimateByMonth.get(ym) || 0) + (typeof perDay === 'function' ? perDay(day) : perDay))
+      }
       let total = 0, withActual = 0
       for (const [ym, days] of perMonth) {
         const a = actual?.[ym] || 0
-        if (a > 0) { total += a * (days / daysInMonthOf(ym)); withActual++ } else total += days * perDay
+        if (a > 0) { total += a * (days / daysInMonthOf(ym)); withActual++ } else total += estimateByMonth.get(ym) || 0
       }
       return { total, source: withActual === 0 ? 'estimate' : withActual === perMonth.size ? 'actual' : 'mixed' }
     }
-    const lB = blend(settings.staffPerDay, actuals?.labour)
-    const eB = blend(settings.electricityPerDay, actuals?.electricity)
-    const oB = blend(settings.overhead / 26, actuals?.overhead)
+    // The rates in force on a given day: the latest dated change on or before it (the earliest known row for
+    // days before the first change). No history = today's saved rates for every day, as before.
+    const hist = (settings.history || []).slice().sort((a, b) => a.from.localeCompare(b.from))
+    const rateOn = (pick: (r: CostRateRow) => number, fallback: number) => (day: string): number => {
+      if (hist.length === 0) return fallback
+      let row = hist[0]
+      for (const r of hist) { if (r.from <= day) row = r; else break }
+      return pick(row)
+    }
+    const lB = blend(rateOn(r => r.staffPerDay, settings.staffPerDay), actuals?.labour)
+    const eB = blend(rateOn(r => r.electricityPerDay, settings.electricityPerDay), actuals?.electricity)
+    const oB = blend(rateOn(r => r.overhead / 26, settings.overhead / 26), actuals?.overhead)
     const labour = lB.total
     const electricity = eB.total
     const overhead = oB.total
@@ -348,6 +369,10 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
         if (row) {
           settings = { configured: true, staffPerDay: num(row.staff_per_day), electricityPerDay: num(row.electricity_per_day), overhead: num(row.overhead) }
           basis = row.electricity_basis
+          // Dated rate changes (table exists once migration 20261024000003 is applied; absent = no history).
+          const { data: hrows, error: herr } = await service.from('pos_factory_cost_rate_history')
+            .select('effective_from, staff_per_day, electricity_per_day, overhead').eq('location_id', f.id).order('effective_from', { ascending: true })
+          if (!herr && hrows && hrows.length > 0) settings.history = hrows.map((h: any) => ({ from: String(h.effective_from), staffPerDay: num(h.staff_per_day), electricityPerDay: num(h.electricity_per_day), overhead: num(h.overhead) }))
         }
       }
       results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now, undefined, factoryTimeZone(country)))

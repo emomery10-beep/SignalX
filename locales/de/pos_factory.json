@@ -165,5 +165,13 @@
   "colSellingPrice": "Verkaufspreis",
   "colMargin": "Marge",
   "overheadComingSoonTitle": "Aktivitätsbasierte Gemeinkostenzuordnung – demnächst verfügbar",
-  "overheadComingSoonDesc": "Miete, Nebenkosten und Abschreibungen anhand von Maschinenstunden und Grundfläche auf Produktlinien verteilen. Derzeit werden Gemeinkosten pauschal mit {pct}% auf Material + Arbeit aufgeschlagen."
+  "overheadComingSoonDesc": "Miete, Nebenkosten und Abschreibungen anhand von Maschinenstunden und Grundfläche auf Produktlinien verteilen. Derzeit werden Gemeinkosten pauschal mit {pct}% auf Material + Arbeit aufgeschlagen.",
+  "money_strip_title": "Dieser Monat – dieselben Zahlen wie im CFO",
+  "money_revenue": "Umsatz",
+  "money_gross_profit": "Rohgewinn",
+  "money_margin": "Marge {pct} %",
+  "money_owed": "Kunden schulden Ihnen",
+  "money_overdue": "{amount} überfällig",
+  "money_stock": "Lagerwert",
+  "money_unpriced": "{count} Lieferungen brauchen noch einen Preis"
 }

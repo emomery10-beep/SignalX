@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logPosAudit } from '@/lib/pos-audit'
+import { ownerFactoryTimeZone, dayOfInZone } from '@/lib/factory-time'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 
 const json = (data: any, status = 200) => NextResponse.json(data, { status })
@@ -106,6 +107,28 @@ export async function POST(req: NextRequest) {
         toValue: JSON.stringify({ staff_per_day: staff, electricity_per_day: elec, overhead }),
       })
     }
+    // Dated history: from today on the new rates apply; earlier days keep the rates they had. The first change
+    // also records the old rates as the baseline. Silently skipped until the history table exists.
+    try {
+      const changedRates = !prev || Number(prev.staff_per_day) !== staff || Number(prev.electricity_per_day) !== elec || Number(prev.overhead) !== overhead
+      if (changedRates) {
+        const tz = await ownerFactoryTimeZone(service, auth.ownerId)
+        const today = dayOfInZone(Date.now(), tz)
+        if (prev) {
+          const { count } = await service.from('pos_factory_cost_rate_history').select('id', { count: 'exact', head: true }).eq('location_id', locationId)
+          if (count === 0) {
+            await service.from('pos_factory_cost_rate_history').insert({
+              owner_id: auth.ownerId, location_id: locationId, effective_from: '2000-01-01',
+              staff_per_day: Number(prev.staff_per_day) || 0, electricity_per_day: Number(prev.electricity_per_day) || 0, overhead: Number(prev.overhead) || 0,
+            })
+          }
+        }
+        await service.from('pos_factory_cost_rate_history').upsert({
+          owner_id: auth.ownerId, location_id: locationId, effective_from: today,
+          staff_per_day: staff, electricity_per_day: elec, overhead, changed_by: auth.staffId || null,
+        }, { onConflict: 'location_id,effective_from' })
+      }
+    } catch (e) { console.error('cost rate history write failed (rates themselves saved):', e) }
     return json({ ok: true })
   } catch (e) {
     console.error('cost-settings POST error:', e)

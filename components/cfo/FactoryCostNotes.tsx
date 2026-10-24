@@ -32,6 +32,7 @@ export interface SegmentInfo {
   unpriced_dispatches: number
   factory_stock_value: number
   factory_wastage_value?: number
+  factory_revenue?: number
   factory_data_capped?: boolean
   factory_money?: { ar: number; ap: number; ar_overdue: number; ap_overdue: number; collected_in_period: number; paid_out_in_period: number; top_debtors: { name: string; outstanding: number; days_overdue: number }[] } | null
   factory_costs: FactoryCostInfo[]
@@ -63,7 +64,11 @@ export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined;
     notes.push(`Customers owe the factory ${fmt(fm.ar)}${fm.ar_overdue > 0 ? ` (${fmt(fm.ar_overdue)} overdue)` : ''}; the factory owes suppliers ${fmt(fm.ap)}${fm.ap_overdue > 0 ? ` (${fmt(fm.ap_overdue)} overdue)` : ''}. Both are in the Receivables and Payables totals. If you also typed these debts into the Receivables tracker, they are counted twice.`)
     if (fm.top_debtors.length > 0) notes.push(`Biggest debts: ${fm.top_debtors.map(d => `${d.name} ${fmt(d.outstanding)}${d.days_overdue > 0 ? ` (${d.days_overdue} days late)` : ''}`).join(', ')}.`)
   }
-  if (fm && (fm.collected_in_period > 0 || fm.paid_out_in_period > 0)) notes.push(`Cash moved in this period: ${fmt(fm.collected_in_period)} collected from customers, ${fmt(fm.paid_out_in_period)} paid to suppliers.`)
+  if (fm && (fm.collected_in_period > 0 || fm.paid_out_in_period > 0)) {
+    const sold = info.factory_revenue || 0
+    notes.push(`Cash moved in this period: ${fmt(fm.collected_in_period)} collected from customers, ${fmt(fm.paid_out_in_period)} paid to suppliers.` +
+      (sold > 0 ? ` Factory sales were ${fmt(sold)}; the cash flow chart counts a sale on the day it is approved, not on the day the customer pays, so compare it with the cash collected here.` : ''))
+  }
   if (info.key !== 'retail' && (info.factory_wastage_value || 0) > 0) notes.push(`${fmt(info.factory_wastage_value || 0)} of finished goods and raw material was written off as wastage this period, valued at cost.`)
   const costed = info.key !== 'retail' ? info.factory_costs.filter(f => f.cansProduced > 0 && f.rawKgFed > 0) : []
   if (notes.length === 0 && costed.length === 0) return null

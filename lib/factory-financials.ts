@@ -56,6 +56,8 @@ export interface FactoryWindow {
 // country's rates.
 export interface FactoryCostSettings {
   configured: boolean
+  /** Dated rate changes, oldest first (see lib/factory-unit-cost CostRateRow). */
+  history?: { from: string; staffPerDay: number; electricityPerDay: number; overhead: number }[]
   staffPerDay: number
   electricityPerDay: number
   overhead: number

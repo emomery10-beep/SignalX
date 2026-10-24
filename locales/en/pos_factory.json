@@ -165,5 +165,13 @@
   "colSellingPrice": "Selling Price",
   "colMargin": "Margin",
   "overheadComingSoonTitle": "Activity-Based Overhead Allocation — coming soon",
-  "overheadComingSoonDesc": "Allocate rent, utilities and equipment depreciation across product lines by machine-hours and floor space. Currently overhead is applied as a flat {pct}% of materials + labor."
+  "overheadComingSoonDesc": "Allocate rent, utilities and equipment depreciation across product lines by machine-hours and floor space. Currently overhead is applied as a flat {pct}% of materials + labor.",
+  "money_strip_title": "This month — same numbers as the CFO",
+  "money_revenue": "Sales",
+  "money_gross_profit": "Gross profit",
+  "money_margin": "{pct}% margin",
+  "money_owed": "Customers owe you",
+  "money_overdue": "{amount} overdue",
+  "money_stock": "Stock value",
+  "money_unpriced": "{count} dispatches still need a price"
 }

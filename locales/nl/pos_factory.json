@@ -165,5 +165,13 @@
   "colSellingPrice": "Verkoopprijs",
   "colMargin": "Marge",
   "overheadComingSoonTitle": "Activiteitsgebaseerde overheadtoewijzing — binnenkort beschikbaar",
-  "overheadComingSoonDesc": "Wijs huur, nutsvoorzieningen en afschrijvingen op apparatuur toe aan productlijnen op basis van machine-uren en vloeroppervlak. Momenteel wordt overhead toegepast als een vast percentage van {pct}% van materialen + arbeid."
+  "overheadComingSoonDesc": "Wijs huur, nutsvoorzieningen en afschrijvingen op apparatuur toe aan productlijnen op basis van machine-uren en vloeroppervlak. Momenteel wordt overhead toegepast als een vast percentage van {pct}% van materialen + arbeid.",
+  "money_strip_title": "Deze maand – dezelfde cijfers als de CFO",
+  "money_revenue": "Omzet",
+  "money_gross_profit": "Brutowinst",
+  "money_margin": "Marge {pct}%",
+  "money_owed": "Klanten zijn u verschuldigd",
+  "money_overdue": "{amount} achterstallig",
+  "money_stock": "Voorraadwaarde",
+  "money_unpriced": "{count} leveringen hebben nog een prijs nodig"
 }

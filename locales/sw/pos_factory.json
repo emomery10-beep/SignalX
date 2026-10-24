@@ -165,5 +165,13 @@
   "colSellingPrice": "Bei ya Kuuza",
   "colMargin": "Faida",
   "overheadComingSoonTitle": "Ugawaji wa Gharama za Uendeshaji kwa Shughuli — unakuja hivi karibuni",
-  "overheadComingSoonDesc": "Gawa kodi ya pango, huduma na uchakavu wa vifaa kwenye mistari ya bidhaa kwa saa-mashine na nafasi ya sakafu. Kwa sasa gharama za uendeshaji zinatumika kama asilimia tuli ya {pct}% ya malighafi + kazi."
+  "overheadComingSoonDesc": "Gawa kodi ya pango, huduma na uchakavu wa vifaa kwenye mistari ya bidhaa kwa saa-mashine na nafasi ya sakafu. Kwa sasa gharama za uendeshaji zinatumika kama asilimia tuli ya {pct}% ya malighafi + kazi.",
+  "money_strip_title": "Mwezi huu — namba zilezile za CFO",
+  "money_revenue": "Mauzo",
+  "money_gross_profit": "Faida ghafi",
+  "money_margin": "Pembe ya {pct}%",
+  "money_owed": "Wateja wanakudai",
+  "money_overdue": "{amount} imechelewa",
+  "money_stock": "Thamani ya hisa",
+  "money_unpriced": "Usafirishaji {count} bado unahitaji bei"
 }

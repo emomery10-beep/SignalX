@@ -165,5 +165,13 @@
   "colSellingPrice": "Precio de venta",
   "colMargin": "Margen",
   "overheadComingSoonTitle": "Asignación de gastos generales por actividad — próximamente",
-  "overheadComingSoonDesc": "Asigna renta, servicios y depreciación de equipos entre líneas de producto según horas-máquina y superficie. Actualmente los gastos generales se aplican como un {pct}% fijo sobre materiales + mano de obra."
+  "overheadComingSoonDesc": "Asigna renta, servicios y depreciación de equipos entre líneas de producto según horas-máquina y superficie. Actualmente los gastos generales se aplican como un {pct}% fijo sobre materiales + mano de obra.",
+  "money_strip_title": "Este mes: las mismas cifras que el CFO",
+  "money_revenue": "Ventas",
+  "money_gross_profit": "Beneficio bruto",
+  "money_margin": "Margen {pct}%",
+  "money_owed": "Los clientes te deben",
+  "money_overdue": "{amount} vencido",
+  "money_stock": "Valor del inventario",
+  "money_unpriced": "{count} despachos aún necesitan precio"
 }

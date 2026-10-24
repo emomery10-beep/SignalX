@@ -758,6 +758,31 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
 
   useEffect(() => { fetchCaptures() }, [fetchCaptures])
 
+  // The Overview's money numbers come from the CFO snapshot itself (same code, same month), not from a second
+  // calculation in this component, so the two screens cannot disagree.
+  const [cfoMoney, setCfoMoney] = useState<null | {
+    revenue: number; grossProfit: number; marginPct: number; owed: number; owedOverdue: number; stock: number; unpriced: number
+  }>(null)
+  useEffect(() => {
+    if (previewCaptures) return
+    let cancelled = false
+    const qs = new URLSearchParams({ period: 'this_month', segment: 'factory' })
+    if (selectedLocation && selectedLocation !== 'all') qs.set('factory', selectedLocation)
+    fetch('/api/cfo/snapshot?' + qs.toString())
+      .then(r => (r.ok ? r.json() : null))
+      .then(snap => {
+        if (cancelled || !snap?.totals) { if (!cancelled) setCfoMoney(null); return }
+        const fm = snap.segment?.factory_money
+        setCfoMoney({
+          revenue: Number(snap.totals.revenue) || 0, grossProfit: Number(snap.totals.gross_profit) || 0,
+          marginPct: Number(snap.totals.gross_margin_pct) || 0, owed: Number(fm?.ar) || 0, owedOverdue: Number(fm?.ar_overdue) || 0,
+          stock: Number(snap.segment?.factory_stock_value) || 0, unpriced: Number(snap.segment?.unpriced_dispatches) || 0,
+        })
+      })
+      .catch(() => { if (!cancelled) setCfoMoney(null) })
+    return () => { cancelled = true }
+  }, [selectedLocation, previewCaptures])
+
   // ── Normalise props ────────────────────────────────────────
   const inv: InventoryItem[] = useMemo(() => Array.isArray(inventory) ? inventory : [], [inventory])
   const staffList: StaffMember[] = useMemo(() => Array.isArray(staff) ? staff : [], [staff])
@@ -922,6 +947,26 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
           </button>
         ))}
       </div>
+
+      {subTab === 'overview' && cfoMoney && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_factory.money_strip_title')}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+            {[
+              { label: tc('pos_factory.money_revenue'), value: fmt(currencySymbol, cfoMoney.revenue), sub: '' },
+              { label: tc('pos_factory.money_gross_profit'), value: fmt(currencySymbol, cfoMoney.grossProfit), sub: tc('pos_factory.money_margin', { pct: cfoMoney.marginPct }) },
+              { label: tc('pos_factory.money_owed'), value: fmt(currencySymbol, cfoMoney.owed), sub: cfoMoney.owedOverdue > 0 ? tc('pos_factory.money_overdue', { amount: fmt(currencySymbol, cfoMoney.owedOverdue) }) : '' },
+              { label: tc('pos_factory.money_stock'), value: fmt(currencySymbol, cfoMoney.stock), sub: cfoMoney.unpriced > 0 ? tc('pos_factory.money_unpriced', { count: cfoMoney.unpriced }) : '' },
+            ].map(c => (
+              <div key={c.label} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{c.value}</div>
+                {c.sub && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{c.sub}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div style={{ fontSize: 11, color: 'var(--tx3)', padding: 20 }}>{tc('pos_factory.loadingFactoryData')}</div>

@@ -165,5 +165,13 @@
   "colSellingPrice": "Prix de vente",
   "colMargin": "Marge",
   "overheadComingSoonTitle": "Imputation des frais généraux par activité — bientôt disponible",
-  "overheadComingSoonDesc": "Répartissez le loyer, les charges et l'amortissement des équipements entre les lignes de produits selon les heures machine et la surface occupée. Actuellement, les frais généraux sont appliqués à un taux fixe de {pct}% sur les matières + la main-d'œuvre."
+  "overheadComingSoonDesc": "Répartissez le loyer, les charges et l'amortissement des équipements entre les lignes de produits selon les heures machine et la surface occupée. Actuellement, les frais généraux sont appliqués à un taux fixe de {pct}% sur les matières + la main-d'œuvre.",
+  "money_strip_title": "Ce mois-ci : les mêmes chiffres que le CFO",
+  "money_revenue": "Ventes",
+  "money_gross_profit": "Marge brute",
+  "money_margin": "Marge {pct} %",
+  "money_owed": "Vos clients vous doivent",
+  "money_overdue": "{amount} en retard",
+  "money_stock": "Valeur du stock",
+  "money_unpriced": "{count} expéditions attendent encore un prix"
 }
