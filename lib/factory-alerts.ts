@@ -16,7 +16,9 @@ export interface AlertInput {
   now: number
 }
 
-const fmt = (symbol: string, n: number) => `${symbol}${Math.round(n).toLocaleString('en-US')}`
+function fmt(symbol: string, n: number): string {
+  return symbol + Math.round(n).toLocaleString('en-US')
+}
 
 export function buildFactoryLines(i: AlertInput): string[] {
   const lines: string[] = []
@@ -26,8 +28,8 @@ export function buildFactoryLines(i: AlertInput): string[] {
     const dispatches = i.pending.filter(p => p.type === 'dispatch').length
     lines.push(
       `⏳ ${i.pending.length} capture${i.pending.length === 1 ? '' : 's'} waiting for approval` +
-      (old.length > 0 ? ` (${old.length} for over a day)` : '') +
-      (dispatches > 0 ? `, ${dispatches} of them dispatch${dispatches === 1 ? '' : 'es'} that need a price` : '') + '.',
+      (old.length ? ' (' + old.length + ' for over a day)' : '') +
+      (dispatches ? ', ' + dispatches + (dispatches === 1 ? ' of them is a dispatch' : ' of them are dispatches') + ' that needs a price' : '') + '.',
     )
   }
 
@@ -44,7 +46,9 @@ export function buildFactoryLines(i: AlertInput): string[] {
     const top = [...byParty.values()].sort((a, b) => b.amt - a.amt)[0]
     lines.push(`💰 Customers owe you ${fmt(i.symbol, m.arTotal)}, ${fmt(i.symbol, m.arOverdue)} of it late. Biggest: ${top.name} ${fmt(i.symbol, top.amt)} (${top.days} days late).`)
   }
-  if (m && m.apOverdue > 0) lines.push(`🧾 You owe suppliers ${fmt(i.symbol, m.apTotal)}, ${fmt(i.symbol, m.apOverdue)} of it overdue.`)
+  if (m && m.apOverdue) {
+    lines.push(`🧾 You owe suppliers ${fmt(i.symbol, m.apTotal)}, ${fmt(i.symbol, m.apOverdue)} of it overdue.`)
+  }
 
   // A quiet factory: nothing logged yesterday although the previous days were busy. Skip the weekly rest day.
   const before = Object.entries(i.activityByDay).filter(([d]) => d < i.yesterday)
