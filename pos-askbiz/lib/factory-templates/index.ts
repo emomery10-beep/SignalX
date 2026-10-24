@@ -31,6 +31,10 @@ import concreteBlocks from './concrete_blocks'
 import poultry from './poultry'
 import coffee from './coffee'
 import fishSmoking from './fish_smoking'
+import carpentryFurniture from './carpentry_furniture'
+import metalFabrication from './metal_fabrication'
+import garmentsTailoring from './garments_tailoring'
+import iceMaking from './ice_making'
 
 // A recipe-level (not template-level) not-yet-releasable gate. Recipe-level
 // because dairy proves a template-wide flag isn't precise enough — cheese
@@ -76,6 +80,10 @@ export interface FactoryTypeTemplate {
   id: string
   label: string
   icon: string
+  /** Count-based workshops (furniture, metal work, garments, ice): output is whole pieces, so a yield % is meaningless and is not scored. */
+  yieldNotApplicable?: boolean
+  /** Starter product names for the capture screen when the type has no yield recipes to derive them from. */
+  products?: { inputs: string[]; outputs: string[] }
   // `path` tags a stage as belonging to one specific branch of a
   // multi-path factory type (cassava's garri/fufu/starch, dairy's
   // yoghurt/cheese/ghee_butter) rather than the shared prep every batch
@@ -120,6 +128,10 @@ export const FACTORY_TYPE_TEMPLATES: FactoryTypeTemplate[] = [
   poultry,
   coffee,
   fishSmoking,
+  carpentryFurniture,
+  metalFabrication,
+  garmentsTailoring,
+  iceMaking,
 ]
 
 export const FACTORY_TYPE_TEMPLATES_BY_ID: Record<string, FactoryTypeTemplate> =

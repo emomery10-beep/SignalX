@@ -486,6 +486,12 @@ async function syncAskBizPOS(
   supabase: ReturnType<typeof createServiceClient>,
   userId: string
 ): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  // POS sales already reach unified_data in real time via the sync_pos_to_unified_data()
+  // trigger (one 'askbiz_pos_daily_agg' row per user/day). Writing per-line-item rows here
+  // always 23505'd on unified_data_pos_daily_uniq, so every record failed and the source was
+  // flagged 'error' (Pulse showed "connection issue" + "stale"). Nothing ever landed from
+  // this path, so it is a healthy no-op unless explicitly re-enabled.
+  if (process.env.ASKBIZ_POS_LINE_ITEM_SYNC !== 'true') return { records: [] }
   try {
     const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 

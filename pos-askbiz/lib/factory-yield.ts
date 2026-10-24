@@ -55,6 +55,10 @@ export function evaluateYield(
   }
 
   const template = getFactoryTypeTemplate(factoryType)
+  // Count-based workshops (furniture, metal work, garments, ice): pieces out are not a share of material in.
+  if (template?.yieldNotApplicable) {
+    return { status: 'neutral', min: null, max: null, expected: null, matchedRecipe: false, productLabel: null }
+  }
   const recipe = template && productName
     ? template.suggestedRecipes.find(r => r.output_product_name.toLowerCase() === productName.toLowerCase().trim())
     : null

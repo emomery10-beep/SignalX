@@ -734,10 +734,17 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
       const params = new URLSearchParams()
       if (selectedLocation && selectedLocation !== 'all') params.set('location_id', selectedLocation)
       params.set('limit', '2000')
-      const res = await fetch(`/api/pos/factory/capture?${params}`)
-      const data = await res.json()
-      setFactoryTz(data?.time_zone)
-      let list: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
+      // Every page, not just the newest 2,000: totals computed from a silently truncated list are wrong for a busy factory.
+      let list: FactoryCapture[] = []
+      for (let page = 0; page < 10; page++) {
+        params.set('page', String(page))
+        const res = await fetch(`/api/pos/factory/capture?${params}`)
+        const data = await res.json()
+        setFactoryTz(data?.time_zone)
+        const chunk: FactoryCapture[] = Array.isArray(data) ? data : (data.captures || data.data || [])
+        list = list.concat(Array.isArray(chunk) ? chunk : [])
+        if (!Array.isArray(chunk) || chunk.length < 2000) break
+      }
       // Map API response fields (product_name) to component interface (product)
       list = Array.isArray(list) ? list.map(c => ({ ...c, product: c.product || (c as any).product_name })) : []
       setCaptures(list)
@@ -777,10 +784,15 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
 
   // ── Core KPIs ──────────────────────────────────────────────
   const todayKey = dayKey(new Date())
-  const unitsToday = useMemo(() => outputs.filter(c => dayKey(c.created_at) === todayKey).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [outputs, todayKey])
-  const totalOutput = useMemo(() => outputs.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [outputs])
-  const totalIntake = useMemo(() => intakes.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [intakes])
-  const totalWaste = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [wastages])
+  // The headline KPIs count APPROVED captures only (a pending or rejected capture is not production; the
+  // Pending count below carries those), and efficiency divides by what was FED to production, not by deliveries
+  // received — counting arrivals as well as feeds double-counted raw material and understated efficiency.
+  const isApproved = (c: FactoryCapture) => c.status == null || c.status === 'approved'
+  const approvedOutputs = useMemo(() => outputs.filter(isApproved), [outputs])
+  const unitsToday = useMemo(() => approvedOutputs.filter(c => dayKey(c.created_at) === todayKey).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [approvedOutputs, todayKey])
+  const totalOutput = useMemo(() => approvedOutputs.reduce((s, c) => s + (Number(c.quantity) || 0), 0), [approvedOutputs])
+  const totalIntake = useMemo(() => intakesConsumed.filter(isApproved).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [intakesConsumed])
+  const totalWaste = useMemo(() => wastages.filter(isApproved).reduce((s, c) => s + (Number(c.quantity) || 0), 0), [wastages])
   const wastagePct = totalOutput + totalWaste > 0 ? (totalWaste / (totalOutput + totalWaste)) * 100 : 0
   const pendingCount = useMemo(() => captures.filter(c => c.status === 'pending').length, [captures])
   const efficiency = totalIntake > 0 ? (totalOutput / totalIntake) * 100 : 0
@@ -804,10 +816,10 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
       out.push({ key: k, output: 0, wastage: 0 })
     }
     const idx = new Map(out.map((o, i) => [o.key, i]))
-    for (const c of outputs) { const i = idx.get(dayKey(c.created_at)); if (i != null) out[i].output += Number(c.quantity) || 0 }
-    for (const c of wastages) { const i = idx.get(dayKey(c.created_at)); if (i != null) out[i].wastage += Number(c.quantity) || 0 }
+    for (const c of approvedOutputs) { const i = idx.get(dayKey(c.created_at)); if (i != null) out[i].output += Number(c.quantity) || 0 }
+    for (const c of wastages.filter(isApproved)) { const i = idx.get(dayKey(c.created_at)); if (i != null) out[i].wastage += Number(c.quantity) || 0 }
     return out
-  }, [outputs, wastages])
+  }, [approvedOutputs, wastages])
 
   // ── Status breakdown ───────────────────────────────────────
   const statusBreakdown = useMemo(() => {

@@ -53,8 +53,8 @@ export function defaultFactoryProducts(factoryType: string | null | undefined, s
   // recipes — inputs for intake steps, outputs for output/pack/dispatch.
   const tpl = getFactoryTypeTemplate(factoryType)
   if (!tpl) return []
-  const inputs = uniq(tpl.suggestedRecipes.map(r => r.input_product_name))
-  const outputs = uniq(tpl.suggestedRecipes.map(r => r.output_product_name))
+  const inputs = uniq([...tpl.suggestedRecipes.map(r => r.input_product_name), ...(tpl.products?.inputs || [])])
+  const outputs = uniq([...tpl.suggestedRecipes.map(r => r.output_product_name), ...(tpl.products?.outputs || [])])
   if (step === 'intake' || step === 'intake_arrival' || step === 'intake_feed') return inputs
   if (step === 'output' || step === 'packaging' || step === 'dispatch') return outputs
   return uniq([...inputs, ...outputs])

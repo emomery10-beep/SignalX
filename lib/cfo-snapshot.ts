@@ -261,6 +261,8 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
   const factoryResults: { id: string; name: string; type: string | null; fin: ReturnType<typeof computeFactoryFinancials> }[] = []
   // Who owes the factory / whom it owes, from approved dispatches and deliveries less recorded payments.
   // null until the money-loop tables exist (migration 20261024000001) or when no factory is in scope.
+  // True when a factory had more approved captures than the 20,000 the snapshot reads, so its totals are a lower bound.
+  let factoryCapped = false
   let factoryMoney: (MoneyReport & { collectedInPeriod: number; paidOutInPeriod: number; topDebtors: { name: string; outstanding: number; days_overdue: number }[] }) | null = null
   if (includeFactory && scopeIds.length > 0) {
     const [{ data: capRows }, { data: countRows }, { data: settingRows }, { data: taggedRows }] = await Promise.all([
@@ -278,6 +280,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
         .select('date, amount, category, location_id')
         .eq('user_id', ownerId).eq('segment', 'factory').lte('date', todayStr).limit(5000),
     ])
+    if ((capRows || []).length >= 20000) factoryCapped = true
     // Tagged to one factory → that factory. Tagged 'all factories' (no location) → split equally.
     const actualsBy = new Map<string, FactoryActuals>()
     const actualsFor = (id: string) => {
@@ -809,6 +812,7 @@ export async function buildCfoSnapshot({ supabase, ownerId, user, isOwner, param
       // Dispatches in the period still waiting for an approver to set dispatch_price (not in revenue)
       unpriced_dispatches: factoryFin.unpricedDispatches,
       factory_stock_value: Math.round(factoryFin.stockValue),
+      factory_data_capped: factoryCapped,
       // Finished goods and raw material written off as wastage in the period, valued at cost (not inside COGS)
       factory_wastage_value: Math.round(factoryFin.wastageValue),
       // Cash side of the factory: owed to it, owed by it, and what actually moved in the period.

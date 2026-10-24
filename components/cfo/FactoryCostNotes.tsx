@@ -32,6 +32,7 @@ export interface SegmentInfo {
   unpriced_dispatches: number
   factory_stock_value: number
   factory_wastage_value?: number
+  factory_data_capped?: boolean
   factory_money?: { ar: number; ap: number; ar_overdue: number; ap_overdue: number; collected_in_period: number; paid_out_in_period: number; top_debtors: { name: string; outstanding: number; days_overdue: number }[] } | null
   factory_costs: FactoryCostInfo[]
 }
@@ -52,6 +53,7 @@ export function FactoryCostNotes({ info, sym }: { info: SegmentInfo | undefined;
   const fmt = (n: number) => `${sym}${Math.round(n).toLocaleString()}`
   const notes: string[] = []
   if (info.key !== 'all') notes.push('Shown before shared expenses (rent, payroll, utilities and other overheads are not split between retail and factory).')
+  if (info.key !== 'retail' && info.factory_data_capped) notes.push('This factory has more records than the CFO reads at once (20,000), so factory totals here may be lower than the real figures.')
   if (info.unpriced_dispatches > 0) notes.push(`${info.unpriced_dispatches} factory dispatch${info.unpriced_dispatches === 1 ? '' : 'es'} in this period still need a price from an approver, so they are not in revenue yet.`)
   for (const f of info.factory_costs) {
     if (!f.complete) notes.push(`${f.name}: cost is understated — ${f.missing.map(m => MISSING_TEXT[m] || m).join('; ')}.`)

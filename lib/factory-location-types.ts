@@ -57,6 +57,10 @@ export const FACTORY_LOCATION_TYPES: FactoryLocationType[] = [
   { id: 'poultry', label: 'Poultry processing', icon: '🐔', products: [] },
   { id: 'coffee', label: 'Coffee processing', icon: '☕', products: [] },
   { id: 'fish_smoking', label: 'Fish smoking', icon: '🐟', products: [] },
+  { id: 'carpentry_furniture', label: 'Carpentry / furniture workshop', icon: '🪑', products: [] },
+  { id: 'metal_fabrication', label: 'Metal fabrication (jua kali)', icon: '🔧', products: [] },
+  { id: 'garments_tailoring', label: 'Garments / tailoring', icon: '🧵', products: [] },
+  { id: 'ice_making', label: 'Ice making', icon: '🧊', products: [] },
   { id: 'other', label: 'Other factory', icon: '🏭', products: [] },
 ]
 

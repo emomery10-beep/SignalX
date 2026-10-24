@@ -27,7 +27,11 @@ export async function GET() {
 const SOURCE_LABELS: Record<string, string> = {
   stripe: 'Stripe', shopify: 'Shopify', amazon_fba: 'Amazon FBA',
   xero: 'Xero', quickbooks: 'QuickBooks', pos: 'POS', csv: 'CSV', ebay: 'eBay',
+  askbiz_pos: 'AskBiz POS',
 }
+
+const sourceLabel = (t: string) =>
+  SOURCE_LABELS[t] || t.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
 async function runSourceSignals(userId: string): Promise<Signal[]> {
   try {
@@ -49,7 +53,7 @@ async function runSourceSignals(userId: string): Promise<Signal[]> {
     })
 
     if (staleSources.length > 0) {
-      const names = staleSources.map(s => SOURCE_LABELS[s.source_type] || s.source_type).join(', ')
+      const names = staleSources.map(s => sourceLabel(s.source_type)).join(', ')
       signals.push({
         id: `stale-sync-${userId}`,
         title: `${names} data is stale`,
@@ -65,7 +69,7 @@ async function runSourceSignals(userId: string): Promise<Signal[]> {
     // Check for errored/disconnected sources
     const errorSources = sources.filter(s => s.status === 'error' || s.status === 'disconnected')
     if (errorSources.length > 0) {
-      const names = errorSources.map(s => SOURCE_LABELS[s.source_type] || s.source_type).join(', ')
+      const names = errorSources.map(s => sourceLabel(s.source_type)).join(', ')
       signals.push({
         id: `error-source-${userId}`,
         title: `${names} connection issue`,
