@@ -1,0 +1,21 @@
+{
+  "title": "Partij traceren",
+  "subtitle": "Waar het vandaan kwam en wie het ontving",
+  "hint": "Voer dezelfde partijreferentie in bij levering, grondstof, productie, verpakking en verzending. Dan toont één zoekopdracht het hele traject.",
+  "search_placeholder": "Partijreferentie",
+  "search": "Traceren",
+  "recent": "Recente partijen",
+  "not_found": "Geen productiepartij met die referentie",
+  "section_in": "Binnengekomen",
+  "section_made": "Gemaakt",
+  "section_packed": "Verpakt",
+  "section_out": "Naar klanten verzonden",
+  "no_dispatch": "Er is nog niets van deze partij verzonden",
+  "supplier": "Leverancier",
+  "customer": "Klant",
+  "no_name": "Geen naam vastgelegd",
+  "pending": "wacht op goedkeuring",
+  "back": "Terug",
+  "loading": "Laden…",
+  "no_access": "Alleen goedkeurders kunnen partijen traceren."
+}

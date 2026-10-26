@@ -173,5 +173,7 @@
   "money_owed": "Wateja wanakudai",
   "money_overdue": "{amount} imechelewa",
   "money_stock": "Thamani ya hisa",
-  "money_unpriced": "Usafirishaji {count} bado unahitaji bei"
+  "money_unpriced": "Usafirishaji {count} bado unahitaji bei",
+  "cost_official": "Gharama kwa kipande inayotumiwa na CFO na Hisa: {official}",
+  "cost_differs": "Skrini hii inakokotoa {local} kwa sababu ya namba unazoweza kubadilisha hapa (saa, kazi ya ziada, mabadiliko). Hizo ni makadirio: viwango vilivyohifadhiwa chini ya Viwango vyako vya gharama pekee ndivyo vinavyobadilisha CFO."
 }

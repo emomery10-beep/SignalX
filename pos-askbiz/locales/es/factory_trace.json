@@ -1,0 +1,21 @@
+{
+  "title": "Rastrear un lote",
+  "subtitle": "De dónde vino y quién lo recibió",
+  "hint": "Escribe la misma referencia de lote en la entrega, la materia prima, la producción, el empaque y el despacho. Así una sola búsqueda muestra todo el recorrido.",
+  "search_placeholder": "Referencia del lote",
+  "search": "Rastrear",
+  "recent": "Lotes recientes",
+  "not_found": "No hay un lote de producción con esa referencia",
+  "section_in": "Lo que entró",
+  "section_made": "Producido",
+  "section_packed": "Empacado",
+  "section_out": "Enviado a clientes",
+  "no_dispatch": "Aún no se ha despachado nada de este lote",
+  "supplier": "Proveedor",
+  "customer": "Cliente",
+  "no_name": "Sin nombre registrado",
+  "pending": "pendiente de aprobación",
+  "back": "Atrás",
+  "loading": "Cargando…",
+  "no_access": "Solo los aprobadores pueden rastrear lotes."
+}

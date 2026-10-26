@@ -1,0 +1,21 @@
+{
+  "title": "Trace a batch",
+  "subtitle": "Where it came from, and who received it",
+  "hint": "Type the same run reference on the delivery, the raw material fed, the output, the packaging and the dispatch. Then one search shows the whole trail.",
+  "search_placeholder": "Run reference",
+  "search": "Trace",
+  "recent": "Recent runs",
+  "not_found": "No production run with that reference",
+  "section_in": "Went in",
+  "section_made": "Made",
+  "section_packed": "Packed",
+  "section_out": "Sent to customers",
+  "no_dispatch": "Nothing from this run has been dispatched yet",
+  "supplier": "Supplier",
+  "customer": "Customer",
+  "no_name": "No name recorded",
+  "pending": "waiting for approval",
+  "back": "Back",
+  "loading": "Loading…",
+  "no_access": "Only approvers can trace batches."
+}

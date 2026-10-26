@@ -2731,8 +2731,30 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
     return [...bulkRows, ...jerrycanRows].sort((a, b) => b.margin - a.margin)
   }, [intakes, outputs, costForCapture, sellPriceFor, staffCostPerJerrycan, electricityCostPerJerrycan, overheadPerJerrycan, totalMaterialCost, jerrycansProduced, costPerJerrycan, packagedLabel])
 
+  // The cost per unit the CFO and the Inventory tab use (one server calculation, with rate history and the
+  // per-product split). This screen also keeps its own what-if arithmetic, so show the official figure and say
+  // so plainly when the two differ.
+  const [officialCost, setOfficialCost] = useState<number | null>(null)
+  useEffect(() => {
+    if (previewCaptures) return
+    let live = true
+    const q = selectedLocation && selectedLocation !== 'all' ? '?location_id=' + encodeURIComponent(selectedLocation) : ''
+    fetch('/api/pos/factory/sesame-production' + q)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (live) setOfficialCost(Number(d?.cycleCost?.unitCost) > 0 ? Number(d.cycleCost.unitCost) : null) })
+      .catch(() => { if (live) setOfficialCost(null) })
+    return () => { live = false }
+  }, [selectedLocation, previewCaptures])
+  const costDiffers = officialCost != null && costPerJerrycan > 0 && Math.abs(officialCost - costPerJerrycan) / officialCost > 0.02
+
   return (
     <div>
+      {officialCost != null && (
+        <div role="status" style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 12, fontSize: 12, color: 'var(--tx2)' }}>
+          <strong style={{ color: 'var(--tx)' }}>{tc('pos_factory.cost_official', { official: fmt(currencySymbol, officialCost) })}</strong>
+          {costDiffers && <div style={{ marginTop: 4 }}>{tc('pos_factory.cost_differs', { local: fmt(currencySymbol, costPerJerrycan) })}</div>}
+        </div>
+      )}
       {/* Cost rates — saved per factory, shared with the CFO */}
       <div style={{ padding: 14, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'var(--tx)' }}>Your cost rates ({currencySymbol})</div>

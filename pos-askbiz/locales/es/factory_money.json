@@ -34,5 +34,8 @@
   "method_bank": "Banco",
   "method_cheque": "Cheque",
   "method_other": "Otro",
-  "cfo_note": "Si también anotaste estas deudas en el seguimiento de cuentas por cobrar del CFO, se cuentan dos veces. Mantenlas en un solo lugar."
+  "cfo_note": "Si también anotaste estas deudas en el seguimiento de cuentas por cobrar del CFO, se cuentan dos veces. Mantenlas en un solo lugar.",
+  "remind_button": "Recordar",
+  "remind_confirm": "¿Enviar a {name} un recordatorio de WhatsApp para pagar {amount}?",
+  "remind_sent": "Recordatorio enviado"
 }

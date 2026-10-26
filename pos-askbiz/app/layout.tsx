@@ -3,6 +3,7 @@ import { cookies, headers } from 'next/headers'
 import './globals.css'
 import PosConsentBanner from '@/components/PosConsentBanner'
 import PosOfflineBanner from '@/components/PosOfflineBanner'
+import PosOutboxBanner from '@/components/PosOutboxBanner'
 import PosSessionGuard from '@/components/PosSessionGuard'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { LanguageProvider } from '@/components/LanguageProvider'
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider initialLang={lang}>
           <PosSessionGuard />
           <PosOfflineBanner />
+          <PosOutboxBanner />
           {children}
           <PosConsentBanner />
         </LanguageProvider>

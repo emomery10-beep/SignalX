@@ -16,7 +16,7 @@ const BAD = '#f87171'
 const METHODS = ['cash', 'mobile_money', 'bank', 'cheque', 'other']
 
 interface Item {
-  capture_id: string; party_name: string; product_name: string; quantity: number
+  capture_id: string; party_name: string; party_phone?: string | null; product_name: string; quantity: number
   value: number; paid: number; outstanding: number; due_date: string; days_overdue: number; bucket: string
 }
 interface Report {
@@ -81,6 +81,16 @@ export default function FactoryMoneyPage() {
       setPaying(null); setAmount(''); setReference('')
       await load()
     } catch { setMsg({ kind: 'err', text: tc('factory_money.error_generic') }) } finally { setBusy(false) }
+  }
+
+  async function remind(it: Item) {
+    if (!window.confirm(tc('factory_money.remind_confirm', { name: it.party_name || tc('factory_money.unknown_party'), amount: fmt(it.outstanding) }))) return
+    setMsg(null)
+    try {
+      const r = await fetch('/api/pos/factory/payments/remind', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify({ capture_id: it.capture_id }) })
+      const d = await r.json().catch(() => ({}))
+      setMsg(r.ok ? { kind: 'ok', text: tc('factory_money.remind_sent') } : { kind: 'err', text: d.error || tc('factory_money.error_generic') })
+    } catch { setMsg({ kind: 'err', text: tc('factory_money.error_generic') }) }
   }
 
   const items = tab === 'customers' ? report?.receivables || [] : report?.payables || []
@@ -186,10 +196,18 @@ export default function FactoryMoneyPage() {
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => { setPaying(it.capture_id); setAmount(String(it.outstanding)); setMsg(null) }}
-                    style={{ marginTop: 12, minHeight: 44, padding: '0 16px', borderRadius: 10, border: `1px solid ${ACCENT}`, background: 'transparent', color: ACCENT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-                    {tc('factory_money.record_payment')}
-                  </button>
+                  <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button onClick={() => { setPaying(it.capture_id); setAmount(String(it.outstanding)); setMsg(null) }}
+                      style={{ minHeight: 44, padding: '0 16px', borderRadius: 10, border: `1px solid ${ACCENT}`, background: 'transparent', color: ACCENT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                      {tc('factory_money.record_payment')}
+                    </button>
+                    {tab === 'customers' && (
+                      <button onClick={() => remind(it)}
+                        style={{ minHeight: 44, padding: '0 16px', borderRadius: 10, border: '1px solid #25D366', background: 'transparent', color: '#25D366', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                        💬 {tc('factory_money.remind_button')}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             ))}

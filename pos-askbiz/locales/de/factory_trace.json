@@ -1,0 +1,21 @@
+{
+  "title": "Charge nachverfolgen",
+  "subtitle": "Woher es kam und wer es erhielt",
+  "hint": "Geben Sie dieselbe Chargenreferenz bei Lieferung, Rohstoff, Produktion, Verpackung und Versand ein. Dann zeigt eine Suche den ganzen Weg.",
+  "search_placeholder": "Chargenreferenz",
+  "search": "Suchen",
+  "recent": "Letzte Chargen",
+  "not_found": "Keine Produktionscharge mit dieser Referenz",
+  "section_in": "Eingegangen",
+  "section_made": "Hergestellt",
+  "section_packed": "Verpackt",
+  "section_out": "An Kunden gesendet",
+  "no_dispatch": "Aus dieser Charge wurde noch nichts versendet",
+  "supplier": "Lieferant",
+  "customer": "Kunde",
+  "no_name": "Kein Name erfasst",
+  "pending": "wartet auf Genehmigung",
+  "back": "Zurück",
+  "loading": "Laden…",
+  "no_access": "Nur Genehmiger können Chargen nachverfolgen."
+}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { queueWrite } from '@/lib/pos-offline-write'
 
 const tokens = {
   bg:      'var(--pos-bg)',
@@ -181,16 +182,18 @@ export default function ShiftPage() {
     if (!startPhoto || !shiftName || !session) return
     setSaveError('')
     setStage('submitting')
+    const startBody = {
+      shift_name:   shiftName,
+      custom_name:  shiftName === 'Custom' ? customName.trim() : undefined,
+      image:        startPhoto,
+      target_units: targetUnits ? parseFloat(targetUnits) : undefined,
+      client_tx_id: 'shift_start_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    }
     try {
       const res = await fetch('/api/pos/factory/shift', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({
-          shift_name:   shiftName,
-          custom_name:  shiftName === 'Custom' ? customName.trim() : undefined,
-          image:        startPhoto,
-          target_units: targetUnits ? parseFloat(targetUnits) : undefined,
-        }),
+        body: JSON.stringify(startBody),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -203,6 +206,8 @@ export default function ShiftPage() {
       await loadData()
       setStage('start_success')
     } catch {
+      // No signal: keep the start on this device (the banner shows it waiting) and upload when back online.
+      if (await queueWrite(session, '/api/pos/factory/shift', 'POST', startBody, 'shift_start', startBody.client_tx_id)) { setStage('hub'); return }
       setSaveError(tc('factory_shift.error_network'))
       setStage('shift_name')
     }
@@ -213,11 +218,12 @@ export default function ShiftPage() {
     if (!activeShift || !session) return
     setSaveError('')
     setStage('submitting')
+    const endBody = { id: activeShift.id, image: photo }
     try {
       const res = await fetch('/api/pos/factory/shift', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: activeShift.id, image: photo }),
+        body: JSON.stringify(endBody),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -230,6 +236,7 @@ export default function ShiftPage() {
       await loadData()
       setStage('end_success')
     } catch {
+      if (await queueWrite(session, '/api/pos/factory/shift', 'PATCH', endBody, 'shift_end')) { setStage('hub'); return }
       setSaveError(tc('factory_shift.error_network'))
       setStage('hub')
     }

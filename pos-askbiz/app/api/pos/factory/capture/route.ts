@@ -79,7 +79,10 @@ const PARAM_ANNOTATABLE_TYPES: CaptureType[] = ['intake', 'intake_arrival', 'int
 // Which captures can be grouped into a production run (see the run_ref
 // find-or-create block in POST below) — intake/output only, the two
 // moments a run's "what went in, what came out" actually spans.
-const RUN_TAGGABLE_TYPES: CaptureType[] = ['intake', 'intake_arrival', 'intake_feed', 'output']
+// Packaging and dispatch can be tagged too, but only to a run that already exists (they never create one), so a
+// product can be traced from the raw material that went in to the customers who received it (recalls).
+const RUN_TAGGABLE_TYPES: CaptureType[] = ['intake', 'intake_arrival', 'intake_feed', 'output', 'packaging', 'dispatch']
+const RUN_LOOKUP_ONLY_TYPES: CaptureType[] = ['packaging', 'dispatch']
 
 // ─────────────────────────────────────────────────────────────
 // GET — list captures (filterable by type / status / date / shift)
@@ -311,6 +314,8 @@ export async function POST(req: NextRequest) {
         .maybeSingle()
       if (existingRun) {
         production_run_id = existingRun.id
+      } else if (RUN_LOOKUP_ONLY_TYPES.includes(captureType)) {
+        // unknown reference on a packaging/dispatch capture: leave it untagged rather than invent a run
       } else {
         const { data: newRun, error: newRunErr } = await service
           .from('pos_factory_production_runs')

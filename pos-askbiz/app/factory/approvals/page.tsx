@@ -5,6 +5,7 @@ import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { queueWrite } from '@/lib/pos-offline-write'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -148,16 +149,17 @@ export default function ApprovalsPage() {
     const customer_phone = status === 'approved' && c.type === 'dispatch' && waNumberFor(c).length >= 8 ? waNumberFor(c) : undefined
     setBusy(c.id)
     setError(null)
+    const payload = { id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}),
+      ...(status === 'approved' && (c.type === 'dispatch' || c.type === 'intake_arrival') ? {
+        ...(Number(paidNow[c.id]) > 0 ? { amount_paid: Number(paidNow[c.id]), payment_method: payMethod[c.id] || 'cash' } : {}),
+        ...(dueDates[c.id] ? { due_date: dueDates[c.id] } : {}),
+      } : {}),
+      ...(allowOverStock ? { allow_over_stock: true } : {}) }
     try {
       const res = await fetch('/api/pos/factory/capture', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}),
-          ...(status === 'approved' && (c.type === 'dispatch' || c.type === 'intake_arrival') ? {
-            ...(Number(paidNow[c.id]) > 0 ? { amount_paid: Number(paidNow[c.id]), payment_method: payMethod[c.id] || 'cash' } : {}),
-            ...(dueDates[c.id] ? { due_date: dueDates[c.id] } : {}),
-          } : {}),
-          ...(allowOverStock ? { allow_over_stock: true } : {}) }),
+        body: JSON.stringify(payload),
       })
       if (res.status === 405) {
         // PATCH not supported on this deployment — surface clearly
@@ -184,7 +186,15 @@ export default function ApprovalsPage() {
       setRejecting(null)
       setReason('')
     } catch {
-      setError(tc('factory_approvals.error_network'))
+      // No signal: keep a non-dispatch decision on this device and send it when back online. A dispatch needs
+      // the server's stock check and a price, so it is not queued.
+      if (c.type !== 'dispatch' && await queueWrite(session, '/api/pos/factory/capture', 'PATCH', payload, 'approve')) {
+        setCaptures(prev => prev.filter(x => x.id !== c.id))
+        setRejecting(null)
+        setReason('')
+      } else {
+        setError(tc('factory_approvals.error_network'))
+      }
     } finally {
       setBusy(null)
     }

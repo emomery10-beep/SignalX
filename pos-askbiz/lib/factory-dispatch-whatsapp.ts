@@ -72,3 +72,22 @@ export async function sendDispatchWhatsApp(
     return { success: false, error: msg }
   }
 }
+
+/**
+ * Send one plain single-line WhatsApp text to a customer of this owner (same channel and template path as the
+ * dispatch messages). The caller decides whether sending is appropriate; this only delivers it.
+ */
+export async function sendCustomerWhatsApp(ownerId: string, phoneNumber: string | null | undefined, text: string): Promise<WhatsAppResult> {
+  const phone = cleanWhatsAppNumber(phoneNumber)
+  if (phone.length < 8) return { success: false, error: 'No usable phone number' }
+  try {
+    const service = createServiceClient()
+    const { data: profile } = await service.from('profiles').select('country_code').eq('id', ownerId).maybeSingle()
+    const dialHint = COUNTRY_DIAL.find(c => c.code === profile?.country_code)?.dial
+    const res = await sendNotification(phone, text.replace(/\s+/g, ' ').trim(), dialHint)
+    if (!res.ok) return { success: false, error: res.error }
+    return { success: true, messageId: res.messageId }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) }
+  }
+}

@@ -173,5 +173,7 @@
   "money_owed": "Macaamiishu way ku leeyihiin",
   "money_overdue": "{amount} way dhaaftay waqtigii",
   "money_stock": "Qiimaha kaydka",
-  "money_unpriced": "{count} dirid weli waxay u baahan yihiin qiimo"
+  "money_unpriced": "{count} dirid weli waxay u baahan yihiin qiimo",
+  "cost_official": "Kharashka halkii cutub ee CFO iyo Kaydku isticmaalaan: {official}",
+  "cost_differs": "Shaashaddan waxay xisaabisaa {local} sababtoo ah tirooyinka halkan laga beddeli karo (saacado, shaqo dheeraad ah, beddelo). Kuwaas waa qiyaas: kaliya heerarka lagu keydiyey Heerarkaaga kharashka ayaa beddela CFO."
 }

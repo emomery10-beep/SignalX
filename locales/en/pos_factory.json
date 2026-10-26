@@ -173,5 +173,7 @@
   "money_owed": "Customers owe you",
   "money_overdue": "{amount} overdue",
   "money_stock": "Stock value",
-  "money_unpriced": "{count} dispatches still need a price"
+  "money_unpriced": "{count} dispatches still need a price",
+  "cost_official": "Cost per unit used by the CFO and Inventory: {official}",
+  "cost_differs": "This screen works out {local} because of the figures you can change here (hours, extra labour, overrides). Those are what-ifs: only the rates saved under Your cost rates change the CFO."
 }

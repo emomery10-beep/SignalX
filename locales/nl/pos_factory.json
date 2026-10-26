@@ -173,5 +173,7 @@
   "money_owed": "Klanten zijn u verschuldigd",
   "money_overdue": "{amount} achterstallig",
   "money_stock": "Voorraadwaarde",
-  "money_unpriced": "{count} leveringen hebben nog een prijs nodig"
+  "money_unpriced": "{count} leveringen hebben nog een prijs nodig",
+  "cost_official": "Kostprijs per eenheid die CFO en Voorraad gebruiken: {official}",
+  "cost_differs": "Dit scherm rekent {local} door de cijfers die u hier kunt aanpassen (uren, extra arbeid, overschrijvingen). Dat zijn proefberekeningen: alleen de tarieven opgeslagen onder Uw kostentarieven wijzigen de CFO."
 }

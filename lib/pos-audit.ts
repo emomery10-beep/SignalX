@@ -23,6 +23,7 @@ export type PosAuditEvent =
   | 'capture.rejected'
   | 'capture.voided'
   | 'payment.recorded'
+  | 'payment.reminder_sent'
   | 'factory.rates_changed'
   // Transactions
   | 'transaction.refund'

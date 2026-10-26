@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { queueWrite } from '@/lib/pos-offline-write'
 
 type Tc = (key: string, vars?: Record<string, string | number>) => string
 
@@ -163,15 +164,17 @@ export default function DowntimePage() {
     if (!photoUrl || !reason || !session) return
     setSaveError('')
     setStage('submitting')
+    const downBody = {
+      machine_name: machineName.trim() || 'Machine',
+      reason,
+      image: photoUrl,
+      client_tx_id: 'downtime_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    }
     try {
       const res = await fetch('/api/pos/factory/downtime', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({
-          machine_name: machineName.trim() || 'Machine',
-          reason,
-          image: photoUrl,
-        }),
+        body: JSON.stringify(downBody),
       })
       if (!res.ok) {
         const d = await res.json()
@@ -182,6 +185,7 @@ export default function DowntimePage() {
       await loadActive()
       setStage('success')
     } catch {
+      if (await queueWrite(session, '/api/pos/factory/downtime', 'POST', downBody, 'downtime', downBody.client_tx_id)) { setStage('active_check'); return }
       setSaveError(tc('factory_downtime.error_network'))
       setStage('machine_name')
     }
@@ -191,11 +195,12 @@ export default function DowntimePage() {
   async function submitClose(photo: string) {
     if (!closingEvent || !session) return
     setStage('submitting')
+    const closeBody = { id: closingEvent.id, image: photo }
     try {
       const res = await fetch('/api/pos/factory/downtime', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...session.headers },
-        body: JSON.stringify({ id: closingEvent.id, image: photo }),
+        body: JSON.stringify(closeBody),
       })
       if (!res.ok) {
         setSaveError(tc('factory_downtime.error_failed_close'))
@@ -205,6 +210,7 @@ export default function DowntimePage() {
       await loadActive()
       setStage('close_success')
     } catch {
+      if (await queueWrite(session, '/api/pos/factory/downtime', 'PATCH', closeBody, 'downtime_close')) { setStage('active_check'); return }
       setSaveError(tc('factory_downtime.error_network'))
       setStage('active_check')
     }

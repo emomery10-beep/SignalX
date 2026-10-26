@@ -13,6 +13,8 @@ export interface AlertInput {
   yesterday: string
   today: string
   money: MoneyReport | null
+  /** Approved goods with a shelf-life deadline (e.g. bakery) that falls within the next two days. */
+  expiringSoon?: { product_name: string | null; expires_at: string }[]
   now: number
 }
 
@@ -50,6 +52,13 @@ export function buildFactoryLines(i: AlertInput): string[] {
     lines.push(`🧾 You owe suppliers ${fmt(i.symbol, m.apTotal)}, ${fmt(i.symbol, m.apOverdue)} of it overdue.`)
   }
 
+  // Goods about to go off. Say which product, not just how many rows.
+  const exp = i.expiringSoon || []
+  if (exp.length > 0) {
+    const names = Array.from(new Set(exp.map(e => e.product_name || 'goods'))).slice(0, 3).join(', ')
+    lines.push('⏰ ' + exp.length + (exp.length === 1 ? ' batch' : ' batches') + ' reach their sell-by time within two days: ' + names + '.')
+  }
+
   // A quiet factory: nothing logged yesterday although the previous days were busy. Skip the weekly rest day.
   const before = Object.entries(i.activityByDay).filter(([d]) => d < i.yesterday)
   const busyDays = before.filter(([, n]) => n > 0)
@@ -72,7 +81,8 @@ export async function factoryBriefLines(svc: any, ownerId: string, symbol: strin
     const yesterday = dayOfInZone(now - 24 * 3600 * 1000, tz)
     const weekAgo = new Date(now - 8 * 24 * 3600 * 1000).toISOString()
 
-    const [pendingQ, recentQ, moneyCapQ, payQ, partyQ] = await Promise.all([
+    const soon = new Date(now + 48 * 3600 * 1000).toISOString()
+    const [pendingQ, recentQ, moneyCapQ, payQ, partyQ, expQ] = await Promise.all([
       svc.from('pos_factory_captures').select('type, created_at').eq('owner_id', ownerId).eq('status', 'pending').in('location_id', ids).limit(2000),
       svc.from('pos_factory_captures').select('created_at').eq('owner_id', ownerId).in('location_id', ids).gte('created_at', weekAgo).neq('status', 'rejected').limit(5000),
       svc.from('pos_factory_captures')
@@ -80,6 +90,8 @@ export async function factoryBriefLines(svc: any, ownerId: string, symbol: strin
         .eq('owner_id', ownerId).eq('status', 'approved').in('type', ['dispatch', 'intake_arrival']).in('location_id', ids).limit(20000),
       svc.from('pos_factory_payments').select('capture_id, direction, amount, paid_at').eq('owner_id', ownerId).limit(50000),
       svc.from('pos_factory_parties').select('id, name, phone').eq('owner_id', ownerId),
+      svc.from('pos_factory_captures').select('product_name, expires_at').eq('owner_id', ownerId).eq('status', 'approved').in('location_id', ids)
+        .gt('expires_at', new Date(now).toISOString()).lt('expires_at', soon).limit(200),
     ])
     const activityByDay: Record<string, number> = {}
     for (const r of (recentQ.data || []) as any[]) {
@@ -90,7 +102,7 @@ export async function factoryBriefLines(svc: any, ownerId: string, symbol: strin
     const money = !moneyCapQ.error && !payQ.error
       ? computeMoney((moneyCapQ.data || []) as any[], (payQ.data || []) as any[], (partyQ.data || []) as any[], now, tz)
       : null
-    return buildFactoryLines({ symbol, pending: (pendingQ.data || []) as any[], activityByDay, yesterday, today, money, now })
+    return buildFactoryLines({ symbol, pending: (pendingQ.data || []) as any[], activityByDay, yesterday, today, money, expiringSoon: expQ.error ? [] : (expQ.data || []) as any[], now })
   } catch (e) {
     console.error('[factory-alerts] failed for', ownerId, e)
     return []

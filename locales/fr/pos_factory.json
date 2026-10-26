@@ -173,5 +173,7 @@
   "money_owed": "Vos clients vous doivent",
   "money_overdue": "{amount} en retard",
   "money_stock": "Valeur du stock",
-  "money_unpriced": "{count} expéditions attendent encore un prix"
+  "money_unpriced": "{count} expéditions attendent encore un prix",
+  "cost_official": "Coût par unité utilisé par le CFO et le Stock : {official}",
+  "cost_differs": "Cet écran calcule {local} à cause des chiffres que vous pouvez modifier ici (heures, main-d'œuvre supplémentaire, ajustements). Ce sont des hypothèses : seuls les tarifs enregistrés sous Vos tarifs de coût modifient le CFO."
 }

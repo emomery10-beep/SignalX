@@ -34,5 +34,8 @@
   "method_bank": "Banque",
   "method_cheque": "Chèque",
   "method_other": "Autre",
-  "cfo_note": "Si vous avez aussi saisi ces dettes dans le suivi des créances du CFO, elles sont comptées deux fois. Gardez-les à un seul endroit."
+  "cfo_note": "Si vous avez aussi saisi ces dettes dans le suivi des créances du CFO, elles sont comptées deux fois. Gardez-les à un seul endroit.",
+  "remind_button": "Relancer",
+  "remind_confirm": "Envoyer à {name} un rappel WhatsApp pour payer {amount} ?",
+  "remind_sent": "Rappel envoyé"
 }

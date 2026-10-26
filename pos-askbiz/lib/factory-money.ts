@@ -36,6 +36,7 @@ export interface OpenItem {
   location_id: string | null
   party_id: string | null
   party_name: string
+  party_phone: string | null
   product_name: string
   quantity: number
   value: number
@@ -81,6 +82,7 @@ export function computeMoney(
     paidBy.set(k, (paidBy.get(k) || 0) + num(p.amount))
   }
   const nameOf = new Map(parties.map(p => [p.id, p.name]))
+  const phoneOf = new Map(parties.map(p => [p.id, p.phone || null]))
   const receivables: OpenItem[] = []
   const payables: OpenItem[] = []
 
@@ -105,6 +107,7 @@ export function computeMoney(
     const item: OpenItem = {
       capture_id: c.id, location_id: c.location_id || null, party_id: c.party_id || null,
       party_name: (c.party_id && nameOf.get(c.party_id)) || '',
+      party_phone: (c.party_id && phoneOf.get(c.party_id)) || null,
       product_name: c.product_name || '', quantity: qty,
       value: r2(value), paid: r2(paid), outstanding: r2(outstanding),
       due_date: due, days_overdue: daysOverdue, bucket: bucketOf(daysOverdue),

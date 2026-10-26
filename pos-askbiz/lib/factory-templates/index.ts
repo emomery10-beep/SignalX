@@ -35,6 +35,9 @@ import carpentryFurniture from './carpentry_furniture'
 import metalFabrication from './metal_fabrication'
 import garmentsTailoring from './garments_tailoring'
 import iceMaking from './ice_making'
+import animalFeed from './animal_feed'
+import juiceBeverages from './juice_beverages'
+import peanutButter from './peanut_butter'
 
 // A recipe-level (not template-level) not-yet-releasable gate. Recipe-level
 // because dairy proves a template-wide flag isn't precise enough — cheese
@@ -132,6 +135,9 @@ export const FACTORY_TYPE_TEMPLATES: FactoryTypeTemplate[] = [
   metalFabrication,
   garmentsTailoring,
   iceMaking,
+  animalFeed,
+  juiceBeverages,
+  peanutButter,
 ]
 
 export const FACTORY_TYPE_TEMPLATES_BY_ID: Record<string, FactoryTypeTemplate> =

@@ -34,5 +34,8 @@
   "method_bank": "Bangi",
   "method_cheque": "Jeeg",
   "method_other": "Mid kale",
-  "cfo_note": "Haddii aad deymahan geliso Receivables ee CFO, CFO ayaa labo jeer tirinaya. Meel keliya ku hay."
+  "cfo_note": "Haddii aad deymahan geliso Receivables ee CFO, CFO ayaa labo jeer tirinaya. Meel keliya ku hay.",
+  "remind_button": "Xus",
+  "remind_confirm": "U dir {name} xusuus WhatsApp ah oo ku saabsan bixinta {amount}?",
+  "remind_sent": "Xusuusta waa la diray"
 }

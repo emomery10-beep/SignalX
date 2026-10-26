@@ -173,5 +173,7 @@
   "money_owed": "Kunden schulden Ihnen",
   "money_overdue": "{amount} überfällig",
   "money_stock": "Lagerwert",
-  "money_unpriced": "{count} Lieferungen brauchen noch einen Preis"
+  "money_unpriced": "{count} Lieferungen brauchen noch einen Preis",
+  "cost_official": "Stückkosten, die CFO und Lager verwenden: {official}",
+  "cost_differs": "Dieser Bildschirm rechnet {local} wegen der Werte, die Sie hier ändern können (Stunden, Zusatzarbeit, Überschreibungen). Das sind Gedankenspiele: nur die unter Ihre Kostensätze gespeicherten Sätze ändern den CFO."
 }

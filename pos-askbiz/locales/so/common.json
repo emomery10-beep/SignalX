@@ -24,5 +24,6 @@
   "consent_reject": "Kuwa muhiimka ah oo keliya",
   "consent_accept": "Aqbal falanqaynta",
   "consent_privacy": "Siyaasadda asturnaanta",
-  "consent_cookies": "Siyaasadda cookie-ga"
+  "consent_cookies": "Siyaasadda cookie-ga",
+  "outbox_waiting": "{count} ayaa lagu keydiyey qalabkan, waxaa la geynayaa marka xiriirku soo noqdo"
 }

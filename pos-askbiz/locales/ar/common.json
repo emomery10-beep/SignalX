@@ -24,5 +24,6 @@
   "consent_reject": "الأساسي فقط",
   "consent_accept": "قبول التحليلات",
   "consent_privacy": "سياسة الخصوصية",
-  "consent_cookies": "سياسة ملفات تعريف الارتباط"
+  "consent_cookies": "سياسة ملفات تعريف الارتباط",
+  "outbox_waiting": "{count} محفوظة على هذا الجهاز وسيتم رفعها عند عودة الاتصال"
 }

@@ -34,5 +34,8 @@
   "method_bank": "Bank",
   "method_cheque": "Cheque",
   "method_other": "Other",
-  "cfo_note": "If you also typed these debts into the CFO Receivables tracker, the CFO counts them twice. Keep them in one place."
+  "cfo_note": "If you also typed these debts into the CFO Receivables tracker, the CFO counts them twice. Keep them in one place.",
+  "remind_button": "Remind",
+  "remind_confirm": "Send {name} a WhatsApp reminder to pay {amount}?",
+  "remind_sent": "Reminder sent"
 }

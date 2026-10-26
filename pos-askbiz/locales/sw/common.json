@@ -24,5 +24,6 @@
   "consent_reject": "Muhimu tu",
   "consent_accept": "Kubali uchambuzi",
   "consent_privacy": "Sera ya faragha",
-  "consent_cookies": "Sera ya vidakuzi"
+  "consent_cookies": "Sera ya vidakuzi",
+  "outbox_waiting": "{count} zimehifadhiwa kwenye kifaa hiki, zitapakiwa mtandao ukirudi"
 }

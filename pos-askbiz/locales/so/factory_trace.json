@@ -1,0 +1,21 @@
+{
+  "title": "Raadi dufcad",
+  "subtitle": "Meesha ay ka timid iyo cidda qaadatay",
+  "hint": "Qor tixraaca isku mid ah rarka la helay, alaabta cuntada ah, wax-soo-saarka, baakadaha iyo dirista. Markaas hal raadin ayaa muujinaysa jidka oo dhan.",
+  "search_placeholder": "Tixraaca dufcadda",
+  "search": "Raadi",
+  "recent": "Dufcadihii ugu dambeeyay",
+  "not_found": "Ma jirto dufcad wax-soo-saar oo tixraacaas leh",
+  "section_in": "Gudaha u galay",
+  "section_made": "La sameeyay",
+  "section_packed": "La baakadeeyay",
+  "section_out": "La diray macaamiisha",
+  "no_dispatch": "Wax laga direy dufcaddan weli ma jiraan",
+  "supplier": "Alaab-qeybiye",
+  "customer": "Macmiil",
+  "no_name": "Magac lama diiwaan gelin",
+  "pending": "sugaya oggolaansho",
+  "back": "Dib u noqo",
+  "loading": "Waa la soo rarayaa…",
+  "no_access": "Kaliya kuwa oggolaanshaha ayaa raadin kara dufcado."
+}

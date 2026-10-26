@@ -94,6 +94,9 @@ export const FACTORY_TYPE_OPTIONS: FactoryTypeOption[] = [
   { id: 'metal_fabrication', label: 'Metal Fabrication (Jua Kali)', icon: '🔧' },
   { id: 'garments_tailoring', label: 'Garments / Tailoring', icon: '🧵' },
   { id: 'ice_making', label: 'Ice Making', icon: '🧊' },
+  { id: 'animal_feed', label: 'Animal Feed Milling / Mixing', icon: '🌾' },
+  { id: 'juice_beverages', label: 'Juice / Beverage Bottling', icon: '🧃' },
+  { id: 'peanut_butter', label: 'Peanut / Nut Butter Making', icon: '🥜' },
 ]
 
 // 'other' has no dedicated option above — picking this gets the generic

@@ -816,6 +816,10 @@ export default function FactoryHub() {
             ...(session && hasPermission(session.role, 'capture.approve')
               ? [{ label: tc('factory_money.title'), sub: tc('factory_money.subtitle'), icon: <span style={{ fontSize: 20 }}>💰</span>, color: tokens.success, href: '/factory/money', span: false }]
               : []),
+            // Approvers only — follow a production run from raw material to customers (recalls).
+            ...(session && hasPermission(session.role, 'capture.approve')
+              ? [{ label: tc('factory_trace.title'), sub: tc('factory_trace.subtitle'), icon: <span style={{ fontSize: 20 }}>🔎</span>, color: tokens.warning, href: '/factory/trace', span: false }]
+              : []),
             // Owner / managers only — sets the labour, electricity and overhead rates the CFO uses.
             ...(session && ['owner', 'manager', 'branch_manager', 'factory-production-manager'].includes(session.role)
               ? [{ label: 'Cost rates', sub: 'Labour, electricity & overhead', icon: <span style={{ fontSize: 20 }}>⚙️</span>, color: tokens.accent, href: '/factory/rates', span: false }]

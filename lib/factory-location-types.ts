@@ -61,6 +61,9 @@ export const FACTORY_LOCATION_TYPES: FactoryLocationType[] = [
   { id: 'metal_fabrication', label: 'Metal fabrication (jua kali)', icon: '🔧', products: [] },
   { id: 'garments_tailoring', label: 'Garments / tailoring', icon: '🧵', products: [] },
   { id: 'ice_making', label: 'Ice making', icon: '🧊', products: [] },
+  { id: 'animal_feed', label: 'Animal feed milling / mixing', icon: '🌾', products: [] },
+  { id: 'juice_beverages', label: 'Juice / beverage bottling', icon: '🧃', products: [] },
+  { id: 'peanut_butter', label: 'Peanut / nut butter making', icon: '🥜', products: [] },
   { id: 'other', label: 'Other factory', icon: '🏭', products: [] },
 ]
 

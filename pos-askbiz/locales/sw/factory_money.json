@@ -34,5 +34,8 @@
   "method_bank": "Benki",
   "method_cheque": "Hundi",
   "method_other": "Nyingine",
-  "cfo_note": "Ukiingiza madeni haya pia kwenye Receivables ya CFO, CFO inayahesabu mara mbili. Yaweke mahali pamoja."
+  "cfo_note": "Ukiingiza madeni haya pia kwenye Receivables ya CFO, CFO inayahesabu mara mbili. Yaweke mahali pamoja.",
+  "remind_button": "Kumbusha",
+  "remind_confirm": "Mtumie {name} ukumbusho wa WhatsApp wa kulipa {amount}?",
+  "remind_sent": "Ukumbusho umetumwa"
 }

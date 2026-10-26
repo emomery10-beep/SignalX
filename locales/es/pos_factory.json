@@ -173,5 +173,7 @@
   "money_owed": "Los clientes te deben",
   "money_overdue": "{amount} vencido",
   "money_stock": "Valor del inventario",
-  "money_unpriced": "{count} despachos aún necesitan precio"
+  "money_unpriced": "{count} despachos aún necesitan precio",
+  "cost_official": "Costo por unidad que usan el CFO y el Inventario: {official}",
+  "cost_differs": "Esta pantalla calcula {local} por las cifras que puedes cambiar aquí (horas, mano de obra extra, ajustes). Son hipótesis: solo las tarifas guardadas en Tus tarifas de costo cambian el CFO."
 }

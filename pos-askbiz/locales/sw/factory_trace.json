@@ -1,0 +1,21 @@
+{
+  "title": "Fuatilia kundi",
+  "subtitle": "Ilikotoka na nani aliipokea",
+  "hint": "Andika rejeo ile ile kwenye mzigo uliopokelewa, malighafi iliyolishwa, bidhaa iliyotengenezwa, ufungashaji na usafirishaji. Kisha utafutaji mmoja unaonyesha njia nzima.",
+  "search_placeholder": "Rejeo ya kundi",
+  "search": "Fuatilia",
+  "recent": "Makundi ya hivi karibuni",
+  "not_found": "Hakuna kundi la uzalishaji lenye rejeo hiyo",
+  "section_in": "Iliyoingia",
+  "section_made": "Iliyotengenezwa",
+  "section_packed": "Iliyofungashwa",
+  "section_out": "Iliyotumwa kwa wateja",
+  "no_dispatch": "Hakuna kilichosafirishwa kutoka kundi hili bado",
+  "supplier": "Msambazaji",
+  "customer": "Mteja",
+  "no_name": "Jina halijarekodiwa",
+  "pending": "inasubiri idhini",
+  "back": "Rudi",
+  "loading": "Inapakia…",
+  "no_access": "Ni wanaoidhinisha pekee wanaweza kufuatilia makundi."
+}

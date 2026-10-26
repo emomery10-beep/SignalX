@@ -384,7 +384,7 @@ export default function FactoryCapturePage() {
       ...(PARAM_ANNOTATABLE_TYPES.includes(captureType) && recordParam && paramLabel.trim() && paramValue
         ? { param_label: paramLabel.trim(), param_value: Number(paramValue), param_unit: paramUnit.trim() || undefined }
         : {}),
-      ...((captureType === 'intake' || captureType === 'output') && runRef.trim() ? { run_ref: runRef.trim() } : {}),
+      ...((captureType === 'intake' || captureType === 'intake_arrival' || captureType === 'intake_feed' || captureType === 'output' || captureType === 'packaging' || captureType === 'dispatch') && runRef.trim() ? { run_ref: runRef.trim() } : {}),
       ...(captureType === 'output' && isIntermediate ? { is_intermediate: true } : {}),
       ...(captureType === 'dispatch' && dispatchWhatsApp.trim() ? { buyer_name: dispatchWhatsApp.trim() } : {}),
       ...((captureType === 'dispatch' || captureType === 'intake_arrival') && partyName.trim() ? { party_name: partyName.trim() } : {}),
@@ -977,7 +977,7 @@ export default function FactoryCapturePage() {
         {/* Production run — intake/output only, optional. Type the same
             reference on the intake and its resulting output(s) to group
             them, same find-or-create pattern as Batch's batch_ref. */}
-        {(captureType === 'intake' || captureType === 'output') && (
+        {(captureType === 'intake' || captureType === 'intake_arrival' || captureType === 'intake_feed' || captureType === 'output' || captureType === 'packaging' || captureType === 'dispatch') && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               {tc('factory_capture.run_ref_label')} <span style={{ color: 'rgba(255,255,255,0.25)' }}>{tc('factory_capture.notes_optional')}</span>

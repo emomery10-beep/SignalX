@@ -267,7 +267,7 @@ export async function PATCH(req: NextRequest) {
     .eq('id', body.id).eq('owner_id', auth.ownerId).is('delivered_at', null)
     .select('id, delivered_at, received_by').maybeSingle()
   if (error) return json({ error: error.message }, 500)
-  if (!updated) return json({ error: 'Not found, or already confirmed delivered' }, 409)
+  if (!updated) return json({ error: 'Not found, or already confirmed delivered' }, 400)
   logPosAudit({ auth, event: 'waybill.logged', entityType: 'factory_waybill', entityId: updated.id, toValue: 'delivered', metadata: { received_by: updated.received_by } })
   return json({ waybill: updated })
 }

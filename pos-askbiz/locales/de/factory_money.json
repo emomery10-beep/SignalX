@@ -34,5 +34,8 @@
   "method_bank": "Bank",
   "method_cheque": "Scheck",
   "method_other": "Andere",
-  "cfo_note": "Wenn Sie diese Forderungen auch in den Forderungs-Tracker des CFO eingetragen haben, zählt der CFO sie doppelt. Führen Sie sie nur an einer Stelle."
+  "cfo_note": "Wenn Sie diese Forderungen auch in den Forderungs-Tracker des CFO eingetragen haben, zählt der CFO sie doppelt. Führen Sie sie nur an einer Stelle.",
+  "remind_button": "Erinnern",
+  "remind_confirm": "{name} eine WhatsApp-Erinnerung zur Zahlung von {amount} senden?",
+  "remind_sent": "Erinnerung gesendet"
 }

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
+import { queueWrite } from '@/lib/pos-offline-write'
 
 const tokens = {
   bg:      'var(--pos-bg)',
@@ -171,11 +172,19 @@ export default function WaybillPage() {
     if (!session) return
     const receivedBy = window.prompt(tc('factory_waybill.received_by_prompt')) ?? null
     if (receivedBy === null) return
-    const r = await fetch('/api/pos/factory/waybill', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...session.headers },
-      body: JSON.stringify({ id: w.id, received_by: receivedBy.trim() || undefined }),
-    })
+    const deliveredBody = { id: w.id, received_by: receivedBy.trim() || undefined }
+    let r: Response | null = null
+    try {
+      r = await fetch('/api/pos/factory/waybill', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify(deliveredBody),
+      })
+    } catch {
+      // No signal: keep the confirmation on this device and upload it when back online.
+      await queueWrite(session, '/api/pos/factory/waybill', 'PATCH', deliveredBody, 'waybill_delivered')
+      return
+    }
     if (r.ok) setHubData(h => h ? { ...h, waybills: h.waybills.map(x => x.id === w.id ? { ...x, delivered_at: new Date().toISOString(), received_by: receivedBy.trim() || null } : x) } : h)
   }
 
@@ -243,11 +252,11 @@ export default function WaybillPage() {
     setPendingHoldWarning(null)
     setError('')
     setStage('submitting')
+    const body: Record<string, unknown> = {
+      destination: destination.trim(),
+      image:       capturedImage,
+    }
     try {
-      const body: Record<string, unknown> = {
-        destination: destination.trim(),
-        image:       capturedImage,
-      }
       if (waybillRef.trim())  body.waybill_ref  = waybillRef.trim()
       if (productName.trim()) body.product_name = productName.trim()
       if (quantity)           body.quantity      = Number(quantity)
@@ -255,6 +264,7 @@ export default function WaybillPage() {
       if (scheduledAt)        body.scheduled_at = new Date(scheduledAt).toISOString()
       if (notes.trim())       body.notes        = notes.trim()
       if (linkedCaptureId)    body.capture_id   = linkedCaptureId
+      body.client_tx_id = 'waybill_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
 
       const r = await fetch('/api/pos/factory/waybill', {
         method: 'POST',
@@ -266,7 +276,11 @@ export default function WaybillPage() {
       setSuccessWaybill(d.waybill)
       await loadHub()
       setStage('success')
-    } catch { setError(tc('factory_waybill.error_network')); setStage('details') }
+    } catch {
+      // No signal: keep the dispatch on this device (the banner shows it waiting) and upload when back online.
+      if (await queueWrite(session, '/api/pos/factory/waybill', 'POST', body, 'waybill', body.client_tx_id as string)) { setStage('hub'); return }
+      setError(tc('factory_waybill.error_network')); setStage('details')
+    }
   }
 
   if (!authReady || !session) return (

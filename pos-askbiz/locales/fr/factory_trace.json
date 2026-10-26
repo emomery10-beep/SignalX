@@ -1,0 +1,21 @@
+{
+  "title": "Tracer un lot",
+  "subtitle": "D'où il vient et qui l'a reçu",
+  "hint": "Saisissez la même référence de lot sur la livraison, la matière première, la production, le conditionnement et l'expédition. Une seule recherche montre alors tout le parcours.",
+  "search_placeholder": "Référence du lot",
+  "search": "Tracer",
+  "recent": "Lots récents",
+  "not_found": "Aucun lot de production avec cette référence",
+  "section_in": "Entrées",
+  "section_made": "Produit",
+  "section_packed": "Conditionné",
+  "section_out": "Envoyé aux clients",
+  "no_dispatch": "Rien n'a encore été expédié de ce lot",
+  "supplier": "Fournisseur",
+  "customer": "Client",
+  "no_name": "Aucun nom enregistré",
+  "pending": "en attente d'approbation",
+  "back": "Retour",
+  "loading": "Chargement…",
+  "no_access": "Seuls les approbateurs peuvent tracer les lots."
+}

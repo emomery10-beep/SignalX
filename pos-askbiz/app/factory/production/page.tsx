@@ -669,6 +669,13 @@ export default function ProductionLogPage() {
               </div>
             )}
 
+            {detail.production_run?.run_ref && session && hasPermission(session.role, 'capture.approve') && (
+              <button onClick={() => window.open('/factory/trace?run_ref=' + encodeURIComponent(detail.production_run!.run_ref), '_blank', 'noopener')}
+                style={{ width: '100%', marginBottom: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid #475569', background: 'transparent', color: '#e2e8f0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                {tc('factory_trace.title')}
+              </button>
+            )}
+
             {detail.type === 'dispatch' && detail.status !== 'rejected' && (
               <button onClick={() => window.open(`/factory/delivery-note?id=${detail.id}`, '_blank', 'noopener')}
                 style={{ width: '100%', marginBottom: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid #475569', background: 'transparent', color: '#e2e8f0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>

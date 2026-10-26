@@ -34,5 +34,8 @@
   "method_bank": "Bank",
   "method_cheque": "Cheque",
   "method_other": "Overig",
-  "cfo_note": "Als u deze schulden ook in de debiteurenlijst van de CFO hebt ingevoerd, telt de CFO ze dubbel. Houd ze op één plek."
+  "cfo_note": "Als u deze schulden ook in de debiteurenlijst van de CFO hebt ingevoerd, telt de CFO ze dubbel. Houd ze op één plek.",
+  "remind_button": "Herinneren",
+  "remind_confirm": "{name} een WhatsApp-herinnering sturen om {amount} te betalen?",
+  "remind_sent": "Herinnering verzonden"
 }

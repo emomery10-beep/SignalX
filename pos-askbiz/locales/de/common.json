@@ -24,5 +24,6 @@
   "consent_reject": "Nur notwendige",
   "consent_accept": "Analyse akzeptieren",
   "consent_privacy": "Datenschutzrichtlinie",
-  "consent_cookies": "Cookie-Richtlinie"
+  "consent_cookies": "Cookie-Richtlinie",
+  "outbox_waiting": "{count} auf diesem Gerät gespeichert, Upload sobald wieder Verbindung besteht"
 }

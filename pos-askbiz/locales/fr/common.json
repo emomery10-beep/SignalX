@@ -24,5 +24,6 @@
   "consent_reject": "Essentiels uniquement",
   "consent_accept": "Accepter les analyses",
   "consent_privacy": "Politique de confidentialité",
-  "consent_cookies": "Politique de cookies"
+  "consent_cookies": "Politique de cookies",
+  "outbox_waiting": "{count} enregistrés sur cet appareil, envoi dès le retour de la connexion"
 }
