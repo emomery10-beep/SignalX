@@ -19,7 +19,7 @@
  * NOTE: identical copy lives in pos-askbiz/lib/factory-unit-cost.ts — the two
  * apps are deployed separately. Change both together.
  */
-import { getCostingProfile, isPackagedName, isByproductName, isRawIntakeName } from '@/lib/factory-costing-profiles'
+import { getCostingProfile, isPackagedName, isByproductName, isRawIntakeName, oilKgPerUnit } from '@/lib/factory-costing-profiles'
 import { normalizeCaptureUnits } from './factory-units'
 import { canonProductKey, guessRawPricePerKg, coconutChain, copraCostPerKg, FACTORY_COUNT_REASON, type StockCount } from './factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
@@ -227,7 +227,7 @@ export function computeCycleUnitCost(
     .reduce((m, c) => Math.min(m, new Date(c.created_at!).getTime()), Infinity)
 
   const build = (from: string, to: string, cycleDays: number, basis: CycleUnitCost['basis']): CycleUnitCost => {
-    let fedKg = 0, material = 0, canPackOut = 0, canDispatched = 0, cakeKg = 0
+    let fedKg = 0, material = 0, canPackOut = 0, canDispatched = 0, cakeKg = 0, oilKg = 0
     const madeBy = new Map<string, number>()       // finished product → units packed/made in the cycle
     const dispatchedBy = new Map<string, number>() // finished product → units dispatched in the cycle (fallback when nothing is packed)
     for (const c of captures) {
@@ -243,8 +243,15 @@ export function computeCycleUnitCost(
         else if (c.type === 'dispatch') { canDispatched += q; dispatchedBy.set(pk, (dispatchedBy.get(pk) || 0) + q) }
       }
       if ((c.type === 'wastage' || c.type === 'output') && isBy(c)) cakeKg += q
+      if (c.type === 'output' && P.kind === 'oil' && P.product && P.product.test(name(c)) && !isBy(c) && !isPackagedName(P, name(c))) oilKg += q
     }
-    const units = canPackOut > 0 ? canPackOut : canDispatched
+    // An oil factory's cost per can is what the OIL PRESSED cost: the material fed made that oil, so the cost is
+    // spread over oil kg ÷ kg per can (a 20L can = 18.35 kg). Counting packed cans instead breaks as soon as packing
+    // and pressing are logged at different times or in different amounts — then the same material is shared over
+    // cans it never made. Only when no oil output was logged do packed (then dispatched) cans stand in.
+    const kgPerCan = P.kind === 'oil' && P.defaultUnitLitres ? oilKgPerUnit(P.defaultUnitLitres) : 0
+    const oilEq = kgPerCan > 0 && oilKg > 0 ? oilKg / kgPerCan : 0
+    const units = oilEq > 0 ? Math.round(oilEq * 10) / 10 : (canPackOut > 0 ? canPackOut : canDispatched)
     const start = firstProd && firstProd > from ? firstProd : from
     const charged = units > 0 || fedKg > 0 ? Math.max(1, dayDiff(start, to) + 1) : 0
     // Per category: months with real tagged spend use it (pro-rated to the charged days in that month);
@@ -292,7 +299,7 @@ export function computeCycleUnitCost(
     // Joint-cost split by sales value, only when it can be done honestly (2+ finished products, all priced).
     let perProduct: Record<string, number> | undefined
     const produced = canPackOut > 0 ? madeBy : dispatchedBy
-    if (units > 0 && produced.size >= 2) {
+    if (oilEq <= 0 && units > 0 && produced.size >= 2) {
       let weightSum = 0
       let allPriced = true
       for (const [pk, qty] of produced) {

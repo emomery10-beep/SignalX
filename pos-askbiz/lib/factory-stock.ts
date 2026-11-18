@@ -371,7 +371,8 @@ export function coconutChain(captures: GenericCapture[], counts: StockCount[] = 
     prevQty = cnt.qty; prevAt = cnt.at
   }
   const raw = ownSum > 0 ? usedSum / ownSum : null
-  const ratio = raw !== null && raw >= 1 && raw <= 20 ? Math.round(raw * 100) / 100 : null
+  // A real nuts-per-kg figure sits well inside 2–9; outside that the logs are missing copra (or nuts), so no ratio is guessed.
+  const ratio = raw !== null && raw >= 2 && raw <= 9 ? Math.round(raw * 100) / 100 : null
   const lastAt = nutCounts.length ? nutCounts[nutCounts.length - 1].at : -Infinity
   const sinceKg = captures.filter(c => isOwnCopra(c) && ts(c.created_at) > lastAt).reduce((t, c) => t + n(c.quantity), 0)
   return { nutKey, ratio, ownCopraKgTotal: ownTotal, ownCopraKgSinceCount: sinceKg, boughtCopraKg: boughtKg, boughtCopraCost: boughtCost }
