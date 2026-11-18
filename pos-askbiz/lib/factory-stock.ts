@@ -259,7 +259,17 @@ const BYPRODUCT_NAME = /waste|husk|shell|cake|fibre|fiber|kernel|chaff|bran/
 export function canonProductKey(raw?: string | null): string {
   let k = (raw || '').toLowerCase().replace(/\s+/g, ' ').trim()
   k = k.replace(/^(dry |dried |coconut |fresh )?copra$/, 'copra')
+  // The pressing waste is logged as "Coconut cake" and sold as "Coconut waste (shell & husk)" — one pile.
+  if (/^coconut (cake|waste)\b/.test(k)) k = 'coconut waste'
   return k
+}
+
+/** The one name a merged product is shown under. */
+export function displayProductName(raw?: string | null): string {
+  const k = canonProductKey(raw)
+  if (k === 'copra') return 'Copra'
+  if (k === 'coconut waste') return 'Coconut waste (cake, shell & husk)'
+  return (raw || '').trim()
 }
 
 /**
@@ -435,7 +445,8 @@ export function computeGenericStock(rawCaptures: GenericCapture[], counts: Stock
     // Nuts dried into copra since the last count (the ratio is worked out from the owner's own counts).
     const dried = chain && chain.ratio && r.key === chain.nutKey ? Math.round(chain.ratio * chain.ownCopraKgSinceCount * 100) / 100 : 0
     const out = p.fed + p.wasted + p.dispatched + dried
-    const name = [...r.nameVotes.entries()].sort((a, b) => b[1] - a[1] || a[0].length - b[0].length)[0]?.[0] || r.name
+    const voted = [...r.nameVotes.entries()].sort((a, b) => b[1] - a[1] || a[0].length - b[0].length)[0]?.[0] || r.name
+    const name = displayProductName(voted)
     return {
       key: r.key, name, unit: r.unit, counted: r.counted, lastDispatchPrice: r.lastDispatchPrice,
       parts: { received: round(p.received), produced: round(p.produced), byproductMade: round(p.byproductMade), fed: round(p.fed), wasted: round(p.wasted), dispatched: round(p.dispatched), ...(dried > 0 ? { dried } : {}) },

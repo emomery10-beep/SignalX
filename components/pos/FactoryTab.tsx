@@ -4,7 +4,7 @@ import { PACKAGED_NAME, getCostingProfile, unitNaming, isPackagedName, isByprodu
 import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
-import { canonProductKey, guessRawPricePerKg } from '@/lib/factory-stock'
+import { canonProductKey, guessRawPricePerKg, displayProductName } from '@/lib/factory-stock'
 import { WORKING_DAYS_PER_MONTH, factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { effectiveType as inferFactoryType, parseCycle, cycleWindow, DEFAULT_CYCLE_DAYS, MAX_CYCLE_DAYS, type FactoryCycle } from '@/lib/factory-unit-cost'
 import { factoryDayKey, getFactoryTz, setFactoryTz } from '@/lib/factory-tz-client'
@@ -1454,7 +1454,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
 
   const lossByProduct = useMemo(() => {
     const m = new Map<string, { kg: number; cost: number }>()
-    for (const c of lossCaps) { const k = c.product || 'Unknown'; const e = m.get(k) || { kg: 0, cost: 0 }; e.kg += qty(c); e.cost += qty(c) * costForCapture(c); m.set(k, e) }
+    for (const c of lossCaps) { const k = displayProductName(c.product) || 'Unknown'; const e = m.get(k) || { kg: 0, cost: 0 }; e.kg += qty(c); e.cost += qty(c) * costForCapture(c); m.set(k, e) }
     return Array.from(m.entries()).map(([label, v]) => ({ label, value: v.kg, cost: v.cost })).sort((a, b) => b.value - a.value)
   }, [lossCaps, costForCapture])
   const lossByReason = useMemo(() => {
@@ -1464,7 +1464,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
   }, [lossCaps])
   const byproductByProduct = useMemo(() => {
     const m = new Map<string, number>()
-    for (const c of byproductCaps) m.set(c.product || 'Unknown', (m.get(c.product || 'Unknown') || 0) + qty(c))
+    for (const c of byproductCaps) { const k = displayProductName(c.product) || 'Unknown'; m.set(k, (m.get(k) || 0) + qty(c)) }
     return Array.from(m.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
   }, [byproductCaps])
 
@@ -1802,7 +1802,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
     // them. Everything else in the catalogue is shown as stored.
     const allItems: (InventoryItem & { usagePerDay?: number; kind?: StockKind; generic?: any })[] = [
       ...factoryInventory,
-      ...inv.filter(i => i.source_type !== 'factory_dispatch' && !factoryInventory.some(f => (f.name || '').toLowerCase() === (i.name || '').toLowerCase())),
+      ...inv.filter(i => i.source_type !== 'factory_dispatch' && !factoryInventory.some(f => canonProductKey(f.name) === canonProductKey(i.name))),
     ]
     const mapped = allItems.map(it => {
       const qty = getQty(it)

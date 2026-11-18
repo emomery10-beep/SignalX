@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { foldPackCaptures, canonProductKey } from '@/lib/factory-stock'
+import { foldPackCaptures, displayProductName } from '@/lib/factory-stock'
 import { buildSystemPrompt, askOnce } from '@/lib/ai'
 import { loadMemoryContext, extractAndSaveMemory } from '@/lib/ai/memory'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from '@/lib/ai/expansion'
@@ -1644,7 +1644,7 @@ export async function POST(request: NextRequest) {
           for (const c of foldPackCaptures(captures as any[]) as any[]) {
             countByType[c.type] = (countByType[c.type] || 0) + 1
             const rawName = (c.product_name || 'Unnamed product').trim()
-            const name = canonProductKey(rawName) === 'copra' ? 'Copra' : rawName
+            const name = displayProductName(rawName)
             const row = perProduct.get(name) || {}
             row[c.type] = (row[c.type] || 0) + (Number(c.quantity) || 0)
             perProduct.set(name, row)
