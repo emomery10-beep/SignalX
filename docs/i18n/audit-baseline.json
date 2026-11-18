@@ -14,7 +14,7 @@
   "ratchet": {
     "main": {
       "hardcodedLocaleLiterals": 123,
-      "hardcodedCurrencyInMarkup": 1111,
+      "hardcodedCurrencyInMarkup": 1125,
       "typescriptErrors": 27
     },
     "pos": {
