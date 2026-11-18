@@ -239,7 +239,7 @@ export function computeFactoryStock(captures: StockCapture[], now: number = Date
 // ("Coconut oil") is a count of jerrycans, so it moves the jerrycan row — not a
 // separate kg row that no screen shows.
 // ─────────────────────────────────────────────────────────────────────────
-export interface GenericStockParts { received: number; produced: number; byproductMade: number; fed: number; wasted: number; dispatched: number }
+export interface GenericStockParts { received: number; produced: number; byproductMade: number; fed: number; wasted: number; dispatched: number; /** Whole nuts dried into copra since the last count (nuts per kg of copra × own-dried copra kg). */ dried?: number }
 export interface GenericStockRow {
   name: string; unit?: string | null; onHand: number; in: number; out: number; lastDispatchPrice: number
   /** How the balance is built: received + produced (+ by-product made) − fed − lost − dispatched. */
@@ -247,6 +247,8 @@ export interface GenericStockRow {
   /** Logged usage beyond what was logged coming in (a delivery or production entry is missing). 0 when the ledger is consistent. */
   shortfall: number
   counted?: { qty: number; at: string } | null
+  /** Whole coconut only: nuts needed per kg of copra, worked out from the owner's counts. */
+  nutsPerKgCopra?: number | null
   /** Stable key for matching costs and counts to this row. */
   key: string
 }
@@ -313,10 +315,82 @@ export function foldPackCaptures<T extends GenericCapture>(captures: T[]): T[] {
   })
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Coconut chain: whole nuts (counted in pieces) → dried into copra → fed to the press.
+// The owner dries the nuts and feeds the copra straight to the machine, so nothing logs how many nuts a kg of copra
+// took. It is WORKED OUT instead, from physical counts of the nuts:
+//
+//   nuts used in a window = count at the start + nuts delivered − nuts logged as fed/lost − count at the end
+//   nuts per kg of copra  = nuts used ÷ own-dried copra in that window
+//
+// "Own-dried copra" = copra that came into stock WITHOUT a purchase price (an unpriced copra arrival, or copra logged
+// as output); copra bought at a price is not made from the owner's nuts. With the ratio known, every kg of own-dried
+// copra takes that many nuts off the nut stock, and costs that many nuts × the nut price.
+// ─────────────────────────────────────────────────────────────────────────
+const NUT_EXCLUDE = /copra|oil|cake|waste|husk|shell|groundnut|peanut|palm/
+export const isWholeNutName = (nm?: string | null) => { const l = (nm || '').toLowerCase(); return /coconut|\bnuts?\b/.test(l) && !NUT_EXCLUDE.test(l) }
+
+export interface CoconutChain {
+  nutKey: string
+  ratio: number | null            // nuts per kg of own-dried copra; null until a count lets it be worked out
+  ownCopraKgTotal: number         // own-dried copra, all time
+  ownCopraKgSinceCount: number    // …since the latest nut count (all of it when never counted)
+  boughtCopraKg: number
+  boughtCopraCost: number         // total paid for bought copra
+}
+
+export function coconutChain(captures: GenericCapture[], counts: StockCount[] = []): CoconutChain | null {
+  const nutKey = (() => { for (const c of captures) if (c.type === 'intake_arrival' && isWholeNutName(c.product_name)) return canonProductKey(c.product_name); return null })()
+  if (!nutKey) return null
+  if (!captures.some(c => canonProductKey(c.product_name) === 'copra')) return null
+  const isOwnCopra = (c: GenericCapture) => canonProductKey(c.product_name) === 'copra' && n(c.quantity) > 0 &&
+    ((c.type === 'intake_arrival' && !(c.param_label === 'intake_price_per_kg' && n(c.param_value) > 0)) || c.type === 'output')
+  let boughtKg = 0, boughtCost = 0, ownTotal = 0
+  for (const c of captures) {
+    if (isOwnCopra(c)) ownTotal += n(c.quantity)
+    else if (canonProductKey(c.product_name) === 'copra' && c.type === 'intake_arrival' && c.param_label === 'intake_price_per_kg' && n(c.param_value) > 0) { boughtKg += n(c.quantity); boughtCost += n(c.quantity) * n(c.param_value) }
+  }
+  const nutCounts = counts.filter(c => canonProductKey(c.product_name) === nutKey && c.created_at)
+    .map(c => ({ qty: Math.max(0, n(c.counted_qty)), at: ts(c.created_at) })).sort((a, b) => a.at - b.at)
+  const inWin = (c: GenericCapture, from: number, to: number) => { const t = ts(c.created_at); return t > from && t <= to }
+  let usedSum = 0, ownSum = 0
+  let prevQty = 0, prevAt = -Infinity
+  for (const cnt of nutCounts) {
+    let arrivals = 0, logged = 0, own = 0
+    for (const c of captures) {
+      if (!inWin(c, prevAt, cnt.at)) continue
+      const q = n(c.quantity); if (q <= 0) continue
+      if (canonProductKey(c.product_name) === nutKey) {
+        if (c.type === 'intake_arrival' || c.type === 'intake') arrivals += q
+        else if (c.type === 'intake_feed' || c.type === 'wastage') logged += q
+      }
+      if (isOwnCopra(c)) own += q
+    }
+    const used = prevQty + arrivals - logged - cnt.qty
+    if (own > 0 && used > 0) { usedSum += used; ownSum += own }
+    prevQty = cnt.qty; prevAt = cnt.at
+  }
+  const raw = ownSum > 0 ? usedSum / ownSum : null
+  const ratio = raw !== null && raw >= 1 && raw <= 20 ? Math.round(raw * 100) / 100 : null
+  const lastAt = nutCounts.length ? nutCounts[nutCounts.length - 1].at : -Infinity
+  const sinceKg = captures.filter(c => isOwnCopra(c) && ts(c.created_at) > lastAt).reduce((t, c) => t + n(c.quantity), 0)
+  return { nutKey, ratio, ownCopraKgTotal: ownTotal, ownCopraKgSinceCount: sinceKg, boughtCopraKg: boughtKg, boughtCopraCost: boughtCost }
+}
+
+/** Cost per kg of copra pooled from what was bought (its price) and what was dried from nuts (nuts per kg × nut price). */
+export function copraCostPerKg(chain: CoconutChain | null, nutPrice: number): number | null {
+  if (!chain || !(nutPrice > 0)) return null
+  const ownCost = chain.ratio ? chain.ratio * nutPrice * chain.ownCopraKgTotal : 0
+  const kg = chain.boughtCopraKg + (chain.ratio ? chain.ownCopraKgTotal : 0)
+  return kg > 0 ? (chain.boughtCopraCost + ownCost) / kg : null
+}
+
+
 export function computeGenericStock(rawCaptures: GenericCapture[], counts: StockCount[] = []): GenericStockRow[] {
   const round = (v: number) => Math.round(v * 100) / 100
   const isBy = isByName
   const captures = foldPackCaptures(rawCaptures)
+  const chain = coconutChain(captures, counts)
 
   // Latest physical count per product (re-anchors that product's balance).
   const latestCount = new Map<string, { qty: number; at: string }>()
@@ -357,11 +431,14 @@ export function computeGenericStock(rawCaptures: GenericCapture[], counts: Stock
     const p = r.parts
     const base = r.counted ? r.counted.qty : 0
     const inn = p.received + p.produced + p.byproductMade
-    const out = p.fed + p.wasted + p.dispatched
+    // Nuts dried into copra since the last count (the ratio is worked out from the owner's own counts).
+    const dried = chain && chain.ratio && r.key === chain.nutKey ? Math.round(chain.ratio * chain.ownCopraKgSinceCount * 100) / 100 : 0
+    const out = p.fed + p.wasted + p.dispatched + dried
     const name = [...r.nameVotes.entries()].sort((a, b) => b[1] - a[1] || a[0].length - b[0].length)[0]?.[0] || r.name
     return {
       key: r.key, name, unit: r.unit, counted: r.counted, lastDispatchPrice: r.lastDispatchPrice,
-      parts: { received: round(p.received), produced: round(p.produced), byproductMade: round(p.byproductMade), fed: round(p.fed), wasted: round(p.wasted), dispatched: round(p.dispatched) },
+      parts: { received: round(p.received), produced: round(p.produced), byproductMade: round(p.byproductMade), fed: round(p.fed), wasted: round(p.wasted), dispatched: round(p.dispatched), ...(dried > 0 ? { dried } : {}) },
+      ...(chain && r.key === chain.nutKey ? { unit: 'pcs', nutsPerKgCopra: chain.ratio } : {}),
       in: round(inn), out: round(out), onHand: round(Math.max(0, base + inn - out)), shortfall: round(Math.max(0, out - (base + inn))),
     }
   })

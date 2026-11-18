@@ -28,7 +28,7 @@
 // Dispatches without a dispatch_price yet are NOT valued — they are counted in
 // `unpricedDispatches` so the UI can say revenue is awaiting approver pricing
 // rather than inventing a figure.
-import { computeFactoryStock, computeGenericStock, foldPackCaptures, canonProductKey, type StockCapture, type StockCount } from '@/lib/factory-stock'
+import { computeFactoryStock, computeGenericStock, foldPackCaptures, canonProductKey, coconutChain, copraCostPerKg, type StockCapture, type StockCount } from '@/lib/factory-stock'
 import { getCostingProfile, isPackagedName, isByproductName } from '@/lib/factory-costing-profiles'
 import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
 import { computeCycleUnitCost, stockRoleOf, type FactoryCycle } from '@/lib/factory-unit-cost'
@@ -200,7 +200,13 @@ export function computeFactoryFinancials(
       e.cost += num(c.param_value) * num(c.quantity); e.kg += num(c.quantity); priceByKey.set(k, e)
     }
   }
-  const priceFor = (name?: string | null) => { const e = priceByKey.get(canonProductKey(name)); return e && e.kg > 0 ? e.cost / e.kg : rawCostPerKg }
+  const nutChain = coconutChain(captures as any[], counts as any[])
+  const nutPx = nutChain ? priceByKey.get(nutChain.nutKey) : undefined
+  const blendedCopra = copraCostPerKg(nutChain, nutPx && nutPx.kg > 0 ? nutPx.cost / nutPx.kg : 0)
+  const priceFor = (name?: string | null) => {
+    if (blendedCopra && canonProductKey(name) === 'copra') return blendedCopra
+    const e = priceByKey.get(canonProductKey(name)); return e && e.kg > 0 ? e.cost / e.kg : rawCostPerKg
+  }
   let fedCost = 0
   for (const c of captures) {
     const legacyFeed = c.type === 'intake' && c.created_at && new Date(c.created_at).getTime() >= firstFeed
@@ -277,7 +283,7 @@ export function computeFactoryFinancials(
   // taken off here (cake sales are revenue below — netting them off cost too would count them twice).
   let perProduct: Record<string, number> | undefined
   if (cycle) {
-    const cc = computeCycleUnitCost(captures, settings, cycle, factoryType, now, actuals, tz)
+    const cc = computeCycleUnitCost(captures, settings, cycle, factoryType, now, actuals, tz, null, counts as any[])
     if (cc.unitsProduced > 0) {
       unitCost = cc.unitCostBeforeCake
       perProduct = cc.perProduct

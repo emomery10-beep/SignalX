@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { isWholeNutName } from '@/lib/factory-stock'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import { hasPermission } from '@/lib/pos-permissions'
@@ -310,7 +311,7 @@ export default function ApprovalsPage() {
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>{c.product_name || tc('factory_approvals.product_unspecified')}</div>
                     <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 2 }}>
-                      {c.quantity != null ? `${c.quantity} ${c.type === 'packaging' ? 'items' : 'kg'}` : tc('factory_approvals.no_quantity')}
+                      {c.quantity != null ? `${c.quantity} ${c.type === 'packaging' ? 'items' : isWholeNutName(c.product_name) ? 'pcs' : 'kg'}` : tc('factory_approvals.no_quantity')}
                     </div>
                     {c.notes && <div style={{ fontSize: 13, color: '#cbd5e1', marginTop: 8, background: '#0f172a', borderRadius: 8, padding: '8px 12px', lineHeight: 1.4 }}>{c.notes}</div>}
                     {c.sale_price != null && (
@@ -355,7 +356,7 @@ export default function ApprovalsPage() {
                     {c.type === 'intake_arrival' && (
                       <div style={{ marginTop: 10, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px' }}>
                         <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                          {tc('factory_approvals.intake_price_label')}
+                          {isWholeNutName(c.product_name) ? tc('factory_approvals.intake_price_label_pcs') : tc('factory_approvals.intake_price_label')}
                         </label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <input

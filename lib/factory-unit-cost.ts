@@ -21,7 +21,7 @@
  */
 import { getCostingProfile, isPackagedName, isByproductName, isRawIntakeName } from '@/lib/factory-costing-profiles'
 import { normalizeCaptureUnits } from './factory-units'
-import { canonProductKey, guessRawPricePerKg } from './factory-stock'
+import { canonProductKey, guessRawPricePerKg, coconutChain, copraCostPerKg, FACTORY_COUNT_REASON, type StockCount } from './factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { dayOfInZone, factoryTimeZone, DEFAULT_FACTORY_TZ } from '@/lib/factory-time'
 
@@ -147,6 +147,7 @@ export function computeCycleUnitCost(
   actuals?: UnitCostActuals,
   tz: string = DEFAULT_FACTORY_TZ,
   currency?: string | null,
+  counts: StockCount[] = [],
 ): CycleUnitCost {
   const type = effectiveType(factoryType, captures)
   const P = getCostingProfile(type)
@@ -171,7 +172,13 @@ export function computeCycleUnitCost(
   const overallPrice = allKg > 0 ? allCost / allKg : 0
   // A product's own price first; else a known guess for that product (whole coconut); only then the overall
   // average — never another product's price when the product itself is known.
+  // Coconut: copra dried from the owner's own nuts costs (nuts per kg × nut price); the ratio is worked out from
+  // nut counts (lib/factory-stock coconutChain). Bought copra keeps its price; the pool is blended.
+  const chain = coconutChain(captures as any[], counts)
+  const nutE = chain ? byName.get(chain.nutKey) : undefined
+  const blendedCopra = copraCostPerKg(chain, nutE && nutE.kg > 0 ? nutE.cost / nutE.kg : 0)
   const priceOf = (c: UnitCostCapture) => {
+    if (blendedCopra && canonProductKey(name(c)) === 'copra') return blendedCopra
     const e = byName.get(canonProductKey(name(c)))
     if (e && e.kg > 0) return e.cost / e.kg
     const g = guessRawPricePerKg(name(c), currency)
@@ -380,6 +387,9 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
       const type = f.type && f.type !== 'other' ? f.type : (profileType && profileType !== 'other' ? profileType : null)
       const caps = await fetchAllCaptures(service, ownerId, f.id, type)
       if (caps.length === 0) continue
+      let cq = service.from('pos_stock_adjustments').select('product_name, counted_qty, created_at').eq('owner_id', ownerId).eq('reason', FACTORY_COUNT_REASON)
+      if (f.id) cq = cq.eq('location_id', f.id)
+      const { data: countRows } = await cq
       let settings: UnitCostSettings = factoryCostDefaultsFor(country, type)
       let basis: unknown = null
       if (f.id) {
@@ -393,7 +403,7 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
           if (!herr && hrows && hrows.length > 0) settings.history = hrows.map((h: any) => ({ from: String(h.effective_from), staffPerDay: num(h.staff_per_day), electricityPerDay: num(h.electricity_per_day), overhead: num(h.overhead) }))
         }
       }
-      results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now, undefined, factoryTimeZone(country), currency))
+      results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now, undefined, factoryTimeZone(country), currency, (countRows || []) as StockCount[]))
     }
     if (results.length === 0) return null
     if (results.length === 1) return results[0]

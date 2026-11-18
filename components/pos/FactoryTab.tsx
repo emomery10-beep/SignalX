@@ -1992,11 +1992,19 @@ function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, sa
           {p.produced > 0 && line(`+ Made / packed in the factory${g.counted ? ' since' : ''}`, fmtQty(p.produced))}
           {p.byproductMade > 0 && line(`+ By-product made${g.counted ? ' since' : ''}`, fmtQty(p.byproductMade))}
           {p.fed > 0 && line(`− Fed to the machine${g.counted ? ' since' : ''}`, fmtQty(p.fed))}
+          {0 < p.dried && line(`− Dried into copra${g.counted ? ' since' : ''} (${fmtQty(p.dried / (g.nutsPerKgCopra || 1))} kg copra × ${g.nutsPerKgCopra})`, fmtQty(p.dried))}
           {p.wasted > 0 && line(`− Lost / wasted${g.counted ? ' since' : ''}`, fmtQty(p.wasted))}
           {p.dispatched > 0 && line(`− Dispatched${g.counted ? ' since' : ''}`, fmtQty(p.dispatched))}
           <div style={{ borderTop: '1px solid var(--b)', marginTop: 4 }} />
           {line('On hand', `${fmtQty(row.qty)} ${row.unit}`, true)}
           {line(`Value (${fmt(currencySymbol, row.cost)} each)`, fmt(currencySymbol, row.value))}
+          {g.nutsPerKgCopra ? (
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx2)' }}>
+              About <strong>{g.nutsPerKgCopra}</strong> nuts make 1 kg of copra — worked out from your counts and the copra you dried, and refined at every count. Each kg of your own copra now takes that many nuts off this stock.
+            </div>
+          ) : g.counted === null && /coconut/i.test(row.name) && !/copra/i.test(row.name) ? (
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx3)' }}>Count the nuts in store once (box on the right) and the app works out how many nuts a kg of copra takes.</div>
+          ) : null}
           {g.shortfall > 0 && (
             <div style={{ marginTop: 8, padding: 8, borderRadius: 8, background: 'rgba(202,138,4,.12)', border: `1px solid ${AMBER}44`, fontSize: 11 }}>
               ⚠ {fmtQty(g.shortfall)} {row.unit} more went out than was logged coming in — a delivery or production entry is missing. Record a physical count to correct the balance.

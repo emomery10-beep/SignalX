@@ -61,5 +61,6 @@
   "intake_price_total": "Total: {total}",
   "intake_price_hint": "Rellenado con el último precio de este producto: cámbielo por el precio real. Define el valor del stock y el costo de producción.",
   "error_valid_intake_price": "Introduzca un costo por kg válido.",
-  "error_price_before_paid": "Introduzca primero el costo por kg y luego el importe pagado."
+  "error_price_before_paid": "Introduzca primero el costo por kg y luego el importe pagado.",
+  "intake_price_label_pcs": "Costo por pieza (lo que pagó por coco)"
 }

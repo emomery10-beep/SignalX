@@ -63,5 +63,6 @@
   "intake_price_total": "Total: {total}",
   "intake_price_hint": "Filled from the last price for this product — change it to the real price. It sets the stock value and production cost.",
   "error_valid_intake_price": "Enter a valid cost per kg.",
-  "error_price_before_paid": "Enter the cost per kg first, then the amount paid."
+  "error_price_before_paid": "Enter the cost per kg first, then the amount paid.",
+  "intake_price_label_pcs": "Cost per piece (what you paid per coconut)"
 }

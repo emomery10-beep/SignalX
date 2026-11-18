@@ -131,13 +131,16 @@ export async function syncFactoryStockToInventory(ownerId: string, locationId: s
 async function syncGenericFactoryStock(service: ReturnType<typeof createServiceClient>, ownerId: string, locationId: string): Promise<DispatchSyncResult> {
   const { data: caps, error: capErr } = await service
     .from('pos_factory_captures')
-    .select('type, product_name, quantity, created_at, dispatch_price')
+    .select('type, product_name, quantity, created_at, dispatch_price, param_label, param_value')
     .eq('owner_id', ownerId)
     .eq('location_id', locationId)
     .eq('status', 'approved')
   if (capErr) throw capErr
 
-  const products = computeGenericStock((caps || []) as any[])
+  const { data: countRows } = await service
+    .from('pos_stock_adjustments').select('product_name, counted_qty, created_at')
+    .eq('owner_id', ownerId).eq('location_id', locationId).eq('reason', FACTORY_COUNT_REASON)
+  const products = computeGenericStock((caps || []) as any[], (countRows || []) as any[])
   const { data: rows, error: rowsErr } = await service
     .from('inventory')
     .select('id, name, sale_price')
