@@ -56,5 +56,10 @@
   "method_mobile_money": "المحفظة المحمولة",
   "method_bank": "بنك",
   "method_cheque": "شيك",
-  "method_other": "أخرى"
+  "method_other": "أخرى",
+  "intake_price_label": "التكلفة لكل كغ (ما دفعته)",
+  "intake_price_total": "الإجمالي: {total}",
+  "intake_price_hint": "مُعبّأ من آخر سعر لهذا المنتج — غيّره إلى السعر الفعلي. يحدد قيمة المخزون وتكلفة الإنتاج.",
+  "error_valid_intake_price": "أدخل تكلفة صحيحة لكل كغ.",
+  "error_price_before_paid": "أدخل التكلفة لكل كغ أولاً ثم المبلغ المدفوع."
 }

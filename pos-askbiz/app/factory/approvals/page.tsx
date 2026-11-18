@@ -36,6 +36,9 @@ interface Capture {
   customer_phone?: string | null
   dispatch_price?: number | null
   suggested_dispatch_price?: number | null
+  suggested_intake_price?: number | null
+  param_label?: string | null
+  param_value?: number | null
 }
 
 // Sky-blue matches the "packaging" defect category on the Quality screen
@@ -85,6 +88,12 @@ export default function ApprovalsPage() {
   const [paidNow, setPaidNow] = useState<Record<string, string>>({})
   const [payMethod, setPayMethod] = useState<Record<string, string>>({})
   const [dueDates, setDueDates] = useState<Record<string, string>>({})
+  // Approver-editable cost per kg of a raw-material delivery — starts at what the receiver typed, else the last
+  // price paid for that product, else a known guess; the approver can type any real price over it.
+  const [intakePrices, setIntakePrices] = useState<Record<string, string>>({})
+  function intakePriceFor(c: Capture) {
+    return intakePrices[c.id] ?? (c.suggested_intake_price ? String(c.suggested_intake_price) : '')
+  }
   function dispatchPriceFor(c: Capture) {
     return dispatchPrices[c.id] ?? (c.suggested_dispatch_price ? String(c.suggested_dispatch_price) : '')
   }
@@ -146,10 +155,19 @@ export default function ApprovalsPage() {
       }
       dispatch_price = parsed
     }
+    let intake_price_per_kg: number | undefined
+    if (status === 'approved' && c.type === 'intake_arrival' && intakePriceFor(c).trim() !== '') {
+      const ip = Number(intakePriceFor(c))
+      if (!Number.isFinite(ip) || ip < 0) { setError(tc('factory_approvals.error_valid_intake_price')); return }
+      intake_price_per_kg = ip
+    }
+    if (status === 'approved' && c.type === 'intake_arrival' && Number(paidNow[c.id]) > 0 && !(Number(intakePriceFor(c)) > 0)) {
+      setError(tc('factory_approvals.error_price_before_paid')); return
+    }
     const customer_phone = status === 'approved' && c.type === 'dispatch' && waNumberFor(c).length >= 8 ? waNumberFor(c) : undefined
     setBusy(c.id)
     setError(null)
-    const payload = { id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(customer_phone ? { customer_phone } : {}),
+    const payload = { id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}), ...(dispatch_price !== undefined ? { dispatch_price } : {}), ...(intake_price_per_kg !== undefined ? { intake_price_per_kg } : {}), ...(customer_phone ? { customer_phone } : {}),
       ...(status === 'approved' && (c.type === 'dispatch' || c.type === 'intake_arrival') ? {
         ...(Number(paidNow[c.id]) > 0 ? { amount_paid: Number(paidNow[c.id]), payment_method: payMethod[c.id] || 'cash' } : {}),
         ...(dueDates[c.id] ? { due_date: dueDates[c.id] } : {}),
@@ -330,6 +348,29 @@ export default function ApprovalsPage() {
                             ? tc('factory_approvals.dispatch_price_hint', { default: Number(c.suggested_dispatch_price).toLocaleString() })
                             : tc('factory_approvals.dispatch_price_hint_none')}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Cost per kg of a delivery — auto-filled, amendable before Approve; drives stock value and cost. */}
+                    {c.type === 'intake_arrival' && (
+                      <div style={{ marginTop: 10, background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px' }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          {tc('factory_approvals.intake_price_label')}
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <input
+                            type="number" inputMode="decimal" min="0" placeholder="0"
+                            value={intakePriceFor(c)} disabled={working}
+                            onChange={e => setIntakePrices(prev => ({ ...prev, [c.id]: e.target.value }))}
+                            style={{ width: 140, minHeight: 44, fontVariantNumeric: 'tabular-nums', transition: 'border-color 150ms ease-out', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f1f5f9', padding: '8px 10px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
+                          />
+                          {c.quantity != null && Number(intakePriceFor(c)) > 0 && (
+                            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                              {tc('factory_approvals.intake_price_total', { total: (Number(intakePriceFor(c)) * c.quantity).toLocaleString() })}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>{tc('factory_approvals.intake_price_hint')}</div>
                       </div>
                     )}
 

@@ -56,5 +56,10 @@
   "method_mobile_money": "Pesa ya simu",
   "method_bank": "Benki",
   "method_cheque": "Hundi",
-  "method_other": "Nyingine"
+  "method_other": "Nyingine",
+  "intake_price_label": "Gharama kwa kg (ulicholipa)",
+  "intake_price_total": "Jumla: {total}",
+  "intake_price_hint": "Imejazwa kutoka bei ya mwisho ya bidhaa hii — ibadilishe iwe bei halisi. Inaamua thamani ya hisa na gharama ya uzalishaji.",
+  "error_valid_intake_price": "Weka gharama sahihi kwa kg.",
+  "error_price_before_paid": "Weka gharama kwa kg kwanza, kisha kiasi kilicholipwa."
 }

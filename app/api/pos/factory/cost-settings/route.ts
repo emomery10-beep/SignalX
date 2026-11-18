@@ -13,9 +13,15 @@ const money = (v: unknown) => { const n = Number(v); return Number.isFinite(n) &
 // Factory tab and the CFO. No saved row → the country default (Kenya is
 // pre-filled; every other country is unset, never another country's rates).
 async function resolveFactory(auth: { ownerId: string; locationId: string | null }, req: NextRequest) {
-  const locationId = auth.locationId || new URL(req.url).searchParams.get('location_id')
-  if (!locationId) return null
+  let locationId = auth.locationId || new URL(req.url).searchParams.get('location_id')
   const service = createServiceClient()
+  if (!locationId) {
+    // "All factories" with exactly one factory on the account IS that factory — rates belong to it, so the
+    // costing never shows 0 labour just because no branch was picked in the selector.
+    const { data: only } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').limit(2)
+    if (only && only.length === 1) locationId = only[0].id as string
+  }
+  if (!locationId) return null
   const { data } = await service.from('pos_locations').select('id, kind, factory_type').eq('id', locationId).eq('owner_id', auth.ownerId).maybeSingle()
   if (!data || data.kind !== 'factory') return null
   // The branch's own type wins; 'other'/unset falls back to the owner's profile type.
@@ -45,12 +51,12 @@ export async function GET(req: NextRequest) {
     const defaults = factoryCostDefaultsFor(locale.countryCode, factory?.type)
     if (row) {
       return json({
-        saved: true, country_code: locale.countryCode, currency: locale.currency,
+        saved: true, needs_factory: !factory, country_code: locale.countryCode, currency: locale.currency,
         settings: { configured: true, staffPerDay: Number(row.staff_per_day), electricityPerDay: Number(row.electricity_per_day), overhead: Number(row.overhead) },
         electricity_basis: row.electricity_basis, updated_at: row.updated_at,
       })
     }
-    return json({ saved: false, country_code: locale.countryCode, currency: locale.currency, settings: defaults, electricity_basis: null })
+    return json({ saved: false, needs_factory: !factory, country_code: locale.countryCode, currency: locale.currency, settings: defaults, electricity_basis: null })
   } catch (e) {
     console.error('cost-settings GET error:', e)
     return json({ error: 'Server error' }, 500)
@@ -63,9 +69,13 @@ export async function POST(req: NextRequest) {
     const auth = await resolvePosAuth(req, 'manager')
     if (!auth) return json({ error: 'Unauthorised' }, 401)
     const body = await req.json().catch(() => ({}))
-    const locationId = auth.locationId || body.location_id || null
-    if (!locationId) return json({ error: 'Select a factory' }, 400)
+    let locationId = auth.locationId || body.location_id || null
     const service = createServiceClient()
+    if (!locationId) {
+      const { data: only } = await service.from('pos_locations').select('id').eq('owner_id', auth.ownerId).eq('kind', 'factory').limit(2)
+      if (only && only.length === 1) locationId = only[0].id as string
+    }
+    if (!locationId) return json({ error: 'Select a factory' }, 400)
     const { data: loc } = await service.from('pos_locations').select('id, kind').eq('id', locationId).eq('owner_id', auth.ownerId).maybeSingle()
     if (!loc || loc.kind !== 'factory') return json({ error: 'Not a factory' }, 400)
 

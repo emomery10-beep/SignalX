@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import {
-  computeFactoryStock, KIND_NAME, FACTORY_COUNT_REASON, type StockKind,
+  computeFactoryStock, computeGenericStock, canonProductKey, KIND_NAME, FACTORY_COUNT_REASON, type StockKind,
 } from '@/lib/factory-stock'
 import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
 
@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}))
     const kind = body.kind as StockKind
-    if (!['seed', 'cans', 'waste'].includes(kind)) return json({ error: 'Invalid product' }, 400)
+    const genericName = typeof body.product_name === 'string' ? body.product_name.trim().slice(0, 200) : ''
+    if (!genericName && !['seed', 'cans', 'waste'].includes(kind)) return json({ error: 'Invalid product' }, 400)
     const counted = Number(body.counted_qty)
     if (!Number.isFinite(counted) || counted < 0 || counted > 10_000_000) return json({ error: 'Enter a valid quantity' }, 400)
 
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     const locationId = auth.locationId || null
     let capQuery = service
       .from('pos_factory_captures')
-      .select('type, product_name, quantity, param_label, param_value, created_at')
+      .select('type, product_name, quantity, param_label, param_value, dispatch_price, created_at')
       .eq('owner_id', auth.ownerId)
       .eq('status', 'approved')
     if (locationId) capQuery = capQuery.eq('location_id', locationId)
@@ -43,6 +44,23 @@ export async function POST(req: NextRequest) {
       .eq('reason', FACTORY_COUNT_REASON)
     if (locationId) countQuery = countQuery.eq('location_id', locationId)
     const { data: counts } = await countQuery
+
+    // A coconut / other-factory product (no sesame "kind"): the count is stored under its own name and the
+    // balance for that product restarts from it (see computeGenericStock).
+    if (genericName) {
+      const key = canonProductKey(genericName)
+      const rows = computeGenericStock((caps || []) as any[], (counts || []) as any[])
+      const row = rows.find(r => r.key === key)
+      const systemQty = row ? row.onHand : 0
+      const { error: gErr } = await service.from('pos_stock_adjustments').insert({
+        owner_id: auth.ownerId, location_id: locationId, adjusted_by: auth.staffId || null,
+        product_name: genericName, system_qty: systemQty, counted_qty: counted, variance: counted - systemQty,
+        unit_cost: 0, variance_value: 0, reason: FACTORY_COUNT_REASON, session_ref: 'factory-count',
+        created_at: new Date().toISOString(),
+      })
+      if (gErr) return json({ error: gErr.message }, 500)
+      return json({ ok: true, system_qty: systemQty, counted_qty: counted, variance: counted - systemQty })
+    }
 
     const stock = computeFactoryStock((caps || []) as any[], Date.now(), (counts || []) as any[])
 

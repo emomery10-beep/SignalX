@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { submitOrder, getTransactionStatus, isPaymentComplete, isPaymentFailed } from '@/lib/pesapal'
 import { PRICING } from '@/lib/geo'
+import { seatsToCharge } from '@/lib/pos-seat-pricing'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
 
@@ -19,10 +20,14 @@ export async function POST(request: NextRequest) {
       if (!plan && !seats) return NextResponse.json({ error: 'Plan or seats required' }, { status: 400 })
 
       const isPosSeats = !!seats
-      const seatCount = isPosSeats ? Math.max(1, Math.min(50, parseInt(seats, 10))) : 0
+      const seatInfo = isPosSeats ? await seatsToCharge(supabase, user.id, parseInt(seats, 10) || 1) : null
+      if (seatInfo && seatInfo.charge === 0) {
+        return NextResponse.json({ error: `You already have ${seatInfo.current} seats. Choose a higher number to add seats.` }, { status: 400 })
+      }
+      const seatCount = seatInfo ? seatInfo.total : 0
       const kesPricing = PRICING.KES
-      const amount = isPosSeats
-        ? seatCount * 500
+      const amount = seatInfo
+        ? seatInfo.charge * 500
         : plan === 'business' ? kesPricing[2] : kesPricing[1]
 
       const orderId = `ASKBIZ-${isPosSeats ? `POS-${seatCount}` : plan.toUpperCase()}-${Date.now()}`
@@ -39,7 +44,7 @@ export async function POST(request: NextRequest) {
         orderId,
         amount,
         currency: 'KES',
-        description: isPosSeats ? `AskBiz POS ${seatCount} seat(s)` : `AskBiz ${plan} plan`,
+        description: seatInfo ? `AskBiz POS ${seatInfo.charge} seat(s)` : `AskBiz ${plan} plan`,
         email: user.email!,
         firstName: names[0] || '',
         lastName: names.slice(1).join(' ') || '',

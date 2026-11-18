@@ -56,5 +56,10 @@
   "method_mobile_money": "Mobile Money",
   "method_bank": "Bank",
   "method_cheque": "Scheck",
-  "method_other": "Andere"
+  "method_other": "Andere",
+  "intake_price_label": "Kosten pro kg (Ihr Einkaufspreis)",
+  "intake_price_total": "Summe: {total}",
+  "intake_price_hint": "Mit dem letzten Preis dieses Produkts vorbelegt – durch den echten Preis ersetzen. Er bestimmt Lagerwert und Produktionskosten.",
+  "error_valid_intake_price": "Geben Sie gültige Kosten pro kg ein.",
+  "error_price_before_paid": "Geben Sie zuerst die Kosten pro kg ein, dann den gezahlten Betrag."
 }

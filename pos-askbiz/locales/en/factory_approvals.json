@@ -58,5 +58,10 @@
   "method_mobile_money": "Mobile money",
   "method_bank": "Bank",
   "method_cheque": "Cheque",
-  "method_other": "Other"
+  "method_other": "Other",
+  "intake_price_label": "Cost per kg (what you paid)",
+  "intake_price_total": "Total: {total}",
+  "intake_price_hint": "Filled from the last price for this product — change it to the real price. It sets the stock value and production cost.",
+  "error_valid_intake_price": "Enter a valid cost per kg.",
+  "error_price_before_paid": "Enter the cost per kg first, then the amount paid."
 }

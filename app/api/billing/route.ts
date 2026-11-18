@@ -298,6 +298,33 @@ async function handlePost(request: NextRequest) {
     // Exact-match whitelist only (never interpolate arbitrary paths into redirects).
     const returnToActivate = body.return_path === '/pos/activate'
 
+    // Already paying for POS seats on Stripe → raise the quantity on the
+    // EXISTING subscription (prorated). Creating a second checkout here used
+    // to start a parallel subscription whose webhook then OVERWROTE the seat
+    // count with only the newly-added seats.
+    const { data: posProfile } = await supabase
+      .from('profiles').select('pos_enabled, pos_seat_count, pos_stripe_subscription_id').eq('id', user.id).single()
+    const existingSubId = (posProfile as { pos_stripe_subscription_id?: string } | null)?.pos_stripe_subscription_id
+    if (existingSubId) {
+      try {
+        const existing = await stripe.subscriptions.retrieve(existingSubId)
+        if (existing.status === 'active' || existing.status === 'trialing' || existing.status === 'past_due') {
+          const item = existing.items.data[0]
+          const newTotal = Math.min(50, (item?.quantity || 0) + seatCount)
+          await stripe.subscriptions.update(existingSubId, {
+            items: [{ id: item.id, quantity: newTotal }],
+            proration_behavior: 'create_prorations',
+            metadata: { ...(existing.metadata || {}), supabase_user_id: user.id, type: 'pos_seats', seats: String(newTotal) },
+          })
+          await supabase.from('profiles').update({ pos_enabled: true, pos_seat_count: newTotal }).eq('id', user.id)
+          return NextResponse.json({ success: true, updated: true, seats: newTotal })
+        }
+      } catch (e) {
+        console.error('[billing] seat update on existing subscription failed', e)
+        return NextResponse.json({ error: 'Could not add seats to your existing subscription. Please use Manage billing, or contact support.' }, { status: 400 })
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',

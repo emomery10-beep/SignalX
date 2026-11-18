@@ -133,6 +133,9 @@ export default function BillingPage() {
   const [waafiReferenceId,  setWaafiReferenceId]  = useState('')
   const [waafiError,        setWaafiError]        = useState('')
 
+  // Seats actually being bought now: only the ones above what's already paid.
+  const posChargeSeats = posEnabled && !trials.pos?.active && posSeatCount > 0 ? Math.max(0, posSeats - posSeatCount) : posSeats
+
   const sym      = isKenyan ? 'KSh' : isSomali ? '$' : '£'
   const currency = isKenyan ? 'KES' : isSomali ? 'USD' : 'GBP'
 
@@ -228,7 +231,7 @@ export default function BillingPage() {
     setPosLoading(true)
     setCheckoutError('')
     try {
-      const additionalSeats = posSeats - posSeatCount
+      const additionalSeats = posChargeSeats
       const res = await fetch('/api/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -236,6 +239,13 @@ export default function BillingPage() {
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
+      else if (data.updated) {
+        // Seats raised on the existing subscription — no checkout page.
+        setPosSeatCount(data.seats)
+        setPosSeats(data.seats)
+        setPosSuccess(true)
+        setTimeout(() => setPosSuccess(false), 6000)
+      }
       else setCheckoutError(data.error || tc('billing.alert_something_wrong'))
     } catch { setCheckoutError(tc('billing.alert_something_wrong_retry')) }
     finally { setPosLoading(false) }
@@ -592,10 +602,10 @@ export default function BillingPage() {
               )}
               <button
                 onClick={handlePesapalPosCheckout}
-                disabled={!!pesapalLoading || posLoading}
+                disabled={!!pesapalLoading || posLoading || posChargeSeats < 1}
                 style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(76,175,80,.4)', background: 'transparent', color: '#4CAF50', fontSize: 15, fontWeight: 600, cursor: (pesapalLoading || posLoading) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (pesapalLoading || posLoading) ? .6 : 1, minHeight: 44 }}
               >
-                {posLoading ? tc('billing.btn_loading') : tc(posSeats === 1 ? 'billing.mpesa_btn_pos_one' : 'billing.mpesa_btn_pos', { seats: posSeats, total: (posSeats * 500).toLocaleString() })}
+                {posLoading ? tc('billing.btn_loading') : tc(posChargeSeats === 1 ? 'billing.mpesa_btn_pos_one' : 'billing.mpesa_btn_pos', { seats: posChargeSeats, total: (posChargeSeats * 500).toLocaleString() })}
               </button>
             </div>
 
@@ -679,7 +689,7 @@ export default function BillingPage() {
                     disabled={waafiStatus === 'sending' || !waafiPhone.trim()}
                     style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(22,163,74,.4)', background: 'transparent', color: '#16a34a', fontSize: 15, fontWeight: 600, cursor: (waafiStatus === 'sending' || !waafiPhone.trim()) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (waafiStatus === 'sending' || !waafiPhone.trim()) ? .6 : 1, minHeight: 44 }}
                   >
-                    {waafiStatus === 'sending' && waafiPlan === 'pos' ? tc('billing.waafipay_btn_sending') : tc(posSeats === 1 ? 'billing.waafipay_btn_pos_one' : 'billing.waafipay_btn_pos', { seats: posSeats, total: posSeats * 5 })}
+                    {waafiStatus === 'sending' && waafiPlan === 'pos' ? tc('billing.waafipay_btn_sending') : tc(posChargeSeats === 1 ? 'billing.waafipay_btn_pos_one' : 'billing.waafipay_btn_pos', { seats: posChargeSeats, total: posChargeSeats * 5 })}
                   </button>
                 </div>
 
@@ -793,7 +803,7 @@ export default function BillingPage() {
 
                     {posSeats > posSeatCount ? (
                       <button
-                        onClick={handlePosCheckout}
+                        onClick={isKenyan ? handlePesapalPosCheckout : isSomali ? () => handleWaafiSubmit('pos') : handlePosCheckout}
                         disabled={posLoading}
                         style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1, minHeight: 44 }}
                       >

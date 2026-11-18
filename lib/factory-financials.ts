@@ -28,10 +28,10 @@
 // Dispatches without a dispatch_price yet are NOT valued — they are counted in
 // `unpricedDispatches` so the UI can say revenue is awaiting approver pricing
 // rather than inventing a figure.
-import { computeFactoryStock, type StockCapture, type StockCount } from '@/lib/factory-stock'
+import { computeFactoryStock, computeGenericStock, foldPackCaptures, canonProductKey, type StockCapture, type StockCount } from '@/lib/factory-stock'
 import { getCostingProfile, isPackagedName, isByproductName } from '@/lib/factory-costing-profiles'
 import { WORKING_DAYS_PER_MONTH } from '@/lib/factory-cost-defaults'
-import { computeCycleUnitCost, type FactoryCycle } from '@/lib/factory-unit-cost'
+import { computeCycleUnitCost, stockRoleOf, type FactoryCycle } from '@/lib/factory-unit-cost'
 import { dayOfInZone, DEFAULT_FACTORY_TZ } from '@/lib/factory-time'
 
 export interface FactoryCapture extends StockCapture {
@@ -137,7 +137,7 @@ const emptyCost = (a: FactoryCostSettings): FactoryCostBreakdown => ({
 })
 
 export function computeFactoryFinancials(
-  captures: FactoryCapture[],
+  rawCaptures: FactoryCapture[],
   counts: StockCount[],
   w: FactoryWindow,
   now: number = Date.now(),
@@ -154,6 +154,9 @@ export function computeFactoryFinancials(
   // The factory's own clock (see lib/factory-time). Every day bucket below is a day on that clock.
   tz: string = DEFAULT_FACTORY_TZ,
 ): FactoryFinancials {
+  // Packs logged against the bulk oil are jerrycans — the same fold the Inventory tab uses, so stock, cost and
+  // revenue all count the same cans.
+  const captures = foldPackCaptures(rawCaptures as any[]) as FactoryCapture[]
   const dayOf = (iso?: string | null) => (iso ? dayOfInZone(new Date(iso).getTime(), tz) : '')
   const profile = factoryType === undefined ? null : getCostingProfile(factoryType)
   const isCan = (c: StockCapture): boolean => profile
@@ -188,6 +191,21 @@ export function computeFactoryFinancials(
     if (c.type === 'intake_feed' || legacyFeed) fedKg += q
   }
   const rawCostPerKg = pricedKg > 0 ? pricedCost / pricedKg : 0
+  // Each raw material at its OWN purchase price (a kg of whole coconut is not a kg of copra); the overall average
+  // only where a product was never priced.
+  const priceByKey = new Map<string, { cost: number; kg: number }>()
+  for (const c of captures) {
+    if (c.type === 'intake_arrival' && c.param_label === 'intake_price_per_kg' && num(c.param_value) > 0 && num(c.quantity) > 0) {
+      const k = canonProductKey(c.product_name); const e = priceByKey.get(k) || { cost: 0, kg: 0 }
+      e.cost += num(c.param_value) * num(c.quantity); e.kg += num(c.quantity); priceByKey.set(k, e)
+    }
+  }
+  const priceFor = (name?: string | null) => { const e = priceByKey.get(canonProductKey(name)); return e && e.kg > 0 ? e.cost / e.kg : rawCostPerKg }
+  let fedCost = 0
+  for (const c of captures) {
+    const legacyFeed = c.type === 'intake' && c.created_at && new Date(c.created_at).getTime() >= firstFeed
+    if ((c.type === 'intake_feed' || legacyFeed) && num(c.quantity) > 0) fedCost += num(c.quantity) * priceFor(c.product_name)
+  }
 
   // ── Working days (Nairobi, Sundays excluded) ──────────────────────────────
   const activeDays = new Set<string>()
@@ -218,7 +236,7 @@ export function computeFactoryFinancials(
     if (c.type === 'dispatch' && isByproduct(c) && num(c.dispatch_price) > 0) byproductCredit += num(c.quantity) * num(c.dispatch_price)
   }
 
-  const material = fedKg * rawCostPerKg
+  const material = fedCost
   // Per category: a month with real tagged spend uses it; other months use the per-working-day estimate.
   const monthDays = new Map<string, number>()
   for (const d of activeDays) monthDays.set(d.slice(0, 7), (monthDays.get(d.slice(0, 7)) || 0) + 1)
@@ -288,6 +306,17 @@ export function computeFactoryFinancials(
   const rawOnHand = sesame.seedArrived > 0 ? sesame.seedKg : Math.max(0, arrivedKg - fedKg)
   const cansOnHand = sesame.cansProduced > 0 ? sesame.cans : Math.max(0, cansProduced - cansDispatched)
   out.stockValue = rawOnHand * rawCostPerKg + cansOnHand * unitCost
+  if (sesame.seedArrived <= 0 && sesame.cansProduced <= 0) {
+    // Non-sesame factory: value each product's own balance (the same ledger the Inventory tab shows) — raw
+    // materials at their own price, finished packs at the unit cost. By-products are not valued here (as before).
+    let v = 0
+    for (const r of computeGenericStock(captures, counts as any[])) {
+      const role = stockRoleOf(factoryType, r.name)
+      if (role === 'raw') v += r.onHand * priceFor(r.name)
+      else if (role === 'finished') v += r.onHand * (perProduct?.[r.name.toLowerCase()] ?? unitCost)
+    }
+    out.stockValue = v
+  }
 
   // Book one event into whichever windows its date falls in.
   const book = (date: string, revenue: number, cogs: number, product: string, units: number) => {
@@ -315,6 +344,10 @@ export function computeFactoryFinancials(
     const date = dayOf(c.approved_at || c.created_at)
     const qty = num(c.quantity)
     if (qty <= 0 || !date) continue
+    // An oil factory ships packed units (and sells its by-product). A dispatch of loose material (copra, raw
+    // nuts) is a wrong pick, not a sale of anything the books can cost — it stays out of revenue until it is
+    // voided and re-logged (the Quality tab lists these).
+    if (profile && profile.kind === 'oil' && !isCan(c) && !isByproduct(c)) continue
     const price = num(c.dispatch_price)
     if (within(date, w.start, w.end)) {
       out.dispatches++
@@ -335,7 +368,7 @@ export function computeFactoryFinancials(
     const qty = num(c.quantity)
     if (qty <= 0 || !within(day, w.start, w.end)) continue
     const key = (c.product_name || '').trim().toLowerCase()
-    out.wastageValue += isCan(c) ? qty * (perProduct?.[key] ?? unitCost) : qty * rawCostPerKg
+    out.wastageValue += isCan(c) ? qty * (perProduct?.[key] ?? unitCost) : qty * priceFor(c.product_name)
   }
   out.wastageValue = Math.round(out.wastageValue)
 

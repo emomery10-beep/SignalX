@@ -56,5 +56,10 @@
   "method_mobile_money": "Lacag mobaylka",
   "method_bank": "Bangi",
   "method_cheque": "Jeeg",
-  "method_other": "Mid kale"
+  "method_other": "Mid kale",
+  "intake_price_label": "Qiimaha kg kasta (waxaad bixisay)",
+  "intake_price_total": "Wadarta: {total}",
+  "intake_price_hint": "Waxaa laga buuxiyay qiimihii u dambeeyay ee alaabtan — beddel qiimaha dhabta ah. Wuxuu go'aamiyaa qiimaha kaydka iyo kharashka wax-soo-saarka.",
+  "error_valid_intake_price": "Geli qiimo sax ah oo kg kasta.",
+  "error_price_before_paid": "Marka hore geli qiimaha kg kasta, kadibna lacagta la bixiyay."
 }

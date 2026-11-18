@@ -33,6 +33,8 @@ export interface StockCount {
   created_at?: string | null
 }
 
+import { PACKAGED_NAME } from './factory-costing-profiles'
+
 export const FACTORY_COUNT_REASON = 'factory_stock_count'
 export const JERRYCAN_PRODUCTION_COST = 6000 // KSh per 20L jerrycan
 export const WASTE_COST_PER_KG = 30 // KSh per kg of byproduct waste
@@ -226,34 +228,141 @@ export function computeFactoryStock(captures: StockCapture[], now: number = Date
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Generic (non-sesame) factories — e.g. coconut. Stock per product name, no
-// sesame-specific naming. Direction by capture type:
+// Generic (non-sesame) factories — e.g. coconut. Stock per product, by a
+// canonical product name so one product logged under two names is ONE ledger
+// ("Copra" and "Coconut copra"). Direction by capture type:
 //   intake_arrival / intake → in      intake_feed → out
 //   output / packaging      → in      dispatch    → out
-//   wastage → in when the product is itself a by-product (name has waste/
-//   husk/shell), otherwise out (shrinkage of that product).
+//   wastage → in when the product is itself a by-product (waste/husk/shell/
+//   cake…), otherwise out (loss of that product).
+// Packs: a packaging capture (or a priced dispatch) logged against the BULK oil
+// ("Coconut oil") is a count of jerrycans, so it moves the jerrycan row — not a
+// separate kg row that no screen shows.
 // ─────────────────────────────────────────────────────────────────────────
-export interface GenericStockRow { name: string; unit?: string | null; onHand: number; in: number; out: number; lastDispatchPrice: number }
+export interface GenericStockParts { received: number; produced: number; byproductMade: number; fed: number; wasted: number; dispatched: number }
+export interface GenericStockRow {
+  name: string; unit?: string | null; onHand: number; in: number; out: number; lastDispatchPrice: number
+  /** How the balance is built: received + produced (+ by-product made) − fed − lost − dispatched. */
+  parts: GenericStockParts
+  /** Logged usage beyond what was logged coming in (a delivery or production entry is missing). 0 when the ledger is consistent. */
+  shortfall: number
+  counted?: { qty: number; at: string } | null
+  /** Stable key for matching costs and counts to this row. */
+  key: string
+}
 
-const isByproductName = (p: string) => /waste|husk|shell/.test(p)
+const BYPRODUCT_NAME = /waste|husk|shell|cake|fibre|fiber|kernel|chaff|bran/
 
-export function computeGenericStock(captures: (StockCapture & { dispatch_price?: number | string | null; unit?: string | null })[]): GenericStockRow[] {
+/** One key per real product: lower-case, single spaces, and "<crop> copra" is just "copra". */
+export function canonProductKey(raw?: string | null): string {
+  let k = (raw || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  k = k.replace(/^(dry |dried |coconut |fresh )?copra$/, 'copra')
+  return k
+}
+
+/**
+ * A starting guess for what a kg of an UNPRICED raw material costs, so stock is never valued at another
+ * product's price (whole coconut at the copra price was the case that mattered). Only where it is known:
+ * Kenyan whole coconut ≈ KSh 23/kg. The approver can always enter the real price on the delivery.
+ */
+export function guessRawPricePerKg(name?: string | null, currencyOrSymbol?: string | null): number {
+  const n = (name || '').toLowerCase()
+  const cur = (currencyOrSymbol || '').toUpperCase()
+  const isKes = cur === 'KES' || cur.startsWith('KSH')
+  if (isKes && /coconut|nut/.test(n) && !/copra|oil|cake|waste|husk|shell/.test(n)) return 23
+  return 0
+}
+
+type GenericCapture = StockCapture & { dispatch_price?: number | string | null; unit?: string | null }
+
+const isPackName = (nm: string) => PACKAGED_NAME.test(nm)
+const isByName = (key: string) => BYPRODUCT_NAME.test(key)
+const isBulkOilName = (nm: string) => /\boil\b/i.test(nm) && !isPackName(nm) && !isByName(canonProductKey(nm))
+
+/**
+ * Packs logged against the BULK oil ("Coconut oil") are jerrycans: a packaging capture always, and a dispatch when
+ * it is priced like a pack. Returns the captures with those product names replaced by the factory's pack name
+ * ("Coconut oil - Jerrycan (20L)"), so every screen, the stock ledger and the CFO count the same jerrycans.
+ */
+export function foldPackCaptures<T extends GenericCapture>(captures: T[]): T[] {
+  const packNames = new Map<string, number>()
+  const packPrices: number[] = []
+  for (const c of captures) {
+    const nm = (c.product_name || '').trim()
+    if (!nm || !isPackName(nm) || isByName(canonProductKey(nm))) continue
+    packNames.set(nm, (packNames.get(nm) || 0) + 1)
+    if (c.type === 'dispatch' && n(c.dispatch_price) > 0) packPrices.push(n(c.dispatch_price))
+  }
+  if (packNames.size === 0) return captures
+  packPrices.sort((x, y) => x - y)
+  const median = packPrices.length ? packPrices[Math.floor(packPrices.length / 2)] : 0
+  const packFor = (bulk: string): string | null => {
+    const b = bulk.toLowerCase().trim()
+    let best: string | null = null, bestN = 0
+    for (const [nm, cnt] of packNames) if (nm.toLowerCase().startsWith(b) && cnt > bestN) { best = nm; bestN = cnt }
+    return best
+  }
+  return captures.map(c => {
+    const raw = (c.product_name || '').trim()
+    if (!raw || !isBulkOilName(raw)) return c
+    const pack = packFor(raw)
+    if (!pack) return c
+    if (c.type === 'packaging') return { ...c, product_name: pack }
+    if (c.type === 'dispatch' && median > 0 && n(c.dispatch_price) >= median * 0.5 && n(c.dispatch_price) <= median * 2) return { ...c, product_name: pack }
+    return c
+  })
+}
+
+export function computeGenericStock(rawCaptures: GenericCapture[], counts: StockCount[] = []): GenericStockRow[] {
   const round = (v: number) => Math.round(v * 100) / 100
-  const acc = new Map<string, GenericStockRow & { priceAt: number }>()
+  const isBy = isByName
+  const captures = foldPackCaptures(rawCaptures)
+
+  // Latest physical count per product (re-anchors that product's balance).
+  const latestCount = new Map<string, { qty: number; at: string }>()
+  for (const c of [...counts].sort((a, b) => ts(b.created_at) - ts(a.created_at))) {
+    const k = canonProductKey(c.product_name)
+    if (k && !latestCount.has(k) && c.created_at) latestCount.set(k, { qty: Math.max(0, n(c.counted_qty)), at: c.created_at })
+  }
+
+  type Acc = GenericStockRow & { priceAt: number; nameVotes: Map<string, number> }
+  const acc = new Map<string, Acc>()
   for (const c of captures) {
     const raw = (c.product_name || '').trim()
     const qty = n(c.quantity)
     if (!raw || !c.type || qty <= 0) continue
-    const key = raw.toLowerCase()
-    let dir: 'in' | 'out' | null = null
-    if (c.type === 'intake_arrival' || c.type === 'intake' || c.type === 'output' || c.type === 'packaging') dir = 'in'
-    else if (c.type === 'intake_feed' || c.type === 'dispatch') dir = 'out'
-    else if (c.type === 'wastage') dir = isByproductName(key) ? 'in' : 'out'
-    if (!dir) continue
-    const row = acc.get(key) || { name: raw, unit: c.unit ?? null, onHand: 0, in: 0, out: 0, lastDispatchPrice: 0, priceAt: 0 }
-    if (dir === 'in') row.in += qty; else row.out += qty
+    const key = canonProductKey(raw)
+    let part: keyof GenericStockParts | null = null
+    if (c.type === 'intake_arrival' || c.type === 'intake') part = 'received'
+    else if (c.type === 'output' || c.type === 'packaging') part = 'produced'
+    else if (c.type === 'intake_feed') part = 'fed'
+    else if (c.type === 'dispatch') part = 'dispatched'
+    else if (c.type === 'wastage') part = isBy(key) ? 'byproductMade' : 'wasted'
+    if (!part) continue
+    const cnt = latestCount.get(key)
+    const row = acc.get(key) || { key, name: raw, unit: c.unit ?? null, onHand: 0, in: 0, out: 0, lastDispatchPrice: 0, priceAt: 0, nameVotes: new Map(),
+      parts: { received: 0, produced: 0, byproductMade: 0, fed: 0, wasted: 0, dispatched: 0 }, shortfall: 0, counted: cnt ? { qty: round(cnt.qty), at: cnt.at } : null } as Acc
+    row.nameVotes.set(raw, (row.nameVotes.get(raw) || 0) + 1)
+    // Movements before the latest physical count are already inside the counted figure.
+    if (!cnt || ts(c.created_at) > ts(cnt.at)) row.parts[part] += qty
     if (c.type === 'dispatch' && n(c.dispatch_price) > 0 && ts(c.created_at) >= row.priceAt) { row.lastDispatchPrice = n(c.dispatch_price); row.priceAt = ts(c.created_at) }
     acc.set(key, row)
   }
-  return [...acc.values()].map(r => ({ name: r.name, unit: r.unit, in: round(r.in), out: round(r.out), onHand: round(Math.max(0, r.in - r.out)), lastDispatchPrice: r.lastDispatchPrice }))
+  // A count for a product with no captures after it still has a balance.
+  for (const [key, cnt] of latestCount) if (!acc.has(key) && [...captures].some(c => canonProductKey(c.product_name) === key)) {
+    acc.set(key, { key, name: key, unit: null, onHand: 0, in: 0, out: 0, lastDispatchPrice: 0, priceAt: 0, nameVotes: new Map(),
+      parts: { received: 0, produced: 0, byproductMade: 0, fed: 0, wasted: 0, dispatched: 0 }, shortfall: 0, counted: { qty: round(cnt.qty), at: cnt.at } })
+  }
+  return [...acc.values()].map(r => {
+    const p = r.parts
+    const base = r.counted ? r.counted.qty : 0
+    const inn = p.received + p.produced + p.byproductMade
+    const out = p.fed + p.wasted + p.dispatched
+    const name = [...r.nameVotes.entries()].sort((a, b) => b[1] - a[1] || a[0].length - b[0].length)[0]?.[0] || r.name
+    return {
+      key: r.key, name, unit: r.unit, counted: r.counted, lastDispatchPrice: r.lastDispatchPrice,
+      parts: { received: round(p.received), produced: round(p.produced), byproductMade: round(p.byproductMade), fed: round(p.fed), wasted: round(p.wasted), dispatched: round(p.dispatched) },
+      in: round(inn), out: round(out), onHand: round(Math.max(0, base + inn - out)), shortfall: round(Math.max(0, out - (base + inn))),
+    }
+  })
 }

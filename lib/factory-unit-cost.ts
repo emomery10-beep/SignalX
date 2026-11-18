@@ -21,6 +21,7 @@
  */
 import { getCostingProfile, isPackagedName, isByproductName, isRawIntakeName } from '@/lib/factory-costing-profiles'
 import { normalizeCaptureUnits } from './factory-units'
+import { canonProductKey, guessRawPricePerKg } from './factory-stock'
 import { factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { dayOfInZone, factoryTimeZone, DEFAULT_FACTORY_TZ } from '@/lib/factory-time'
 
@@ -83,6 +84,8 @@ export interface CycleUnitCost {
    */
   perProduct?: Record<string, number>
   sources: { labour: 'estimate' | 'actual' | 'mixed'; electricity: 'estimate' | 'actual' | 'mixed'; overhead: 'estimate' | 'actual' | 'mixed' }
+  /** Cost per kg of each raw material (canonical lower-case product key): its own purchase price, else a known guess, else the overall average. */
+  rawPrices?: Record<string, number>
   wasteCostPerKg: number   // what a kg of by-product is worth (its real sale price; 0 if it never sold)
   complete: boolean
   missing: string[]
@@ -143,6 +146,7 @@ export function computeCycleUnitCost(
   now: number = Date.now(),
   actuals?: UnitCostActuals,
   tz: string = DEFAULT_FACTORY_TZ,
+  currency?: string | null,
 ): CycleUnitCost {
   const type = effectiveType(factoryType, captures)
   const P = getCostingProfile(type)
@@ -157,7 +161,7 @@ export function computeCycleUnitCost(
   let allCost = 0, allKg = 0
   for (const c of captures) {
     if (c.type === 'intake_arrival' && c.param_label === 'intake_price_per_kg' && num(c.param_value) > 0 && num(c.quantity) > 0 && isRaw(c)) {
-      const k = name(c).toLowerCase()
+      const k = canonProductKey(name(c))
       const e = byName.get(k) || { cost: 0, kg: 0 }
       e.cost += num(c.param_value) * num(c.quantity); e.kg += num(c.quantity)
       byName.set(k, e)
@@ -165,7 +169,20 @@ export function computeCycleUnitCost(
     }
   }
   const overallPrice = allKg > 0 ? allCost / allKg : 0
-  const priceOf = (c: UnitCostCapture) => { const e = byName.get(name(c).toLowerCase()); return e && e.kg > 0 ? e.cost / e.kg : overallPrice }
+  // A product's own price first; else a known guess for that product (whole coconut); only then the overall
+  // average — never another product's price when the product itself is known.
+  const priceOf = (c: UnitCostCapture) => {
+    const e = byName.get(canonProductKey(name(c)))
+    if (e && e.kg > 0) return e.cost / e.kg
+    const g = guessRawPricePerKg(name(c), currency)
+    return g > 0 ? g : overallPrice
+  }
+  const rawPrices: Record<string, number> = {}
+  for (const c of captures) {
+    if ((c.type === 'intake_arrival' || c.type === 'intake_feed' || c.type === 'intake') && isRaw(c)) {
+      const k = canonProductKey(name(c)); if (k && !(k in rawPrices)) rawPrices[k] = Math.round(priceOf(c) * 100) / 100
+    }
+  }
 
   // What by-product really sells for (all history). Sesame keeps its long-standing KSh 30/kg
   // fallback; any other factory gets no guessed price — 0 until it actually sells some.
@@ -262,7 +279,7 @@ export function computeCycleUnitCost(
     const pool = Math.max(0, material - cakeCredit) + labour + electricity + overhead
     const poolBeforeCake = material + labour + electricity + overhead
     const missing: string[] = []
-    if (!(overallPrice > 0)) missing.push('raw_material_price')
+    if (!(overallPrice > 0) && !Object.values(rawPrices).some(v => v > 0)) missing.push('raw_material_price')
     if (!(units > 0)) missing.push('finished_goods_output')
     if (!settings.configured && !(lB.source === 'actual' && eB.source === 'actual')) missing.push('labour_electricity_rates')
     // Joint-cost split by sales value, only when it can be done honestly (2+ finished products, all priced).
@@ -283,13 +300,14 @@ export function computeCycleUnitCost(
     }
     return {
       factoryType: type, from, to, cycleDays, chargedDays: charged, basis,
-      rawKgFed: Math.round(fedKg * 100) / 100, rawCostPerKg: Math.round(overallPrice * 100) / 100,
+      rawKgFed: Math.round(fedKg * 100) / 100, rawCostPerKg: Math.round((fedKg > 0 ? material / fedKg : overallPrice) * 100) / 100,
       material: Math.round(material), cakeKg: Math.round(cakeKg * 100) / 100, cakePricePerKg: Math.round(cakePrice * 100) / 100,
       cakeCredit: Math.round(cakeCredit), labour: Math.round(labour), electricity: Math.round(electricity), overhead: Math.round(overhead),
       pool: Math.round(pool), unitsProduced: units, unitCost: units > 0 ? Math.round(pool / units) : 0,
       unitCostBeforeCake: units > 0 ? Math.round(poolBeforeCake / units) : 0,
       ...(perProduct ? { perProduct } : {}),
       sources: { labour: lB.source, electricity: eB.source, overhead: oB.source },
+      rawPrices,
       wasteCostPerKg: Math.round(cakePrice * 100) / 100,
       complete: missing.length === 0, missing,
     }
@@ -335,10 +353,10 @@ async function fetchAllCaptures(service: any, ownerId: string, locationId: strin
   return normalizeCaptureUnits(out, factoryType).captures
 }
 
-async function ownerCountry(service: any, ownerId: string): Promise<{ country: string | null; profileType: string | null }> {
+async function ownerCountry(service: any, ownerId: string): Promise<{ country: string | null; profileType: string | null; currency: string | null }> {
   const { data } = await service.from('profiles').select('country_code, currency, factory_type').eq('id', ownerId).maybeSingle()
   const currency = (data as any)?.currency || null
-  return { country: (data as any)?.country_code || (currency === 'KES' ? 'KE' : null), profileType: (data as any)?.factory_type || null }
+  return { country: (data as any)?.country_code || (currency === 'KES' ? 'KE' : null), profileType: (data as any)?.factory_type || null, currency }
 }
 
 /**
@@ -347,7 +365,7 @@ async function ownerCountry(service: any, ownerId: string): Promise<{ country: s
  */
 export async function loadCycleUnitCost(service: any, ownerId: string, locationId: string | null, now: number = Date.now()): Promise<CycleUnitCost | null> {
   try {
-    const { country, profileType } = await ownerCountry(service, ownerId)
+    const { country, profileType, currency } = await ownerCountry(service, ownerId)
     let factories: { id: string | null; type: string | null }[] = []
     if (locationId) {
       const { data } = await service.from('pos_locations').select('id, kind, factory_type').eq('id', locationId).eq('owner_id', ownerId).maybeSingle()
@@ -375,7 +393,7 @@ export async function loadCycleUnitCost(service: any, ownerId: string, locationI
           if (!herr && hrows && hrows.length > 0) settings.history = hrows.map((h: any) => ({ from: String(h.effective_from), staffPerDay: num(h.staff_per_day), electricityPerDay: num(h.electricity_per_day), overhead: num(h.overhead) }))
         }
       }
-      results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now, undefined, factoryTimeZone(country)))
+      results.push(computeCycleUnitCost(caps, settings, parseCycle(basis), type, now, undefined, factoryTimeZone(country), currency))
     }
     if (results.length === 0) return null
     if (results.length === 1) return results[0]

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { initiateWaafiBillingPurchase } from '@/lib/waafipay-billing'
+import { seatsToCharge } from '@/lib/pos-seat-pricing'
 
 // USD pricing — matches Somalia's existing USD framing on the landing page,
 // not Somali Shillings (mirrors PRICING.USD in lib/geo/index.ts, kept local
@@ -39,9 +40,13 @@ export async function POST(request: NextRequest) {
       }
 
       const isPosSeats = !!seats
-      const seatCount = isPosSeats ? Math.max(1, Math.min(50, parseInt(seats, 10))) : 0
-      const amount = isPosSeats
-        ? seatCount * USD_SEAT_PRICE
+      const seatInfo = isPosSeats ? await seatsToCharge(supabase, user.id, parseInt(seats, 10) || 1) : null
+      if (seatInfo && seatInfo.charge === 0) {
+        return NextResponse.json({ error: `You already have ${seatInfo.current} seats. Choose a higher number to add seats.` }, { status: 400 })
+      }
+      const seatCount = seatInfo ? seatInfo.total : 0
+      const amount = seatInfo
+        ? seatInfo.charge * USD_SEAT_PRICE
         : USD_PLAN_PRICE[plan]
 
       if (!isPosSeats && !amount) {
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
         invoiceId: referenceId,
         amount: amount.toFixed(2),
         currency: 'USD',
-        description: isPosSeats ? `AskBiz POS ${seatCount} seat(s)` : `AskBiz ${plan} plan`,
+        description: seatInfo ? `AskBiz POS ${seatInfo.charge} seat(s)` : `AskBiz ${plan} plan`,
       })
 
       const { error: insertError } = await supabase.from('waafipay_billing_payments').insert({

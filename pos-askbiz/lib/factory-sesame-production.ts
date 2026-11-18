@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     // Per-product stock for factories that are not the sesame press (coconut, groundnut, water, …), each product
     // tagged with its role so the Inventory tab can cost it: raw material, finished unit or by-product.
-    const genericStock = computeGenericStock(((allCaptures || []) as any[]).filter((c: any) => c.status === 'approved' || c.status == null))
+    const genericStock = computeGenericStock(((allCaptures || []) as any[]).filter((c: any) => c.status === 'approved' || c.status == null), (counts || []) as any[])
       .map(r => ({ ...r, role: stockRoleOf(cycleCost?.factoryType, r.name) }))
 
     // Waste sold is COGS; waste still in stock is inventory value

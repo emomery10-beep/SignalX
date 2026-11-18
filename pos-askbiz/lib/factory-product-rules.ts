@@ -23,7 +23,9 @@ function oilByStep(o: NonNullable<ReturnType<typeof getFactoryLocationType>>['oi
     intake: [seed],
     output: [oil, ...waste],
     packaging: [...can],
-    dispatch: [oil, ...waste, ...can],
+    // An oil factory ships packed jerrycans (and sells its by-product). Loose oil, copra or raw material is not a
+    // dispatch: it would leave stock without being a sale of anything the books can count in packs.
+    dispatch: [...can, ...waste],
     wastage: [seed, oil, ...waste],
   }
 }
@@ -73,6 +75,8 @@ export function allowedFactoryProducts(
 ): string[] {
   const defaults = defaultFactoryProducts(factoryType, step)
   if (isSeedOnlyStep(factoryType, step)) return defaults
+  // Same for dispatch: the oil factory's dispatch list is fixed (packs + by-product), inventory names don't pad it.
+  if (step === 'dispatch' && getFactoryLocationType(factoryType)?.oil) return defaults
   const seen = new Set<string>()
   return [...defaults, ...inventoryNames].filter(n => {
     const k = n.trim().toLowerCase()

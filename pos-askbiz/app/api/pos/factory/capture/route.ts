@@ -14,6 +14,7 @@ import { allowedFactoryProducts, resolveFactoryType } from '@/lib/factory-produc
 import { sendDispatchWhatsApp } from '@/lib/factory-dispatch-whatsapp'
 import { normalisePhone, phoneFields, capturePhone } from '@/lib/customer-phone'
 import { moneySchemaReady, findOrCreateParty } from '@/lib/factory-parties'
+import { canonProductKey, guessRawPricePerKg } from '@/lib/factory-stock'
 import { parseOptionalAmount, clipText, imageProblem, resolveOwnedLocation, ownedShiftId, MAX_MONEY } from '@/lib/pos-input'
 
 export async function OPTIONS() {
@@ -160,8 +161,28 @@ export async function GET(req: NextRequest) {
       if (!suggestedPrice.has(k)) suggestedPrice.set(k, Number(r.dispatch_price))
     }
   }
+  // Pending raw-material deliveries get a suggested cost per kg: the price this factory last paid for the same
+  // product, else a known starting guess (whole coconut ≈ KSh 23). The approver types the real price over it.
+  const suggestedCost = new Map<string, number>()
+  if (hasPermission(auth.role, 'capture.approve') && (data || []).some((c: any) => c.type === 'intake_arrival' && c.status === 'pending')) {
+    const { data: priced } = await service
+      .from('pos_factory_captures')
+      .select('product_name, location_id, param_value')
+      .eq('owner_id', auth.ownerId).eq('type', 'intake_arrival').eq('status', 'approved').eq('param_label', 'intake_price_per_kg').gt('param_value', 0)
+      .order('created_at', { ascending: false }).limit(300)
+    for (const r of (priced || []) as any[]) {
+      const k = `${r.location_id || ''}|${canonProductKey(r.product_name)}`
+      if (!suggestedCost.has(k)) suggestedCost.set(k, Number(r.param_value))
+    }
+  }
+  const { data: curRow } = await service.from('profiles').select('currency').eq('id', auth.ownerId).maybeSingle()
+  const ownerCurrency = (curRow as any)?.currency || null
   const captures = (data || []).map((c: any) => {
     const safe: any = redactDispatchPriceForNonApprovers(c, auth.role)
+    if (c.type === 'intake_arrival' && c.status === 'pending') {
+      const own = c.param_label === 'intake_price_per_kg' && Number(c.param_value) > 0 ? Number(c.param_value) : null
+      safe.suggested_intake_price = own ?? suggestedCost.get(`${c.location_id || ''}|${canonProductKey(c.product_name)}`) ?? (guessRawPricePerKg(c.product_name, ownerCurrency) || null)
+    }
     if (c.type === 'dispatch' && c.status === 'pending' && suggestedPrice.size > 0) {
       safe.suggested_dispatch_price = suggestedPrice.get(`${c.location_id || ''}|${(c.product_name || '').trim().toLowerCase()}`) ?? null
     }
@@ -634,6 +655,13 @@ export async function PATCH(req: NextRequest) {
   let paidNow = 0
   let paidMethod = 'cash'
   let dueDate: string | null = null
+  // The approver sets (or corrects) what a kg of a delivery cost; it replaces whatever the receiver typed.
+  let resolvedIntakePrice: number | null = null
+  if (status === 'approved' && existing.type === 'intake_arrival' && body.intake_price_per_kg !== undefined && body.intake_price_per_kg !== null && body.intake_price_per_kg !== '') {
+    const pp = Number(body.intake_price_per_kg)
+    if (!Number.isFinite(pp) || pp < 0 || pp > MAX_MONEY) return json({ error: 'Cost per kg must be a number, 0 or more' }, 400)
+    resolvedIntakePrice = pp
+  }
   if (moneyReady) {
     const paidParsed = parseOptionalAmount(body.amount_paid, 'amount_paid', MAX_MONEY)
     if (!paidParsed.ok) return json({ error: paidParsed.error }, 400)
@@ -643,9 +671,14 @@ export async function PATCH(req: NextRequest) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(body.due_date) || Number.isNaN(Date.parse(body.due_date))) return json({ error: 'due_date must be YYYY-MM-DD' }, 400)
       dueDate = body.due_date
     }
-    const unitPrice = existing.type === 'dispatch' ? Number(resolvedDispatchPrice) : (existing.param_label === 'intake_price_per_kg' ? Number(existing.param_value) : 0)
+    const unitPrice = existing.type === 'dispatch'
+      ? Number(resolvedDispatchPrice)
+      : (resolvedIntakePrice !== null ? resolvedIntakePrice : (existing.param_label === 'intake_price_per_kg' ? Number(existing.param_value) : 0))
     const total = (Number(existing.quantity) || 0) * (unitPrice || 0)
-    if (paidNow > 0 && paidNow > total + 0.005) return json({ error: `Amount paid (${paidNow}) is more than the total (${Math.round(total * 100) / 100})` }, 400)
+    if (paidNow > 0 && existing.type === 'intake_arrival' && !(unitPrice > 0)) {
+      return json({ error: 'Enter the cost per kg for this delivery first — the amount paid is checked against quantity × cost per kg.' }, 400)
+    }
+    if (paidNow > 0 && paidNow > total + 0.005) return json({ error: `Amount paid (${paidNow}) is more than the total (${Math.round(total * 100) / 100} = ${existing.quantity} kg × ${unitPrice} per kg)` }, 400)
   }
 
   // Guard rail: a dispatch bigger than everything logged as made or received for that product. The approver
@@ -675,6 +708,7 @@ export async function PATCH(req: NextRequest) {
       rejection_reason: status === 'rejected' ? rejection_reason.trim() : null,
       ...(isDispatchApproval ? { dispatch_price: resolvedDispatchPrice } : {}),
       ...(moneyReady && dueDate ? { due_date: dueDate } : {}),
+      ...(status === 'approved' && existing.type === 'intake_arrival' && resolvedIntakePrice !== null && resolvedIntakePrice > 0 ? { param_label: 'intake_price_per_kg', param_value: resolvedIntakePrice } : {}),
       ...approverPhoneFields,
     })
     .eq('id', id)

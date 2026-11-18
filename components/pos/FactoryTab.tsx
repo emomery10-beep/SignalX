@@ -1,9 +1,10 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
-import { getCostingProfile, unitNaming, isPackagedName, isByproductName, isRawIntakeName, oilKgPerUnit, hasDefaultMachines } from '@/lib/factory-costing-profiles'
+import { PACKAGED_NAME, getCostingProfile, unitNaming, isPackagedName, isByproductName, isRawIntakeName, oilKgPerUnit, hasDefaultMachines } from '@/lib/factory-costing-profiles'
 import { useLang } from '@/components/LanguageProvider'
 import { formatMoney } from '@/lib/pos-format'
 import type { StockKind } from '@/lib/factory-stock'
+import { canonProductKey, guessRawPricePerKg } from '@/lib/factory-stock'
 import { WORKING_DAYS_PER_MONTH, factoryCostDefaultsFor } from '@/lib/factory-cost-defaults'
 import { effectiveType as inferFactoryType, parseCycle, cycleWindow, DEFAULT_CYCLE_DAYS, MAX_CYCLE_DAYS, type FactoryCycle } from '@/lib/factory-unit-cost'
 import { factoryDayKey, getFactoryTz, setFactoryTz } from '@/lib/factory-tz-client'
@@ -879,7 +880,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
     for (const c of captures) {
       const anyC = c as any
       if (anyC.param_label === 'intake_price_per_kg' && anyC.param_value != null && Number(anyC.param_value) > 0) {
-        const key = (c.product || '').toLowerCase()
+        const key = canonProductKey(c.product)
         const e = sums.get(key) || { total: 0, count: 0 }
         e.total += Number(anyC.param_value)
         e.count += 1
@@ -906,9 +907,9 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
     if (anyC.param_label === 'intake_price_per_kg' && anyC.param_value != null && Number(anyC.param_value) > 0) {
       return Number(anyC.param_value)
     }
-    const productKey = (c.product || '').toLowerCase()
-    return paramCostByProduct.get(productKey) || costByProduct.get(productKey) || 0
-  }, [costByProduct, paramCostByProduct])
+    const productKey = canonProductKey(c.product)
+    return paramCostByProduct.get(productKey) || costByProduct.get(productKey) || guessRawPricePerKg(c.product, currencySymbol) || 0
+  }, [costByProduct, paramCostByProduct, currencySymbol])
 
   // ═══════════════════ SUB-TAB BAR ════════════════════════════
   const subTabs: { id: SubTab; label: string }[] = [
@@ -986,7 +987,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, factoryTy
             <ProductionView captures={captures} staffName={staffName} currencySymbol={currencySymbol} />
           )}
           {subTab === 'quality' && (
-            <QualityView captures={captures} wastages={wastages} costForCapture={costForCapture} totalWaste={totalWaste} currencySymbol={currencySymbol} staffName={staffName} />
+            <QualityView captures={captures} wastages={wastages} costForCapture={costForCapture} totalWaste={totalWaste} currencySymbol={currencySymbol} staffName={staffName} factoryType={costingType} />
           )}
           {subTab === 'inventory' && (
             <InventoryView inv={inv} intakes={intakes} currencySymbol={currencySymbol} outputs={outputs} dispatches={dispatches} selectedLocation={selectedLocation} factoryType={costingType} />
@@ -1140,7 +1141,7 @@ function ProductionView({ captures, staffName, currencySymbol }: {
   captures: FactoryCapture[]; staffName: (id?: string | null) => string | null; currencySymbol: string
 }) {
   const { tc } = useLang()
-  const [typeFilter, setTypeFilter] = useState<'all' | 'intake' | 'output'>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'intake' | 'intake_arrival' | 'intake_feed' | 'output'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | CaptureStatus>('all')
   const [productFilter, setProductFilter] = useState('')
   const [operatorFilter, setOperatorFilter] = useState('all')
@@ -1170,7 +1171,9 @@ function ProductionView({ captures, staffName, currencySymbol }: {
 
   const filtered = useMemo(() => {
     let rows = base
-    if (typeFilter !== 'all') rows = rows.filter(c => c.type === typeFilter)
+    // 'Intake' = every kind of intake (arrivals, feed to the machine, legacy 'intake'); Arrival / Feed narrow it.
+    if (typeFilter === 'intake') rows = rows.filter(c => c.type === 'intake' || c.type === 'intake_arrival' || c.type === 'intake_feed')
+    else if (typeFilter !== 'all') rows = rows.filter(c => c.type === typeFilter)
     if (statusFilter !== 'all') rows = rows.filter(c => c.status === statusFilter)
     if (productFilter) rows = rows.filter(c => c.product === productFilter)
     if (operatorFilter !== 'all') rows = rows.filter(c => (c.operator || staffName(c.staff_id)) === operatorFilter)
@@ -1238,9 +1241,10 @@ function ProductionView({ captures, staffName, currencySymbol }: {
       {/* Filters */}
       <Section title={tc('pos_factory.productionLog')}>
         <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-          {(['all', 'intake', 'output'] as const).map(t => (
+          {(['all', 'intake', 'intake_arrival', 'intake_feed', 'output'] as const).map(t => (
             <button key={t} onClick={() => setTypeFilter(t)} style={filterBtn(typeFilter === t)}>
-              {t === 'all' ? tc('pos_factory.allTypes') : tc('pos_factory.type' + (t === 'intake' ? 'Intake' : 'Output'))}
+              {t === 'all' ? tc('pos_factory.allTypes')
+                : tc('pos_factory.type' + (t === 'intake' ? 'Intake' : t === 'intake_arrival' ? 'IntakeArrival' : t === 'intake_feed' ? 'IntakeFeed' : 'Output'))}
             </button>
           ))}
           <span style={{ width: 1, background: 'var(--b)', margin: '0 4px' }} />
@@ -1393,73 +1397,257 @@ function ProductionView({ captures, staffName, currencySymbol }: {
 // ═════════════════════════════════════════════════════════════
 // QUALITY SUB-TAB
 // ═════════════════════════════════════════════════════════════
-function QualityView({ captures, wastages, costForCapture, totalWaste, currencySymbol, staffName }: {
+function QualityView({ captures, wastages, costForCapture, totalWaste, currencySymbol, staffName, factoryType }: {
   captures: FactoryCapture[]; wastages: FactoryCapture[]; costForCapture: (c: FactoryCapture) => number
-  totalWaste: number; currencySymbol: string; staffName: (id?: string | null) => string | null
+  totalWaste: number; currencySymbol: string; staffName: (id?: string | null) => string | null; factoryType?: string | null
 }) {
   const { tc } = useLang()
-  const totalCaptures = captures.length
-  const rejected = useMemo(() => captures.filter(c => c.status === 'rejected'), [captures])
-  const rejectionRate = totalCaptures > 0 ? (rejected.length / totalCaptures) * 100 : 0
-  // first pass yield: approved / (approved + rejected)
-  const approvedCount = captures.filter(c => c.status === 'approved').length
-  const decided = approvedCount + rejected.length
-  const firstPassYield = decided > 0 ? (approvedCount / decided) * 100 : 0
+  void totalWaste; void wastages
+  const P = getCostingProfile(factoryType)
+  const isBy = (n?: string | null) => isByproductName(P, n) || /cake|husk|shell|waste|fib(re|er)/i.test(n || '')
+  const isRawName = (n?: string | null) => isRawIntakeName(P, n) && !isBy(n)
+  const qty = (c: FactoryCapture) => Number(c.quantity) || 0
+  const opOf = (c: FactoryCapture) => c.operator || staffName(c.staff_id) || '—'
+  const isVoid = (c: FactoryCapture) => c.status === 'rejected' && /^voided after approval/i.test(c.rejection_reason || '')
 
-  const wasteByProduct = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const c of wastages) m.set(c.product || 'Unknown', (m.get(c.product || 'Unknown') || 0) + (Number(c.quantity) || 0))
-    return Array.from(m.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 8)
-  }, [wastages])
+  // ── Review quality ────────────────────────────────────────────
+  // Rates are over DECIDED captures (approved + rejected). A capture still waiting for review has not passed or
+  // failed anything yet, so it must not dilute the rate (the old figure divided by every capture, pending included).
+  const approved = useMemo(() => captures.filter(c => c.status === 'approved'), [captures])
+  const rejectedAll = useMemo(() => captures.filter(c => c.status === 'rejected'), [captures])
+  const voided = useMemo(() => rejectedAll.filter(isVoid), [rejectedAll])
+  const rejectedAtReview = rejectedAll.length - voided.length
+  const pendingCaps = useMemo(() => captures.filter(c => c.status === 'pending'), [captures])
+  const decided = approved.length + rejectedAll.length
+  const rejectionRate = decided > 0 ? (rejectedAtReview / decided) * 100 : 0
+  const lateRate = approved.length + voided.length > 0 ? (voided.length / (approved.length + voided.length)) * 100 : 0
+  const oldPending = pendingCaps.filter(c => Date.now() - new Date(c.created_at).getTime() > 48 * 3600_000)
 
-  const wasteByReason = useMemo(() => {
+  // ── Process loss ──────────────────────────────────────────────
+  // Only APPROVED captures count. Wastage of a by-product (cake, husk, shell) is the by-product being MADE — a
+  // recovery with a sale value — not waste. Real loss is wastage of the raw material, intermediate or product.
+  const wastageOk = useMemo(() => approved.filter(c => c.type === 'wastage'), [approved])
+  const lossCaps = useMemo(() => wastageOk.filter(c => !isBy(c.product)), [wastageOk])
+  const byproductCaps = useMemo(() => wastageOk.filter(c => isBy(c.product)), [wastageOk])
+  const lossKg = lossCaps.reduce((t, c) => t + qty(c), 0)
+  const byproductKg = byproductCaps.reduce((t, c) => t + qty(c), 0)
+  const lossCost = lossCaps.reduce((t, c) => t + qty(c) * costForCapture(c), 0)
+  const fedByProduct = useMemo(() => {
     const m = new Map<string, number>()
-    for (const c of wastages) { const r = wasteReason(c.notes); m.set(r, (m.get(r) || 0) + (Number(c.quantity) || 0)) }
+    for (const c of approved) if ((c.type === 'intake_feed' || c.type === 'intake') && isRawName(c.product)) m.set(canonProductKey(c.product), (m.get(canonProductKey(c.product)) || 0) + qty(c))
+    return m
+  }, [approved])
+  const fedKg = Array.from(fedByProduct.values()).reduce((a, b) => a + b, 0)
+  const lossPct = fedKg > 0 ? (lossKg / fedKg) * 100 : 0
+
+  // Extraction yield: oil pressed ÷ the raw material that goes straight into the press (the raw product fed the
+  // most — copra, not the whole nuts that were dried into it, which would count the same mass twice).
+  const oilOutKg = approved.filter(c => c.type === 'output' && P.product && P.product.test(c.product || '') && !isPackagedName(P, c.product) && !isBy(c.product)).reduce((t, c) => t + qty(c), 0)
+  const mainFed = Array.from(fedByProduct.entries()).sort((a, b) => b[1] - a[1])[0]
+  const yieldPct = mainFed && mainFed[1] > 0 ? (oilOutKg / mainFed[1]) * 100 : 0
+  const cakeMade = byproductKg
+  const cakePerFed = mainFed && mainFed[1] > 0 ? (cakeMade / mainFed[1]) * 100 : 0
+  // Typical extraction ranges only where they are well known; never invented for other crops.
+  const YIELD_RANGE: Record<string, [number, number]> = { coconut_oil: [58, 66], sesame_oil: [40, 50] }
+  const range = factoryType ? YIELD_RANGE[factoryType] : undefined
+  const yieldAccent = !range || yieldPct === 0 ? ACC : yieldPct >= range[0] && yieldPct <= range[1] ? GREEN : yieldPct < range[0] ? RED : AMBER
+
+  const lossByProduct = useMemo(() => {
+    const m = new Map<string, { kg: number; cost: number }>()
+    for (const c of lossCaps) { const k = c.product || 'Unknown'; const e = m.get(k) || { kg: 0, cost: 0 }; e.kg += qty(c); e.cost += qty(c) * costForCapture(c); m.set(k, e) }
+    return Array.from(m.entries()).map(([label, v]) => ({ label, value: v.kg, cost: v.cost })).sort((a, b) => b.value - a.value)
+  }, [lossCaps, costForCapture])
+  const lossByReason = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const c of lossCaps) { const r = wasteReason(c.notes); m.set(r, (m.get(r) || 0) + qty(c)) }
     return Array.from(m.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
-  }, [wastages])
+  }, [lossCaps])
+  const byproductByProduct = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const c of byproductCaps) m.set(c.product || 'Unknown', (m.get(c.product || 'Unknown') || 0) + qty(c))
+    return Array.from(m.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
+  }, [byproductCaps])
 
-  // weekly rejection rate trend
-  const rejectionTrend = useMemo(() => {
-    const m = new Map<string, { total: number; rej: number }>()
+  // ── Weekly trends ─────────────────────────────────────────────
+  const trends = useMemo(() => {
+    const m = new Map<string, { dec: number; rej: number; fed: number; loss: number }>()
+    const get = (k: string) => m.get(k) || { dec: 0, rej: 0, fed: 0, loss: 0 }
     for (const c of captures) {
+      if (c.status === 'pending') continue
+      const k = weekKey(c.created_at); const e = get(k); e.dec += 1; if (c.status === 'rejected' && !isVoid(c)) e.rej += 1; m.set(k, e)
+    }
+    for (const c of approved) {
       const k = weekKey(c.created_at)
-      const e = m.get(k) || { total: 0, rej: 0 }
-      e.total += 1
-      if (c.status === 'rejected') e.rej += 1
+      if ((c.type === 'intake_feed' || c.type === 'intake') && isRawName(c.product)) { const e = get(k); e.fed += qty(c); m.set(k, e) }
+      if (c.type === 'wastage' && !isBy(c.product)) { const e = get(k); e.loss += qty(c); m.set(k, e) }
+    }
+    const lab = (k: string) => k.split('-W')[1] ? `W${k.split('-W')[1]}` : k
+    const sorted = Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+    return {
+      rejection: sorted.map(([k, v]) => ({ label: lab(k), value: v.dec > 0 ? (v.rej / v.dec) * 100 : 0 })),
+      loss: sorted.filter(([, v]) => v.fed > 0).map(([k, v]) => ({ label: lab(k), value: (v.loss / v.fed) * 100 })),
+    }
+  }, [captures, approved])
+
+  // ── Operator scorecard ────────────────────────────────────────
+  const operators = useMemo(() => {
+    const m = new Map<string, { n: number; rej: number; voided: number; lossKg: number }>()
+    for (const c of captures) {
+      if (c.status === 'pending') continue
+      const k = opOf(c); const e = m.get(k) || { n: 0, rej: 0, voided: 0, lossKg: 0 }
+      e.n += 1
+      if (isVoid(c)) e.voided += 1; else if (c.status === 'rejected') e.rej += 1
+      if (c.status === 'approved' && c.type === 'wastage' && !isBy(c.product)) e.lossKg += qty(c)
       m.set(k, e)
     }
-    return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([k, v]) => ({ label: k.split('-W')[1] ? `W${k.split('-W')[1]}` : k, value: v.total > 0 ? (v.rej / v.total) * 100 : 0 }))
-  }, [captures])
+    return Array.from(m.entries()).map(([name, v]) => ({ name, ...v, rate: v.n > 0 ? ((v.rej + v.voided) / v.n) * 100 : 0 })).sort((a, b) => b.rate - a.rate || b.n - a.n)
+  }, [captures, staffName])
 
-  const costOfWaste = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [wastages, costForCapture])
+  // ── Data-quality flags ────────────────────────────────────────
+  const flags = useMemo(() => {
+    const out: { key: string; title: string; detail: string; rows: string[] }[] = []
+    // Dispatches of something that is not a packed unit or a by-product (copra, raw material): an oil factory ships
+    // jerrycans, so these are almost certainly a wrong product picked — and they are counted as sales at that price.
+    const badDispatch = approved.filter(c => c.type === 'dispatch' && !PACKAGED_NAME.test(c.product || '') && !isBy(c.product))
+    if (P.kind === 'oil' && badDispatch.length) out.push({ key: 'baddisp', title: `${badDispatch.length} dispatch${badDispatch.length === 1 ? '' : 'es'} of loose material, not jerrycans`, detail: 'An oil factory dispatches packed jerrycans. These look like the wrong product was picked — they remove stock and are counted as sales. Void them and log the real jerrycans.', rows: badDispatch.slice(0, 5).map(c => `${shortDate(c.created_at)} · ${c.product || '—'} · ${fmtInt(qty(c))} @ ${fmtInt(Number(c.dispatch_price) || 0)}`) })
+    // Duplicates: same type, product, quantity and operator within 10 minutes (a double tap or a re-entry).
+    const sorted = [...captures].filter(c => c.status !== 'rejected').sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    const dups: string[] = []
+    for (let i = 1; i < sorted.length; i++) {
+      for (let j = i - 1; j >= 0 && j >= i - 6; j--) {
+        const a = sorted[j], b = sorted[i]
+        if (new Date(b.created_at).getTime() - new Date(a.created_at).getTime() > 10 * 60_000) break
+        if (a.type === b.type && (a.product || '') === (b.product || '') && qty(a) === qty(b) && qty(a) > 0 && opOf(a) === opOf(b)) { dups.push(`${shortDate(b.created_at)} · ${b.product || '—'} · ${fmtInt(qty(b))} · ${opOf(b)} (logged twice within 10 min)`); break }
+      }
+    }
+    if (dups.length) out.push({ key: 'dup', title: `${dups.length} possible duplicate${dups.length === 1 ? '' : 's'}`, detail: 'Same type, product, quantity and person within 10 minutes. Void the extra one if it was entered twice.', rows: dups.slice(0, 5) })
+    // Outliers: a quantity far above the usual for that type and product.
+    const groups = new Map<string, FactoryCapture[]>()
+    for (const c of approved) { if (qty(c) <= 0) continue; const k = `${c.type}|${canonProductKey(c.product)}`; const g = groups.get(k) || []; g.push(c); groups.set(k, g) }
+    const outl: string[] = []
+    groups.forEach(g => {
+      if (g.length < 6) return
+      const v = g.map(qty).sort((x, y) => x - y); const med = v[Math.floor(v.length / 2)]
+      for (const c of g) if (med > 0 && qty(c) > med * 4) outl.push(`${shortDate(c.created_at)} · ${c.product || '—'} (${c.type.replace('_', ' ')}) · ${fmtInt(qty(c))} vs usual ≈ ${fmtInt(med)}`)
+    })
+    if (outl.length) out.push({ key: 'out', title: `${outl.length} unusually large entr${outl.length === 1 ? 'y' : 'ies'}`, detail: 'More than 4× the usual quantity for that product and step — a typo (an extra zero) is the usual cause.', rows: outl.slice(0, 5) })
+    // Deliveries approved without a price: stock value and cost per unit cannot be exact.
+    const unpriced = approved.filter(c => c.type === 'intake_arrival' && !((c as any).param_label === 'intake_price_per_kg' && Number((c as any).param_value) > 0))
+    if (unpriced.length) out.push({ key: 'price', title: `${unpriced.length} deliver${unpriced.length === 1 ? 'y' : 'ies'} with no cost per kg`, detail: 'Stock value and cost per unit use an estimate for these. Enter the real cost when approving.', rows: unpriced.slice(0, 5).map(c => `${shortDate(c.created_at)} · ${c.product || '—'} · ${fmtInt(qty(c))} kg`) })
+    if (oldPending.length) out.push({ key: 'pend', title: `${oldPending.length} capture${oldPending.length === 1 ? '' : 's'} waiting over 48 hours`, detail: 'Unreviewed captures are not in stock or cost figures yet.', rows: oldPending.slice(0, 5).map(c => `${shortDate(c.created_at)} · ${c.product || '—'} · ${c.type.replace('_', ' ')} · ${opOf(c)}`) })
+    return out
+  }, [captures, approved, oldPending])
+
+  const rejected = rejectedAll
 
   return (
     <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 }}>
+        <KpiCard label={tc('pos_factory.rejectionRateLabel')} value={pct(rejectionRate)} accent={rejectionRate > 5 ? RED : GREEN}
+          sub={`${rejectedAtReview} rejected of ${decided} reviewed`}
+          breakdown={[
+            { label: 'Approved', value: fmtInt(approved.length) },
+            { label: 'Rejected at review', value: fmtInt(rejectedAtReview) },
+            { label: 'Voided after approval', value: fmtInt(voided.length) },
+            { label: 'Still waiting for review (not counted)', value: fmtInt(pendingCaps.length) },
+            { label: 'Rejection rate = rejected ÷ reviewed', value: pct(rejectionRate), strong: true },
+          ]} />
+        <KpiCard label="Late corrections" value={pct(lateRate)} accent={voided.length === 0 ? GREEN : lateRate > 3 ? RED : AMBER}
+          sub={`${voided.length} voided after approval`}
+          breakdownNote="Captures approved and later taken back out (wrong quantity, product or a duplicate). A high rate means errors are slipping past review."
+          breakdown={voided.slice(0, 8).map(c => ({ label: `${shortDate(c.created_at)} · ${c.product || '—'} · ${fmtInt(qty(c))}`, value: (c.rejection_reason || '').replace(/^voided after approval:\s*/i, '').slice(0, 30) || '—' }))} />
+        <KpiCard label="Process loss" value={`${fmtInt(lossKg)} kg`} accent={lossPct > 10 ? RED : lossPct > 3 ? AMBER : GREEN}
+          sub={fedKg > 0 ? `${pct(lossPct)} of ${fmtInt(fedKg)} kg fed to the machine` : 'wastage of material, not by-product'}
+          breakdown={lossByProduct.map(r => ({ label: r.label, value: `${fmtInt(r.value)} kg` }))}
+          breakdownNote="Only real loss: wastage of raw material, intermediates or product. By-product made in pressing (cake, husk, shell) is not loss and is shown separately." />
+        <KpiCard label={tc('pos_factory.costOfWasteLabel')} value={fmt(currencySymbol, lossCost)} accent={RED}
+          sub="loss kg × cost per kg"
+          breakdown={lossByProduct.map(r => ({ label: `${r.label} — ${fmtInt(r.value)} kg`, value: fmt(currencySymbol, r.cost) }))}
+          breakdownNote="Each lost kg is valued at that material's own purchase price (the approver's cost per kg on the delivery)." />
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label={tc('pos_factory.rejectionRateLabel')} value={pct(rejectionRate)} sub={tc('pos_factory.rejectionRateSub', { rejected: rejected.length, total: totalCaptures })} accent={rejectionRate > 5 ? RED : GREEN} />
-        <KpiCard label={tc('pos_factory.firstPassYieldLabel')} value={pct(firstPassYield)} sub={tc('pos_factory.approvedFirstDecision')} accent={firstPassYield >= 90 ? GREEN : AMBER} />
-        <KpiCard label={tc('pos_factory.totalWastageLabel')} value={fmtInt(totalWaste)} sub={tc('pos_factory.unitsWasted')} accent={RED} />
-        <KpiCard label={tc('pos_factory.costOfWasteLabel')} value={fmt(currencySymbol, costOfWaste)} sub={tc('pos_factory.wastedMaterialValue')} accent={RED} />
+        <KpiCard label="Extraction yield" value={oilOutKg > 0 && mainFed ? pct(yieldPct) : '—'} accent={yieldAccent}
+          sub={mainFed ? `oil out ÷ ${mainFed[0]} fed${range ? ` · typical ${range[0]}–${range[1]}%` : ''}` : 'needs oil output and material fed'}
+          breakdown={mainFed ? [
+            { label: `Oil pressed (kg)`, value: fmtInt(oilOutKg) },
+            { label: `${mainFed[0]} fed (kg)`, value: fmtInt(mainFed[1]) },
+            { label: 'Yield', value: pct(yieldPct), strong: true },
+          ] : undefined}
+          breakdownNote={range && yieldPct > 0 && yieldPct < range[0] ? 'Below the usual range: check press settings, material moisture and unrecorded losses.' : undefined} />
+        <KpiCard label="By-product recovered" value={`${fmtInt(cakeMade)} kg`} accent={ACC}
+          sub={mainFed && cakePerFed > 0 ? `${pct(cakePerFed)} of material fed` : 'cake / husk / shell made'}
+          breakdown={byproductByProduct.map(r => ({ label: r.label, value: `${fmtInt(r.value)} kg` }))}
+          breakdownNote="Logged as wastage but it is a saleable by-product, so it is not counted as waste." />
+        <KpiCard label="Reviewed captures" value={fmtInt(decided)} accent="#a855f7" sub={`${fmtInt(captures.length)} logged in total`} />
+        <KpiCard label="Data flags" value={fmtInt(flags.length)} accent={flags.length > 0 ? AMBER : GREEN} sub={flags.length > 0 ? 'see Data quality below' : 'nothing suspicious found'} />
       </div>
 
-      <Section title={tc('pos_factory.wastageByProduct')}>
-        <HBarChart data={wasteByProduct} color={RED} currencySymbol={currencySymbol} />
+      <Section title="Loss by product (kg)">
+        {lossByProduct.length === 0 ? <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noWastageRecorded')}</div> : <HBarChart data={lossByProduct} color={RED} currencySymbol={currencySymbol} />}
       </Section>
 
-      <Section title={tc('pos_factory.wastageByReason')}>
-        {wasteByReason.length === 0 ? (
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noWastageRecorded')}</div>
-        ) : (
-          <HBarChart data={wasteByReason} color={AMBER} currencySymbol={currencySymbol} />
+      <Section title="By-product recovered (kg)">
+        {byproductByProduct.length === 0 ? <div style={{ fontSize: 11, color: 'var(--tx3)' }}>None logged yet.</div> : <HBarChart data={byproductByProduct} color={GREEN} currencySymbol={currencySymbol} />}
+      </Section>
+
+      <Section title="Loss by reason (kg)">
+        {lossByReason.length === 0 ? <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.noWastageRecorded')}</div> : <HBarChart data={lossByReason} color={AMBER} currencySymbol={currencySymbol} />}
+        {lossByReason.length === 1 && (lossByReason[0].label === 'Other' || lossByReason[0].label === 'Uncategorised') && (
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 6 }}>Every loss is filed under one reason. Ask operators to pick or write the cause when logging wastage so it can be tackled.</div>
         )}
       </Section>
 
       <Section title={tc('pos_factory.rejectionRateTrend')}>
-        {rejectionTrend.length === 0 ? (
+        {trends.rejection.length === 0 ? (
           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.notEnoughTrendData')}</div>
         ) : (
-          <LineChart points={rejectionTrend} color={RED} yLabel={tc('pos_factory.pctRejectedPerWeek')} formatY={(n) => pct(n)} />
+          <LineChart points={trends.rejection} color={RED} yLabel={tc('pos_factory.pctRejectedPerWeek')} formatY={(n) => pct(n)} />
+        )}
+      </Section>
+
+      <Section title="Process loss trend (% of material fed, weekly)">
+        {trends.loss.length < 2 ? (
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.notEnoughTrendData')}</div>
+        ) : (
+          <LineChart points={trends.loss} color={AMBER} yLabel="% lost per week" formatY={(n) => pct(n)} />
+        )}
+      </Section>
+
+      <Section title="Operator scorecard">
+        {operators.length === 0 ? <div style={{ fontSize: 11, color: 'var(--tx3)' }}>No reviewed captures yet.</div> : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+              <thead><tr><Th label="Operator" /><Th label="Reviewed" align="right" /><Th label="Rejected" align="right" /><Th label="Voided" align="right" /><Th label="Error rate" align="right" /><Th label="Loss logged (kg)" align="right" /></tr></thead>
+              <tbody>
+                {operators.map(o => (
+                  <tr key={o.name}>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{o.name}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtInt(o.n)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(o.rej)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(o.voided)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', color: o.n >= 5 && o.rate > 10 ? RED : 'var(--tx)', fontWeight: o.n >= 5 && o.rate > 10 ? 700 : 400 }}>{pct(o.rate)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(o.lossKg)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Data quality">
+        {flags.length === 0 ? (
+          <EmptyState icon="✅" title="No suspicious entries" hint="No duplicates, outliers, unpriced deliveries or stale reviews found." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {flags.map(f => (
+              <div key={f.key} style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(202,138,4,.08)', border: `1px solid ${AMBER}44` }}>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>⚠ {f.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--tx2)', margin: '2px 0 6px' }}>{f.detail}</div>
+                {f.rows.map((r, i) => <div key={i} style={{ fontSize: 11, color: 'var(--tx3)' }}>{r}</div>)}
+              </div>
+            ))}
+          </div>
         )}
       </Section>
 
@@ -1539,6 +1727,22 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
       setCountMsg({ ok: false, text: e.message || 'Could not save the count' })
     } finally { setSaving(false) }
   }
+  // A physical count for a coconut / generic product: re-anchors that product's balance.
+  const saveGenericCount = async (productName: string, qty: number) => {
+    setSaving(true); setCountMsg(null)
+    try {
+      const res = await fetch(`/api/pos/factory/stock-count${locQs}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_name: productName, counted_qty: qty }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || (res.status === 401 ? 'Only a manager or owner can record a stock count' : 'Could not save the count'))
+      setCountMsg({ ok: true, text: 'Saved — stock updated.' })
+      await loadStock()
+    } catch (e: any) {
+      setCountMsg({ ok: false, text: e.message || 'Could not save the count' })
+    } finally { setSaving(false) }
+  }
   const onSort = (c: string) => {
     if (sortCol === c) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(c); setSortDir('asc') }
@@ -1550,7 +1754,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
   // every screen agrees. Seed = arrivals − feed − seed wastage; cans =
   // packaging + output − dispatched; waste = produced − dispatched − fed back.
   const factoryInventory = useMemo(() => {
-    const items: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = []
+    const items: (InventoryItem & { usagePerDay?: number; kind?: StockKind; generic?: any })[] = []
     if (!sesameData || typeof sesameData.remainingArrival !== 'number') return items
     const d = sesameData
     // Which kind of factory this is: its saved type, else what the cost calculation inferred from what it logged.
@@ -1566,8 +1770,11 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
       const cc = d.cycleCost
       for (const r of (Array.isArray(d.genericStock) ? d.genericStock : [])) {
         if (r.role === 'bulk') continue // pressed oil before packing: counted once it is packed into jerrycans
-        const cost = r.role === 'finished' ? (cc?.unitCost || 0) : r.role === 'raw' ? (cc?.rawCostPerKg || 0) : r.role === 'byproduct' ? (cc?.wasteCostPerKg || 0) : 0
+        // Each raw material at ITS OWN price (a kg of whole coconut is not a kg of copra), then a known guess, then the average.
+        const rawCost = cc?.rawPrices?.[r.key || canonProductKey(r.name)] || guessRawPricePerKg(r.name, currencySymbol) || cc?.rawCostPerKg || 0
+        const cost = r.role === 'finished' ? (cc?.perProduct?.[(r.name || '').toLowerCase()] || cc?.unitCost || 0) : r.role === 'raw' ? rawCost : r.role === 'byproduct' ? (cc?.wasteCostPerKg || 0) : 0
         items.push({
+          generic: r,
           name: r.name, category: r.role === 'raw' ? 'raw' : r.role === 'finished' ? 'finished' : r.role === 'byproduct' ? 'byproduct' : '',
           quantity: r.onHand, unit: r.role === 'finished' ? 'item' : (r.unit || 'kg'), cost,
         })
@@ -1587,13 +1794,13 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
       cost: d.wasteCostPerKg || 0, usagePerDay: (d.wasteDispatchedLast30 || 0) / 30,
     })
     return items
-  }, [sesameData, factoryType])
+  }, [sesameData, factoryType, currencySymbol])
 
   const rows = useMemo(() => {
     // Rows synced from dispatches (source_type 'factory_dispatch') hold
     // dispatched totals, not stock on hand — the computed rows above replace
     // them. Everything else in the catalogue is shown as stored.
-    const allItems: (InventoryItem & { usagePerDay?: number; kind?: StockKind })[] = [
+    const allItems: (InventoryItem & { usagePerDay?: number; kind?: StockKind; generic?: any })[] = [
       ...factoryInventory,
       ...inv.filter(i => i.source_type !== 'factory_dispatch' && !factoryInventory.some(f => (f.name || '').toLowerCase() === (i.name || '').toLowerCase())),
     ]
@@ -1606,7 +1813,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
       return {
         name: it.name || 'Unnamed',
         category: isRaw(it) ? 'Raw' : isFinished(it) ? 'Finished' : (it.category || '—'),
-        kind: it.kind, sell: getSell(it), qty, unit: it.unit || '—', cost, reorder, daysOfStock,
+        kind: it.kind, generic: (it as any).generic, sell: getSell(it), qty, unit: it.unit || '—', cost, reorder, daysOfStock,
         value: qty * cost,
         low: reorder > 0 && qty <= reorder,
       }
@@ -1690,7 +1897,7 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
                   const isOpen = openRow === r.name
                   return (
                     <Fragment key={r.name}>
-                      <tr onClick={() => { setOpenRow(isOpen ? null : r.name); setCountMsg(null); setCountInput(r.kind ? String(Math.round(r.qty * 10) / 10) : '') }}
+                      <tr onClick={() => { setOpenRow(isOpen ? null : r.name); setCountMsg(null); setCountInput(r.kind || r.generic ? String(Math.round(r.qty * 10) / 10) : '') }}
                           style={{ background: r.low ? 'rgba(220,38,38,.05)' : isOpen ? ACC_BG : 'transparent', cursor: 'pointer' }}>
                         <td style={{ ...tdStyle, fontWeight: 600 }}>
                           <span style={{ display: 'inline-block', width: 12, color: 'var(--tx3)' }}>{isOpen ? '▾' : '▸'}</span>
@@ -1706,11 +1913,25 @@ function InventoryView({ inv, intakes, currencySymbol, outputs, dispatches, sele
                           {isFinite(r.daysOfStock) ? `${Math.round(r.daysOfStock)}d` : '—'}
                         </td>
                       </tr>
+                      {/* Where an intermediate's stock came from: bought in (intake arrival) vs made in-house (output).
+                          Memo lines only — the balance above is the one number counted in totals. */}
+                      {r.generic && r.generic.parts?.received > 0 && r.generic.parts?.produced > 0 && !isOpen && (
+                        [['↳ Bought in (intake arrival)', r.generic.parts.received], ['↳ Made in-house (output)', r.generic.parts.produced]].map(([label, q]) => (
+                          <tr key={`${r.name}-${label}`} style={{ background: 'transparent' }}>
+                            <td style={{ ...tdStyle, paddingLeft: 30, color: 'var(--tx3)', fontSize: 11 }}>{label}</td>
+                            <td style={{ ...tdStyle, color: 'var(--tx3)', fontSize: 11 }}>received / made</td>
+                            <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--tx3)', fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>{fmtInt(Number(q))}</td>
+                            <td style={{ ...tdStyle, color: 'var(--tx3)', fontSize: 11 }}>{r.unit}</td>
+                            <td colSpan={4} style={{ ...tdStyle, color: 'var(--tx3)', fontSize: 10 }}>not added again — included in the balance above</td>
+                          </tr>
+                        ))
+                      )}
                       {isOpen && (
                         <tr>
                           <td colSpan={8} style={{ ...tdStyle, background: ACC_BG, padding: 14 }}>
                             <StockDetail row={r} stock={sesameData?.stock} currencySymbol={currencySymbol}
-                              countInput={countInput} setCountInput={setCountInput} saving={saving} countMsg={countMsg} onSave={saveCount} />
+                              countInput={countInput} setCountInput={setCountInput} saving={saving} countMsg={countMsg} onSave={saveCount} onSaveGeneric={saveGenericCount}
+                              finishedBreakdown={r.category === 'Finished' ? sesameData?.cycleCost : null} />
                           </td>
                         </tr>
                       )}
@@ -1737,8 +1958,10 @@ const KIND_TEXT: Record<StockKind, { in: string; out: string; unit: string }> = 
   waste: { in: 'Logged as wastage', out: 'Dispatched + fed back', unit: 'kg' },
 }
 
-function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, saving, countMsg, onSave }: {
-  row: { name: string; kind?: StockKind; qty: number; unit: string; cost: number; value: number; sell: number; reorder: number }
+function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, saving, countMsg, onSave, onSaveGeneric, finishedBreakdown }: {
+  onSaveGeneric?: (productName: string, qty: number) => void
+  finishedBreakdown?: any
+  row: { name: string; category?: string; kind?: StockKind; generic?: any; qty: number; unit: string; cost: number; value: number; sell: number; reorder: number }
   stock: any; currencySymbol: string
   countInput: string; setCountInput: (v: string) => void; saving: boolean
   countMsg: { ok: boolean; text: string } | null
@@ -1750,6 +1973,61 @@ function StockDetail({ row, stock, currencySymbol, countInput, setCountInput, sa
       <span>{label}</span><span>{value}</span>
     </div>
   )
+
+  // Coconut / other factories: the same ledger idea per product — what came in, what went out, what is left.
+  if (!kind && row.generic) {
+    const g = row.generic
+    const p = g.parts || {}
+    const submitG = () => {
+      const q = Number(countInput)
+      if (countInput.trim() === '' || !Number.isFinite(q) || q < 0 || !onSaveGeneric) return
+      onSaveGeneric(g.name, q)
+    }
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--tx3)', marginBottom: 6 }}>How this is worked out</div>
+          {g.counted && line(`Counted ${fmtWhen(g.counted.at)}`, `${fmtQty(g.counted.qty)} ${row.unit}`)}
+          {p.received > 0 && line(`+ Deliveries received${g.counted ? ' since' : ''}`, fmtQty(p.received))}
+          {p.produced > 0 && line(`+ Made / packed in the factory${g.counted ? ' since' : ''}`, fmtQty(p.produced))}
+          {p.byproductMade > 0 && line(`+ By-product made${g.counted ? ' since' : ''}`, fmtQty(p.byproductMade))}
+          {p.fed > 0 && line(`− Fed to the machine${g.counted ? ' since' : ''}`, fmtQty(p.fed))}
+          {p.wasted > 0 && line(`− Lost / wasted${g.counted ? ' since' : ''}`, fmtQty(p.wasted))}
+          {p.dispatched > 0 && line(`− Dispatched${g.counted ? ' since' : ''}`, fmtQty(p.dispatched))}
+          <div style={{ borderTop: '1px solid var(--b)', marginTop: 4 }} />
+          {line('On hand', `${fmtQty(row.qty)} ${row.unit}`, true)}
+          {line(`Value (${fmt(currencySymbol, row.cost)} each)`, fmt(currencySymbol, row.value))}
+          {g.shortfall > 0 && (
+            <div style={{ marginTop: 8, padding: 8, borderRadius: 8, background: 'rgba(202,138,4,.12)', border: `1px solid ${AMBER}44`, fontSize: 11 }}>
+              ⚠ {fmtQty(g.shortfall)} {row.unit} more went out than was logged coming in — a delivery or production entry is missing. Record a physical count to correct the balance.
+            </div>
+          )}
+          {row.category === 'Finished' && finishedBreakdown && finishedBreakdown.unitsProduced > 0 && (
+            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--tx2)' }}>
+              <div style={{ fontWeight: 700, marginBottom: 2 }}>Cost to produce one (last {finishedBreakdown.chargedDays || finishedBreakdown.cycleDays} days)</div>
+              {line('Raw material fed', fmt(currencySymbol, finishedBreakdown.material))}
+              {finishedBreakdown.cakeCredit > 0 && line('− By-product (cake) credit', fmt(currencySymbol, finishedBreakdown.cakeCredit))}
+              {line('+ Labour', fmt(currencySymbol, finishedBreakdown.labour))}
+              {line('+ Electricity', fmt(currencySymbol, finishedBreakdown.electricity))}
+              {line('+ Overhead', fmt(currencySymbol, finishedBreakdown.overhead))}
+              {line(`÷ ${fmtQty(finishedBreakdown.unitsProduced)} made`, fmt(currencySymbol, finishedBreakdown.unitCost) + ' each', true)}
+            </div>
+          )}
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--tx3)', marginBottom: 6 }}>Physical count</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 6 }}>Count what is really there and the balance restarts from it; later entries add to it.</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="number" min="0" value={countInput} onChange={e => setCountInput(e.target.value)} onClick={e => e.stopPropagation()}
+              style={{ width: 120, minHeight: 40, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 16, fontVariantNumeric: 'tabular-nums' }} />
+            <button onClick={e => { e.stopPropagation(); submitG() }} disabled={saving}
+              style={{ minHeight: 40, padding: '7px 16px', borderRadius: 8, border: 'none', background: ACC, color: '#fff', fontWeight: 700, fontSize: 12, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 150ms ease-out' }}>{saving ? '…' : 'Save count'}</button>
+          </div>
+          {countMsg && <div style={{ marginTop: 6, fontSize: 11, color: countMsg.ok ? GREEN : RED }}>{countMsg.text}</div>}
+        </div>
+      </div>
+    )
+  }
 
   // Catalogue rows that aren't derived from captures: just the stored facts.
   if (!kind || !stock?.byKind?.[kind]) {
@@ -1878,59 +2156,80 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
 
   const pending = dispatches.filter(d => d.status === 'pending')
 
-  // Group dispatched quantity by each capture's own recorded unit instead
-  // of summing every capture's raw quantity as if kg/litres/pcs/boxes/etc.
-  // were interchangeable — the capture form offers a generic unit-pill
-  // list per dispatch (not a fixed unit per factory type), so nothing
-  // guarantees every dispatch here was logged the same way. The headline
-  // figure uses whichever unit accounts for the most volume; anything
-  // else surfaces in the tap-to-expand breakdown instead of being
-  // silently folded into the same total.
+  // "Units dispatched" used to add EVERYTHING together — jerrycans, kilos of copra and kilos of husk — because the
+  // unit column is blank on most dispatches. Two families are kept apart instead:
+  //   • packs — finished packed units (jerrycans, bottles…), counted in items; the headline figure;
+  //   • kg    — loose by-products and intermediates (copra, cake, husk), counted by weight.
+  // A dispatch of the bulk oil ("Coconut oil") priced like a pack is a pack count, as in the stock ledger.
+  const packPriceMedian = useMemo(() => {
+    const p = dispatches.filter(c => PACKAGED_NAME.test(c.product || '') && Number(c.dispatch_price) > 0).map(c => Number(c.dispatch_price)).sort((x, y) => x - y)
+    return p.length ? p[Math.floor(p.length / 2)] : 0
+  }, [dispatches])
+  const familyOf = useCallback((c: FactoryCapture): 'packs' | 'kg' => {
+    const nm = c.product || ''
+    if (PACKAGED_NAME.test(nm)) return 'packs'
+    const u = (c.unit || '').trim().toLowerCase()
+    if (/\boil\b/i.test(nm) && packPriceMedian > 0) {
+      const pr = Number(c.dispatch_price) || 0
+      if (pr >= packPriceMedian * 0.5 && pr <= packPriceMedian * 2) return 'packs'
+    }
+    if (u === 'item' || u === 'items' || u === 'pcs') return 'packs'
+    return 'kg'
+  }, [packPriceMedian])
   const dispatchByUnit = useMemo(() => {
     const m = new Map<string, number>()
     for (const c of dispatches) {
-      const u = (c.unit || '').trim().toLowerCase()
-      m.set(u, (m.get(u) || 0) + (Number(c.quantity) || 0))
+      if (c.status === 'rejected') continue
+      const f = familyOf(c)
+      m.set(f, (m.get(f) || 0) + (Number(c.quantity) || 0))
     }
-    return Array.from(m.entries()).sort((a, b) => b[1] - a[1])
-  }, [dispatches])
+    return Array.from(m.entries()).sort((a, b) => (a[0] === 'packs' ? -1 : b[0] === 'packs' ? 1 : b[1] - a[1]))
+  }, [dispatches, familyOf])
   const [dominantUnit, dominantQty] = dispatchByUnit[0] || ['', 0]
   const otherUnits = dispatchByUnit.slice(1)
-  const unitsDispatchedValue = dominantUnit ? `${fmtInt(dominantQty)} ${dominantUnit}` : fmtInt(dominantQty)
+  const unitsDispatchedValue = dominantUnit === 'packs' ? `${fmtInt(dominantQty)} packs` : dominantUnit ? `${fmtInt(dominantQty)} kg` : fmtInt(dominantQty)
+  // Per-product detail behind the headline.
+  const dispatchByProduct = useMemo(() => {
+    const m = new Map<string, { qty: number; fam: string; revenue: number }>()
+    for (const c of dispatches) {
+      if (c.status === 'rejected') continue
+      const k = (c.product || 'Unspecified').trim()
+      const e = m.get(k) || { qty: 0, fam: familyOf(c), revenue: 0 }
+      const q = Number(c.quantity) || 0
+      e.qty += q; e.revenue += q * (Number(c.dispatch_price) || 0)
+      m.set(k, e)
+    }
+    return Array.from(m.entries()).sort((a, b) => b[1].qty - a[1].qty)
+  }, [dispatches, familyOf])
 
-  // weekly dispatch volume — same dominant-unit basis as the KPI above, so
-  // every bar in the chart represents one consistent unit rather than
-  // adding e.g. kg and litres together.
+  // weekly dispatch volume — same basis as the headline (packs), so every bar is one consistent unit.
   const weekly = useMemo(() => {
     const m = new Map<string, number>()
     for (const c of dispatches) {
-      if ((c.unit || '').trim().toLowerCase() !== dominantUnit) continue
+      if (c.status === 'rejected' || familyOf(c) !== dominantUnit) continue
       m.set(weekKey(c.created_at), (m.get(weekKey(c.created_at)) || 0) + (Number(c.quantity) || 0))
     }
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]))
       .map(([k, v]) => ({ label: k.split('-W')[1] ? `W${k.split('-W')[1]}` : k, value: v }))
-  }, [dispatches, dominantUnit])
+  }, [dispatches, dominantUnit, familyOf])
 
   const weeklyMax = Math.max(1, ...weekly.map(w => w.value))
-  const excludedShipmentCount = otherUnits.reduce((s, [u]) => s + dispatches.filter(c => (c.unit || '').trim().toLowerCase() === u).length, 0)
+  const excludedShipmentCount = dispatches.filter(c => c.status !== 'rejected' && familyOf(c) !== dominantUnit).length
 
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label={tc('pos_factory.totalShipmentsLabel')} value={fmtInt(dispatches.length)} sub={tc('pos_factory.dispatchCaptures')} accent="#a855f7" />
+        <KpiCard label={tc('pos_factory.totalShipmentsLabel')} value={fmtInt(dispatches.filter(c => c.status !== 'rejected').length)} sub={tc('pos_factory.dispatchCaptures')} accent="#a855f7" />
         <KpiCard
           label={tc('pos_factory.unitsDispatchedLabel')}
           value={unitsDispatchedValue}
           sub={tc('pos_factory.acrossAllShipments')}
           accent={ACC}
-          breakdown={otherUnits.length > 0 ? dispatchByUnit.map(([u, v], i) => ({
-            label: u || '(no unit recorded)',
-            value: fmtInt(v),
-            strong: i === 0,
-          })) : undefined}
-          breakdownNote={otherUnits.length > 0
-            ? `Grouped by the unit recorded on each dispatch — ${dominantUnit || '(no unit recorded)'} accounts for the most volume and is shown above; the rest were logged in a different unit and aren't added into that total.`
-            : undefined}
+          breakdown={[
+            ...dispatchByProduct.map(([nm, e]) => ({ label: `${nm} — ${e.fam === 'packs' ? 'packs' : 'kg'}`, value: fmtInt(e.qty) })),
+            ...dispatchByUnit.map(([u, v]) => ({ label: u === 'packs' ? 'Total packs (jerrycans etc.)' : 'Total loose kg (copra, cake, husk)', value: fmtInt(v), strong: true })),
+          ]}
+          breakdownNote="Finished packs (jerrycans) are counted separately from loose kilos of copra, cake or husk — they are different things and are never added together. Rejected dispatches are not counted."
         />
         <KpiCard label={tc('pos_factory.pendingDispatchesLabel')} value={fmtInt(pending.length)} sub={tc('pos_factory.awaitingApproval')} accent={pending.length > 0 ? AMBER : GREEN} />
         <KpiCard label={tc('pos_factory.onTimeRateLabel')} value="—" sub={tc('pos_factory.trackingComingSoon')} accent="var(--tx3)" />
@@ -2132,25 +2431,17 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
   // packaging still uses that (unchanged from before), while a
   // dispatch-only day is no longer silently dropped from the lifetime total.
   const jerrycansProduced = useMemo(() => {
-    const byDay = new Map<string, { packaging: number; output: number; dispatch: number }>()
-    const addTo = (list: FactoryCapture[], key: 'packaging' | 'output' | 'dispatch') => {
-      for (const c of list) {
-        // A packaging capture IS a packaged can whatever its product name says.
-        if (key !== 'packaging' && !isPackaged(c.product)) continue
-        const day = nairobiDayKey(new Date(c.created_at))
-        const entry = byDay.get(day) || { packaging: 0, output: 0, dispatch: 0 }
-        entry[key] += Number(c.quantity) || 0
-        byDay.set(day, entry)
-      }
-    }
-    addTo(packaging || [], 'packaging')
-    addTo(outputs, 'output')
-    addTo(dispatches || [], 'dispatch')
-    let total = 0
-    for (const day of byDay.values()) {
-      total += day.packaging > 0 ? day.packaging : day.output > 0 ? day.output : day.dispatch
-    }
-    return total
+    // Packed units over the cycle: every packaging capture is a packed can whatever its product name says.
+    // Only when NOTHING was packed in the cycle do packed-name outputs, then dispatches, stand in for it —
+    // never added on top: a can packed on Monday and dispatched on Friday is one can, not two (the old
+    // per-day mix counted the Friday dispatch as another can and understated every per-can cost).
+    // Same rule as the server's cycle cost (lib/factory-unit-cost), so the tabs agree.
+    const sum = (list: FactoryCapture[], anyName: boolean) => list.reduce((t, c) => (anyName || isPackaged(c.product)) ? t + (Number(c.quantity) || 0) : t, 0)
+    const packed = sum(packaging || [], true)
+    if (packed > 0) return packed
+    const made = sum(outputs, false)
+    if (made > 0) return made
+    return sum(dispatches || [], false)
   }, [outputs, packaging, dispatches])
 
   // Cost per 20L jerrycan (allocated across actual jerrycan output)
@@ -2290,6 +2581,7 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
   const [rateBill, setRateBill] = useState('')
   const [rateOverhead, setRateOverhead] = useState('')
   const [ratesConfigured, setRatesConfigured] = useState(false)
+  const [ratesNeedFactory, setRatesNeedFactory] = useState(true) // false once the server resolves the account's only factory
   const [ratesBusy, setRatesBusy] = useState(false)
   const [ratesMsg, setRatesMsg] = useState<string | null>(null)
   useEffect(() => {
@@ -2299,6 +2591,7 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
       .then(d => {
         if (!live || !d) return
         setRatesCountry(d.country_code || null)
+        setRatesNeedFactory(!!d.needs_factory)
         setRatesSaved(!!d.saved)
         const cy = parseCycle(d.electricity_basis)
         setCycle(cy)
@@ -2761,7 +3054,7 @@ function CostingView({ intakes: intakesAll, outputs: outputsAll, wastages: wasta
         <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 10 }}>
           Labour (daily, weekly or monthly) and electricity, saved for this factory. The CFO uses the same numbers.
         </div>
-        {selectedLocation === 'all' || !selectedLocation ? (
+        {(selectedLocation === 'all' || !selectedLocation) && ratesNeedFactory ? (
           <div role="status" style={{ fontSize: 11, color: 'var(--tx2)' }}>Select a factory above to set its rates.</div>
         ) : (
           <>

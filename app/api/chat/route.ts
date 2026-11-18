@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { foldPackCaptures, canonProductKey } from '@/lib/factory-stock'
 import { buildSystemPrompt, askOnce } from '@/lib/ai'
 import { loadMemoryContext, extractAndSaveMemory } from '@/lib/ai/memory'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from '@/lib/ai/expansion'
@@ -1587,7 +1588,7 @@ export async function POST(request: NextRequest) {
       const [batchRes, captureRes, waybillRes] = await Promise.all([
         service.from('pos_factory_batches').select('status, product_name, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
         // Approved captures only (a pending or rejected capture is not stock), uncapped enough for a busy factory.
-        service.from('pos_factory_captures').select('type, quantity, product_name, created_at').eq('owner_id', user.id).eq('status', 'approved').gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(10000),
+        service.from('pos_factory_captures').select('type, quantity, product_name, dispatch_price, created_at').eq('owner_id', user.id).eq('status', 'approved').gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(10000),
         service.from('pos_factory_waybills').select('destination, product_name, quantity, created_at').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).limit(1000),
       ])
       if (batchRes.error) console.error('pos_factory_batches query error:', batchRes.error.message)
@@ -1639,9 +1640,11 @@ export async function POST(request: NextRequest) {
           // cans are different units and a single "N units" figure means nothing.
           const perProduct = new Map<string, Record<string, number>>()
           const countByType: Record<string, number> = {}
-          for (const c of captures as any[]) {
+          // One product under two names is one product ("Coconut copra" = "Copra"), and packs logged against the bulk oil are jerrycans.
+          for (const c of foldPackCaptures(captures as any[]) as any[]) {
             countByType[c.type] = (countByType[c.type] || 0) + 1
-            const name = (c.product_name || 'Unnamed product').trim()
+            const rawName = (c.product_name || 'Unnamed product').trim()
+            const name = canonProductKey(rawName) === 'copra' ? 'Copra' : rawName
             const row = perProduct.get(name) || {}
             row[c.type] = (row[c.type] || 0) + (Number(c.quantity) || 0)
             perProduct.set(name, row)

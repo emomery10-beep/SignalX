@@ -4,7 +4,8 @@ import { resolvePosOwner } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
 import { getDailyCache, setDailyCache } from '@/lib/ai-daily-cache'
 import { loadCycleUnitCost } from '@/lib/factory-unit-cost'
-import { PACKAGED_NAME } from '@/lib/factory-costing-profiles'
+import { PACKAGED_NAME, getCostingProfile, isByproductName, isRawIntakeName } from '@/lib/factory-costing-profiles'
+import { canonProductKey, computeGenericStock, foldPackCaptures } from '@/lib/factory-stock'
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
@@ -221,7 +222,7 @@ async function getTaxData(service: any, ownerId: string, startDate: Date) {
 async function getFactoryData(service: any, ownerId: string, startDate: Date) {
   const { data: captures } = await service
     .from('pos_factory_captures')
-    .select('type, status, quantity, created_at, approved_at, batch_ref, product_name')
+    .select('type, status, quantity, created_at, approved_at, batch_ref, product_name, dispatch_price, param_label, param_value, location_id, rejection_reason')
     .eq('owner_id', ownerId)
     .gte('created_at', startDate.toISOString())
 
@@ -245,11 +246,39 @@ async function getFactoryData(service: any, ownerId: string, startDate: Date) {
   // Efficiency maths uses APPROVED captures only (a pending or rejected capture is not stock) and compares
   // quantities, not row counts. Raw material fed to production is 'intake_feed' (older accounts logged 'intake');
   // 'intake_arrival' is delivery, not consumption.
-  const approvedCaps = captures.filter((c: any) => c.status === 'approved')
-  const qtyOf = (types: string[]) => approvedCaps.filter((c: any) => types.includes(c.type)).reduce((s: number, c: any) => s + (Number(c.quantity) || 0), 0)
-  const fedQty = qtyOf(['intake_feed', 'intake'])
-  const outputQty = qtyOf(['output'])
-  const wastageQty = qtyOf(['wastage'])
+  const approvedCaps = foldPackCaptures(captures.filter((c: any) => c.status === 'approved') as any[]) as any[]
+  // What the factory makes decides what is raw material, by-product and a finished pack.
+  const { data: locRows } = await service.from('pos_locations').select('factory_type').eq('owner_id', ownerId).eq('kind', 'factory')
+  const { data: profRow } = await service.from('profiles').select('factory_type').eq('id', ownerId).maybeSingle()
+  const typeCounts = new Map<string, number>()
+  for (const l of (locRows || []) as any[]) if (l.factory_type && l.factory_type !== 'other') typeCounts.set(l.factory_type, (typeCounts.get(l.factory_type) || 0) + 1)
+  const fType = [...typeCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || (profRow as any)?.factory_type || null
+  const prof = getCostingProfile(fType)
+  const isBy = (c: any) => isByproductName(prof, c.product_name) || /cake|husk|shell|waste|fib(re|er)/i.test(c.product_name || '')
+  const sumQ = (list: any[]) => list.reduce((s: number, c: any) => s + (Number(c.quantity) || 0), 0)
+  // Raw material fed to production: raw products only ('intake_feed'; older accounts logged 'intake'). Cake fed back
+  // to the press is not new raw material.
+  const fedCaps = approvedCaps.filter((c: any) => (c.type === 'intake_feed' || c.type === 'intake') && isRawIntakeName(prof, c.product_name) && !isBy(c))
+  const fedQty = sumQ(fedCaps)
+  // Real loss = wastage of material/product. Wastage of a by-product (cake, husk, shell) is the by-product being
+  // made — a saleable recovery, not waste — and is reported separately.
+  const lossQty = sumQ(approvedCaps.filter((c: any) => c.type === 'wastage' && !isBy(c)))
+  const byproductQty = sumQ(approvedCaps.filter((c: any) => c.type === 'wastage' && isBy(c)))
+  const wastageQty = lossQty
+  // Extraction yield: oil pressed ÷ the raw material fed in most (copra, not the nuts dried into it — same mass twice).
+  const fedByKey = new Map<string, number>()
+  for (const c of fedCaps) fedByKey.set(canonProductKey(c.product_name), (fedByKey.get(canonProductKey(c.product_name)) || 0) + (Number(c.quantity) || 0))
+  const mainFed = [...fedByKey.entries()].sort((a, b) => b[1] - a[1])[0]
+  const oilOutQty = sumQ(approvedCaps.filter((c: any) => c.type === 'output' && prof.product && prof.product.test(c.product_name || '') && !PACKAGED_NAME.test(c.product_name || '') && !isBy(c)))
+  const outputQty = oilOutQty
+  // Voided-after-approval are counted apart from review rejections.
+  const voidedCaps = captures.filter((c: any) => c.status === 'rejected' && /^voided after approval/i.test(c.rejection_reason || ''))
+  const rejectedAtReview = rejected - voidedCaps.length
+  // Data gaps that make every other number less trustworthy.
+  const ledger = computeGenericStock(captures.filter((c: any) => c.status === 'approved') as any[])
+  const ledgerGaps = ledger.filter(r => r.shortfall > 0).map(r => `${r.name}: ${r.shortfall} more went out than was logged in`)
+  const unpricedDeliveries = approvedCaps.filter((c: any) => c.type === 'intake_arrival' && !(c.param_label === 'intake_price_per_kg' && Number(c.param_value) > 0)).length
+  const looseDispatches = prof.kind === 'oil' ? approvedCaps.filter((c: any) => c.type === 'dispatch' && !PACKAGED_NAME.test(c.product_name || '') && !isBy(c)) : []
 
   // Average approval lag (hours)
   const approvedWithTimes = captures.filter((c: any) => c.approved_at && c.created_at)
@@ -295,9 +324,17 @@ async function getFactoryData(service: any, ownerId: string, startDate: Date) {
     total_captures: total,
     by_type: byType,
     status_breakdown: { pending, approved, rejected },
-    wastage_rate_pct: fedQty > 0 ? +((wastageQty / fedQty) * 100).toFixed(1) : null, // wastage as a share of raw material fed to production (approved, by quantity)
-    rejection_rate_pct: (approved + rejected) > 0 ? +((rejected / (approved + rejected)) * 100).toFixed(1) : 0,
-    output_vs_intake_ratio: fedQty > 0 && outputQty > 0 ? +(outputQty / fedQty).toFixed(2) : null, // output quantity ÷ raw fed (approved)
+    // Real process loss as a share of raw material fed (approved, by quantity). By-product made is NOT loss.
+    wastage_rate_pct: fedQty > 0 ? +((wastageQty / fedQty) * 100).toFixed(1) : null,
+    by_product_recovered_kg: Math.round(byproductQty),
+    rejection_rate_pct: (approved + rejected) > 0 ? +((rejectedAtReview / (approved + rejected)) * 100).toFixed(1) : 0,
+    voided_after_approval_count: voidedCaps.length,
+    // Oil pressed ÷ the main raw material fed (approved, kg).
+    output_vs_intake_ratio: fedQty > 0 && outputQty > 0 && mainFed && mainFed[1] > 0 ? +(outputQty / mainFed[1]).toFixed(2) : null,
+    main_raw_material: mainFed ? mainFed[0] : null,
+    deliveries_approved_without_a_price: unpricedDeliveries,
+    stock_ledger_gaps: ledgerGaps.slice(0, 5),
+    dispatches_of_loose_material_not_jerrycans: looseDispatches.length ? { count: looseDispatches.length, examples: looseDispatches.slice(0, 3).map((c: any) => `${c.product_name}: ${c.quantity} @ ${c.dispatch_price ?? '—'}`) } : 0,
     avg_approval_lag_hours: avgApprovalLagHrs,
     pending_approvals: pending,
     unique_batches: new Set(captures.map((c: any) => c.batch_ref).filter(Boolean)).size,
@@ -393,6 +430,7 @@ function buildAnalysisPrompt(data: Record<string, any>, periodDays: number): str
       '9. Rejection spikes — potential quality control issues',
       '10. Batch-level anomalies in production flow',
       '11. Dispatches sold below their cost to make (dispatches_sold_below_cost) — name the product and the loss',
+      '13. Stock ledger gaps, deliveries with no price, and dispatches of loose material instead of jerrycans — these make cost and stock figures unreliable; name them',
       '12. Approvals that overrode the stock check, or were voided after approval — repeated use can point to missing records or fraud',
     )
   }

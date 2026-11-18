@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { initiateStkPush, queryStkStatus } from '@/lib/mpesa'
+import { seatsToCharge } from '@/lib/pos-seat-pricing'
 
 // POST — initiate STK Push or query status
 export async function POST(request: NextRequest) {
@@ -17,16 +18,20 @@ export async function POST(request: NextRequest) {
       if (!phone) return NextResponse.json({ error: 'Phone number required' }, { status: 400 })
 
       const isPosSeats = !!seats
-      const amount = isPosSeats
-        ? Math.max(1, Math.min(50, parseInt(seats, 10))) * 500
+      const seatInfo = isPosSeats ? await seatsToCharge(supabase, user.id, parseInt(seats, 10) || 1) : null
+      if (seatInfo && seatInfo.charge === 0) {
+        return NextResponse.json({ error: `You already have ${seatInfo.current} seats. Choose a higher number to add seats.` }, { status: 400 })
+      }
+      const amount = seatInfo
+        ? seatInfo.charge * 500
         : plan === 'business' ? 4900 : 2400
-      const accountRef = isPosSeats ? `ASKBIZ-POS-${seats}` : `ASKBIZ-${(plan || 'growth').toUpperCase()}`
+      const accountRef = seatInfo ? `ASKBIZ-POS-${seatInfo.total}` : `ASKBIZ-${(plan || 'growth').toUpperCase()}`
 
       const result = await initiateStkPush({
         phone,
         amount,
         accountRef,
-        description: isPosSeats ? `AskBiz POS ${seats} seat(s)` : `AskBiz ${plan} plan`,
+        description: seatInfo ? `AskBiz POS ${seatInfo.charge} seat(s)` : `AskBiz ${plan} plan`,
       })
 
       // Store pending payment for callback reconciliation
@@ -36,7 +41,7 @@ export async function POST(request: NextRequest) {
         merchant_request_id: result.MerchantRequestID,
         phone: phone,
         amount,
-        plan: isPosSeats ? `pos_seats_${seats}` : plan,
+        plan: seatInfo ? `pos_seats_${seatInfo.total}` : plan,
         status: 'pending',
       })
 

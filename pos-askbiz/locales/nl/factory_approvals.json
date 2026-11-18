@@ -56,5 +56,10 @@
   "method_mobile_money": "Mobiel geld",
   "method_bank": "Bank",
   "method_cheque": "Cheque",
-  "method_other": "Overig"
+  "method_other": "Overig",
+  "intake_price_label": "Kosten per kg (wat u betaalde)",
+  "intake_price_total": "Totaal: {total}",
+  "intake_price_hint": "Ingevuld met de laatste prijs van dit product — pas aan naar de echte prijs. Bepaalt voorraadwaarde en productiekosten.",
+  "error_valid_intake_price": "Voer geldige kosten per kg in.",
+  "error_price_before_paid": "Voer eerst de kosten per kg in, daarna het betaalde bedrag."
 }
